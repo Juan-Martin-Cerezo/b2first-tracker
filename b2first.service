@@ -1,0 +1,17 @@
+[Unit]
+Description=B2 First study portal (tracker + material)
+After=network-online.target
+
+[Service]
+Type=simple
+User=juan
+WorkingDirectory=/home/juan/b2first-tracker
+ExecStart=/usr/bin/python3 /home/juan/b2first-tracker/server.py
+Restart=always
+RestartSec=3
+# Seguridad básica
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
