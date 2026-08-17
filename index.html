@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2 First Tracker — Grade A</title>
+<style>
+:root{
+  --bg:#0f1117; --panel:#171a23; --panel2:#1e2230; --line:#2a2f42;
+  --txt:#e6e9f2; --dim:#8b93ab; --acc:#4f8cff; --acc2:#7c5cff;
+  --ok:#2ecc71; --warn:#f1c40f; --bad:#e74c3c;
+  --mon:#39d98a; --fri:#5aa2ff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,Segoe UI,Roboto,sans-serif;padding-bottom:80px}
+header{position:sticky;top:0;z-index:10;background:linear-gradient(135deg,#10131c,#181d2e);border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+header h1{font-size:19px;letter-spacing:.3px}
+header .stage{font-size:12px;padding:4px 10px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--acc)}
+nav{display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:61px;z-index:9;overflow-x:auto}
+nav button{flex:1;min-width:90px;padding:9px 6px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:13px;font-weight:600;cursor:pointer}
+nav button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{max-width:860px;margin:0 auto;padding:16px}
+.view{display:none}
+.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:16px;margin-bottom:4px}
+.card .sub{color:var(--dim);font-size:12.5px;margin-bottom:12px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700;margin-left:6px;vertical-align:middle}
+.badge.mon{background:rgba(57,217,138,.15);color:var(--mon)}
+.badge.fri{background:rgba(90,162,255,.15);color:var(--fri)}
+.step{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:10px}
+.step h3{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.step h3 .t{font-size:11px;color:var(--dim);font-weight:400}
+.step ol,.step ul{margin-left:20px;font-size:13.5px;color:var(--txt);opacity:.92}
+.step li{margin-bottom:4px}
+label{display:block;font-size:12px;color:var(--dim);margin:8px 0 3px}
+select,input[type=number],input[type=text],textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--txt);padding:8px 10px;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:120px}
+.btn{background:var(--acc);color:#fff;border:none;border-radius:9px;padding:9px 14px;font-size:13.5px;font-weight:600;cursor:pointer}
+.btn.gray{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+.btn.ok{background:var(--ok)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:12px}
+.timer{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--acc)}
+.timer.running{color:var(--ok)}
+.timer .tbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--dim);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+.gate{border-left:3px solid var(--line);padding:10px 12px;margin-bottom:10px;background:var(--panel2);border-radius:0 10px 10px 0}
+.gate.pass{border-left-color:var(--ok)}
+.gate.fail{border-left-color:var(--bad)}
+.gate h4{font-size:13.5px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.gate .bar{height:7px;background:var(--bg);border-radius:5px;margin-top:8px;overflow:hidden}
+.gate .fill{height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:5px;transition:width .4s}
+.gate.pass .fill{background:var(--ok)}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin:2px 3px 2px 0}
+.pill.L-GAP{background:rgba(79,140,255,.2);color:#7fb0ff}
+.pill.G-ERR{background:rgba(124,92,255,.2);color:#a78fff}
+.pill.T-MIS{background:rgba(241,196,15,.2);color:#f5d76e}
+.pill.T-LIM{background:rgba(231,76,60,.2);color:#ff8d80}
+.empty{color:var(--dim);font-size:13px;padding:14px;text-align:center}
+.del{background:none;border:none;color:var(--bad);cursor:pointer;font-size:14px}
+.book{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.book:last-child{border:none}
+.book .ico{font-size:22px}
+.book b{display:block;font-size:14px}
+.book .meta{font-size:12px;color:var(--dim)}
+.book .price{color:var(--mon);font-weight:700}
+.book a{color:var(--acc);text-decoration:none;font-size:12px}
+.note{background:rgba(241,196,15,.08);border:1px solid rgba(241,196,15,.3);border-radius:10px;padding:10px 12px;font-size:12.5px;color:#f5d76e;margin-bottom:12px}
+.ok-note{background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:10px 12px;font-size:12.5px;color:#7ee2a8;margin-bottom:12px}
+.next-session{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,#141a2c,#1a2138);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.next-session .big{font-size:15px;font-weight:700}
+.next-session .when{font-size:12.5px;color:var(--dim)}
+footer{position:fixed;bottom:0;left:0;right:0;background:#0d0f15;border-top:1px solid var(--line);padding:8px 16px;font-size:11.5px;color:var(--dim);text-align:center}
+@media (max-width:560px){
+  body{font-size:14px;padding-bottom:64px}
+  header{padding:10px 12px}
+  header h1{font-size:16px}
+  nav{top:55px;padding:8px 10px;gap:6px}
+  nav button{min-width:68px;padding:8px 4px;font-size:12px}
+  main{padding:10px}
+  .card{padding:12px}
+  .card h2{font-size:15px}
+  .row{flex-direction:column;gap:0}
+  .row>div{min-width:100%}
+  .step{padding:10px}
+  .step h3{font-size:13px}
+  .book{flex-direction:column;gap:6px}
+  .book .price{align-self:flex-start}
+  .next-session{flex-direction:column;align-items:flex-start;gap:6px}
+  table{font-size:12px}
+  th,td{padding:6px 5px}
+  .gate h4{font-size:12.5px}
+  .timer{font-size:12px;padding:3px 8px}
+  footer{font-size:10.5px}
+  #logTable td:last-child, #logTable th:last-child{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 B2 First Tracker</h1>
+  <span class="stage" id="stageBadge">Etapa 0 — Cimientos</span>
+</header>
+<nav>
+  <button data-view="hoy" class="active">HOY</button>
+  <button data-view="exam">EXAMEN</button>
+  <button data-view="partes">PARTES</button>
+  <button data-view="prog">PROGRESO</button>
+  <button data-view="plan">PLAN</button>
+  <button data-view="err">ERRORES</button>
+  <button data-view="libros">LIBROS</button>
+</nav>
+<main>
+<!-- ============ HOY ============ -->
+<section id="v-hoy" class="view active">
+  <div class="next-session" id="nextBox"></div>
+
+  <div class="card" style="padding:12px">
+    <h2 style="font-size:14px">📅 Rotación de la semana</h2>
+    <div class="sub">Automática (ciclo completo de ejercicios semana a semana). Si hoy querés practicar otra cosa, elegí acá y guarda para esta semana.</div>
+    <div class="row" style="margin-top:4px">
+      <div><label>R&UoE</label><select id="ovRue" onchange="setOv('rue',this.value)"></select></div>
+      <div><label>Writing</label><select id="ovW" onchange="setOv('w',this.value)"></select></div>
+      <div><label>Listening</label><select id="ovL" onchange="setOv('l',this.value)"></select></div>
+      <div><label>Speaking</label><select id="ovSp" onchange="setOv('sp',this.value)"></select></div>
+    </div>
+  </div>
+
+  <!-- SESION A -->
+  <div id="sesA">
+    <div class="card">
+      <h2>Sesión A — Ingeniería de Texto <span class="badge mon">LUN 15:30</span></h2>
+      <div class="sub">Objetivo: eliminar error gramatical y dominar la estructura algorítmica del Writing.</div>
+
+      <div class="step">
+        <h3>Paso 1 — Use of English Focus <span class="t">(15 min · límite real: 10 min)</span></h3>
+        <div class="guide" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;margin:8px 0">
+          📍 <b>Dónde encontrar el ejercicio (abrí el PDF, andá a la parte que toca esta semana):</b><br>
+          • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf" target="_blank">RUE Sample 1 PDF</a> · claves: <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf" target="_blank">Answer keys 1</a><br>
+          • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf" target="_blank">RUE Sample 2 PDF</a> · claves: <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf" target="_blank">Answer keys 2</a><br>
+          • <b>For Schools 1:</b> <a href="/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf" target="_blank">RUE FS1</a> · <b>FS2:</b> <a href="/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf" target="_blank">RUE FS2</a><br>
+          • <b>Exam Booster (tu libro, SIN key ⚠️):</b> sección "Use of English" → ejercicios de la parte que toca. Sin respuestas: corregí conmigo o con la profe.<br>
+          • <b>Flo-Joe (auto-corrige online):</b> <a href="https://www.flo-joe.co.uk/fce/students/tests/" target="_blank">flo-joe.co.uk/fce</a> · <b>Handbook (reglas):</b> <a href="/files/handbook.pdf" target="_blank">handbook.pdf</a>
+        </div>
+        <p id="semanaP">Esta semana: <b id="semanaTxt"></b></p>
+        <div class="row">
+          <div><label>Fuente</label>
+            <select id="ueFuente">
+              <option value="gv">Grammar &amp; Vocabulary for First (con answers)</option>
+              <option value="booster">Exam Booster (sin key ⚠️)</option>
+              <option value="flojoe">Flo-Joe (web, con auto-corr.)</option>
+              <option value="sample">Sample Paper (oficial, con answers)</option>
+              <option value="ptplus">Practice Tests Plus B2 First (con key)</option>
+            </select>
+          </div>
+          <div><label>Parte</label>
+            <select id="uePart">
+              <option value="1">Part 1 — Multiple-choice cloze (8)</option>
+              <option value="2">Part 2 — Open cloze (8)</option>
+              <option value="3">Part 3 — Word Formation (8)</option>
+              <option value="4">Part 4 — Key Word Transformation (6)</option>
+              <option value="5">Part 5 — Multiple choice reading (6)</option>
+              <option value="6">Part 6 — Gapped text (6)</option>
+              <option value="7">Part 7 — Multiple matching (10)</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label>Ejercicio / ref.</label><input type="text" id="ueRef" placeholder="ej: G&amp;V Unit 12 / Booster p.34"></div>
+          <div><label>Aciertos</label><input type="number" id="ueOk" min="0" value="0"></div>
+          <div><label>Total preguntas</label><input type="number" id="ueTotal" min="1" value="6"></div>
+          <div><label>Minutos</label><input type="number" id="ueMin" min="0" value="10"></div>
+        </div>
+        <div style="margin-top:8px"><button class="btn sm" onclick="ueTimer.start()">⏱ 10:00</button> <span class="timer" id="ueTimer">10:00</span></div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveUE()">✔ Registrar UoE</button></div>
+      </div>
+
+      <div class="step">
+        <h3>Paso 2 — Sprint de Redacción <span class="t">(30 min: 5 plan + 22 escribí + 3 revisá)</span></h3>
+        <div class="guide" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;margin:8px 0">
+          📍 <b>Dónde encontrar la consigna (abrí el PDF y copiá el enunciado en el campo de abajo):</b><br>
+          • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf" target="_blank">Writing Sample 1 PDF</a> → Part 1 (Essay, obligatorio) + Part 2 (elegí 1: Article/Review/Report/Email)<br>
+          • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf" target="_blank">Writing Sample 2 PDF</a><br>
+          • <b>For Schools 1:</b> <a href="/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf" target="_blank">Writing FS1</a> · <b>FS2:</b> <a href="/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf" target="_blank">Writing FS2</a><br>
+          • <b>Practice Tests Plus / FCE 6 / Exam Booster:</b> consignas de su sección Writing (los que tienen key incluyen model answers).<br>
+          • <b>Estructura obligatoria:</b> P1 introducción → P2 idea 1 (conector + argumento + ejemplo) → P3 idea 2 + idea propia → P4 conclusión. <b>Reglas:</b> 140–190 palabras · cero contracciones · ≥3 conectores C1 · 1 pasiva · 1 inversión/condicional.
+        </div>
+        <div class="row">
+          <div><label>Tipo de texto</label>
+            <select id="wTipo"><option>Essay</option><option>Article</option><option>Report</option><option>Review</option><option>Email</option></select>
+          </div>
+          <div><label>Consigna de</label>
+            <select id="wFuente">
+              <option value="sample">Sample Paper oficial</option>
+              <option value="ptplus">Practice Tests Plus</option>
+              <option value="fce6">FCE 6</option>
+              <option value="booster">Exam Booster</option>
+              <option value="clase">Consigna de la profe</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div><label>Consigna (pegala acá)</label><input type="text" id="wPrompt" placeholder="ej: 'Your teacher wants you to write an essay about...'"></div>
+          <div><label>Nº palabras</label><input type="number" id="wWords" min="100" value="160"></div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn sm" onclick="wPlan.start()">📐 Planificar 05:00</button>
+          <button class="btn sm" onclick="wWrite.start()">✍️ Escribir 22:00</button>
+          <button class="btn sm" onclick="wRev.start()">🔎 Revisar 03:00</button>
+          <span class="timer" id="wTimer">—</span>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Nota IA / Write&amp;Improve (sobre 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
+          <div><label>Minutos totales</label><input type="number" id="wMin" min="0" value="30"></div>
+        </div>
+        <p style="font-size:12px;color:var(--dim);margin-top:6px">Reglas: 140–190 palabras · cero contracciones · ≥3 conectores C1 · 1 pasiva · 1 inversión/condicional.</p>
+        <div style="margin-top:8px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px">
+          <b style="font-size:12.5px">Rúbrica Grade A — <span id="rubCount" style="color:var(--acc)">0/7</span></b>
+          <div id="rubList" style="margin-top:6px">
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 4-5 párrafos separados por línea en blanco</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> ≥4 conectores avanzados (Furthermore, Nevertheless, Consequently, As a result...)</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 cláusula relativa no definitoria (which/who entre comas)</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 estructura pasiva (It is widely believed... / Measures should be implemented...)</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 condicional complejo o inversión (Were governments to act... / Not only... but also...)</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> Registro consistente: cero lenguaje informal</label>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--txt);margin:4px 0"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 140-190 palabras exactas</label>
+          </div>
+        </div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveW()">✔ Registrar Writing</button></div>
+      </div>
+
+      <div class="step">
+        <h3>Paso 3 — Auditoría y Causa Raíz <span class="t">(15 min)</span></h3>
+        <p style="font-size:13px">Prompt para tu IA: <i>"Actúa como examinador Senior Cambridge B2/C1. Evalúa según Content, Communicative Achievement, Organisation y Language. Nota sobre 20 (máx 5 c/u), errores exactos y versión mejorada C1."</i> — o pegá el texto en <a href="https://writeandimprove.com" target="_blank" style="color:var(--acc)">Write &amp; Improve</a>.</p>
+        <div class="row" style="margin-top:10px">
+          <div><label>Código de error principal</label>
+            <select id="errCode">
+              <option value="L-GAP">L-GAP — no conocías la palabra</option>
+              <option value="G-ERR">G-ERR — regla sintáctica mal aplicada</option>
+              <option value="T-MIS">T-MIS — caíste en el distractor</option>
+              <option value="T-LIM">T-LIM — error por apuro/falta de tiempo</option>
+            </select>
+          </div>
+          <div><label>Nota auditada (opcional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
+        </div>
+        <div><label>¿Qué falló? (1 línea)</label><input type="text" id="errDesc" placeholder="ej: no apliqué inversión con 'Seldom'"></div>
+        <div><label>Acción correctiva inmediata</label><input type="text" id="errFix" placeholder="ej: repasar regla de inversión + hacer 5 KWT más"></div>
+        <div style="margin-top:10px"><button class="btn" onclick="saveErr()">🔖 Guardar error</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESION B -->
+  <div id="sesB">
+    <div class="card">
+      <h2>Sesión B — Procesamiento Auditivo y Simulación Oral <span class="badge fri">VIE 13:00</span></h2>
+      <div class="sub">Objetivo: velocidad de procesamiento auditivo y fluidez verbal sin pausas.</div>
+
+      <div class="step">
+        <h3>Paso 1 — Full Listening Test <span class="t">(30 min · sin pausar el audio)</span></h3>
+        <div class="guide" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;margin:8px 0">
+          📍 <b>Qué reproducir (el audio está acá mismo en la pestaña LIBROS → Material):</b><br>
+          • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf" target="_blank">preguntas PDF</a> + <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3" target="_blank">audio completo</a> + <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf" target="_blank">claves</a><br>
+          • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Listening%202022.pdf" target="_blank">preguntas PDF</a> + audio por partes (part-1 a part-4) + <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf" target="_blank">claves</a> — todo en LIBROS → Material<br>
+          • <b>For Schools 1 y 2:</b> PDFs de Listening + audios en sus carpetas (Material).<br>
+          • <b>Practice Tests Plus / FCE 6:</b> usá el código/audio del libro. <b>Regla:</b> resolvé de corrido, sin pausar. Puntaje sobre 30.
+        </div>
+        <p id="lFocusNote" style="font-size:12.5px;color:var(--mon);margin:6px 0 0"></p>
+        <div class="row">
+          <div><label>Fuente del audio</label>
+            <select id="lFuente">
+              <option value="sample1">Sample Paper 1 (MP3 local)</option>
+              <option value="sample2">Sample Paper 2 (MP3 local)</option>
+              <option value="ptplus">Practice Tests Plus (audio online)</option>
+              <option value="fce6">FCE 6 (CDs)</option>
+            </select>
+          </div>
+          <div><label>Test Nº</label><input type="text" id="lRef" placeholder="ej: Sample 1 / Test 3"></div>
+        </div>
+        <div class="row">
+          <div><label>Aciertos (sobre 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
+          <div><label>Errores en Part 2</label><input type="number" id="lP2" min="0" value="0"></div>
+          <div><label>Minutos</label><input type="number" id="lMin" min="0" value="30"></div>
+        </div>
+        <div style="margin-top:8px"><button class="btn sm" onclick="lTimer.start()">⏱ 30:00</button> <span class="timer" id="lTimer">30:00</span></div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Registrar Listening</button></div>
+      </div>
+
+      <div class="step">
+        <h3>Paso 2 — Post-Mortem Auditivo <span class="t">(10 min)</span></h3>
+        <p style="font-size:13px">Abrí el tapescript SOLO de las que fallaste. Identificá la trampa (distractor textual, vocab nuevo, velocidad) y sumá las palabras a tu libreta de léxico.</p>
+        <div><label>¿Qué te comió? (una por línea, con código)</label><textarea id="pmText" rows="3" placeholder="ej: T-MIS: fecha distractor · L-GAP: 'out of the blue'"></textarea></div>
+      </div>
+
+      <div class="step">
+        <h3>Paso 3 — Speaking Sprint <span class="t">(20 min)</span></h3>
+        <div class="guide" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;margin:8px 0">
+          📍 <b>Visuales para Part 2 (abrí el PDF con las fotos del examen):</b><br>
+          • <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-speaking%20v2.pdf" target="_blank">Speaking Sample 1 PDF</a> · <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-speaking%20v2.pdf" target="_blank">Speaking Sample 2 PDF</a> · For Schools 1 y 2: PDFs de Speaking en sus carpetas.<br>
+          • <b>Long Turn:</b> poné 2 fotos en pantalla, grabate 1 min exacto. Describí AMBAS + especulá: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Prohibido solo describir.<br>
+          • <b>Parts 3-4:</b> la IA (yo) es tu compañero — debatí un diagrama con 5 opciones 3 min y llegá a consenso en el último minuto.
+        </div>
+        <p id="spFocusNote" style="font-size:12.5px;color:var(--mon);margin:6px 0 0"></p>
+        <p style="font-size:13px"><b>Ej. 1 — Part 2 Long Turn:</b> 2 fotos del PDF de Speaking, grabate 1 min exacto comparando y especulando. <i>Prohibido solo describir.</i> <b>Ej. 2 — Parts 3-4:</b> la IA es tu compañero, 3 min de debate y consenso en el último minuto.</p>
+        <div style="margin-top:8px"><button class="btn sm" onclick="sp1.start()">🎙 Part 2 · 01:00</button> <button class="btn sm" onclick="sp2.start()">🤝 Part 3-4 · 03:00</button> <span class="timer" id="spTimer">—</span></div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Part 2: ¿hubo silencios &gt;3s?</label>
+            <select id="spSil"><option value="no">No</option><option value="si">Sí</option></select>
+          </div>
+          <div><label>Part 2: ¿repetiste corrigiendo?</label>
+            <select id="spRep"><option value="si">Sí</option><option value="no">No</option></select>
+          </div>
+          <div><label>¿Completaste Parts 3-4 con IA?</label>
+            <select id="sp34"><option value="si">Sí</option><option value="no">No</option></select>
+          </div>
+        </div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Registrar Speaking</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULACRO COMPLETO -->
+  <div id="sesFull">
+    <div class="card">
+      <h2>🧪 Simulacro Completo (Etapas 1-2)</h2>
+      <div class="sub">Examen entero bajo condiciones reales, para las gates de Maestría.</div>
+      <div class="step">
+        <h3>Reading &amp; Use of English completo <span class="t">(límite: 65 min)</span></h3>
+        <div class="row">
+          <div><label>Fuente</label>
+            <select id="rueFuente">
+              <option value="sample">Sample Paper oficial</option>
+              <option value="ptplus">Practice Tests Plus</option>
+              <option value="fce6">FCE 6</option>
+              <option value="booster">Exam Booster (sin key ⚠️)</option>
+            </select>
+          </div>
+          <div><label>Ref.</label><input type="text" id="rueRef" placeholder="ej: Sample 2"></div>
+        </div>
+        <div class="row">
+          <div><label>Aciertos</label><input type="number" id="rueOk" min="0" value="0"></div>
+          <div><label>Total</label><input type="number" id="rueTotal" min="1" value="52"></div>
+          <div><label>Minutos</label><input type="number" id="rueMin" min="0" value="65"></div>
+        </div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Registrar R&amp;UoE completo</button></div>
+      </div>
+      <div class="step">
+        <h3>Full Writing (Part 1 + Part 2) <span class="t">(límite: 1h 20m)</span></h3>
+        <div class="row">
+          <div><label>Nota texto 1 /20</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
+          <div><label>Nota texto 2 /20</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
+          <div><label>Minutos</label><input type="number" id="fwMin" min="0" value="80"></div>
+        </div>
+        <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Registrar Full Writing</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXAMEN ============ -->
+<section id="v-exam" class="view">
+  <div class="card">
+    <h2>🧪 Modo Examen — Inmersión Real</h2>
+    <div class="sub">Tiempos oficiales Cambridge · condiciones reales: papel y lapicera, sin pausar el audio, sin música, un solo intento.</div>
+    <div class="row">
+      <div><label>Paper a rendir</label>
+        <select id="exPaper" onchange="renderEx()">
+          <option value="rue">Reading &amp; Use of English — 75 min (52 preguntas)</option>
+          <option value="w">Writing — 80 min (2 textos)</option>
+          <option value="l">Listening — 40 min (30 preguntas)</option>
+          <option value="full">EXAMEN COMPLETO — 195 min (todo)</option>
+        </select>
+      </div>
+    </div>
+    <div id="exGuide" class="guide" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;margin:10px 0"></div>
+    <div style="text-align:center;margin:14px 0">
+      <div class="timer" id="exTimer" style="font-size:36px;padding:14px 22px;display:inline-block">01:15:00</div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn" onclick="exStart()">▶ Empezar</button>
+        <button class="btn gray" onclick="exPause()">⏸ Pausar</button>
+        <button class="btn gray" onclick="exReset()">↺ Reiniciar</button>
+      </div>
+    </div>
+    <div id="exRegister" style="display:none;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px">
+      <h3 style="font-size:14px;margin-bottom:6px">📝 Registrá tu resultado</h3>
+      <div id="exRegFields" class="row"></div>
+      <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Guardar resultado</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PARTES ============ -->
+<section id="v-partes" class="view">
+  <div class="card">
+    <h2>🎯 Práctica por parte — TODO el examen</h2>
+    <div class="sub">Los 15 ejercicios de las 4 pruebas. Cada uno con su tiempo objetivo, dónde encontrarlo, y registro de resultado. Los que ya viven en Sesión A/B están marcados.</div>
+    <div id="partsList"></div>
+  </div>
+</section>
+
+<!-- ============ PROGRESO ============ -->
+<section id="v-prog" class="view">
+  <div class="card">
+    <h2>Matriz de Progresión</h2>
+    <div class="sub">Avanzás de etapa solo cuando superás TODAS las gates numéricas. Los datos se calculan solos de tu registro.</div>
+    <div id="gates"></div>
+    <div style="margin-top:12px"><button class="btn" id="advanceBtn" disabled onclick="advanceStage()">⬆ Pasar a la siguiente etapa</button>
+    <button class="btn gray" onclick="stageDown()">⬇ Bajar etapa</button></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn gray" onclick="exportData()">💾 Exportar datos</button>
+      <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Importar datos</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
+    </div>
+    <p style="font-size:11.5px;color:var(--dim);margin-top:8px">Exportá el JSON para respaldar o pasar tus datos de la PC al celular (y viceversa).</p>
+  </div>
+  <div class="card">
+    <h2>Historial</h2>
+    <div class="sub">Todo lo registrado, del más reciente al más viejo.</div>
+    <div style="overflow-x:auto"><table id="logTable"><thead><tr><th>Fecha</th><th>Módulo</th><th>Score</th><th>%</th><th>Min</th><th></th></tr></thead><tbody></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>📈 Estadísticas por ejercicio</h2>
+    <div class="sub">Cuántas veces practicaste cada parte y cómo te fue. Aparecen los ejercicios que ya registraste.</div>
+    <div style="overflow-x:auto"><table id="statsTable"><thead><tr><th>Ejercicio</th><th>Veces</th><th>Promedio</th><th>Mejor</th><th>Última</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ ERRORES ============ -->
+<section id="v-err" class="view">
+  <div class="card">
+    <h2>Registro de Causa Raíz</h2>
+    <div class="sub">Taxonomía: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo).</div>
+    <div id="errList"></div>
+  </div>
+</section>
+
+<!-- ============ PLAN ============ -->
+<section id="v-plan" class="view">
+  <div class="card">
+    <h2>🗓 Plan a largo plazo — editable</h2>
+    <div class="sub">Modificá horarios, duraciones, rotación de ejercicios y criterios de las gates. Todo se aplica al tracker al instante. Cambiá lo que quieras y guardá.</div>
+    <div class="step">
+      <h3>Horarios de sesiones</h3>
+      <div class="row">
+        <div><label>Sesión A (texto) — día</label><select id="pADay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
+        <div><label>Sesión A — hora</label><input type="time" id="pATime"></div>
+      </div>
+      <div class="row">
+        <div><label>Sesión B (auditivo) — día</label><select id="pBDay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
+        <div><label>Sesión B — hora</label><input type="time" id="pBTime"></div>
+      </div>
+    </div>
+    <div class="step">
+      <h3>Duraciones (timers)</h3>
+      <div class="row">
+        <div><label>UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
+        <div><label>Planificar writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
+        <div><label>Escribir (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
+        <div><label>Revisar (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
+      </div>
+      <div class="row">
+        <div><label>Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
+        <div><label>Speaking Part 2 (seg)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
+        <div><label>Speaking Parts 3-4 (seg)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
+      </div>
+      <div class="row">
+        <div><label>Writing — palabras mín</label><input type="number" id="pWMin" min="80" max="200"></div>
+        <div><label>Writing — palabras máx</label><input type="number" id="pWMax" min="100" max="260"></div>
+      </div>
+    </div>
+    <div class="step">
+      <h3>Rotación Use of English</h3>
+      <div class="row">
+        <div><label>Semana PAR →</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select></div>
+        <div><label>Semana IMPAR →</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select></div>
+      </div>
+    </div>
+    <div class="step">
+      <h3>Rotación de ejercicios (ciclos semanales)</h3>
+      <div class="sub">El orden en que rotás los ejercicios semana a semana. Todo automático, pero podés reordenar o sacar ejercicios.</div>
+      <div><label>R&UoE (partes 1-7, en orden)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
+      <div><label>Writing (tipos, en orden)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
+      <div><label>Listening (partes 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
+      <div><label>Speaking (partes 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
+    </div>
+    <div class="step">
+      <h3>Gates — criterios numéricos</h3>
+      <div class="sub">Etapa 0</div>
+      <div class="row">
+        <div><label>Essays consecutivos nota ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
+        <div><label>UoE P4 % en 5 tandas ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
+        <div><label>Listening P2 errores ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
+      </div>
+      <div class="sub">Etapa 1</div>
+      <div class="row">
+        <div><label>Textos (nota ≥, min ≤)</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
+        <div><label>UoE global % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
+        <div><label>Listening score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
+      </div>
+      <div class="sub">Etapa 2</div>
+      <div class="row">
+        <div><label>R&UoE % ≥ y min ≤</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
+        <div><label>Full Writing nota ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
+        <div><label>Listening ≥ (en N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ok" onclick="savePlan()">💾 Guardar plan</button>
+      <button class="btn gray" onclick="resetPlan()">↩ Restaurar plan original</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIBROS ============ -->
+<section id="v-libros" class="view">
+  <div class="card">
+    <h2>📥 Material (PDFs y audio)</h2>
+    <div class="sub">Los PDFs abren en el visor, los audios se reproducen acá. Dinámico: lo que agregues a la carpeta aparece solo.</div>
+    <div id="matList"></div>
+  </div>
+  <div class="card">
+    <h2>🛒 Todos los libros disponibles (precios verificados)</h2>
+    <div class="sub">Filtrá por nombre. Precios chequeados en la página de producto. <span style="color:var(--mon)">Con answers</span> = podés autocorregirte (clave para estudiar solo).</div>
+    <input type="text" id="bookFilter" placeholder="🔍 Buscar libro... (ej: practice, grammar, fce)" style="margin-bottom:10px">
+    <div id="bookList"></div>
+  </div>
+</section>
+</main>
+<footer>B2 First Mastery · Grade A · datos guardados en tu navegador (localStorage)</footer>
+
+<script>
+'use strict';
+/* =====================================================================
+   B2 FIRST TRACKER — Sistema de Alto Rendimiento (Grade A / C1)
+   ---------------------------------------------------------------------
+   ARCHITECTURE
+   Single-file web app (HTML + CSS + JS inline) servida por server.py
+   (portal stdlib Python). TODOS los datos viven en localStorage bajo
+   la clave KEY (abajo). No hay backend de datos: el celular y la PC
+   sincronizan vía Exportar/Importar JSON (PROGRESO).
+
+   DATA MODEL  (D = objeto raíz persistido en localStorage)
+   ---------------------------------------------------------------------
+   D.log[]          → historial de práctica. Cada entrada:
+       {type, date, part?, correct?, total?, min?, score?, kind?, s1?,
+        s2?, p2?, note?, book?, ref?}
+       type: 'ue'  = Use of English (part 1-7)
+             'w'   = Writing (kind: Essay/Article/Report/Review/Email,
+                      score: /20 nota del examinador)
+             'l'   = Listening completo (correct/30, p2 = errores Part 2)
+             'lp'  = Listening por parte (part 1-4)
+             'sp'  = Speaking por parte (part 1-4, sin score)
+             'rue' = R&UoE completo (correct/52) — modo EXAMEN
+             'fw'  = Full Writing (s1+s2 notas) — modo EXAMEN
+   D.errs[]        → registro de errores con taxonomía
+       {date, code (L-GAP/G-ERR/T-MIS/T-LIM), detail}
+   D.stage         → etapa actual 0..2 (avanza con las gates)
+   D.overrides     → gates marcadas manualmente como logradas
+       {`${stage}-${idx}`: true}
+   D.weekOverrides → rotación semanal elegida a mano
+       {rue: part, w: tipo, l: part, sp: part}
+   D.settings      → TODO lo configurable (SETTINGS_DEFAULT abajo):
+       sesA/sesB horarios · duraciones de timers · rango de palabras ·
+       ciclos de rotación (rueCycle/wCycle/lCycle/spCycle) · criterios
+       numéricos de las gates (e0/e1/e2).
+
+   GATES  (etapas → criterios en D.settings)
+   ---------------------------------------------------------------------
+   Etapa 0: 3 gates — Writing nota >= e0.w · UoE Part 4 % >= e0.u ·
+             Listening Part 2 errores <= e0.l
+   Etapa 1: 4 gates — Writing >= e1.w y min <= e1.wm · UoE global % >=
+             e1.u · Listening >= e1.l
+   Etapa 2: 5 gates — R&UoE % >= e2.r y min <= e2.rm · Full Writing >=
+             e2.w · Listening >= e2.l en e2.ln tests seguidos
+   Cada gate tiene checkbox de override manual (D.overrides) por si el
+   criterio no aplica (ej: falta el audio).
+
+   ROTACIÓN SEMANAL
+   ---------------------------------------------------------------------
+   El nº de semana ISO indexa los ciclos (rueCycle/wCycle/lCycle/
+   spCycle) → cada semana toca un ejercicio distinto de cada prueba.
+   Los selects de la tarjeta "Rotación de la semana" permiten override
+   manual persistido en D.weekOverrides (vale para toda la semana).
+
+   MODO EXAMEN
+   ---------------------------------------------------------------------
+   Timers con tiempos reales de Cambridge (R&UoE 75', Writing 80',
+   Listening 40', completo 195'). Al llegar a 0 (o antes, con Empezar
+   + Guardar) registra entradas tipo rue/fw/l que alimentan las gates
+   de Etapa 2.
+   ===================================================================== */
+const KEY='b2first_tracker_v1';
+const SETTINGS_DEFAULT={
+  sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
+  ueMin:10,planMin:5,writeMin:22,revMin:3,listenMin:30,sp1Sec:60,sp2Sec:180,
+  wMin:140,wMax:190,even:3,odd:4,
+  rueCycle:[1,2,3,4,5,6,7],
+  wCycle:['Essay','Article','Report','Review','Email'],
+  lCycle:[1,2,3,4],
+  spCycle:[1,2,3,4],
+  e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:65,w:16,l:26,ln:4}
+};
+let D=load();
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(KEY))||{};
+    d.log=d.log||[];d.errs=d.errs||[];d.stage=d.stage||0;
+    d.settings=Object.assign({},JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),d.settings||{});
+    d.overrides=d.overrides||{};
+    d.weekOverrides=d.weekOverrides||{};
+    return d;
+  }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{}}}
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(D))}
+function today(){return new Date().toISOString().slice(0,10)}
+function isoWeek(d){d=new Date(d);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const wn=new Date(Date.UTC(w.getUTCFullYear(),0,4));return Math.round((((w-wn)/86400000)+wn.getUTCDay()-1)/7)}
+function pad(n){return String(n).padStart(2,'0')}
+function fmtMin(m){return pad(Math.floor(m/60))+':'+pad(m%60)}
+function pct(c,t){return t?Math.round(c/t*100):0}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ---------- TIMER ----------
+   makeTimer(id, minutos) crea un cronómetro COUNTDOWN genérico:
+   - set(m) reinicia a m minutos (en segundos internos)
+   - start() arranca, toggle() pausa/reanuda
+   - al llegar a 0 se detiene solo y el botón vuelve a "Empezar"
+   Los timers de sesión (UoE, planificar/escribir/revisar, listening,
+   speaking) se crean con duraciones por defecto pero leen SIEMPRE
+   D.settings al arrancar (applyTimers) → respetan la config del PLAN. */
+function makeTimer(elId,dur){
+  let left=dur*60,iv=null,el=document.getElementById(elId);
+  function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+  return{
+    start(){if(iv){clearInterval(iv);iv=null;render();return}iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null;left=0}render()},1000);render()},
+    set(s){left=s*60;render()}
+  }
+}
+const ueTimer=makeTimer('ueTimer',10);
+const lTimer=makeTimer('lTimer',30);
+let wTimerEl,wMode='plan',wPlan,wWrite,wRev;
+(function(){let left=0,iv=null,el=document.getElementById('wTimer');
+function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.planMin*60;render()}};
+wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.writeMin*60;render()}};
+wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.revMin*60;render()}};
+function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}})();
+let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(D.settings.sp1Sec)}};sp2={start(){run(D.settings.sp2Sec)}}})();
+function applyTimers(){ueTimer.set(D.settings.ueMin);lTimer.set(D.settings.listenMin);}
+
+/* ---------- SAVE HANDLERS ----------
+   Cada form de sesión tiene su saveXXX():
+   - saveUE: Use of English (parte elegida en uePart, correcto/total)
+   - saveWR: Sprint de redacción (kind + words + autoeval + nota final)
+   - saveL:  Listening completo (correct/30 + errores Part 2)
+   - saveSP: Speaking (se auto-registra al tocar "Terminar")
+   - saveFull: simulacro completo (R&UoE 52 + 2 textos + listening)
+   Todas: validan, pushean a D.log con fecha de hoy y refreshAll().
+   pct(a,b) = porcentaje redondeado (para % y gates). */
+function log(e){D.log.push(Object.assign({date:today()},e));D.log.sort((a,b)=>b.date.localeCompare(a.date));save();refreshAll()}
+function saveUE(){
+  const correct=+document.getElementById('ueOk').value,total=+document.getElementById('ueTotal').value;
+  if(!total){alert('Poné el total de preguntas');return}
+  log({type:'ue',part:+document.getElementById('uePart').value,book:document.getElementById('ueFuente').value,ref:document.getElementById('ueRef').value,correct,total,min:+document.getElementById('ueMin').value});
+  document.getElementById('ueOk').value=0;document.getElementById('ueRef').value='';
+}
+function saveW(){
+  const score=+document.getElementById('wScore').value;
+  if(!score){alert('Poné la nota (0-20)');return}
+  log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length});
+  document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
+  document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
+}
+function saveL(){
+  const correct=+document.getElementById('lOk').value;
+  if(!correct&&correct!==0){alert('Poné aciertos');return}
+  log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min:+document.getElementById('lMin').value});
+  document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
+}
+function saveSP(){
+  log({type:'sp',sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,p34:document.getElementById('sp34').value});
+}
+function saveRUE(){
+  const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
+  if(!total){alert('Poné el total');return}
+  log({type:'rue',book:document.getElementById('rueFuente').value,ref:document.getElementById('rueRef').value,correct,total,min:+document.getElementById('rueMin').value});
+  document.getElementById('rueOk').value=0;document.getElementById('rueRef').value='';
+}
+function saveFW(){
+  const a=+document.getElementById('fw1').value,b=+document.getElementById('fw2').value;
+  if(!a&&!b){alert('Poné al menos una nota');return}
+  log({type:'fw',s1:a,s2:b,min:+document.getElementById('fwMin').value});
+  document.getElementById('fw1').value='';document.getElementById('fw2').value='';
+}
+function saveErr(){
+  const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
+  if(!desc){alert('Describí el error');return}
+  D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix').value});
+  save();refreshAll();
+  document.getElementById('errDesc').value='';document.getElementById('errFix').value='';
+}
+function delLog(i){D.log.splice(i,1);save();refreshAll()}
+function delErr(i){D.errs.splice(i,1);save();refreshAll()}
+
+/* ---------- GATES ----------
+   calcGates() evalúa las 3 etapas contra D.log usando los criterios de
+   D.settings (e0/e1/e2). Devuelve {stage, done, pct, groups[]} donde
+   groups[stage] es la lista de gates de cada etapa: cada gate es
+   {label, ok, info} — ok = criterio cumplido.
+   renderGates() pinta la etapa actual + barra de progreso, el botón
+   "avanzar" (solo si TODAS ok) y checkboxes de override manual que
+   persisten en D.overrides. advanceStage()/stageDown() mueven la etapa. */
+function avg(es){if(!es.length)return null;return es.reduce((s,e)=>s+e.correct/e.total,0)/es.length*100}
+function lastN(type,n){return D.log.filter(e=>e.type===type).slice(0,n)}
+function gate(cond){return cond?{pass:true,val:1}:{pass:false,val:0}}
+function calcGates(){
+  const s=D.settings;
+  const w=D.log.filter(e=>e.type==='w').sort((a,b)=>a.date.localeCompare(b.date));
+  let streak=0,best=0;for(const e of w){streak=e.score>=s.e0.w?streak+1:0;best=Math.max(best,streak)}
+  const wE1=D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm).length;
+  const ue4=lastN('ue',5).filter(e=>e.part===4);
+  const ue4a=avg(ue4);
+  const ueAll=avg(D.log.filter(e=>e.type==='ue'));
+  const l3=lastN('l',3);
+  const l4=lastN('l',4);
+  const l3ok=l3.length===3&&l3.every(e=>e.correct>=s.e1.l);
+  const lP2=l3.filter(e=>e.p2!==undefined&&e.p2<=s.e0.l);
+  const lP2ok=l3.length>=3&&l3.slice(0,3).every(e=>e.p2!==undefined&&e.p2<=s.e0.l);
+  const l4ok=l4.length>=s.e2.ln&&l4.slice(0,s.e2.ln).every(e=>e.correct>=s.e2.l);
+  const rue=D.log.filter(e=>e.type==='rue').filter(e=>e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
+  const fw=D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
+  const gates=[
+    {name:'4 Essays consecutivos ≥ '+s.e0.w+'/20',ok:best>=4,val:Math.min(best/4,1),txt:`racha actual: ${best}/4`},
+    {name:'UoE Part 4 ≥ '+s.e0.u+'% en 5 tandas',ok:ue4a!==null&&ue4a>=s.e0.u,val:ue4a?Math.min(ue4a/s.e0.u,1):0,txt:ue4a?`promedio últimas 5: ${ue4a.toFixed(0)}%`:'falta registro (5 tandas)'},
+    {name:'Listening Part 2 ≤ '+s.e0.l+' errores en 3 tests',ok:lP2ok,val:lP2.length/3,txt:`tests con ≤${s.e0.l} err: ${lP2.length}/3`},
+    {name:'6 textos (Part 1 y 2) ≤'+s.e1.wm+' min con nota ≥'+s.e1.w+'/20',ok:wE1>=6,val:Math.min(wE1/6,1),txt:`cumplen: ${wE1}/6`},
+    {name:'Use of English (Parts 1-4) ≥ '+s.e1.u+'% global',ok:ueAll!==null&&ueAll>=s.e1.u,val:ueAll?Math.min(ueAll/s.e1.u,1):0,txt:ueAll?`global: ${ueAll.toFixed(0)}%`:'sin registros'},
+    {name:'Listening completo ≥'+s.e1.l+'/30 en 3 tests consecutivos',ok:l3ok,val:l3.length/3,txt:`tests: ${l3.length}/3`},
+    {name:'R&UoE completo ≤'+s.e2.rm+' min con ≥'+s.e2.r+'%',ok:rue.length>=1,val:Math.min(rue.length/1,1),txt:`aprobados: ${rue.length}`},
+    {name:'Full Writing (1h20m) ambos textos ≥'+s.e2.w+'/20',ok:fw.length>=1,val:Math.min(fw.length/1,1),txt:`aprobados: ${fw.length}`},
+    {name:'Listening ≥'+s.e2.l+'/30 en '+s.e2.ln+' exámenes consecutivos',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`}
+  ];
+  return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5]],[gates[6],gates[7],gates[8]]]};
+}
+const STAGE_NAMES=['Etapa 0 — Cimientos','Etapa 1 — Precisión','Etapa 2 — Maestría (Grade A)'];
+const STAGE_FOCUS=['Estructura del Essay y deducción de patrones gramaticales.','Reducción de tiempos y dominio de formatos de Part 2 (Reports/Articles).','Simulacros en tiempo real bajo condiciones de fatiga.'];
+
+function renderGates(){
+  const calc=calcGates(),st=Math.min(D.stage,2);
+  const gates=calc.groups[st];
+  const el=document.getElementById('gates');
+  el.innerHTML=`<div style="background:var(--panel2);border-radius:10px;padding:12px;margin-bottom:12px">
+    <b style="color:var(--acc)">${STAGE_NAMES[st]}</b>
+    <div style="font-size:12.5px;color:var(--dim)">${STAGE_FOCUS[st]}</div></div>`+
+    gates.map((x,i)=>{
+      const key=st+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
+      return `<div class="gate ${ok?'pass':'fail'}">
+      <h4><span>${x.name}</span><span style="color:${ok?'var(--ok)':'var(--dim)'};font-size:11.5px">${x.txt}</span></h4>
+      <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
+      <label style="font-size:11.5px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:6px"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> marcar como lograda manualmente</label>
+    </div>`}).join('');
+  const allOk=gates.every(x=>D.overrides[st+'-'+gates.indexOf(x)]||x.ok);
+  document.getElementById('advanceBtn').disabled=!allOk;
+  document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Pasar a '+(STAGE_NAMES[st+1]||'🎓 COMPLETADO'):'🎓 COMPLETASTE TODO'):'⬆ Completá todas las gates para avanzar';
+  document.getElementById('stageBadge').textContent=STAGE_NAMES[st]+(allOk?' ✓':'');
+}
+function toggleOverride(key,on){if(on)D.overrides[key]=true;else delete D.overrides[key];save();renderGates()}
+function advanceStage(){
+  if(D.stage<2)D.stage++;
+  save();refreshAll();
+}
+function stageDown(){
+  if(D.stage>0)D.stage--;
+  save();refreshAll();
+}
+function exportData(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(D,null,2));
+  a.download='b2first-backup-'+today()+'.json';a.click();
+}
+function importData(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;save();refreshAll();alert('Datos importados ✓');}catch(e){alert('Archivo inválido');}};
+  r.readAsText(f);ev.target.value='';
+}
+function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
+document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCount));
+/* ---------- PLAN ----------
+   Vista de configuración a largo plazo (todo lo de SETTINGS_DEFAULT
+   editable por el usuario):
+   - renderPlan(): carga los valores actuales en los inputs
+   - savePlan():   lee los inputs, valida ciclos (filtra partes fuera
+                   de rango), persiste y re-aplica timers + rotación
+   - resetPlan():  restaura SETTINGS_DEFAULT (con confirm)
+   - applyTimers(): re-inicializa los cronómetros con las duraciones
+                   guardadas (se llama al guardar y al cargar). */
+function renderPlan(){
+  const s=D.settings;
+  document.getElementById('pADay').value=s.sesA.day;document.getElementById('pATime').value=s.sesA.time;
+  document.getElementById('pBDay').value=s.sesB.day;document.getElementById('pBTime').value=s.sesB.time;
+  document.getElementById('pUeMin').value=s.ueMin;document.getElementById('pPlanMin').value=s.planMin;
+  document.getElementById('pWriteMin').value=s.writeMin;document.getElementById('pRevMin').value=s.revMin;
+  document.getElementById('pListenMin').value=s.listenMin;document.getElementById('pSp1Sec').value=s.sp1Sec;document.getElementById('pSp2Sec').value=s.sp2Sec;
+  document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
+  document.getElementById('pEven').value=s.even;document.getElementById('pOdd').value=s.odd;
+  document.getElementById('pRueCycle').value=s.rueCycle.join(',');
+  document.getElementById('pWCycle').value=s.wCycle.join(',');
+  document.getElementById('pLCycle').value=s.lCycle.join(',');
+  document.getElementById('pSpCycle').value=s.spCycle.join(',');
+  document.getElementById('pE0w').value=s.e0.w;document.getElementById('pE0u').value=s.e0.u;document.getElementById('pE0l').value=s.e0.l;
+  document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
+  document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
+}
+function savePlan(){
+  const s=D.settings,g=id=>document.getElementById(id).value;
+  s.sesA.day=+g('pADay')||1;s.sesA.time=g('pATime')||s.sesA.time;
+  s.sesB.day=+g('pBDay')||5;s.sesB.time=g('pBTime')||s.sesB.time;
+  s.ueMin=+g('pUeMin')||10;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||22;s.revMin=+g('pRevMin')||3;
+  s.listenMin=+g('pListenMin')||30;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
+  s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
+  s.even=+g('pEven')||3;s.odd=+g('pOdd')||4;
+  s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];
+  s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];
+  s.lCycle=String(g('pLCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.lCycle.length)s.lCycle=[1,2,3,4];
+  s.spCycle=String(g('pSpCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.spCycle.length)s.spCycle=[1,2,3,4];
+  s.e0.w=+g('pE0w')||14;s.e0.u=+g('pE0u')||60;s.e0.l=+g('pE0l')||3;
+  s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
+  s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||65;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
+  save();applyTimers();refreshAll();alert('Plan guardado ✓');
+}
+function resetPlan(){
+  if(!confirm('¿Restaurar el plan original? Se pierden tus cambios.'))return;
+  D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+  save();renderPlan();applyTimers();refreshAll();
+}
+
+/* ---------- EXAMEN + PARTES ----------
+   MODO EXAMEN (inmersión real): EX_DUR = duraciones oficiales en
+   segundos. renderEx() cambia guía + campos de registro según el paper
+   elegido; exStart()/exPause()/exReset() controlan el countdown;
+   exTick() pinta el reloj, avisa a 10' y 5' (alert) y colorea el timer
+   (rojo <10', ámbar <20'); al llegar a 0 muestra el registro.
+   exSave() convierte el resultado en entradas tipo rue/fw/l.
+
+   PARTES: PARTS[] = catálogo de los 15 ejercicios del examen (7 UoE +
+   4 Listening + 4 Speaking) con preguntas, tiempo objetivo y dónde
+   encontrarlos. renderParts() los pinta agrupados por prueba;
+   savePart(i) registra la entrada en D.log (ue/lp/sp). */
+const EX_DUR={rue:75*60,w:80*60,l:40*60,full:195*60};
+let exLeft=75*60,exIv=null,exPaper='rue';
+function renderEx(){
+  exPaper=document.getElementById('exPaper').value;
+  exReset();
+  const g=document.getElementById('exGuide');
+  const L=(t,h)=>`<a href="${h}" target="_blank">${t}</a>`;
+  if(exPaper==='rue')g.innerHTML=`<b>📖 Abrí:</b> ${L('R&UoE Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf')}.<br><b>⏱ Distribución:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 preguntas. <b>Claves:</b> ${L('Sample 1 keys','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('Sample 2 keys','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}`;
+  else if(exPaper==='w')g.innerHTML=`<b>✍️ Abrí:</b> ${L('Writing Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf')}.<br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' escribir) → Part 2 a elección (5' + 30') → 5' de revisión. 140-190 palabras por texto. Model answers en los libros con key.`;
+  else if(exPaper==='l')g.innerHTML=`<b>🎧 Abrí:</b> ${L('preguntas Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf')} + ${L('audio completo','/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3')} · Sample 2: preguntas + audio por partes (LIBROS → Material) · <b>Claves:</b> ${L('S1','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('S2','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}.<br><b>⏱ Ritmo:</b> 30 preguntas, ~40 min con lectura previa. NUNCA pausar el audio.`;
+  else g.innerHTML=`<b>🕒 Secuencia del día de examen (195 min):</b><br>1️⃣ R&UoE 75' → pausa 2'<br>2️⃣ Writing 80' → pausa 5'<br>3️⃣ Listening 40'<br><b>Material:</b> los links de arriba en ese orden (R&UoE → Writing → Listening). Cerrá todo lo demás.`;
+  const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
+  if(exPaper==='rue')f.innerHTML=`<div><label>Aciertos R&UoE (máx 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutos usados</label><input type="number" id="exMin" min="0"></div>`;
+  else if(exPaper==='w')f.innerHTML=`<div><label>Nota texto 1 /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Nota texto 2 /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutos</label><input type="number" id="exMin" min="0"></div>`;
+  else if(exPaper==='l')f.innerHTML=`<div><label>Aciertos (máx 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Errores Part 2</label><input type="number" id="exP2" min="0"></div><div><label>Minutos</label><input type="number" id="exMin" min="0"></div>`;
+  else f.innerHTML=`<div><label>Aciertos R&UoE (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Nota texto 1</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Nota texto 2</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Aciertos Listening (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Minutos totales</label><input type="number" id="exMin" min="0"></div>`;
+  reg.style.display='none';
+}
+function exStart(){
+  if(exIv){exPause();return}
+  exIv=setInterval(()=>{exLeft--;exTick();if(exLeft<=0){clearInterval(exIv);exIv=null;exTick();document.getElementById('exRegister').style.display='block';}},1000);
+  exTick();
+}
+function exPause(){if(exIv){clearInterval(exIv);exIv=null;exTick()}}
+function exReset(){if(exIv){clearInterval(exIv);exIv=null}exLeft=EX_DUR[document.getElementById('exPaper').value];exTick()}
+function exTick(){
+  const el=document.getElementById('exTimer');
+  el.textContent=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
+  el.classList.toggle('running',!!exIv);
+  el.style.color=(exIv&&exLeft<600)?'var(--bad)':(exIv&&exLeft<1200)?'var(--warn)':'';
+  if(exIv&&exLeft===600)alert('⏰ 10 minutos restantes');
+  if(exIv&&exLeft===300)alert('⏰ 5 minutos restantes');
+}
+function exSave(){
+  const v=id=>{const e=document.getElementById(id);return e?+e.value||0:0};
+  const min=v('exMin')||Math.max(0,Math.round((EX_DUR[exPaper]-exLeft)/60))||0;
+  if(exPaper==='rue')log({type:'rue',book:'examen',ref:'modo examen',correct:v('exOk'),total:52,min});
+  else if(exPaper==='w')log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});
+  else if(exPaper==='l')log({type:'l',book:'examen',ref:'modo examen',correct:v('exOk'),total:30,p2:v('exP2'),min});
+  else{log({type:'rue',book:'examen',ref:'completo',correct:v('exOk'),total:52,min});log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});log({type:'l',book:'examen',ref:'completo',correct:v('exLOk'),total:30,p2:0,min});}
+  document.getElementById('exRegister').style.display='none';exReset();alert('Resultado guardado ✓');
+}
+const PARTS=[
+ {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
+ {g:'Reading & Use of English',n:2,t:'Open cloze',q:8,min:8,type:'ue',note:''},
+ {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Ya está en Sesión A (semana par)'},
+ {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Ya está en Sesión A (semana impar)'},
+ {g:'Reading & Use of English',n:5,t:'Multiple choice (2 textos)',q:6,min:20,type:'ue',note:''},
+ {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:20,type:'ue',note:''},
+ {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:20,type:'ue',note:''},
+ {g:'Listening',n:1,t:'Short extracts (3 opciones)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (LIBROS → Material)'},
+ {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · la gate de Etapa 0 controla tus errores acá'},
+ {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
+ {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
+ {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Preguntas personales con la IA o la profe'},
+ {g:'Speaking',n:2,t:'Long turn (comparar fotos)',q:0,min:1,type:'sp',note:'Ya está en Sesión B'},
+ {g:'Speaking',n:3,t:'Collaborative task (5 opciones)',q:0,min:3,type:'sp',note:'Ya está en Sesión B'},
+ {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Ya está en Sesión B'}
+];
+function renderParts(){
+  const el=document.getElementById('partsList');
+  let html='',last='';
+  PARTS.forEach((p,i)=>{
+    if(p.g!==last){html+=`<h3 class="folder" style="color:var(--acc);font-size:15px;margin:16px 0 6px">${p.g}</h3>`;last=p.g}
+    const donde=p.type==='ue'?`R&UoE Sample 1/2 y FS1/2 (LIBROS → Material) — Parte ${p.n} dentro del PDF`
+      :p.type==='lp'?`Preguntas Listening Sample 2 + audio part-${p.n} (LIBROS → Material)`
+      :'Visuales en los PDFs de Speaking (LIBROS → Material)';
+    html+=`<div class="step">
+      <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' preguntas · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
+      ${p.note?`<p style="font-size:12px;color:var(--mon)">${p.note}</p>`:''}
+      <p style="font-size:12px;color:var(--dim)">📍 ${donde}</p>
+      ${p.type!=='sp'?`<div class="row" style="margin-top:6px">
+        <div><label>Aciertos</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
+        <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
+        <div><label>Minutos</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
+        <div style="align-self:flex-end"><button class="btn ok" onclick="savePart(${i})">✔ Registrar</button></div>
+      </div>`:`<div style="margin-top:6px"><button class="btn ok" onclick="savePart(${i})">✔ Lo practiqué</button></div>`}
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function savePart(i){
+  const p=PARTS[i];
+  if(p.type==='sp'){log({type:'sp',part:p.n,note:p.t});return}
+  const ok=+document.getElementById('ptOk'+i).value,tot=+document.getElementById('ptTot'+i).value,min=+document.getElementById('ptMin'+i).value;
+  if(!tot){alert('Poné el total');return}
+  log({type:p.type,part:p.n,correct:ok,total:tot,min,note:p.t});
+}
+
+/* ---------- LOG TABLE + STATS ----------
+   renderLog(): pinta D.log (nuevo → viejo) en la tabla con la columna
+   de Score según el tipo. editLog(i)/saveEdit(i)/cancelEdit(i):
+   edición inline de fecha y números de una entrada (lápiz).
+   renderStats(): agrega por ejercicio — cuántas veces, promedio %,
+   mejor y última — para UoE P1-7, Listening P1-4, Writing por tipo,
+   R&UoE completo y Listening completo (solo los con datos). */
+const MOD={
+  ue:e=>`UoE P${e.part}`,
+  w:e=>`Writing ${e.kind}`,
+  l:e=>`Listening ${e.ref||''}`,
+  lp:e=>`Listening P${e.part}`,
+  sp:e=>`Speaking P${e.part||''}`,
+  rue:e=>`R&UoE completo`,
+  fw:e=>`Full Writing`
+};
+function renderLog(){
+  const tb=document.querySelector('#logTable tbody');
+  if(!D.log.length){tb.innerHTML='<tr><td colspan="6" class="empty">Todavía no registraste nada. Arrancá en HOY.</td></tr>';return}
+  tb.innerHTML=D.log.map((e,i)=>`<tr>
+    <td>${e.date}</td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td>
+    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'hecho':(e.correct+'/'+e.total)}</td>
+    <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'?'':pct(e.correct,e.total)+'%'}</td>
+    <td>${e.min??''}</td>
+    <td><button class="del" onclick="editLog(${i})" title="Editar">✎</button> <button class="del" onclick="delLog(${i})" title="Borrar">✕</button></td>
+  </tr>`).join('');
+}
+function editLog(i){
+  const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
+  if(!tr)return;
+  if(e.type==='sp'){alert('Speaking no tiene campos numéricos para editar — borralo y volvé a registrarlo.');return}
+  let fields='';
+  if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:10px">nota/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:10px">texto1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:10px">texto2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:10px">aciertos</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:10px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  tr.innerHTML=`<td><input type="date" id="edDate" value="${e.date}"></td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td><td>${fields}</td><td></td><td></td>
+    <td><button class="del" onclick="saveEdit(${i})" title="Guardar">💾</button> <button class="del" onclick="refreshAll()">✕</button></td>`;
+}
+function saveEdit(i){
+  const e=D.log[i];
+  const v1=+document.getElementById('ed1').value;
+  const v2=document.getElementById('ed2')?+document.getElementById('ed2').value:null;
+  const vm=document.getElementById('edMin')?+document.getElementById('edMin').value:null;
+  const vd=document.getElementById('edDate').value;
+  if(e.type==='w'){e.score=v1;e.min=vm}
+  else if(e.type==='fw'){e.s1=v1;e.s2=v2;e.min=vm}
+  else{e.correct=v1;e.total=v2;e.min=vm}
+  if(vd)e.date=vd;
+  save();refreshAll();
+}
+
+function renderStats(){
+  const rows=[];
+  const row=(name,es,type)=>{
+    if(!es.length)return;
+    const vals=es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100);
+    rows.push(`<tr><td>${name}</td><td>${es.length}</td><td>${Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)}%</td><td>${Math.round(Math.max(...vals))}%</td><td>${Math.round(vals[0])}%</td></tr>`);
+  };
+  for(let i=1;i<=7;i++)row('UoE P'+i+' — '+partName(i),D.log.filter(e=>e.type==='ue'&&e.part===i));
+  for(let i=1;i<=4;i++)row('Listening P'+i,D.log.filter(e=>e.type==='lp'&&e.part===i));
+  ['Essay','Article','Report','Review','Email'].forEach(k=>row('Writing '+k,D.log.filter(e=>e.type==='w'&&e.kind===k)));
+  const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('R&UoE completo',rue);
+  const l=D.log.filter(e=>e.type==='l');if(l.length)row('Listening completo',l);
+  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">practicado</td></tr>`)}
+  document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="empty">Sin datos todavía — registrá ejercicios y acá vas a ver tu evolución.</td></tr>';
+}
+
+/* ---------- ERRORS ----------
+   Registro de errores con taxonomía de causa raíz (L-GAP laguna
+   léxica, G-ERR regla mal aplicada, T-MIS trap textual, T-LIM error
+   por apuro). renderErrs() lista + borrado individual + clear. */
+function renderErrs(){
+  const el=document.getElementById('errList');
+  if(!D.errs.length){el.innerHTML='<div class="empty">Sin errores registrados. Cada fallo que anotes te acerca al Grade A.</div>';return}
+  el.innerHTML=D.errs.map((e,i)=>`<div class="card" style="padding:12px">
+    <span class="pill ${e.code}">${e.code}</span> <span style="font-size:12px;color:var(--dim)">${e.date}</span>
+    <div style="margin-top:6px">${esc(e.desc)}</div>
+    ${e.fix?`<div style="font-size:12.5px;color:var(--mon);margin-top:4px">→ ${esc(e.fix)}</div>`:''}
+    <button class="del" style="float:right" onclick="delErr(${i})">✕</button>
+  </div>`).join('');
+}
+
+/* ---------- BOOKS + MATERIAL ----------
+   BUY_BOOKS: los 25 libros recomendados (precios verificados en la
+   página de producto; ML y Buscalibre) con buscador en vivo.
+   MATERIAL: catálogo de archivos servidos por /libros.json (el server
+   escanea ~/Descargas/b2-first dinámicamente). renderMaterial() pinta
+   PDFs (abrir/descargar) y audios (reproductor inline). */
+const BUY_BOOKS=[
+ {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$43.900',u:'https://www.mercadolibre.com.ar/practice-tests-plus-b2-first-volume-1-book-with-key-de-kenny-nick-editorial-pearson-tapa-blanda-en-ingles-internacional-2019/p/MLA26577198',src:'MercadoLibre',use:'Simulacros · Listening · Writing'},
+ {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos'},
+ {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$79.594',u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas'},
+ {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros'},
+ {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra'},
+ {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra'},
+ {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros'},
+ {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE'},
+ {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$29.900',u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book-hart-cambridge/p/MLA70873732',src:'MercadoLibre',use:'Curso + UoE'},
+ {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital'},
+ {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full'},
+ {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)'},
+ {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado'},
+ {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros'},
+ {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)'},
+ {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$34.369',u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso'},
+ {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros'},
+ {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$46.140',u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4'},
+ {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$46.846',u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4'},
+ {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas.',p:'$47.280',u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros'},
+ {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros'},
+ {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$56.874',u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros'},
+ {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$80.847',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles'},
+ {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$103.211',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso'},
+ {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$147.912',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta'}
+];
+let MATERIALS=[];
+function renderMaterial(){
+  const el=document.getElementById('matList');
+  if(!MATERIALS.length){el.innerHTML='<div class="empty">Cargando material... (en la versión web http://100.112.213.66:8088 se carga solo; si abriste el archivo local no hay PDFs)</div>';return}
+  const groups={};
+  MATERIALS.forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
+  el.innerHTML=Object.keys(groups).map(f=>{
+    const items=groups[f].map(m=>m.ext==='AUDIO'
+      ?`<div class="book"><div class="ico">🎧</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div></div>`
+      :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn" style="text-decoration:none">Abrir PDF</a> <a class="dl" href="${m.href}" download>Descargar</a></div></div>`).join('');
+    return `<h3 class="folder" style="color:var(--acc);font-size:14px;margin:10px 0 6px">${esc(f)}</h3>${items}`;
+  }).join('');
+}
+function fmtSize(n){
+  if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return n.toFixed(1)+' MB';
+}
+function renderBooks(){
+  const q=(document.getElementById('bookFilter').value||'').toLowerCase().trim();
+  const list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
+  const el=document.getElementById('bookList');
+  if(!list.length){el.innerHTML='<div class="empty">Sin resultados para "'+esc(q)+'"</div>';return}
+  el.innerHTML=list.map(b=>`<div class="book">
+    <div class="ico">${b.i||'📖'}</div>
+    <div style="flex:1">
+      <b>${b.n}</b>
+      <div class="meta">${b.m}</div>
+      <div class="meta"><span style="color:var(--acc)">${b.src}</span> · usalo en: ${b.use}</div>
+      <a href="${b.u}" target="_blank">Ver oferta →</a>
+    </div>
+    <div class="price">${b.p}</div>
+  </div>`).join('');
+}
+
+/* ---------- TODAY VIEW ----------
+   renderToday(): banner de "qué toca hoy" + tarjeta de ROTACIÓN.
+   La rotación indexa los ciclos de D.settings con el nº de semana ISO
+   (autoRue/autoW/autoL/autoSp) y aplica overrides manuales de
+   D.weekOverrides si existen. Después preselecciona: el select de
+   parte del Paso 1 (uePart), el tipo de texto del Writing (wTipo), y
+   escribe los enfoques de Listening/Speaking de Sesión B.
+   setOv(k,v): guarda un override de rotación para la semana. */
+const DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
+function renderToday(){
+  const d=new Date(),wd=d.getDay();
+  const week=isoWeek(d);
+  const s=D.settings;
+  const autoRue=s.rueCycle[week%s.rueCycle.length],autoW=s.wCycle[week%s.wCycle.length],autoL=s.lCycle[week%s.lCycle.length],autoSp=s.spCycle[week%s.spCycle.length];
+  const wov=D.weekOverrides||{};
+  const rue=wov.rue||autoRue,wT=wov.w||autoW,lP=wov.l||autoL,spP=wov.sp||autoSp;
+  const ovRue=document.getElementById('ovRue');
+  ovRue.innerHTML=[1,2,3,4,5,6,7].map(p=>`<option value="${p}" ${p==rue?'selected':''}>P${p} — ${partName(p)}</option>`).join('');
+  const ovW=document.getElementById('ovW');
+  ovW.innerHTML=s.wCycle.map(t=>`<option ${t==wT?'selected':''}>${t}</option>`).join('');
+  const ovL=document.getElementById('ovL');
+  ovL.innerHTML=[1,2,3,4].map(p=>`<option value="${p}" ${p==lP?'selected':''}>P${p}</option>`).join('');
+  const ovSp=document.getElementById('ovSp');
+  ovSp.innerHTML=[1,2,3,4].map(p=>`<option value="${p}" ${p==spP?'selected':''}>P${p}</option>`).join('');
+  document.getElementById('uePart').value=rue;
+  document.getElementById('semanaTxt').textContent='Part '+rue+' — '+partName(rue)+(wov.rue?' (elegido manualmente)':' (auto, rotación)');
+  document.getElementById('wTipo').value=wT;
+  document.getElementById('wWords').min=s.wMin;document.getElementById('wWords').max=s.wMax;
+  document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
+  document.getElementById('lFocusNote').textContent='🎯 Enfoque semanal: Listening Part '+lP+' — practicá esa parte en PARTES, o el test completo acá.';
+  document.getElementById('spFocusNote').textContent='🎯 Enfoque semanal: Speaking Part '+spP+' — con la IA o la profe.';
+  const nb=document.getElementById('nextBox');
+  const DIA=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const aDay=s.sesA.day,bDay=s.sesB.day;
+  if(wd===aDay)nb.innerHTML=`<div class="big">📝 Hoy (${DIA[wd]}): <b style="color:var(--mon)">Sesión A — Ingeniería de Texto</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Rotación: R&UoE P${rue} · Writing ${wT}. Las sesiones están todas disponibles abajo — hacelas cuando quieras.</div>`;
+  else if(wd===bDay)nb.innerHTML=`<div class="big">🎧 Hoy (${DIA[wd]}): <b style="color:var(--fri)">Sesión B — Procesamiento Auditivo</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Rotación: Listening P${lP} · Speaking P${spP}. Las sesiones están todas disponibles abajo — hacelas cuando quieras.</div>`;
+  else{
+    const toA=(aDay-wd+7)%7||7,toB=(bDay-wd+7)%7||7;
+    const next=toA<=toB?`${DIA[aDay]} (en ${toA}d) — Sesión A`:`${DIA[bDay]} (en ${toB}d) — Sesión B`;
+    nb.innerHTML=`<div class="big">🗓 Sin sesión programada hoy</div><div class="when">Próxima: <b>${next}</b>. Rotación: R&UoE P${rue} · Writing ${wT} · Listening P${lP} · Speaking P${spP}. Podés adelantar lo que quieras.</div>`;
+  }
+}
+function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
+
+/* ---------- NAV + INIT ----------
+   Las 7 vistas (hoy/exam/partes/prog/plan/err/libros) se alternan
+   con la clase .active en <nav> y <section>.
+   refreshAll() es el render central: lo llama TODO guardado/cambio.
+   loadMaterial() trae el catálogo de archivos del server y al fallar
+   (ej: abierto como file:// sin server) usa una lista mínima local.
+   init: setea listeners, aplica timers del PLAN, y refresca todo. */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+b.dataset.view).classList.add('active');
+});
+
+function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderMaterial();rubCount();renderPlan();renderEx();renderParts()}
+function loadMaterial(){
+  fetch('/libros.json').then(r=>r.json()).then(data=>{
+    MATERIALS=data;renderMaterial();
+  }).catch(()=>{ /* modo archivo local: sin material dinámico */ });
+}
+document.getElementById('bookFilter').addEventListener('input',renderBooks);
+loadMaterial();
+applyTimers();
+refreshAll();
+</script>
+</body>
+</html>
