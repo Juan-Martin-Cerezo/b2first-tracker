@@ -24,7 +24,7 @@ catálogo de material (PDFs + audio) servido desde la misma Pi.
                                       (6 exámenes oficiales + handbook)
 ```
 
-- **Frontend**: `index.html` — app single-file (HTML + CSS + JS inline, ~1.300 líneas). Cero dependencias, cero frameworks. Datos en `localStorage` (clave `b2first_tracker_v1`) + **sincronización con la Pi**.
+- **Frontend**: `index.html` — app single-file (HTML + CSS + JS inline, ~1.300 líneas). Cero dependencias, cero frameworks. Datos en `localStorage` (clave `b2first_tracker_v1`) + **sincronización con la Pi**. Diseño v2: tema oscuro con acento índigo, tipografía Inter, tarjetas y tabs rediseñadas (misma funcionalidad).
 - **Backend**: `server.py` — HTTP server **solo stdlib** (sin pip install). Sirve el tracker, el material y el JSON del catálogo.
 - **Persistencia**: el progreso se guarda en la Pi (`data/progress.json`) con **backups automáticos** en `data/backups/` (último que guarda gana). Cada `save()` del tracker hace push a la Pi; al abrir la página se baja lo más reciente. El estado se ve en el footer (✔ sincronizado / ⚠ modo local).
 - **Servicio**: `b2first.service` — unidad systemd (Restart=always), corre desde este repo.

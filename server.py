@@ -176,28 +176,33 @@ def portal():
     return f'''<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Material B2 First</title><style>
-:root{{--bg:#0f1117;--panel:#171a23;--panel2:#1e2230;--line:#2a2f42;--txt:#e6e9f2;--dim:#8b93ab;--acc:#4f8cff;--mon:#39d98a}}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{{--bg:#0a0c12;--panel:#141824;--panel2:#1b2133;--line:#262d42;--line2:#323b56;--txt:#e8ecf8;--dim:#8b94ad;--acc:#6c8cff;--acc2:#8b6cff;--mon:#34d399}}
 *{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:var(--bg);color:var(--txt);font:15px/1.45 system-ui,sans-serif;padding:16px 16px 40px}}
-h1{{font-size:20px;margin-bottom:4px}}h1 a{{color:var(--txt);text-decoration:none}}
+body{{background:radial-gradient(900px 420px at 85% -8%,rgba(108,140,255,.10),transparent 60%),radial-gradient(700px 380px at -10% 18%,rgba(139,108,255,.08),transparent 55%),var(--bg);color:var(--txt);font:15px/1.5 'Inter',system-ui,sans-serif;padding:16px 16px 44px;min-height:100vh}}
+h1{{font-size:20px;font-weight:800;margin-bottom:4px;letter-spacing:-.2px}}h1 a{{color:var(--txt);text-decoration:none}}
 .sub{{color:var(--dim);font-size:13px;margin-bottom:16px}}
-.folder{{color:var(--acc);font-size:15px;margin:18px 0 8px;text-transform:capitalize}}
+.back{{display:inline-block;margin-bottom:14px;color:var(--acc);text-decoration:none;font-size:13px;font-weight:600;background:var(--panel);border:1px solid var(--line);padding:7px 14px;border-radius:10px;transition:border-color .15s}}
+.back:hover{{border-color:var(--acc)}}
+.folder{{color:var(--acc);font-size:15px;font-weight:700;margin:20px 0 9px;text-transform:capitalize;letter-spacing:.2px}}
 .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}}
-.card{{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}}
+.card{{background:linear-gradient(180deg,rgba(255,255,255,.018),transparent 40%),var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 30px -12px rgba(0,0,0,.55)}}
 .card .top{{display:flex;gap:10px;align-items:flex-start}}
-.card .ico{{font-size:22px}}
-.card b{{font-size:13.5px;display:block;line-height:1.3}}
-.card .meta{{font-size:11.5px;color:var(--dim)}}
-.acts{{display:flex;gap:8px;margin-top:10px;align-items:center}}
-audio{{width:100%;margin-top:10px;height:34px}}
-.btn{{background:var(--acc);color:#fff;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;text-decoration:none}}
-.dl{{color:var(--acc);font-size:12px;text-decoration:none;margin-left:auto}}
-.back{{display:inline-block;margin-bottom:14px;color:var(--acc);text-decoration:none;font-size:13px}}
+.card .ico{{width:34px;height:34px;flex:none;border-radius:9px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:16px}}
+.card b{{font-size:13.5px;display:block;line-height:1.35;overflow-wrap:break-word;word-break:break-word}}
+.card .meta{{font-size:11.5px;color:var(--dim);margin-top:2px}}
+.acts{{display:flex;gap:8px;margin-top:11px;align-items:center}}
+audio{{width:100%;margin-top:10px;height:34px;border-radius:8px}}
+.btn{{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-radius:9px;padding:8px 13px;font-size:12.5px;font-weight:700;text-decoration:none;display:inline-block}}
+.dl{{color:var(--acc);font-size:12px;font-weight:600;text-decoration:none;margin-left:auto}}
+.dl:hover{{text-decoration:underline}}
+#filtro{{width:100%;max-width:440px;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:'Inter',system-ui,sans-serif;margin-bottom:16px;transition:border-color .15s,box-shadow .15s}}
+#filtro:focus{{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(108,140,255,.14)}}
 </style></head><body>
 <a class="back" href="/">← Volver al Tracker</a>
 <h1>📚 Material B2 First</h1>
 <div class="sub">{total} archivos · los PDFs abren en el visor del navegador (PC y celular) · los audios se reproducen acá</div>
-<input id="filtro" placeholder="🔍 Buscar material... (ej: listening, speaking, handbook)" style="width:100%;max-width:420px;background:var(--bg);border:1px solid var(--line);border-radius:9px;color:var(--txt);padding:10px 12px;font-size:14px;margin-bottom:14px">
+<input id="filtro" placeholder="🔍 Buscar material... (ej: listening, speaking, handbook)">
 <div id="contenido">
 {''.join(blocks)}
 </div>
