@@ -13,22 +13,33 @@ Endpoints:
   GET /libros.json → JSON con el catálogo (para el tracker)
   GET /files/<rel> → sirve un archivo del material con soporte Range
                      (necesario para que el audio se pueda re-buscar)
+  GET /api/progress?download=1 → descarga el progreso guardado (JSON)
+  GET /api/progress → lista de backups (JSON) {file, size, date}
+  PUT /api/progress → guarda el progreso (body JSON) y respalda el anterior
   GET /favicon.ico → 204 (no existe, no loguear 404)
+
+Persistencia: el progreso vive en <repo>/data/progress.json. Cada PUT
+respalda automáticamente la versión anterior en <repo>/data/backups/
+(último gana + backups). Datos SOLO en esta Pi, sin auth (red privada).
 
 Dependencias: SOLO stdlib (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) en este dir.
 """
-import os, re, html, mimetypes
+import os, re, html, mimetypes, json, shutil, time
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 # ---------------------------------------------------------------------------
 # Constantes
 # ---------------------------------------------------------------------------
-ROOT    = os.path.expanduser("~/Descargas/b2-first")  # material (PDF/MP3/ZIP)
-TRACKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-PORT    = 8088                                        # 8080 lo ocupa docker-proxy
-EXTS    = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
+ROOT      = os.path.expanduser("~/Descargas/b2-first")  # material (PDF/MP3/ZIP)
+TRACKER   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+PORT      = int(os.environ.get("PORT", 8088))           # 8080 lo ocupa docker-proxy
+EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
+DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+PROG_FILE = os.path.join(DATA_DIR, "progress.json")
+BK_DIR    = os.path.join(DATA_DIR, "backups")
+BK_KEEP   = 20                                          # backups a conservar
 
 
 # ---------------------------------------------------------------------------
@@ -68,6 +79,61 @@ def fmt_size(n):
 def esc(s):
     """Escape HTML (evita inyección por nombres de archivo raros)."""
     return html.escape(str(s))
+
+
+# ---------------------------------------------------------------------------
+# Persistencia del progreso (data/progress.json + backups/ultimo-gato-gana)
+# ---------------------------------------------------------------------------
+def read_progress():
+    """Devuelve el progreso guardado o {} si no existe / está corrupto."""
+    try:
+        with open(PROG_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_progress(data):
+    """Persiste el progreso (dict) de forma atómica + backup del anterior."""
+    os.makedirs(BK_DIR, exist_ok=True)
+    if os.path.exists(PROG_FILE):
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        try:
+            shutil.copy2(PROG_FILE, os.path.join(BK_DIR, f"progress-{stamp}.json"))
+        except OSError:
+            pass  # si el backup falla, seguimos con el guardado principal
+    tmp = PROG_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+    os.replace(tmp, PROG_FILE)  # atómico: nunca queda un archivo a medias
+    # Podar backups viejos (conservar los BK_KEEP más recientes).
+    try:
+        bks = sorted(os.listdir(BK_DIR))
+        for old in bks[:-BK_KEEP]:
+            os.remove(os.path.join(BK_DIR, old))
+    except OSError:
+        pass
+
+
+def list_backups():
+    """Devuelve [{file, size, date}] con los backups, más reciente primero."""
+    try:
+        files = sorted(os.listdir(BK_DIR), reverse=True)
+    except OSError:
+        return []
+    out = []
+    for fn in files:
+        full = os.path.join(BK_DIR, fn)
+        try:
+            st = os.stat(full)
+        except OSError:
+            continue
+        out.append({
+            "file": fn,
+            "size": st.st_size,
+            "date": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime)),
+        })
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -229,9 +295,36 @@ class H(BaseHTTPRequestHandler):
             data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
                      "size": it["size"], "href": "/files/" + quote(it["rel"])}
                     for it in scan()]
-            import json
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # Progreso: GET (descargar o listar backups) + PUT (guardar)
+        if path == "/api/progress":
+            if self.command == "GET":
+                if self.path.split("?", 1)[-1].startswith("download=1"):
+                    data = read_progress()
+                    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                    self._send(200, body, "application/json; charset=utf-8")
+                else:
+                    data = list_backups()
+                    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                    self._send(200, body, "application/json; charset=utf-8")
+            elif self.command == "PUT":
+                try:
+                    raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                    data = json.loads(raw.decode("utf-8"))
+                    if not isinstance(data, dict) or not isinstance(data.get("log"), list) or \
+                       not isinstance(data.get("errs"), list):
+                        self._send(400, b"formato invalido: falta log/errs", "text/plain")
+                        return
+                    save_progress(data)
+                    body = b"ok"
+                    self._send(200, body, "text/plain")
+                except (ValueError, OSError):
+                    self._send(400, b"JSON invalido", "text/plain")
+            else:
+                self._send(405, b"metodo no permitido", "text/plain")
             return
 
         if path == "/favicon.ico":
@@ -241,6 +334,9 @@ class H(BaseHTTPRequestHandler):
         self._send(404, b"not found", "text/plain")
 
     def do_GET(self):
+        self._handle()
+
+    def do_PUT(self):
         self._handle()
 
     def do_HEAD(self):

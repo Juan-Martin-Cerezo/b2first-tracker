@@ -29,9 +29,11 @@ código, comentarios y mensajes van en español.
   testea con Playwright sin cadena de compilación.
 - **Backend**: `server.py`, Python **solo stdlib** (http.server). No hace falta
   pip install. No agregues dependencias sin hablar antes.
-- **Datos**: todo en `localStorage` del navegador (clave `b2first_tracker_v1`).
-  La sincronización PC↔celular es Exportar/Importar JSON manual (PROGRESO).
-  No hay base de datos ni backend de datos — así se mantiene.
+- **Datos**: todo en `localStorage` del navegador (clave `b2first_tracker_v1`) y
+  **sincronizado con la Pi** (`data/progress.json` + backups en `data/backups/`).
+  Cada `save()` hace push a `/api/progress` (PUT) y al abrir la página se hace pull
+  (GET). Regla: **último que guarda gana** — el server respalda la versión anterior.
+  No hay base de datos: es un archivo JSON en el repo.
 
 ## Modelo de datos (resumen)
 
@@ -53,12 +55,14 @@ para la referencia completa con ejemplos:
 ```
 header (arquitectura + modelo de datos)
 SETTINGS_DEFAULT / load / save / helpers
+SYNC             → syncPush/syncPull + badge del footer (save() dispara push)
 TIMER          → makeTimer + timers de sesión (leen D.settings)
 SAVE HANDLERS  → saveUE / saveWR / saveL / saveSP / saveFull
 LOG TABLE      → renderLog + edición inline + renderStats
 GATES          → calcGates (lee D.settings) / renderGates / advanceStage
 ERRORS         → renderErrs + registro con taxonomía
 BOOKS          → BUY_BOOKS (25 libros, precios verificados) + MATERIAL (libros.json)
+GRÁFICOS       → renderGrafEvol/Part/Err/Cons (SVG puro, sin dependencias)
 PLAN           → renderPlan / savePlan / resetPlan / applyTimers
 EXAMEN+PARTES  → modo examen (EX_DUR, tiempos reales) + PARTS[] (15 ejercicios)
 TODAY VIEW     → renderToday (rotación + banner) / setOv
@@ -74,11 +78,14 @@ Si agregás un render nuevo, agregalo a refreshAll().
 # El servicio debe estar activo (http://127.0.0.1:8088)
 cd tests
 uv run --with playwright python test_final.py    # suite principal
+uv run --with playwright python test_sync.py     # persistencia + backups (server propio en 8099)
+uv run --with playwright python test_graf.py     # gráficos (server propio en 8100)
 # test_exam.py y test_rot.py cubren modo examen y rotación
 ```
 
-Los tests limpian sus propios datos de prueba. Antes de correrlos, asegurate de que
-el server responda (curl http://127.0.0.1:8088/).
+Los tests de sync/graf levantan su propio server de prueba en un puerto alternativo
+con `data/` temporal: no tocan el servicio real ni tu progreso. El resto corre contra
+el servicio activo en 8088.
 
 ## Pitfalls conocidos (no los repitas)
 
@@ -91,6 +98,10 @@ el server responda (curl http://127.0.0.1:8088/).
 - **Buscalibre**: precio real = página de producto, no el del listado.
 - Los nombres de archivo del material tienen espacios → usar `quote()` en las URLs.
 - `node --check` para validar el JS extraído del HTML (nunca deployar con syntax error).
+- Los tests de sync/graf importan `server.py` con `sys.path` y le cambian `DATA_DIR`/
+  `PORT` ANTES de levantar el server — nunca dejes que toquen el `data/` real.
+- El backup se genera copiando el archivo anterior: el primer PUT no crea backup
+  (no hay nada anterior que respaldar), y se conservan los últimos 20 (`BK_KEEP`).
 
 ## Deploy
 
@@ -108,3 +119,5 @@ sudo systemctl restart b2first
 - Corrección de Writing automática por el asistente (rol examinador Senior Cambridge).
 - Simulación de Speaking Parts 3-4 con la IA como compañero.
 - Más material (los libros comprados → escanear/agregar PDFs a ~/Descargas/b2-first).
+- ~~Persistencia del progreso entre dispositivos~~ **HECHO** (data/progress.json + backups).
+- ~~Sección de gráficos~~ **HECHO** (pestaña GRÁFICOS, 4 paneles SVG).

@@ -14,17 +14,19 @@ catálogo de material (PDFs + audio) servido desde la misma Pi.
 ┌─────────────┐   GET /   ┌────────────────────────────────────────────┐
 │  PC / cel  │ ─────────► │  server.py  (stdlib Python, puerto 8088)  │
 │  Tailscale │            │  · /          → index.html (tracker)      │
-└────────────┘            │  · /libros    → material con visor+audio  │
+└────────────┘            │  · /libros    → material con visor+audio │
                           │  · /libros.json → catálogo para el tracker │
                           │  · /files/…   → PDF/MP3 con Range (audio) │
+                          │  · /api/progress → progreso (GET/PUT)     │
                           └───────────────────┬────────────────────────┘
                                               │ escanea dinámicamente
                                       ~/Descargas/b2-first/
                                       (6 exámenes oficiales + handbook)
 ```
 
-- **Frontend**: `index.html` — app single-file (HTML + CSS + JS inline, ~1.200 líneas). Cero dependencias, cero frameworks. Datos en `localStorage` (no hay backend de datos).
+- **Frontend**: `index.html` — app single-file (HTML + CSS + JS inline, ~1.300 líneas). Cero dependencias, cero frameworks. Datos en `localStorage` (clave `b2first_tracker_v1`) + **sincronización con la Pi**.
 - **Backend**: `server.py` — HTTP server **solo stdlib** (sin pip install). Sirve el tracker, el material y el JSON del catálogo.
+- **Persistencia**: el progreso se guarda en la Pi (`data/progress.json`) con **backups automáticos** en `data/backups/` (último que guarda gana). Cada `save()` del tracker hace push a la Pi; al abrir la página se baja lo más reciente. El estado se ve en el footer (✔ sincronizado / ⚠ modo local).
 - **Servicio**: `b2first.service` — unidad systemd (Restart=always), corre desde este repo.
 
 ## Archivos
@@ -32,7 +34,9 @@ catálogo de material (PDFs + audio) servido desde la misma Pi.
 | Archivo | Rol |
 |---|---|
 | `index.html` | El tracker completo (UI + lógica + comentarios del modelo de datos en el header del `<script>`) |
-| `server.py` | Portal HTTP (comentado línea por línea) |
+| `server.py` | Portal HTTP (comentado línea por línea) + persistencia del progreso |
+| `data/progress.json` | Progreso sincronizado (se crea solo con el primer guardado) |
+| `data/backups/` | Backups automáticos de cada guardado (los últimos 20) |
 | `b2first.service` | Unidad systemd (copiar a `/etc/systemd/system/`) |
 | `plan.md` | **El plan de inglés completo** (objetivo, sesiones, gates, rúbrica, material) |
 | `agents.md` | Onboarding para el próximo agente/desarrollador |
@@ -59,18 +63,32 @@ Verificá: `systemctl status b2first` → `active` · `curl http://127.0.0.1:808
 ## Testing
 
 ```bash
-cd tests && uv run --with playwright python test_final.py   # suite completa (viewport móvil)
+cd tests && uv run --with playwright python test_final.py   # suite principal (viewport móvil)
+uv run --with playwright python test_sync.py                # persistencia + backups
+uv run --with playwright python test_graf.py                # gráficos
 ```
 
 Los tests abren la página servida con Chromium headless y verifican: sin overflow
 horizontal en 390×844, tabs funcionando, rotación, gates, stats, modo examen,
-cero errores JS. Se ejecutan contra `http://127.0.0.1:8088` (servicio arriba).
+cero errores JS, sincronización con la Pi y los 4 paneles de gráficos.
+`test_sync.py` y `test_graf.py` levantan su propio server de prueba en un puerto
+alternativo con datos temporales — no tocan el servicio real ni tu progreso.
+Se ejecutan contra `http://127.0.0.1:8088` (servicio arriba).
 
 ## Material
 
 `~/Descargas/b2-first/` contiene 6 exámenes oficiales completos (Sample 1, Sample 2,
 For Schools 1, For Schools 2 + 2 del handbook) con PDFs, audio (MP3) y claves, más el
 handbook. El server lo escanea en cada visita: **agregar un PDF/MP3 = aparece solo**.
+
+## Sincronización
+
+El tracker guarda en el navegador (`localStorage`) y **además sincroniza con la Pi**:
+cada vez que guardás algo se sube automáticamente a `data/progress.json`, y al abrir
+la página se baja lo más reciente. El footer muestra el estado (✔ sincronizado con la
+Pi / ⚠ modo local si la Pi no responde). Regla: **último que guarda gana**, con backup
+automático de la versión anterior (los últimos 20 en `data/backups/`). El Exportar/
+Importar JSON manual de PROGRESO sigue disponible como respaldo extra.
 
 ## Notas operativas
 
