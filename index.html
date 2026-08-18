@@ -111,6 +111,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#0d0f15;border-top:1px 
   <button data-view="exam">EXAMEN</button>
   <button data-view="partes">PARTES</button>
   <button data-view="prog">PROGRESO</button>
+  <button data-view="graf">GRÁFICOS</button>
   <button data-view="plan">PLAN</button>
   <button data-view="err">ERRORES</button>
   <button data-view="libros">LIBROS</button>
@@ -439,6 +440,30 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#0d0f15;border-top:1px 
   </div>
 </section>
 
+<!-- ============ GRÁFICOS ============ -->
+<section id="v-graf" class="view">
+  <div class="card">
+    <h2>📈 Evolución en el tiempo</h2>
+    <div class="sub">Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.</div>
+    <div id="gEvol"></div>
+  </div>
+  <div class="card">
+    <h2>📊 Por parte y ejercicio</h2>
+    <div class="sub">Promedio % de cada parte del examen — las barras rojas son las que más te cuestan.</div>
+    <div id="gPart"></div>
+  </div>
+  <div class="card">
+    <h2>🧩 Errores por tipo</h2>
+    <div class="sub">Acumulado de tu taxonomía de causa raíz.</div>
+    <div id="gErr"></div>
+  </div>
+  <div class="card">
+    <h2>🔥 Consistencia semanal</h2>
+    <div class="sub">Registros por semana (últimas 12) · <span id="gStreak"></span></div>
+    <div id="gCons"></div>
+  </div>
+</section>
+
 <!-- ============ PLAN ============ -->
 <section id="v-plan" class="view">
   <div class="card">
@@ -531,7 +556,7 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#0d0f15;border-top:1px 
   </div>
 </section>
 </main>
-<footer>B2 First Mastery · Grade A · datos guardados en tu navegador (localStorage)</footer>
+<footer>B2 First Mastery · Grade A · <span id="syncBadge" title="Estado de guardado en la Pi">—</span></footer>
 
 <script>
 'use strict';
@@ -616,7 +641,36 @@ function load(){
     return d;
   }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{}}}
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(D))}
+function save(){localStorage.setItem(KEY,JSON.stringify(D));syncPush()}
+/* ---------- SINCRONIZACIÓN CON LA PI ----------
+   Cada save() sube el progreso a la Pi (PUT /api/progress) — el último
+   que guarda gana, y el server respalda la versión anterior automáticamente.
+   Al abrir la página se baja el progreso guardado (pull) y si el server
+   tiene algo más nuevo que lo local, se importa. El indicador en el
+   footer muestra el estado (local / sincronizado / sin conexión). */
+let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
+let syncT=null;
+function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(!el)return;el.textContent=s==='ok'?'✔ sincronizado con la Pi':s==='local'?'… guardando en la Pi':'⚠ modo local (sin Pi)';el.style.color=s==='ok'?'var(--ok)':s==='local'?'var(--warn)':'var(--dim)'}
+function syncPush(){
+  if(syncT)clearTimeout(syncT);
+  syncStatus('local');
+  syncT=setTimeout(()=>{
+    fetch('/api/progress',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)})
+      .then(r=>{if(!r.ok)throw 0;syncStatus('ok')})
+      .catch(()=>syncStatus('off'));
+  },400);
+}
+function syncPull(){
+  fetch('/api/progress?download=1').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+    if(d&&d.log&&d.errs){
+      const loc=JSON.parse(localStorage.getItem(KEY))||{log:[]};
+      if((d.log.length>loc.log.length)||(d.log.length===loc.log.length&&d.errs.length>loc.errs.length)){
+        D=Object.assign({},D,d);save();
+      }
+      syncStatus('ok');
+    }
+  }).catch(()=>syncStatus('off'));
+}
 function today(){return new Date().toISOString().slice(0,10)}
 function isoWeek(d){d=new Date(d);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const wn=new Date(Date.UTC(w.getUTCFullYear(),0,4));return Math.round((((w-wn)/86400000)+wn.getUTCDay()-1)/7)}
 function pad(n){return String(n).padStart(2,'0')}
@@ -1088,6 +1142,120 @@ function renderBooks(){
   </div>`).join('');
 }
 
+/* ---------- GRÁFICOS ----------
+   Los 4 paneles se dibujan con SVG puro (cero dependencias) y se
+   re-renderizan en cada refreshAll():
+   - renderGrafEvol(): líneas por serie (Writing /20 → %, Listening /30,
+     UoE %) a lo largo del tiempo (eje X = índice de registro).
+   - renderGrafPart(): barras horizontales con el promedio % por parte
+     (UoE P1-7, Listening P1-4, Writing por tipo, R&UoE y Listening
+     completo) — las < umbral mínimo se pintan rojas.
+   - renderGrafErr(): barras con el acumulado de la taxonomía de errores.
+   - renderGrafCons(): barras de registros por semana ISO (últimas 12)
+     + racha de semanas con ≥1 registro. */
+function svgChart(w,h,inner,extra){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="background:var(--bg);border:1px solid var(--line);border-radius:10px;display:block;margin:8px 0" ${extra||''}>${inner}</svg>`;
+}
+function svgTxt(x,y,t,fill,size,anchor){
+  return `<text x="${x}" y="${y}" fill="${fill||'var(--dim)'}" font-size="${size||11}" text-anchor="${anchor||'start'}" font-family="system-ui,sans-serif">${esc(t)}</text>`;
+}
+function svgBar(label,pct,min,color){
+  const c=pct>=min?'var(--ok)':(color||'var(--bad)');
+  return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0">
+    <span style="flex:0 0 130px;font-size:11.5px;color:var(--dim);text-align:right">${esc(label)}</span>
+    <div style="flex:1;background:var(--bg);border-radius:6px;height:14px;overflow:hidden"><div style="width:${Math.min(100,pct)}%;height:100%;background:${c};border-radius:6px"></div></div>
+    <span style="flex:0 0 40px;font-size:11.5px;color:var(--txt)">${Math.round(pct)}%</span></div>`;
+}
+function renderGrafEvol(){
+  const el=document.getElementById('gEvol'),log=D.log||[];
+  const series=[
+    {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
+    {name:'Listening',color:'var(--mon)',es:log.filter(e=>e.type==='l')},
+    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')}
+  ];
+  const seriesOk=series.filter(s=>s.es.length);
+  if(!seriesOk.length){el.innerHTML='<div class="empty">Registrá Writing, Listening o UoE para ver tu evolución.</div>';return}
+  const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
+  const n=Math.max(...seriesOk.map(s=>s.es.length));
+  const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
+  const ys=v=>padT+(H-padT-padB)*(1-v/100);
+  const last=Math.max(...seriesOk.map(s=>s.es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100)).flat());
+  const ymax=Math.ceil(Math.max(100,last)/10)*10;
+  let g='';
+  for(let v=0;v<=ymax;v+=ymax/4){
+    g+=`<line x1="${padL}" x2="${W-padR}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(padL-4,ys(v)+3,Math.round(v)+'%','var(--dim)',10,'end');
+  }
+  seriesOk.forEach((s,si)=>{
+    const pts=s.es.map((e,i)=>`${xs(i)},${ys(e.type==='w'?e.score/20*100:e.correct/e.total*100)}`).join(' ');
+    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
+    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(e.type==='w'?e.score/20*100:e.correct/e.total*100)}" r="3" fill="${s.color}"/>`});
+    g+=svgTxt(xs(s.es.length-1)+6,ys(s.es[s.es.length-1].type==='w'?s.es[s.es.length-1].score/20*100:s.es[s.es.length-1].correct/s.es[s.es.length-1].total*100)+3,s.name,s.color,11,'start');
+  });
+  g+=svgTxt(padL,H-4,'← más viejo · más reciente →','var(--dim)',10,'middle');
+  el.innerHTML=svgChart(W,H,g);
+}
+function renderGrafPart(){
+  const el=document.getElementById('gPart'),log=D.log||[];
+  const MIN=60;
+  const rows=[];
+  const push=(label,es,extra)=>{
+    if(!es.length)return;
+    const vals=es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100);
+    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+    rows.push({label,pct:avg,min:MIN});
+  };
+  for(let i=1;i<=7;i++)push('UoE P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
+  for(let i=1;i<=4;i++)push('Listening P'+i,log.filter(e=>e.type==='lp'&&e.part===i));
+  ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
+  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('R&UoE completo',rue);
+  const l=log.filter(e=>e.type==='l');if(l.length)push('Listening completo',l);
+  if(!rows.length){el.innerHTML='<div class="empty">Sin datos todavía — registrá ejercicios y acá vas a ver tus puntos débiles.</div>';return}
+  rows.sort((a,b)=>a.pct-b.pct);
+  el.innerHTML='<div style="max-width:560px">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
+}
+function renderGrafErr(){
+  const el=document.getElementById('gErr'),errs=D.errs||[];
+  if(!errs.length){el.innerHTML='<div class="empty">Sin errores registrados todavía.</div>';return}
+  const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
+  const names={'L-GAP':'L-GAP · léxico','G-ERR':'G-ERR · gramática','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · tiempo'};
+  const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>e.code===c).length}));
+  const max=Math.max(...counts.map(c=>c.n));
+  const W=340,H=140,padL=110,padB=18,padT=8,padR=8;
+  const bw=(H-padT-padB)/counts.length;
+  let g='';
+  counts.forEach((c,i)=>{
+    const y=padT+i*bw;
+    const bwid=(W-padL-padR)*(max?c.n/max:0);
+    g+=svgTxt(padL-6,y+bw/2+3,c.label,'var(--dim)',10.5,'end');
+    g+=`<rect x="${padL}" y="${y+2}" width="${bwid}" height="${bw-6}" rx="3" fill="var(--acc)"/>`;
+    g+=svgTxt(padL+bwid+4,y+bw/2+3,c.n,'var(--txt)',11,'start');
+  });
+  el.innerHTML=svgChart(W,H,g);
+}
+function renderGrafCons(){
+  const el=document.getElementById('gCons'),log=D.log||[];
+  if(!log.length){el.innerHTML='<div class="empty">Sin registros todavía — cada sesión cuenta para tu racha.</div>';return}
+  const byWeek={};
+  log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
+  const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
+  const max=Math.max(...weeks.map(w=>byWeek[w]));
+  const W=340,H=150,padL=24,padB=20,padT=8,padR=8;
+  const bw=(W-padL-padR)/weeks.length;
+  let g='';
+  weeks.forEach((w,i)=>{
+    const n=byWeek[w];
+    const h=(H-padT-padB)*(max?n/max:0);
+    const x=padL+i*bw;
+    g+=`<rect x="${x+2}" y="${H-padB-h}" width="${bw-4}" height="${h}" rx="3" fill="var(--acc)"/>`;
+    g+=svgTxt(x+bw/2,H-5,'S'+w,'var(--dim)',9,'middle');
+  });
+  // Racha: semanas consecutivas (desde la actual hacia atrás) con ≥1 registro
+  let streak=0,wCur=isoWeek(new Date());
+  while(byWeek[wCur]){streak++;wCur--}
+  document.getElementById('gStreak').textContent='🔥 racha actual: '+streak+' semana'+(streak===1?'':'s');
+  el.innerHTML=svgChart(W,H,g);
+}
 /* ---------- TODAY VIEW ----------
    renderToday(): banner de "qué toca hoy" + tarjeta de ROTACIÓN.
    La rotación indexa los ciclos de D.settings con el nº de semana ISO
@@ -1147,7 +1315,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.getElementById('v-'+b.dataset.view).classList.add('active');
 });
 
-function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderMaterial();rubCount();renderPlan();renderEx();renderParts()}
+function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderMaterial();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;renderMaterial();
@@ -1155,6 +1323,7 @@ function loadMaterial(){
 }
 document.getElementById('bookFilter').addEventListener('input',renderBooks);
 loadMaterial();
+syncPull();
 applyTimers();
 refreshAll();
 </script>
