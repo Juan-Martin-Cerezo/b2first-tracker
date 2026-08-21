@@ -128,3 +128,91 @@ con precios está en el tracker (LIBROS).
 El tracker guarda todo en el navegador (localStorage). Para pasar de la PC al celular:
 **PROGRESO → Exportar** (JSON) → abrir en el otro dispositivo → **Importar**. Nada de
 datos vive en el servidor.
+
+---
+
+## 12. Sistema de usuarios (PLAN — no implementado)
+
+Objetivo: que amigos/familiares usen el tracker desde sus propios dispositivos, cada uno
+con su progreso aislado, sin que "el último que guarda gane" pise los datos de otro.
+
+### 12.1 Problema actual
+
+- Un único `data/progress.json` global en la Pi + un único `localStorage` por navegador.
+- El sync es "último que guarda gana": dos personas en la misma Pi se pisan los datos.
+- No hay concepto de identidad: `save()` y `syncPull()` usan el mismo endpoint sin saber quién es quién.
+
+### 12.2 Modelo de datos propuesto
+
+```
+data/
+  users.json                 → registro de usuarios { id, name, color, created }
+  users/<user_id>/           → carpeta por usuario
+    progress.json            → el D completo de ese usuario (log/errs/stage/settings…)
+    backups/                 → backups por usuario (misma rotación de 20)
+```
+
+- `progress.json` actual se migra a `users/<admin>/` en el primer deploy (usuario "owner").
+- `D.settings` puede quedar por-usuario (cada uno configura sus horarios) o global;
+  decisión: **por usuario**, porque horarios y gates son personales.
+
+### 12.3 API (server.py, stdlib, sin dependencias)
+
+```
+GET  /api/users                    → lista usuarios {id, name, color} (para el selector)
+POST /api/users                    → crea usuario {name} → {id, name} (admin: la Pi)
+GET  /api/progress?user=<id>       → progreso del usuario (reemplaza ?download=1)
+PUT  /api/progress?user=<id>       → guarda progreso del usuario (body D completo)
+GET  /api/users/<id>/backups       → lista backups de ese usuario
+```
+
+- Compatibilidad: sin `?user=` se usa el usuario por defecto (migración transparente).
+- Backups: `data/users/<id>/backups/progress-<ts>.json`, misma política (últimos 20).
+
+### 12.4 Autenticación (decisión: sin password, por invitación)
+
+- La red es Tailscale/LAN privada (como hoy). No se agrega login con password.
+- **Identidad por PIN corto** (4-6 dígitos) elegido al crear el usuario en la Pi:
+  el server guarda `users.json` con el hash del PIN; el tracker pide el PIN al abrir
+  y lo manda en header `X-User-Pin` (o query firmada) en cada PUT/GET.
+- Alternativa más simple (fase 1): **selector de usuario sin PIN** (confianza en la red
+  privada), PIN opcional en fase 2 si hace falta.
+- Recomendado: fase 1 = selector + persistencia por usuario; fase 2 = PIN opcional.
+
+### 12.5 Frontend (index.html)
+
+- **Pantalla de entrada** (overlay al cargar, si no hay `localStorage.userId`):
+  - Selector de usuario + botón "Entrar"; si hay PIN, campo para ingresarlo.
+  - "Crear usuario nuevo" → nombre + color → POST /api/users → entra directo.
+- **Estado**: `localStorage` pasa de `b2first_tracker_v1` a
+  `b2first_tracker_v1_<userId>` (clave por usuario) — cero conflicto entre navegadores.
+- **Sync**: `syncPush()`/`syncPull()` agregan `?user=<id>` y el header de PIN.
+- **UI**: chip en el topbar con el nombre/color del usuario + menú para cambiar de
+  usuario / volver al selector. El footer muestra "sync de <nombre>".
+- **Contrato**: todos los IDs/funciones actuales se mantienen; solo cambia la clave de
+  localStorage y la URL del fetch. Los tests existentes siguen pasando (usuario default).
+
+### 12.6 Migración
+
+1. `server.py`: renombrar `data/progress.json` → `data/users/owner/progress.json`
+   (script `migrate_users.py` o lógica en el arranque si `users.json` no existe).
+2. `index.html`: `load()` usa `b2first_tracker_v1_<userId>`; si no existe, cae a la
+   clave vieja para no perder el progreso actual del owner.
+3. Primer usuario = "owner" (el actual dueño del tracker), con su progreso intacto.
+
+### 12.7 Pasos de implementación (orden sugerido)
+
+1. **Server**: `users.json` + rutas `/api/users` + `?user=` en progress + backups por usuario.
+2. **Migración**: mover `progress.json` a `users/owner/` con fallback automático.
+3. **Frontend**: clave de localStorage por usuario + `?user=` en fetch.
+4. **Selector de usuario**: overlay de entrada + crear usuario + chip en topbar.
+5. **PIN opcional** (fase 2): hash en `users.json`, header `X-User-Pin`, validación en server.
+6. **Tests**: extender `test_sync.py` para multi-usuario (crear 2, PUT a cada uno,
+   verificar aislamiento y backups por usuario).
+
+### 12.8 Lo que NO cambia
+
+- Cero dependencias nuevas (sigue stdlib Python + single-file frontend).
+- El contrato de tests actual (IDs, funciones, empty states) se preserva.
+- El modo local (abrir el archivo sin server) sigue funcionando con la clave por usuario.
+
