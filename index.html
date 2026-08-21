@@ -297,6 +297,10 @@ tbody tr:hover{background:var(--surface-container-low)}
 .rot-card select option{background:var(--primary);color:var(--on-primary)}
 .rot-card .rot-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
 .rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-primary);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:3px 8px;border-radius:4px}
+.rot-card .rot-day{background:rgba(255,255,255,.08);border-left:4px solid var(--tertiary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0 0}
+.rot-card .rot-day .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
+.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-primary)}
+.rot-card .rot-day .sub2{display:block;font-size:11.5px;color:rgba(255,255,255,.6);margin-top:3px}
 .rot-card .cur-ex{background:rgba(255,255,255,.08);border-left:4px solid var(--primary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0}
 .rot-card .cur-ex .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
 .rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-primary)}
@@ -784,6 +788,7 @@ footer{
                 <span class="chip">Algorithmic</span>
               </div>
               <div class="sub">Automatic (full exercise cycle week by week). If you want to practice something else today, pick it here and it's saved for this week.</div>
+              <div class="rot-day"><span class="lbl">Rotation day</span><span class="val" id="rotDay">—</span><span class="sub2" id="rotDayNext">—</span></div>
               <div class="cur-ex"><span class="lbl">Current Exercise</span><span class="val" id="rotVal">—</span></div>
               <div class="row" style="margin-top:4px">
                 <div><label>R&UoE</label><select id="ovRue" onchange="setOv('rue',this.value)"></select></div>
@@ -2021,6 +2026,18 @@ function renderToday(){
     const toA=(aDay-wd+7)%7||7,toB=(bDay-wd+7)%7||7;
     const next=toA<=toB?`${DIA[aDay]} (in ${toA}d) — Session A`:`${DIA[bDay]} (in ${toB}d) — Session B`;
     nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${next}</b>. Rotation: R&UoE P${rue} · Writing ${wT} · Listening P${lP} · Speaking P${spP}. You can get ahead whenever you want.</div>`;
+  }
+  // Rotation day: la rotación indexa la semana ISO (lunes a domingo) →
+  // el ciclo cambia cada lunes a las 00:00.
+  const rd=document.getElementById('rotDay'),rdn=document.getElementById('rotDayNext');
+  if(rd){
+    const daysToMon=(8-wd)%7||7; // días hasta el próximo lunes (1..7)
+    rd.textContent='Every Monday';
+    if(rdn){
+      rdn.textContent=wd===1
+        ?'Changes today — new cycle already active'
+        :'Next change: Monday (in '+daysToMon+' day'+(daysToMon===1?'':'s')+')';
+    }
   }
 }
 function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
