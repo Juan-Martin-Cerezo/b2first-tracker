@@ -295,6 +295,20 @@ class H(BaseHTTPRequestHandler):
             self._send(200, data, ctype, {"Accept-Ranges": "bytes"})
             return
 
+        # Assets estáticos del tracker (favicon, manifest, apple-touch-icon)
+        if path.startswith("/assets/"):
+            rel = path[len("/assets/"):]
+            root_assets = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
+            full = os.path.realpath(os.path.join(root_assets, rel))
+            if not full.startswith(os.path.realpath(root_assets)) or not os.path.isfile(full):
+                self._send(404, b"no existe", "text/plain")
+                return
+            ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
+            with open(full, "rb") as f:
+                data = f.read()
+            self._send(200, data, ctype)
+            return
+
         # JSON del catálogo (lo consume la pestaña LIBROS del tracker)
         if path == "/libros.json":
             data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
