@@ -523,7 +523,7 @@ class H(BaseHTTPRequestHandler):
         # JSON del catálogo (lo consume la pestaña LIBROS del tracker)
         if path == "/libros.json":
             data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
-                     "size": it["size"], "href": "/files/" + quote(it["rel"])}
+                     "rel": it["rel"], "size": it["size"], "href": "/files/" + quote(it["rel"])}
                     for it in scan()]
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
