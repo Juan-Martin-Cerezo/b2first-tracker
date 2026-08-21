@@ -152,12 +152,12 @@ datos vive en el servidor.
 
 ---
 
-## 12. Sistema de usuarios (PLAN — no implementado)
+## 12. Sistema de usuarios (IMPLEMENTADO)
 
 Objetivo: que amigos/familiares usen el tracker desde sus propios dispositivos, cada uno
 con su progreso aislado, sin que "el último que guarda gane" pise los datos de otro.
 
-### 12.1 Problema actual
+### 12.1 Problema original
 
 - Un único `data/progress.json` global en la Pi + un único `localStorage` por navegador.
 - El sync es "último que guarda gana": dos personas en la misma Pi se pisan los datos.
@@ -236,4 +236,31 @@ GET  /api/users/<id>/backups       → lista backups de ese usuario
 - Cero dependencias nuevas (sigue stdlib Python + single-file frontend).
 - El contrato de tests actual (IDs, funciones, empty states) se preserva.
 - El modo local (abrir el archivo sin server) sigue funcionando con la clave por usuario.
+
+### 12.9 Implementación (2026-08-21)
+
+Construido según el plan anterior, con estas decisiones finales:
+
+- **Auth**: login + registro con nombre y contraseña (hash `sha256(salt+password)`),
+  sesión por **token** (`secrets.token_hex(24)` en `data/tokens.json`, expira a los
+  7 días). El frontend guarda `{id, name, color, token}` en `localStorage.b2first_user`
+  y manda `Authorization: Bearer <token>` + `?user=<id>` en cada sync.
+- **Server** (`server.py`, stdlib): rutas nuevas `/api/users`, `/api/register`,
+  `/api/login`, `/api/logout`, `/api/me`; `/api/progress?user=<id>` con validación
+  de token (403 si el token no pertenece al user; 401 sin token salvo owner).
+- **Datos**: `data/users.json` (cuentas con hash), `data/tokens.json` (sesiones),
+  `data/users/<id>/progress.json` + `backups/` por usuario.
+- **Migración**: `migrate_legacy()` mueve `data/progress.json` → `data/users/owner/`
+  y crea el usuario "Owner" con la contraseña por defecto `b2first` (configurable
+  con la env `B2_OWNER_PASSWORD`).
+- **Frontend**: overlay de login/registro (obligatorio sin sesión), overlay de
+  onboarding al primer ingreso (elegir días/hora de Sesión A y B + "usar plan
+  sugerido" o "empezar de cero"), chip de usuario con logout en el topbar, clave
+  de localStorage `b2first_tracker_v1_<userId>` (con fallback a la clave vieja
+  para el owner). El PLAN sigue siendo editable por cada usuario.
+- **Tests**: `tests/helpers.py` con `login_owner()`; los 6 tests de frontend se
+  loguean como owner antes de interactuar; `test_sync.py` cubre multi-usuario
+  (login, PUT/GET aislados por usuario, backups por usuario, 401/403).
+- **Pendiente sugerido**: cambiar la contraseña del owner (`b2first` → propia)
+  editando `data/users.json` o re-generando con la env `B2_OWNER_PASSWORD`.
 

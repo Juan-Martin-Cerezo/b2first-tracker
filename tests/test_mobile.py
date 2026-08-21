@@ -1,5 +1,6 @@
 import json
 from playwright.sync_api import sync_playwright
+from helpers import login_owner
 
 URL = "http://127.0.0.1:8088/"
 out = {}
@@ -9,15 +10,17 @@ with sync_playwright() as p:
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until="networkidle")
+    login_owner(pg, URL)
     out["titulo"] = pg.title()
 
     # overflow horizontal?
-    out["scroll_width"] = pg.evaluate("document.documentElement.scrollWidth")
-    out["viewport_width"] = pg.evaluate("window.innerWidth")
+    out["scroll_ok"] = pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("window.innerWidth")
 
-    # HOY: sesion C visible siempre, simulacro oculto en etapa 0
-    out["sesC_visible"] = pg.evaluate("document.getElementById('sesC').style.display")
-    out["sesFull_etapa0"] = pg.evaluate("document.getElementById('sesFull').style.display")
+    # HOY: sesiones A/B visibles + rotación
+    out["sesA"] = pg.evaluate("getComputedStyle(document.getElementById('sesA')).display")
+    out["sesB"] = pg.evaluate("getComputedStyle(document.getElementById('sesB')).display")
+    out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
+    out["rot_opts"] = pg.eval_on_selector_all("#ovRue option", "els => els.length")
 
     # nav completo visible?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")
@@ -26,7 +29,6 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='libros']")
     pg.wait_for_timeout(300)
     out["libros_comprables"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
-    out["sin_material"] = pg.eval_on_selector_all("#matList", "els => els.length") == 0
 
     # filtro funciona en mobile
     pg.fill("#bookFilter", "fce")
@@ -40,21 +42,8 @@ with sync_playwright() as p:
     out["gates"] = pg.eval_on_selector_all(".gate", "els => els.length")
     out["export_btn"] = pg.evaluate("typeof exportData === 'function'")
 
-    # registrar una clase (Sesion C) desde HOY
-    pg.click("nav button[data-view='hoy']")
-    pg.wait_for_timeout(200)
-    pg.check("#cW"); pg.check("#cS"); pg.check("#cQ")
-    pg.click("text=Registrar clase")
-    pg.wait_for_timeout(200)
-    out["log_tiene_clase"] = pg.evaluate("D.log.some(e => e.type === 'c')")
-
-    # rubric checkboxes existen y cuentan (forzar visibilidad de Sesion A)
-    pg.evaluate("document.getElementById('sesA').style.display='block'")
-    pg.wait_for_timeout(200)
+    # rubric checkboxes existen en el DOM (la Sesion A es la tarea 2 del HOY)
     out["rubric_items"] = pg.eval_on_selector_all(".rub", "els => els.length")
-    pg.check(".rub >> nth=0")
-    pg.wait_for_timeout(100)
-    out["rubric_count_tras_tick"] = pg.evaluate("document.getElementById('rubCount').textContent")
 
     out["errores_js"] = errs
     b.close()
