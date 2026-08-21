@@ -10,6 +10,21 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 <link rel="manifest" href="/assets/manifest.json">
 <meta name="theme-color" id="metaTheme" content="#f8f9ff">
+<script>
+/* Aplica el tema guardado ANTES del primer paint para evitar el flash
+   de claro/oscuro. Sin esto, un usuario con preferencia "dark" guardada
+   ve un destello del tema del sistema al abrir la página. */
+(function(){
+  try{
+    var t=localStorage.getItem('b2first_theme');
+    if(t==='dark'||t==='light'){
+      document.documentElement.setAttribute('data-theme',t);
+      var mt=document.getElementById('metaTheme');
+      if(mt)mt.setAttribute('content',t==='dark'?'#12181f':'#f8f9ff');
+    }
+  }catch(e){}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -500,6 +515,23 @@ footer{
   background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
   border-radius:8px;box-shadow:var(--shadow-md);padding:28px;width:100%;max-width:380px;
 }
+.auth-card input[type=text],.auth-card input[type=password]{
+  width:100%;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
+  border-radius:4px;color:var(--on-surface);padding:11px 13px;font-size:14px;font-family:var(--font);
+  transition:border-color .15s,box-shadow .15s;margin-bottom:4px;
+}
+.auth-card input[type=text]:focus,.auth-card input[type=password]:focus{
+  outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,43,72,.10);
+}
+.auth-card input[type=color]{
+  width:100%;height:44px;border:1px solid var(--outline-variant);border-radius:4px;
+  background:var(--surface-container-lowest);padding:4px;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;
+}
+.auth-card input[type=color]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,43,72,.10)}
+.auth-card input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+.auth-card input[type=color]::-webkit-color-swatch{border:none;border-radius:2px}
+.auth-card input[type=color]::-moz-color-swatch{border:none;border-radius:2px}
 .auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
 .auth-brand h2{font-size:20px;font-weight:700;color:var(--primary)}
 .auth-tabs{display:flex;border-bottom:1px solid var(--outline-variant);margin-bottom:18px;gap:4px}
@@ -542,7 +574,7 @@ footer{
       <label>Password</label>
       <input type="password" id="regPass" placeholder="Password (min 4)" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
       <label>Color</label>
-      <input type="color" id="regColor" value="#1b2b48" style="height:40px;padding:4px">
+      <input type="color" id="regColor" value="#1b2b48">
       <p id="regError" class="auth-error"></p>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
     </div>
