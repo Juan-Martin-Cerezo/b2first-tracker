@@ -9,7 +9,7 @@
 <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 <link rel="manifest" href="/assets/manifest.json">
-<meta name="theme-color" content="#1b2b48">
+<meta name="theme-color" id="metaTheme" content="#f8f9ff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -48,12 +48,73 @@
   --ok:#2e7d32; --ok-soft:rgba(46,125,50,.12);
   --warn:#b45309; --warn-soft:rgba(180,83,9,.12);
   --bad:#ba1a1a; --bad-soft:rgba(186,26,26,.10);
+  /* Semánticos propios del tracker (antes sin definir → rompían en cualquier tema) */
+  --mon:var(--tertiary-container);          /* verde "mon" (badges/series) */
+  --fri:var(--primary-container);           /* índigo "fri" (badges/series) */
+  --acc:var(--primary);                     /* acento principal */
+  --acc2:var(--primary);                    /* acento secundario */
+  --dim:var(--on-surface-variant);          /* texto secundario */
+  --bg:var(--surface-container-low);        /* fondo de gráficos/barras */
+  --line:var(--outline-variant);            /* líneas de gráficos */
+  --txt:var(--on-surface);                  /* texto de gráficos */
+  --green-text:#1b5e20;                     /* texto verde sobre fondo claro */
+  --select-arrow:#44474d;                   /* flecha de los <select> */
+  --select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2344474d'/%3E%3C/svg%3E");
+  --hero-bg:var(--primary-container);       /* fondo de tarjetas navy (rot/exam/plan) */
+  --on-hero:#ffffff;                        /* texto sobre tarjetas navy */
+  --shadow-dark:0 6px 24px rgba(0,0,0,.35);
   --radius:4px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --shadow-sm:0 1px 2px rgba(11,28,48,.05),0 1px 3px rgba(11,28,48,.06);
   --shadow-md:0 4px 6px -2px rgba(11,28,48,.07),0 2px 4px -2px rgba(11,28,48,.06);
   --sidebar-w:288px;
+}
+/* ============ TEMA OSCURO ============
+   Se activa con data-theme="dark" en <html> (toggle manual) o
+   automáticamente con prefers-color-scheme: dark. Los tokens
+   semánticos y "hero" se re-mapean para el modo oscuro. */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --primary:#9fc2ff; --primary-container:#284878;
+  --on-primary:#002e5c; --on-primary-container:#cde0ff;
+  --primary-fixed:#d7e2ff; --primary-fixed-dim:#a3bdf0;
+  --secondary:#b3babf; --secondary-container:#41484d;
+  --on-secondary:#2c3236; --on-secondary-container:#cfd7dc;
+  --secondary-fixed:#dfe3e7; --secondary-fixed-dim:#a6adb2;
+  --tertiary:#88db80; --tertiary-container:#1f4a1c;
+  --on-tertiary:#0b3308; --on-tertiary-container:#a9f5a1;
+  --tertiary-fixed:#a3f69c; --tertiary-fixed-dim:#82cf7c;
+  --surface:#12181f; --surface-dim:#10151c; --surface-bright:#383f46;
+  --surface-container-lowest:#0d1219; --surface-container-low:#171d25;
+  --surface-container:#1b222b; --surface-container-high:#252d37;
+  --surface-container-highest:#303944; --surface-variant:#424b55;
+  --on-surface:#e2e9f2; --on-surface-variant:#b7c1cc;
+  --inverse-surface:#e2e9f2; --inverse-on-surface:#2a313a; --inverse-primary:#416491;
+  --outline:#8f98a3; --outline-variant:#3d464f;
+  --error:#ffb4ab; --error-container:#93000a; --on-error:#690005; --on-error-container:#ffdad6;
+  --background:#12181f; --on-background:#e2e9f2;
+  --ok:#81c784; --ok-soft:rgba(129,199,132,.14);
+  --warn:#fbbf24; --warn-soft:rgba(251,191,36,.13);
+  --bad:#ff8a80; --bad-soft:rgba(255,138,128,.14);
+  --mon:var(--tertiary-fixed-dim);
+  --fri:var(--primary-fixed-dim);
+  --acc:var(--primary-fixed);
+  --acc2:var(--primary-fixed);
+  --dim:var(--on-surface-variant);
+  --bg:var(--surface-container);
+  --line:var(--outline-variant);
+  --txt:var(--on-surface);
+  --green-text:#a9f5a1;
+  --select-arrow:#c9d4df;
+  --select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9d4df'/%3E%3C/svg%3E");
+  --hero-bg:#0a1526;
+  --on-hero:#f2f7ff;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.35);
+  --shadow-md:0 4px 10px -2px rgba(0,0,0,.45);
+}
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]){color-scheme:dark;--primary:#9fc2ff;--primary-container:#284878;--on-primary:#002e5c;--on-primary-container:#cde0ff;--primary-fixed:#d7e2ff;--primary-fixed-dim:#a3bdf0;--secondary:#b3babf;--secondary-container:#41484d;--on-secondary:#2c3236;--on-secondary-container:#cfd7dc;--secondary-fixed:#dfe3e7;--secondary-fixed-dim:#a6adb2;--tertiary:#88db80;--tertiary-container:#1f4a1c;--on-tertiary:#0b3308;--on-tertiary-container:#a9f5a1;--tertiary-fixed:#a3f69c;--tertiary-fixed-dim:#82cf7c;--surface:#12181f;--surface-dim:#10151c;--surface-bright:#383f46;--surface-container-lowest:#0d1219;--surface-container-low:#171d25;--surface-container:#1b222b;--surface-container-high:#252d37;--surface-container-highest:#303944;--surface-variant:#424b55;--on-surface:#e2e9f2;--on-surface-variant:#b7c1cc;--inverse-surface:#e2e9f2;--inverse-on-surface:#2a313a;--inverse-primary:#416491;--outline:#8f98a3;--outline-variant:#3d464f;--error:#ffb4ab;--error-container:#93000a;--on-error:#690005;--on-error-container:#ffdad6;--background:#12181f;--on-background:#e2e9f2;--ok:#81c784;--ok-soft:rgba(129,199,132,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.13);--bad:#ff8a80;--bad-soft:rgba(255,138,128,.14);--mon:var(--tertiary-fixed-dim);--fri:var(--primary-fixed-dim);--acc:var(--primary-fixed);--acc2:var(--primary-fixed);--dim:var(--on-surface-variant);--bg:var(--surface-container);--line:var(--outline-variant);--txt:var(--on-surface);--green-text:#a9f5a1;--select-arrow:#c9d4df;--select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9d4df'/%3E%3C/svg%3E");--hero-bg:#0a1526;--on-hero:#f2f7ff;--shadow-sm:0 1px 3px rgba(0,0,0,.35);--shadow-md:0 4px 10px -2px rgba(0,0,0,.45)}
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -98,6 +159,12 @@ a:hover{text-decoration:underline}
 }
 .topbar .sync-status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--on-surface-variant)}
 .topbar .sync-status .dot{width:8px;height:8px;border-radius:50%;background:var(--tertiary-fixed-dim);flex:none}
+.theme-toggle{
+  background:var(--surface-container);border:1px solid var(--outline-variant);border-radius:4px;
+  width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+  color:var(--on-surface);font-size:17px;transition:background .15s,color .15s;flex:none;
+}
+.theme-toggle:hover{background:var(--surface-container-high);color:var(--primary)}
 .topbar .user-chip{display:flex;align-items:center;gap:8px}
 .topbar .user-chip .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
 
@@ -126,8 +193,8 @@ a:hover{text-decoration:underline}
   display:inline-block;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:4px;
   letter-spacing:.4px;text-transform:uppercase;vertical-align:middle;font-family:var(--mono);
 }
-.badge.mon{background:var(--tertiary-container);color:var(--on-tertiary);border:1px solid rgba(0,61,18,.2)}
-.badge.fri{background:var(--primary-container);color:var(--on-primary-container);border:1px solid rgba(27,43,72,.25)}
+.badge.mon{background:var(--tertiary-container);color:var(--on-tertiary);border:1px solid color-mix(in srgb,var(--tertiary-container) 55%,transparent)}
+.badge.fri{background:var(--primary-container);color:var(--on-primary-container);border:1px solid color-mix(in srgb,var(--primary-container) 60%,transparent)}
 
 /* ============ sesion cards (TODAY) ============ */
 .sesion-card .sesion-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
@@ -166,8 +233,8 @@ select,input[type=number],input[type=text],input[type=time],input[type=date],inp
   color:var(--on-surface);padding:10px 12px;font-size:14px;font-family:var(--font);
   transition:border-color .15s,box-shadow .15s;
 }
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,43,72,.10)}
-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2344474d'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
+select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 .row{display:flex;gap:14px;flex-wrap:wrap}
 .row>div{flex:1;min-width:140px}
 
@@ -186,7 +253,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;c
 }
 .btn.gray:hover{border-color:var(--primary);background:var(--surface-container)}
 .btn.ok{background:var(--tertiary-container);color:var(--on-tertiary)}
-.btn.ok:hover{background:var(--tertiary)}
+.btn.ok:hover{filter:brightness(1.2)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn.sm{padding:7px 12px;font-size:11.5px;border-radius:4px}
 
@@ -197,7 +264,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;c
   font-variant-numeric:tabular-nums;font-weight:600;color:var(--primary);
   font-family:var(--mono);font-size:14px;letter-spacing:.04em;
 }
-.timer.running{color:var(--tertiary-container);border-color:rgba(0,61,18,.35)}
+.timer.running{color:var(--green-text);border-color:color-mix(in srgb,var(--green-text) 45%,transparent)}
 .timer .tbtn{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface);border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
 
 /* ============ exam (EXAM view) ============ */
@@ -218,12 +285,12 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;c
   background:var(--surface-container-lowest);border-radius:0 4px 4px 0;
   border:1px solid var(--outline-variant);border-left-width:4px;
 }
-.gate.pass{border-left-color:var(--tertiary-container);background:linear-gradient(90deg,rgba(46,125,50,.06),transparent 70%),#fff}
+.gate.pass{border-left-color:var(--green-text);background:linear-gradient(90deg,var(--ok-soft),transparent 70%),var(--surface-container-lowest)}
 .gate.fail{border-left-color:var(--error)}
 .gate h4{font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--on-surface)}
 .gate .bar{height:8px;background:var(--surface-container);border-radius:2px;margin-top:10px;overflow:hidden}
-.gate .fill{height:100%;background:var(--primary);border-radius:2px;transition:width .5s ease}
-.gate.pass .fill{background:var(--tertiary-container)}
+.gate .fill{height:100%;background:var(--acc);border-radius:2px;transition:width .5s ease}
+.gate.pass .fill{background:var(--green-text)}
 .gate .ov-label{font-size:11.5px;color:var(--on-surface-variant);margin-top:8px;display:flex;align-items:center;gap:6px;font-family:var(--mono);text-transform:none}
 
 /* ============ stat cards ============ */
@@ -234,15 +301,15 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;c
 .stat-card .stat-card-val{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--primary);line-height:1.1;display:block}
 .stat-card .stat-card-sub{display:block;font-size:12.5px;color:var(--on-surface-variant);margin-top:4px}
 .stat-card .stat-bar{height:8px;background:var(--surface-variant);border-radius:2px;margin-top:14px;overflow:hidden}
-.stat-card .stat-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .6s ease}
-.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:88px;color:var(--primary);opacity:.08;pointer-events:none}
+.stat-card .stat-bar-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .6s ease}
+.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:88px;color:var(--acc);opacity:.08;pointer-events:none}
 
 /* ============ pills ============ */
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:2px;margin:2px 4px 2px 0;letter-spacing:.3px;font-family:var(--mono)}
 .pill.L-GAP{background:var(--primary-container);color:var(--on-primary-container)}
 .pill.G-ERR{background:var(--error-container);color:var(--on-error-container)}
 .pill.T-MIS{background:var(--warn-soft);color:var(--warn)}
-.pill.T-LIM{background:rgba(100,116,139,.14);color:#475569}
+.pill.T-LIM{background:color-mix(in srgb,var(--on-surface-variant) 16%,transparent);color:var(--on-surface-variant)}
 .empty{color:var(--on-surface-variant);font-size:13px;padding:18px;text-align:center;font-style:italic}
 .del{background:none;border:none;color:var(--outline);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:4px;transition:color .12s,background .12s}
 .del:hover{color:var(--error);background:var(--error-container)}
@@ -262,7 +329,7 @@ tbody tr:hover{background:var(--surface-container-low)}
 .book .ico{width:38px;height:38px;flex:none;border-radius:4px;background:var(--surface-container);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;font-size:18px}
 .book b{display:block;font-size:13.5px;font-weight:600;line-height:1.35;color:var(--on-surface)}
 .book .meta{font-size:12px;color:var(--on-surface-variant);margin-top:2px;line-height:1.45}
-.book .price{color:var(--tertiary-container);font-weight:700;font-size:13.5px;white-space:nowrap;font-family:var(--mono)}
+.book .price{color:var(--green-text);font-weight:700;font-size:13.5px;white-space:nowrap;font-family:var(--mono)}
 .book a{color:var(--primary);font-size:12px;font-weight:600}
 .book audio{width:100%;margin-top:8px;height:36px;border-radius:4px}
 .folder{color:var(--primary);font-size:14px;font-weight:700;margin:18px 0 8px;text-transform:capitalize;letter-spacing:.04em}
@@ -275,13 +342,13 @@ tbody tr:hover{background:var(--surface-container-low)}
 .step h3 .t{font-size:11px;color:var(--on-surface-variant);font-weight:500;font-family:var(--mono)}
 
 /* ============ notes ============ */
-.note{background:var(--warn-soft);border:1px solid rgba(180,83,9,.3);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--warn);margin-bottom:13px;line-height:1.5}
-.ok-note{background:var(--ok-soft);border:1px solid rgba(46,125,50,.3);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--ok);margin-bottom:13px;line-height:1.5}
+.note{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--warn);margin-bottom:13px;line-height:1.5}
+.ok-note{background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 40%,transparent);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--ok);margin-bottom:13px;line-height:1.5}
 
 /* ============ next session banner (TODAY) ============ */
 .next-session{
-  display:flex;gap:14px;align-items:center;background:var(--primary);color:var(--on-primary);
-  border:1px solid var(--primary);border-radius:4px;padding:18px 20px;margin-bottom:20px;
+  display:flex;gap:14px;align-items:center;background:var(--hero-bg);color:var(--on-hero);
+  border:1px solid var(--hero-bg);border-radius:4px;padding:18px 20px;margin-bottom:20px;
   box-shadow:var(--shadow-md);
 }
 .next-session .big{font-size:15px;font-weight:700;letter-spacing:-.01em}
@@ -289,22 +356,22 @@ tbody tr:hover{background:var(--surface-container-low)}
 .next-session .badge{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)}
 
 /* ============ rot card (sidebar HOY) ============ */
-.rot-card{background:var(--primary);color:var(--on-primary);border:none}
-.rot-card h2{color:var(--on-primary);font-size:16px;font-weight:600}
+.rot-card{background:var(--hero-bg);color:var(--on-hero);border:none}
+.rot-card h2{color:var(--on-hero);font-size:16px;font-weight:600}
 .rot-card .sub{color:rgba(255,255,255,.72)}
 .rot-card label{color:rgba(255,255,255,.75)}
-.rot-card select{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:var(--on-primary)}
-.rot-card select option{background:var(--primary);color:var(--on-primary)}
+.rot-card select{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:var(--on-hero)}
+.rot-card select option{background:var(--hero-bg);color:var(--on-hero)}
 .rot-card .rot-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-primary);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:3px 8px;border-radius:4px}
+.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:3px 8px;border-radius:4px}
 .rot-card .rot-day{background:rgba(255,255,255,.08);border-left:4px solid var(--tertiary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0 0}
 .rot-card .rot-day .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
-.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-primary)}
+.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-hero)}
 .rot-card .rot-day .sub2{display:block;font-size:11.5px;color:rgba(255,255,255,.6);margin-top:3px}
 .rot-card .cur-ex{background:rgba(255,255,255,.08);border-left:4px solid var(--primary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0}
 .rot-card .cur-ex .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
-.rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-primary)}
-.rot-card .btn.gray{background:transparent;color:var(--on-primary);border:1px solid rgba(255,255,255,.7)}
+.rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-hero)}
+.rot-card .btn.gray{background:transparent;color:var(--on-hero);border:1px solid rgba(255,255,255,.7)}
 .rot-card .btn.gray:hover{background:rgba(255,255,255,.1)}
 
 /* ============ metrics card ============ */
@@ -314,21 +381,21 @@ tbody tr:hover{background:var(--surface-container-low)}
 .metrics-card .metric-divider{height:1px;background:var(--outline-variant)}
 
 /* ============ plan dark card ============ */
-.plan-dark-card{background:var(--primary-container);border-color:var(--primary-container);color:var(--on-primary-container)}
-.plan-dark-card h2{color:#fff}
+.plan-dark-card{background:var(--hero-bg);border-color:var(--hero-bg);color:var(--on-hero)}
+.plan-dark-card h2{color:var(--on-hero)}
 .plan-dark-card .sub{color:rgba(255,255,255,.65)}
 .plan-dark-card label{color:rgba(255,255,255,.75)}
-.plan-dark-card select,.plan-dark-card input{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.25);color:#fff}
-.plan-dark-card select option{background:var(--primary-container);color:#fff}
-.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+.plan-dark-card select,.plan-dark-card input{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.25);color:var(--on-hero)}
+.plan-dark-card select option{background:var(--hero-bg);color:var(--on-hero)}
+.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:var(--on-hero);box-shadow:0 0 0 3px rgba(255,255,255,.15)}
 
 /* ============ error taxonomy ============ */
 .err-item{display:flex;flex-direction:column;gap:6px;padding:18px;border-bottom:1px solid var(--outline-variant);transition:background .15s}
 .err-item:last-child{border-bottom:none}
-.err-item:hover{background:var(--secondary-fixed)}
+.err-item:hover{background:color-mix(in srgb,var(--secondary-fixed) 55%,transparent)}
 .err-item .err-date{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant)}
 .err-item .err-desc{font-size:14px;color:var(--on-surface)}
-.err-item .err-fix{font-size:12.5px;color:var(--tertiary-container);border-left:2px solid var(--outline-variant);padding-left:12px;margin-top:2px}
+.err-item .err-fix{font-size:12.5px;color:var(--green-text);border-left:2px solid var(--outline-variant);padding-left:12px;margin-top:2px}
 
 /* ============ footer ============ */
 footer{
@@ -357,10 +424,10 @@ footer{
 .exam-card .exam-card-min{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--primary);color:var(--on-primary);padding:4px 10px;border-radius:4px}
 .exam-card .exam-card-title{font-size:18px;font-weight:600;color:var(--on-surface)}
 .exam-card .exam-card-desc{font-size:13.5px;color:var(--on-surface-variant);line-height:1.5}
-.exam-card-full{background:var(--primary);color:var(--on-primary)}
+.exam-card-full{background:var(--hero-bg);color:var(--on-hero)}
 .exam-card-full .exam-card-kicker{color:rgba(255,255,255,.75)}
-.exam-card-full .exam-card-min{background:rgba(255,255,255,.2);color:var(--on-primary)}
-.exam-card-full .exam-card-title{color:var(--on-primary)}
+.exam-card-full .exam-card-min{background:rgba(255,255,255,.2);color:var(--on-hero)}
+.exam-card-full .exam-card-title{color:var(--on-hero)}
 .exam-card-full .exam-card-desc{color:rgba(255,255,255,.8)}
 
 /* ============ gates tabs ============ */
@@ -423,9 +490,77 @@ footer{
   footer{text-align:center;padding:12px 16px;margin-bottom:58px}
 }
 
+/* ============ overlays (auth / onboarding) ============ */
+.overlay{
+  position:fixed;inset:0;z-index:200;background:rgba(11,28,48,.55);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.auth-card{
+  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
+  border-radius:8px;box-shadow:var(--shadow-md);padding:28px;width:100%;max-width:380px;
+}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.auth-brand h2{font-size:20px;font-weight:700;color:var(--primary)}
+.auth-tabs{display:flex;border-bottom:1px solid var(--outline-variant);margin-bottom:18px;gap:4px}
+.auth-tab{padding:10px 16px;border:none;background:transparent;cursor:pointer;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--on-surface-variant);border-bottom:2px solid transparent}
+.auth-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.auth-error{color:var(--error);font-size:12.5px;margin-top:8px;min-height:16px}
+.onboard-intro{font-size:13.5px;color:var(--on-surface-variant);margin-bottom:16px;line-height:1.5}
+.ob-plan-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.ob-plan-row>span{flex:0 0 130px;font-family:var(--mono);font-size:12px;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.04em}
+.ob-plan-row select{flex:1;min-width:120px}
+.ob-plan-row input[type=time]{flex:0 0 110px}
+.ob-plan-row label{display:flex;gap:6px;align-items:center;margin:4px 0;text-transform:none;font-family:var(--font);font-size:13px}
+
 </style>
 </head>
 <body>
+
+<!-- ============ AUTH OVERLAY (login / registro) ============ -->
+<div id="authOverlay" class="overlay" style="display:none">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <img src="/assets/logo-192.png" alt="B2 First" class="logo-img" style="height:36px;width:auto">
+      <h2>B2 First Tracker</h2>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Create account</button>
+    </div>
+    <div id="authLogin">
+      <label>Name</label>
+      <input type="text" id="authName" placeholder="Your name" autocomplete="username">
+      <label>Password</label>
+      <input type="password" id="authPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      <p id="authError" class="auth-error"></p>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()">Enter</button>
+    </div>
+    <div id="authRegister" style="display:none">
+      <label>Name</label>
+      <input type="text" id="regName" placeholder="Your name" autocomplete="username">
+      <label>Password</label>
+      <input type="password" id="regPass" placeholder="Password (min 4)" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+      <label>Color</label>
+      <input type="color" id="regColor" value="#1b2b48" style="height:40px;padding:4px">
+      <p id="regError" class="auth-error"></p>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ONBOARDING (primer ingreso) ============ -->
+<div id="onboardingOverlay" class="overlay" style="display:none">
+  <div class="auth-card" style="max-width:520px">
+    <div class="auth-brand"><h2>👋 Welcome!</h2></div>
+    <p class="onboard-intro">Set up your study plan. You can change everything later in the PLAN tab.</p>
+    <div id="obPlan"></div>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="finishOnboarding()">Start using the tracker</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside class="sidebar">
@@ -450,7 +585,10 @@ footer{
   <div class="content">
     <div class="topbar">
       <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the Pi">—</span></div>
-      <div class="user-chip"><span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span><span class="avatar">A</span></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="user-chip" id="userChip"><span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span><span class="avatar">A</span></div>
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
+      </div>
     </div>
 
     <main>
@@ -587,7 +725,7 @@ footer{
                     <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
                     <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
+                  <p style="font-size:11.5px;color:var(--green-text);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
                   <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
                     <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
                     <div id="rubList" style="margin-top:6px">
@@ -662,7 +800,7 @@ footer{
                     • <b>For Schools 1 y 2:</b> PDFs de Listening + audios en sus carpetas (Material).<br>
                     • <b>Practice Tests Plus / FCE 6:</b> use the book's code/audio. <b>Rule:</b> complete it in one go, without pausing. Score out of 30.
                   </div>
-                  <p id="lFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
+                  <p id="lFocusNote" style="font-size:12.5px;color:var(--green-text);margin:6px 0 0"></p>
                   <div class="row">
                     <div><label>Audio source</label>
                       <select id="lFuente">
@@ -711,7 +849,7 @@ footer{
                     • <b>Long Turn:</b> put 2 photos on screen, record yourself for exactly 1 min. Describe BOTH + speculate: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Describing alone is forbidden.<br>
                     • <b>Parts 3-4:</b> the AI (me) is your partner — discuss a diagram with 5 options for 3 min and reach a consensus in the last minute.
                   </div>
-                  <p id="spFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
+                  <p id="spFocusNote" style="font-size:12.5px;color:var(--green-text);margin:6px 0 0"></p>
                   <div class="row" style="margin-top:10px">
                     <div><label>Speaking part</label>
                       <select id="spPart">
@@ -729,7 +867,7 @@ footer{
                     </div>
                     <div><label>Parts 3-4: negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
+                  <p style="font-size:11.5px;color:var(--green-text);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
                 </div>
               </div>
@@ -1273,7 +1411,7 @@ footer{
         </div>
         <div class="card">
           <h2>🛒 All available books (verified prices)</h2>
-          <div class="sub">Filter by name. Prices checked on the product page. <span style="color:var(--tertiary-container)">With answers</span> = self-correctable (key for solo study).</div>
+          <div class="sub">Filter by name. Prices checked on the product page. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo study).</div>
           <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="margin-bottom:12px">
           <div id="bookList"></div>
         </div>
@@ -1357,7 +1495,6 @@ footer{
    + Guardar) registra entradas tipo rue/fw/l que alimentan las gates
    de Etapa 2.
    ===================================================================== */
-const KEY='b2first_tracker_v1';
 const SETTINGS_DEFAULT={
   sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
   ueMin:10,planMin:5,writeMin:22,revMin:3,listenMin:30,sp1Sec:60,sp2Sec:180,
@@ -1368,10 +1505,164 @@ const SETTINGS_DEFAULT={
   spCycle:[1,2,3,4],
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:65,w:16,l:26,ln:4}
 };
+/* =====================================================================
+   USUARIOS (multi-cuenta)
+   ---------------------------------------------------------------------
+   Cada usuario tiene su propio D en localStorage bajo la clave
+   `b2first_tracker_v1_<userId>` (el owner conserva la clave vieja como
+   fallback). La sesión es un token del server guardado en
+   `localStorage.b2first_user = {id, name, color, token}`. El sync
+   (syncPush/syncPull) manda `?user=<id>` + `Authorization: Bearer <token>`.
+   Si no hay sesión, se muestra el overlay de login (#authOverlay).
+   El onboarding (#onboardingOverlay) se muestra la primera vez que un
+   usuario entra (elige días de clase y confirma el plan sugerido).
+   ===================================================================== */
+const BASE_KEY='b2first_tracker_v1';
+const AUTH_KEY='b2first_user';
+let USER=null; // {id, name, color, token}
+function userKey(){return USER?BASE_KEY+'_'+USER.id:BASE_KEY}
+function loadUser(){
+  try{return JSON.parse(localStorage.getItem(AUTH_KEY))||null}catch(e){return null}
+}
+function saveUserSession(u){USER=u;localStorage.setItem(AUTH_KEY,JSON.stringify(u))}
+function clearUserSession(){USER=null;localStorage.removeItem(AUTH_KEY)}
+function authHeaders(){
+  const h={'Content-Type':'application/json'};
+  if(USER&&USER.token)h['Authorization']='Bearer '+USER.token;
+  return h;
+}
+function apiUrl(path){return path+(USER?('?user='+encodeURIComponent(USER.id)):'')}
+async function apiLogin(name,password){
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password})});
+  if(!r.ok)throw new Error((await r.text())||'login failed');
+  return r.json();
+}
+async function apiRegister(name,password,color){
+  const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password,color})});
+  if(!r.ok)throw new Error((await r.text())||'register failed');
+  return r.json();
+}
+async function apiLogout(){
+  if(USER&&USER.token){
+    try{await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:USER.token})})}catch(e){}
+  }
+}
+
+/* ---------- AUTH OVERLAY ---------- */
+function showAuthOverlay(){
+  const ov=document.getElementById('authOverlay');
+  if(ov)ov.style.display='flex';
+}
+function hideAuthOverlay(){
+  const ov=document.getElementById('authOverlay');
+  if(ov)ov.style.display='none';
+}
+function switchAuthTab(tab){
+  document.querySelectorAll('#authOverlay .auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.getElementById('authLogin').style.display=tab==='login'?'block':'none';
+  document.getElementById('authRegister').style.display=tab==='register'?'block':'none';
+}
+async function doLogin(){
+  const name=document.getElementById('authName').value.trim();
+  const pass=document.getElementById('authPass').value;
+  const err=document.getElementById('authError');
+  try{
+    const u=await apiLogin(name,pass);
+    saveUserSession(u);
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){err.textContent='❌ '+e.message}
+}
+async function doRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const pass=document.getElementById('regPass').value;
+  const color=document.getElementById('regColor').value||'#1b2b48';
+  const err=document.getElementById('regError');
+  if(pass.length<4){err.textContent='❌ Password must be at least 4 characters';return}
+  try{
+    const u=await apiRegister(name,pass,color);
+    saveUserSession(u);
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){err.textContent='❌ '+e.message}
+}
+async function doLogout(){
+  await apiLogout();
+  clearUserSession();
+  location.reload();
+}
+
+/* ---------- ONBOARDING ---------- */
+function showOnboarding(){
+  const ov=document.getElementById('onboardingOverlay');
+  if(ov){ov.style.display='flex';renderOnboardingPlan()}
+}
+function hideOnboarding(){
+  const ov=document.getElementById('onboardingOverlay');
+  if(ov)ov.style.display='none';
+}
+function renderOnboardingPlan(){
+  const el=document.getElementById('obPlan');
+  if(!el)return;
+  const s=D.settings;
+  el.innerHTML=`<div class="ob-plan-row"><span>Session A day</span><select id="obADay">${['Monday','Tuesday','Wednesday','Thursday','Friday'].map((d,i)=>`<option value="${i+1}" ${s.sesA.day===i+1?'selected':''}>${d}</option>`).join('')}</select><input type="time" id="obATime" value="${s.sesA.time}"></div>
+    <div class="ob-plan-row"><span>Session B day</span><select id="obBDay">${['Monday','Tuesday','Wednesday','Thursday','Friday'].map((d,i)=>`<option value="${i+1}" ${s.sesB.day===i+1?'selected':''}>${d}</option>`).join('')}</select><input type="time" id="obBTime" value="${s.sesB.time}"></div>
+    <div class="ob-plan-row"><span>Plan</span><label style="display:flex;gap:6px;align-items:center;margin:0;text-transform:none"><input type="radio" name="obPlan" value="suggested" checked> Use suggested plan (current gates/stages)</label>
+    <label style="display:flex;gap:6px;align-items:center;margin:0;text-transform:none"><input type="radio" name="obPlan" value="blank"> Start blank and edit everything</label></div>`;
+}
+function finishOnboarding(){
+  const s=D.settings;
+  s.sesA.day=+document.getElementById('obADay').value||1;
+  s.sesA.time=document.getElementById('obATime').value||s.sesA.time;
+  s.sesB.day=+document.getElementById('obBDay').value||5;
+  s.sesB.time=document.getElementById('obBTime').value||s.sesB.time;
+  const plan=document.querySelector('input[name="obPlan"]:checked');
+  if(plan&&plan.value==='blank'){
+    // Empezar de cero: settings default pero sin criterios de gates pre-cargados
+    D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+  }
+  D.onboarded=true;
+  save();renderPlan();applyTimers();refreshAll();
+  hideOnboarding();
+}
+
+/* ---------- INIT DE SESIÓN ---------- */
+async function afterAuth(){
+  // Cargar el D del usuario (clave propia; owner con fallback a la vieja)
+  D=load();
+  saveUserSession(USER);
+  if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id)){
+    showOnboarding();
+  }
+  renderUserChip();
+  syncPull();
+  applyTimers();
+  refreshAll();
+}
+function renderUserChip(){
+  const el=document.getElementById('userChip');
+  if(!el)return;
+  if(USER){
+    const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
+    el.innerHTML=`<span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span>
+      <span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
+      <button class="btn sm gray" onclick="doLogout()" title="Change user">⇄</button>`;
+    // Re-enganchar stageBadge (el renderGates lo pisa)
+    renderGates();
+  }
+}
+
+/* ---------- CARGA / GUARDADO (por usuario) ---------- */
 let D=load();
 function load(){
+  const key=userKey();
   try{
-    const d=JSON.parse(localStorage.getItem(KEY))||{};
+    const d=JSON.parse(localStorage.getItem(key))||{};
+    // Fallback: el owner con la clave vieja (migración)
+    if(!Object.keys(d).length&&key!==BASE_KEY&&localStorage.getItem(BASE_KEY)){
+      const old=JSON.parse(localStorage.getItem(BASE_KEY))||{};
+      if(old.log||old.errs){Object.assign(d,old)}
+    }
     d.log=d.log||[];d.errs=d.errs||[];d.stage=d.stage||0;
     d.settings=Object.assign({},JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),d.settings||{});
     d.overrides=d.overrides||{};
@@ -1379,29 +1670,26 @@ function load(){
     return d;
   }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{}}}
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(D));syncPush()}
+function save(){localStorage.setItem(userKey(),JSON.stringify(D));syncPush()}
 /* ---------- SINCRONIZACIÓN CON LA PI ----------
-   Cada save() sube el progreso a la Pi (PUT /api/progress) — el último
-   que guarda gana, y el server respalda la versión anterior automáticamente.
-   Al abrir la página se baja el progreso guardado (pull) y si el server
-   tiene algo más nuevo que lo local, se importa. El indicador en el
-   footer muestra el estado (local / sincronizado / sin conexión). */
+   Cada save() sube el progreso a la Pi (PUT /api/progress?user=<id>) con
+   el token de sesión. Al abrir la página se baja el progreso guardado. */
 let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
 let syncT=null;
-function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--tertiary-container)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
+function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--green-text)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
 function syncPush(){
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
   syncT=setTimeout(()=>{
-    fetch('/api/progress',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)})
+    fetch(apiUrl('/api/progress'),{method:'PUT',headers:authHeaders(),body:JSON.stringify(D)})
       .then(r=>{if(!r.ok)throw 0;syncStatus('ok')})
       .catch(()=>syncStatus('off'));
   },400);
 }
 function syncPull(){
-  fetch('/api/progress?download=1').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
+  fetch(apiUrl('/api/progress')+'&download=1').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
     if(d&&d.log&&d.errs){
-      const loc=JSON.parse(localStorage.getItem(KEY))||{log:[]};
+      const loc=JSON.parse(localStorage.getItem(userKey()))||{log:[]};
       if((d.log.length>loc.log.length)||(d.log.length===loc.log.length&&d.errs.length>loc.errs.length)){
         D=Object.assign({},D,d);save();
       }
@@ -1595,7 +1883,7 @@ function renderGates(){
     viewGates.map((x,i)=>{
       const key=viewSt+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
       return `<div class="gate ${ok?'pass':'fail'}">
-      <h4><span>${x.name}</span><span style="color:${ok?'var(--tertiary-container)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
+      <h4><span>${x.name}</span><span style="color:${ok?'var(--green-text)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
@@ -2209,9 +2497,55 @@ function loadMaterial(){
 }
 document.getElementById('bookFilter').addEventListener('input',renderBooks);
 loadMaterial();
-syncPull();
 applyTimers();
 refreshAll();
+
+/* ---------- TEMA OSCURO (toggle + persistencia + sistema) ---------- */
+const THEME_KEY='b2first_theme';
+function currentTheme(){
+  if(document.documentElement.getAttribute('data-theme'))return document.documentElement.getAttribute('data-theme');
+  return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const mt=document.getElementById('metaTheme');
+  if(mt)mt.setAttribute('content',t==='dark'?'#12181f':'#f8f9ff');
+  const btn=document.getElementById('themeToggle');
+  if(btn)btn.innerHTML=t==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  applyTheme(currentTheme()==='dark'?'light':'dark');
+  try{localStorage.setItem(THEME_KEY,currentTheme())}catch(e){}
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  let saved=null;
+  try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
+  applyTheme(saved||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  const btn=document.getElementById('themeToggle');
+  if(btn)btn.onclick=toggleTheme;
+});
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
+    let saved=null;
+    try{saved=localStorage.getItem(THEME_KEY)}catch(err){}
+    if(!saved)applyTheme(e.matches?'dark':'light');
+  });
+}
+
+/* ---------- ARRANQUE CON SESIÓN ---------- */
+(function initSession(){
+  USER=loadUser();
+  if(USER){
+    D=load();
+    renderUserChip();
+    syncPull();
+    applyTimers();
+    refreshAll();
+    if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id))showOnboarding();
+  }else{
+    showAuthOverlay();
+  }
+})();
 
 </script>
 </body>

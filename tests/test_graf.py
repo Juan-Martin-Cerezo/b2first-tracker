@@ -1,5 +1,6 @@
 import json, os, sys, tempfile, threading
 from playwright.sync_api import sync_playwright
+from helpers import login_owner
 
 # Levantar server de prueba con data temporal (misma técnica que test_sync.py)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -9,6 +10,9 @@ _tmp = tempfile.mkdtemp(prefix="b2graf-")
 S.DATA_DIR = _tmp
 S.PROG_FILE = os.path.join(_tmp, "progress.json")
 S.BK_DIR = os.path.join(_tmp, "backups")
+S.USERS_FILE = os.path.join(_tmp, "users.json")
+S.TOKENS_FILE = os.path.join(_tmp, "tokens.json")
+S.USERS_DIR = os.path.join(_tmp, "users")
 S.PORT = 8100
 
 srv = S.ThreadingHTTPServer(("127.0.0.1", S.PORT), S.H)
@@ -23,6 +27,7 @@ with sync_playwright() as p:
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until="networkidle")
+    login_owner(pg, URL)
 
     # pestaña GRÁFICOS existe en el nav
     out["nav_graf"] = pg.eval_on_selector_all("nav button[data-view='graf']", "els => els.length")

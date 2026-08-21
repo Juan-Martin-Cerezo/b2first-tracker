@@ -25,7 +25,7 @@ respalda automáticamente la versión anterior en <repo>/data/backups/
 Dependencias: SOLO stdlib (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) en este dir.
 """
-import os, re, html, mimetypes, json, shutil, time
+import os, re, html, mimetypes, json, shutil, time, hashlib, secrets
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
@@ -40,6 +40,12 @@ DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")
 BK_KEEP   = 20                                          # backups a conservar
+# Usuarios (sistema multi-cuenta)
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
+USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
+TOKEN_TTL  = 7 * 24 * 3600                              # sesión válida 7 días
+OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # pass del owner al migrar
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +139,211 @@ def list_backups():
             "size": st.st_size,
             "date": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime)),
         })
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Usuarios + sesiones (sistema multi-cuenta)
+# ---------------------------------------------------------------------------
+def _read_json(path, default):
+    """Lee un JSON o devuelve el default si no existe / está corrupto."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def _write_json(path, data):
+    """Escribe un JSON de forma atómica (tmp + rename)."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
+def load_users():
+    """Devuelve {user_id: {id, name, salt, hash, color, created}}."""
+    return _read_json(USERS_FILE, {})
+
+
+def save_users(users):
+    _write_json(USERS_FILE, users)
+
+
+def load_tokens():
+    """Devuelve {token: {user_id, exp}}."""
+    return _read_json(TOKENS_FILE, {})
+
+
+def save_tokens(tokens):
+    _write_json(TOKENS_FILE, tokens)
+
+
+def hash_password(salt, password):
+    """sha256(salt + password). Salt de 16 bytes hex (32 chars)."""
+    return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+
+
+def new_token(user_id):
+    """Crea un token de sesión válido por TOKEN_TTL y lo persiste."""
+    tokens = load_tokens()
+    # Podar expirados
+    now = time.time()
+    tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
+    tok = secrets.token_hex(24)
+    tokens[tok] = {"user_id": user_id, "exp": now + TOKEN_TTL}
+    save_tokens(tokens)
+    return tok
+
+
+def user_from_token(token):
+    """Devuelve el user_id del token si es válido, o None."""
+    if not token:
+        return None
+    tokens = load_tokens()
+    v = tokens.get(token)
+    if not v or v.get("exp", 0) < time.time():
+        return None
+    return v.get("user_id")
+
+
+def revoke_token(token):
+    tokens = load_tokens()
+    if token in tokens:
+        del tokens[token]
+        save_tokens(tokens)
+
+
+def public_user(u):
+    """Usuario sin campos sensibles (sin salt/hash)."""
+    return {"id": u["id"], "name": u["name"], "color": u.get("color", "#1b2b48"),
+            "created": u.get("created", "")}
+
+
+def user_prog_file(user_id):
+    """Ruta del progress.json de un usuario."""
+    return os.path.join(USERS_DIR, user_id, "progress.json")
+
+
+def user_bk_dir(user_id):
+    """Ruta del directorio de backups de un usuario."""
+    return os.path.join(USERS_DIR, user_id, "backups")
+
+
+def register_user(name, password, color=None):
+    """Crea un usuario. Devuelve (user_id, error)."""
+    users = load_users()
+    name = name.strip()
+    if not name:
+        return None, "name vacío"
+    if len(password) < 4:
+        return None, "contraseña muy corta (mín 4)"
+    # Normalizar nombre para id único (slug + sufijo si repetido)
+    base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "user"
+    uid = base
+    n = 2
+    while uid in users:
+        uid = f"{base}-{n}"
+        n += 1
+    salt = secrets.token_hex(8)  # 16 chars
+    users[uid] = {
+        "id": uid, "name": name, "salt": salt,
+        "hash": hash_password(salt, password),
+        "color": color or "#1b2b48",
+        "created": time.strftime("%Y-%m-%d %H:%M"),
+    }
+    save_users(users)
+    os.makedirs(user_bk_dir(uid), exist_ok=True)
+    return uid, None
+
+
+def login_user(name, password):
+    """Valida credenciales. Devuelve (user_id, error)."""
+    users = load_users()
+    name = name.strip()
+    for u in users.values():
+        if u["name"].lower() == name.lower():
+            if u["hash"] == hash_password(u["salt"], password):
+                return u["id"], None
+            return None, "contraseña incorrecta"
+    return None, "usuario no encontrado"
+
+
+def migrate_legacy():
+    """Migra data/progress.json → data/users/owner/progress.json (una vez).
+
+    Si ya existe users.json no hace nada. Crea el usuario 'owner' con la
+    contraseña OWNER_PASSWORD y conserva el progreso actual.
+    """
+    if os.path.exists(USERS_FILE):
+        return
+    os.makedirs(USERS_DIR, exist_ok=True)
+    uid = "owner"
+    salt = secrets.token_hex(8)
+    users = {
+        uid: {"id": uid, "name": "Owner", "salt": salt,
+              "hash": hash_password(salt, OWNER_PASSWORD),
+              "color": "#1b2b48", "created": time.strftime("%Y-%m-%d %H:%M")}
+    }
+    save_users(users)
+    os.makedirs(user_bk_dir(uid), exist_ok=True)
+    if os.path.exists(PROG_FILE):
+        shutil.move(PROG_FILE, user_prog_file(uid))
+    elif not os.path.exists(user_prog_file(uid)):
+        _write_json(user_prog_file(uid), {})
+    # Mover backups viejos al usuario owner
+    if os.path.isdir(BK_DIR):
+        try:
+            for fn in os.listdir(BK_DIR):
+                src = os.path.join(BK_DIR, fn)
+                if os.path.isfile(src):
+                    shutil.move(src, os.path.join(user_bk_dir(uid), fn))
+            os.rmdir(BK_DIR)
+        except OSError:
+            pass
+
+
+def read_user_progress(user_id):
+    """Devuelve el progreso de un usuario o {} si no existe."""
+    return _read_json(user_prog_file(user_id), {})
+
+
+def save_user_progress(user_id, data):
+    """Persiste el progreso de un usuario de forma atómica + backup."""
+    os.makedirs(user_bk_dir(user_id), exist_ok=True)
+    pf = user_prog_file(user_id)
+    if os.path.exists(pf):
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        try:
+            shutil.copy2(pf, os.path.join(user_bk_dir(user_id), f"progress-{stamp}.json"))
+        except OSError:
+            pass
+    _write_json(pf, data)
+    # Podar backups viejos
+    try:
+        bks = sorted(os.listdir(user_bk_dir(user_id)))
+        for old in bks[:-BK_KEEP]:
+            os.remove(os.path.join(user_bk_dir(user_id), old))
+    except OSError:
+        pass
+
+
+def list_user_backups(user_id):
+    """Devuelve [{file, size, date}] de los backups de un usuario."""
+    try:
+        files = sorted(os.listdir(user_bk_dir(user_id)), reverse=True)
+    except OSError:
+        return []
+    out = []
+    for fn in files:
+        full = os.path.join(user_bk_dir(user_id), fn)
+        try:
+            st = os.stat(full)
+        except OSError:
+            continue
+        out.append({"file": fn, "size": st.st_size,
+                    "date": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime))})
     return out
 
 
@@ -318,15 +529,98 @@ class H(BaseHTTPRequestHandler):
             self._send(200, body, "application/json; charset=utf-8")
             return
 
-        # Progreso: GET (descargar o listar backups) + PUT (guardar)
+        # ---- API de usuarios / auth ----
+        if path == "/api/users":
+            migrate_legacy()
+            users = [public_user(u) for u in load_users().values()]
+            body = json.dumps(users, ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        if path == "/api/register":
+            migrate_legacy()
+            if self.command != "POST":
+                self._send(405, b"metodo no permitido", "text/plain"); return
+            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send(400, b"JSON invalido", "text/plain"); return
+            uid, err = register_user(req.get("name", ""), req.get("password", ""), req.get("color"))
+            if err:
+                self._send(400, err.encode("utf-8"), "text/plain"); return
+            tok = new_token(uid)
+            users = load_users()
+            body = json.dumps({"id": uid, "name": users[uid]["name"], "color": users[uid]["color"], "token": tok},
+                              ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        if path == "/api/login":
+            migrate_legacy()
+            if self.command != "POST":
+                self._send(405, b"metodo no permitido", "text/plain"); return
+            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send(400, b"JSON invalido", "text/plain"); return
+            uid, err = login_user(req.get("name", ""), req.get("password", ""))
+            if err:
+                self._send(401, err.encode("utf-8"), "text/plain"); return
+            tok = new_token(uid)
+            users = load_users()
+            body = json.dumps({"id": uid, "name": users[uid]["name"], "color": users[uid]["color"], "token": tok},
+                              ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        if path == "/api/logout":
+            if self.command != "POST":
+                self._send(405, b"metodo no permitido", "text/plain"); return
+            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send(400, b"JSON invalido", "text/plain"); return
+            revoke_token(req.get("token", ""))
+            self._send(200, b"ok", "text/plain")
+            return
+
+        if path == "/api/me":
+            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
+            uid = user_from_token(tok)
+            if not uid:
+                self._send(401, b"sesion invalida", "text/plain"); return
+            users = load_users()
+            u = users.get(uid)
+            if not u:
+                self._send(404, b"usuario no existe", "text/plain"); return
+            body = json.dumps(public_user(u), ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # Progreso: GET (descargar o listar backups) + PUT (guardar) — por usuario
         if path == "/api/progress":
+            migrate_legacy()
+            qs = self.path.split("?", 1)[-1]
+            user_id = re.search(r"(?:^|&)user=([^&]+)", qs)
+            user_id = unquote(user_id.group(1)) if user_id else "owner"
+            # Validar sesión: si hay token, debe pertenecer al user; si no hay
+            # token, se permite solo al owner (compatibilidad con tests antiguos).
+            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
+            uid = user_from_token(tok)
+            if uid is None and user_id != "owner":
+                self._send(401, b"sesion requerida", "text/plain"); return
+            if uid is not None and uid != user_id:
+                self._send(403, b"no autorizado para este usuario", "text/plain"); return
             if self.command == "GET":
-                if self.path.split("?", 1)[-1].startswith("download=1"):
-                    data = read_progress()
+                if "download=1" in qs.split("&"):
+                    data = read_user_progress(user_id)
                     body = json.dumps(data, ensure_ascii=False).encode("utf-8")
                     self._send(200, body, "application/json; charset=utf-8")
                 else:
-                    data = list_backups()
+                    data = list_user_backups(user_id)
                     body = json.dumps(data, ensure_ascii=False).encode("utf-8")
                     self._send(200, body, "application/json; charset=utf-8")
             elif self.command == "PUT":
@@ -337,7 +631,7 @@ class H(BaseHTTPRequestHandler):
                        not isinstance(data.get("errs"), list):
                         self._send(400, b"formato invalido: falta log/errs", "text/plain")
                         return
-                    save_progress(data)
+                    save_user_progress(user_id, data)
                     body = b"ok"
                     self._send(200, body, "text/plain")
                 except (ValueError, OSError):
@@ -358,6 +652,9 @@ class H(BaseHTTPRequestHandler):
     def do_PUT(self):
         self._handle()
 
+    def do_POST(self):
+        self._handle()
+
     def do_HEAD(self):
         self._handle()
 
@@ -366,5 +663,6 @@ class H(BaseHTTPRequestHandler):
 # Arranque
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    migrate_legacy()
     print(f"B2First portal en http://0.0.0.0:{PORT} (root={ROOT})")
     ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()

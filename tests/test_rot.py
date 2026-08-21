@@ -1,5 +1,6 @@
 import json
 from playwright.sync_api import sync_playwright
+from helpers import login_owner
 
 URL = "http://127.0.0.1:8088/"
 out = {}
@@ -9,6 +10,7 @@ with sync_playwright() as p:
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.goto(URL, wait_until="networkidle")
+    login_owner(pg, URL)
     out["scroll_ok"] = pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("window.innerWidth")
 
     # rotación: selects llenos + uePart + wTipo
