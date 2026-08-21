@@ -339,6 +339,52 @@ footer{
 .phase-mini .btn{margin-top:2px}
 .stage-badge{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:4px;background:var(--primary-container);color:var(--on-primary-container);letter-spacing:.04em;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 
+/* ============ exam selection cards ============ */
+.exam-select-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:8px}
+.exam-card{
+  display:flex;flex-direction:column;gap:8px;text-align:left;
+  background:var(--surface-container);border:1px solid transparent;border-radius:4px;
+  padding:26px;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s;
+  position:relative;overflow:hidden;font-family:var(--font);
+}
+.exam-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.exam-card .exam-card-top{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:8px}
+.exam-card .exam-card-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--primary)}
+.exam-card .exam-card-min{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--primary);color:var(--on-primary);padding:4px 10px;border-radius:4px}
+.exam-card .exam-card-title{font-size:18px;font-weight:600;color:var(--on-surface)}
+.exam-card .exam-card-desc{font-size:13.5px;color:var(--on-surface-variant);line-height:1.5}
+.exam-card-full{background:var(--primary);color:var(--on-primary)}
+.exam-card-full .exam-card-kicker{color:rgba(255,255,255,.75)}
+.exam-card-full .exam-card-min{background:rgba(255,255,255,.2);color:var(--on-primary)}
+.exam-card-full .exam-card-title{color:var(--on-primary)}
+.exam-card-full .exam-card-desc{color:rgba(255,255,255,.8)}
+
+/* ============ gates tabs ============ */
+.gates-tabs{display:flex;border-bottom:1px solid var(--outline-variant);gap:4px;flex-wrap:wrap}
+.gates-tab{
+  padding:10px 18px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;
+  color:var(--on-surface-variant);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;
+}
+.gates-tab:hover{color:var(--on-surface)}
+.gates-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ============ plan cards (Stitch layout) ============ */
+.plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
+.chip-plan{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--primary);background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:4px;padding:4px 10px;box-shadow:var(--shadow-sm)}
+.chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--tertiary-fixed-dim)}
+.plan-green-card{background:var(--tertiary-container);border-color:var(--tertiary-container);color:var(--on-tertiary)}
+.plan-green-card h2{color:var(--on-tertiary)}
+.plan-green-card .sub{color:rgba(255,255,255,.75)}
+.plan-green-card label{color:rgba(255,255,255,.8)}
+.plan-green-card select,.plan-green-card input{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:var(--on-tertiary)}
+.plan-green-card select option{background:var(--tertiary-container);color:var(--on-tertiary)}
+.rot-cycles{display:flex;align-items:stretch;gap:12px;margin:6px 0 4px}
+.cycle-box{flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:14px;display:flex;flex-direction:column}
+.cycle-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px}
+.cycle-val{font-size:16px;font-weight:600;color:var(--on-tertiary)}
+.cycle-swap{display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5)}
+
 /* ============ views ============ */
 .view{display:none}
 .view.active{display:block;animation:fadeUp .25s ease}
@@ -767,39 +813,82 @@ footer{
           <div>
             <span class="page-kicker">[ EXAM_SIMULATION ]</span>
             <h1 class="page-title">Simulación de Examen</h1>
-            <p class="page-sub">Tiempos oficiales Cambridge · condiciones reales: papel y lapicera, sin pausar el audio, sin música, un solo intento.</p>
+            <p class="page-sub">Seleccioná un módulo para comenzar una simulación cronometrada bajo condiciones estrictas de examen. Asegurate de tener un ambiente silencioso antes de iniciar.</p>
           </div>
         </div>
-        <div class="card">
-          <div class="row">
-            <div><label>Paper a rendir</label>
-              <select id="exPaper" onchange="renderEx()">
-                <option value="rue">Reading &amp; Use of English — 75 min (52 preguntas)</option>
-                <option value="w">Writing — 80 min (2 textos)</option>
-                <option value="l">Listening — 40 min (30 preguntas)</option>
-                <option value="full">EXAMEN COMPLETO — 195 min (todo)</option>
-              </select>
+
+        <!-- Grid de selección de módulo (como Stitch) -->
+        <div class="exam-select-grid" id="examSelectGrid">
+          <button class="exam-card" data-paper="rue" onclick="startExamFromCard('rue')">
+            <div class="exam-card-top">
+              <span class="exam-card-kicker">Part 1 &amp; 2</span>
+              <span class="exam-card-min">75 Min</span>
             </div>
-          </div>
-          <div class="exam-dial-wrap">
-            <div class="exam-dial-bg">
-              <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.5">
-                <circle cx="50" cy="50" r="48" stroke-dasharray="2 4"></circle>
-                <circle cx="50" cy="50" r="38" stroke-dasharray="1 8"></circle>
-              </svg>
+            <h3 class="exam-card-title">Reading &amp; Use of English</h3>
+            <p class="exam-card-desc">7 parts. Tests your reading comprehension and grammar proficiency.</p>
+          </button>
+          <button class="exam-card" data-paper="w" onclick="startExamFromCard('w')">
+            <div class="exam-card-top">
+              <span class="exam-card-kicker">Part 3</span>
+              <span class="exam-card-min">80 Min</span>
             </div>
-            <div class="exam-timer" id="exTimer">01:15:00</div>
-          </div>
-          <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            <button class="btn" onclick="exStart()">▶ Empezar</button>
-            <button class="btn gray" onclick="exPause()">⏸ Pausar</button>
-            <button class="btn gray" onclick="exReset()">↺ Reiniciar</button>
-          </div>
-          <div id="exGuide" class="exam-guide-card"></div>
-          <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px">
-            <h3 style="font-size:14px;margin-bottom:6px">📝 Registrá tu resultado</h3>
-            <div id="exRegFields" class="row"></div>
-            <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Guardar resultado</button></div>
+            <h3 class="exam-card-title">Writing</h3>
+            <p class="exam-card-desc">2 parts. Essay and a choice of article, email, letter, report or review.</p>
+          </button>
+          <button class="exam-card" data-paper="l" onclick="startExamFromCard('l')">
+            <div class="exam-card-top">
+              <span class="exam-card-kicker">Part 4</span>
+              <span class="exam-card-min">40 Min</span>
+            </div>
+            <h3 class="exam-card-title">Listening</h3>
+            <p class="exam-card-desc">4 parts. Tests ability to follow and understand spoken English.</p>
+          </button>
+          <button class="exam-card exam-card-full" data-paper="full" onclick="startExamFromCard('full')">
+            <div class="exam-card-top">
+              <span class="exam-card-kicker">Comprehensive</span>
+              <span class="exam-card-min">195 Min</span>
+            </div>
+            <h3 class="exam-card-title">Full B2 First Exam</h3>
+            <p class="exam-card-desc">Complete sequential run of all three written papers without breaks.</p>
+          </button>
+        </div>
+
+        <!-- Selector avanzado (contrato de tests) -->
+        <div style="margin:16px 0 0;max-width:480px">
+          <label>O elegí el paper manualmente</label>
+          <select id="exPaper" onchange="renderEx()">
+            <option value="rue">Reading &amp; Use of English — 75 min (52 preguntas)</option>
+            <option value="w">Writing — 80 min (2 textos)</option>
+            <option value="l">Listening — 40 min (30 preguntas)</option>
+            <option value="full">EXAMEN COMPLETO — 195 min (todo)</option>
+          </select>
+        </div>
+
+        <!-- Estado activo del examen -->
+        <div id="exActive">
+          <div class="card" style="text-align:center">
+            <h2 id="exActiveTitle" style="justify-content:center">Reading &amp; Use of English</h2>
+            <p style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)">In Progress</p>
+            <div class="exam-dial-wrap">
+              <div class="exam-dial-bg">
+                <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.5">
+                  <circle cx="50" cy="50" r="48" stroke-dasharray="2 4"></circle>
+                  <circle cx="50" cy="50" r="38" stroke-dasharray="1 8"></circle>
+                </svg>
+              </div>
+              <div class="exam-timer" id="exTimer">01:15:00</div>
+            </div>
+            <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+              <button class="btn" onclick="exStart()">▶ Empezar</button>
+              <button class="btn gray" onclick="exPause()">⏸ Pausar</button>
+              <button class="btn gray" onclick="exReset()">↺ Reiniciar</button>
+            </div>
+            <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
+            <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px;text-align:left">
+              <h3 style="font-size:14px;margin-bottom:6px">📝 Registrá tu resultado</h3>
+              <div id="exRegFields" class="row"></div>
+              <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Guardar resultado</button></div>
+            </div>
           </div>
         </div>
       </section>
@@ -1007,23 +1096,13 @@ footer{
         </div>
 
         <div class="grid-12">
+          <!-- Exam Timers (blanco, como Stitch) -->
           <div class="col-7">
             <div class="card">
-              <h2>🗓 Session Schedules</h2>
-              <div class="sub">Sesión A (texto) y Sesión B (auditivo) — día y hora.</div>
-              <div class="row">
-                <div><label>Sesión A (texto) — día</label><select id="pADay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
-                <div><label>Sesión A — hora</label><input type="time" id="pATime"></div>
+              <div class="plan-card-head">
+                <h2>🧪 Exam Timers</h2>
+                <span class="chip-plan"><span class="dot"></span>FCE Format</span>
               </div>
-              <div class="row">
-                <div><label>Sesión B (auditivo) — día</label><select id="pBDay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
-                <div><label>Sesión B — hora</label><input type="time" id="pBTime"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-5">
-            <div class="card plan-dark-card">
-              <h2>🧪 Exam Timers</h2>
               <div class="sub">Duraciones oficiales de cada paper.</div>
               <div class="row">
                 <div><label>UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
@@ -1038,12 +1117,6 @@ footer{
                 <div><label>Speaking Part 2 (seg)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
                 <div><label>Speaking Parts 3-4 (seg)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
               </div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="card">
-              <h2>📏 Writing — rango de palabras</h2>
               <div class="row">
                 <div><label>Writing — palabras mín</label><input type="number" id="pWMin" min="80" max="200"></div>
                 <div><label>Writing — palabras máx</label><input type="number" id="pWMax" min="100" max="260"></div>
@@ -1051,48 +1124,75 @@ footer{
             </div>
           </div>
 
-          <div class="col-6">
-            <div class="card">
-              <h2>🔄 Rotación Use of English</h2>
-              <div class="sub">Qué parte de UoE toca en semanas pares/impares.</div>
+          <!-- Thresholds (Gates) navy, como Stitch -->
+          <div class="col-5">
+            <div class="card plan-dark-card">
+              <h2>🎯 Thresholds (Gates)</h2>
+              <div class="sub">Criterios numéricos por etapa.</div>
+              <div class="sub" style="margin-top:10px">Etapa 0</div>
               <div class="row">
-                <div><label>Semana PAR →</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select></div>
-                <div><label>Semana IMPAR →</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select></div>
+                <div><label>Essays nota ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
+                <div><label>UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
+                <div><label>L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
+              </div>
+              <div class="sub" style="margin-top:10px">Etapa 1</div>
+              <div class="row">
+                <div><label>Textos nota ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
+                <div><label>UoE global % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
+                <div><label>L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
+              </div>
+              <div class="sub" style="margin-top:10px">Etapa 2</div>
+              <div class="row">
+                <div><label>R&UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
+                <div><label>Full W nota ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
+                <div><label>L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
             </div>
           </div>
+
+          <!-- Session Schedules -->
           <div class="col-6">
             <div class="card">
+              <h2>🗓 Session Schedules</h2>
+              <div class="sub">Sesión A (texto) y Sesión B (auditivo) — día y hora.</div>
+              <div class="row">
+                <div><label>Sesión A (texto) — día</label><select id="pADay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
+                <div><label>Sesión A — hora</label><input type="time" id="pATime"></div>
+              </div>
+              <div class="row">
+                <div><label>Sesión B (auditivo) — día</label><select id="pBDay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
+                <div><label>Sesión B — hora</label><input type="time" id="pBTime"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rotation Cycles -->
+          <div class="col-6">
+            <div class="card plan-green-card">
               <h2>🔁 Rotation Cycles</h2>
-              <div class="sub">El orden en que rotás los ejercicios semana a semana. Todo automático, pero podés reordenar o sacar ejercicios.</div>
+              <div class="sub">Distribución quincenal de las áreas de estudio enfocadas.</div>
+              <div class="rot-cycles">
+                <div class="cycle-box">
+                  <span class="cycle-lbl">Odd Week</span>
+                  <span class="cycle-val">R + UoE</span>
+                  <div style="margin-top:8px">
+                    <label style="margin-top:2px">UoE PAR</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                  </div>
+                </div>
+                <span class="cycle-swap material-symbols-outlined">swap_horiz</span>
+                <div class="cycle-box">
+                  <span class="cycle-lbl">Even Week</span>
+                  <span class="cycle-val">W + L</span>
+                  <div style="margin-top:8px">
+                    <label style="margin-top:2px">UoE IMPAR</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                  </div>
+                </div>
+              </div>
+              <div class="sub" style="margin-top:14px">El orden en que rotás los ejercicios semana a semana. Todo automático, pero podés reordenar o sacar ejercicios.</div>
               <div><label>R&UoE (partes 1-7, en orden)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
               <div><label>Writing (tipos, en orden)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
               <div><label>Listening (partes 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
               <div><label>Speaking (partes 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="card">
-              <h2>🎯 Gates — criterios numéricos</h2>
-              <div class="sub">Etapa 0</div>
-              <div class="row">
-                <div><label>Essays consecutivos nota ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
-                <div><label>UoE P4 % en 5 tandas ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
-                <div><label>Listening P2 errores ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
-              </div>
-              <div class="sub">Etapa 1</div>
-              <div class="row">
-                <div><label>Textos (nota ≥, min ≤)</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
-                <div><label>UoE global % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
-                <div><label>Listening score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
-              </div>
-              <div class="sub">Etapa 2</div>
-              <div class="row">
-                <div><label>R&UoE % ≥ y min ≤</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
-                <div><label>Full Writing nota ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
-                <div><label>Listening ≥ (en N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
-              </div>
             </div>
           </div>
 
@@ -1391,21 +1491,29 @@ function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
   const gates=calc.groups[st];
   const el=document.getElementById('gates');
-  el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(108,140,255,.12),rgba(139,108,255,.07)),var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:13px">
-    <b style="color:var(--acc);font-size:14px">${STAGE_NAMES[st]}</b>
-    <div style="font-size:12.5px;color:var(--dim);margin-top:2px">${STAGE_FOCUS[st]}</div></div>`+
-    gates.map((x,i)=>{
-      const key=st+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
+  const viewSt=typeof window.__gatesTab==='number'?Math.min(window.__gatesTab,2):st;
+  const viewGates=calc.groups[viewSt];
+  el.innerHTML=`
+    <div class="gates-tabs">
+      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Etapa '+i}</button>`).join('')}
+    </div>
+    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
+      <b style="color:var(--primary);font-size:14px">${STAGE_NAMES[viewSt]}</b>
+      <div style="font-size:12.5px;color:var(--on-surface-variant);margin-top:2px">${STAGE_FOCUS[viewSt]}</div>
+    </div>`+
+    viewGates.map((x,i)=>{
+      const key=viewSt+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
       return `<div class="gate ${ok?'pass':'fail'}">
-      <h4><span>${x.name}</span><span style="color:${ok?'var(--ok)':'var(--dim)'};font-size:11.5px">${x.txt}</span></h4>
+      <h4><span>${x.name}</span><span style="color:${ok?'var(--tertiary-container)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
-      <label style="font-size:11.5px;color:var(--dim);margin-top:6px;display:flex;align-items:center;gap:6px"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> marcar como lograda manualmente</label>
+      <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> marcar como lograda manualmente</label>
     </div>`}).join('');
   const allOk=gates.every(x=>D.overrides[st+'-'+gates.indexOf(x)]||x.ok);
   document.getElementById('advanceBtn').disabled=!allOk;
   document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Pasar a '+(STAGE_NAMES[st+1]||'🎓 COMPLETADO'):'🎓 COMPLETASTE TODO'):'⬆ Completá todas las gates para avanzar';
   document.getElementById('stageBadge').textContent=STAGE_NAMES[st]+(allOk?' ✓':'');
 }
+function showGatesTab(i){window.__gatesTab=i;renderGates()}
 function toggleOverride(key,on){if(on)D.overrides[key]=true;else delete D.overrides[key];save();renderGates()}
 function advanceStage(){
   if(D.stage<2)D.stage++;
@@ -1491,6 +1599,15 @@ function resetPlan(){
    savePart(i) registra la entrada en D.log (ue/lp/sp). */
 const EX_DUR={rue:75*60,w:80*60,l:40*60,full:195*60};
 let exLeft=75*60,exIv=null,exPaper='rue';
+function startExamFromCard(p){
+  exPaper=p;
+  const sel=document.getElementById('exPaper');
+  if(sel)sel.value=p;
+  const t=document.getElementById('exActiveTitle');
+  if(t)t.textContent=p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':'Full B2 First Exam';
+  exReset();
+  document.getElementById('exActive').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function renderEx(){
   exPaper=document.getElementById('exPaper').value;
   exReset();
