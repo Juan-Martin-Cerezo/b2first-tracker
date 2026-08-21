@@ -12,15 +12,15 @@
 <meta name="theme-color" id="metaTheme" content="#f8f9ff">
 <script>
 /* Aplica el tema guardado ANTES del primer paint para evitar el flash
-   de claro/oscuro. Sin esto, un usuario con preferencia "dark" guardada
-   ve un destello del tema del sistema al abrir la página. */
+   de claro/oscuro. El default es SIEMPRE claro; solo se fuerza dark
+   si el usuario lo eligió explícitamente (guardado en localStorage). */
 (function(){
   try{
     var t=localStorage.getItem('b2first_theme');
-    if(t==='dark'||t==='light'){
-      document.documentElement.setAttribute('data-theme',t);
+    if(t==='dark'){
+      document.documentElement.setAttribute('data-theme','dark');
       var mt=document.getElementById('metaTheme');
-      if(mt)mt.setAttribute('content',t==='dark'?'#12181f':'#f8f9ff');
+      if(mt)mt.setAttribute('content','#12181f');
     }
   }catch(e){}
 })();
@@ -72,12 +72,11 @@
   --bg:var(--surface-container-low);        /* fondo de gráficos/barras */
   --line:var(--outline-variant);            /* líneas de gráficos */
   --txt:var(--on-surface);                  /* texto de gráficos */
-  --green-text:#1b5e20;                     /* texto verde sobre fondo claro */
+  --green-text:#003408;                     /* texto verde sobre fondo claro (= tertiary-container original) */
   --select-arrow:#44474d;                   /* flecha de los <select> */
   --select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2344474d'/%3E%3C/svg%3E");
   --hero-bg:var(--primary-container);       /* fondo de tarjetas navy (rot/exam/plan) */
   --on-hero:#ffffff;                        /* texto sobre tarjetas navy */
-  --shadow-dark:0 6px 24px rgba(0,0,0,.35);
   --radius:4px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -86,9 +85,10 @@
   --sidebar-w:288px;
 }
 /* ============ TEMA OSCURO ============
-   Se activa con data-theme="dark" en <html> (toggle manual) o
-   automáticamente con prefers-color-scheme: dark. Los tokens
-   semánticos y "hero" se re-mapean para el modo oscuro. */
+   Se activa SOLO con data-theme="dark" en <html> (toggle manual).
+   El modo claro (default) usa los tokens de :root sin ninguna
+   modificación: es idéntico a la versión original. Acá solo se
+   re-mapean tokens para el tema oscuro. */
 html[data-theme="dark"]{
   color-scheme:dark;
   --primary:#9fc2ff; --primary-container:#284878;
@@ -127,9 +127,6 @@ html[data-theme="dark"]{
   --on-hero:#f2f7ff;
   --shadow-sm:0 1px 3px rgba(0,0,0,.35);
   --shadow-md:0 4px 10px -2px rgba(0,0,0,.45);
-}
-@media (prefers-color-scheme:dark){
-  html:not([data-theme="light"]){color-scheme:dark;--primary:#9fc2ff;--primary-container:#284878;--on-primary:#002e5c;--on-primary-container:#cde0ff;--primary-fixed:#d7e2ff;--primary-fixed-dim:#a3bdf0;--secondary:#b3babf;--secondary-container:#41484d;--on-secondary:#2c3236;--on-secondary-container:#cfd7dc;--secondary-fixed:#dfe3e7;--secondary-fixed-dim:#a6adb2;--tertiary:#88db80;--tertiary-container:#1f4a1c;--on-tertiary:#0b3308;--on-tertiary-container:#a9f5a1;--tertiary-fixed:#a3f69c;--tertiary-fixed-dim:#82cf7c;--surface:#12181f;--surface-dim:#10151c;--surface-bright:#383f46;--surface-container-lowest:#0d1219;--surface-container-low:#171d25;--surface-container:#1b222b;--surface-container-high:#252d37;--surface-container-highest:#303944;--surface-variant:#424b55;--on-surface:#e2e9f2;--on-surface-variant:#b7c1cc;--inverse-surface:#e2e9f2;--inverse-on-surface:#2a313a;--inverse-primary:#416491;--outline:#8f98a3;--outline-variant:#3d464f;--error:#ffb4ab;--error-container:#93000a;--on-error:#690005;--on-error-container:#ffdad6;--background:#12181f;--on-background:#e2e9f2;--ok:#81c784;--ok-soft:rgba(129,199,132,.14);--warn:#fbbf24;--warn-soft:rgba(251,191,36,.13);--bad:#ff8a80;--bad-soft:rgba(255,138,128,.14);--mon:var(--tertiary-fixed-dim);--fri:var(--primary-fixed-dim);--acc:var(--primary-fixed);--acc2:var(--primary-fixed);--dim:var(--on-surface-variant);--bg:var(--surface-container);--line:var(--outline-variant);--txt:var(--on-surface);--green-text:#a9f5a1;--select-arrow:#c9d4df;--select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c9d4df'/%3E%3C/svg%3E");--hero-bg:#0a1526;--on-hero:#f2f7ff;--shadow-sm:0 1px 3px rgba(0,0,0,.35);--shadow-md:0 4px 10px -2px rgba(0,0,0,.45)}
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -208,8 +205,8 @@ a:hover{text-decoration:underline}
   display:inline-block;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:4px;
   letter-spacing:.4px;text-transform:uppercase;vertical-align:middle;font-family:var(--mono);
 }
-.badge.mon{background:var(--tertiary-container);color:var(--on-tertiary);border:1px solid color-mix(in srgb,var(--tertiary-container) 55%,transparent)}
-.badge.fri{background:var(--primary-container);color:var(--on-primary-container);border:1px solid color-mix(in srgb,var(--primary-container) 60%,transparent)}
+.badge.mon{background:var(--tertiary-container);color:var(--on-tertiary);border:1px solid rgba(0,61,18,.2)}
+.badge.fri{background:var(--primary-container);color:var(--on-primary-container);border:1px solid rgba(27,43,72,.25)}
 
 /* ============ sesion cards (TODAY) ============ */
 .sesion-card .sesion-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
@@ -248,8 +245,8 @@ select,input[type=number],input[type=text],input[type=time],input[type=date],inp
   color:var(--on-surface);padding:10px 12px;font-size:14px;font-family:var(--font);
   transition:border-color .15s,box-shadow .15s;
 }
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 22%,transparent)}
-select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,43,72,.10)}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2344474d'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 .row{display:flex;gap:14px;flex-wrap:wrap}
 .row>div{flex:1;min-width:140px}
 
@@ -268,9 +265,13 @@ select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);b
 }
 .btn.gray:hover{border-color:var(--primary);background:var(--surface-container)}
 .btn.ok{background:var(--tertiary-container);color:var(--on-tertiary)}
-.btn.ok:hover{filter:brightness(1.2)}
+.btn.ok:hover{background:var(--tertiary)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn.sm{padding:7px 12px;font-size:11.5px;border-radius:4px}
+.chip{display:inline-block;font-size:11.5px;font-weight:600;padding:5px 10px;margin:2px 4px 2px 0;border:1px solid var(--line);border-radius:20px;background:var(--surface-container);color:var(--txt);text-decoration:none;cursor:pointer;transition:all .15s}
+.chip:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-1px)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-acc,#fff)}
+.chips{margin:4px 0}
 
 /* ============ timers ============ */
 .timer{
@@ -279,7 +280,7 @@ select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);b
   font-variant-numeric:tabular-nums;font-weight:600;color:var(--primary);
   font-family:var(--mono);font-size:14px;letter-spacing:.04em;
 }
-.timer.running{color:var(--green-text);border-color:color-mix(in srgb,var(--green-text) 45%,transparent)}
+.timer.running{color:var(--tertiary-container);border-color:rgba(0,61,18,.35)}
 .timer .tbtn{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface);border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
 
 /* ============ exam (EXAM view) ============ */
@@ -300,12 +301,12 @@ select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);b
   background:var(--surface-container-lowest);border-radius:0 4px 4px 0;
   border:1px solid var(--outline-variant);border-left-width:4px;
 }
-.gate.pass{border-left-color:var(--green-text);background:linear-gradient(90deg,var(--ok-soft),transparent 70%),var(--surface-container-lowest)}
+.gate.pass{border-left-color:var(--tertiary-container);background:linear-gradient(90deg,rgba(46,125,50,.06),transparent 70%),#fff}
 .gate.fail{border-left-color:var(--error)}
 .gate h4{font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--on-surface)}
 .gate .bar{height:8px;background:var(--surface-container);border-radius:2px;margin-top:10px;overflow:hidden}
-.gate .fill{height:100%;background:var(--acc);border-radius:2px;transition:width .5s ease}
-.gate.pass .fill{background:var(--green-text)}
+.gate .fill{height:100%;background:var(--primary);border-radius:2px;transition:width .5s ease}
+.gate.pass .fill{background:var(--tertiary-container)}
 .gate .ov-label{font-size:11.5px;color:var(--on-surface-variant);margin-top:8px;display:flex;align-items:center;gap:6px;font-family:var(--mono);text-transform:none}
 
 /* ============ stat cards ============ */
@@ -316,15 +317,15 @@ select{cursor:pointer;appearance:none;background-image:var(--select-arrow-img);b
 .stat-card .stat-card-val{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--primary);line-height:1.1;display:block}
 .stat-card .stat-card-sub{display:block;font-size:12.5px;color:var(--on-surface-variant);margin-top:4px}
 .stat-card .stat-bar{height:8px;background:var(--surface-variant);border-radius:2px;margin-top:14px;overflow:hidden}
-.stat-card .stat-bar-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .6s ease}
-.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:88px;color:var(--acc);opacity:.08;pointer-events:none}
+.stat-card .stat-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .6s ease}
+.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:88px;color:var(--primary);opacity:.08;pointer-events:none}
 
 /* ============ pills ============ */
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:2px;margin:2px 4px 2px 0;letter-spacing:.3px;font-family:var(--mono)}
 .pill.L-GAP{background:var(--primary-container);color:var(--on-primary-container)}
 .pill.G-ERR{background:var(--error-container);color:var(--on-error-container)}
 .pill.T-MIS{background:var(--warn-soft);color:var(--warn)}
-.pill.T-LIM{background:color-mix(in srgb,var(--on-surface-variant) 16%,transparent);color:var(--on-surface-variant)}
+.pill.T-LIM{background:rgba(100,116,139,.14);color:#475569}
 .empty{color:var(--on-surface-variant);font-size:13px;padding:18px;text-align:center;font-style:italic}
 .del{background:none;border:none;color:var(--outline);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:4px;transition:color .12s,background .12s}
 .del:hover{color:var(--error);background:var(--error-container)}
@@ -344,7 +345,7 @@ tbody tr:hover{background:var(--surface-container-low)}
 .book .ico{width:38px;height:38px;flex:none;border-radius:4px;background:var(--surface-container);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;font-size:18px}
 .book b{display:block;font-size:13.5px;font-weight:600;line-height:1.35;color:var(--on-surface)}
 .book .meta{font-size:12px;color:var(--on-surface-variant);margin-top:2px;line-height:1.45}
-.book .price{color:var(--green-text);font-weight:700;font-size:13.5px;white-space:nowrap;font-family:var(--mono)}
+.book .price{color:var(--tertiary-container);font-weight:700;font-size:13.5px;white-space:nowrap;font-family:var(--mono)}
 .book a{color:var(--primary);font-size:12px;font-weight:600}
 .book audio{width:100%;margin-top:8px;height:36px;border-radius:4px}
 .folder{color:var(--primary);font-size:14px;font-weight:700;margin:18px 0 8px;text-transform:capitalize;letter-spacing:.04em}
@@ -357,13 +358,13 @@ tbody tr:hover{background:var(--surface-container-low)}
 .step h3 .t{font-size:11px;color:var(--on-surface-variant);font-weight:500;font-family:var(--mono)}
 
 /* ============ notes ============ */
-.note{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--warn);margin-bottom:13px;line-height:1.5}
-.ok-note{background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 40%,transparent);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--ok);margin-bottom:13px;line-height:1.5}
+.note{background:var(--warn-soft);border:1px solid rgba(180,83,9,.3);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--warn);margin-bottom:13px;line-height:1.5}
+.ok-note{background:var(--ok-soft);border:1px solid rgba(46,125,50,.3);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--ok);margin-bottom:13px;line-height:1.5}
 
 /* ============ next session banner (TODAY) ============ */
 .next-session{
-  display:flex;gap:14px;align-items:center;background:var(--hero-bg);color:var(--on-hero);
-  border:1px solid var(--hero-bg);border-radius:4px;padding:18px 20px;margin-bottom:20px;
+  display:flex;gap:14px;align-items:center;background:var(--primary);color:var(--on-primary);
+  border:1px solid var(--primary);border-radius:4px;padding:18px 20px;margin-bottom:20px;
   box-shadow:var(--shadow-md);
 }
 .next-session .big{font-size:15px;font-weight:700;letter-spacing:-.01em}
@@ -371,22 +372,22 @@ tbody tr:hover{background:var(--surface-container-low)}
 .next-session .badge{background:rgba(255,255,255,.18);color:#fff;border-color:rgba(255,255,255,.3)}
 
 /* ============ rot card (sidebar HOY) ============ */
-.rot-card{background:var(--hero-bg);color:var(--on-hero);border:none}
-.rot-card h2{color:var(--on-hero);font-size:16px;font-weight:600}
+.rot-card{background:var(--primary);color:var(--on-primary);border:none}
+.rot-card h2{color:var(--on-primary);font-size:16px;font-weight:600}
 .rot-card .sub{color:rgba(255,255,255,.72)}
 .rot-card label{color:rgba(255,255,255,.75)}
-.rot-card select{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:var(--on-hero)}
-.rot-card select option{background:var(--hero-bg);color:var(--on-hero)}
+.rot-card select{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.28);color:var(--on-primary)}
+.rot-card select option{background:var(--primary);color:var(--on-primary)}
 .rot-card .rot-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:3px 8px;border-radius:4px}
+.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-primary);background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);padding:3px 8px;border-radius:4px}
 .rot-card .rot-day{background:rgba(255,255,255,.08);border-left:4px solid var(--tertiary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0 0}
 .rot-card .rot-day .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
-.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-hero)}
+.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-primary)}
 .rot-card .rot-day .sub2{display:block;font-size:11.5px;color:rgba(255,255,255,.6);margin-top:3px}
 .rot-card .cur-ex{background:rgba(255,255,255,.08);border-left:4px solid var(--primary-fixed-dim);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0}
 .rot-card .cur-ex .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.65);display:block;margin-bottom:4px}
-.rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-hero)}
-.rot-card .btn.gray{background:transparent;color:var(--on-hero);border:1px solid rgba(255,255,255,.7)}
+.rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-primary)}
+.rot-card .btn.gray{background:transparent;color:var(--on-primary);border:1px solid rgba(255,255,255,.7)}
 .rot-card .btn.gray:hover{background:rgba(255,255,255,.1)}
 
 /* ============ metrics card ============ */
@@ -396,21 +397,21 @@ tbody tr:hover{background:var(--surface-container-low)}
 .metrics-card .metric-divider{height:1px;background:var(--outline-variant)}
 
 /* ============ plan dark card ============ */
-.plan-dark-card{background:var(--hero-bg);border-color:var(--hero-bg);color:var(--on-hero)}
-.plan-dark-card h2{color:var(--on-hero)}
+.plan-dark-card{background:var(--primary-container);border-color:var(--primary-container);color:var(--on-primary-container)}
+.plan-dark-card h2{color:#fff}
 .plan-dark-card .sub{color:rgba(255,255,255,.65)}
 .plan-dark-card label{color:rgba(255,255,255,.75)}
-.plan-dark-card select,.plan-dark-card input{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.25);color:var(--on-hero)}
-.plan-dark-card select option{background:var(--hero-bg);color:var(--on-hero)}
-.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:var(--on-hero);box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+.plan-dark-card select,.plan-dark-card input{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.25);color:#fff}
+.plan-dark-card select option{background:var(--primary-container);color:#fff}
+.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.15)}
 
 /* ============ error taxonomy ============ */
 .err-item{display:flex;flex-direction:column;gap:6px;padding:18px;border-bottom:1px solid var(--outline-variant);transition:background .15s}
 .err-item:last-child{border-bottom:none}
-.err-item:hover{background:color-mix(in srgb,var(--secondary-fixed) 55%,transparent)}
+.err-item:hover{background:var(--secondary-fixed)}
 .err-item .err-date{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant)}
 .err-item .err-desc{font-size:14px;color:var(--on-surface)}
-.err-item .err-fix{font-size:12.5px;color:var(--green-text);border-left:2px solid var(--outline-variant);padding-left:12px;margin-top:2px}
+.err-item .err-fix{font-size:12.5px;color:var(--tertiary-container);border-left:2px solid var(--outline-variant);padding-left:12px;margin-top:2px}
 
 /* ============ footer ============ */
 footer{
@@ -439,10 +440,10 @@ footer{
 .exam-card .exam-card-min{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--primary);color:var(--on-primary);padding:4px 10px;border-radius:4px}
 .exam-card .exam-card-title{font-size:18px;font-weight:600;color:var(--on-surface)}
 .exam-card .exam-card-desc{font-size:13.5px;color:var(--on-surface-variant);line-height:1.5}
-.exam-card-full{background:var(--hero-bg);color:var(--on-hero)}
+.exam-card-full{background:var(--primary);color:var(--on-primary)}
 .exam-card-full .exam-card-kicker{color:rgba(255,255,255,.75)}
-.exam-card-full .exam-card-min{background:rgba(255,255,255,.2);color:var(--on-hero)}
-.exam-card-full .exam-card-title{color:var(--on-hero)}
+.exam-card-full .exam-card-min{background:rgba(255,255,255,.2);color:var(--on-primary)}
+.exam-card-full .exam-card-title{color:var(--on-primary)}
 .exam-card-full .exam-card-desc{color:rgba(255,255,255,.8)}
 
 /* ============ gates tabs ============ */
@@ -757,7 +758,7 @@ footer{
                     <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
                     <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--green-text);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
+                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
                   <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
                     <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
                     <div id="rubList" style="margin-top:6px">
@@ -832,7 +833,7 @@ footer{
                     • <b>For Schools 1 y 2:</b> PDFs de Listening + audios en sus carpetas (Material).<br>
                     • <b>Practice Tests Plus / FCE 6:</b> use the book's code/audio. <b>Rule:</b> complete it in one go, without pausing. Score out of 30.
                   </div>
-                  <p id="lFocusNote" style="font-size:12.5px;color:var(--green-text);margin:6px 0 0"></p>
+                  <p id="lFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
                   <div class="row">
                     <div><label>Audio source</label>
                       <select id="lFuente">
@@ -881,7 +882,7 @@ footer{
                     • <b>Long Turn:</b> put 2 photos on screen, record yourself for exactly 1 min. Describe BOTH + speculate: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Describing alone is forbidden.<br>
                     • <b>Parts 3-4:</b> the AI (me) is your partner — discuss a diagram with 5 options for 3 min and reach a consensus in the last minute.
                   </div>
-                  <p id="spFocusNote" style="font-size:12.5px;color:var(--green-text);margin:6px 0 0"></p>
+                  <p id="spFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
                   <div class="row" style="margin-top:10px">
                     <div><label>Speaking part</label>
                       <select id="spPart">
@@ -899,7 +900,7 @@ footer{
                     </div>
                     <div><label>Parts 3-4: negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--green-text);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
+                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
                 </div>
               </div>
@@ -1443,13 +1444,22 @@ footer{
         </div>
         <div class="card">
           <h2>📥 Material (PDFs & audio)</h2>
-          <div class="sub">PDFs open in the viewer, audio plays here. Dynamic: whatever you add to the folder shows up automatically.</div>
+          <div class="sub">Todo lo descargado: exámenes completos, guías por habilidad, lesson plans y audio. PDFs open in the viewer, audio plays here. Dynamic: whatever you add to the folder shows up automatically.</div>
+          <input type="text" id="matFilter" placeholder="🔍 Filtrar material... (e.g. listening, part 3, writing)" style="margin-bottom:12px">
           <div id="matList"></div>
         </div>
         <div class="card">
           <h2>🛒 All available books (verified prices)</h2>
-          <div class="sub">Filter by name. Prices checked on the product page. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo study).</div>
-          <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="margin-bottom:12px">
+          <div class="sub">Filtro por categoría + búsqueda + orden por precio. <span style="color:var(--tertiary-container)">With answers</span> = self-correctable (key for solo study).</div>
+          <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="flex:1">
+            <select id="bookSort" style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px">
+              <option value="cat">Orden: categoría</option>
+              <option value="asc">Precio: menor ↑</option>
+              <option value="desc">Precio: mayor ↓</option>
+            </select>
+          </div>
           <div id="bookList"></div>
         </div>
       </section>
@@ -1713,7 +1723,7 @@ function save(){localStorage.setItem(userKey(),JSON.stringify(D));syncPush()}
    el token de sesión. Al abrir la página se baja el progreso guardado. */
 let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
 let syncT=null;
-function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--green-text)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
+function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--tertiary-container)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
 function syncPush(){
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
@@ -1920,7 +1930,7 @@ function renderGates(){
     viewGates.map((x,i)=>{
       const key=viewSt+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
       return `<div class="gate ${ok?'pass':'fail'}">
-      <h4><span>${x.name}</span><span style="color:${ok?'var(--green-text)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
+      <h4><span>${x.name}</span><span style="color:${ok?'var(--tertiary-container)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
@@ -2029,9 +2039,9 @@ function renderEx(){
   exReset();
   const g=document.getElementById('exGuide');
   const L=(t,h)=>`<a href="${h}" target="_blank">${t}</a>`;
-  if(exPaper==='rue')g.innerHTML=`<b>📖 Open:</b> ${L('R&UoE Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf')}.<br><b>⏱ Distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions. <b>Keys:</b> ${L('Sample 1 keys','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('Sample 2 keys','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}`;
-  else if(exPaper==='w')g.innerHTML=`<b>✍️ Open:</b> ${L('Writing Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf')}.<br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text. Model answers in the books with keys.`;
-  else if(exPaper==='l')g.innerHTML=`<b>🎧 Open:</b> ${L('preguntas Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf')} + ${L('audio completo','/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3')} · Sample 2: preguntas + audio por partes (LIBROS → Material) · <b>Keys:</b> ${L('S1','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('S2','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}.<br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
+  if(exPaper==='rue')g.innerHTML=`<b>📖 Abrí el examen:</b><div class="chips" style="margin-top:6px">${chips([['R&UoE Sample 1','rueS1'],['Sample 2','rueS2'],['For Schools 1','rueFS1'],['For Schools 2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Online UoE','https://test-english.com/use-of-english/b2/']])}</div><br><b>⏱ Distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions.`;
+  else if(exPaper==='w')g.innerHTML=`<b>✍️ Abrí el examen:</b><div class="chips" style="margin-top:6px">${chips([['Writing Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Online','https://www.examenglish.com/FCE/fce_writing.html']])}</div><br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text. Model answers in the books with keys.`;
+  else if(exPaper==='l')g.innerHTML=`<b>🎧 Abrí el examen (preguntas + audio juntos):</b><div class="chips" style="margin-top:6px">${chips([['Preguntas S1','lS1'],['Preguntas S2','lS2'],['Preguntas FS1','lFS1'],['Preguntas FS2','lFS2'],['🎧 Audio S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 Audio FS2','auFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Online','https://www.examenglish.com/FCE/fce_listening.html']])}</div><br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
   else g.innerHTML=`<b>🕒 Exam day sequence (195 min):</b><br>1️⃣ R&UoE 75' → 2' pause<br>2️⃣ Writing 80' → 5' pause<br>3️⃣ Listening 40'<br><b>Material:</b> the links above in that order (R&UoE → Writing → Listening). Close everything else.`;
   const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
   if(exPaper==='rue')f.innerHTML=`<div><label>R&UoE correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
@@ -2086,13 +2096,14 @@ function renderParts(){
   let html='',last='';
   PARTS.forEach((p,i)=>{
     if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
-    const donde=p.type==='ue'?`R&UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part ${p.n} inside the PDF`
-      :p.type==='lp'?`Listening Sample 2 questions + part-${p.n} audio (BOOKS → Material)`
-      :'Visuals in the Speaking PDFs (BOOKS → Material)';
+    const donde=p.type==='ue'?chips([['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n],['Online','https://www.flo-joe.co.uk/fce/students/tests/']])
+      :p.type==='lp'?chips([['Preguntas S1','lS1'],['Preguntas S2','lS2'],['Preguntas FS1','lFS1'],['Preguntas FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Online','https://www.examenglish.com/FCE/fce_listening.html']])
+      :chips([['Visuales S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']]);
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' preguntas · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--mon)">${p.note}</p>`:''}
-      <p style="font-size:12px;color:var(--dim)">📍 ${donde}</p>
+      <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Dónde practicarlo:</div>
+      <div class="chips">${donde}</div>
       ${p.type!=='sp'?`<div class="row" style="margin-top:8px">
         <div><label>Aciertos</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
@@ -2226,31 +2237,31 @@ function renderErrPills(){
    escanea ~/Descargas/b2-first dinámicamente). renderMaterial() pinta
    PDFs (abrir/descargar) y audios (reproductor inline). */
 const BUY_BOOKS=[
- {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$43.900',u:'https://www.mercadolibre.com.ar/practice-tests-plus-b2-first-volume-1-book-with-key-de-kenny-nick-editorial-pearson-tapa-blanda-en-ingles-internacional-2019/p/MLA26577198',src:'MercadoLibre',use:'Simulacros · Listening · Writing'},
- {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos'},
- {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$79.594',u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas'},
- {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros'},
- {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra'},
- {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra'},
- {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros'},
- {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE'},
- {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$29.900',u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book-hart-cambridge/p/MLA70873732',src:'MercadoLibre',use:'Curso + UoE'},
- {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital'},
- {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full'},
- {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)'},
- {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado'},
- {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros'},
- {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)'},
- {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$34.369',u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso'},
- {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros'},
- {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$46.140',u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4'},
- {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$46.846',u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4'},
- {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas.',p:'$47.280',u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros'},
- {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros'},
- {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$56.874',u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros'},
- {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$80.847',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles'},
- {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$103.211',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso'},
- {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$147.912',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta'}
+ {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$43.900',u:'https://www.mercadolibre.com.ar/practice-tests-plus-b2-first-volume-1-book-with-key-de-kenny-nick-editorial-pearson-tapa-blanda-en-ingles-internacional-2019/p/MLA26577198',src:'MercadoLibre',use:'Simulacros · Listening · Writing',c:'Simulacros'},
+ {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos',c:'Simulacros'},
+ {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$79.594',u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas',c:'Gramática'},
+ {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra',c:'Workbook'},
+ {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra',c:'Workbook'},
+ {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
+ {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$29.900',u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book-hart-cambridge/p/MLA70873732',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
+ {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital',c:'Simulacros'},
+ {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full',c:'UoE'},
+ {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)',c:'Simulacros'},
+ {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado',c:'Workbook'},
+ {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)',c:'Gramática'},
+ {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$34.369',u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso',c:'Curso'},
+ {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$46.140',u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'UoE'},
+ {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$46.846',u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4',c:'UoE'},
+ {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas.',p:'$47.280',u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$56.874',u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$80.847',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles',c:'Simulacros'},
+ {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$103.211',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso',c:'Curso'},
+ {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$147.912',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta',c:'Curso'}
 ];
 const ONLINE=[
  {g:'🎧 Listening',l:[
@@ -2286,33 +2297,112 @@ function renderOnline(){
   if(!el)return;
   el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">gratis · online · sin descarga</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;margin-top:6px">Abrir →</a></div></div>`).join('')).join('');
 }
+/* ---------- MAT: índice de material por nombre ----------
+   Se construye cuando llega /libros.json. Cada key apunta al href
+   del archivo que matchea su regex sobre rel (folder+name). Si un
+   recurso no existe, MAT[k]='' y chips() no pinta nada → los links
+   de "dónde practicar" quedan siempre al día solos. */
+let MAT={};
+function buildMatIndex(){
+  MAT={};
+  const add=(k,re)=>{const m=MATERIALS.find(x=>re.test(x.rel||(x.folder+'/'+x.name)));if(m)MAT[k]=m.href;};
+  add('rueS1',/01-Examen.*RUE 2022/);add('rueS2',/02-Examen.*Reading and Use of English 2022/);
+  add('rueFS1',/03-Examen.*RUE 2022/);add('rueFS2',/04-Examen.*Reading and Use of English sample paper 2/);
+  add('wS1',/01-Examen.*Writing 2022/);add('wS2',/02-Examen.*Writing 2022/);
+  add('wFS1',/03-Examen.*Writing 2022/);add('wFS2',/04-Examen.*Writing sample paper 2/);
+  add('lS1',/01-Examen.*Listening 2022/);add('lS2',/02-Examen.*Listening 2022/);
+  add('lFS1',/03-Examen.*Listening 2022/);add('lFS2',/04-Examen.*Listening sample paper 2/);
+  add('spS1',/01-Examen.*speaking/);add('spS2',/02-Examen.*speaking/);
+  add('spFS1',/03-Examen.*speaking/);add('spFS2',/04-Examen.*Speaking sample paper 2/);
+  add('keyS1',/01-Examen.*RUE-Sample-1-Answer-Key/);add('keyS2',/02-Examen.*answer-keys/);
+  add('keyFS1',/03-Examen.*RUE-Sample-1-Answer-Key/);add('keyFS2',/04-Examen.*Answer key/);
+  add('tsS1',/01-Examen.*Tapescript/);add('tsFS1',/03-Examen.*Tapescript/);
+  add('lkS1',/01-Examen.*Listening-Sample-1-Answer-Key/);add('lkFS1',/03-Examen.*Listening-Sample-1-Answer-Key/);
+  add('auS1',/01-Examen.*listening-audio-file v2/);
+  add('auS2p1',/02-Examen.*part-1/);add('auS2p2',/02-Examen.*part-2/);add('auS2p3',/02-Examen.*part-3/);add('auS2p4',/02-Examen.*part-4/);
+  add('auFS1p1',/03-Examen.*audio-1-1/);add('auFS1p2',/03-Examen.*listening-audio-2/);
+  add('auFS1p3',/03-Examen.*listening-audio-3/);add('auFS1p4',/03-Examen.*listening-audio-4/);
+  add('auFS2',/04-Examen.*Listening audio/);
+  add('hb',/05-Handbooks.*b2-first-handbook\.pdf/);add('hbFS',/05-Handbooks.*for-schools-handbook/);
+  add('wCheck',/06-Writing.*checklist/);add('wAct1',/06-Writing.*writing-activities-part-1/);
+  add('wAct2',/06-Writing.*further-writing/);add('wGuide',/06-Writing.*teacher-guide-for-writing/);
+  add('rAct1',/07-Reading.*reading-activities-1/);add('rAct1b',/07-Reading.*reading-activities-part-1/);
+  add('rAct2',/07-Reading.*further-reading/);add('rGuide',/07-Reading.*developing-reading/);
+  add('spAct',/08-Speaking.*speaking-activities/);add('spGuide',/08-Speaking.*teacher-guide-for-speaking/);
+  ['natalia-enzo','giulia-tabatha-elena','julia-isabela','francesco-emma','lara-agustina-mateo','julia-malena'].forEach((n,i)=>add('exC'+i,new RegExp('08-Speaking.*examiner-comments-'+n)));
+  add('lGuide',/^09-Listening\/teacher-guide/);
+  add('lpR1',/10-Lesson-Plans\/B2-First.*reading-part-1/);add('lpR2',/10-Lesson-Plans\/B2-First.*reading-part-2/);
+  add('lpR3',/10-Lesson-Plans\/B2-First.*reading-part-3/);add('lpR4',/10-Lesson-Plans\/B2-First.*reading-part-4/);
+  add('lpR5',/10-Lesson-Plans\/B2-First.*reading-part-5/);add('lpR6',/10-Lesson-Plans\/B2-First.*reading-part-6/);
+  add('lpR7',/10-Lesson-Plans\/B2-First.*reading-part-7/);
+  add('lpL1',/10-Lesson-Plans\/B2-First.*listening-part-1/);add('lpL2',/10-Lesson-Plans\/B2-First.*listening-part-2/);
+  add('lpL3',/10-Lesson-Plans\/B2-First.*listening-part-3/);add('lpL4',/10-Lesson-Plans\/B2-First.*listening-part-4/);
+  add('lpSp1',/10-Lesson-Plans\/B2-First.*speaking-part-1/);add('lpSp2',/10-Lesson-Plans\/B2-First.*speaking-part-2/);
+  add('lpSp3',/10-Lesson-Plans\/B2-First.*speaking-part-3/);add('lpSp4',/10-Lesson-Plans\/B2-First.*speaking-part-4/);
+  add('lpW1',/10-Lesson-Plans\/B2-First.*writing-part-1/);add('lpW2',/10-Lesson-Plans\/B2-First.*writing-part-2/);
+  add('fR1',/10-Lesson-Plans\/B2-First-For-Schools.*reading-and-use-of-english-part-1/);add('fR2',/10-Lesson-Plans\/B2-First-For-Schools.*part-2/);
+  add('fR3',/10-Lesson-Plans\/B2-First-For-Schools.*part-3/);add('fR4',/10-Lesson-Plans\/B2-First-For-Schools.*part-4/);
+  add('fR5',/10-Lesson-Plans\/B2-First-For-Schools.*part-5/);add('fR6',/10-Lesson-Plans\/B2-First-For-Schools.*part-6/);
+  add('fR7',/10-Lesson-Plans\/B2-First-For-Schools.*part-7/);
+  add('fL1',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 1\.pdf/);add('fL1a',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 1-audio/);
+  add('fL2',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 2\.pdf/);add('fL2a',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 2-audio/);
+  add('fL3',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 3\.pdf/);add('fL3a',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 3-audio/);
+  add('fL4',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 4\.pdf/);add('fL4a',/10-Lesson-Plans\/B2-First-For-Schools.*Listening Part 4-audio/);
+  add('fSp1',/10-Lesson-Plans\/B2-First-For-Schools.*speaking-part-1/);add('fSp2',/10-Lesson-Plans\/B2-First-For-Schools.*speaking-part-2/);
+  add('fSp3',/10-Lesson-Plans\/B2-First-For-Schools.*speaking-part-3/);add('fSp4',/10-Lesson-Plans\/B2-First-For-Schools.*speaking-part-4/);
+  add('fW1',/10-Lesson-Plans\/B2-First-For-Schools.*writing-part-1/);add('fW2',/10-Lesson-Plans\/B2-First-For-Schools.*writing-part-2/);
+  add('tips',/11-Guias.*teaching-tips/);add('cand',/11-Guias.*first-information/);add('score',/11-Guias.*convertir/);
+}
+function chips(items){
+  return items.map(x=>{
+    const k=x[1];const t=x[0];
+    if(/^https?:/.test(k))return `<a class="chip" href="${k}" target="_blank" rel="noopener">${t} ↗</a>`;
+    return MAT[k]?`<a class="chip" href="${MAT[k]}" target="_blank" rel="noopener">${t}</a>`:'';
+  }).join('');
+}
 let MATERIALS=[];
+let BOOK_CAT=''; // filtro activo de categoría ('' = todas)
 function renderMaterial(){
   const el=document.getElementById('matList');
   if(!MATERIALS.length){el.innerHTML='<div class="empty">📥 Loading material... (the web version http://100.112.213.66:8088 loads it automatically; if you opened the local file there are no PDFs)</div>';return}
+  const q=(document.getElementById('matFilter').value||'').toLowerCase().trim();
   const groups={};
-  MATERIALS.forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
+  MATERIALS.filter(m=>!q||m.name.toLowerCase().includes(q)||m.folder.toLowerCase().includes(q)).forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
   el.innerHTML=Object.keys(groups).map(f=>{
     const items=groups[f].map(m=>m.ext==='AUDIO'
       ?`<div class="book"><div class="ico">🎧</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div></div>`
       :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Abrir PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Descargar</a></div></div>`).join('');
-    return `<h3 class="folder">${esc(f)}</h3>${items}`;
+    return `<h3 class="folder">${esc(f)} <span class="t">${groups[f].length}</span></h3>${items}`;
   }).join('');
 }
 function fmtSize(n){
   if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return n.toFixed(1)+' MB';
 }
+function renderBookCats(){
+  const el=document.getElementById('bookCats');
+  const cats=[...new Set(BUY_BOOKS.map(b=>b.c||'Otros'))];
+  el.innerHTML=`<button class="chip ${!BOOK_CAT?'on':''}" onclick="setBookCat('')">Todos (${BUY_BOOKS.length})</button>`+
+    cats.map(c=>`<button class="chip ${BOOK_CAT===c?'on':''}" onclick="setBookCat('${c}')">${c} (${BUY_BOOKS.filter(b=>(b.c||'Otros')===c).length})</button>`).join('');
+}
+function setBookCat(c){BOOK_CAT=c;renderBookCats();renderBooks()}
+function priceNum(p){const m=(p||'').match(/[\d.,]+/);if(!m)return Infinity;return parseFloat(m[0].replace(/\./g,'').replace(',','.'))}
 function renderBooks(){
   const q=(document.getElementById('bookFilter').value||'').toLowerCase().trim();
-  const list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
+  const s=document.getElementById('bookSort').value;
+  let list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
+  if(BOOK_CAT)list=list.filter(b=>(b.c||'Otros')===BOOK_CAT);
+  if(s==='asc')list=list.slice().sort((a,b)=>priceNum(a.p)-priceNum(b.p));
+  else if(s==='desc')list=list.slice().sort((a,b)=>priceNum(b.p)-priceNum(a.p));
+  else list=list.slice().sort((a,b)=>(a.c||'Otros').localeCompare(b.c||'Otros'));
   const el=document.getElementById('bookList');
   if(!list.length){el.innerHTML='<div class="empty">No results for "'+esc(q)+'"</div>';return}
   el.innerHTML=list.map(b=>`<div class="book">
     <div class="ico">${b.i||'📖'}</div>
     <div style="flex:1">
       <b>${b.n}</b>
+      <div class="meta"><span class="pill" style="font-size:10px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc)">${b.c||'Otros'}</span> <span style="color:var(--tertiary-container)">${b.src}</span></div>
       <div class="meta">${b.m}</div>
-      <div class="meta"><span style="color:var(--acc);font-weight:600">${b.src}</span> · usalo en: ${b.use}</div>
+      <div class="meta" style="font-size:11px;color:var(--dim)">usalo en: ${b.use}</div>
       <a href="${b.u}" target="_blank">Ver oferta →</a>
     </div>
     <div class="price">${b.p}</div>
@@ -2560,22 +2650,26 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.getElementById('v-'+b.dataset.view).classList.add('active');
 });
 
-function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderOnline();renderMaterial();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
+function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
-    MATERIALS=data;renderMaterial();
+    MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();
   }).catch(()=>{ /* modo archivo local: sin material dinámico */ });
 }
 document.getElementById('bookFilter').addEventListener('input',renderBooks);
+document.getElementById('bookSort').addEventListener('change',renderBooks);
+document.getElementById('matFilter').addEventListener('input',renderMaterial);
 loadMaterial();
 applyTimers();
 refreshAll();
 
-/* ---------- TEMA OSCURO (toggle + persistencia + sistema) ---------- */
+/* ---------- TEMA OSCURO (toggle + persistencia) ----------
+   El default es SIEMPRE el modo claro. El usuario puede cambiar con
+   el toggle (🌙/☀️) y la preferencia queda guardada en localStorage.
+   No se auto-detecta el tema del sistema: claro por defecto. */
 const THEME_KEY='b2first_theme';
 function currentTheme(){
-  if(document.documentElement.getAttribute('data-theme'))return document.documentElement.getAttribute('data-theme');
-  return window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  return document.documentElement.getAttribute('data-theme')||'light';
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
@@ -2585,23 +2679,17 @@ function applyTheme(t){
   if(btn)btn.innerHTML=t==='dark'?'☀️':'🌙';
 }
 function toggleTheme(){
-  applyTheme(currentTheme()==='dark'?'light':'dark');
-  try{localStorage.setItem(THEME_KEY,currentTheme())}catch(e){}
+  const next=currentTheme()==='dark'?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem(THEME_KEY,next)}catch(e){}
 }
 document.addEventListener('DOMContentLoaded',()=>{
   let saved=null;
   try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
-  applyTheme(saved||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  applyTheme(saved==='dark'?'dark':'light');
   const btn=document.getElementById('themeToggle');
   if(btn)btn.onclick=toggleTheme;
 });
-if(window.matchMedia){
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
-    let saved=null;
-    try{saved=localStorage.getItem(THEME_KEY)}catch(err){}
-    if(!saved)applyTheme(e.matches?'dark':'light');
-  });
-}
 
 /* ---------- ARRANQUE CON SESIÓN ---------- */
 (function initSession(){
