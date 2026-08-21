@@ -583,6 +583,11 @@ footer{
                     <div><label>Total minutes</label><input type="number" id="wMin" min="0" value="30"></div>
                   </div>
                   <p style="font-size:12px;color:var(--on-surface-variant);margin-top:6px">Rules: 140–190 words · zero contractions · ≥3 C1 connectors · 1 passive · 1 inversion/conditional.</p>
+                  <div class="row" style="margin-top:8px">
+                    <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
+                    <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
+                  </div>
+                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
                   <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
                     <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
                     <div id="rubList" style="margin-top:6px">
@@ -708,16 +713,23 @@ footer{
                   </div>
                   <p id="spFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
                   <div class="row" style="margin-top:10px">
+                    <div><label>Speaking part</label>
+                      <select id="spPart">
+                        <option value="1">Part 1 — Interview</option>
+                        <option value="2" selected>Part 2 — Long turn</option>
+                        <option value="3">Part 3 — Collaborative task</option>
+                        <option value="4">Part 4 — Discussion</option>
+                      </select>
+                    </div>
                     <div><label>Part 2: were there silences &gt;3s?</label>
                       <select id="spSil"><option value="no">No</option><option value="si">Yes</option></select>
                     </div>
                     <div><label>Part 2: did you self-correct?</label>
                       <select id="spRep"><option value="si">Yes</option><option value="no">No</option></select>
                     </div>
-                    <div><label>Did you complete Parts 3-4 with AI?</label>
-                      <select id="sp34"><option value="si">Yes</option><option value="no">No</option></select>
-                    </div>
+                    <div><label>Parts 3-4: negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
                   </div>
+                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
                 </div>
               </div>
@@ -775,6 +787,41 @@ footer{
                     <div><label>Minutos</label><input type="number" id="fwMin" min="0" value="80"></div>
                   </div>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Full Writing</button></div>
+                </div>
+                <div class="task">
+                  <div class="task-head">
+                    <div class="task-num">3</div>
+                    <div>
+                      <div class="task-title">Reading Part 6 — Gapped Text <span class="t">Stage 1 gate</span></div>
+                    </div>
+                  </div>
+                  <div class="guide">
+                    📍 <b>Where to find it:</b> R&UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part 6 inside the PDF. 6 gaps, choose the correct sentence for each.
+                  </div>
+                  <div class="row">
+                    <div><label>Correct (out of 6)</label><input type="number" id="r6Ok" min="0" max="6" value="0"></div>
+                    <div><label>Ref.</label><input type="text" id="r6Ref" placeholder="e.g. Sample 2 Part 6"></div>
+                    <div><label>Minutes</label><input type="number" id="r6Min" min="0" value="20"></div>
+                  </div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveR6()">✔ Save Reading Part 6</button></div>
+                </div>
+                <div class="task">
+                  <div class="task-head">
+                    <div class="task-num">4</div>
+                    <div>
+                      <div class="task-title">Speaking Final — Full Simulation <span class="t">Stage 2 · 14 min · validated by teacher at C1</span></div>
+                    </div>
+                  </div>
+                  <div class="guide">
+                    🎙 Complete Speaking paper (Parts 1-4, ~14 min) in exam conditions. Your teacher validates that the overall level is C1.
+                  </div>
+                  <div class="row">
+                    <div><label>Validated at C1 by teacher?</label>
+                      <select id="sfOk"><option value="yes">Yes</option><option value="no">No</option></select>
+                    </div>
+                    <div><label>Teacher / date ref.</label><input type="text" id="sfRef" placeholder="e.g. Prof. M. — 2026-09-01"></div>
+                  </div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSF()">✔ Save Speaking final</button></div>
                 </div>
               </div>
             </div>
@@ -1259,12 +1306,16 @@ footer{
         s2?, p2?, note?, book?, ref?}
        type: 'ue'  = Use of English (part 1-7)
              'w'   = Writing (kind: Essay/Article/Report/Review/Email,
-                      score: /20 nota del examinador)
+                      score: /20 nota del examinador, lex: {pv, col} para
+                      la regla de Inyección Léxica de Etapa 1)
              'l'   = Listening completo (correct/30, p2 = errores Part 2)
              'lp'  = Listening por parte (part 1-4)
-             'sp'  = Speaking por parte (part 1-4, sin score)
+             'sp'  = Speaking por parte (part 1-4; sil = silencios Part 2,
+                      neg = estructuras de negociación de Parts 3-4)
              'rue' = R&UoE completo (correct/52) — modo EXAMEN
              'fw'  = Full Writing (s1+s2 notas) — modo EXAMEN
+             'r6'  = Reading Part 6 Gapped Text (correct/6) — gate Etapa 1
+             'sf'  = Speaking final 14' (ok: validado por la profe en C1)
    D.errs[]        → registro de errores con taxonomía
        {date, code (L-GAP/G-ERR/T-MIS/T-LIM), detail}
    D.stage         → etapa actual 0..2 (avanza con las gates)
@@ -1279,12 +1330,16 @@ footer{
 
    GATES  (etapas → criterios en D.settings)
    ---------------------------------------------------------------------
-   Etapa 0: 3 gates — Writing nota >= e0.w · UoE Part 4 % >= e0.u ·
-             Listening Part 2 errores <= e0.l
-   Etapa 1: 4 gates — Writing >= e1.w y min <= e1.wm · UoE global % >=
-             e1.u · Listening >= e1.l
-   Etapa 2: 5 gates — R&UoE % >= e2.r y min <= e2.rm · Full Writing >=
-             e2.w · Listening >= e2.l en e2.ln tests seguidos
+   Etapa 0 — Cimientos: 3 gates — Writing nota >= e0.w · UoE Part 4 % >=
+             e0.u · Listening Part 2 errores <= e0.l
+   Etapa 1 — Precisión y Cohesión: 6 gates — Writing >= e1.w y min <=
+             e1.wm + Inyección Léxica (4 phrasal verbs + 3 collocations) ·
+             UoE (Parts 1-4) >= e1.u en 4 simulacros · Listening >= e1.l
+             en 3 · Speaking P2 sin silencios >3s · Reading P6 >= 4/6 en 3 ·
+             Speaking P3-4 con >= 3 estructuras de negociación en 4
+   Etapa 2 — Maestría (Release Candidate): 4 gates — R&UoE % >= e2.r y min
+             <= e2.rm · Full Writing >= e2.w · Listening >= e2.l en e2.ln
+             tests seguidos · Speaking final 14' validado por la profe en C1
    Cada gate tiene checkbox de override manual (D.overrides) por si el
    criterio no aplica (ej: falta el audio).
 
@@ -1408,8 +1463,9 @@ function saveUE(){
 function saveW(){
   const score=+document.getElementById('wScore').value;
   if(!score){alert('Set the score (0-20)');return}
-  log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length});
+  log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length,lex:{pv:+document.getElementById('wPv').value||0,col:+document.getElementById('wCol').value||0}});
   document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
+  document.getElementById('wPv').value=0;document.getElementById('wCol').value=0;
   document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
 }
 function saveL(){
@@ -1419,7 +1475,7 @@ function saveL(){
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
 function saveSP(){
-  log({type:'sp',sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,p34:document.getElementById('sp34').value});
+  log({type:'sp',part:+document.getElementById('spPart').value,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0});
 }
 function saveRUE(){
   const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
@@ -1432,6 +1488,15 @@ function saveFW(){
   if(!a&&!b){alert('Set at least one score');return}
   log({type:'fw',s1:a,s2:b,min:+document.getElementById('fwMin').value});
   document.getElementById('fw1').value='';document.getElementById('fw2').value='';
+}
+function saveR6(){
+  const correct=+document.getElementById('r6Ok').value;
+  log({type:'r6',correct,total:6,ref:document.getElementById('r6Ref').value,min:+document.getElementById('r6Min').value});
+  document.getElementById('r6Ok').value=0;document.getElementById('r6Ref').value='';
+}
+function saveSF(){
+  log({type:'sf',ok:document.getElementById('sfOk').value==='yes',ref:document.getElementById('sfRef').value});
+  document.getElementById('sfRef').value='';
 }
 function saveErr(){
   const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
@@ -1465,33 +1530,53 @@ function calcGates(){
   const s=D.settings;
   const w=D.log.filter(e=>e.type==='w').sort((a,b)=>a.date.localeCompare(b.date));
   let streak=0,best=0;for(const e of w){streak=e.score>=s.e0.w?streak+1:0;best=Math.max(best,streak)}
-  const wE1=D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm).length;
+  const wE1=D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm);
+  const wE1ok=wE1.length>=6&&wE1.slice(-6).every(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3);
   const ue4=lastN('ue',5).filter(e=>e.part===4);
   const ue4a=avg(ue4);
   const ueAll=avg(D.log.filter(e=>e.type==='ue'));
+  // UoE global: 4 simulacros completos (parts 1-4) — se toman los últimos 4 logs de tipo 'ue' con part<=4
+  const ueSims=lastN('ue',4).filter(e=>e.part<=4);
+  const ueSimsOk=ueSims.length>=4&&ueSims.every(e=>e.correct/e.total*100>=s.e1.u);
   const l3=lastN('l',3);
   const l4=lastN('l',4);
-  const l3ok=l3.length===3&&l3.every(e=>e.correct>=s.e1.l);
+  const l3ok=l3.length>=3&&l3.slice(0,3).every(e=>e.correct>=s.e1.l);
   const lP2=l3.filter(e=>e.p2!==undefined&&e.p2<=s.e0.l);
   const lP2ok=l3.length>=3&&l3.slice(0,3).every(e=>e.p2!==undefined&&e.p2<=s.e0.l);
   const l4ok=l4.length>=s.e2.ln&&l4.slice(0,s.e2.ln).every(e=>e.correct>=s.e2.l);
   const rue=D.log.filter(e=>e.type==='rue').filter(e=>e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
   const fw=D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
+  // Speaking Part 2: 1 min sin silencios >3s → logs 'sp' con sil='no' (sin silencios)
+  const sp2=D.log.filter(e=>e.type==='sp'&&e.part===2&&e.sil==='no');
+  const sp2ok=sp2.length>=1;
+  // Reading Part 6 (Gapped Text): ≥4/6 en 3 simulacros consecutivos → logs 'r6'
+  const r6=lastN('r6',3);
+  const r6ok=r6.length>=3&&r6.slice(0,3).every(e=>e.correct>=4&&e.total===6);
+  // Speaking Parts 3-4: 4 simulacros con ≥3 estructuras de negociación → logs 'sp' part 3/4 con neg>=3
+  const sp34=D.log.filter(e=>e.type==='sp'&&(e.part===3||e.part===4)&&e.neg>=3);
+  const sp34ok=sp34.length>=4;
+  // Speaking final (14 min) validado por la profe en C1 → logs 'sf' con ok=true
+  const sf=D.log.filter(e=>e.type==='sf'&&e.ok===true);
+  const sfok=sf.length>=1;
   const gates=[
     {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:best>=4,val:Math.min(best/4,1),txt:`current streak: ${best}/4`},
     {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:ue4a!==null&&ue4a>=s.e0.u,val:ue4a?Math.min(ue4a/s.e0.u,1):0,txt:ue4a?`last 5 average: ${ue4a.toFixed(0)}%`:'no log yet (5 rounds)'},
     {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 tests',ok:lP2ok,val:lP2.length/3,txt:`tests with ≤${s.e0.l} err: ${lP2.length}/3`},
-    {name:'6 texts (Parts 1 and 2) ≤'+s.e1.wm+' min with score ≥'+s.e1.w+'/20',ok:wE1>=6,val:Math.min(wE1/6,1),txt:`meet it: ${wE1}/6`},
-    {name:'Use of English (Parts 1-4) ≥ '+s.e1.u+'% overall',ok:ueAll!==null&&ueAll>=s.e1.u,val:ueAll?Math.min(ueAll/s.e1.u,1):0,txt:ueAll?`overall: ${ueAll.toFixed(0)}%`:'no logs'},
+    {name:'6 texts ≤'+s.e1.wm+' min, score ≥'+s.e1.w+'/20 + Lexical Injection (4 phrasal verbs + 3 C1 collocations)',ok:wE1ok,val:Math.min(wE1.filter(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3).length/6,1),txt:`meet it: ${wE1.filter(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3).length}/6`},
+    {name:'UoE (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:ueSimsOk,val:Math.min(ueSims.length/4,1),txt:`mocks: ${ueSims.length}/4`},
     {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:l3ok,val:l3.length/3,txt:`tests: ${l3.length}/3`},
+    {name:'Speaking Part 2 — 1 min continuous, no silences >3s',ok:sp2ok,val:Math.min(sp2.length/1,1),txt:`clean runs: ${sp2.length}`},
+    {name:'Reading Part 6 (Gapped Text) ≥4/6 in 3 consecutive mocks',ok:r6ok,val:Math.min(r6.length/3,1),txt:`mocks: ${r6.length}/3`},
+    {name:'Speaking Parts 3-4 — 4 mocks with ≥3 negotiation structures',ok:sp34ok,val:Math.min(sp34.length/4,1),txt:`mocks: ${sp34.length}/4`},
     {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:rue.length>=1,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
     {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:fw.length>=1,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
-    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`}
+    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`},
+    {name:'Speaking final (14 min) validated by teacher at C1',ok:sfok,val:Math.min(sf.length/1,1),txt:`validated: ${sf.length}`}
   ];
-  return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5]],[gates[6],gates[7],gates[8]]]};
+  return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5],gates[6],gates[7],gates[8]],[gates[9],gates[10],gates[11],gates[12]]]};
 }
-const STAGE_NAMES=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery (Grade A)'];
-const STAGE_FOCUS=['Essay structure and deduction of grammar patterns.','Time reduction and mastery of Part 2 formats (Reports/Articles).','Real-time mocks under fatigue conditions.'];
+const STAGE_NAMES=['Stage 0 — Foundations (Structural Acquisition)','Stage 1 — Precision & Cohesion (Pattern Mastery)','Stage 2 — Mastery (Target Grade A / C1) · Release Candidate'];
+const STAGE_FOCUS=['Trap recognition and basic architecture.','Optimal solving times and interactive fluency.','Execution under fatigue. If you pass this, you take the official exam.'];
 
 function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
@@ -1715,15 +1800,17 @@ const MOD={
   lp:e=>`Listening P${e.part}`,
   sp:e=>`Speaking P${e.part||''}`,
   rue:e=>`Full R&UoE`,
-  fw:e=>`Full Writing`
+  fw:e=>`Full Writing`,
+  r6:e=>`Reading P6 (Gapped)`,
+  sf:e=>`Speaking Final`
 };
 function renderLog(){
   const tb=document.querySelector('#logTable tbody');
   if(!D.log.length){tb.innerHTML='<tr><td colspan="6" class="empty">📭 You haven\'t logged anything yet. Start in TODAY.</td></tr>';return}
   tb.innerHTML=D.log.map((e,i)=>`<tr>
     <td>${e.date}</td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td>
-    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':(e.correct+'/'+e.total)}</td>
-    <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'?'':pct(e.correct,e.total)+'%'}</td>
+    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✔':'pending'):(e.correct+'/'+e.total)}</td>
+    <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td>${e.min??''}</td>
     <td><button class="del" onclick="editLog(${i})" title="Editar">✎</button> <button class="del" onclick="delLog(${i})" title="Borrar">✕</button></td>
   </tr>`).join('');
@@ -1731,7 +1818,7 @@ function renderLog(){
 function editLog(i){
   const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
   if(!tr)return;
-  if(e.type==='sp'){alert('Speaking has no numeric fields to edit — delete it and log it again.');return}
+  if(e.type==='sp'||e.type==='sf'){alert(e.type==='sf'?'Speaking final has no numeric fields to edit — delete it and log it again.':'Speaking has no numeric fields to edit — delete it and log it again.');return}
   let fields='';
   if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:10px">nota/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
   else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:10px">texto1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:10px">texto2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
@@ -1764,6 +1851,8 @@ function renderStats(){
   ['Essay','Article','Report','Review','Email'].forEach(k=>row('Writing '+k,D.log.filter(e=>e.type==='w'&&e.kind===k)));
   const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('R&UoE completo',rue);
   const l=D.log.filter(e=>e.type==='l');if(l.length)row('Listening completo',l);
+  const r6=D.log.filter(e=>e.type==='r6');if(r6.length)row('Reading P6 (Gapped)',r6);
+  const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--mon)">${sf.filter(e=>e.ok).length} validated C1</td></tr>`);
   for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">practiced</td></tr>`)}
   document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="empty">📊 No data yet — log exercises and you\'ll see your evolution here.</td></tr>';
 }

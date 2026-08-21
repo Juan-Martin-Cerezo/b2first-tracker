@@ -62,11 +62,32 @@ ejercicios siempre disponibles para practicar lo que quieras, cuando quieras.
 
 ## 6. Metric Gates (avance por etapas)
 
-| Etapa | Gates (todas con criterio numérico) |
-|---|---|
-| **Etapa 0 — Fundamentos** | Writing ≥ 14/20 · UoE Part 4 ≥ 60% · Listening Part 2 ≤ 3 errores |
-| **Etapa 1 — Consistencia** | Writing ≥ 16/20 en ≤ 45' · UoE global ≥ 75% · Listening ≥ 24/30 |
-| **Etapa 2 — Excelencia** | R&UoE ≥ 80% en ≤ 65' · Full Writing ≥ 16/20 · Listening ≥ 26/30 en 4 tests seguidos |
+### Etapa 0 — Cimientos (Adquisición Estructural)
+*Objetivo: reconocimiento de trampas y arquitectura básica.*
+
+- [ ] **Writing**: 4 textos consecutivos con nota ≥ 14/20.
+- [ ] **Use of English (Part 4)**: ≥ 60% de aciertos en 5 tandas consecutivas.
+- [ ] **Listening (Part 2)**: ≤ 3 errores por prueba en 3 intentos consecutivos.
+
+### Etapa 1 — Precisión y Cohesión (Dominio de Patrones)
+*Objetivo: tiempos de resolución óptimos y fluidez interactiva.*
+
+- [ ] **Writing**: 6 textos en ≤ 45 min cada uno, con nota ≥ 16/20 y cumplimiento de la
+      regla de **Inyección Léxica** (4 phrasal verbs + 3 collocations C1).
+- [ ] **Use of English (Global)**: ≥ 75% de precisión en 4 simulacros completos (Parts 1 a 4).
+- [ ] **Listening**: ≥ 24/30 aciertos en 3 pruebas completas consecutivas.
+- [ ] **Speaking (Part 2)**: 1 minuto continuo sin silencios > 3 segundos.
+- [ ] **Reading (Part 6 - Gapped Text)**: ≥ 4/6 aciertos en 3 simulacros consecutivos.
+- [ ] **Speaking (Parts 3 & 4)**: 4 simulacros utilizando exitosamente ≥ 3 estructuras de
+      negociación avanzada.
+
+### Etapa 2 — Maestría (Target Grade A / C1) · Release Candidate
+*Objetivo: ejecución bajo fatiga. Si pasás esto, rendís el examen oficial.*
+
+- [ ] **Reading and Use of English**: prueba completa en ≤ 65 min (sobran 10 min) con ≥ 80% de aciertos.
+- [ ] **Full Writing**: redacción de 2 textos seguidos en 1 h 20 min, ambos ≥ 16/20.
+- [ ] **Listening**: puntuación sostenida ≥ 26/30 en 4 exámenes de práctica consecutivos.
+- [ ] **Speaking**: simulación final (14 minutos) validada por tu profesora en nivel C1.
 
 - Las gates se calculan **solas** desde el historial (pestaña PROGRESO).
 - Si un criterio no aplica (ej: falta audio), hay checkbox de **override manual**.
