@@ -30,10 +30,10 @@ with sync_playwright() as p:
     # sin datos: mensajes vacíos
     pg.click("nav button[data-view='graf']")
     pg.wait_for_timeout(200)
-    out["evol_vacio"] = "Registrá" in pg.evaluate("document.getElementById('gEvol').textContent")
-    out["part_vacio"] = "Sin datos" in pg.evaluate("document.getElementById('gPart').textContent")
-    out["err_vacio"] = "Sin errores" in pg.evaluate("document.getElementById('gErr').textContent")
-    out["cons_vacio"] = "Sin registros" in pg.evaluate("document.getElementById('gCons').textContent")
+    out["evol_vacio"] = "Log Writing" in pg.evaluate("document.getElementById('gEvol').textContent")
+    out["part_vacio"] = "No data yet" in pg.evaluate("document.getElementById('gPart').textContent")
+    out["err_vacio"] = "No errors logged" in pg.evaluate("document.getElementById('gErr').textContent")
+    out["cons_vacio"] = "No logs yet" in pg.evaluate("document.getElementById('gCons').textContent")
 
     # con datos: los 4 paneles renderizan
     pg.evaluate("""D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:15,min:30});
