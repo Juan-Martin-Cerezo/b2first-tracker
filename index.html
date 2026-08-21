@@ -18,10 +18,10 @@
 /* ============================================================
    B2 First Tracker — Academic Precision (Stitch fiel)
    Estructura replicada de las pantallas de Stitch:
-   - Sidebar vertical de navegación (desktop) / bottom nav (mobile)
-   - Tarjetas de sesión con tasks numerados y timers
+   - Vertical navigation sidebar (desktop) / bottom nav (mobile)
+   - Session cards with numbered tasks and timers
    - Timer de examen gigante con dial
-   - Matriz de progresión con tabs por etapa
+   - Progression matrix with per-stage tabs
    - Bento grid en PLAN, split view en ERRORES
    Se mantiene el 100% del contrato de IDs/funciones del JS.
    ============================================================ */
@@ -430,14 +430,14 @@ footer{
       <span>B2 FIRST</span>
     </div>
     <nav id="sideNav">
-      <button data-view="hoy" class="active"><span class="mat material-symbols-outlined">today</span>HOY</button>
-      <button data-view="exam"><span class="mat material-symbols-outlined">assignment</span>EXAMEN</button>
-      <button data-view="partes"><span class="mat material-symbols-outlined">grid_view</span>PARTES</button>
-      <button data-view="prog"><span class="mat material-symbols-outlined">trending_up</span>PROGRESO</button>
-      <button data-view="graf"><span class="mat material-symbols-outlined">monitoring</span>GRÁFICOS</button>
+      <button data-view="hoy" class="active"><span class="mat material-symbols-outlined">today</span>TODAY</button>
+      <button data-view="exam"><span class="mat material-symbols-outlined">assignment</span>EXAM</button>
+      <button data-view="partes"><span class="mat material-symbols-outlined">grid_view</span>PARTS</button>
+      <button data-view="prog"><span class="mat material-symbols-outlined">trending_up</span>PROGRESS</button>
+      <button data-view="graf"><span class="mat material-symbols-outlined">monitoring</span>CHARTS</button>
       <button data-view="plan"><span class="mat material-symbols-outlined">tune</span>PLAN</button>
-      <button data-view="err"><span class="mat material-symbols-outlined">bug_report</span>ERRORES</button>
-      <button data-view="libros"><span class="mat material-symbols-outlined">menu_book</span>LIBROS</button>
+      <button data-view="err"><span class="mat material-symbols-outlined">bug_report</span>ERRORS</button>
+      <button data-view="libros"><span class="mat material-symbols-outlined">menu_book</span>BOOKS</button>
     </nav>
     <div class="side-foot"><span class="dot"></span>Pi Sync Active</div>
   </aside>
@@ -445,8 +445,8 @@ footer{
   <!-- ============ CONTENIDO ============ -->
   <div class="content">
     <div class="topbar">
-      <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Estado de guardado en la Pi">—</span></div>
-      <div class="user-chip"><span class="stage-badge" id="stageBadge">Etapa 0 — Cimientos</span><span class="avatar">A</span></div>
+      <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the Pi">—</span></div>
+      <div class="user-chip"><span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span><span class="avatar">A</span></div>
     </div>
 
     <main>
@@ -455,14 +455,14 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ COACH_OVERVIEW ]</span>
-            <h1 class="page-title">Hoy</h1>
-            <p class="page-sub">Tu plan de estudio de alto rendimiento. Sesiones, rotación algorítmica y métricas semanales.</p>
+            <h1 class="page-title">Today</h1>
+            <p class="page-sub">Your high-performance study plan. Sessions, algorithmic rotation and weekly metrics.</p>
           </div>
           <button class="btn" onclick="document.getElementById('v-hoy').scrollIntoView()">▶ START SESSION</button>
         </div>
 
         <div class="grid-12">
-          <!-- Columna principal -->
+          <!-- Main column -->
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
 
@@ -471,12 +471,12 @@ footer{
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Sesión A</span>
-                    <div class="sesion-title">✍️ Ingeniería de Texto <span class="badge fri">LUN 15:30</span></div>
-                    <div class="sesion-sub">Objetivo: eliminar error gramatical y dominar la estructura algorítmica del Writing.</div>
+                    <span class="badge mon">Session A</span>
+                    <div class="sesion-title">✍️ Text Engineering <span class="badge fri">MON 15:30</span></div>
+                    <div class="sesion-sub">Goal: eliminate grammar errors and master the algorithmic structure of Writing.</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Duración total</span>
+                    <span class="dur-label">Total duration</span>
                     <span class="dur-val">45 MIN</span>
                   </div>
                 </div>
@@ -485,7 +485,7 @@ footer{
                   <div class="task-head">
                     <div class="task-num">1</div>
                     <div>
-                      <div class="task-title">Use of English Focus <span class="t">15 min · límite real 10 min</span></div>
+                      <div class="task-title">Use of English Focus <span class="t">15 min · real limit 10 min</span></div>
                     </div>
                     <div class="task-meta">
                       <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">10:00</span></div>
@@ -493,25 +493,25 @@ footer{
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Dónde encontrar el ejercicio (abrí el PDF, andá a la parte que toca esta semana):</b><br>
-                    • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf" target="_blank">RUE Sample 1 PDF</a> · claves: <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf" target="_blank">Answer keys 1</a><br>
-                    • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf" target="_blank">RUE Sample 2 PDF</a> · claves: <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf" target="_blank">Answer keys 2</a><br>
+                    📍 <b>Where to find the exercise (open the PDF, go to this week's part):</b><br>
+                    • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf" target="_blank">RUE Sample 1 PDF</a> · keys: <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf" target="_blank">Answer keys 1</a><br>
+                    • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf" target="_blank">RUE Sample 2 PDF</a> · keys: <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf" target="_blank">Answer keys 2</a><br>
                     • <b>For Schools 1:</b> <a href="/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf" target="_blank">RUE FS1</a> · <b>FS2:</b> <a href="/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf" target="_blank">RUE FS2</a><br>
-                    • <b>Exam Booster (tu libro, SIN key ⚠️):</b> sección "Use of English" → ejercicios de la parte que toca. Sin respuestas: corregí conmigo o con la profe.<br>
-                    • <b>Flo-Joe (auto-corrige online):</b> <a href="https://www.flo-joe.co.uk/fce/students/tests/" target="_blank">flo-joe.co.uk/fce</a> · <b>Handbook (reglas):</b> <a href="/files/handbook.pdf" target="_blank">handbook.pdf</a>
+                    • <b>Exam Booster (your book, NO key ⚠️):</b> "Use of English" section → exercises for the part of the week. No answers: check with me or your teacher.<br>
+                    • <b>Flo-Joe (self-check online):</b> <a href="https://www.flo-joe.co.uk/fce/students/tests/" target="_blank">flo-joe.co.uk/fce</a> · <b>Handbook (rules):</b> <a href="/files/handbook.pdf" target="_blank">handbook.pdf</a>
                   </div>
-                  <p id="semanaP">Esta semana: <b id="semanaTxt"></b></p>
+                  <p id="semanaP">This week: <b id="semanaTxt"></b></p>
                   <div class="row">
-                    <div><label>Fuente</label>
+                    <div><label>Source</label>
                       <select id="ueFuente">
-                        <option value="gv">Grammar &amp; Vocabulary for First (con answers)</option>
-                        <option value="booster">Exam Booster (sin key ⚠️)</option>
-                        <option value="flojoe">Flo-Joe (web, con auto-corr.)</option>
-                        <option value="sample">Sample Paper (oficial, con answers)</option>
-                        <option value="ptplus">Practice Tests Plus B2 First (con key)</option>
+                        <option value="gv">Grammar &amp; Vocabulary for First (with answers)</option>
+                        <option value="booster">Exam Booster (no key ⚠️)</option>
+                        <option value="flojoe">Flo-Joe (web, self-check)</option>
+                        <option value="sample">Sample Paper (official, with answers)</option>
+                        <option value="ptplus">Practice Tests Plus B2 First (with key)</option>
                       </select>
                     </div>
-                    <div><label>Parte</label>
+                    <div><label>Part</label>
                       <select id="uePart">
                         <option value="1">Part 1 — Multiple-choice cloze (8)</option>
                         <option value="2">Part 2 — Open cloze (8)</option>
@@ -524,49 +524,49 @@ footer{
                     </div>
                   </div>
                   <div class="row">
-                    <div><label>Ejercicio / ref.</label><input type="text" id="ueRef" placeholder="ej: G&amp;V Unit 12 / Booster p.34"></div>
-                    <div><label>Aciertos</label><input type="number" id="ueOk" min="0" value="0"></div>
-                    <div><label>Total preguntas</label><input type="number" id="ueTotal" min="1" value="6"></div>
-                    <div><label>Minutos</label><input type="number" id="ueMin" min="0" value="10"></div>
+                    <div><label>Exercise / ref.</label><input type="text" id="ueRef" placeholder="e.g. G&amp;V Unit 12 / Booster p.34"></div>
+                    <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
+                    <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="6"></div>
+                    <div><label>Minutes</label><input type="number" id="ueMin" min="0" value="10"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveUE()">✔ Registrar UoE</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveUE()">✔ Save UoE</button></div>
                 </div>
 
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">2</div>
                     <div>
-                      <div class="task-title">Sprint de Redacción <span class="t">30 min · 5 plan + 22 escribí + 3 revisá</span></div>
+                      <div class="task-title">Writing Sprint <span class="t">30 min · 5 plan + 22 write + 3 review</span></div>
                     </div>
                     <div class="task-meta">
                       <div class="task-timer"><span class="lbl">Total</span><span class="timer" id="wTimer">—</span></div>
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Dónde encontrar la consigna (abrí el PDF y copiá el enunciado en el campo de abajo):</b><br>
-                    • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf" target="_blank">Writing Sample 1 PDF</a> → Part 1 (Essay, obligatorio) + Part 2 (elegí 1: Article/Review/Report/Email)<br>
+                    📍 <b>Where to find the task (open the PDF and copy the prompt into the field below):</b><br>
+                    • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf" target="_blank">Writing Sample 1 PDF</a> → Part 1 (Essay, compulsory) + Part 2 (choose 1: Article/Review/Report/Email)<br>
                     • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf" target="_blank">Writing Sample 2 PDF</a><br>
                     • <b>For Schools 1:</b> <a href="/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf" target="_blank">Writing FS1</a> · <b>FS2:</b> <a href="/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf" target="_blank">Writing FS2</a><br>
-                    • <b>Practice Tests Plus / FCE 6 / Exam Booster:</b> consignas de su sección Writing (los que tienen key incluyen model answers).<br>
-                    • <b>Estructura obligatoria:</b> P1 introducción → P2 idea 1 (conector + argumento + ejemplo) → P3 idea 2 + idea propia → P4 conclusión. <b>Reglas:</b> 140–190 palabras · cero contracciones · ≥3 conectores C1 · 1 pasiva · 1 inversión/condicional.
+                    • <b>Practice Tests Plus / FCE 6 / Exam Booster:</b> prompts from their Writing section (the ones with keys include model answers).<br>
+                    • <b>Mandatory structure:</b> P1 introduction → P2 idea 1 (connector + argument + example) → P3 idea 2 + own idea → P4 conclusion. <b>Rules:</b> 140–190 words · zero contractions · ≥3 C1 connectors · 1 passive · 1 inversion/conditional.
                   </div>
                   <div class="row">
-                    <div><label>Tipo de texto</label>
+                    <div><label>Text type</label>
                       <select id="wTipo"><option>Essay</option><option>Article</option><option>Report</option><option>Review</option><option>Email</option></select>
                     </div>
-                    <div><label>Consigna de</label>
+                    <div><label>Prompt from</label>
                       <select id="wFuente">
-                        <option value="sample">Sample Paper oficial</option>
+                        <option value="sample">Official Sample Paper</option>
                         <option value="ptplus">Practice Tests Plus</option>
                         <option value="fce6">FCE 6</option>
                         <option value="booster">Exam Booster</option>
-                        <option value="clase">Consigna de la profe</option>
+                        <option value="clase">Teacher's prompt</option>
                       </select>
                     </div>
                   </div>
                   <div class="row">
-                    <div><label>Consigna (pegala acá)</label><input type="text" id="wPrompt" placeholder="ej: 'Your teacher wants you to write an essay about...'"></div>
-                    <div><label>Nº palabras</label><input type="number" id="wWords" min="100" value="160"></div>
+                    <div><label>Prompt (paste it here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your teacher wants you to write an essay about...'"></div>
+                    <div><label>Word count</label><input type="number" id="wWords" min="100" value="160"></div>
                   </div>
                   <!-- Sub-fases -->
                   <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:12px">
@@ -575,47 +575,47 @@ footer{
                     <div class="phase-mini"><span class="ph-lbl">REVIEW</span><span class="ph-val">03:00</span><button class="btn sm gray" onclick="wRev.start()">▶</button></div>
                   </div>
                   <div class="row" style="margin-top:12px">
-                    <div><label>Nota IA / Write&amp;Improve (sobre 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
-                    <div><label>Minutos totales</label><input type="number" id="wMin" min="0" value="30"></div>
+                    <div><label>AI / Write&amp;Improve score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
+                    <div><label>Total minutes</label><input type="number" id="wMin" min="0" value="30"></div>
                   </div>
-                  <p style="font-size:12px;color:var(--on-surface-variant);margin-top:6px">Reglas: 140–190 palabras · cero contracciones · ≥3 conectores C1 · 1 pasiva · 1 inversión/condicional.</p>
+                  <p style="font-size:12px;color:var(--on-surface-variant);margin-top:6px">Rules: 140–190 words · zero contractions · ≥3 C1 connectors · 1 passive · 1 inversion/conditional.</p>
                   <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
-                    <b style="font-size:12.5px">Rúbrica Grade A — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
+                    <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
                     <div id="rubList" style="margin-top:6px">
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 4-5 párrafos separados por línea en blanco</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> ≥4 conectores avanzados (Furthermore, Nevertheless, Consequently, As a result...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 cláusula relativa no definitoria (which/who entre comas)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 estructura pasiva (It is widely believed... / Measures should be implemented...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 condicional complejo o inversión (Were governments to act... / Not only... but also...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> Registro consistente: cero lenguaje informal</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 140-190 palabras exactas</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 4-5 paragraphs separated by a blank line</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> ≥4 advanced connectors (Furthermore, Nevertheless, Consequently, As a result...)</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 non-defining relative clause (which/who between commas)</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 passive structure (It is widely believed... / Measures should be implemented...)</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 complex conditional or inversion (Were governments to act... / Not only... but also...)</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> Consistent register: zero informal language</label>
+                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 140-190 exact words</label>
                     </div>
                   </div>
-                  <div style="margin-top:12px"><button class="btn ok" onclick="saveW()">✔ Registrar Writing</button></div>
+                  <div style="margin-top:12px"><button class="btn ok" onclick="saveW()">✔ Save Writing</button></div>
                 </div>
 
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">3</div>
                     <div>
-                      <div class="task-title">Auditoría y Causa Raíz <span class="t">15 min</span></div>
+                      <div class="task-title">Audit & Root Cause <span class="t">15 min</span></div>
                     </div>
                   </div>
-                  <p style="font-size:13px">Prompt para tu IA: <i>"Actúa como examinador Senior Cambridge B2/C1. Evalúa según Content, Communicative Achievement, Organisation y Language. Nota sobre 20 (máx 5 c/u), errores exactos y versión mejorada C1."</i> — o pegá el texto en <a href="https://writeandimprove.com" target="_blank" style="color:var(--primary)">Write &amp; Improve</a>.</p>
+                  <p style="font-size:13px">Prompt for your AI: <i>"Act as a Senior Cambridge B2/C1 examiner. Assess according to Content, Communicative Achievement, Organisation and Language. Score out of 20 (max 5 each), exact errors and an improved C1 version."</i> — or paste the text into <a href="https://writeandimprove.com" target="_blank" style="color:var(--primary)">Write &amp; Improve</a>.</p>
                   <div class="row" style="margin-top:10px">
-                    <div><label>Código de error principal</label>
+                    <div><label>Main error code</label>
                       <select id="errCode">
-                        <option value="L-GAP">L-GAP — no conocías la palabra</option>
-                        <option value="G-ERR">G-ERR — regla sintáctica mal aplicada</option>
-                        <option value="T-MIS">T-MIS — caíste en el distractor</option>
-                        <option value="T-LIM">T-LIM — error por apuro/falta de tiempo</option>
+                        <option value="L-GAP">L-GAP — you didn't know the word</option>
+                        <option value="G-ERR">G-ERR — syntactic rule misapplied</option>
+                        <option value="T-MIS">T-MIS — fell for the distractor</option>
+                        <option value="T-LIM">T-LIM — rushed / time pressure error</option>
                       </select>
                     </div>
-                    <div><label>Nota auditada (opcional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
+                    <div><label>Audited score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
                   </div>
-                  <div><label>¿Qué falló? (1 línea)</label><input type="text" id="errDesc" placeholder="ej: no apliqué inversión con 'Seldom'"></div>
-                  <div><label>Acción correctiva inmediata</label><input type="text" id="errFix" placeholder="ej: repasar regla de inversión + hacer 5 KWT más"></div>
-                  <div style="margin-top:10px"><button class="btn" onclick="saveErr()">🔖 Guardar error</button></div>
+                  <div><label>What went wrong? (1 line)</label><input type="text" id="errDesc" placeholder="e.g. I didn't apply inversion with 'Seldom'"></div>
+                  <div><label>Immediate corrective action</label><input type="text" id="errFix" placeholder="e.g. review inversion rule + do 5 more KWT"></div>
+                  <div style="margin-top:10px"><button class="btn" onclick="saveErr()">🔖 Save error</button></div>
                 </div>
               </div>
             </div>
@@ -625,12 +625,12 @@ footer{
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Sesión B</span>
-                    <div class="sesion-title">🎧 Procesamiento Auditivo y Simulación Oral <span class="badge fri">VIE 13:00</span></div>
-                    <div class="sesion-sub">Objetivo: velocidad de procesamiento auditivo y fluidez verbal sin pausas.</div>
+                    <span class="badge fri">Session B</span>
+                    <div class="sesion-title">🎧 Auditory Processing & Oral Simulation <span class="badge fri">FRI 13:00</span></div>
+                    <div class="sesion-sub">Goal: auditory processing speed and verbal fluency without pauses.</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Duración total</span>
+                    <span class="dur-label">Total duration</span>
                     <span class="dur-val">60 MIN</span>
                   </div>
                 </div>
@@ -639,7 +639,7 @@ footer{
                   <div class="task-head">
                     <div class="task-num">1</div>
                     <div>
-                      <div class="task-title">Full Listening Test <span class="t">30 min · sin pausar el audio</span></div>
+                      <div class="task-title">Full Listening Test <span class="t">30 min · do not pause the audio</span></div>
                     </div>
                     <div class="task-meta">
                       <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">30:00</span></div>
@@ -647,15 +647,15 @@ footer{
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Qué reproducir (el audio está acá mismo en la pestaña LIBROS → Material):</b><br>
+                    📍 <b>What to play (the audio is right here in the BOOKS → Material tab):</b><br>
                     • <b>Sample 1:</b> <a href="/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf" target="_blank">preguntas PDF</a> + <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3" target="_blank">audio completo</a> + <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf" target="_blank">claves</a><br>
                     • <b>Sample 2:</b> <a href="/files/sample2/B2%20First%20sample%20paper%202%20Listening%202022.pdf" target="_blank">preguntas PDF</a> + audio por partes (part-1 a part-4) + <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf" target="_blank">claves</a> — todo en LIBROS → Material<br>
                     • <b>For Schools 1 y 2:</b> PDFs de Listening + audios en sus carpetas (Material).<br>
-                    • <b>Practice Tests Plus / FCE 6:</b> usá el código/audio del libro. <b>Regla:</b> resolvé de corrido, sin pausar. Puntaje sobre 30.
+                    • <b>Practice Tests Plus / FCE 6:</b> use the book's code/audio. <b>Rule:</b> complete it in one go, without pausing. Score out of 30.
                   </div>
                   <p id="lFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
                   <div class="row">
-                    <div><label>Fuente del audio</label>
+                    <div><label>Audio source</label>
                       <select id="lFuente">
                         <option value="sample1">Sample Paper 1 (MP3 local)</option>
                         <option value="sample2">Sample Paper 2 (MP3 local)</option>
@@ -663,25 +663,25 @@ footer{
                         <option value="fce6">FCE 6 (CDs)</option>
                       </select>
                     </div>
-                    <div><label>Test Nº</label><input type="text" id="lRef" placeholder="ej: Sample 1 / Test 3"></div>
+                    <div><label>Test #</label><input type="text" id="lRef" placeholder="e.g. Sample 1 / Test 3"></div>
                   </div>
                   <div class="row">
-                    <div><label>Aciertos (sobre 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
-                    <div><label>Errores en Part 2</label><input type="number" id="lP2" min="0" value="0"></div>
+                    <div><label>Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
+                    <div><label>Part 2 errors</label><input type="number" id="lP2" min="0" value="0"></div>
                     <div><label>Minutos</label><input type="number" id="lMin" min="0" value="30"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Registrar Listening</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Save Listening</button></div>
                 </div>
 
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">2</div>
                     <div>
-                      <div class="task-title">Post-Mortem Auditivo <span class="t">10 min</span></div>
+                      <div class="task-title">Auditory Post-Mortem <span class="t">10 min</span></div>
                     </div>
                   </div>
-                  <p style="font-size:13px">Abrí el tapescript SOLO de las que fallaste. Identificá la trampa (distractor textual, vocab nuevo, velocidad) y sumá las palabras a tu libreta de léxico.</p>
-                  <div><label>¿Qué te comió? (una por línea, con código)</label><textarea id="pmText" rows="3" placeholder="ej: T-MIS: fecha distractor · L-GAP: 'out of the blue'"></textarea></div>
+                  <p style="font-size:13px">Open the tapescript ONLY for the ones you got wrong. Identify the trap (textual distractor, new vocab, speed) and add the words to your vocabulary notebook.</p>
+                  <div><label>What got you? (one per line, with code)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
                 </div>
 
                 <div class="task">
@@ -697,24 +697,24 @@ footer{
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Visuales para Part 2 (abrí el PDF con las fotos del examen):</b><br>
+                    📍 <b>Visuals for Part 2 (open the PDF with the exam photos):</b><br>
                     • <a href="/files/sample1/cambridge-english-first-2015-sample-paper-1-speaking%20v2.pdf" target="_blank">Speaking Sample 1 PDF</a> · <a href="/files/sample2/cambridge-english-first-2015-sample-paper-2-speaking%20v2.pdf" target="_blank">Speaking Sample 2 PDF</a> · For Schools 1 y 2: PDFs de Speaking en sus carpetas.<br>
-                    • <b>Long Turn:</b> poné 2 fotos en pantalla, grabate 1 min exacto. Describí AMBAS + especulá: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Prohibido solo describir.<br>
-                    • <b>Parts 3-4:</b> la IA (yo) es tu compañero — debatí un diagrama con 5 opciones 3 min y llegá a consenso en el último minuto.
+                    • <b>Long Turn:</b> put 2 photos on screen, record yourself for exactly 1 min. Describe BOTH + speculate: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Describing alone is forbidden.<br>
+                    • <b>Parts 3-4:</b> the AI (me) is your partner — discuss a diagram with 5 options for 3 min and reach a consensus in the last minute.
                   </div>
                   <p id="spFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
                   <div class="row" style="margin-top:10px">
-                    <div><label>Part 2: ¿hubo silencios &gt;3s?</label>
-                      <select id="spSil"><option value="no">No</option><option value="si">Sí</option></select>
+                    <div><label>Part 2: were there silences &gt;3s?</label>
+                      <select id="spSil"><option value="no">No</option><option value="si">Yes</option></select>
                     </div>
-                    <div><label>Part 2: ¿repetiste corrigiendo?</label>
-                      <select id="spRep"><option value="si">Sí</option><option value="no">No</option></select>
+                    <div><label>Part 2: did you self-correct?</label>
+                      <select id="spRep"><option value="si">Yes</option><option value="no">No</option></select>
                     </div>
-                    <div><label>¿Completaste Parts 3-4 con IA?</label>
-                      <select id="sp34"><option value="si">Sí</option><option value="no">No</option></select>
+                    <div><label>Did you complete Parts 3-4 with AI?</label>
+                      <select id="sp34"><option value="si">Yes</option><option value="no">No</option></select>
                     </div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Registrar Speaking</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
                 </div>
               </div>
             </div>
@@ -724,9 +724,9 @@ footer{
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Simulacro</span>
-                    <div class="sesion-title">🧪 Simulacro Completo (Etapas 1-2)</div>
-                    <div class="sesion-sub">Examen entero bajo condiciones reales, para las gates de Maestría.</div>
+                    <span class="badge mon">Mock</span>
+                    <div class="sesion-title">🧪 Full Mock Exam (Stages 1-2)</div>
+                    <div class="sesion-sub">Whole exam under real conditions, for the Mastery gates.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Formato</span>
@@ -737,40 +737,40 @@ footer{
                   <div class="task-head">
                     <div class="task-num">1</div>
                     <div>
-                      <div class="task-title">Reading &amp; Use of English completo <span class="t">límite: 65 min</span></div>
+                      <div class="task-title">Complete Reading &amp; Use of English <span class="t">limit: 65 min</span></div>
                     </div>
                   </div>
                   <div class="row">
-                    <div><label>Fuente</label>
+                    <div><label>Source</label>
                       <select id="rueFuente">
-                        <option value="sample">Sample Paper oficial</option>
+                        <option value="sample">Official Sample Paper</option>
                         <option value="ptplus">Practice Tests Plus</option>
                         <option value="fce6">FCE 6</option>
-                        <option value="booster">Exam Booster (sin key ⚠️)</option>
+                        <option value="booster">Exam Booster (no key ⚠️)</option>
                       </select>
                     </div>
-                    <div><label>Ref.</label><input type="text" id="rueRef" placeholder="ej: Sample 2"></div>
+                    <div><label>Ref.</label><input type="text" id="rueRef" placeholder="e.g. Sample 2"></div>
                   </div>
                   <div class="row">
-                    <div><label>Aciertos</label><input type="number" id="rueOk" min="0" value="0"></div>
+                    <div><label>Correct</label><input type="number" id="rueOk" min="0" value="0"></div>
                     <div><label>Total</label><input type="number" id="rueTotal" min="1" value="52"></div>
                     <div><label>Minutos</label><input type="number" id="rueMin" min="0" value="65"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Registrar R&amp;UoE completo</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save full R&amp;UoE</button></div>
                 </div>
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">2</div>
                     <div>
-                      <div class="task-title">Full Writing (Part 1 + Part 2) <span class="t">límite: 1h 20m</span></div>
+                      <div class="task-title">Full Writing (Part 1 + Part 2) <span class="t">limit: 1h 20m</span></div>
                     </div>
                   </div>
                   <div class="row">
-                    <div><label>Nota texto 1 /20</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
-                    <div><label>Nota texto 2 /20</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
+                    <div><label>Text 1 score /20</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
+                    <div><label>Text 2 score /20</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
                     <div><label>Minutos</label><input type="number" id="fwMin" min="0" value="80"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Registrar Full Writing</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Full Writing</button></div>
                 </div>
               </div>
             </div>
@@ -781,9 +781,9 @@ footer{
             <div class="card rot-card">
               <div class="rot-head">
                 <h2>🔄 Rotation</h2>
-                <span class="chip">Algorítmica</span>
+                <span class="chip">Algorithmic</span>
               </div>
-              <div class="sub">Automática (ciclo completo de ejercicios semana a semana). Si hoy querés practicar otra cosa, elegí acá y guarda para esta semana.</div>
+              <div class="sub">Automatic (full exercise cycle week by week). If you want to practice something else today, pick it here and it's saved for this week.</div>
               <div class="cur-ex"><span class="lbl">Current Exercise</span><span class="val" id="rotVal">—</span></div>
               <div class="row" style="margin-top:4px">
                 <div><label>R&UoE</label><select id="ovRue" onchange="setOv('rue',this.value)"></select></div>
@@ -795,13 +795,13 @@ footer{
 
             <div class="card metrics-card">
               <h4 class="metrics-title">Weekly Metrics</h4>
-              <div class="metric-row"><span>Horas totales</span><span class="metric-val" id="mHoras">—</span></div>
+              <div class="metric-row"><span>Total hours</span><span class="metric-val" id="mHoras">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>Precisión UoE</span><span class="metric-val" id="mUoe">—</span></div>
+              <div class="metric-row"><span>UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>Racha diaria</span><span class="metric-val" id="mRacha">—</span></div>
+              <div class="metric-row"><span>Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>Registros</span><span class="metric-val" id="mRegs">—</span></div>
+              <div class="metric-row"><span>Logs</span><span class="metric-val" id="mRegs">—</span></div>
             </div>
           </div>
         </div>
@@ -812,12 +812,12 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ EXAM_SIMULATION ]</span>
-            <h1 class="page-title">Simulación de Examen</h1>
-            <p class="page-sub">Seleccioná un módulo para comenzar una simulación cronometrada bajo condiciones estrictas de examen. Asegurate de tener un ambiente silencioso antes de iniciar.</p>
+            <h1 class="page-title">Exam Simulation</h1>
+            <p class="page-sub">Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.</p>
           </div>
         </div>
 
-        <!-- Grid de selección de módulo (como Stitch) -->
+        <!-- Module selection grid (like Stitch) -->
         <div class="exam-select-grid" id="examSelectGrid">
           <button class="exam-card" data-paper="rue" onclick="startExamFromCard('rue')">
             <div class="exam-card-top">
@@ -855,7 +855,7 @@ footer{
 
         <!-- Selector avanzado (contrato de tests) -->
         <div style="margin:16px 0 0;max-width:480px">
-          <label>O elegí el paper manualmente</label>
+          <label>Or pick the paper manually</label>
           <select id="exPaper" onchange="renderEx()">
             <option value="rue">Reading &amp; Use of English — 75 min (52 preguntas)</option>
             <option value="w">Writing — 80 min (2 textos)</option>
@@ -880,14 +880,14 @@ footer{
             </div>
             <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
               <button class="btn" onclick="exStart()">▶ Empezar</button>
-              <button class="btn gray" onclick="exPause()">⏸ Pausar</button>
-              <button class="btn gray" onclick="exReset()">↺ Reiniciar</button>
+              <button class="btn gray" onclick="exPause()">⏸ Pause</button>
+              <button class="btn gray" onclick="exReset()">↺ Reset</button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px;text-align:left">
-              <h3 style="font-size:14px;margin-bottom:6px">📝 Registrá tu resultado</h3>
+              <h3 style="font-size:14px;margin-bottom:6px">📝 Log your result</h3>
               <div id="exRegFields" class="row"></div>
-              <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Guardar resultado</button></div>
+              <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Save result</button></div>
             </div>
           </div>
         </div>
@@ -898,8 +898,8 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ SYLLABUS_INDEX ]</span>
-            <h1 class="page-title">Práctica por parte</h1>
-            <p class="page-sub">Los 15 ejercicios de las 4 pruebas. Cada uno con su tiempo objetivo, dónde encontrarlo, y registro de resultado. Los que ya viven en Sesión A/B están marcados.</p>
+            <h1 class="page-title">Practice by Part</h1>
+            <p class="page-sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
           </div>
           <div class="page-stat">
             <span class="stat-label">Total Parts</span>
@@ -914,8 +914,8 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ METRICS_OVERVIEW ]</span>
-            <h1 class="page-title">Progreso</h1>
-            <p class="page-sub">Monitoreá tu avance por las etapas de preparación del B2 First. La precisión es lo que cuenta.</p>
+            <h1 class="page-title">Progress</h1>
+            <p class="page-sub">Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.</p>
           </div>
         </div>
 
@@ -936,51 +936,51 @@ footer{
             <span class="stat-ico material-symbols-outlined">hourglass_top</span>
             <span class="stat-card-label">Total Study Time</span>
             <span class="stat-card-val" id="pTime">0</span>
-            <span class="stat-card-sub">minutos registrados</span>
+            <span class="stat-card-sub">logged minutes</span>
           </div>
         </div>
 
         <div class="card">
-          <h2>🧗 Matriz de Progresión</h2>
-          <div class="sub">Completá todos los criterios de una etapa para avanzar.</div>
+          <h2>🧗 Progression Matrix</h2>
+          <div class="sub">Complete all criteria within a stage to advance.</div>
           <div id="gates"></div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()">⬆ Pasar a la siguiente etapa</button>
-            <button class="btn gray" onclick="stageDown()">⬇ Bajar etapa</button>
+            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()">⬆ Advance to the next stage</button>
+            <button class="btn gray" onclick="stageDown()">⬇ Go back a stage</button>
           </div>
           <div style="margin-top:16px;border-top:1px solid var(--outline-variant);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="exportData()">💾 Exportar datos</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Importar datos</button>
+            <button class="btn gray" onclick="exportData()">💾 Export data</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Import data</button>
             <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
           </div>
-          <p style="font-size:11.5px;color:var(--on-surface-variant);margin-top:10px">Exportá el JSON para respaldar o pasar tus datos de la PC al celular (y viceversa).</p>
+          <p style="font-size:11.5px;color:var(--on-surface-variant);margin-top:10px">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
         </div>
 
         <div class="grid-12">
           <div class="col-6">
             <div class="card">
-              <h2>Historial</h2>
-              <div class="sub">Todo lo registrado, del más reciente al más viejo.</div>
-              <div class="table-wrap"><table id="logTable"><thead><tr><th>Fecha</th><th>Módulo</th><th>Score</th><th>%</th><th>Min</th><th></th></tr></thead><tbody></tbody></table></div>
+              <h2>History</h2>
+              <div class="sub">Everything logged, newest to oldest.</div>
+              <div class="table-wrap"><table id="logTable"><thead><tr><th>Date</th><th>Module</th><th>Score</th><th>%</th><th>Min</th><th></th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>📈 Estadísticas por ejercicio</h2>
-              <div class="sub">Cuántas veces practicaste cada parte y cómo te fue. Aparecen los ejercicios que ya registraste.</div>
-              <div class="table-wrap"><table id="statsTable"><thead><tr><th>Ejercicio</th><th>Veces</th><th>Promedio</th><th>Mejor</th><th>Última</th></tr></thead><tbody></tbody></table></div>
+              <h2>📈 Stats by exercise</h2>
+              <div class="sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
+              <div class="table-wrap"><table id="statsTable"><thead><tr><th>Exercise</th><th>Times</th><th>Average</th><th>Best</th><th>Last</th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ============ GRÁFICOS ============ -->
+      <!-- ============ CHARTS ============ -->
       <section id="v-graf" class="view">
         <div class="page-head">
           <div>
             <span class="page-kicker">[ PERFORMANCE_ANALYTICS ]</span>
-            <h1 class="page-title">Analítica de Rendimiento</h1>
-            <p class="page-sub">Desglose detallado de tus métricas de preparación. Seguí tu evolución, detectá áreas débiles y monitoreá la consistencia.</p>
+            <h1 class="page-title">Performance Analytics</h1>
+            <p class="page-sub">Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.</p>
           </div>
         </div>
 
@@ -995,42 +995,42 @@ footer{
             <span class="stat-ico material-symbols-outlined">assignment_turned_in</span>
             <span class="stat-card-label">Mock Exams Taken</span>
             <span class="stat-card-val" id="gMocks">0</span>
-            <span class="stat-card-sub">simulacros registrados</span>
+            <span class="stat-card-sub">mocks logged</span>
           </div>
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">local_fire_department</span>
             <span class="stat-card-label">Study Streak</span>
             <span class="stat-card-val" id="gRacha">0</span>
-            <span class="stat-card-sub">días seguidos</span>
+            <span class="stat-card-sub">consecutive days</span>
           </div>
         </div>
 
         <div class="grid-12">
           <div class="col-6">
             <div class="card">
-              <h2>📈 Evolución en el tiempo</h2>
-              <div class="sub">Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.</div>
+              <h2>📈 Temporal Evolution</h2>
+              <div class="sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
               <div id="gEvol"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>📊 Por parte y ejercicio</h2>
-              <div class="sub">Promedio % de cada parte del examen — las barras rojas son las que más te cuestan.</div>
+              <h2>📊 By Part & Exercise</h2>
+              <div class="sub">Average % of each exam part — red bars are your weakest.</div>
               <div id="gPart"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>🧩 Errores por tipo</h2>
-              <div class="sub">Acumulado de tu taxonomía de causa raíz.</div>
+              <h2>🧩 Errors by type</h2>
+              <div class="sub">Accumulated root-cause taxonomy.</div>
               <div id="gErr"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>🔥 Consistencia semanal</h2>
-              <div class="sub">Registros por semana (últimas 12) · <span id="gStreak"></span></div>
+              <h2>🔥 Weekly Consistency</h2>
+              <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
               <div id="gCons"></div>
             </div>
           </div>
@@ -1042,40 +1042,40 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ ERROR_TAXONOMY ]</span>
-            <h1 class="page-title">Taxonomía de Errores</h1>
-            <p class="page-sub">Registro de causa raíz: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo). Identificá patrones sistemáticos para optimizar el tiempo restante.</p>
+            <h1 class="page-title">Error Taxonomy</h1>
+            <p class="page-sub">Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.</p>
           </div>
         </div>
         <div class="grid-12">
           <div class="col-8">
             <div class="card">
-              <h2>🔖 Registro de Causa Raíz</h2>
-              <div class="sub">Cada fallo anotado te acerca al Grade A.</div>
+              <h2>🔖 Root-Cause Log</h2>
+              <div class="sub">Every logged mistake gets you closer to Grade A.</div>
               <div id="errList"></div>
             </div>
           </div>
           <div class="col-4">
             <div class="card">
               <h2>🧩 Failure Patterns</h2>
-              <div class="sub">Distribución acumulada de tu taxonomía.</div>
+              <div class="sub">Accumulated distribution of your taxonomy.</div>
               <div id="errPills"></div>
             </div>
             <div class="card">
               <h2>➕ Log Error</h2>
-              <div class="sub">Clasificación de causa raíz.</div>
+              <div class="sub">Root-cause classification.</div>
               <div class="row">
-                <div><label>Código</label>
+                <div><label>Code</label>
                   <select id="errCode2">
-                    <option value="L-GAP">L-GAP (Laguna léxica)</option>
-                    <option value="G-ERR">G-ERR (Regla mal aplicada)</option>
-                    <option value="T-MIS">T-MIS (Distractor textual)</option>
-                    <option value="T-LIM">T-LIM (Apuro / atención)</option>
+                    <option value="L-GAP">L-GAP (Lexical gap)</option>
+                    <option value="G-ERR">G-ERR (Misapplied rule)</option>
+                    <option value="T-MIS">T-MIS (Textual distractor)</option>
+                    <option value="T-LIM">T-LIM (Rush / attention)</option>
                   </select>
                 </div>
               </div>
-              <div><label>Descripción</label><input type="text" id="errDesc2" placeholder="ej: no apliqué inversión con 'Seldom'"></div>
-              <div><label>Corrección / Notas</label><input type="text" id="errFix2" placeholder="ej: repasar regla de inversión"></div>
-              <div style="margin-top:12px"><button class="btn" onclick="saveErr2()">💾 Guardar error</button></div>
+              <div><label>Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'"></div>
+              <div><label>Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule"></div>
+              <div style="margin-top:12px"><button class="btn" onclick="saveErr2()">💾 Save error</button></div>
             </div>
           </div>
         </div>
@@ -1086,12 +1086,12 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ COACH_CONFIGURATION ]</span>
-            <h1 class="page-title">Configuración del Plan</h1>
-            <p class="page-sub">Ajustá parámetros del sistema, tiempos de simulación y umbrales de rendimiento para personalizar tu ciclo de estudio. Todo se aplica al tracker al instante.</p>
+            <h1 class="page-title">Plan Configuration</h1>
+            <p class="page-sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="exportData()">💾 Exportar JSON</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Importar Backup</button>
+            <button class="btn gray" onclick="exportData()">💾 Export JSON</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Import Backup</button>
           </div>
         </div>
 
@@ -1103,23 +1103,23 @@ footer{
                 <h2>🧪 Exam Timers</h2>
                 <span class="chip-plan"><span class="dot"></span>FCE Format</span>
               </div>
-              <div class="sub">Duraciones oficiales de cada paper.</div>
+              <div class="sub">Official durations for each paper.</div>
               <div class="row">
                 <div><label>UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
                 <div><label>Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
               </div>
               <div class="row">
-                <div><label>Planificar writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
-                <div><label>Escribir (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
-                <div><label>Revisar (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
+                <div><label>Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
+                <div><label>Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
+                <div><label>Review (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
               </div>
               <div class="row">
-                <div><label>Speaking Part 2 (seg)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
-                <div><label>Speaking Parts 3-4 (seg)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
+                <div><label>Speaking Part 2 (sec)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
+                <div><label>Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
               </div>
               <div class="row">
-                <div><label>Writing — palabras mín</label><input type="number" id="pWMin" min="80" max="200"></div>
-                <div><label>Writing — palabras máx</label><input type="number" id="pWMax" min="100" max="260"></div>
+                <div><label>Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
+                <div><label>Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
               </div>
             </div>
           </div>
@@ -1128,23 +1128,23 @@ footer{
           <div class="col-5">
             <div class="card plan-dark-card">
               <h2>🎯 Thresholds (Gates)</h2>
-              <div class="sub">Criterios numéricos por etapa.</div>
-              <div class="sub" style="margin-top:10px">Etapa 0</div>
+              <div class="sub">Numerical criteria per stage.</div>
+              <div class="sub" style="margin-top:10px">Stage 0</div>
               <div class="row">
-                <div><label>Essays nota ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
+                <div><label>Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
                 <div><label>UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
                 <div><label>L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
               </div>
-              <div class="sub" style="margin-top:10px">Etapa 1</div>
+              <div class="sub" style="margin-top:10px">Stage 1</div>
               <div class="row">
-                <div><label>Textos nota ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
-                <div><label>UoE global % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
+                <div><label>Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
+                <div><label>UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
                 <div><label>L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
               </div>
-              <div class="sub" style="margin-top:10px">Etapa 2</div>
+              <div class="sub" style="margin-top:10px">Stage 2</div>
               <div class="row">
                 <div><label>R&UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
-                <div><label>Full W nota ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
+                <div><label>Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
                 <div><label>L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
             </div>
@@ -1154,14 +1154,14 @@ footer{
           <div class="col-6">
             <div class="card">
               <h2>🗓 Session Schedules</h2>
-              <div class="sub">Sesión A (texto) y Sesión B (auditivo) — día y hora.</div>
+              <div class="sub">Session A (text) and Session B (audio) — day and time.</div>
               <div class="row">
-                <div><label>Sesión A (texto) — día</label><select id="pADay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
-                <div><label>Sesión A — hora</label><input type="time" id="pATime"></div>
+                <div><label>Session A (text) — day</label><select id="pADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option></select></div>
+                <div><label>Session A — time</label><input type="time" id="pATime"></div>
               </div>
               <div class="row">
-                <div><label>Sesión B (auditivo) — día</label><select id="pBDay"><option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option></select></div>
-                <div><label>Sesión B — hora</label><input type="time" id="pBTime"></div>
+                <div><label>Session B (audio) — day</label><select id="pBDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option></select></div>
+                <div><label>Session B — time</label><input type="time" id="pBTime"></div>
               </div>
             </div>
           </div>
@@ -1170,13 +1170,13 @@ footer{
           <div class="col-6">
             <div class="card plan-green-card">
               <h2>🔁 Rotation Cycles</h2>
-              <div class="sub">Distribución quincenal de las áreas de estudio enfocadas.</div>
+              <div class="sub">Fortnightly distribution of focused study areas.</div>
               <div class="rot-cycles">
                 <div class="cycle-box">
                   <span class="cycle-lbl">Odd Week</span>
                   <span class="cycle-val">R + UoE</span>
                   <div style="margin-top:8px">
-                    <label style="margin-top:2px">UoE PAR</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                    <label style="margin-top:2px">UoE EVEN</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
                 <span class="cycle-swap material-symbols-outlined">swap_horiz</span>
@@ -1184,22 +1184,22 @@ footer{
                   <span class="cycle-lbl">Even Week</span>
                   <span class="cycle-val">W + L</span>
                   <div style="margin-top:8px">
-                    <label style="margin-top:2px">UoE IMPAR</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                    <label style="margin-top:2px">UoE ODD</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
               </div>
-              <div class="sub" style="margin-top:14px">El orden en que rotás los ejercicios semana a semana. Todo automático, pero podés reordenar o sacar ejercicios.</div>
-              <div><label>R&UoE (partes 1-7, en orden)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
-              <div><label>Writing (tipos, en orden)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
-              <div><label>Listening (partes 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
-              <div><label>Speaking (partes 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
+              <div class="sub" style="margin-top:14px">The order you rotate exercises week by week. Fully automatic, but you can reorder or remove exercises.</div>
+              <div><label>R&UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
+              <div><label>Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
+              <div><label>Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
+              <div><label>Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
             </div>
           </div>
 
           <div class="col-12">
             <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn ok" onclick="savePlan()">💾 Guardar plan</button>
-              <button class="btn gray" onclick="resetPlan()">↩ Restaurar plan original</button>
+              <button class="btn ok" onclick="savePlan()">💾 Save plan</button>
+              <button class="btn gray" onclick="resetPlan()">↩ Restore original plan</button>
             </div>
           </div>
         </div>
@@ -1210,19 +1210,19 @@ footer{
         <div class="page-head">
           <div>
             <span class="page-kicker">[ RESOURCE_LIBRARY ]</span>
-            <h1 class="page-title">Biblioteca de Material</h1>
-            <p class="page-sub">PDFs, audios y todos los libros disponibles para tu preparación. Dinámico: lo que agregues a la carpeta aparece solo.</p>
+            <h1 class="page-title">Resource Library</h1>
+            <p class="page-sub">PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
           </div>
         </div>
         <div class="card">
-          <h2>📥 Material (PDFs y audio)</h2>
-          <div class="sub">Los PDFs abren en el visor, los audios se reproducen acá. Dinámico: lo que agregues a la carpeta aparece solo.</div>
+          <h2>📥 Material (PDFs & audio)</h2>
+          <div class="sub">PDFs open in the viewer, audio plays here. Dynamic: whatever you add to the folder shows up automatically.</div>
           <div id="matList"></div>
         </div>
         <div class="card">
-          <h2>🛒 Todos los libros disponibles (precios verificados)</h2>
-          <div class="sub">Filtrá por nombre. Precios chequeados en la página de producto. <span style="color:var(--tertiary-container)">Con answers</span> = podés autocorregirte (clave para estudiar solo).</div>
-          <input type="text" id="bookFilter" placeholder="🔍 Buscar libro... (ej: practice, grammar, fce)" style="margin-bottom:12px">
+          <h2>🛒 All available books (verified prices)</h2>
+          <div class="sub">Filter by name. Prices checked on the product page. <span style="color:var(--tertiary-container)">With answers</span> = self-correctable (key for solo study).</div>
+          <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="margin-bottom:12px">
           <div id="bookList"></div>
         </div>
       </section>
@@ -1236,6 +1236,7 @@ footer{
 
 
 <script>
+
 'use strict';
 /* =====================================================================
    B2 FIRST TRACKER — Sistema de Alto Rendimiento (Grade A / C1)
@@ -1327,7 +1328,7 @@ function save(){localStorage.setItem(KEY,JSON.stringify(D));syncPush()}
    footer muestra el estado (local / sincronizado / sin conexión). */
 let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
 let syncT=null;
-function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ sincronizado con la Pi':s==='local'?'… guardando en la Pi':'⚠ modo local (sin Pi)';el.style.color=s==='ok'?'var(--tertiary-container)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ sincronizado con la Pi':s==='local'?'… guardando en la Pi':'⚠ modo local (sin Pi)'}
+function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--tertiary-container)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
 function syncPush(){
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
@@ -1395,20 +1396,20 @@ function applyTimers(){ueTimer.set(D.settings.ueMin);lTimer.set(D.settings.liste
 function log(e){D.log.push(Object.assign({date:today()},e));D.log.sort((a,b)=>b.date.localeCompare(a.date));save();refreshAll()}
 function saveUE(){
   const correct=+document.getElementById('ueOk').value,total=+document.getElementById('ueTotal').value;
-  if(!total){alert('Poné el total de preguntas');return}
+  if(!total){alert('Set the total number of questions');return}
   log({type:'ue',part:+document.getElementById('uePart').value,book:document.getElementById('ueFuente').value,ref:document.getElementById('ueRef').value,correct,total,min:+document.getElementById('ueMin').value});
   document.getElementById('ueOk').value=0;document.getElementById('ueRef').value='';
 }
 function saveW(){
   const score=+document.getElementById('wScore').value;
-  if(!score){alert('Poné la nota (0-20)');return}
+  if(!score){alert('Set the score (0-20)');return}
   log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length});
   document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
   document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
 }
 function saveL(){
   const correct=+document.getElementById('lOk').value;
-  if(!correct&&correct!==0){alert('Poné aciertos');return}
+  if(!correct&&correct!==0){alert('Set correct answers');return}
   log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min:+document.getElementById('lMin').value});
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
@@ -1417,19 +1418,19 @@ function saveSP(){
 }
 function saveRUE(){
   const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
-  if(!total){alert('Poné el total');return}
+  if(!total){alert('Set the total');return}
   log({type:'rue',book:document.getElementById('rueFuente').value,ref:document.getElementById('rueRef').value,correct,total,min:+document.getElementById('rueMin').value});
   document.getElementById('rueOk').value=0;document.getElementById('rueRef').value='';
 }
 function saveFW(){
   const a=+document.getElementById('fw1').value,b=+document.getElementById('fw2').value;
-  if(!a&&!b){alert('Poné al menos una nota');return}
+  if(!a&&!b){alert('Set at least one score');return}
   log({type:'fw',s1:a,s2:b,min:+document.getElementById('fwMin').value});
   document.getElementById('fw1').value='';document.getElementById('fw2').value='';
 }
 function saveErr(){
   const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
-  if(!desc){alert('Describí el error');return}
+  if(!desc){alert('Describe the error');return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix').value});
   save();refreshAll();
   document.getElementById('errDesc').value='';document.getElementById('errFix').value='';
@@ -1438,7 +1439,7 @@ function delLog(i){D.log.splice(i,1);save();refreshAll()}
 function delErr(i){D.errs.splice(i,1);save();refreshAll()}
 function saveErr2(){
   const code=document.getElementById('errCode2').value,desc=document.getElementById('errDesc2').value;
-  if(!desc){alert('Describí el error');return}
+  if(!desc){alert('Describe the error');return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix2').value});
   save();refreshAll();
   document.getElementById('errDesc2').value='';document.getElementById('errFix2').value='';
@@ -1472,20 +1473,20 @@ function calcGates(){
   const rue=D.log.filter(e=>e.type==='rue').filter(e=>e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
   const fw=D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
   const gates=[
-    {name:'4 Essays consecutivos ≥ '+s.e0.w+'/20',ok:best>=4,val:Math.min(best/4,1),txt:`racha actual: ${best}/4`},
-    {name:'UoE Part 4 ≥ '+s.e0.u+'% en 5 tandas',ok:ue4a!==null&&ue4a>=s.e0.u,val:ue4a?Math.min(ue4a/s.e0.u,1):0,txt:ue4a?`promedio últimas 5: ${ue4a.toFixed(0)}%`:'falta registro (5 tandas)'},
-    {name:'Listening Part 2 ≤ '+s.e0.l+' errores en 3 tests',ok:lP2ok,val:lP2.length/3,txt:`tests con ≤${s.e0.l} err: ${lP2.length}/3`},
-    {name:'6 textos (Part 1 y 2) ≤'+s.e1.wm+' min con nota ≥'+s.e1.w+'/20',ok:wE1>=6,val:Math.min(wE1/6,1),txt:`cumplen: ${wE1}/6`},
-    {name:'Use of English (Parts 1-4) ≥ '+s.e1.u+'% global',ok:ueAll!==null&&ueAll>=s.e1.u,val:ueAll?Math.min(ueAll/s.e1.u,1):0,txt:ueAll?`global: ${ueAll.toFixed(0)}%`:'sin registros'},
-    {name:'Listening completo ≥'+s.e1.l+'/30 en 3 tests consecutivos',ok:l3ok,val:l3.length/3,txt:`tests: ${l3.length}/3`},
-    {name:'R&UoE completo ≤'+s.e2.rm+' min con ≥'+s.e2.r+'%',ok:rue.length>=1,val:Math.min(rue.length/1,1),txt:`aprobados: ${rue.length}`},
-    {name:'Full Writing (1h20m) ambos textos ≥'+s.e2.w+'/20',ok:fw.length>=1,val:Math.min(fw.length/1,1),txt:`aprobados: ${fw.length}`},
-    {name:'Listening ≥'+s.e2.l+'/30 en '+s.e2.ln+' exámenes consecutivos',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`}
+    {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:best>=4,val:Math.min(best/4,1),txt:`current streak: ${best}/4`},
+    {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:ue4a!==null&&ue4a>=s.e0.u,val:ue4a?Math.min(ue4a/s.e0.u,1):0,txt:ue4a?`last 5 average: ${ue4a.toFixed(0)}%`:'no log yet (5 rounds)'},
+    {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 tests',ok:lP2ok,val:lP2.length/3,txt:`tests with ≤${s.e0.l} err: ${lP2.length}/3`},
+    {name:'6 texts (Parts 1 and 2) ≤'+s.e1.wm+' min with score ≥'+s.e1.w+'/20',ok:wE1>=6,val:Math.min(wE1/6,1),txt:`meet it: ${wE1}/6`},
+    {name:'Use of English (Parts 1-4) ≥ '+s.e1.u+'% overall',ok:ueAll!==null&&ueAll>=s.e1.u,val:ueAll?Math.min(ueAll/s.e1.u,1):0,txt:ueAll?`overall: ${ueAll.toFixed(0)}%`:'no logs'},
+    {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:l3ok,val:l3.length/3,txt:`tests: ${l3.length}/3`},
+    {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:rue.length>=1,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
+    {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:fw.length>=1,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
+    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`}
   ];
   return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5]],[gates[6],gates[7],gates[8]]]};
 }
-const STAGE_NAMES=['Etapa 0 — Cimientos','Etapa 1 — Precisión','Etapa 2 — Maestría (Grade A)'];
-const STAGE_FOCUS=['Estructura del Essay y deducción de patrones gramaticales.','Reducción de tiempos y dominio de formatos de Part 2 (Reports/Articles).','Simulacros en tiempo real bajo condiciones de fatiga.'];
+const STAGE_NAMES=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery (Grade A)'];
+const STAGE_FOCUS=['Essay structure and deduction of grammar patterns.','Time reduction and mastery of Part 2 formats (Reports/Articles).','Real-time mocks under fatigue conditions.'];
 
 function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
@@ -1495,7 +1496,7 @@ function renderGates(){
   const viewGates=calc.groups[viewSt];
   el.innerHTML=`
     <div class="gates-tabs">
-      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Etapa '+i}</button>`).join('')}
+      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Stage '+i}</button>`).join('')}
     </div>
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
       <b style="color:var(--primary);font-size:14px">${STAGE_NAMES[viewSt]}</b>
@@ -1506,11 +1507,11 @@ function renderGates(){
       return `<div class="gate ${ok?'pass':'fail'}">
       <h4><span>${x.name}</span><span style="color:${ok?'var(--tertiary-container)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
-      <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> marcar como lograda manualmente</label>
+      <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
   const allOk=gates.every(x=>D.overrides[st+'-'+gates.indexOf(x)]||x.ok);
   document.getElementById('advanceBtn').disabled=!allOk;
-  document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Pasar a '+(STAGE_NAMES[st+1]||'🎓 COMPLETADO'):'🎓 COMPLETASTE TODO'):'⬆ Completá todas las gates para avanzar';
+  document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Advance to '+(STAGE_NAMES[st+1]||'🎓 COMPLETED'):'🎓 YOU COMPLETED EVERYTHING'):'⬆ Complete all gates to advance';
   document.getElementById('stageBadge').textContent=STAGE_NAMES[st]+(allOk?' ✓':'');
 }
 function showGatesTab(i){window.__gatesTab=i;renderGates()}
@@ -1531,7 +1532,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;save();refreshAll();alert('Datos importados ✓');}catch(e){alert('Archivo inválido');}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;save();refreshAll();alert('Data imported ✓');}catch(e){alert('Invalid file');}};
   r.readAsText(f);ev.target.value='';
 }
 function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
@@ -1577,10 +1578,10 @@ function savePlan(){
   s.e0.w=+g('pE0w')||14;s.e0.u=+g('pE0u')||60;s.e0.l=+g('pE0l')||3;
   s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
   s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||65;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
-  save();applyTimers();refreshAll();alert('Plan guardado ✓');
+  save();applyTimers();refreshAll();alert('Plan saved ✓');
 }
 function resetPlan(){
-  if(!confirm('¿Restaurar el plan original? Se pierden tus cambios.'))return;
+  if(!confirm('Restore the original plan? Your changes will be lost.'))return;
   D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
   save();renderPlan();applyTimers();refreshAll();
 }
@@ -1613,15 +1614,15 @@ function renderEx(){
   exReset();
   const g=document.getElementById('exGuide');
   const L=(t,h)=>`<a href="${h}" target="_blank">${t}</a>`;
-  if(exPaper==='rue')g.innerHTML=`<b>📖 Abrí:</b> ${L('R&UoE Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf')}.<br><b>⏱ Distribución:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 preguntas. <b>Claves:</b> ${L('Sample 1 keys','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('Sample 2 keys','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}`;
-  else if(exPaper==='w')g.innerHTML=`<b>✍️ Abrí:</b> ${L('Writing Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf')}.<br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' escribir) → Part 2 a elección (5' + 30') → 5' de revisión. 140-190 palabras por texto. Model answers en los libros con key.`;
-  else if(exPaper==='l')g.innerHTML=`<b>🎧 Abrí:</b> ${L('preguntas Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf')} + ${L('audio completo','/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3')} · Sample 2: preguntas + audio por partes (LIBROS → Material) · <b>Claves:</b> ${L('S1','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('S2','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}.<br><b>⏱ Ritmo:</b> 30 preguntas, ~40 min con lectura previa. NUNCA pausar el audio.`;
-  else g.innerHTML=`<b>🕒 Secuencia del día de examen (195 min):</b><br>1️⃣ R&UoE 75' → pausa 2'<br>2️⃣ Writing 80' → pausa 5'<br>3️⃣ Listening 40'<br><b>Material:</b> los links de arriba en ese orden (R&UoE → Writing → Listening). Cerrá todo lo demás.`;
+  if(exPaper==='rue')g.innerHTML=`<b>📖 Open:</b> ${L('R&UoE Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20RUE%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Reading%20and%20Use%20of%20English%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20RUE%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%202015%20Reading%20and%20Use%20of%20English%20sample%20paper%202.pdf')}.<br><b>⏱ Distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions. <b>Keys:</b> ${L('Sample 1 keys','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('Sample 2 keys','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}`;
+  else if(exPaper==='w')g.innerHTML=`<b>✍️ Open:</b> ${L('Writing Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Writing%202022.pdf')} · ${L('Sample 2','/files/sample2/B2%20First%20sample%20paper%202%20Writing%202022.pdf')} · ${L('FS1','/files/for-schools-1/first-for-schools-sample-paper-1/B2%20First%20for%20Schools%20sample%20paper%201%20Writing%202022.pdf')} · ${L('FS2','/files/for-schools-2/first-for-schools-sample-paper-2/First%20for%20Schools%20Writing%20sample%20paper%202.pdf')}.<br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text. Model answers in the books with keys.`;
+  else if(exPaper==='l')g.innerHTML=`<b>🎧 Open:</b> ${L('preguntas Sample 1','/files/sample1/B2%20First%20sample%20paper%201%20Listening%202022.pdf')} + ${L('audio completo','/files/sample1/cambridge-english-first-2015-sample-paper-1-listening-audio-file%20v2.mp3')} · Sample 2: preguntas + audio por partes (LIBROS → Material) · <b>Keys:</b> ${L('S1','/files/sample1/cambridge-english-first-2015-sample-paper-1-answer-keys%20v2.pdf')} · ${L('S2','/files/sample2/cambridge-english-first-2015-sample-paper-2-answer-keys%20v2.pdf')}.<br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
+  else g.innerHTML=`<b>🕒 Exam day sequence (195 min):</b><br>1️⃣ R&UoE 75' → 2' pause<br>2️⃣ Writing 80' → 5' pause<br>3️⃣ Listening 40'<br><b>Material:</b> the links above in that order (R&UoE → Writing → Listening). Close everything else.`;
   const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
-  if(exPaper==='rue')f.innerHTML=`<div><label>Aciertos R&UoE (máx 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutos usados</label><input type="number" id="exMin" min="0"></div>`;
-  else if(exPaper==='w')f.innerHTML=`<div><label>Nota texto 1 /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Nota texto 2 /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutos</label><input type="number" id="exMin" min="0"></div>`;
-  else if(exPaper==='l')f.innerHTML=`<div><label>Aciertos (máx 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Errores Part 2</label><input type="number" id="exP2" min="0"></div><div><label>Minutos</label><input type="number" id="exMin" min="0"></div>`;
-  else f.innerHTML=`<div><label>Aciertos R&UoE (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Nota texto 1</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Nota texto 2</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Aciertos Listening (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Minutos totales</label><input type="number" id="exMin" min="0"></div>`;
+  if(exPaper==='rue')f.innerHTML=`<div><label>R&UoE correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
+  else if(exPaper==='w')f.innerHTML=`<div><label>Text 1 score /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
+  else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
+  else f.innerHTML=`<div><label>R&UoE correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
 }
 function exStart(){
@@ -1636,8 +1637,8 @@ function exTick(){
   el.textContent=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
   el.classList.toggle('running',!!exIv);
   el.style.color=(exIv&&exLeft<600)?'var(--bad)':(exIv&&exLeft<1200)?'var(--warn)':'';
-  if(exIv&&exLeft===600)alert('⏰ 10 minutos restantes');
-  if(exIv&&exLeft===300)alert('⏰ 5 minutos restantes');
+  if(exIv&&exLeft===600)alert('⏰ 10 minutes remaining');
+  if(exIv&&exLeft===300)alert('⏰ 5 minutes remaining');
 }
 function exSave(){
   const v=id=>{const e=document.getElementById(id);return e?+e.value||0:0};
@@ -1646,33 +1647,33 @@ function exSave(){
   else if(exPaper==='w')log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});
   else if(exPaper==='l')log({type:'l',book:'examen',ref:'modo examen',correct:v('exOk'),total:30,p2:v('exP2'),min});
   else{log({type:'rue',book:'examen',ref:'completo',correct:v('exOk'),total:52,min});log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});log({type:'l',book:'examen',ref:'completo',correct:v('exLOk'),total:30,p2:0,min});}
-  document.getElementById('exRegister').style.display='none';exReset();alert('Resultado guardado ✓');
+  document.getElementById('exRegister').style.display='none';exReset();alert('Result saved ✓');
 }
 const PARTS=[
  {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
  {g:'Reading & Use of English',n:2,t:'Open cloze',q:8,min:8,type:'ue',note:''},
- {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Ya está en Sesión A (semana par)'},
- {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Ya está en Sesión A (semana impar)'},
+ {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Already in Session A (even week)'},
+ {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Already in Session A (odd week)'},
  {g:'Reading & Use of English',n:5,t:'Multiple choice (2 textos)',q:6,min:20,type:'ue',note:''},
  {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:20,type:'ue',note:''},
  {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:20,type:'ue',note:''},
- {g:'Listening',n:1,t:'Short extracts (3 opciones)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (LIBROS → Material)'},
- {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · la gate de Etapa 0 controla tus errores acá'},
+ {g:'Listening',n:1,t:'Short extracts (3 opciones)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
+ {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
- {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Preguntas personales con la IA o la profe'},
- {g:'Speaking',n:2,t:'Long turn (comparar fotos)',q:0,min:1,type:'sp',note:'Ya está en Sesión B'},
- {g:'Speaking',n:3,t:'Collaborative task (5 opciones)',q:0,min:3,type:'sp',note:'Ya está en Sesión B'},
- {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Ya está en Sesión B'}
+ {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the AI or your teacher'},
+ {g:'Speaking',n:2,t:'Long turn (comparar fotos)',q:0,min:1,type:'sp',note:'Already in Session B'},
+ {g:'Speaking',n:3,t:'Collaborative task (5 opciones)',q:0,min:3,type:'sp',note:'Already in Session B'},
+ {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Already in Session B'}
 ];
 function renderParts(){
   const el=document.getElementById('partsList');
   let html='',last='';
   PARTS.forEach((p,i)=>{
     if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
-    const donde=p.type==='ue'?`R&UoE Sample 1/2 y FS1/2 (LIBROS → Material) — Parte ${p.n} dentro del PDF`
-      :p.type==='lp'?`Preguntas Listening Sample 2 + audio part-${p.n} (LIBROS → Material)`
-      :'Visuales en los PDFs de Speaking (LIBROS → Material)';
+    const donde=p.type==='ue'?`R&UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part ${p.n} inside the PDF`
+      :p.type==='lp'?`Listening Sample 2 questions + part-${p.n} audio (BOOKS → Material)`
+      :'Visuals in the Speaking PDFs (BOOKS → Material)';
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' preguntas · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--mon)">${p.note}</p>`:''}
@@ -1682,7 +1683,7 @@ function renderParts(){
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
         <div><label>Minutos</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
         <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Registrar</button></div>
-      </div>`:`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ Lo practiqué</button></div>`}
+      </div>`:`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`}
     </div>`;
   });
   el.innerHTML=html;
@@ -1691,7 +1692,7 @@ function savePart(i){
   const p=PARTS[i];
   if(p.type==='sp'){log({type:'sp',part:p.n,note:p.t});return}
   const ok=+document.getElementById('ptOk'+i).value,tot=+document.getElementById('ptTot'+i).value,min=+document.getElementById('ptMin'+i).value;
-  if(!tot){alert('Poné el total');return}
+  if(!tot){alert('Set the total');return}
   log({type:p.type,part:p.n,correct:ok,total:tot,min,note:p.t});
 }
 
@@ -1708,15 +1709,15 @@ const MOD={
   l:e=>`Listening ${e.ref||''}`,
   lp:e=>`Listening P${e.part}`,
   sp:e=>`Speaking P${e.part||''}`,
-  rue:e=>`R&UoE completo`,
+  rue:e=>`Full R&UoE`,
   fw:e=>`Full Writing`
 };
 function renderLog(){
   const tb=document.querySelector('#logTable tbody');
-  if(!D.log.length){tb.innerHTML='<tr><td colspan="6" class="empty">📭 Todavía no registraste nada. Arrancá en HOY.</td></tr>';return}
+  if(!D.log.length){tb.innerHTML='<tr><td colspan="6" class="empty">📭 You haven\'t logged anything yet. Start in TODAY.</td></tr>';return}
   tb.innerHTML=D.log.map((e,i)=>`<tr>
     <td>${e.date}</td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td>
-    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'hecho':(e.correct+'/'+e.total)}</td>
+    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':(e.correct+'/'+e.total)}</td>
     <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'?'':pct(e.correct,e.total)+'%'}</td>
     <td>${e.min??''}</td>
     <td><button class="del" onclick="editLog(${i})" title="Editar">✎</button> <button class="del" onclick="delLog(${i})" title="Borrar">✕</button></td>
@@ -1725,7 +1726,7 @@ function renderLog(){
 function editLog(i){
   const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
   if(!tr)return;
-  if(e.type==='sp'){alert('Speaking no tiene campos numéricos para editar — borralo y volvé a registrarlo.');return}
+  if(e.type==='sp'){alert('Speaking has no numeric fields to edit — delete it and log it again.');return}
   let fields='';
   if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:10px">nota/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
   else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:10px">texto1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:10px">texto2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
@@ -1758,8 +1759,8 @@ function renderStats(){
   ['Essay','Article','Report','Review','Email'].forEach(k=>row('Writing '+k,D.log.filter(e=>e.type==='w'&&e.kind===k)));
   const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('R&UoE completo',rue);
   const l=D.log.filter(e=>e.type==='l');if(l.length)row('Listening completo',l);
-  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">practicado</td></tr>`)}
-  document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="empty">📊 Sin datos todavía — registrá ejercicios y acá vas a ver tu evolución.</td></tr>';
+  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">practiced</td></tr>`)}
+  document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="empty">📊 No data yet — log exercises and you\'ll see your evolution here.</td></tr>';
 }
 
 /* ---------- ERRORS ----------
@@ -1768,7 +1769,7 @@ function renderStats(){
    por apuro). renderErrs() lista + borrado individual + clear. */
 function renderErrs(){
   const el=document.getElementById('errList');
-  if(!D.errs.length){el.innerHTML='<div class="empty">🔖 Sin errores registrados. Cada fallo que anotes te acerca al Grade A.</div>';return}
+  if(!D.errs.length){el.innerHTML='<div class="empty">🔖 No errors logged. Every mistake you note gets you closer to Grade A.</div>';return}
   el.innerHTML=D.errs.map((e,i)=>`<div class="card" style="padding:13px 14px">
     <span class="pill ${e.code}">${e.code}</span> <span style="font-size:12px;color:var(--dim)">${e.date}</span>
     <div style="margin-top:7px;font-size:13.5px">${esc(e.desc)}</div>
@@ -1780,9 +1781,9 @@ function renderErrPills(){
   const el=document.getElementById('errPills');
   if(!el)return;
   const errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">Sin errores registrados todavía.</div>';return}
+  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet.</div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const names={'L-GAP':'Laguna léxica','G-ERR':'Regla mal aplicada','T-MIS':'Distractor textual','T-LIM':'Apuro / atención'};
+  const names={'L-GAP':'Lexical gap','G-ERR':'Misapplied rule','T-MIS':'Textual distractor','T-LIM':'Rush / attention'};
   const total=errs.length;
   el.innerHTML=codes.map(c=>{
     const n=errs.filter(e=>e.code===c).length;
@@ -1835,7 +1836,7 @@ const BUY_BOOKS=[
 let MATERIALS=[];
 function renderMaterial(){
   const el=document.getElementById('matList');
-  if(!MATERIALS.length){el.innerHTML='<div class="empty">📥 Cargando material... (en la versión web http://100.112.213.66:8088 se carga solo; si abriste el archivo local no hay PDFs)</div>';return}
+  if(!MATERIALS.length){el.innerHTML='<div class="empty">📥 Loading material... (the web version http://100.112.213.66:8088 loads it automatically; if you opened the local file there are no PDFs)</div>';return}
   const groups={};
   MATERIALS.forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
   el.innerHTML=Object.keys(groups).map(f=>{
@@ -1852,7 +1853,7 @@ function renderBooks(){
   const q=(document.getElementById('bookFilter').value||'').toLowerCase().trim();
   const list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
   const el=document.getElementById('bookList');
-  if(!list.length){el.innerHTML='<div class="empty">Sin resultados para "'+esc(q)+'"</div>';return}
+  if(!list.length){el.innerHTML='<div class="empty">No results for "'+esc(q)+'"</div>';return}
   el.innerHTML=list.map(b=>`<div class="book">
     <div class="ico">${b.i||'📖'}</div>
     <div style="flex:1">
@@ -1897,7 +1898,7 @@ function renderGrafEvol(){
     {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
-  if(!seriesOk.length){el.innerHTML='<div class="empty">📈 Registrá Writing, Listening o UoE para ver tu evolución.</div>';return}
+  if(!seriesOk.length){el.innerHTML='<div class="empty">📈 Log Writing, Listening or UoE to see your evolution.</div>';return}
   const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
   const n=Math.max(...seriesOk.map(s=>s.es.length));
   const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
@@ -1933,15 +1934,15 @@ function renderGrafPart(){
   ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
   const rue=log.filter(e=>e.type==='rue');if(rue.length)push('R&UoE completo',rue);
   const l=log.filter(e=>e.type==='l');if(l.length)push('Listening completo',l);
-  if(!rows.length){el.innerHTML='<div class="empty">Sin datos todavía — registrá ejercicios y acá vas a ver tus puntos débiles.</div>';return}
+  if(!rows.length){el.innerHTML='<div class="empty">No data yet — log exercises and you\'ll see your weak spots here.</div>';return}
   rows.sort((a,b)=>a.pct-b.pct);
   el.innerHTML='<div style="max-width:560px">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
 }
 function renderGrafErr(){
   const el=document.getElementById('gErr'),errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">Sin errores registrados todavía.</div>';return}
+  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet.</div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const names={'L-GAP':'L-GAP · léxico','G-ERR':'G-ERR · gramática','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · tiempo'};
+  const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
   const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>e.code===c).length}));
   const max=Math.max(...counts.map(c=>c.n));
   const W=340,H=140,padL=110,padB=18,padT=8,padR=8;
@@ -1958,7 +1959,7 @@ function renderGrafErr(){
 }
 function renderGrafCons(){
   const el=document.getElementById('gCons'),log=D.log||[];
-  if(!log.length){el.innerHTML='<div class="empty">Sin registros todavía — cada sesión cuenta para tu racha.</div>';return}
+  if(!log.length){el.innerHTML='<div class="empty">No logs yet — every session counts toward your streak.</div>';return}
   const byWeek={};
   log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
   const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
@@ -1976,7 +1977,7 @@ function renderGrafCons(){
   // Racha: semanas consecutivas (desde la actual hacia atrás) con ≥1 registro
   let streak=0,wCur=isoWeek(new Date());
   while(byWeek[wCur]){streak++;wCur--}
-  document.getElementById('gStreak').textContent='🔥 racha actual: '+streak+' semana'+(streak===1?'':'s');
+  document.getElementById('gStreak').textContent='🔥 current streak: '+streak+' week'+(streak===1?'':'s');
   el.innerHTML=svgChart(W,H,g);
 }
 /* ---------- TODAY VIEW ----------
@@ -1987,7 +1988,7 @@ function renderGrafCons(){
    parte del Paso 1 (uePart), el tipo de texto del Writing (wTipo), y
    escribe los enfoques de Listening/Speaking de Sesión B.
    setOv(k,v): guarda un override de rotación para la semana. */
-const DAYS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
 function renderToday(){
   const d=new Date(),wd=d.getDay();
@@ -2005,21 +2006,21 @@ function renderToday(){
   const ovSp=document.getElementById('ovSp');
   ovSp.innerHTML=[1,2,3,4].map(p=>`<option value="${p}" ${p==spP?'selected':''}>P${p}</option>`).join('');
   document.getElementById('uePart').value=rue;
-  document.getElementById('semanaTxt').textContent='Part '+rue+' — '+partName(rue)+(wov.rue?' (elegido manualmente)':' (auto, rotación)');
+  document.getElementById('semanaTxt').textContent='Part '+rue+' — '+partName(rue)+(wov.rue?' (manually chosen)':' (auto, rotation)');
   document.getElementById('wTipo').value=wT;
   document.getElementById('wWords').min=s.wMin;document.getElementById('wWords').max=s.wMax;
   document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
-  document.getElementById('lFocusNote').textContent='🎯 Enfoque semanal: Listening Part '+lP+' — practicá esa parte en PARTES, o el test completo acá.';
-  document.getElementById('spFocusNote').textContent='🎯 Enfoque semanal: Speaking Part '+spP+' — con la IA o la profe.';
+  document.getElementById('lFocusNote').textContent='🎯 Weekly focus: Listening Part '+lP+' — practice that part in PARTS, or the full test here.';
+  document.getElementById('spFocusNote').textContent='🎯 Weekly focus: Speaking Part '+spP+' — with the AI or your teacher.';
   const nb=document.getElementById('nextBox');
-  const DIA=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const aDay=s.sesA.day,bDay=s.sesB.day;
-  if(wd===aDay)nb.innerHTML=`<div class="big">📝 Hoy (${DIA[wd]}): <b style="color:var(--mon)">Sesión A — Ingeniería de Texto</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Rotación: R&UoE P${rue} · Writing ${wT}. Las sesiones están todas disponibles abajo — hacelas cuando quieras.</div>`;
-  else if(wd===bDay)nb.innerHTML=`<div class="big">🎧 Hoy (${DIA[wd]}): <b style="color:var(--fri)">Sesión B — Procesamiento Auditivo</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Rotación: Listening P${lP} · Speaking P${spP}. Las sesiones están todas disponibles abajo — hacelas cuando quieras.</div>`;
+  if(wd===aDay)nb.innerHTML=`<div class="big">📝 Today (${DIA[wd]}): <b style="color:var(--mon)">Session A — Text Engineering</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Rotation: R&UoE P${rue} · Writing ${wT}. All sessions are available below — do them whenever you want.</div>`;
+  else if(wd===bDay)nb.innerHTML=`<div class="big">🎧 Today (${DIA[wd]}): <b style="color:var(--fri)">Session B — Auditory Processing</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Rotation: Listening P${lP} · Speaking P${spP}. All sessions are available below — do them whenever you want.</div>`;
   else{
     const toA=(aDay-wd+7)%7||7,toB=(bDay-wd+7)%7||7;
-    const next=toA<=toB?`${DIA[aDay]} (en ${toA}d) — Sesión A`:`${DIA[bDay]} (en ${toB}d) — Sesión B`;
-    nb.innerHTML=`<div class="big">🗓 Sin sesión programada hoy</div><div class="when">Próxima: <b>${next}</b>. Rotación: R&UoE P${rue} · Writing ${wT} · Listening P${lP} · Speaking P${spP}. Podés adelantar lo que quieras.</div>`;
+    const next=toA<=toB?`${DIA[aDay]} (in ${toA}d) — Session A`:`${DIA[bDay]} (in ${toB}d) — Session B`;
+    nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${next}</b>. Rotation: R&UoE P${rue} · Writing ${wT} · Listening P${lP} · Speaking P${spP}. You can get ahead whenever you want.</div>`;
   }
 }
 function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
@@ -2105,6 +2106,7 @@ loadMaterial();
 syncPull();
 applyTimers();
 refreshAll();
+
 </script>
 </body>
 </html>

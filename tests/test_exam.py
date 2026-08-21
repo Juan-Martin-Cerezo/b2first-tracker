@@ -23,7 +23,7 @@ with sync_playwright() as p:
     out["ex_w_timer"] = pg.evaluate("document.getElementById('exTimer').textContent")
     out["ex_w_links"] = pg.eval_on_selector_all("#exGuide a", "els => els.length")
     # start timer y verificar cuenta regresiva
-    pg.click("text=Empezar")
+    pg.click("button[onclick='exStart()']")
     pg.wait_for_timeout(2100)
     out["ex_corriendo"] = pg.evaluate("exIv !== null")
     out["ex_timer_tras2s"] = pg.evaluate("document.getElementById('exTimer').textContent")
