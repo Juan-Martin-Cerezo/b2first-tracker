@@ -1405,6 +1405,11 @@ footer{
           </div>
         </div>
         <div class="card">
+          <h2>🌐 Práctica online (1 click — gratis)</h2>
+          <div class="sub">Ejercicios interactivos ilimitados por habilidad. Oficiales de Cambridge + sitios de práctica gratuitos (sin descarga).</div>
+          <div id="onlineList"></div>
+        </div>
+        <div class="card">
           <h2>📥 Material (PDFs & audio)</h2>
           <div class="sub">PDFs open in the viewer, audio plays here. Dynamic: whatever you add to the folder shows up automatically.</div>
           <div id="matList"></div>
@@ -2215,6 +2220,40 @@ const BUY_BOOKS=[
  {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$103.211',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso'},
  {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$147.912',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta'}
 ];
+const ONLINE=[
+ {g:'🎧 Listening',l:[
+  {n:'Cambridge English — actividades oficiales B2 (listening)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2'},
+  {n:'ExamEnglish — FCE Listening (4 tests)',u:'https://www.examenglish.com/FCE/fce_listening.html'},
+  {n:'Test-English — B2 Listening (con answers + transcript)',u:'https://test-english.com/listening/b2/'}
+ ]},
+ {g:'📖 Reading',l:[
+  {n:'Cambridge English — actividades oficiales B2 (reading)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2'},
+  {n:'ExamEnglish — FCE Reading',u:'https://www.examenglish.com/FCE/fce_reading.html'}
+ ]},
+ {g:'✍️ Use of English',l:[
+  {n:'Flo-Joe — FCE UoE (open cloze, word formation, key word transformation)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
+  {n:'ExamEnglish — FCE Use of English',u:'https://www.examenglish.com/FCE/fce_use_of_english.html'},
+  {n:'Test-English — B2 Use of English (con answers + explicación)',u:'https://test-english.com/use-of-english/b2/'}
+ ]},
+ {g:'📝 Writing',l:[
+  {n:'Cambridge English — actividades oficiales B2 (writing)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2'},
+  {n:'ExamEnglish — FCE Writing',u:'https://www.examenglish.com/FCE/fce_writing.html'}
+ ]},
+ {g:'🗣️ Speaking',l:[
+  {n:'Cambridge English — actividades oficiales B2 (speaking)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2'},
+  {n:'ExamEnglish — FCE Speaking',u:'https://www.examenglish.com/FCE/fce_speaking.html'}
+ ]},
+ {g:'📚 Todo en uno',l:[
+  {n:'Test & Train — app oficial Cambridge (demo gratis)',u:'https://testandtrain.cambridgeenglish.org/'},
+  {n:'Cambridge One — plataforma oficial Cambridge',u:'https://www.cambridgeone.org/'},
+  {n:'Cambridge English — todas las actividades B2',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2'}
+ ]}
+];
+function renderOnline(){
+  const el=document.getElementById('onlineList');
+  if(!el)return;
+  el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">gratis · online · sin descarga</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;margin-top:6px">Abrir →</a></div></div>`).join('')).join('');
+}
 let MATERIALS=[];
 function renderMaterial(){
   const el=document.getElementById('matList');
@@ -2489,7 +2528,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.getElementById('v-'+b.dataset.view).classList.add('active');
 });
 
-function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderMaterial();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
+function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderOnline();renderMaterial();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;renderMaterial();
