@@ -627,10 +627,13 @@ class H(BaseHTTPRequestHandler):
                 try:
                     raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
                     data = json.loads(raw.decode("utf-8"))
-                    if not isinstance(data, dict) or not isinstance(data.get("log"), list) or \
-                       not isinstance(data.get("errs"), list):
-                        self._send(400, b"formato invalido: falta log/errs", "text/plain")
+                    if not isinstance(data, dict):
+                        self._send(400, b"formato invalido: debe ser dict JSON", "text/plain")
                         return
+                    if "log" not in data or not isinstance(data["log"], list):
+                        data["log"] = []
+                    if "errs" not in data or not isinstance(data["errs"], list):
+                        data["errs"] = []
                     save_user_progress(user_id, data)
                     body = b"ok"
                     self._send(200, body, "text/plain")

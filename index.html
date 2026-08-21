@@ -33,67 +33,68 @@
 /* ============================================================
    B2 First Tracker — Academic Precision Design System
    Dual-Theme Architecture: Day (Academic Clean) / Night (Slate Dark)
+   Fully Responsive (Mobile First to Desktop)
    ============================================================ */
 :root{
   color-scheme:light;
   /* Surfaces & Backgrounds */
-  --background:#f8f9fc;
+  --background:#f8fafd;
   --surface:#ffffff;
   --surface-container-lowest:#ffffff;
   --surface-container-low:#f1f5f9;
-  --surface-container:#e2e8f0;
-  --surface-container-high:#cbd5e1;
-  --surface-container-highest:#94a3b8;
-  --surface-variant:#e2e8f0;
+  --surface-container:#e9eff7;
+  --surface-container-high:#dbe5f2;
+  --surface-container-highest:#cbd8ea;
+  --surface-variant:#e2eaf5;
   --on-surface:#0f172a;
   --on-surface-variant:#475569;
   --outline:#94a3b8;
   --outline-variant:#e2e8f0;
 
   /* Brand & Actions */
-  --primary:#0f2b5c;
-  --primary-hover:#1e3a8a;
+  --primary:#1e3a8a;
+  --primary-hover:#172554;
   --on-primary:#ffffff;
   --primary-container:#e0edff;
-  --on-primary-container:#0f2b5c;
+  --on-primary-container:#1e3a8a;
   --primary-fixed:#d7e2ff;
   --primary-fixed-dim:#b7c7eb;
 
   /* Hero & Navy Accent Cards */
-  --hero-bg:#0a1931;
-  --hero-border:#152e56;
+  --hero-bg:#0d2346;
+  --hero-border:#1c3d70;
   --on-hero:#ffffff;
-  --on-hero-sub:rgba(255,255,255,0.78);
-  --on-hero-sub2:rgba(255,255,255,0.60);
-  --hero-surface:rgba(255,255,255,0.08);
-  --hero-surface-border:rgba(255,255,255,0.18);
-  --hero-accent:#60a5fa;
+  --on-hero-sub:rgba(255,255,255,0.80);
+  --on-hero-sub2:rgba(255,255,255,0.65);
+  --hero-surface:rgba(255,255,255,0.10);
+  --hero-surface-border:rgba(255,255,255,0.20);
+  --hero-accent:#38bdf8;
 
   /* Green Hero Cards (Plan) */
-  --green-card-bg:#06371c;
-  --green-card-border:#0d522c;
+  --green-card-bg:#08381e;
+  --green-card-border:#12522e;
   --on-green-card:#ffffff;
-  --on-green-card-sub:rgba(255,255,255,0.80);
+  --on-green-card-sub:rgba(255,255,255,0.82);
   --green-surface:rgba(255,255,255,0.10);
   --green-surface-border:rgba(255,255,255,0.20);
   --green-accent:#4ade80;
 
   /* Feedback & Status Colors */
   --ok:#16a34a;
-  --ok-soft:rgba(22,163,74,0.10);
+  --ok-soft:#ecfdf5;
   --ok-border:rgba(22,163,74,0.25);
   --ok-text:#15803d;
   --warn:#d97706;
-  --warn-soft:rgba(217,119,6,0.10);
+  --warn-soft:#fffbeb;
   --warn-border:rgba(217,119,6,0.25);
   --warn-text:#b45309;
   --bad:#dc2626;
-  --bad-soft:rgba(220,38,38,0.10);
+  --bad-soft:#fef2f2;
   --bad-border:rgba(220,38,38,0.25);
   --bad-text:#b91c1c;
 
   /* Legacy & Chart Mappings */
-  --acc:#0f2b5c;
+  --acc:#1e3a8a;
   --acc2:#2563eb;
   --mon:#16a34a;
   --fri:#2563eb;
@@ -103,12 +104,12 @@
   --txt:var(--on-surface);
   --select-arrow-img:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23475569'/%3E%3C/svg%3E");
 
-  --radius:4px;
+  --radius:6px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --shadow-sm:0 1px 2px rgba(15,23,42,0.04),0 1px 3px rgba(15,23,42,0.05);
   --shadow-md:0 4px 6px -2px rgba(15,23,42,0.05),0 2px 4px -2px rgba(15,23,42,0.04);
-  --sidebar-w:288px;
+  --sidebar-w:270px;
 }
 
 /* ============ TEMA OSCURO (Night Precision) ============ */
@@ -195,8 +196,9 @@ html[data-theme="dark"]{
 html{-webkit-text-size-adjust:100%}
 body{
   background:var(--background);color:var(--on-surface);
-  font:15px/1.5 var(--font);min-height:100vh;
+  font:14.5px/1.5 var(--font);min-height:100vh;
   font-feature-settings:'tnum' 1;
+  overflow-x:hidden;
 }
 a{color:var(--primary);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -205,236 +207,239 @@ a:hover{text-decoration:underline}
 .app{display:flex;min-height:100vh}
 .sidebar{
   width:var(--sidebar-w);flex:none;position:fixed;top:0;left:0;bottom:0;z-index:50;
-  background:var(--surface-container);border-right:1px solid var(--outline-variant);
+  background:var(--surface-container-low);border-right:1px solid var(--outline-variant);
   display:flex;flex-direction:column;overflow-y:auto;
 }
-.sidebar .brand{display:flex;align-items:center;gap:12px;padding:24px 28px;border-bottom:1px solid var(--outline-variant)}
-.sidebar .brand img{height:32px;width:auto;object-fit:contain}
-.sidebar .brand span{font-family:var(--font);font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--on-surface)}
-.sidebar nav{flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.sidebar .brand{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--outline-variant)}
+.sidebar .brand img{height:30px;width:auto;object-fit:contain}
+.sidebar .brand span{font-family:var(--font);font-size:19px;font-weight:700;letter-spacing:-.01em;color:var(--on-surface)}
+.sidebar nav{flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .sidebar nav button{
-  display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:4px;border:none;
-  background:transparent;color:var(--on-surface-variant);font-family:var(--mono);font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--radius);border:none;
+  background:transparent;color:var(--on-surface-variant);font-family:var(--mono);font-size:12.5px;font-weight:500;
   letter-spacing:.02em;text-decoration:none;cursor:pointer;transition:background .15s,color .15s;text-align:left;width:100%;
 }
 .sidebar nav button:hover{background:var(--surface-container-high);color:var(--on-surface)}
 .sidebar nav button.active{background:var(--primary);color:var(--on-primary);font-weight:700}
 .sidebar nav button .mat{font-size:20px;width:24px;text-align:center;flex:none}
-.sidebar .side-foot{padding:16px 24px;border-top:1px solid var(--outline-variant);font-family:var(--mono);font-size:11px;color:var(--on-surface-variant);display:flex;align-items:center;gap:8px}
+.sidebar .side-foot{padding:14px 20px;border-top:1px solid var(--outline-variant);font-family:var(--mono);font-size:11px;color:var(--on-surface-variant);display:flex;align-items:center;gap:8px}
 .sidebar .side-foot .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
 .content{flex:1;margin-left:var(--sidebar-w);min-width:0;display:flex;flex-direction:column}
-.content main{flex:1;padding:28px 32px 48px;max-width:1440px;width:100%}
+.content main{flex:1;padding:24px 28px 48px;max-width:1440px;width:100%;box-sizing:border-box}
 
 /* ============ TOPBAR ============ */
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  padding:14px 32px;border-bottom:1px solid var(--outline-variant);
-  background:var(--surface-container-lowest);position:sticky;top:0;z-index:30;flex-wrap:wrap;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 28px;border-bottom:1px solid var(--outline-variant);
+  background:var(--surface-container-lowest);position:sticky;top:0;z-index:30;
 }
-.topbar .sync-status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--on-surface-variant)}
+.topbar .sync-status{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;color:var(--on-surface-variant);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar .sync-status .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.topbar .top-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .theme-toggle{
-  background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;
+  background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);
   width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
-  color:var(--on-surface);font-size:17px;transition:background .15s,color .15s;flex:none;
+  color:var(--on-surface);font-size:17px;transition:background .15s,color .15s,transform .1s;flex:none;
 }
-.theme-toggle:hover{background:var(--surface-container-high);color:var(--primary)}
+.theme-toggle:hover{background:var(--surface-container-high);color:var(--primary);transform:scale(1.05)}
 .topbar .user-chip{display:flex;align-items:center;gap:8px}
-.topbar .user-chip .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600}
+.topbar .user-chip .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 
 /* ============ PAGE HEADERS ============ */
-.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:28px;flex-wrap:wrap}
-.page-head .page-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--primary);text-transform:uppercase;display:block;margin-bottom:6px;font-weight:600}
-.page-head .page-title{font-size:34px;font-weight:700;letter-spacing:-.02em;color:var(--on-surface);line-height:1.1}
-.page-head .page-sub{font-size:15px;color:var(--on-surface-variant);margin-top:8px;max-width:640px;line-height:1.55}
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.page-head .page-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--primary);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600}
+.page-head .page-title{font-size:30px;font-weight:700;letter-spacing:-.02em;color:var(--on-surface);line-height:1.15}
+.page-head .page-sub{font-size:14px;color:var(--on-surface-variant);margin-top:6px;max-width:680px;line-height:1.5}
 .page-stat{text-align:right;flex:none}
-.page-stat .stat-label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--on-surface-variant);text-transform:uppercase}
-.page-stat .stat-val{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--primary);line-height:1.1;display:block;margin-top:2px}
+.page-stat .stat-label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--on-surface-variant);text-transform:uppercase}
+.page-stat .stat-val{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--primary);line-height:1.1;display:block;margin-top:2px}
 
 /* ============ GRID ============ */
-.grid-12{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.grid-12{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
 .col-8{grid-column:span 8;min-width:0}.col-7{grid-column:span 7;min-width:0}.col-6{grid-column:span 6;min-width:0}.col-5{grid-column:span 5;min-width:0}.col-4{grid-column:span 4;min-width:0}.col-12{grid-column:span 12;min-width:0}
 
 /* ============ CARDS ============ */
 .card{
   background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
-  border-radius:4px;padding:24px;margin-bottom:20px;box-shadow:var(--shadow-sm);
+  border-radius:var(--radius);padding:22px;margin-bottom:18px;box-shadow:var(--shadow-sm);
 }
-.card h2{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--on-surface)}
+.card h2{font-size:17px;font-weight:600;letter-spacing:-.01em;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--on-surface)}
 .card h2 .ico{font-size:18px}
-.card .sub{color:var(--on-surface-variant);font-size:13px;margin-bottom:16px;line-height:1.55}
+.card .sub{color:var(--on-surface-variant);font-size:13px;margin-bottom:14px;line-height:1.5}
 .badge{
-  display:inline-block;font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:4px;
+  display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:var(--radius);
   letter-spacing:.4px;text-transform:uppercase;vertical-align:middle;font-family:var(--mono);
 }
 .badge.mon{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok-border)}
 .badge.fri{background:var(--primary-container);color:var(--on-primary-container);border:1px solid var(--outline-variant)}
 
 /* ============ SESSION CARDS (TODAY) ============ */
-.sesion-card .sesion-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px;flex-wrap:wrap}
-.sesion-card .sesion-head .sesion-title{font-size:20px;font-weight:600;color:var(--on-surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sesion-card .sesion-head .sesion-sub{font-size:13.5px;color:var(--on-surface-variant);margin-top:4px}
+.sesion-card .sesion-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.sesion-card .sesion-head .sesion-title{font-size:19px;font-weight:600;color:var(--on-surface);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sesion-card .sesion-head .sesion-sub{font-size:13px;color:var(--on-surface-variant);margin-top:3px}
 .sesion-dur{text-align:right;flex:none}
 .sesion-dur .dur-label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--on-surface-variant);text-transform:uppercase}
-.sesion-dur .dur-val{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--primary);display:block;margin-top:2px}
+.sesion-dur .dur-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--primary);display:block;margin-top:1px}
 .task{
   background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
-  border-radius:4px;padding:20px;margin-bottom:12px;position:relative;transition:border-color .15s;
+  border-radius:var(--radius);padding:18px;margin-bottom:12px;position:relative;transition:border-color .15s;
 }
 .task:hover{border-color:var(--primary)}
-.task .task-head{display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.task .task-head{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
 .task .task-num{
-  width:40px;height:40px;border-radius:50%;background:var(--primary-container);
+  width:36px;height:36px;border-radius:50%;background:var(--primary-container);
   color:var(--on-primary-container);display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:16px;font-weight:600;flex:none;
+  font-family:var(--mono);font-size:15px;font-weight:700;flex:none;
 }
-.task .task-title{font-size:16px;font-weight:600;color:var(--on-surface)}
-.task .task-title .t{font-size:11.5px;color:var(--on-surface-variant);font-weight:500;font-family:var(--mono);margin-left:8px}
-.task .task-meta{margin-left:auto;display:flex;align-items:center;gap:12px}
+.task .task-title{font-size:15.5px;font-weight:600;color:var(--on-surface)}
+.task .task-title .t{font-size:11.5px;color:var(--on-surface-variant);font-weight:500;font-family:var(--mono);margin-left:6px}
+.task .task-meta{margin-left:auto;display:flex;align-items:center;gap:10px}
 .task .task-timer{font-family:var(--mono);font-size:13px;color:var(--on-surface);white-space:nowrap}
 .task .task-timer .lbl{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--on-surface-variant);text-transform:uppercase}
 .guide{
-  background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;
-  padding:12px 14px;font-size:12.5px;margin:10px 0;line-height:1.6;color:var(--on-surface-variant);
+  background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);
+  padding:12px 14px;font-size:12.5px;margin:10px 0;line-height:1.55;color:var(--on-surface-variant);
 }
 .guide b{color:var(--on-surface)}
-.guide a{color:var(--primary);font-weight:500}
+.guide a{color:var(--primary);font-weight:600}
 
 /* ============ FORMS ============ */
-label{display:block;font-size:10.5px;font-weight:600;color:var(--on-surface-variant);margin:10px 0 4px;letter-spacing:.1em;font-family:var(--mono);text-transform:uppercase}
+label{display:block;font-size:11px;font-weight:600;color:var(--on-surface-variant);margin:8px 0 4px;letter-spacing:.08em;font-family:var(--mono);text-transform:uppercase}
 select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=file],textarea{
-  width:100%;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:4px;
-  color:var(--on-surface);padding:10px 12px;font-size:14px;font-family:var(--font);
+  width:100%;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:var(--radius);
+  color:var(--on-surface);padding:10px 12px;font-size:14.5px;font-family:var(--font);
   transition:border-color .15s,box-shadow .15s;
 }
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.18)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,58,138,.15)}
 select{
   cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-color:var(--surface-container-lowest);
   background-image:var(--select-arrow-img);background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
 }
 select option{background:var(--surface-container-lowest);color:var(--on-surface)}
-.row{display:flex;gap:14px;flex-wrap:wrap}
-.row>div{flex:1;min-width:140px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1;min-width:130px}
 
 /* ============ BUTTONS & CHIPS ============ */
 .btn{
   background:var(--primary);color:var(--on-primary);border:none;
-  border-radius:4px;padding:11px 18px;font-size:13px;font-weight:600;font-family:var(--mono);
-  letter-spacing:.04em;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;
-  box-shadow:var(--shadow-sm);display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  border-radius:var(--radius);padding:10px 16px;font-size:13px;font-weight:600;font-family:var(--mono);
+  letter-spacing:.03em;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;
+  box-shadow:var(--shadow-sm);display:inline-flex;align-items:center;gap:7px;justify-content:center;
+  min-height:38px;
 }
 .btn:hover{background:var(--primary-hover);transform:translateY(-1px)}
 .btn:active{transform:translateY(0)}
 .btn.gray{
-  background:var(--surface-container-lowest);color:var(--on-surface);border:1px solid var(--outline);
+  background:var(--surface-container-lowest);color:var(--on-surface);border:1px solid var(--outline-variant);
   box-shadow:none;font-weight:500;
 }
-.btn.gray:hover{border-color:var(--primary);background:var(--surface-container);color:var(--primary)}
+.btn.gray:hover{border-color:var(--primary);background:var(--surface-container-low);color:var(--primary)}
 .btn.ok{background:var(--ok);color:#ffffff}
-.btn.ok:hover{opacity:.9;background:var(--ok)}
+.btn.ok:hover{opacity:.92;background:var(--ok)}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn.sm{padding:7px 12px;font-size:11.5px;border-radius:4px}
+.btn.sm{padding:6px 12px;font-size:11.5px;min-height:30px;border-radius:var(--radius)}
 .chip{
-  display:inline-block;font-size:11.5px;font-weight:600;padding:5px 10px;margin:2px 4px 2px 0;
-  border:1px solid var(--outline-variant);border-radius:4px;background:var(--surface-container-low);
+  display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:5px 10px;margin:2px 4px 2px 0;
+  border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low);
   color:var(--on-surface);text-decoration:none;cursor:pointer;transition:all .15s;font-family:var(--mono);
 }
 .chip:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
 .chip.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
-.chips{margin:4px 0}
+.chips{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
 
 /* ============ TIMERS ============ */
 .timer{
   display:inline-flex;align-items:center;gap:8px;background:var(--surface-container-low);
-  border:1px solid var(--outline-variant);border-radius:4px;padding:6px 14px;
+  border:1px solid var(--outline-variant);border-radius:var(--radius);padding:5px 12px;
   font-variant-numeric:tabular-nums;font-weight:600;color:var(--on-surface);
-  font-family:var(--mono);font-size:14px;letter-spacing:.04em;
+  font-family:var(--mono);font-size:13.5px;letter-spacing:.04em;
 }
 .timer.running{color:var(--ok);border-color:var(--ok-border);background:var(--ok-soft)}
-.timer .tbtn{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface);border-radius:4px;padding:3px 9px;font-size:11px;cursor:pointer}
+.timer .tbtn{background:var(--surface-container);border:1px solid var(--outline-variant);color:var(--on-surface);border-radius:var(--radius);padding:3px 8px;font-size:11px;cursor:pointer}
 
 /* ============ EXAM VIEW ============ */
 .exam-timer{
-  font-family:var(--mono);font-size:56px;font-weight:700;letter-spacing:-.02em;
+  font-family:var(--mono);font-size:52px;font-weight:700;letter-spacing:-.02em;
   color:var(--primary);font-variant-numeric:tabular-nums;display:inline-block;
   border:none;background:transparent;
 }
-.exam-dial-wrap{position:relative;max-width:640px;margin:24px auto;display:flex;flex-direction:column;align-items:center}
+.exam-dial-wrap{position:relative;max-width:600px;margin:20px auto;display:flex;flex-direction:column;align-items:center}
 .exam-dial-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.15;pointer-events:none;color:var(--primary)}
 .exam-dial-bg svg{width:100%;height:100%}
-.exam-guide-card{background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px 16px;font-size:13px;margin:14px 0;line-height:1.6;color:var(--on-surface-variant)}
+.exam-guide-card{background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);padding:14px 16px;font-size:13px;margin:14px 0;line-height:1.55;color:var(--on-surface-variant)}
 .exam-guide-card a{font-weight:600}
 
 /* ============ GATES ============ */
 .gate{
   border-left:4px solid var(--outline-variant);padding:14px 16px;margin-bottom:12px;
-  background:var(--surface-container-lowest);border-radius:0 4px 4px 0;
+  background:var(--surface-container-lowest);border-radius:0 var(--radius) var(--radius) 0;
   border:1px solid var(--outline-variant);border-left-width:4px;
 }
 .gate.pass{border-left-color:var(--ok);background:linear-gradient(90deg,var(--ok-soft),transparent 70%),var(--surface-container-lowest)}
 .gate.fail{border-left-color:var(--bad)}
 .gate h4{font-size:13.5px;font-weight:600;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--on-surface)}
-.gate .bar{height:8px;background:var(--surface-container-low);border-radius:2px;margin-top:10px;overflow:hidden}
-.gate .fill{height:100%;background:var(--primary);border-radius:2px;transition:width .5s ease}
+.gate .bar{height:8px;background:var(--surface-container-low);border-radius:4px;margin-top:10px;overflow:hidden}
+.gate .fill{height:100%;background:var(--primary);border-radius:4px;transition:width .5s ease}
 .gate.pass .fill{background:var(--ok)}
-.gate .ov-label{font-size:11.5px;color:var(--on-surface-variant);margin-top:8px;display:flex;align-items:center;gap:6px;font-family:var(--mono);text-transform:none}
+.gate .ov-label{font-size:11.5px;color:var(--on-surface-variant);margin-top:8px;display:flex;align-items:center;gap:6px;font-family:var(--mono);text-transform:none;cursor:pointer}
 
 /* ============ STAT CARDS ============ */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:28px}
-.stat-card{background:var(--surface-container);border-radius:4px;padding:22px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:background .2s;border:1px solid var(--outline-variant)}
-.stat-card:hover{background:var(--surface-container-high)}
-.stat-card .stat-card-label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:10px}
-.stat-card .stat-card-val{font-family:var(--mono);font-size:36px;font-weight:600;color:var(--primary);line-height:1.1;display:block}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface-container-lowest);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:background .2s,border-color .2s;border:1px solid var(--outline-variant)}
+.stat-card:hover{background:var(--surface-container-low);border-color:var(--primary)}
+.stat-card .stat-card-label{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:8px}
+.stat-card .stat-card-val{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--primary);line-height:1.1;display:block}
 .stat-card .stat-card-sub{display:block;font-size:12.5px;color:var(--on-surface-variant);margin-top:4px}
-.stat-card .stat-bar{height:8px;background:var(--surface-container-low);border-radius:2px;margin-top:14px;overflow:hidden}
-.stat-card .stat-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .6s ease}
-.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:88px;color:var(--primary);opacity:.10;pointer-events:none}
+.stat-card .stat-bar{height:7px;background:var(--surface-container-low);border-radius:4px;margin-top:12px;overflow:hidden}
+.stat-card .stat-bar-fill{height:100%;background:var(--primary);border-radius:4px;transition:width .6s ease}
+.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;font-size:80px;color:var(--primary);opacity:.08;pointer-events:none}
 
 /* ============ PILLS ============ */
-.pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:2px;margin:2px 4px 2px 0;letter-spacing:.3px;font-family:var(--mono)}
+.pill{display:inline-block;font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:var(--radius);margin:2px 4px 2px 0;letter-spacing:.3px;font-family:var(--mono)}
 .pill.L-GAP{background:var(--primary-container);color:var(--on-primary-container);border:1px solid var(--outline-variant)}
 .pill.G-ERR{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad-border)}
 .pill.T-MIS{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-border)}
 .pill.T-LIM{background:var(--surface-container-high);color:var(--on-surface-variant);border:1px solid var(--outline-variant)}
 .empty{color:var(--on-surface-variant);font-size:13px;padding:18px;text-align:center;font-style:italic}
-.del{background:none;border:none;color:var(--outline);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:4px;transition:color .12s,background .12s}
+.del{background:none;border:none;color:var(--outline);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:var(--radius);transition:color .12s,background .12s}
 .del:hover{color:var(--bad);background:var(--bad-soft)}
 
 /* ============ TABLES ============ */
-.table-wrap{overflow-x:auto;border:1px solid var(--outline-variant);border-radius:4px;background:var(--surface-container-lowest)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--outline-variant)}
+.table-wrap{overflow-x:auto;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-lowest);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--outline-variant)}
 th{color:var(--on-surface-variant);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;background:var(--surface-container-low);font-family:var(--mono)}
 tbody tr:last-child td{border-bottom:none}
 tbody tr{transition:background .12s}
 tbody tr:hover{background:var(--surface-container-low)}
 
 /* ============ BOOKS / MATERIAL ============ */
-.book{display:flex;gap:14px;align-items:flex-start;padding:13px 2px;border-bottom:1px solid var(--outline-variant)}
+.book{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-bottom:1px solid var(--outline-variant)}
 .book:last-child{border:none}
-.book .ico{width:38px;height:38px;flex:none;border-radius:4px;background:var(--surface-container-low);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;font-size:18px}
+.book .ico{width:36px;height:36px;flex:none;border-radius:var(--radius);background:var(--surface-container-low);border:1px solid var(--outline-variant);display:flex;align-items:center;justify-content:center;font-size:17px}
 .book b{display:block;font-size:13.5px;font-weight:600;line-height:1.35;color:var(--on-surface)}
 .book .meta{font-size:12px;color:var(--on-surface-variant);margin-top:2px;line-height:1.45}
 .book .price{color:var(--ok);font-weight:700;font-size:13.5px;white-space:nowrap;font-family:var(--mono)}
 .book a{color:var(--primary);font-size:12px;font-weight:600}
-.book audio{width:100%;margin-top:8px;height:36px;border-radius:4px}
-.folder{color:var(--primary);font-size:14px;font-weight:700;margin:18px 0 8px;text-transform:capitalize;letter-spacing:.04em}
+.book audio{width:100%;margin-top:8px;height:36px;border-radius:var(--radius)}
+.folder{color:var(--primary);font-size:14px;font-weight:700;margin:16px 0 8px;text-transform:capitalize;letter-spacing:.04em}
 .step{
-  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:4px;
-  padding:16px 18px;margin-bottom:12px;transition:border-color .15s,background .15s;
+  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:var(--radius);
+  padding:15px 16px;margin-bottom:10px;transition:border-color .15s,background .15s;
 }
 .step:hover{border-color:var(--primary)}
-.step h3{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--on-surface)}
+.step h3{font-size:13.5px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--on-surface)}
 .step h3 .t{font-size:11px;color:var(--on-surface-variant);font-weight:500;font-family:var(--mono)}
 
 /* ============ NOTES ============ */
-.note{background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--warn-text);margin-bottom:13px;line-height:1.5}
-.ok-note{background:var(--ok-soft);border:1px solid var(--ok-border);border-radius:4px;padding:11px 13px;font-size:12.5px;color:var(--ok-text);margin-bottom:13px;line-height:1.5}
+.note{background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--radius);padding:11px 13px;font-size:12.5px;color:var(--warn-text);margin-bottom:12px;line-height:1.5}
+.ok-note{background:var(--ok-soft);border:1px solid var(--ok-border);border-radius:var(--radius);padding:11px 13px;font-size:12.5px;color:var(--ok-text);margin-bottom:12px;line-height:1.5}
 
 /* ============ HERO CARDS ============ */
 .next-session{
   display:flex;gap:14px;align-items:center;background:var(--hero-bg);color:var(--on-hero);
-  border:1px solid var(--hero-border);border-radius:4px;padding:18px 20px;margin-bottom:20px;
+  border:1px solid var(--hero-border);border-radius:var(--radius);padding:16px 20px;margin-bottom:18px;
   box-shadow:var(--shadow-md);
 }
 .next-session .big{font-size:15px;font-weight:700;letter-spacing:-.01em;color:var(--on-hero)}
@@ -447,25 +452,26 @@ tbody tr:hover{background:var(--surface-container-low)}
 .rot-card .sub{color:var(--on-hero-sub)}
 .rot-card label{color:var(--on-hero-sub)}
 .rot-card select{
-  background:var(--hero-surface);border-color:var(--hero-surface-border);color:var(--on-hero);
+  background-color:var(--hero-surface);border-color:var(--hero-surface-border);color:var(--on-hero);
   background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
 }
 .rot-card select option{background:var(--surface-container-lowest);color:var(--on-surface)}
 .rot-card .rot-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero);background:var(--hero-surface);border:1px solid var(--hero-surface-border);padding:3px 8px;border-radius:4px}
-.rot-card .rot-day{background:var(--hero-surface);border-left:4px solid var(--mon);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0 0}
+.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero);background:var(--hero-surface);border:1px solid var(--hero-surface-border);padding:3px 8px;border-radius:var(--radius)}
+.rot-card .rot-day{background:var(--hero-surface);border-left:4px solid var(--mon);padding:12px 14px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0 0}
 .rot-card .rot-day .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);display:block;margin-bottom:4px}
-.rot-card .rot-day .val{font-size:16px;font-weight:600;color:var(--on-hero)}
+.rot-card .rot-day .val{font-size:15.5px;font-weight:600;color:var(--on-hero)}
 .rot-card .rot-day .sub2{display:block;font-size:11.5px;color:var(--on-hero-sub);margin-top:3px}
-.rot-card .cur-ex{background:var(--hero-surface);border-left:4px solid var(--hero-accent);padding:12px 14px;border-radius:0 4px 4px 0;margin:14px 0}
+.rot-card .cur-ex{background:var(--hero-surface);border-left:4px solid var(--hero-accent);padding:12px 14px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0}
 .rot-card .cur-ex .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);display:block;margin-bottom:4px}
-.rot-card .cur-ex .val{font-size:16px;font-weight:600;color:var(--on-hero)}
+.rot-card .cur-ex .val{font-size:15.5px;font-weight:600;color:var(--on-hero)}
 .rot-card .btn.gray{background:var(--hero-surface);color:var(--on-hero);border:1px solid var(--hero-surface-border)}
 .rot-card .btn.gray:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.35)}
 
 /* Metrics Card */
-.metrics-card .metrics-title{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:8px}
-.metrics-card .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--on-surface);padding:8px 0}
+.metrics-card .metrics-title{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:8px}
+.metrics-card .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--on-surface);padding:8px 0}
 .metrics-card .metric-val{font-family:var(--mono);font-weight:600;color:var(--primary);font-size:14px}
 .metrics-card .metric-divider{height:1px;background:var(--outline-variant)}
 
@@ -475,8 +481,13 @@ tbody tr:hover{background:var(--surface-container-low)}
 .plan-dark-card .sub{color:var(--on-hero-sub)}
 .plan-dark-card label{color:var(--on-hero-sub)}
 .plan-dark-card select,.plan-dark-card input{background:var(--hero-surface);border:1px solid var(--hero-surface-border);color:var(--on-hero)}
+.plan-dark-card select{
+  background-color:var(--hero-surface);border-color:var(--hero-surface-border);color:var(--on-hero);
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
 .plan-dark-card select option{background:var(--surface-container-lowest);color:var(--on-surface)}
-.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:var(--hero-accent);box-shadow:0 0 0 3px rgba(96,165,250,.25)}
+.plan-dark-card input:focus,.plan-dark-card select:focus{border-color:var(--hero-accent);box-shadow:0 0 0 3px rgba(56,189,248,.25)}
 
 /* Plan Green Card (Rotation Cycles) */
 .plan-green-card{background:var(--green-card-bg);border:1px solid var(--green-card-border);color:var(--on-green-card)}
@@ -484,47 +495,52 @@ tbody tr:hover{background:var(--surface-container-low)}
 .plan-green-card .sub{color:var(--on-green-card-sub)}
 .plan-green-card label{color:var(--on-green-card-sub)}
 .plan-green-card select,.plan-green-card input{background:var(--green-surface);border:1px solid var(--green-surface-border);color:var(--on-green-card)}
+.plan-green-card select{
+  background-color:var(--green-surface);border-color:var(--green-surface-border);color:var(--on-green-card);
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
 .plan-green-card select option{background:var(--surface-container-lowest);color:var(--on-surface)}
-.rot-cycles{display:flex;align-items:stretch;gap:12px;margin:6px 0 4px}
-.cycle-box{flex:1;background:var(--green-surface);border:1px solid var(--green-surface-border);border-radius:4px;padding:14px;display:flex;flex-direction:column}
-.cycle-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-green-card-sub);margin-bottom:4px}
-.cycle-val{font-size:16px;font-weight:600;color:var(--on-green-card)}
+.rot-cycles{display:flex;align-items:stretch;gap:10px;margin:6px 0 4px}
+.cycle-box{flex:1;background:var(--green-surface);border:1px solid var(--green-surface-border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column}
+.cycle-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-green-card-sub);margin-bottom:3px}
+.cycle-val{font-size:15px;font-weight:600;color:var(--on-green-card)}
 .cycle-swap{display:flex;align-items:center;justify-content:center;color:var(--on-green-card-sub)}
 
 /* ============ ERROR TAXONOMY ============ */
-.err-item{display:flex;flex-direction:column;gap:6px;padding:18px;border-bottom:1px solid var(--outline-variant);transition:background .15s}
+.err-item{display:flex;flex-direction:column;gap:5px;padding:16px;border-bottom:1px solid var(--outline-variant);transition:background .15s}
 .err-item:last-child{border-bottom:none}
 .err-item:hover{background:var(--surface-container-low)}
 .err-item .err-date{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-surface-variant)}
-.err-item .err-desc{font-size:14px;color:var(--on-surface)}
-.err-item .err-fix{font-size:12.5px;color:var(--ok);border-left:2px solid var(--outline-variant);padding-left:12px;margin-top:2px}
+.err-item .err-desc{font-size:13.5px;color:var(--on-surface)}
+.err-item .err-fix{font-size:12.5px;color:var(--ok);border-left:2px solid var(--outline-variant);padding-left:10px;margin-top:2px}
 
 /* ============ FOOTER & MISC ============ */
 footer{
   border-top:1px solid var(--outline-variant);background:var(--surface-container-low);
-  padding:12px 32px;font-size:11.5px;color:var(--on-surface-variant);text-align:right;
+  padding:12px 28px;font-size:11.5px;color:var(--on-surface-variant);text-align:right;
   font-family:var(--mono);
 }
-.phase-mini{display:flex;flex-direction:column;gap:4px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:10px 14px;min-width:110px}
+.phase-mini{display:flex;flex-direction:column;gap:4px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);padding:10px 12px;min-width:100px}
 .phase-mini .ph-lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--on-surface-variant);text-transform:uppercase}
-.phase-mini .ph-val{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--on-surface)}
+.phase-mini .ph-val{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--on-surface)}
 .phase-mini .btn{margin-top:2px}
-.stage-badge{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:4px;background:var(--surface-container-low);color:var(--on-surface);border:1px solid var(--outline-variant);letter-spacing:.04em;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.stage-badge{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:var(--radius);background:var(--surface-container-low);color:var(--on-surface);border:1px solid var(--outline-variant);letter-spacing:.03em;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 
 /* Exam Selection Grid */
-.exam-select-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:8px}
+.exam-select-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:8px}
 .exam-card{
   display:flex;flex-direction:column;gap:8px;text-align:left;
-  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:4px;
-  padding:26px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;
+  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:var(--radius);
+  padding:22px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;
   position:relative;overflow:hidden;font-family:var(--font);box-shadow:var(--shadow-sm);
 }
 .exam-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--primary)}
-.exam-card .exam-card-top{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:8px}
+.exam-card .exam-card-top{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:6px}
 .exam-card .exam-card-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--primary);font-weight:600}
-.exam-card .exam-card-min{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface-container-low);color:var(--on-surface);border:1px solid var(--outline-variant);padding:4px 10px;border-radius:4px}
-.exam-card .exam-card-title{font-size:18px;font-weight:600;color:var(--on-surface)}
-.exam-card .exam-card-desc{font-size:13.5px;color:var(--on-surface-variant);line-height:1.5}
+.exam-card .exam-card-min{font-family:var(--mono);font-size:11px;font-weight:600;background:var(--surface-container-low);color:var(--on-surface);border:1px solid var(--outline-variant);padding:3px 8px;border-radius:var(--radius)}
+.exam-card .exam-card-title{font-size:17px;font-weight:600;color:var(--on-surface)}
+.exam-card .exam-card-desc{font-size:13px;color:var(--on-surface-variant);line-height:1.45}
 .exam-card-full{background:var(--hero-bg);border-color:var(--hero-border);color:var(--on-hero)}
 .exam-card-full .exam-card-kicker{color:var(--hero-accent)}
 .exam-card-full .exam-card-min{background:var(--hero-surface);border-color:var(--hero-surface-border);color:var(--on-hero)}
@@ -532,18 +548,19 @@ footer{
 .exam-card-full .exam-card-desc{color:var(--on-hero-sub)}
 
 /* Gates Tabs */
-.gates-tabs{display:flex;border-bottom:1px solid var(--outline-variant);gap:4px;flex-wrap:wrap}
+.gates-tabs{display:flex;border-bottom:1px solid var(--outline-variant);gap:4px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .gates-tab{
-  padding:10px 18px;border:none;background:transparent;cursor:pointer;
+  padding:9px 16px;border:none;background:transparent;cursor:pointer;
   font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;
   color:var(--on-surface-variant);border-bottom:2px solid transparent;transition:color .15s,border-color .15s;
+  white-space:nowrap;
 }
 .gates-tab:hover{color:var(--on-surface)}
 .gates-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 
 /* Plan Chip */
 .plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.chip-plan{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--primary);background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:4px 10px}
+.chip-plan{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--primary);background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);padding:4px 10px}
 .chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
 /* ============ VIEWS & ANIMATION ============ */
@@ -551,33 +568,93 @@ footer{
 .view.active{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-/* ============ RESPONSIVE ============ */
+/* ============ RESPONSIVE BREAKPOINTS ============ */
 @media (max-width:1024px){
   .col-8,.col-7,.col-6,.col-5,.col-4,.col-12{grid-column:span 12}
   .grid-12{gap:16px}
 }
 @media (max-width:768px){
+  /* Mobile Layout */
+  .app{display:block;min-height:100vh}
   .sidebar{position:static;width:auto;height:auto;background:transparent;border:none;overflow:visible}
   .sidebar .brand,.sidebar .side-foot{display:none}
   .sidebar nav{
-    position:fixed;bottom:0;left:0;right:0;top:auto;z-index:60;
-    flex-direction:row;overflow-x:auto;background:var(--surface-container-lowest);
-    border-top:1px solid var(--outline-variant);border-right:none;padding:4px 2px;gap:0;
+    position:fixed;bottom:0;left:0;right:0;top:auto;z-index:90;
+    display:flex;flex-direction:row;justify-content:space-around;align-items:center;
+    background:var(--surface-container-lowest);
+    border-top:1px solid var(--outline-variant);border-right:none;
+    padding:4px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    gap:2px;box-shadow:0 -2px 10px rgba(0,0,0,0.06);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
   .sidebar nav::-webkit-scrollbar{display:none}
   .sidebar nav button{
-    flex:1 0 auto;min-width:72px;flex-direction:column;gap:3px;padding:8px 4px;
-    font-size:9px;border-radius:0;border-bottom:3px solid transparent;width:auto;text-align:center;
+    flex:1 0 auto;min-width:44px;max-width:68px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    padding:6px 2px;font-size:9.5px;font-family:var(--mono);font-weight:600;
+    border-radius:var(--radius);color:var(--on-surface-variant);text-align:center;
+    width:auto;border-bottom:none;min-height:48px;
   }
-  .sidebar nav button.active{background:transparent;color:var(--primary);border-bottom-color:var(--primary)}
-  .sidebar nav button .mat{font-size:19px;width:auto}
-  body{padding-bottom:58px}
-  .content{margin-left:0}
-  .content main{padding:20px 16px 40px}
-  .topbar{padding:12px 16px}
-  .page-head .page-title{font-size:26px}
-  .exam-timer{font-size:40px}
-  footer{text-align:center;padding:12px 16px;margin-bottom:58px}
+  .sidebar nav button.active{
+    background:var(--primary-container);color:var(--on-primary-container);font-weight:700;
+  }
+  .sidebar nav button .mat{font-size:20px;width:auto;height:20px;line-height:20px}
+  body{padding-bottom:72px}
+  .content{margin-left:0;width:100%}
+  .content main{padding:16px 14px 40px}
+  
+  /* Mobile Topbar */
+  .topbar{padding:10px 14px;gap:8px;position:sticky;top:0;z-index:40;flex-wrap:nowrap}
+  .topbar .sync-status{font-size:11px;max-width:130px}
+  .topbar .top-actions{gap:6px}
+  .stage-badge{max-width:110px;font-size:10.5px;padding:4px 8px}
+  .theme-toggle{width:32px;height:32px;font-size:15px}
+  .topbar .user-chip .avatar{width:28px;height:28px;font-size:12px}
+
+  /* Page Headers */
+  .page-head{margin-bottom:18px;gap:10px;flex-direction:column;align-items:flex-start}
+  .page-head .page-title{font-size:24px}
+  .page-stat{text-align:left;margin-top:2px}
+  .page-stat .stat-val{font-size:26px}
+
+  /* Form & Input adjustments for touch */
+  select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=file],textarea{
+    font-size:16px; /* Prevents auto-zoom on iOS */
+    padding:11px 12px;
+  }
+  .row{flex-direction:column;gap:10px}
+  .row>div{min-width:100%}
+  
+  /* Today / Next Session on mobile */
+  .next-session{flex-direction:column;align-items:flex-start;gap:10px;padding:16px}
+  .task{padding:14px}
+  .task-head{gap:10px}
+  .task-meta{margin-left:0;width:100%;justify-content:space-between;margin-top:6px}
+
+  /* Exam View */
+  .exam-select-grid{grid-template-columns:1fr;gap:12px}
+  .exam-card{padding:18px 16px}
+  .exam-timer{font-size:38px}
+
+  /* Stat Grids */
+  .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-card{padding:14px}
+  .stat-card .stat-card-val{font-size:26px}
+  
+  /* Plan Cycles */
+  .rot-cycles{flex-direction:column;gap:8px}
+
+  /* Category chips row */
+  #bookCats{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  #bookCats::-webkit-scrollbar{display:none}
+
+  /* Footer */
+  footer{text-align:center;padding:12px 14px;margin-bottom:60px}
+}
+
+@media (max-width:400px){
+  .stat-grid{grid-template-columns:1fr}
+  .topbar .sync-status{display:none}
 }
 
 /* ============ OVERLAYS ============ */
@@ -588,18 +665,19 @@ footer{
 }
 .auth-card{
   background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
-  border-radius:8px;box-shadow:var(--shadow-md);padding:28px;width:100%;max-width:380px;
+  border-radius:8px;box-shadow:var(--shadow-md);padding:24px;width:100%;max-width:380px;
+  max-height:90vh;overflow-y:auto;
 }
 .auth-card input[type=text],.auth-card input[type=password]{
   width:100%;background:var(--surface-container-low);border:1px solid var(--outline-variant);
-  border-radius:4px;color:var(--on-surface);padding:11px 13px;font-size:14px;font-family:var(--font);
+  border-radius:var(--radius);color:var(--on-surface);padding:11px 13px;font-size:15px;font-family:var(--font);
   transition:border-color .15s,box-shadow .15s;margin-bottom:4px;
 }
 .auth-card input[type=text]:focus,.auth-card input[type=password]:focus{
   outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,.18);
 }
 .auth-card input[type=color]{
-  width:100%;height:44px;border:1px solid var(--outline-variant);border-radius:4px;
+  width:100%;height:44px;border:1px solid var(--outline-variant);border-radius:var(--radius);
   background:var(--surface-container-low);padding:4px;cursor:pointer;
   transition:border-color .15s,box-shadow .15s;
 }
@@ -608,19 +686,12 @@ footer{
 .auth-card input[type=color]::-webkit-color-swatch{border:none;border-radius:2px}
 .auth-card input[type=color]::-moz-color-swatch{border:none;border-radius:2px}
 .auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:18px}
-.auth-brand h2{font-size:20px;font-weight:700;color:var(--on-surface)}
+.auth-brand h2{font-size:19px;font-weight:700;color:var(--on-surface)}
 .auth-tabs{display:flex;border-bottom:1px solid var(--outline-variant);margin-bottom:18px;gap:4px}
 .auth-tab{padding:10px 16px;border:none;background:transparent;cursor:pointer;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--on-surface-variant);border-bottom:2px solid transparent}
 .auth-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 .auth-error{color:var(--bad);font-size:12.5px;margin-top:8px;min-height:16px}
 .onboard-intro{font-size:13.5px;color:var(--on-surface-variant);margin-bottom:16px;line-height:1.5}
-.ob-plan-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.ob-plan-row>span{flex:0 0 130px;font-family:var(--mono);font-size:12px;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.04em}
-.ob-plan-row select{flex:1;min-width:120px}
-.ob-plan-row input[type=time]{flex:0 0 110px}
-.ob-plan-row label{display:flex;gap:6px;align-items:center;margin:4px 0;text-transform:none;font-family:var(--font);font-size:13px}
-</style>-size:13px}
-
 </style>
 </head>
 <body>
@@ -637,34 +708,41 @@ footer{
       <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Create account</button>
     </div>
     <div id="authLogin">
-      <label>Name</label>
-      <input type="text" id="authName" placeholder="Your name" autocomplete="username">
-      <label>Password</label>
-      <input type="password" id="authPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
-      <p id="authError" class="auth-error"></p>
+      <div><label>User name</label><input type="text" id="authName" placeholder="e.g. Owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div><label>Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="auth-error" id="authError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()">Enter</button>
     </div>
     <div id="authRegister" style="display:none">
-      <label>Name</label>
-      <input type="text" id="regName" placeholder="Your name" autocomplete="username">
-      <label>Password</label>
-      <input type="password" id="regPass" placeholder="Password (min 4)" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
-      <label>Color</label>
-      <input type="color" id="regColor" value="#1b2b48">
-      <p id="regError" class="auth-error"></p>
+      <div><label>New username</label><input type="text" id="regName" placeholder="e.g. maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label>Password (min 4 chars)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label>Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
+      <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
     </div>
   </div>
 </div>
 
-<!-- ============ ONBOARDING (primer ingreso) ============ -->
+<!-- ============ ONBOARDING OVERLAY (primera vez) ============ -->
 <div id="onboardingOverlay" class="overlay" style="display:none">
   <div class="auth-card" style="max-width:520px">
-    <div class="auth-brand"><h2>👋 Welcome!</h2></div>
-    <p class="onboard-intro">Set up your study plan. You can change everything later in the PLAN tab.</p>
-    <div id="obPlan"></div>
+    <div class="auth-brand">
+      <h2>🎓 Welcome to your B2 First plan</h2>
+    </div>
+    <p class="onboard-intro">Set your baseline and schedule. You can edit all of this later in <b>PLAN</b>.</p>
+    <div><label>Study plan — days & times</label>
+      <div class="ob-plan-row"><span>Session A</span><select id="obADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obATime" value="15:30"></div>
+      <div class="ob-plan-row"><span>Session B</span><select id="obBDay"><option value="5">Friday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obBTime" value="13:00"></div>
+    </div>
+    <div style="margin-top:14px"><label>Preparation stage</label>
+      <select id="obStage">
+        <option value="0">Stage 0 — Foundations (Learn structures and trap recognition)</option>
+        <option value="1">Stage 1 — Precision (Optimal solving times and fluency)</option>
+        <option value="2">Stage 2 — Mastery (Execution under fatigue · Release Candidate)</option>
+      </select>
+    </div>
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn" onclick="finishOnboarding()">Start using the tracker</button>
+      <button class="btn" onclick="finishOnboarding()">Start preparation →</button>
     </div>
   </div>
 </div>
@@ -693,8 +771,8 @@ footer{
   <div class="content">
     <div class="topbar">
       <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the Pi">—</span></div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div class="user-chip" id="userChip"><span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span><span class="avatar">A</span></div>
+      <div class="top-actions">
+        <div class="user-chip" id="userChip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
       </div>
     </div>
@@ -829,7 +907,7 @@ footer{
                     <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
                     <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
+                  <p style="font-size:11.5px;color:var(--ok);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
                   <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
                     <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
                     <div id="rubList" style="margin-top:6px">
@@ -902,7 +980,7 @@ footer{
                     <div class="chips" id="gLChips" style="margin-top:6px"></div>
                     • <b>Practice Tests Plus / FCE 6:</b> use the book's code/audio. <b>Rule:</b> complete it in one go, without pausing. Score out of 30.
                   </div>
-                  <p id="lFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
+                  <p id="lFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
                   <div class="row">
                     <div><label>Audio source</label>
                       <select id="lFuente">
@@ -951,7 +1029,7 @@ footer{
                     • <b>Long Turn:</b> put 2 photos on screen, record yourself for exactly 1 min. Describe BOTH + speculate: <i>"Both pictures depict..., however, whereas the first person seems to be..., the second might be experiencing..."</i>. Describing alone is forbidden.<br>
                     • <b>Parts 3-4:</b> the AI (me) is your partner — discuss a diagram with 5 options for 3 min and reach a consensus in the last minute.
                   </div>
-                  <p id="spFocusNote" style="font-size:12.5px;color:var(--tertiary-container);margin:6px 0 0"></p>
+                  <p id="spFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
                   <div class="row" style="margin-top:10px">
                     <div><label>Speaking part</label>
                       <select id="spPart">
@@ -969,7 +1047,7 @@ footer{
                     </div>
                     <div><label>Parts 3-4: negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--tertiary-container);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
+                  <p style="font-size:11.5px;color:var(--ok);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
                 </div>
               </div>
@@ -1519,7 +1597,7 @@ footer{
         </div>
         <div class="card">
           <h2>🛒 All available books (verified prices)</h2>
-          <div class="sub">Filtro por categoría + búsqueda + orden por precio. <span style="color:var(--tertiary-container)">With answers</span> = self-correctable (key for solo study).</div>
+          <div class="sub">Filtro por categoría + búsqueda + orden por precio. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo study). <span style="color:var(--warn)">⚠</span> = precio sin re-verificar hoy (MercadoLibre bloquea la Pi; revisar a mano). Buscalibre actualizado 2026-08-21.</div>
           <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
           <div style="display:flex;gap:8px;margin-bottom:12px">
             <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="flex:1">
@@ -1744,14 +1822,16 @@ function finishOnboarding(){
 
 /* ---------- INIT DE SESIÓN ---------- */
 async function afterAuth(){
-  // Cargar el D del usuario (clave propia; owner con fallback a la vieja)
   D=load();
   saveUserSession(USER);
+  renderUserChip();
+  const srv=await syncPull();
+  if(srv&&srv.onboarded){
+    D.onboarded=true;
+  }
   if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id)){
     showOnboarding();
   }
-  renderUserChip();
-  syncPull();
   applyTimers();
   refreshAll();
 }
@@ -1763,7 +1843,6 @@ function renderUserChip(){
     el.innerHTML=`<span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span>
       <span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
       <button class="btn sm gray" onclick="doLogout()" title="Change user">⇄</button>`;
-    // Re-enganchar stageBadge (el renderGates lo pisa)
     renderGates();
   }
 }
@@ -1787,32 +1866,56 @@ function load(){
     return d;
   }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{}}}
 }
-function save(){localStorage.setItem(userKey(),JSON.stringify(D));syncPush()}
-/* ---------- SINCRONIZACIÓN CON LA PI ----------
-   Cada save() sube el progreso a la Pi (PUT /api/progress?user=<id>) con
-   el token de sesión. Al abrir la página se baja el progreso guardado. */
+function save(){
+  D.updated_at=Date.now();
+  localStorage.setItem(userKey(),JSON.stringify(D));
+  syncPush();
+}
+/* ---------- SINCRONIZACIÓN CON EL SERVIDOR ----------
+   Cada save() sube el progreso completo a la Pi/servidor (PUT /api/progress?user=<id>) con
+   el token de sesión. Al entrar o abrir la página se descarga y fusiona la data del usuario. */
 let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
 let syncT=null;
-function syncStatus(s){SYNC_STATE=s;const el=document.getElementById('syncBadge');if(el){el.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)';el.style.color=s==='ok'?'var(--ok)':s==='local'?'var(--warn)':'var(--on-surface-variant)'}const el2=document.getElementById('syncBadgeFoot');if(el2)el2.textContent=s==='ok'?'✔ synced with the Pi':s==='local'?'… saving to the Pi':'⚠ local mode (no Pi)'}
+function syncStatus(s){
+  SYNC_STATE=s;
+  const el=document.getElementById('syncBadge');
+  if(el){
+    el.textContent=s==='ok'?'✔ synced with server':s==='local'?'… saving to server':'⚠ local mode';
+    el.style.color=s==='ok'?'var(--ok)':s==='local'?'var(--warn)':'var(--on-surface-variant)';
+  }
+  const el2=document.getElementById('syncBadgeFoot');
+  if(el2)el2.textContent=s==='ok'?'✔ synced with server':s==='local'?'… saving to server':'⚠ local mode';
+}
 function syncPush(){
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
   syncT=setTimeout(()=>{
-    fetch(apiUrl('/api/progress'),{method:'PUT',headers:authHeaders(),body:JSON.stringify(D)})
+    fetch(apiUrl('/api/progress'),{
+      method:'PUT',
+      headers:authHeaders(),
+      body:JSON.stringify(D)
+    })
       .then(r=>{if(!r.ok)throw 0;syncStatus('ok')})
       .catch(()=>syncStatus('off'));
-  },400);
+  },300);
 }
 function syncPull(){
-  fetch(apiUrl('/api/progress')+'&download=1').then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{
-    if(d&&d.log&&d.errs){
-      const loc=JSON.parse(localStorage.getItem(userKey()))||{log:[]};
-      if((d.log.length>loc.log.length)||(d.log.length===loc.log.length&&d.errs.length>loc.errs.length)){
-        D=Object.assign({},D,d);save();
+  return fetch(apiUrl('/api/progress')+'&download=1',{headers:authHeaders()})
+    .then(r=>{if(!r.ok)throw 0;return r.json()})
+    .then(d=>{
+      if(d&&typeof d==='object'){
+        if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
+          D=Object.assign({},D,d);
+          localStorage.setItem(userKey(),JSON.stringify(D));
+          applyTimers();
+          refreshAll();
+        }
+        syncStatus('ok');
+        return d;
       }
-      syncStatus('ok');
-    }
-  }).catch(()=>syncStatus('off'));
+      return null;
+    })
+    .catch(()=>{syncStatus('off');return null;});
 }
 function today(){return new Date().toISOString().slice(0,10)}
 function isoWeek(d){d=new Date(d);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const wn=new Date(Date.UTC(w.getUTCFullYear(),0,4));return Math.round((((w-wn)/86400000)+wn.getUTCDay()-1)/7)}
@@ -2310,31 +2413,31 @@ function renderErrPills(){
    escanea ~/Descargas/b2-first dinámicamente). renderMaterial() pinta
    PDFs (abrir/descargar) y audios (reproductor inline). */
 const BUY_BOOKS=[
- {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$43.900',u:'https://www.mercadolibre.com.ar/practice-tests-plus-b2-first-volume-1-book-with-key-de-kenny-nick-editorial-pearson-tapa-blanda-en-ingles-internacional-2019/p/MLA26577198',src:'MercadoLibre',use:'Simulacros · Listening · Writing',c:'Simulacros'},
- {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos',c:'Simulacros'},
- {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$79.594',u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas',c:'Gramática'},
- {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra',c:'Workbook'},
- {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra',c:'Workbook'},
- {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
- {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$29.900',u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book-hart-cambridge/p/MLA70873732',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
- {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital',c:'Simulacros'},
- {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full',c:'UoE'},
- {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)',c:'Simulacros'},
- {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado',c:'Workbook'},
- {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)',c:'Gramática'},
- {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$34.369',u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso',c:'Curso'},
- {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$46.140',u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'UoE'},
- {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$46.846',u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4',c:'UoE'},
- {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas.',p:'$47.280',u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$56.874',u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$80.847',u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles',c:'Simulacros'},
- {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$103.211',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso',c:'Curso'},
- {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$147.912',u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta',c:'Curso'}
+ {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$43.900',v:0,u:'https://www.mercadolibre.com.ar/practice-tests-plus-b2-first-volume-1-book-with-key-de-kenny-nick-editorial-pearson-tapa-blanda-en-ingles-internacional-2019/p/MLA26577198',src:'MercadoLibre',use:'Simulacros · Listening · Writing',c:'Simulacros'},
+ {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',v:0,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos',c:'Simulacros'},
+ {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$72.051',v:1,u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas',c:'Gramática'},
+ {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',v:0,u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',v:0,u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra',c:'Workbook'},
+ {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',v:0,u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra',c:'Workbook'},
+ {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',v:0,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',v:0,u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
+ {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$29.900',v:0,u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book-hart-cambridge/p/MLA70873732',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
+ {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',v:0,u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital',c:'Simulacros'},
+ {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',v:0,u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full',c:'UoE'},
+ {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',v:0,u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)',c:'Simulacros'},
+ {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',v:0,u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado',c:'Workbook'},
+ {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',v:0,u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',v:0,u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)',c:'Gramática'},
+ {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$28.499',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso',c:'Curso'},
+ {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$41.550',v:1,u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'UoE'},
+ {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$81.599',v:1,u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4',c:'UoE'},
+ {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas. ⚠ Agotado en Buscalibre (2026-08); revisar usados en MercadoLibre.',p:'Agotado',v:0,u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',v:1,u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$51.366',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
+ {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$73.191',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles',c:'Simulacros'},
+ {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$93.394',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso',c:'Curso'},
+ {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$129.611',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta',c:'Curso'}
 ];
 const ONLINE=[
  {g:'🎧 Listening',l:[
@@ -2368,7 +2471,7 @@ const ONLINE=[
 function renderOnline(){
   const el=document.getElementById('onlineList');
   if(!el)return;
-  el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">gratis · online · sin descarga</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm" style="text-decoration:none;margin-top:6px">Abrir →</a></div></div>`).join('')).join('');
+  el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">gratis · online · sin descarga</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm gray" style="text-decoration:none;margin-top:6px">Abrir →</a></div></div>`).join('')).join('');
 }
 /* ---------- MAT: índice de material por nombre ----------
    Se construye cuando llega /libros.json. Cada key apunta al href
@@ -2512,7 +2615,7 @@ function renderBooks(){
       <div class="meta" style="font-size:11px;color:var(--dim)">usalo en: ${b.use}</div>
       <a href="${b.u}" target="_blank">Ver oferta →</a>
     </div>
-    <div class="price">${b.p}</div>
+    <div class="price">${b.v===0?'⚠ ':''}${b.p}</div>
   </div>`).join('');
 }
 
