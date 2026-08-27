@@ -18,7 +18,7 @@ with sync_playwright() as p:
     out["sesA"] = pg.evaluate("getComputedStyle(document.getElementById('sesA')).display")
     out["sesB"] = pg.evaluate("getComputedStyle(document.getElementById('sesB')).display")
     out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
-    out["rot_opts"] = pg.eval_on_selector_all("#ovRue option", "els => els.length")
+    out["rot_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
     out["nextBox"] = pg.evaluate("document.getElementById('nextBox').textContent.slice(0,70)")
 
     # LIBROS: material + libros
