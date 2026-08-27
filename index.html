@@ -941,6 +941,43 @@ footer{
   </div>
 </div>
 
+<!-- ============ USER PROFILE & ACCOUNT MODAL ============ -->
+<div id="userModal" class="overlay" style="display:none" onclick="if(event.target===this)closeUserModal()">
+  <div class="auth-card" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="avatar" id="modalAvatar" style="width:38px;height:38px;font-size:16px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;font-weight:700"></span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:var(--on-surface);margin:0" id="modalUserName">User Profile</h3>
+          <div style="font-size:11.5px;color:var(--on-surface-variant)" id="modalUserStage">Stage 0</div>
+        </div>
+      </div>
+      <button class="del" onclick="closeUserModal()" style="font-size:18px;padding:4px 8px">✕</button>
+    </div>
+
+    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:var(--on-surface-variant)">Account ID:</span>
+        <b id="modalUserSlug" style="color:var(--on-surface);font-family:var(--mono)">—</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+        <span style="color:var(--on-surface-variant)">Class Schedule:</span>
+        <b id="modalUserSchedule" style="color:var(--primary)">—</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px">
+        <span style="color:var(--on-surface-variant)">Storage Status:</span>
+        <span style="color:var(--ok);font-weight:600">✔ Dedicated Multi-User Storage</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-direction:column">
+      <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')">⚙️ Edit My Study Plan &amp; Schedule</button>
+      <button class="btn gray" style="width:100%" onclick="closeUserModal();exportData()">💾 Download My Full Progress Backup (.json)</button>
+      <button class="btn gray" style="width:100%;color:var(--bad)" onclick="doLogout()">⇄ Switch User / Log Out</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside class="sidebar">
@@ -966,7 +1003,7 @@ footer{
     <div class="topbar">
       <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the Pi">—</span></div>
       <div class="top-actions">
-        <div class="user-chip" id="userChip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
+        <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile & switch user" style="cursor:pointer"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
         <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
       </div>
     </div>
@@ -976,9 +1013,9 @@ footer{
       <section id="v-hoy" class="view active">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ COACH_OVERVIEW ]</span>
-            <h1 class="page-title">Today</h1>
-            <p class="page-sub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
+            <span class="page-kicker" id="userKicker">[ COACH_OVERVIEW ]</span>
+            <h1 class="page-title" id="userTitle">Today</h1>
+            <p class="page-sub" id="userSub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn ok" onclick="openSoloModal()">⚡ Log Single Part</button>
@@ -993,10 +1030,10 @@ footer{
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
-              <button class="session-nav-btn active" data-ses="mon-a" onclick="selectSessionStudio('mon-a')">📚 Monday A: Full R&amp;UoE <span class="pill-tag">50 min</span></button>
-              <button class="session-nav-btn" data-ses="fri-a" onclick="selectSessionStudio('fri-a')">🎧 Friday A: Full Listening <span class="pill-tag">40 min</span></button>
-              <button class="session-nav-btn" data-ses="mon-b" onclick="selectSessionStudio('mon-b')">✍️ Monday B: Full Writing <span class="pill-tag" id="navWTag">Auto</span></button>
-              <button class="session-nav-btn" data-ses="fri-b" onclick="selectSessionStudio('fri-b')">🗣️ Friday B: Full Speaking <span class="pill-tag">60 min</span></button>
+              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: Full R&amp;UoE</span> <span class="pill-tag">50 min</span></button>
+              <button class="session-nav-btn" data-ses="fri-a" id="navBtnFriA" onclick="selectSessionStudio('fri-a')">🎧 <span id="navLblFriA">Fri A: Full Listening</span> <span class="pill-tag">40 min</span></button>
+              <button class="session-nav-btn" data-ses="mon-b" id="navBtnMonB" onclick="selectSessionStudio('mon-b')">✍️ <span id="navLblMonB">Mon B: Full Writing</span> <span class="pill-tag" id="navWTag">Auto</span></button>
+              <button class="session-nav-btn" data-ses="fri-b" id="navBtnFriB" onclick="selectSessionStudio('fri-b')">🗣️ <span id="navLblFriB">Fri B: Full Speaking</span> <span class="pill-tag">60 min</span></button>
               <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">Full</span></button>
             </div>
 
@@ -1006,8 +1043,8 @@ footer{
               <div id="studioMonA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Week A · Monday</span>
-                    <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri">MON 15:30</span></div>
+                    <span class="badge mon" id="st1WkBadge">Week A · Monday</span>
+                    <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri" id="st1TimeBadge">MON 15:30</span></div>
                     <div class="sesion-sub">Speed Training: complete all 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
                   </div>
                   <div class="sesion-dur">
@@ -1107,8 +1144,8 @@ footer{
               <div id="studioMonB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Week B · Monday</span>
-                    <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri">MON 15:30</span></div>
+                    <span class="badge mon" id="st2WkBadge">Week B · Monday</span>
+                    <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
                     <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
                   </div>
                   <div class="sesion-dur">
@@ -1265,8 +1302,8 @@ footer{
               <div id="studioFriA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Week A · Friday</span>
-                    <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri">FRI 13:00</span></div>
+                    <span class="badge fri" id="st3WkBadge">Week A · Friday</span>
+                    <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
                     <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
                   </div>
                   <div class="sesion-dur">
@@ -1351,8 +1388,8 @@ footer{
               <div id="studioFriB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Week B · Friday</span>
-                    <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri">FRI 13:00</span></div>
+                    <span class="badge fri" id="st4WkBadge">Week B · Friday</span>
+                    <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri" id="st4TimeBadge">FRI 13:00</span></div>
                     <div class="sesion-sub">15 min continuous simulation (Parts 1–4) + 45 min C1 deep upgrade and second recording.</div>
                   </div>
                   <div class="sesion-dur">
@@ -1597,14 +1634,14 @@ footer{
                   <div class="rot-session-row">
                     <div class="rot-ses-dot mon"></div>
                     <div class="rot-ses-info">
-                      <span class="rot-ses-day">Monday 15:30</span>
+                      <span class="rot-ses-day" id="rotWkASesADay">Monday 15:30</span>
                       <span class="rot-ses-name">Full Reading &amp; Use of English (50' Sprint)</span>
                     </div>
                   </div>
                   <div class="rot-session-row">
                     <div class="rot-ses-dot fri"></div>
                     <div class="rot-ses-info">
-                      <span class="rot-ses-day">Friday 13:00</span>
+                      <span class="rot-ses-day" id="rotWkASesBDay">Friday 13:00</span>
                       <span class="rot-ses-name">Full Listening Test (40' audio + 20' analysis)</span>
                     </div>
                   </div>
@@ -1619,14 +1656,14 @@ footer{
                   <div class="rot-session-row">
                     <div class="rot-ses-dot mon"></div>
                     <div class="rot-ses-info">
-                      <span class="rot-ses-day">Monday 15:30</span>
+                      <span class="rot-ses-day" id="rotWkBSesADay">Monday 15:30</span>
                       <span class="rot-ses-name">Full Writing (<span id="rotWkBWName">Essay</span>)</span>
                     </div>
                   </div>
                   <div class="rot-session-row">
                     <div class="rot-ses-dot fri"></div>
                     <div class="rot-ses-info">
-                      <span class="rot-ses-day">Friday 13:00</span>
+                      <span class="rot-ses-day" id="rotWkBSesBDay">Friday 13:00</span>
                       <span class="rot-ses-name">Full Speaking Simulation (60 min)</span>
                     </div>
                   </div>
@@ -2022,11 +2059,11 @@ footer{
               <h2>🗓 Session Schedules</h2>
               <div class="sub">Session A (text) and Session B (audio) — day and time.</div>
               <div class="row">
-                <div><label>Session A (text) — day</label><select id="pADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option></select></div>
+                <div><label>Session A (text) — day</label><select id="pADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
                 <div><label>Session A — time</label><input type="time" id="pATime"></div>
               </div>
               <div class="row">
-                <div><label>Session B (audio) — day</label><select id="pBDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option></select></div>
+                <div><label>Session B (audio) — day</label><select id="pBDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
                 <div><label>Session B — time</label><input type="time" id="pBTime"></div>
               </div>
             </div>
@@ -2336,11 +2373,39 @@ function renderUserChip(){
   if(!el)return;
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
-    el.innerHTML=`<span class="stage-badge" id="stageBadge">Stage 0 — Foundations</span>
+    const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
+    const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+    el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>
       <span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
-      <button class="btn sm gray" onclick="doLogout()" title="Change user">⇄</button>`;
+      <button class="btn sm gray" onclick="event.stopPropagation();doLogout()" title="Change user">⇄</button>`;
     renderGates();
   }
+}
+function openUserModal(){
+  const ov=document.getElementById('userModal');
+  if(!ov||!USER)return;
+  const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
+  const stageNames=['Stage 0 — Foundations (Trap Recognition)','Stage 1 — Precision (Fluency & Time)','Stage 2 — Mastery (Grade A Execution)'];
+  const s=D.settings||SETTINGS_DEFAULT;
+  const aDayName=DAYS[s.sesA.day]||'Monday';
+  const bDayName=DAYS[s.sesB.day]||'Friday';
+  
+  const av=document.getElementById('modalAvatar');
+  if(av){av.textContent=initial;av.style.background=USER.color||'var(--primary)';}
+  const un=document.getElementById('modalUserName');
+  if(un)un.textContent=USER.name||'Student';
+  const us=document.getElementById('modalUserStage');
+  if(us)us.textContent=stageNames[D.stage]||('Stage '+(D.stage||0));
+  const ug=document.getElementById('modalUserSlug');
+  if(ug)ug.textContent=USER.id||'—';
+  const uc=document.getElementById('modalUserSchedule');
+  if(uc)uc.textContent=`${aDayName} (${s.sesA.time}) & ${bDayName} (${s.sesB.time})`;
+  
+  ov.style.display='flex';
+}
+function closeUserModal(){
+  const ov=document.getElementById('userModal');
+  if(ov)ov.style.display='none';
 }
 
 /* ---------- CARGA / GUARDADO (por usuario) ---------- */
@@ -2850,13 +2915,14 @@ function renderGates(){
       <div style="font-size:12.5px;color:var(--on-surface-variant);margin-top:2px">${STAGE_FOCUS[viewSt]}</div>
     </div>`+
     viewGates.map((x,i)=>{
-      const key=viewSt+'-'+i,ov=!!D.overrides[key],ok=ov||x.ok;
+      const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
       return `<div class="gate ${ok?'pass':'fail'}">
       <h4><span>${x.name}</span><span style="color:${ok?'var(--ok)':'var(--on-surface-variant)'};font-size:11.5px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
-  const allOk=gates.every(x=>D.overrides[st+'-'+gates.indexOf(x)]||x.ok);
+  const ovs=D.overrides||{};
+  const allOk=gates.every(x=>ovs[st+'-'+gates.indexOf(x)]||x.ok);
   document.getElementById('advanceBtn').disabled=!allOk;
   document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Advance to '+(STAGE_NAMES[st+1]||'🎓 COMPLETED'):'🎓 YOU COMPLETED EVERYTHING'):'⬆ Complete all gates to advance';
   document.getElementById('stageBadge').textContent=STAGE_NAMES[st]+(allOk?' ✓':'');
@@ -3498,7 +3564,70 @@ function renderGrafCons(){
    setOv(k,v): guarda un override de rotación para la semana. */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
+function updatePersonalizedUI(){
+  const s=D.settings||SETTINGS_DEFAULT;
+  const aDayName=DAYS[s.sesA.day]||'Monday';
+  const bDayName=DAYS[s.sesB.day]||'Friday';
+  const aShort=aDayName.slice(0,3);
+  const bShort=bDayName.slice(0,3);
+  const aTime=s.sesA.time||'15:30';
+  const bTime=s.sesB.time||'13:00';
+  const userName=(USER&&USER.name)?USER.name:'Student';
+  const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
+  const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+
+  // Dynamic Header
+  const kickerEl=document.getElementById('userKicker');
+  if(kickerEl)kickerEl.textContent=`[ STUDENT_PORTAL · ${userName.toUpperCase()} ]`;
+  const titleEl=document.getElementById('userTitle');
+  if(titleEl)titleEl.textContent=`Today · ${userName}`;
+  const subEl=document.getElementById('userSub');
+  if(subEl)subEl.textContent=`Personalized study plan for ${userName} · ${curStageTxt} · Schedule: ${aDayName} (${aTime}) & ${bDayName} (${bTime}).`;
+
+  // Dynamic Navigation Studio Tabs
+  const nA=document.getElementById('navLblMonA');
+  if(nA)nA.textContent=`${aShort} A: Full R&UoE`;
+  const nFA=document.getElementById('navLblFriA');
+  if(nFA)nFA.textContent=`${bShort} A: Full Listening`;
+  const nB=document.getElementById('navLblMonB');
+  if(nB)nB.textContent=`${aShort} B: Full Writing`;
+  const nFB=document.getElementById('navLblFriB');
+  if(nFB)nFB.textContent=`${bShort} B: Full Speaking`;
+
+  // Dynamic Studio Card Badges
+  const st1W=document.getElementById('st1WkBadge');
+  if(st1W)st1W.textContent=`Week A · ${aDayName}`;
+  const st1T=document.getElementById('st1TimeBadge');
+  if(st1T)st1T.textContent=`${aShort.toUpperCase()} ${aTime}`;
+
+  const st2W=document.getElementById('st2WkBadge');
+  if(st2W)st2W.textContent=`Week B · ${aDayName}`;
+  const st2T=document.getElementById('st2TimeBadge');
+  if(st2T)st2T.textContent=`${aShort.toUpperCase()} ${aTime}`;
+
+  const st3W=document.getElementById('st3WkBadge');
+  if(st3W)st3W.textContent=`Week A · ${bDayName}`;
+  const st3T=document.getElementById('st3TimeBadge');
+  if(st3T)st3T.textContent=`${bShort.toUpperCase()} ${bTime}`;
+
+  const st4W=document.getElementById('st4WkBadge');
+  if(st4W)st4W.textContent=`Week B · ${bDayName}`;
+  const st4T=document.getElementById('st4TimeBadge');
+  if(st4T)st4T.textContent=`${bShort.toUpperCase()} ${bTime}`;
+
+  // Dynamic Rotation Schedule Rows
+  const rASesA=document.getElementById('rotWkASesADay');
+  if(rASesA)rASesA.textContent=`${aDayName} ${aTime}`;
+  const rASesB=document.getElementById('rotWkASesBDay');
+  if(rASesB)rASesB.textContent=`${bDayName} ${bTime}`;
+  const rBSesA=document.getElementById('rotWkBSesADay');
+  if(rBSesA)rBSesA.textContent=`${aDayName} ${aTime}`;
+  const rBSesB=document.getElementById('rotWkBSesBDay');
+  if(rBSesB)rBSesB.textContent=`${bDayName} ${bTime}`;
+}
+
 function renderToday(){
+  updatePersonalizedUI();
   const d=new Date(),wd=d.getDay();
   const week=isoWeek(d);
   const s=D.settings;
