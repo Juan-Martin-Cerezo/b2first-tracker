@@ -469,6 +469,60 @@ tbody tr:hover{background:var(--surface-container-low)}
 .rot-card .btn.gray{background:var(--hero-surface);color:var(--on-hero);border:1px solid var(--hero-surface-border)}
 .rot-card .btn.gray:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.35)}
 
+/* Rotation Timeline Widget */
+.rot-timeline-wrap{margin:12px 0 6px}
+.rot-timeline-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);margin-bottom:6px;display:block}
+.rot-timeline{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.rot-item{
+  padding:6px 10px;border-radius:var(--radius);background:var(--hero-surface);
+  border:1px solid var(--hero-surface-border);font-family:var(--mono);font-size:11px;color:var(--on-hero-sub);
+  white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .15s;
+}
+.rot-item.current{
+  background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.rot-item .badge-live{font-size:8.5px;padding:2px 5px;border-radius:3px;background:rgba(255,255,255,.25);color:#fff;font-weight:700}
+
+/* Session Studio Navigation */
+.session-nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
+.session-nav-btn{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--radius);
+  background:var(--surface-container-low);border:1px solid var(--outline-variant);color:var(--on-surface-variant);
+  font-family:var(--mono);font-size:11.5px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s;
+}
+.session-nav-btn:hover{background:var(--surface-container-high);color:var(--on-surface);border-color:var(--primary)}
+.session-nav-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:var(--shadow-sm)}
+.session-nav-btn .pill-tag{font-size:9.5px;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.08);color:inherit}
+.session-nav-btn.active .pill-tag{background:rgba(255,255,255,.25);color:#fff}
+
+/* Interactive Phase Stepper */
+.phase-stepper{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0 16px}
+.phase-step{
+  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);border-radius:var(--radius);
+  padding:10px 12px;cursor:pointer;transition:all .15s;text-align:left;position:relative;
+}
+.phase-step:hover{border-color:var(--primary);background:var(--surface-container-low)}
+.phase-step.active{border-color:var(--primary);background:var(--surface-container-low);box-shadow:0 0 0 1px var(--primary)}
+.phase-step .ps-num{font-family:var(--mono);font-size:10px;color:var(--on-surface-variant);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.phase-step .ps-title{font-size:12.5px;font-weight:700;color:var(--on-surface);margin-top:2px}
+.phase-step .ps-time{font-family:var(--mono);font-size:11px;color:var(--primary);margin-top:3px;font-weight:600}
+
+/* Live Writing Studio Pad */
+.writing-live-pad{
+  width:100%;min-height:220px;padding:14px;border-radius:var(--radius);
+  background:var(--surface-container-lowest);border:1px solid var(--outline-variant);
+  color:var(--on-surface);font-size:14px;line-height:1.6;font-family:inherit;resize:vertical;box-sizing:border-box;
+}
+.writing-live-pad:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-container)}
+.live-word-meter{
+  display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:var(--radius);
+  background:var(--surface-container-low);margin-top:8px;font-family:var(--mono);font-size:12px;
+}
+.contraction-alert{
+  background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--radius);
+  padding:8px 12px;font-size:12px;color:var(--warn-text);margin-top:8px;line-height:1.45;
+}
+
 /* Metrics Card */
 .metrics-card .metrics-title{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant);margin-bottom:8px}
 .metrics-card .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;color:var(--on-surface);padding:8px 0}
@@ -794,270 +848,448 @@ footer{
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
 
-            <!-- SESION A (MONDAYS: Week A R&UoE 50' Sprint | Week B Full Writing 60') -->
-            <div id="sesA">
-              <div class="card sesion-card">
-                <div class="sesion-head">
-                  <div>
-                    <span class="badge mon">Monday Sessions</span>
-                    <div class="sesion-title">📚 Full R&amp;UoE (Wk A) / ✍️ Full Writing (Wk B) <span class="badge fri">MON 15:30</span></div>
-                    <div class="sesion-sub">Week A: 50' Full Reading &amp; UoE Sprint · Week B: 60' Full Writing (Auto-rotation: Essay → Article → Report → Review → Email).</div>
-                  </div>
-                  <div class="sesion-dur">
-                    <span class="dur-label">Session duration</span>
-                    <span class="dur-val">50–60 MIN</span>
-                  </div>
-                </div>
-
-                <!-- Reading & Use of English Sprint (Week A Monday) -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">1</div>
-                    <div>
-                      <div class="task-title">Reading &amp; Use of English Sprint <span class="t">50 min · 52 questions (Parts 1–7)</span></div>
-                    </div>
-                    <div class="task-meta">
-                      <div class="task-timer"><span class="lbl">Sprint Timer</span><span class="timer" id="ueTimer">50:00</span></div>
-                      <button class="btn sm" onclick="ueTimer.start()">▶</button>
-                    </div>
-                  </div>
-                  <div class="guide">
-                    📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
-                    <div class="chips" id="gUeChips" style="margin-top:6px"></div>
-                    • <b>Sprint Strategy (50 min):</b> Parts 1–4 (UoE) ~25 min · Parts 5–7 (Reading) ~25 min. Fast resolution under exam pressure.<br>
-                    • <b>Handbook &amp; rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
-                  </div>
-                  <p id="semanaP">Weekly drill part: <b id="semanaTxt"></b></p>
-                  <div class="row">
-                    <div><label>Source</label>
-                      <select id="ueFuente">
-                        <option value="sample">Official Sample Paper (Parts 1–7)</option>
-                        <option value="ptplus">Practice Tests Plus B2 First (with key)</option>
-                        <option value="fce6">FCE 6 (real tests with key)</option>
-                        <option value="gv">Grammar &amp; Vocabulary for First</option>
-                        <option value="booster">Exam Booster (no key ⚠️)</option>
-                        <option value="flojoe">Flo-Joe (web, self-check)</option>
-                      </select>
-                    </div>
-                    <div><label>Part (or Full R&amp;UoE)</label>
-                      <select id="uePart">
-                        <option value="1">Part 1 — Multiple-choice cloze (8)</option>
-                        <option value="2">Part 2 — Open cloze (8)</option>
-                        <option value="3">Part 3 — Word Formation (8)</option>
-                        <option value="4">Part 4 — Key Word Transformation (6)</option>
-                        <option value="5">Part 5 — Multiple choice reading (6)</option>
-                        <option value="6">Part 6 — Gapped text (6)</option>
-                        <option value="7">Part 7 — Multiple matching (10)</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div><label>Exercise / ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 Full / G&amp;V Unit 12"></div>
-                    <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
-                    <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
-                    <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="50"></div>
-                  </div>
-                  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-                    <button class="btn ok" onclick="saveUE()">✔ Save UoE / Reading</button>
-                  </div>
-                </div>
-
-                <!-- Writing Sprint (Week B Monday) -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">2</div>
-                    <div>
-                      <div class="task-title">Writing Sprint (Auto-Rotation) <span class="t">60 min · 5' plan + 35' write + 20' audit</span></div>
-                    </div>
-                    <div class="task-meta">
-                      <div class="task-timer"><span class="lbl">Phase Timer</span><span class="timer" id="wTimer">—</span></div>
-                    </div>
-                  </div>
-                  <div class="guide">
-                    📍 <b>Automatic Genre Rotation:</b> Essay → Article → Report → Review → Email.<br>
-                    <div class="chips" id="gWChips" style="margin-top:6px"></div>
-                    • <b>Mandatory structure:</b> P1 intro → P2 idea 1 (connector + arg + ex) → P3 idea 2 + own idea → P4 conclusion.<br>
-                    • <b>Rules:</b> 140–190 words · zero contractions · ≥3 C1 connectors · 1 passive · 1 inversion/conditional.
-                  </div>
-                  <div class="row">
-                    <div><label>Text type (Auto-assigned by rotation)</label>
-                      <select id="wTipo"><option>Essay</option><option>Article</option><option>Report</option><option>Review</option><option>Email</option></select>
-                    </div>
-                    <div><label>Prompt source</label>
-                      <select id="wFuente">
-                        <option value="sample">Official Sample Paper</option>
-                        <option value="ptplus">Practice Tests Plus</option>
-                        <option value="fce6">FCE 6</option>
-                        <option value="booster">Exam Booster</option>
-                        <option value="clase">Teacher's prompt</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div><label>Prompt (paste it here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher has asked you to write an essay...'"></div>
-                    <div><label>Word count</label><input type="number" id="wWords" min="100" value="160"></div>
-                  </div>
-                  <!-- Sub-fases -->
-                  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:12px">
-                    <div class="phase-mini"><span class="ph-lbl">PLAN</span><span class="ph-val">05:00</span><button class="btn sm gray" onclick="wPlan.start()">▶</button></div>
-                    <div class="phase-mini"><span class="ph-lbl">WRITE</span><span class="ph-val">35:00</span><button class="btn sm gray" onclick="wWrite.start()">▶</button></div>
-                    <div class="phase-mini"><span class="ph-lbl">AUDIT / REV</span><span class="ph-val">20:00</span><button class="btn sm gray" onclick="wRev.start()">▶</button></div>
-                  </div>
-                  <div class="row" style="margin-top:12px">
-                    <div><label>AI / Write&amp;Improve score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
-                    <div><label>Total minutes</label><input type="number" id="wMin" min="0" value="60"></div>
-                  </div>
-                  <p style="font-size:12px;color:var(--on-surface-variant);margin-top:6px">Rules: 140–190 words · zero contractions · ≥3 C1 connectors · 1 passive · 1 inversion/conditional.</p>
-                  <div class="row" style="margin-top:8px">
-                    <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
-                    <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
-                  </div>
-                  <p style="font-size:11.5px;color:var(--ok);margin-top:4px">Lexical Injection rule (Stage 1): ≥ 4 phrasal verbs + ≥ 3 C1 collocations per text.</p>
-                  <div style="margin-top:10px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px">
-                    <b style="font-size:12.5px">Grade A Rubric — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
-                    <div id="rubList" style="margin-top:6px">
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 4-5 paragraphs separated by a blank line</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> ≥4 advanced connectors (Furthermore, Nevertheless, Consequently, As a result...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 non-defining relative clause (which/who between commas)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 passive structure (It is widely believed... / Measures should be implemented...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 complex conditional or inversion (Were governments to act... / Not only... but also...)</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> Consistent register: zero informal language</label>
-                      <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 140-190 exact words</label>
-                    </div>
-                  </div>
-                  <div style="margin-top:12px"><button class="btn ok" onclick="saveW()">✔ Save Writing</button></div>
-                </div>
-
-                <!-- Audit & Root Cause -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">3</div>
-                    <div>
-                      <div class="task-title">Audit &amp; Root Cause Analysis <span class="t">Post-practice error diagnosis</span></div>
-                    </div>
-                  </div>
-                  <p style="font-size:13px">Prompt for your AI: <i>"Act as a Senior Cambridge B2/C1 examiner. Assess according to Content, Communicative Achievement, Organisation and Language. Score out of 20 (max 5 each), exact errors and an improved C1 version."</i> — or paste into <a href="https://writeandimprove.com" target="_blank" style="color:var(--primary)">Write &amp; Improve</a>.</p>
-                  <div class="row" style="margin-top:10px">
-                    <div><label>Main error code</label>
-                      <select id="errCode">
-                        <option value="L-GAP">L-GAP — you didn't know the word</option>
-                        <option value="G-ERR">G-ERR — syntactic rule misapplied</option>
-                        <option value="T-MIS">T-MIS — fell for the distractor</option>
-                        <option value="T-LIM">T-LIM — rushed / time pressure error</option>
-                      </select>
-                    </div>
-                    <div><label>Audited score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
-                  </div>
-                  <div><label>What went wrong? (1 line)</label><input type="text" id="errDesc" placeholder="e.g. I didn't apply inversion with 'Seldom'"></div>
-                  <div><label>Immediate corrective action</label><input type="text" id="errFix" placeholder="e.g. review inversion rule + do 5 more KWT"></div>
-                  <div style="margin-top:10px"><button class="btn" onclick="saveErr()">🔖 Save error</button></div>
-                </div>
-              </div>
+            <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
+            <div class="session-nav" id="sessionNav">
+              <button class="session-nav-btn active" data-ses="mon-a" onclick="selectSessionStudio('mon-a')">📚 Lunes A: Full R&amp;UoE <span class="pill-tag">50 min</span></button>
+              <button class="session-nav-btn" data-ses="fri-a" onclick="selectSessionStudio('fri-a')">🎧 Viernes A: Full Listening <span class="pill-tag">40 min</span></button>
+              <button class="session-nav-btn" data-ses="mon-b" onclick="selectSessionStudio('mon-b')">✍️ Lunes B: Full Writing <span class="pill-tag" id="navWTag">Auto</span></button>
+              <button class="session-nav-btn" data-ses="fri-b" onclick="selectSessionStudio('fri-b')">🗣️ Viernes B: Full Speaking <span class="pill-tag">60 min</span></button>
+              <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">Full</span></button>
             </div>
 
-            <!-- SESION B (FRIDAYS: Week A Full Listening 40'+20' | Week B Full Speaking 60') -->
-            <div id="sesB">
-              <div class="card sesion-card">
+            <!-- SESION A (MONDAYS) -->
+            <div id="sesA">
+              <!-- Studio 1: Full Reading & Use of English Sprint (Week A Monday) -->
+              <div id="studioMonA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Friday Sessions</span>
-                    <div class="sesion-title">🎧 Full Listening (Wk A) / 🗣️ Full Speaking (Wk B) <span class="badge fri">FRI 13:00</span></div>
-                    <div class="sesion-sub">Week A: Full Listening Test (40' audio + 20' post-mortem) · Week B: Full Speaking (15' simulation + 45' C1 upgrade).</div>
+                    <span class="badge mon">Semana A · Lunes</span>
+                    <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri">MON 15:30</span></div>
+                    <div class="sesion-sub">Speed Training: resolve the 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Session duration</span>
+                    <span class="dur-label">Sprint Time</span>
+                    <span class="dur-val">50 MIN</span>
+                  </div>
+                </div>
+
+                <!-- Phase Stepper -->
+                <div class="phase-stepper" id="uePhaseStepper">
+                  <div class="phase-step active" data-phase="sprint" onclick="switchUePhase('sprint')">
+                    <div class="ps-num">Fase 1</div>
+                    <div class="ps-title">⚡ 50' Speed Sprint</div>
+                    <div class="ps-time">50:00 · 52 preguntas</div>
+                  </div>
+                  <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
+                    <div class="ps-num">Fase 2</div>
+                    <div class="ps-title">📊 Score &amp; Diagnóstico</div>
+                    <div class="ps-time">10:00 · Registro de fallos</div>
+                  </div>
+                </div>
+
+                <!-- Phase 1: Sprint Timer & Guides -->
+                <div id="uePhase1">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">1</div>
+                      <div>
+                        <div class="task-title">Sprint de Alta Velocidad <span class="t">50 min · Parts 1 to 7</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">50:00</span></div>
+                        <button class="btn sm" onclick="ueTimer.start()">▶ / ⏸</button>
+                      </div>
+                    </div>
+                    <div class="guide">
+                      📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
+                      <div class="chips" id="gUeChips" style="margin-top:6px"></div>
+                      • <b>Pacing guide:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
+                      • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
+                    </div>
+                    <p id="semanaP">Weekly drill focus: <b id="semanaTxt"></b></p>
+                    <div style="margin-top:12px">
+                      <button class="btn" onclick="switchUePhase('score')">Ir a Fase 2: Cargar Aciertos →</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Phase 2: Scoring & Recording -->
+                <div id="uePhase2" style="display:none">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">2</div>
+                      <div>
+                        <div class="task-title">Control de Respuestas &amp; Registro de Aciertos</div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div><label>Source</label>
+                        <select id="ueFuente">
+                          <option value="sample">Official Sample Paper (Parts 1–7)</option>
+                          <option value="ptplus">Practice Tests Plus B2 First (with key)</option>
+                          <option value="fce6">FCE 6 (real tests with key)</option>
+                          <option value="gv">Grammar &amp; Vocabulary for First</option>
+                          <option value="booster">Exam Booster (no key ⚠️)</option>
+                          <option value="flojoe">Flo-Joe (web, self-check)</option>
+                        </select>
+                      </div>
+                      <div><label>Part / Mode</label>
+                        <select id="uePart">
+                          <option value="1">Part 1 — Multiple-choice cloze (8)</option>
+                          <option value="2">Part 2 — Open cloze (8)</option>
+                          <option value="3">Part 3 — Word Formation (8)</option>
+                          <option value="4">Part 4 — Key Word Transformation (6)</option>
+                          <option value="5">Part 5 — Multiple choice reading (6)</option>
+                          <option value="6">Part 6 — Gapped text (6)</option>
+                          <option value="7">Part 7 — Multiple matching (10)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div><label>Exercise / ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 Full / Test 2"></div>
+                      <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
+                      <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
+                      <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="50"></div>
+                    </div>
+                    <div style="margin-top:12px"><button class="btn ok" onclick="saveUE()">✔ Save UoE / Reading</button></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Studio 2: Full Writing Studio (Week B Monday) -->
+              <div id="studioMonB" class="card sesion-card" style="display:none">
+                <div class="sesion-head">
+                  <div>
+                    <span class="badge mon">Semana B · Lunes</span>
+                    <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri">MON 15:30</span></div>
+                    <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
+                  </div>
+                  <div class="sesion-dur">
+                    <span class="dur-label">Studio Time</span>
                     <span class="dur-val">60 MIN</span>
                   </div>
                 </div>
 
-                <!-- Full Listening (Week A Friday) -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">1</div>
-                    <div>
-                      <div class="task-title">Full Listening Test <span class="t">40 min · 30 questions · do not pause the audio</span></div>
-                    </div>
-                    <div class="task-meta">
-                      <div class="task-timer"><span class="lbl">Listening Timer</span><span class="timer" id="lTimer">40:00</span></div>
-                      <button class="btn sm" onclick="lTimer.start()">▶</button>
-                    </div>
+                <!-- Phase Stepper -->
+                <div class="phase-stepper" id="wPhaseStepper">
+                  <div class="phase-step active" data-phase="plan" onclick="switchWritingPhase('plan')">
+                    <div class="ps-num">Fase 1</div>
+                    <div class="ps-title">💡 Planificación</div>
+                    <div class="ps-time">05:00 · Esquema 4 párrafos</div>
                   </div>
-                  <div class="guide">
-                    📍 <b>Play audio (preguntas + audio + claves juntos):</b>
-                    <div class="chips" id="gLChips" style="margin-top:6px"></div>
-                    • <b>Rule:</b> complete all 4 parts in one continuous go without pausing. Score out of 30.
+                  <div class="phase-step" data-phase="write" onclick="switchWritingPhase('write')">
+                    <div class="ps-num">Fase 2</div>
+                    <div class="ps-title">✍️ Redacción en Vivo</div>
+                    <div class="ps-time">35:00 · 140–190 palabras</div>
                   </div>
-                  <p id="lFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
-                  <div class="row">
-                    <div><label>Audio source</label>
-                      <select id="lFuente">
-                        <option value="sample1">Sample Paper 1 (MP3 local)</option>
-                        <option value="sample2">Sample Paper 2 (MP3 local)</option>
-                        <option value="ptplus">Practice Tests Plus (audio online)</option>
-                        <option value="fce6">FCE 6 (CDs)</option>
-                      </select>
-                    </div>
-                    <div><label>Test # / Ref.</label><input type="text" id="lRef" placeholder="e.g. Sample 1 / Test 3"></div>
+                  <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
+                    <div class="ps-num">Fase 3</div>
+                    <div class="ps-title">🔍 Auditoría C1 &amp; Rúbrica</div>
+                    <div class="ps-time">20:00 · Rúbrica 7 pts + IA</div>
                   </div>
-                  <div class="row">
-                    <div><label>Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
-                    <div><label>Part 2 errors (gaps)</label><input type="number" id="lP2" min="0" value="0"></div>
-                    <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
-                  </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Save Listening</button></div>
                 </div>
 
-                <!-- Auditory Post-Mortem -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">2</div>
-                    <div>
-                      <div class="task-title">Auditory Post-Mortem <span class="t">20 min</span></div>
+                <!-- Phase 1: Planning (5 min) -->
+                <div id="wPhase1">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">1</div>
+                      <div>
+                        <div class="task-title">Fase 1: Planificación Estructural <span class="t">5 min · Objetivo: 4 párrafos</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <div class="task-timer"><span class="lbl">Plan Timer</span><span class="timer" id="wPlanTimer">05:00</span></div>
+                        <button class="btn sm" onclick="wPlan.start()">▶</button>
+                      </div>
+                    </div>
+                    <div class="guide">
+                      📍 <b>Architecture Checklist:</b><br>
+                      • <b>Paragraph 1:</b> Clear introduction &amp; statement of topic.<br>
+                      • <b>Paragraph 2:</b> Main idea 1 with linking device + explanation + concrete example.<br>
+                      • <b>Paragraph 3:</b> Main idea 2 + your own third distinct point.<br>
+                      • <b>Paragraph 4:</b> Concise summary &amp; reasoned conclusion.
+                    </div>
+                    <div class="row">
+                      <div><label>Active Text Type (Auto-assigned)</label>
+                        <select id="wTipo"><option>Essay</option><option>Article</option><option>Report</option><option>Review</option><option>Email</option></select>
+                      </div>
+                      <div><label>Prompt Source</label>
+                        <select id="wFuente">
+                          <option value="sample">Official Sample Paper</option>
+                          <option value="ptplus">Practice Tests Plus</option>
+                          <option value="fce6">FCE 6</option>
+                          <option value="booster">Exam Booster</option>
+                          <option value="clase">Teacher's prompt</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
+                    <div style="margin-top:12px">
+                      <button class="btn" onclick="switchWritingPhase('write')">Pasar a Fase 2: Redacción en Vivo →</button>
                     </div>
                   </div>
-                  <p style="font-size:13px">Open the tapescript ONLY for questions you got wrong. Identify the trap (textual distractor, unknown idiom, speech speed) and record it.</p>
-                  <div><label>What got you? (one per line, with error code)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
                 </div>
 
-                <!-- Full Speaking (Week B Friday) -->
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">3</div>
-                    <div>
-                      <div class="task-title">Full Speaking Simulation &amp; C1 Upgrade <span class="t">60 min · 15' test + 45' deep review</span></div>
+                <!-- Phase 2: Live Writing (35 min) -->
+                <div id="wPhase2" style="display:none">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">2</div>
+                      <div>
+                        <div class="task-title">Fase 2: Redacción en Vivo <span class="t">35 min · 140–190 palabras</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="wTimer">—</span></div>
+                        <button class="btn sm" onclick="wWrite.start()">▶</button>
+                      </div>
                     </div>
-                    <div class="task-meta">
-                      <div class="task-timer"><span class="lbl">Speaking Timer</span><span class="timer" id="spTimer">—</span></div>
-                      <button class="btn sm" onclick="sp1.start()">🎙 1:00 (P2)</button>
-                      <button class="btn sm gray" onclick="sp2.start()">🤝 3:00 (P3)</button>
+                    <textarea class="writing-live-pad" id="wTextDraft" oninput="onWritingDraftChange()" placeholder="Write or draft your text here... Word count and formal register checks will update live in real-time."></textarea>
+                    <div class="live-word-meter">
+                      <span>Live word count: <b id="wLiveWordCount">0 words</b></span>
+                      <span id="wWordMeter" style="font-weight:700">Target: 140–190 words</span>
+                    </div>
+                    <div class="contraction-alert" id="wContractionWarn" style="display:none"></div>
+                    <div class="row" style="margin-top:12px">
+                      <div><label>Registered Word count</label><input type="number" id="wWords" min="100" value="160"></div>
+                      <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="60"></div>
+                    </div>
+                    <div style="margin-top:12px">
+                      <button class="btn" onclick="switchWritingPhase('audit')">Pasar a Fase 3: Auditoría &amp; Rúbrica →</button>
                     </div>
                   </div>
-                  <div class="guide">
-                    📍 <b>Speaking simulation &amp; materials:</b>
-                    <div class="chips" id="gSpChips" style="margin-top:6px"></div>
-                    • <b>Full Simulation (15 min):</b> Record Parts 1, 2, 3 and 4 continuously.<br>
-                    • <b>C1 Upgrade (45 min):</b> Listen back, remove silences >3s, inject advanced discourse markers &amp; re-record.
+                </div>
+
+                <!-- Phase 3: Audit & Rubric (20 min) -->
+                <div id="wPhase3" style="display:none">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">3</div>
+                      <div>
+                        <div class="task-title">Fase 3: Auditoría Algorítmica C1 &amp; Rúbrica <span class="t">20 min</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <button class="btn sm gray" onclick="wRev.start()">▶ 20:00</button>
+                      </div>
+                    </div>
+                    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px;margin-bottom:12px">
+                      <b style="font-size:13px">Grade A Rubric Checklist — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
+                      <div id="rubList" style="margin-top:8px">
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 4-5 paragraphs separated by a blank line</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> ≥4 advanced connectors (Furthermore, Nevertheless, Consequently, As a result...)</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 non-defining relative clause (which/who between commas)</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 passive structure (It is widely believed... / Measures should be implemented...)</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 1 complex conditional or inversion (Were governments to act... / Not only... but also...)</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> Consistent register: zero informal language</label>
+                        <label style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> 140-190 exact words</label>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
+                      <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                      <div><label>AI / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
+                      <div><label>Audited Score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
+                    </div>
+                    <div class="row" style="margin-top:10px">
+                      <div><label>Error Code (if any)</label>
+                        <select id="errCode">
+                          <option value="L-GAP">L-GAP — vocabulary gap</option>
+                          <option value="G-ERR">G-ERR — grammar error</option>
+                          <option value="T-MIS">T-MIS — distractor trap</option>
+                          <option value="T-LIM">T-LIM — time pressure</option>
+                        </select>
+                      </div>
+                      <div><label>What went wrong?</label><input type="text" id="errDesc" placeholder="e.g. didn't use inversion"></div>
+                    </div>
+                    <div><label>Corrective action</label><input type="text" id="errFix" placeholder="e.g. write 5 inversion sentences"></div>
+                    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+                      <button class="btn ok" onclick="saveW()">✔ Save Writing &amp; Progress</button>
+                      <button class="btn gray" onclick="saveErr()">🔖 Log error only</button>
+                    </div>
                   </div>
-                  <p id="spFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
-                  <div class="row" style="margin-top:10px">
-                    <div><label>Speaking part / mode</label>
-                      <select id="spPart">
-                        <option value="2" selected>Part 2 — Long turn (1 min)</option>
-                        <option value="1">Part 1 — Interview</option>
-                        <option value="3">Part 3 — Collaborative task</option>
-                        <option value="4">Part 4 — Discussion</option>
-                      </select>
-                    </div>
-                    <div><label>Part 2: were there silences &gt;3s?</label>
-                      <select id="spSil"><option value="no">No</option><option value="si">Yes</option></select>
-                    </div>
-                    <div><label>Part 2: did you self-correct?</label>
-                      <select id="spRep"><option value="si">Yes</option><option value="no">No</option></select>
-                    </div>
-                    <div><label>Parts 3-4: negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SESION B (FRIDAYS) -->
+            <div id="sesB">
+              <!-- Studio 3: Full Listening (Week A Friday) -->
+              <div id="studioFriA" class="card sesion-card">
+                <div class="sesion-head">
+                  <div>
+                    <span class="badge fri">Semana A · Viernes</span>
+                    <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri">FRI 13:00</span></div>
+                    <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
                   </div>
-                  <p style="font-size:11.5px;color:var(--ok);margin-top:4px">Stage 1 gate: 4 mocks of Parts 3-4 with ≥ 3 advanced negotiation structures (e.g. "What if we consider...", "I'd argue that...", "Let's weigh the options...").</p>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking</button></div>
+                  <div class="sesion-dur">
+                    <span class="dur-label">Studio Time</span>
+                    <span class="dur-val">60 MIN</span>
+                  </div>
+                </div>
+
+                <!-- Phase Stepper -->
+                <div class="phase-stepper" id="lPhaseStepper">
+                  <div class="phase-step active" data-phase="play" onclick="switchListeningPhase('play')">
+                    <div class="ps-num">Fase 1</div>
+                    <div class="ps-title">🎧 40' Audio Continuo</div>
+                    <div class="ps-time">40:00 · 30 preguntas</div>
+                  </div>
+                  <div class="phase-step" data-phase="pm" onclick="switchListeningPhase('pm')">
+                    <div class="ps-num">Fase 2</div>
+                    <div class="ps-title">🕵️ Auditory Post-Mortem</div>
+                    <div class="ps-time">20:00 · Cazador de trampas</div>
+                  </div>
+                </div>
+
+                <!-- Phase 1: Play -->
+                <div id="lPhase1">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">1</div>
+                      <div>
+                        <div class="task-title">Audio Continuo (Parts 1 to 4) <span class="t">40 min · Never pause</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">40:00</span></div>
+                        <button class="btn sm" onclick="lTimer.start()">▶</button>
+                      </div>
+                    </div>
+                    <div class="guide">
+                      📍 <b>Play audio (preguntas + audio + claves juntos):</b>
+                      <div class="chips" id="gLChips" style="margin-top:6px"></div>
+                      • <b>Rule:</b> complete all 4 parts in one continuous go without pausing. Score out of 30.
+                    </div>
+                    <p id="lFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
+                    <div class="row" style="margin-top:10px">
+                      <div><label>Audio Source</label>
+                        <select id="lFuente">
+                          <option value="sample1">Sample Paper 1 (MP3 local)</option>
+                          <option value="sample2">Sample Paper 2 (MP3 local)</option>
+                          <option value="ptplus">Practice Tests Plus (audio online)</option>
+                          <option value="fce6">FCE 6 (CDs)</option>
+                        </select>
+                      </div>
+                      <div><label>Test # / Ref.</label><input type="text" id="lRef" placeholder="e.g. Sample 1 / Test 3"></div>
+                    </div>
+                    <div class="row">
+                      <div><label>Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
+                      <div><label>Part 2 errors (gaps)</label><input type="number" id="lP2" min="0" value="0"></div>
+                      <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
+                    </div>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                      <button class="btn ok" onclick="saveL()">✔ Save Listening</button>
+                      <button class="btn" onclick="switchListeningPhase('pm')">Ir a Fase 2: Post-Mortem →</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Phase 2: Post-Mortem -->
+                <div id="lPhase2" style="display:none">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">2</div>
+                      <div>
+                        <div class="task-title">Auditory Post-Mortem <span class="t">20 min · Root Cause Analysis</span></div>
+                      </div>
+                    </div>
+                    <p style="font-size:13px">Open the tapescript ONLY for questions you got wrong. Identify why you fell for the distractor.</p>
+                    <div><label>What got you? (one per line, with error code: T-MIS, L-GAP)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
+                    <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Save &amp; Finish</button></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Studio 4: Full Speaking Simulation (Week B Friday) -->
+              <div id="studioFriB" class="card sesion-card" style="display:none">
+                <div class="sesion-head">
+                  <div>
+                    <span class="badge fri">Semana B · Viernes</span>
+                    <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri">FRI 13:00</span></div>
+                    <div class="sesion-sub">15 min continuous simulation (Parts 1–4) + 45 min C1 deep upgrade and second recording.</div>
+                  </div>
+                  <div class="sesion-dur">
+                    <span class="dur-label">Studio Time</span>
+                    <span class="dur-val">60 MIN</span>
+                  </div>
+                </div>
+
+                <!-- Phase Stepper -->
+                <div class="phase-stepper" id="spPhaseStepper">
+                  <div class="phase-step active" data-phase="mock" onclick="switchSpPhase('mock')">
+                    <div class="ps-num">Fase 1</div>
+                    <div class="ps-title">🎙️ 15' Simulacro Completo</div>
+                    <div class="ps-time">15:00 · Parts 1, 2, 3, 4</div>
+                  </div>
+                  <div class="phase-step" data-phase="upgrade" onclick="switchSpPhase('upgrade')">
+                    <div class="ps-num">Fase 2</div>
+                    <div class="ps-title">🚀 45' C1 Polish &amp; Re-toma</div>
+                    <div class="ps-time">45:00 · Conectores &amp; Fluidez</div>
+                  </div>
+                </div>
+
+                <!-- Phase 1: Mock -->
+                <div id="spPhase1">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">1</div>
+                      <div>
+                        <div class="task-title">Simulacro Continuo (Parts 1 to 4) <span class="t">15 min</span></div>
+                      </div>
+                      <div class="task-meta">
+                        <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="spTimer">—</span></div>
+                        <button class="btn sm" onclick="sp1.start()">🎙 1:00 (P2)</button>
+                        <button class="btn sm gray" onclick="sp2.start()">🤝 3:00 (P3)</button>
+                      </div>
+                    </div>
+                    <div class="guide">
+                      📍 <b>Visuals &amp; Prompts:</b>
+                      <div class="chips" id="gSpChips" style="margin-top:6px"></div>
+                      • <b>Part 2 Long Turn:</b> compare and speculate (never just describe) for 1 full minute.<br>
+                      • <b>Parts 3-4:</b> negotiate and reach a consensus using advanced discourse markers.
+                    </div>
+                    <p id="spFocusNote" style="font-size:12.5px;color:var(--ok);margin:6px 0 0"></p>
+                    <div class="row" style="margin-top:10px">
+                      <div><label>Speaking part / mode</label>
+                        <select id="spPart">
+                          <option value="2" selected>Part 2 — Long turn (1 min)</option>
+                          <option value="1">Part 1 — Interview</option>
+                          <option value="3">Part 3 — Collaborative task</option>
+                          <option value="4">Part 4 — Discussion</option>
+                        </select>
+                      </div>
+                      <div><label>Silences &gt;3s in Part 2?</label>
+                        <select id="spSil"><option value="no">No (Clean flow)</option><option value="si">Yes (Hesitation)</option></select>
+                      </div>
+                      <div><label>Self-correction performed?</label>
+                        <select id="spRep"><option value="si">Yes</option><option value="no">No</option></select>
+                      </div>
+                      <div><label>Negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
+                    </div>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                      <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
+                      <button class="btn" onclick="switchSpPhase('upgrade')">Ir a Fase 2: C1 Polish →</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Phase 2: Upgrade -->
+                <div id="spPhase2" style="display:none">
+                  <div class="task">
+                    <div class="task-head">
+                      <div class="task-num">2</div>
+                      <div>
+                        <div class="task-title">C1 Polish &amp; Second Take <span class="t">45 min</span></div>
+                      </div>
+                    </div>
+                    <div class="guide">
+                      🎙 <b>Upgrade checklist:</b><br>
+                      • Inject: <i>"Whereas the former illustrates..., the latter seems to convey..."</i><br>
+                      • Negotiate: <i>"What if we were to prioritize..., given that...?"</i><br>
+                      • Re-record the full 4 parts and assess fluency.
+                    </div>
+                    <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking Studio</button></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1158,13 +1390,20 @@ footer{
           <div class="col-4">
             <div class="card rot-card">
               <div class="rot-head">
-                <h2>🔄 Rotation</h2>
+                <h2>🔄 Rotation &amp; Cycle</h2>
                 <span class="chip">Automatic</span>
               </div>
-              <div class="sub">2-week automated rotation (Week A: Full R&amp;UoE + Full Listening · Week B: Full Writing + Full Speaking). Writing rotates sequentially: Essay → Article → Report → Review → Email.</div>
-              <div class="rot-day"><span class="lbl">Current Schedule</span><span class="val" id="rotDay">—</span><span class="sub2" id="rotDayNext">—</span></div>
+              <div class="sub">2-week automated cycle (Week A: R&amp;UoE + L · Week B: W + Sp). Writing advances automatically through all 5 genres.</div>
+              <div class="rot-day"><span class="lbl">Active Fortnight</span><span class="val" id="rotDay">—</span><span class="sub2" id="rotDayNext">—</span></div>
               <div class="cur-ex"><span class="lbl">Active Cycle</span><span class="val" id="rotVal">—</span></div>
-              <div class="row" style="margin-top:4px">
+              
+              <!-- Visual Writing Queue Timeline Widget -->
+              <div class="rot-timeline-wrap">
+                <span class="rot-timeline-lbl">Writing Automatic Queue</span>
+                <div class="rot-timeline" id="rotTimeline"></div>
+              </div>
+
+              <div class="row" style="margin-top:10px">
                 <div><label>R&amp;UoE</label><select id="ovRue" onchange="setOv('rue',this.value)"></select></div>
                 <div><label>Writing</label><select id="ovW" onchange="setOv('w',this.value)"></select></div>
                 <div><label>Listening</label><select id="ovL" onchange="setOv('l',this.value)"></select></div>
@@ -1952,14 +2191,109 @@ function makeTimer(elId,dur){
 const ueTimer=makeTimer('ueTimer',50);
 const lTimer=makeTimer('lTimer',40);
 let wTimerEl,wMode='plan',wPlan,wWrite,wRev;
-(function(){let left=0,iv=null,el=document.getElementById('wTimer');
-function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
-wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.planMin*60;render()}};
-wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.writeMin*60;render()}};
-wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.revMin*60;render()}};
-function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}})();
-let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(D.settings.sp1Sec)}};sp2={start(){run(D.settings.sp2Sec)}}})();
+(function(){
+  let left=0,iv=null;
+  function render(){
+    const el=document.getElementById('wTimer');
+    if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+    const elP=document.getElementById('wPlanTimer');
+    if(elP){elP.textContent=fmtMin(left);elP.classList.toggle('running',iv!==null)}
+  }
+  wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.planMin*60;render()}};
+  wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.writeMin*60;render()}};
+  wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.revMin*60;render()}};
+  function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}
+})();
+let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(D.settings.sp1Sec)}};sp2={start(){run(D.settings.sp2Sec)}}})();
 function applyTimers(){ueTimer.set(D.settings.ueMin||50);lTimer.set(D.settings.listenMin||40);}
+
+/* ---------- INTERACTIVE SESSION STUDIO & STEPPERS ---------- */
+let CURRENT_STUDIO='mon-a';
+function selectSessionStudio(id){
+  CURRENT_STUDIO=id;
+  document.querySelectorAll('.session-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.ses===id));
+  const sMonA=document.getElementById('studioMonA');
+  const sMonB=document.getElementById('studioMonB');
+  const sFriA=document.getElementById('studioFriA');
+  const sFriB=document.getElementById('studioFriB');
+  const sMock=document.getElementById('sesFull');
+  
+  if(sMonA)sMonA.style.display=(id==='mon-a'?'block':'none');
+  if(sMonB)sMonB.style.display=(id==='mon-b'?'block':'none');
+  if(sFriA)sFriA.style.display=(id==='fri-a'?'block':'none');
+  if(sFriB)sFriB.style.display=(id==='fri-b'?'block':'none');
+  if(sMock)sMock.style.display=(id==='mock'?'block':'none');
+}
+
+function switchWritingPhase(p){
+  document.querySelectorAll('#wPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
+  const p1=document.getElementById('wPhase1'),p2=document.getElementById('wPhase2'),p3=document.getElementById('wPhase3');
+  if(p1)p1.style.display=(p==='plan'?'block':'none');
+  if(p2)p2.style.display=(p==='write'?'block':'none');
+  if(p3)p3.style.display=(p==='audit'?'block':'none');
+  if(p==='plan')wPlan.start();
+  else if(p==='write')wWrite.start();
+  else if(p==='audit')wRev.start();
+}
+
+function switchListeningPhase(p){
+  document.querySelectorAll('#lPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
+  const p1=document.getElementById('lPhase1'),p2=document.getElementById('lPhase2');
+  if(p1)p1.style.display=(p==='play'?'block':'none');
+  if(p2)p2.style.display=(p==='pm'?'block':'none');
+  if(p==='play')lTimer.start();
+}
+
+function switchUePhase(p){
+  document.querySelectorAll('#uePhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
+  const p1=document.getElementById('uePhase1'),p2=document.getElementById('uePhase2');
+  if(p1)p1.style.display=(p==='sprint'?'block':'none');
+  if(p2)p2.style.display=(p==='score'?'block':'none');
+  if(p==='sprint')ueTimer.start();
+}
+
+function switchSpPhase(p){
+  document.querySelectorAll('#spPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
+  const p1=document.getElementById('spPhase1'),p2=document.getElementById('spPhase2');
+  if(p1)p1.style.display=(p==='mock'?'block':'none');
+  if(p2)p2.style.display=(p==='upgrade'?'block':'none');
+}
+
+function onWritingDraftChange(){
+  const el=document.getElementById('wTextDraft');
+  if(!el)return;
+  const text=el.value.trim();
+  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  const wcEl=document.getElementById('wLiveWordCount');
+  if(wcEl)wcEl.textContent=words+' words';
+  const wInput=document.getElementById('wWords');
+  if(wInput&&words>0)wInput.value=words;
+  
+  const meter=document.getElementById('wWordMeter');
+  if(meter){
+    if(words>=140&&words<=190){
+      meter.style.color='var(--ok)';
+      meter.textContent='✔ Perfect length ('+words+'/140-190 words)';
+    }else if(words<140){
+      meter.style.color='var(--warn)';
+      meter.textContent='⚠ Needs '+(140-words)+' more words (min 140)';
+    }else{
+      meter.style.color='var(--bad)';
+      meter.textContent='⚠ Over by '+(words-190)+' words (max 190)';
+    }
+  }
+
+  const contractions=text.match(/\b([a-zA-Z]+'([a-zA-Z]+))\b/g);
+  const warnEl=document.getElementById('wContractionWarn');
+  if(warnEl){
+    if(contractions&&contractions.length){
+      warnEl.style.display='block';
+      warnEl.innerHTML='⚠️ <b>Contractions detected:</b> '+[...new Set(contractions)].slice(0,5).join(', ')+'. <i>Zero contractions required for Cambridge B2/C1 formal register!</i>';
+    }else{
+      warnEl.style.display='none';
+    }
+  }
+}
 
 /* ---------- SAVE HANDLERS ----------
    Cada form de sesión tiene su saveXXX():
@@ -2779,28 +3113,47 @@ function renderToday(){
   if(document.getElementById('uePart'))document.getElementById('uePart').value=rue;
   if(document.getElementById('semanaTxt'))document.getElementById('semanaTxt').textContent='Part '+rue+' — '+partName(rue)+(wov.rue?' (manually chosen)':' (auto, rotation)');
   if(document.getElementById('wTipo'))document.getElementById('wTipo').value=wT;
+  if(document.getElementById('navWTag'))document.getElementById('navWTag').textContent=wT;
   if(document.getElementById('wWords')){
     document.getElementById('wWords').min=s.wMin;document.getElementById('wWords').max=s.wMax;
     document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
   }
   if(document.getElementById('lFocusNote'))document.getElementById('lFocusNote').textContent='🎯 Weekly focus: Listening Part '+lP+' — practice that part in PARTS, or the full test here.';
   if(document.getElementById('spFocusNote'))document.getElementById('spFocusNote').textContent='🎯 Weekly focus: Speaking Part '+spP+' — with the AI or your teacher.';
+  
+  // Writing queue visual widget
+  const rotTimelineEl=document.getElementById('rotTimeline');
+  if(rotTimelineEl){
+    rotTimelineEl.innerHTML=s.wCycle.map((g,i)=>{
+      const isCur=(g===wT);
+      return `<div class="rot-item ${isCur?'current':''}">
+        <span>${i+1}. ${g}</span>
+        ${isCur?'<span class="badge-live">ACTIVE</span>':''}
+      </div>`;
+    }).join('');
+  }
+
   const nb=document.getElementById('nextBox');
   const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const aDay=s.sesA.day,bDay=s.sesB.day;
   const weekLabel=isWeekA?'Week A (R&UoE + Listening)':'Week B (Writing + Speaking)';
+  let defaultStudio='mon-a';
 
   if(wd===aDay){
     if(isWeekA){
-      nb.innerHTML=`<div class="big">📚 Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Reading &amp; Use of English Sprint (50 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 52 questions in 50 min. All sessions are available below — do them whenever you want.</div>`;
+      defaultStudio='mon-a';
+      nb.innerHTML=`<div class="big">📚 Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Reading &amp; Use of English Sprint (50 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 52 questions in 50 min. Studio is open below.</div>`;
     }else{
-      nb.innerHTML=`<div class="big">✍️ Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Writing: ${wT} (60 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · Auto-rotation genre: <b>${wT}</b> (5' plan + 35' write + 20' audit). All sessions are available below.</div>`;
+      defaultStudio='mon-b';
+      nb.innerHTML=`<div class="big">✍️ Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Writing Studio: ${wT} (60 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · Auto-rotation genre: <b>${wT}</b> (5' plan + 35' write + 20' audit). Studio is open below.</div>`;
     }
   }else if(wd===bDay){
     if(isWeekA){
-      nb.innerHTML=`<div class="big">🎧 Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Listening Test (40 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 30 questions uninterrupted + 20' post-mortem. All sessions are available below.</div>`;
+      defaultStudio='fri-a';
+      nb.innerHTML=`<div class="big">🎧 Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Listening Test (40 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 30 questions uninterrupted + 20' post-mortem. Studio is open below.</div>`;
     }else{
-      nb.innerHTML=`<div class="big">🗣️ Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Speaking Simulation (60 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 15' simulation (Parts 1-4) + 45' C1 upgrade. All sessions are available below.</div>`;
+      defaultStudio='fri-b';
+      nb.innerHTML=`<div class="big">🗣️ Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Speaking Simulation (60 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 15' simulation (Parts 1-4) + 45' C1 upgrade. Studio is open below.</div>`;
     }
   }else{
     const toA=(aDay-wd+7)%7||7,toB=(bDay-wd+7)%7||7;
@@ -2812,14 +3165,22 @@ function renderToday(){
       const nextIsWeekA=(nextWeek%2!==0);
       const nextWIdx=Math.floor(nextWeek/2)%s.wCycle.length;
       const nextW=s.wCycle[nextWIdx];
+      defaultStudio=nextIsWeekA?'mon-a':'mon-b';
       nextTitle=nextIsWeekA?'Session A (Full Reading & UoE 50\')':`Session A (Full Writing — ${nextW})`;
     }else{
       nextDays=toB;
       nextDayName=DIA[bDay];
+      defaultStudio=isWeekA?'fri-a':'fri-b';
       nextTitle=isWeekA?'Session B (Full Listening 40\')':'Session B (Full Speaking 60\')';
     }
-    nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${nextDayName} (in ${nextDays}d) — ${nextTitle}</b>. Cycle: <b>${weekLabel}</b> · Next Writing genre: <b>${wT}</b>. You can get ahead whenever you want.</div>`;
+    nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${nextDayName} (in ${nextDays}d) — ${nextTitle}</b>. Cycle: <b>${weekLabel}</b> · Active Writing genre: <b>${wT}</b>. You can switch sessions above.</div>`;
   }
+  
+  // Set initial studio if none selected yet
+  if(!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a'){
+    selectSessionStudio(defaultStudio);
+  }
+
   const rd=document.getElementById('rotDay'),rdn=document.getElementById('rotDayNext');
   if(rd){
     const daysToMon=(8-wd)%7||7;
