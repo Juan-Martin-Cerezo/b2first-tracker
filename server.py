@@ -39,7 +39,7 @@ EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
 DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")
-BK_KEEP   = 20                                          # backups a conservar
+BK_KEEP   = 100                                         # backups a conservar por usuario
 # Usuarios (sistema multi-cuenta)
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
