@@ -446,42 +446,103 @@ tbody tr:hover{background:var(--surface-container-low)}
 .next-session .when{font-size:12.5px;color:var(--on-hero-sub);margin-top:3px}
 .next-session .badge{background:var(--hero-surface);color:var(--on-hero);border:1px solid var(--hero-surface-border)}
 
-/* Rotation Card (Sidebar HOY) */
-.rot-card{background:var(--hero-bg);color:var(--on-hero);border:1px solid var(--hero-border)}
-.rot-card h2{color:var(--on-hero);font-size:16px;font-weight:600}
-.rot-card .sub{color:var(--on-hero-sub)}
-.rot-card label{color:var(--on-hero-sub)}
-.rot-card select{
-  background-color:var(--hero-surface);border-color:var(--hero-surface-border);color:var(--on-hero);
-  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23ffffff'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;
+/* ============ REDESIGNED ROTATION MATRIX V2 ============ */
+.rot-card-v2{
+  background:linear-gradient(145deg, var(--hero-bg), #06142c);
+  border:1px solid var(--hero-border);
+  border-radius:8px;padding:18px 20px;color:var(--on-hero);
+  box-shadow:var(--shadow-md);position:relative;overflow:hidden;
 }
-.rot-card select option{background:var(--surface-container-lowest);color:var(--on-surface)}
-.rot-card .rot-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.rot-card .chip{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero);background:var(--hero-surface);border:1px solid var(--hero-surface-border);padding:3px 8px;border-radius:var(--radius)}
-.rot-card .rot-day{background:var(--hero-surface);border-left:4px solid var(--mon);padding:12px 14px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0 0}
-.rot-card .rot-day .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);display:block;margin-bottom:4px}
-.rot-card .rot-day .val{font-size:15.5px;font-weight:600;color:var(--on-hero)}
-.rot-card .rot-day .sub2{display:block;font-size:11.5px;color:var(--on-hero-sub);margin-top:3px}
-.rot-card .cur-ex{background:var(--hero-surface);border-left:4px solid var(--hero-accent);padding:12px 14px;border-radius:0 var(--radius) var(--radius) 0;margin:12px 0}
-.rot-card .cur-ex .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);display:block;margin-bottom:4px}
-.rot-card .cur-ex .val{font-size:15.5px;font-weight:600;color:var(--on-hero)}
-.rot-card .btn.gray{background:var(--hero-surface);color:var(--on-hero);border:1px solid var(--hero-surface-border)}
-.rot-card .btn.gray:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.35)}
+.rot-card-v2::before{
+  content:'';position:absolute;top:-40px;right:-40px;width:130px;height:130px;
+  background:radial-gradient(circle, rgba(56,189,248,0.18), transparent 70%);
+  pointer-events:none;border-radius:50%;
+}
+.rot-v2-header{margin-bottom:14px}
+.rot-v2-badge-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.rot-live-pill{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--hero-accent);
+  background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.30);
+  padding:3px 8px;border-radius:4px;
+}
+.rot-pulse-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--hero-accent);
+  box-shadow:0 0 8px var(--hero-accent);animation:pulseDot 2s infinite ease-in-out;
+}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+.rot-week-pill{
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;
+  padding:3px 9px;border-radius:4px;background:var(--primary);color:#fff;
+  border:1px solid rgba(255,255,255,0.25);
+}
+.rot-v2-title{font-size:15.5px;font-weight:700;color:var(--on-hero);margin-bottom:3px;letter-spacing:-.01em}
+.rot-v2-desc{font-size:12px;color:var(--on-hero-sub);line-height:1.45}
 
-/* Rotation Timeline Widget */
-.rot-timeline-wrap{margin:12px 0 6px}
-.rot-timeline-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--on-hero-sub2);margin-bottom:6px;display:block}
-.rot-timeline{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-.rot-item{
-  padding:6px 10px;border-radius:var(--radius);background:var(--hero-surface);
-  border:1px solid var(--hero-surface-border);font-family:var(--mono);font-size:11px;color:var(--on-hero-sub);
-  white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .15s;
+/* Schedule Weeks Container */
+.rot-schedule-grid{display:flex;flex-direction:column;gap:9px;margin:14px 0}
+.rot-week-card{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px;padding:10px 12px;transition:all .15s;
 }
-.rot-item.current{
-  background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25);
+.rot-week-card.active-week{
+  background:rgba(56,189,248,0.08);border-color:rgba(56,189,248,0.40);
+  box-shadow:0 0 12px rgba(56,189,248,0.10);
 }
-.rot-item .badge-live{font-size:8.5px;padding:2px 5px;border-radius:3px;background:rgba(255,255,255,.25);color:#fff;font-weight:700}
+.rot-wk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rot-wk-name{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--on-hero)}
+.rot-wk-status{
+  font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:2px 6px;border-radius:3px;
+}
+.rot-week-card.active-week .rot-wk-status{background:var(--ok);color:#fff}
+.rot-week-card:not(.active-week) .rot-wk-status{background:rgba(255,255,255,0.12);color:var(--on-hero-sub2)}
+
+.rot-session-row{display:flex;align-items:flex-start;gap:8px;margin-top:5px}
+.rot-ses-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex:none}
+.rot-ses-dot.mon{background:var(--green-accent)}
+.rot-ses-dot.fri{background:var(--hero-accent)}
+.rot-ses-info{display:flex;flex-direction:column;font-size:11.5px;line-height:1.35}
+.rot-ses-day{font-family:var(--mono);font-size:9.5px;color:var(--on-hero-sub2);text-transform:uppercase;letter-spacing:.04em}
+.rot-ses-name{color:var(--on-hero);font-weight:500}
+
+/* Writing Queue Track */
+.rot-queue-section{
+  background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.10);
+  border-radius:6px;padding:10px 12px;margin-top:12px;
+}
+.rot-queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:4px}
+.rot-queue-label{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--on-hero-sub2)}
+.rot-queue-sub{font-size:10.5px;color:var(--hero-accent);font-weight:600}
+.rot-queue-track{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.rot-queue-track::-webkit-scrollbar{height:4px}
+.rot-q-item{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:4px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  font-family:var(--mono);font-size:10px;color:var(--on-hero-sub);white-space:nowrap;
+}
+.rot-q-item.active{
+  background:var(--primary);color:#fff;border-color:var(--hero-accent);font-weight:700;
+  box-shadow:0 0 10px rgba(56,189,248,0.35);
+}
+.rot-q-item .q-badge{font-size:7.5px;padding:1px 4px;border-radius:2px;background:rgba(255,255,255,0.3);color:#fff}
+
+/* Meta status bar */
+.rot-meta-bar{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border-top:1px solid rgba(255,255,255,0.10);padding-top:10px;margin-top:12px;font-size:11.5px;
+}
+.rot-meta-lbl{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-hero-sub2);margin-bottom:2px}
+.rot-meta-val{font-weight:600;color:var(--on-hero);font-size:11.5px}
+
+/* Overrides in sidebar */
+.rot-override-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px}
+.rot-override-grid label{font-size:10px;color:var(--on-hero-sub2);display:flex;flex-direction:column;gap:3px;font-family:var(--mono);text-transform:uppercase}
+.rot-override-grid select{
+  background-color:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);color:var(--on-hero);
+  font-size:11.5px;padding:5px 8px;border-radius:4px;
+}
+.rot-override-grid select option{background:var(--surface-container-lowest);color:var(--on-surface)}
 
 /* Session Studio Navigation */
 .session-nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
@@ -850,10 +911,10 @@ footer{
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
-              <button class="session-nav-btn active" data-ses="mon-a" onclick="selectSessionStudio('mon-a')">📚 Lunes A: Full R&amp;UoE <span class="pill-tag">50 min</span></button>
-              <button class="session-nav-btn" data-ses="fri-a" onclick="selectSessionStudio('fri-a')">🎧 Viernes A: Full Listening <span class="pill-tag">40 min</span></button>
-              <button class="session-nav-btn" data-ses="mon-b" onclick="selectSessionStudio('mon-b')">✍️ Lunes B: Full Writing <span class="pill-tag" id="navWTag">Auto</span></button>
-              <button class="session-nav-btn" data-ses="fri-b" onclick="selectSessionStudio('fri-b')">🗣️ Viernes B: Full Speaking <span class="pill-tag">60 min</span></button>
+              <button class="session-nav-btn active" data-ses="mon-a" onclick="selectSessionStudio('mon-a')">📚 Monday A: Full R&amp;UoE <span class="pill-tag">50 min</span></button>
+              <button class="session-nav-btn" data-ses="fri-a" onclick="selectSessionStudio('fri-a')">🎧 Friday A: Full Listening <span class="pill-tag">40 min</span></button>
+              <button class="session-nav-btn" data-ses="mon-b" onclick="selectSessionStudio('mon-b')">✍️ Monday B: Full Writing <span class="pill-tag" id="navWTag">Auto</span></button>
+              <button class="session-nav-btn" data-ses="fri-b" onclick="selectSessionStudio('fri-b')">🗣️ Friday B: Full Speaking <span class="pill-tag">60 min</span></button>
               <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">Full</span></button>
             </div>
 
@@ -863,9 +924,9 @@ footer{
               <div id="studioMonA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Semana A · Lunes</span>
+                    <span class="badge mon">Week A · Monday</span>
                     <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri">MON 15:30</span></div>
-                    <div class="sesion-sub">Speed Training: resolve the 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
+                    <div class="sesion-sub">Speed Training: complete all 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Sprint Time</span>
@@ -876,14 +937,14 @@ footer{
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="uePhaseStepper">
                   <div class="phase-step active" data-phase="sprint" onclick="switchUePhase('sprint')">
-                    <div class="ps-num">Fase 1</div>
+                    <div class="ps-num">Phase 1</div>
                     <div class="ps-title">⚡ 50' Speed Sprint</div>
-                    <div class="ps-time">50:00 · 52 preguntas</div>
+                    <div class="ps-time">50:00 · 52 questions</div>
                   </div>
                   <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
-                    <div class="ps-num">Fase 2</div>
-                    <div class="ps-title">📊 Score &amp; Diagnóstico</div>
-                    <div class="ps-time">10:00 · Registro de fallos</div>
+                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-title">📊 Score &amp; Diagnosis</div>
+                    <div class="ps-time">10:00 · Error logging</div>
                   </div>
                 </div>
 
@@ -893,7 +954,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Sprint de Alta Velocidad <span class="t">50 min · Parts 1 to 7</span></div>
+                        <div class="task-title">High-Speed Sprint <span class="t">50 min · Parts 1 to 7</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">50:00</span></div>
@@ -908,7 +969,7 @@ footer{
                     </div>
                     <p id="semanaP">Weekly drill focus: <b id="semanaTxt"></b></p>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchUePhase('score')">Ir a Fase 2: Cargar Aciertos →</button>
+                      <button class="btn" onclick="switchUePhase('score')">Proceed to Phase 2: Log Score →</button>
                     </div>
                   </div>
                 </div>
@@ -919,7 +980,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Control de Respuestas &amp; Registro de Aciertos</div>
+                        <div class="task-title">Answer Review &amp; Score Logging</div>
                       </div>
                     </div>
                     <div class="row">
@@ -960,7 +1021,7 @@ footer{
               <div id="studioMonB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Semana B · Lunes</span>
+                    <span class="badge mon">Week B · Monday</span>
                     <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri">MON 15:30</span></div>
                     <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
                   </div>
@@ -973,19 +1034,19 @@ footer{
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="wPhaseStepper">
                   <div class="phase-step active" data-phase="plan" onclick="switchWritingPhase('plan')">
-                    <div class="ps-num">Fase 1</div>
-                    <div class="ps-title">💡 Planificación</div>
-                    <div class="ps-time">05:00 · Esquema 4 párrafos</div>
+                    <div class="ps-num">Phase 1</div>
+                    <div class="ps-title">💡 Planning</div>
+                    <div class="ps-time">05:00 · 4-paragraph outline</div>
                   </div>
                   <div class="phase-step" data-phase="write" onclick="switchWritingPhase('write')">
-                    <div class="ps-num">Fase 2</div>
-                    <div class="ps-title">✍️ Redacción en Vivo</div>
-                    <div class="ps-time">35:00 · 140–190 palabras</div>
+                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-title">✍️ Live Writing</div>
+                    <div class="ps-time">35:00 · 140–190 words</div>
                   </div>
                   <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
-                    <div class="ps-num">Fase 3</div>
-                    <div class="ps-title">🔍 Auditoría C1 &amp; Rúbrica</div>
-                    <div class="ps-time">20:00 · Rúbrica 7 pts + IA</div>
+                    <div class="ps-num">Phase 3</div>
+                    <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
+                    <div class="ps-time">20:00 · 7-point rubric + AI</div>
                   </div>
                 </div>
 
@@ -995,7 +1056,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Fase 1: Planificación Estructural <span class="t">5 min · Objetivo: 4 párrafos</span></div>
+                        <div class="task-title">Phase 1: Structural Planning <span class="t">5 min · Target: 4 paragraphs</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Plan Timer</span><span class="timer" id="wPlanTimer">05:00</span></div>
@@ -1025,7 +1086,7 @@ footer{
                     </div>
                     <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('write')">Pasar a Fase 2: Redacción en Vivo →</button>
+                      <button class="btn" onclick="switchWritingPhase('write')">Proceed to Phase 2: Live Writing →</button>
                     </div>
                   </div>
                 </div>
@@ -1036,7 +1097,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Fase 2: Redacción en Vivo <span class="t">35 min · 140–190 palabras</span></div>
+                        <div class="task-title">Phase 2: Live Writing <span class="t">35 min · 140–190 words</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="wTimer">—</span></div>
@@ -1054,7 +1115,7 @@ footer{
                       <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="60"></div>
                     </div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('audit')">Pasar a Fase 3: Auditoría &amp; Rúbrica →</button>
+                      <button class="btn" onclick="switchWritingPhase('audit')">Proceed to Phase 3: Audit &amp; Rubric →</button>
                     </div>
                   </div>
                 </div>
@@ -1065,7 +1126,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">3</div>
                       <div>
-                        <div class="task-title">Fase 3: Auditoría Algorítmica C1 &amp; Rúbrica <span class="t">20 min</span></div>
+                        <div class="task-title">Phase 3: Algorithmic C1 Audit &amp; Rubric <span class="t">20 min</span></div>
                       </div>
                       <div class="task-meta">
                         <button class="btn sm gray" onclick="wRev.start()">▶ 20:00</button>
@@ -1118,7 +1179,7 @@ footer{
               <div id="studioFriA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Semana A · Viernes</span>
+                    <span class="badge fri">Week A · Friday</span>
                     <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri">FRI 13:00</span></div>
                     <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
                   </div>
@@ -1131,14 +1192,14 @@ footer{
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="lPhaseStepper">
                   <div class="phase-step active" data-phase="play" onclick="switchListeningPhase('play')">
-                    <div class="ps-num">Fase 1</div>
-                    <div class="ps-title">🎧 40' Audio Continuo</div>
-                    <div class="ps-time">40:00 · 30 preguntas</div>
+                    <div class="ps-num">Phase 1</div>
+                    <div class="ps-title">🎧 40' Continuous Audio</div>
+                    <div class="ps-time">40:00 · 30 questions</div>
                   </div>
                   <div class="phase-step" data-phase="pm" onclick="switchListeningPhase('pm')">
-                    <div class="ps-num">Fase 2</div>
+                    <div class="ps-num">Phase 2</div>
                     <div class="ps-title">🕵️ Auditory Post-Mortem</div>
-                    <div class="ps-time">20:00 · Cazador de trampas</div>
+                    <div class="ps-time">20:00 · Trap Hunter</div>
                   </div>
                 </div>
 
@@ -1148,7 +1209,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Audio Continuo (Parts 1 to 4) <span class="t">40 min · Never pause</span></div>
+                        <div class="task-title">Continuous Audio (Parts 1 to 4) <span class="t">40 min · Never pause</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">40:00</span></div>
@@ -1156,7 +1217,7 @@ footer{
                       </div>
                     </div>
                     <div class="guide">
-                      📍 <b>Play audio (preguntas + audio + claves juntos):</b>
+                      📍 <b>Audio files &amp; question papers:</b>
                       <div class="chips" id="gLChips" style="margin-top:6px"></div>
                       • <b>Rule:</b> complete all 4 parts in one continuous go without pausing. Score out of 30.
                     </div>
@@ -1179,7 +1240,7 @@ footer{
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveL()">✔ Save Listening</button>
-                      <button class="btn" onclick="switchListeningPhase('pm')">Ir a Fase 2: Post-Mortem →</button>
+                      <button class="btn" onclick="switchListeningPhase('pm')">Proceed to Phase 2: Post-Mortem →</button>
                     </div>
                   </div>
                 </div>
@@ -1194,7 +1255,7 @@ footer{
                       </div>
                     </div>
                     <p style="font-size:13px">Open the tapescript ONLY for questions you got wrong. Identify why you fell for the distractor.</p>
-                    <div><label>What got you? (one per line, with error code: T-MIS, L-GAP)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
+                    <div><label>What caught you? (one per line, with error code: T-MIS, L-GAP)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
                     <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Save &amp; Finish</button></div>
                   </div>
                 </div>
@@ -1204,7 +1265,7 @@ footer{
               <div id="studioFriB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri">Semana B · Viernes</span>
+                    <span class="badge fri">Week B · Friday</span>
                     <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri">FRI 13:00</span></div>
                     <div class="sesion-sub">15 min continuous simulation (Parts 1–4) + 45 min C1 deep upgrade and second recording.</div>
                   </div>
@@ -1217,14 +1278,14 @@ footer{
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="spPhaseStepper">
                   <div class="phase-step active" data-phase="mock" onclick="switchSpPhase('mock')">
-                    <div class="ps-num">Fase 1</div>
-                    <div class="ps-title">🎙️ 15' Simulacro Completo</div>
+                    <div class="ps-num">Phase 1</div>
+                    <div class="ps-title">🎙️ 15' Full Simulation</div>
                     <div class="ps-time">15:00 · Parts 1, 2, 3, 4</div>
                   </div>
                   <div class="phase-step" data-phase="upgrade" onclick="switchSpPhase('upgrade')">
-                    <div class="ps-num">Fase 2</div>
-                    <div class="ps-title">🚀 45' C1 Polish &amp; Re-toma</div>
-                    <div class="ps-time">45:00 · Conectores &amp; Fluidez</div>
+                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-title">🚀 45' C1 Polish &amp; Retake</div>
+                    <div class="ps-time">45:00 · Connectors &amp; Fluency</div>
                   </div>
                 </div>
 
@@ -1234,7 +1295,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Simulacro Continuo (Parts 1 to 4) <span class="t">15 min</span></div>
+                        <div class="task-title">Continuous Simulation (Parts 1 to 4) <span class="t">15 min</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="spTimer">—</span></div>
@@ -1268,7 +1329,7 @@ footer{
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
-                      <button class="btn" onclick="switchSpPhase('upgrade')">Ir a Fase 2: C1 Polish →</button>
+                      <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
                     </div>
                   </div>
                 </div>
@@ -1304,7 +1365,7 @@ footer{
                     <div class="sesion-sub">Whole exam under real conditions, for the Mastery gates.</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Formato</span>
+                    <span class="dur-label">Format</span>
                     <span class="dur-val">FULL</span>
                   </div>
                 </div>
@@ -1329,7 +1390,7 @@ footer{
                   <div class="row">
                     <div><label>Correct</label><input type="number" id="rueOk" min="0" value="0"></div>
                     <div><label>Total</label><input type="number" id="rueTotal" min="1" value="52"></div>
-                    <div><label>Minutos</label><input type="number" id="rueMin" min="0" value="65"></div>
+                    <div><label>Minutes</label><input type="number" id="rueMin" min="0" value="65"></div>
                   </div>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save full R&amp;UoE</button></div>
                 </div>
@@ -1343,7 +1404,7 @@ footer{
                   <div class="row">
                     <div><label>Text 1 score /20</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
                     <div><label>Text 2 score /20</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
-                    <div><label>Minutos</label><input type="number" id="fwMin" min="0" value="80"></div>
+                    <div><label>Minutes</label><input type="number" id="fwMin" min="0" value="80"></div>
                   </div>
                   <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Full Writing</button></div>
                 </div>
@@ -1355,7 +1416,7 @@ footer{
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Where to find it:</b> R&UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part 6 inside the PDF. 6 gaps, choose the correct sentence for each.
+                    📍 <b>Where to find it:</b> R&amp;UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part 6 inside the PDF. 6 gaps, choose the correct sentence for each.
                   </div>
                   <div class="row">
                     <div><label>Correct (out of 6)</label><input type="number" id="r6Ok" min="0" max="6" value="0"></div>
@@ -1388,26 +1449,90 @@ footer{
 
           <!-- Sidebar derecha (HOY) -->
           <div class="col-4">
-            <div class="card rot-card">
-              <div class="rot-head">
-                <h2>🔄 Rotation &amp; Cycle</h2>
-                <span class="chip">Automatic</span>
-              </div>
-              <div class="sub">2-week automated cycle (Week A: R&amp;UoE + L · Week B: W + Sp). Writing advances automatically through all 5 genres.</div>
-              <div class="rot-day"><span class="lbl">Active Fortnight</span><span class="val" id="rotDay">—</span><span class="sub2" id="rotDayNext">—</span></div>
-              <div class="cur-ex"><span class="lbl">Active Cycle</span><span class="val" id="rotVal">—</span></div>
-              
-              <!-- Visual Writing Queue Timeline Widget -->
-              <div class="rot-timeline-wrap">
-                <span class="rot-timeline-lbl">Writing Automatic Queue</span>
-                <div class="rot-timeline" id="rotTimeline"></div>
+            <div class="card rot-card-v2">
+              <div class="rot-v2-header">
+                <div class="rot-v2-badge-row">
+                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> AUTOMATED CYCLE</span>
+                  <span class="rot-week-pill" id="rotDay">WEEK A</span>
+                </div>
+                <h3 class="rot-v2-title">Fortnightly Rotation Matrix</h3>
+                <p class="rot-v2-desc">Systematic alternating schedule ensuring comprehensive coverage of all exam components.</p>
               </div>
 
-              <div class="row" style="margin-top:10px">
-                <div><label>R&amp;UoE</label><select id="ovRue" onchange="setOv('rue',this.value)"></select></div>
-                <div><label>Writing</label><select id="ovW" onchange="setOv('w',this.value)"></select></div>
-                <div><label>Listening</label><select id="ovL" onchange="setOv('l',this.value)"></select></div>
-                <div><label>Speaking</label><select id="ovSp" onchange="setOv('sp',this.value)"></select></div>
+              <!-- Active 2-Week Plan Overview -->
+              <div class="rot-schedule-grid">
+                <!-- Week A Box -->
+                <div class="rot-week-card" id="rotCardWkA">
+                  <div class="rot-wk-head">
+                    <span class="rot-wk-name">WEEK A</span>
+                    <span class="rot-wk-status" id="rotWkAStatus">ACTIVE</span>
+                  </div>
+                  <div class="rot-session-row">
+                    <div class="rot-ses-dot mon"></div>
+                    <div class="rot-ses-info">
+                      <span class="rot-ses-day">Monday 15:30</span>
+                      <span class="rot-ses-name">Full Reading &amp; Use of English (50' Sprint)</span>
+                    </div>
+                  </div>
+                  <div class="rot-session-row">
+                    <div class="rot-ses-dot fri"></div>
+                    <div class="rot-ses-info">
+                      <span class="rot-ses-day">Friday 13:00</span>
+                      <span class="rot-ses-name">Full Listening Test (40' audio + 20' analysis)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Week B Box -->
+                <div class="rot-week-card" id="rotCardWkB">
+                  <div class="rot-wk-head">
+                    <span class="rot-wk-name">WEEK B</span>
+                    <span class="rot-wk-status" id="rotWkBStatus">UPCOMING</span>
+                  </div>
+                  <div class="rot-session-row">
+                    <div class="rot-ses-dot mon"></div>
+                    <div class="rot-ses-info">
+                      <span class="rot-ses-day">Monday 15:30</span>
+                      <span class="rot-ses-name">Full Writing (<span id="rotWkBWName">Essay</span>)</span>
+                    </div>
+                  </div>
+                  <div class="rot-session-row">
+                    <div class="rot-ses-dot fri"></div>
+                    <div class="rot-ses-info">
+                      <span class="rot-ses-day">Friday 13:00</span>
+                      <span class="rot-ses-name">Full Speaking Simulation (60 min)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Writing Auto-Queue Visual Track -->
+              <div class="rot-queue-section">
+                <div class="rot-queue-head">
+                  <span class="rot-queue-label">AUTOMATIC WRITING QUEUE (WEEK B)</span>
+                  <span class="rot-queue-sub" id="rotQueueSub">Next up: Article</span>
+                </div>
+                <div class="rot-queue-track" id="rotTimeline"></div>
+              </div>
+
+              <!-- Schedule countdown info -->
+              <div class="rot-meta-bar">
+                <div>
+                  <span class="rot-meta-lbl">CYCLE FOCUS</span>
+                  <span class="rot-meta-val" id="rotVal">Week A: Full R&amp;UoE + Full Listening</span>
+                </div>
+                <div style="text-align:right">
+                  <span class="rot-meta-lbl">NEXT SWITCH</span>
+                  <span class="rot-meta-val" id="rotDayNext">Monday</span>
+                </div>
+              </div>
+
+              <!-- Manual overrides -->
+              <div class="rot-override-grid">
+                <label>R&amp;UoE <select id="ovRue" onchange="setOv('rue',this.value)"></select></label>
+                <label>Writing <select id="ovW" onchange="setOv('w',this.value)"></select></label>
+                <label>Listening <select id="ovL" onchange="setOv('l',this.value)"></select></label>
+                <label>Speaking <select id="ovSp" onchange="setOv('sp',this.value)"></select></label>
               </div>
             </div>
 
@@ -1475,10 +1600,10 @@ footer{
         <div style="margin:16px 0 0;max-width:480px">
           <label>Or pick the paper manually</label>
           <select id="exPaper" onchange="renderEx()">
-            <option value="rue">Reading &amp; Use of English — 75 min (52 preguntas)</option>
-            <option value="w">Writing — 80 min (2 textos)</option>
-            <option value="l">Listening — 40 min (30 preguntas)</option>
-            <option value="full">EXAMEN COMPLETO — 195 min (todo)</option>
+            <option value="rue">Reading &amp; Use of English — 75 min (52 questions)</option>
+            <option value="w">Writing — 80 min (2 texts)</option>
+            <option value="l">Listening — 40 min (30 questions)</option>
+            <option value="full">FULL EXAM — 195 min (all components)</option>
           </select>
         </div>
 
@@ -1497,7 +1622,7 @@ footer{
               <div class="exam-timer" id="exTimer">01:15:00</div>
             </div>
             <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-              <button class="btn" onclick="exStart()">▶ Empezar</button>
+              <button class="btn" onclick="exStart()">▶ Start</button>
               <button class="btn gray" onclick="exPause()">⏸ Pause</button>
               <button class="btn gray" onclick="exReset()">↺ Reset</button>
             </div>
@@ -1633,7 +1758,7 @@ footer{
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>📊 By Part & Exercise</h2>
+              <h2>📊 By Part &amp; Exercise</h2>
               <div class="sub">Average % of each exam part — red bars are your weakest.</div>
               <div id="gPart"></div>
             </div>
@@ -1761,7 +1886,7 @@ footer{
               </div>
               <div class="sub" style="margin-top:10px">Stage 2</div>
               <div class="row">
-                <div><label>R&UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
+                <div><label>R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
                 <div><label>Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
                 <div><label>L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
@@ -1833,26 +1958,26 @@ footer{
           </div>
         </div>
         <div class="card">
-          <h2>🌐 Práctica online (1 click — gratis)</h2>
-          <div class="sub">Ejercicios interactivos ilimitados por habilidad. Oficiales de Cambridge + sitios de práctica gratuitos (sin descarga).</div>
+          <h2>🌐 Online Practice (1-Click — Free)</h2>
+          <div class="sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
           <div id="onlineList"></div>
         </div>
         <div class="card">
-          <h2>📥 Material (PDFs & audio)</h2>
-          <div class="sub">Todo lo descargado: exámenes completos, guías por habilidad, lesson plans y audio. PDFs open in the viewer, audio plays here. Dynamic: whatever you add to the folder shows up automatically.</div>
-          <input type="text" id="matFilter" placeholder="🔍 Filtrar material... (e.g. listening, part 3, writing)" style="margin-bottom:12px">
+          <h2>📥 Downloaded Material (PDFs &amp; Audio)</h2>
+          <div class="sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
+          <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" style="margin-bottom:12px">
           <div id="matList"></div>
         </div>
         <div class="card">
-          <h2>🛒 All available books (verified prices)</h2>
-          <div class="sub">Filtro por categoría + búsqueda + orden por precio. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo study). Todos los precios re-verificados 2026-08-21 (MercadoLibre con Chrome real + Buscalibre página de producto). 🆕 = ediciones 2020-2025.</div>
+          <h2>🛒 All Recommended Books (Verified Options)</h2>
+          <div class="sub">Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.</div>
           <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
           <div style="display:flex;gap:8px;margin-bottom:12px">
             <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="flex:1">
             <select id="bookSort" style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px">
-              <option value="cat">Orden: categoría</option>
-              <option value="asc">Precio: menor ↑</option>
-              <option value="desc">Precio: mayor ↓</option>
+              <option value="cat">Sort: Category</option>
+              <option value="asc">Price: Low to High ↑</option>
+              <option value="desc">Price: High to Low ↓</option>
             </select>
           </div>
           <div id="bookList"></div>
@@ -2555,10 +2680,10 @@ function renderEx(){
   exReset();
   const g=document.getElementById('exGuide');
   const L=(t,h)=>`<a href="${h}" target="_blank">${t}</a>`;
-  if(exPaper==='rue')g.innerHTML=`<b>📖 Abrí el examen:</b><div class="chips" style="margin-top:6px">${chips([['R&UoE Sample 1','rueS1'],['Sample 2','rueS2'],['For Schools 1','rueFS1'],['For Schools 2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Online UoE','https://test-english.com/use-of-english/b2/']])}</div><br><b>⏱ Distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions.`;
-  else if(exPaper==='w')g.innerHTML=`<b>✍️ Abrí el examen:</b><div class="chips" style="margin-top:6px">${chips([['Writing Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson W1','lpW1'],['Lesson W2','lpW2'],['Lesson FS W1','fW1'],['Lesson FS W2','fW2'],['Online','https://www.examenglish.com/FCE/fce_writing.html']])}</div><br><b>⏱ Plan:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text. Model answers in the books with keys.`;
-  else if(exPaper==='l')g.innerHTML=`<b>🎧 Abrí el examen (preguntas + audio juntos):</b><div class="chips" style="margin-top:6px">${chips([['Preguntas S1','lS1'],['Preguntas S2','lS2'],['Preguntas FS1','lFS1'],['Preguntas FS2','lFS2'],['🎧 Audio S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 Audio FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']])}</div><br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
-  else g.innerHTML=`<b>🕒 Exam day sequence (195 min):</b><br>1️⃣ R&UoE 75' → 2' pause<br>2️⃣ Writing 80' → 5' pause<br>3️⃣ Listening 40'<br><b>Material:</b> the links above in that order (R&UoE → Writing → Listening). Close everything else.`;
+  if(exPaper==='rue')g.innerHTML=`<b>📖 Open the exam papers:</b><div class="chips" style="margin-top:6px">${chips([['R&UoE Sample 1','rueS1'],['Sample 2','rueS2'],['For Schools 1','rueFS1'],['For Schools 2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Online UoE','https://test-english.com/use-of-english/b2/']])}</div><br><b>⏱ Time distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions.`;
+  else if(exPaper==='w')g.innerHTML=`<b>✍️ Open the writing paper:</b><div class="chips" style="margin-top:6px">${chips([['Writing Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson W1','lpW1'],['Lesson W2','lpW2'],['Lesson FS W1','fW1'],['Lesson FS W2','fW2'],['Online','https://www.examenglish.com/FCE/fce_writing.html']])}</div><br><b>⏱ Exam Strategy:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text.`;
+  else if(exPaper==='l')g.innerHTML=`<b>🎧 Open the listening test (questions + audio):</b><div class="chips" style="margin-top:6px">${chips([['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 Audio S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 Audio FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']])}</div><br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
+  else g.innerHTML=`<b>🕒 Official Exam Sequence (195 min):</b><br>1️⃣ R&UoE 75' → 2' pause<br>2️⃣ Writing 80' → 5' pause<br>3️⃣ Listening 40'<br><b>Material:</b> the links above in that order (R&UoE → Writing → Listening). Close all other tabs.`;
   const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
   if(exPaper==='rue')f.innerHTML=`<div><label>R&UoE correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
   else if(exPaper==='w')f.innerHTML=`<div><label>Text 1 score /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
@@ -2593,19 +2718,19 @@ function exSave(){
 const PARTS=[
  {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
  {g:'Reading & Use of English',n:2,t:'Open cloze',q:8,min:8,type:'ue',note:''},
- {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Already in Session A (even week)'},
- {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Already in Session A (odd week)'},
- {g:'Reading & Use of English',n:5,t:'Multiple choice (2 textos)',q:6,min:20,type:'ue',note:''},
+ {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Included in Week A Monday session'},
+ {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Included in Week B Monday session'},
+ {g:'Reading & Use of English',n:5,t:'Multiple choice (2 texts)',q:6,min:20,type:'ue',note:''},
  {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:20,type:'ue',note:''},
  {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:20,type:'ue',note:''},
- {g:'Listening',n:1,t:'Short extracts (3 opciones)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
+ {g:'Listening',n:1,t:'Short extracts (3 options)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
  {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
  {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the AI or your teacher'},
- {g:'Speaking',n:2,t:'Long turn (comparar fotos)',q:0,min:1,type:'sp',note:'Already in Session B'},
- {g:'Speaking',n:3,t:'Collaborative task (5 opciones)',q:0,min:3,type:'sp',note:'Already in Session B'},
- {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Already in Session B'}
+ {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
+ {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
+ {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'}
 ];
 function renderParts(){
   const el=document.getElementById('partsList');
@@ -2615,19 +2740,19 @@ function renderParts(){
     const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
     if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
     ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
-    const lp=[['Preguntas S1','lS1'],['Preguntas S2','lS2'],['Preguntas FS1','lFS1'],['Preguntas FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
-    const sp=[['Visuales S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
+    const lp=[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
+    const sp=[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
     const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):chips(sp);
     html+=`<div class="step">
-      <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' preguntas · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
+      <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--mon)">${p.note}</p>`:''}
-      <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Dónde practicarlo:</div>
+      <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
       <div class="chips">${donde}</div>
       ${p.type!=='sp'?`<div class="row" style="margin-top:8px">
-        <div><label>Aciertos</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
+        <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
-        <div><label>Minutos</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Registrar</button></div>
+        <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
+        <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Save</button></div>
       </div>`:`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`}
     </div>`;
   });
@@ -2667,7 +2792,7 @@ function renderLog(){
     <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✔':'pending'):(e.correct+'/'+e.total)}</td>
     <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td>${e.min??''}</td>
-    <td><button class="del" onclick="editLog(${i})" title="Editar">✎</button> <button class="del" onclick="delLog(${i})" title="Borrar">✕</button></td>
+    <td><button class="del" onclick="editLog(${i})" title="Edit">✎</button> <button class="del" onclick="delLog(${i})" title="Delete">✕</button></td>
   </tr>`).join('');
 }
 function editLog(i){
@@ -2675,11 +2800,11 @@ function editLog(i){
   if(!tr)return;
   if(e.type==='sp'||e.type==='sf'){alert(e.type==='sf'?'Speaking final has no numeric fields to edit — delete it and log it again.':'Speaking has no numeric fields to edit — delete it and log it again.');return}
   let fields='';
-  if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:10px">nota/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
-  else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:10px">texto1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:10px">texto2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
-  else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:10px">aciertos</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:10px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:10px">score/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:10px">text 1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:10px">text 2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
+  else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:10px">correct</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:10px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:10px">min</label>`;
   tr.innerHTML=`<td><input type="date" id="edDate" value="${e.date}"></td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td><td>${fields}</td><td></td><td></td>
-    <td><button class="del" onclick="saveEdit(${i})" title="Guardar">💾</button> <button class="del" onclick="refreshAll()">✕</button></td>`;
+    <td><button class="del" onclick="saveEdit(${i})" title="Save">💾</button> <button class="del" onclick="refreshAll()">✕</button></td>`;
 }
 function saveEdit(i){
   const e=D.log[i];
@@ -2704,11 +2829,11 @@ function renderStats(){
   for(let i=1;i<=7;i++)row('UoE P'+i+' — '+partName(i),D.log.filter(e=>e.type==='ue'&&e.part===i));
   for(let i=1;i<=4;i++)row('Listening P'+i,D.log.filter(e=>e.type==='lp'&&e.part===i));
   ['Essay','Article','Report','Review','Email'].forEach(k=>row('Writing '+k,D.log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('R&UoE completo',rue);
-  const l=D.log.filter(e=>e.type==='l');if(l.length)row('Listening completo',l);
+  const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('Full R&UoE',rue);
+  const l=D.log.filter(e=>e.type==='l');if(l.length)row('Full Listening',l);
   const r6=D.log.filter(e=>e.type==='r6');if(r6.length)row('Reading P6 (Gapped)',r6);
-  const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--mon)">${sf.filter(e=>e.ok).length} validated C1</td></tr>`);
-  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">practiced</td></tr>`)}
+  const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--mon)">${sf.filter(e=>e.ok).length} validated at C1</td></tr>`);
+  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">completed</td></tr>`)}
   document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5" class="empty">📊 No data yet — log exercises and you\'ll see your evolution here.</td></tr>';
 }
 
@@ -2756,71 +2881,71 @@ function renderErrPills(){
    escanea ~/Descargas/b2-first dinámicamente). renderMaterial() pinta
    PDFs (abrir/descargar) y audios (reproductor inline). */
 const BUY_BOOKS=[
- {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (CON KEY)',m:'6-8 tests completos + respuestas + audio online (código). El mejor value para estudiar solo.',p:'$50.485',v:1,u:'https://www.mercadolibre.com.ar/p/MLA22024707?matt_tool=89488245&pdp_filters=item_id:MLA1912011443&origin=share&action=copy',src:'MercadoLibre',use:'Simulacros · Listening · Writing',c:'Simulacros'},
- {i:'⭐',n:'FCE 6 With Answers (USADO)',m:'4 exámenes reales auténticos + respuestas. ⚠️ preguntá si trae CDs de audio.',p:'$13.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Simulacros completos',c:'Simulacros'},
- {i:'⭐',n:'Grammar & Vocabulary for First (CON answers + audio)',m:'Gramática + vocabulario, base de UoE 1-4. ISBN 9781107481060.',p:'$72.051',v:1,u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Paso 1 · repaso de reglas',c:'Gramática'},
- {i:'⭐',n:'FCE Practice Tests 2 (USADO, con answers)',m:'5 tests para el nuevo First, con respuestas.',p:'$7.390',v:1,u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'⭐',n:'Complete First For Schools Workbook (USADO)',m:'Ejercicios por unidad (sin answers).',p:'$6.189',v:1,u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 práctica extra',c:'Workbook'},
- {i:'',n:'Objective First Workbook (USADO)',m:'Workbook del curso Objective First.',p:'$10.000',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Práctica extra',c:'Workbook'},
- {i:'',n:'FCE 3 (USADO)',m:'Examen real con respuestas.',p:'$14.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Objective First SB (USADO)',m:'Coursebook completo.',p:'$19.900',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
- {i:'',n:'Complete First Certificate SB (USADO)',m:'Coursebook completo.',p:'$9.620',v:1,u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book--cambridge/up/MLAU3471421556',src:'MercadoLibre',use:'Curso + UoE',c:'Curso'},
- {i:'',n:'Authentic Digital Practice Test B2 First',m:'Test digital oficial (ADPT).',p:'$30.900',v:1,u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Simulacro digital',c:'Simulacros'},
- {i:'',n:'English Master B2 Key Word Transformation',m:'200 transformaciones de Part 4.',p:'$39.706',v:1,u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 a full',c:'UoE'},
- {i:'',n:'Cambridge English First 1 SB sin answers (NUEVO)',m:'Exámenes auténticos (answers en Teacher Book).',p:'$43.895',v:1,u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Simulacros (corregir con profe/IA)',c:'Simulacros'},
- {i:'',n:'Complete First 3ra Workbook (NUEVO)',m:'Workbook 3ra edición (sin answers).',p:'$44.512',v:1,u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE 1-4 + Writing guiado',c:'Workbook'},
- {i:'',n:'Collins B2 First Practice Tests',m:'Tests Collins para B2 First.',p:'$47.428',v:1,u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Grammar & Vocabulary for First (tienda oficial ML)',m:'Misma edición con answers, tienda LIBERATE.',p:'$95.942',v:1,u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE 1-4 (más caro que Buscalibre)',c:'Gramática'},
- {i:'',n:'Complete First 2da SB sin answers',m:'Edición anterior, más barata.',p:'$28.499',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Curso',c:'Curso'},
- {i:'',n:'Cambridge English First 1 sin answers',m:'Exámenes auténticos (answers aparte).',p:'$42.097',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformaciones Part 4.',p:'$41.550',v:1,u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'UoE'},
- {i:'',n:'Improve Your B2 Use of English',m:'Todos los formatos de UoE (MC, open cloze, word formation, KWT).',p:'$81.599',v:1,u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE 1-4',c:'UoE'},
- {i:'',n:'First Certificate Practice Tests 2 (CON answers)',m:'5 tests completos con respuestas. ⚠ Agotado en Buscalibre (2026-08); revisar usados en MercadoLibre.',p:'Agotado',v:0,u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'B2 First 4 (sin answers)',m:'FCE Practice Tests, auténticos.',p:'$52.393',v:1,u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'B2 First Complete Practice PLUS',m:'6 exámenes completos para todos los papers.',p:'$51.366',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Simulacros',c:'Simulacros'},
- {i:'',n:'Cambridge English First 1 (CON answers)',m:'Exámenes auténticos con respuestas.',p:'$73.191',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Simulacros autocorregibles',c:'Simulacros'},
- {i:'',n:'Complete First 3ra SB sin answers',m:'Student Book 3ra edición.',p:'$93.394',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Curso',c:'Curso'},
- {i:'',n:'Complete First 3ra Self-Study Pack',m:'SB + Workbook con answers + audio (la edición completa).',p:'$129.611',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Curso completo autodidacta',c:'Curso'},
+ {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (WITH KEY)',m:'6-8 complete tests with full answer keys and online audio codes. Best overall value for self-study.',p:'$50.485',v:1,u:'https://www.mercadolibre.com.ar/p/MLA22024707?matt_tool=89488245&pdp_filters=item_id:MLA1912011443&origin=share&action=copy',src:'MercadoLibre',use:'Mock Exams · Listening · Writing',c:'Practice Tests'},
+ {i:'⭐',n:'FCE 6 With Answers (USED)',m:'4 authentic real Cambridge examination papers with answer keys.',p:'$13.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Full Exam Simulations',c:'Practice Tests'},
+ {i:'⭐',n:'Grammar & Vocabulary for First (WITH answers + audio)',m:'Grammar + vocabulary foundation for Use of English Parts 1-4. ISBN 9781107481060.',p:'$72.051',v:1,u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Rules & Structures',c:'Grammar'},
+ {i:'⭐',n:'FCE Practice Tests 2 (USED, with answers)',m:'5 practice tests for the revised B2 First exam with answers.',p:'$7.390',v:1,u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'⭐',n:'Complete First For Schools Workbook (USED)',m:'Exercises unit by unit for extra practice.',p:'$6.189',v:1,u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 Extra Practice',c:'Workbook'},
+ {i:'',n:'Objective First Workbook (USED)',m:'Official workbook from the Objective First series.',p:'$10.000',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Extra Practice',c:'Workbook'},
+ {i:'',n:'FCE 3 (USED)',m:'Authentic Cambridge exam papers with answers.',p:'$14.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Mock Exams',c:'Practice Tests'},
+ {i:'',n:'Objective First SB (USED)',m:'Comprehensive Cambridge student coursebook.',p:'$19.900',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Course + UoE',c:'Coursebook'},
+ {i:'',n:'Complete First Certificate SB (USED)',m:'Full coursebook with lessons and practice.',p:'$9.620',v:1,u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book--cambridge/up/MLAU3471421556',src:'MercadoLibre',use:'Course + UoE',c:'Coursebook'},
+ {i:'',n:'Authentic Digital Practice Test B2 First',m:'Official Cambridge ADPT computer-based practice test.',p:'$30.900',v:1,u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Digital Exam Simulation',c:'Practice Tests'},
+ {i:'',n:'English Master B2 Key Word Transformation',m:'200 targeted Key Word Transformation exercises for Part 4.',p:'$39.706',v:1,u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 Mastery',c:'Use of English'},
+ {i:'',n:'Cambridge English First 1 SB (NEW)',m:'Authentic exam papers for realistic simulation.',p:'$43.895',v:1,u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Exam Practice',c:'Practice Tests'},
+ {i:'',n:'Complete First 3rd Edition Workbook (NEW)',m:'3rd edition workbook with updated exercises.',p:'$44.512',v:1,u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE + Writing Tasks',c:'Workbook'},
+ {i:'',n:'Collins B2 First Practice Tests',m:'Collins practice exam series for B2 First.',p:'$47.428',v:1,u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'',n:'Grammar & Vocabulary for First (Official Store)',m:'Same edition with answers from official Cambridge distributor.',p:'$95.942',v:1,u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE Parts 1-4',c:'Grammar'},
+ {i:'',n:'Complete First 2nd Edition SB',m:'Previous edition coursebook with full syllabus.',p:'$28.499',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Coursebook',c:'Coursebook'},
+ {i:'',n:'Cambridge English First 1 without answers',m:'Authentic exam papers for self-evaluation.',p:'$42.097',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformations for Part 4 mastery.',p:'$41.550',v:1,u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'Use of English'},
+ {i:'',n:'Improve Your B2 Use of English',m:'All Use of English formats: MC, Open Cloze, Word Formation, KWT.',p:'$81.599',v:1,u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE Parts 1-4',c:'Use of English'},
+ {i:'',n:'First Certificate Practice Tests 2 (WITH answers)',m:'5 complete tests with answers.',p:'Out of stock',v:0,u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'',n:'B2 First 4 (without answers)',m:'Authentic Cambridge practice papers.',p:'$52.393',v:1,u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'',n:'B2 First Complete Practice PLUS',m:'6 complete examinations covering all 4 papers.',p:'$51.366',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
+ {i:'',n:'Cambridge English First 1 (WITH answers)',m:'Authentic examination papers with complete answers.',p:'$73.191',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Self-Study Simulations',c:'Practice Tests'},
+ {i:'',n:'Complete First 3rd Edition SB',m:'Official student coursebook for comprehensive study.',p:'$93.394',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Coursebook',c:'Coursebook'},
+ {i:'',n:'Complete First 3rd Edition Self-Study Pack',m:'SB + Workbook with answers + audio CDs (complete package).',p:'$129.611',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Complete Self-Study Course',c:'Coursebook'},
 
-  {i:'🆕',n:'B2 First 5 - Student’s Book without Answers + Audio (2023)',m:'El más nuevo de la serie Cambridge (4 tests completos, formato actual 2023). Con audio descargable.',p:'$65.052',u:'https://www.mercadolibre.com.ar/libro-para-estudiantes-de-b2-first-5-sin-respuestas-con-audio-de-cambridge-vol-1-editorial-de-la-universidad-de-cambridge-tapa-blanda-numero-1-en-ingles-2023/p/MLA46064082',src:'MercadoLibre',use:'simulacro completo + audio',c:'Simulacros',v:1},
-  {i:'🆕',n:'B2 First Trainer 3 - With Key & Digital Pack (2025)',m:'Trainer más nuevo de Cambridge: 6 tests + tips de estrategia por parte + digital pack. Con key (autocorregible).',p:'$103.688',u:'https://www.mercadolibre.com.ar/libro-b2-first-trainer-3-with-key-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2025/p/MLA63963996',src:'MercadoLibre',use:'simulacro + tips por parte',c:'Simulacros',v:1},
-  {i:'🆕',n:'B2 First for Schools Trainer 3 - With Digital Pack (2024)',m:'Versión For Schools del Trainer 3 (2024): 6 tests oficiales con guía de estrategias. Con digital pack.',p:'$53.690',u:'https://www.mercadolibre.com.ar/libro-b2-first-for-schools-trainer-3-with-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2024/p/MLA63266580',src:'MercadoLibre',use:'simulacro + tips por parte',c:'Simulacros',v:1},
-  {i:'🆕',n:'Cambridge English First 4 - without Answers (2020)',m:'La serie oficial de exámenes auténticos: First 4 (2020), 4 tests reales sin key.',p:'$58.214',u:'https://www.mercadolibre.com.ar/cambridge-english-first-4-b2-students-without-answers-de-indefinido-vol-1-editorial-cambridge-tapa-blanda-en-ingles-2020/p/MLA39630037',src:'MercadoLibre',use:'4 tests reales',c:'Simulacros',v:1},
-  {i:'🆕',n:'Practice Tests B2 First 1 - With Key (Rev 2020) Exam Essentials',m:'National Geographic Learning: práctica tipo examen con key, revisada 2020.',p:'$106.883',u:'https://www.mercadolibre.com.ar/practice-tests-b2-first-1-with-key-rev-2020-exam-essent/p/MLA21228349',src:'MercadoLibre',use:'simulacro + key',c:'Simulacros',v:1},
+  {i:'🆕',n:'B2 First 5 - Student’s Book + Audio (2023)',m:'Latest in the Cambridge official series (4 complete tests, 2023 format) with audio.',p:'$65.052',u:'https://www.mercadolibre.com.ar/libro-para-estudiantes-de-b2-first-5-sin-respuestas-con-audio-de-cambridge-vol-1-editorial-de-la-universidad-de-cambridge-tapa-blanda-numero-1-en-ingles-2023/p/MLA46064082',src:'MercadoLibre',use:'Full Mocks + Audio',c:'Practice Tests',v:1},
+  {i:'🆕',n:'B2 First Trainer 3 - With Key & Digital Pack (2025)',m:'Latest Cambridge Trainer: 6 tests + part-by-part strategy guides. Includes key.',p:'$103.688',u:'https://www.mercadolibre.com.ar/libro-b2-first-trainer-3-with-key-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2025/p/MLA63963996',src:'MercadoLibre',use:'Mocks + Strategy Tips',c:'Practice Tests',v:1},
+  {i:'🆕',n:'B2 First for Schools Trainer 3 (2024)',m:'For Schools edition of Trainer 3 (2024): 6 official tests with strategy guides.',p:'$53.690',u:'https://www.mercadolibre.com.ar/libro-b2-first-for-schools-trainer-3-with-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2024/p/MLA63266580',src:'MercadoLibre',use:'Mocks + Strategy Tips',c:'Practice Tests',v:1},
+  {i:'🆕',n:'Cambridge English First 4 (2020)',m:'Official series of authentic examination papers: 4 real tests.',p:'$58.214',u:'https://www.mercadolibre.com.ar/cambridge-english-first-4-b2-students-without-answers-de-indefinido-vol-1-editorial-cambridge-tapa-blanda-en-ingles-2020/p/MLA39630037',src:'MercadoLibre',use:'4 Real Tests',c:'Practice Tests',v:1},
+  {i:'🆕',n:'Practice Tests B2 First 1 - With Key (Exam Essentials)',m:'National Geographic Learning exam preparation with answers.',p:'$106.883',u:'https://www.mercadolibre.com.ar/practice-tests-b2-first-1-with-key-rev-2020-exam-essent/p/MLA21228349',src:'MercadoLibre',use:'Mocks + Key',c:'Practice Tests',v:1},
 ];
 const ONLINE=[
  {g:'🎧 Listening',l:[
-  {n:'Cambridge English — actividades oficiales B2 (listening)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2'},
+  {n:'Cambridge English — Official B2 Listening Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2'},
   {n:'ExamEnglish — FCE Listening (4 tests)',u:'https://www.examenglish.com/FCE/fce_listening.html'},
-  {n:'Test-English — B2 Listening (con answers + transcript)',u:'https://test-english.com/listening/b2/'}
+  {n:'Test-English — B2 Listening (with answers + transcript)',u:'https://test-english.com/listening/b2/'}
  ]},
  {g:'📖 Reading',l:[
-  {n:'Cambridge English — actividades oficiales B2 (reading)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2'},
-  {n:'ExamEnglish — FCE Reading',u:'https://www.examenglish.com/FCE/fce_reading.html'}
+  {n:'Cambridge English — Official B2 Reading Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2'},
+  {n:'ExamEnglish — FCE Reading Practice',u:'https://www.examenglish.com/FCE/fce_reading.html'}
  ]},
  {g:'✍️ Use of English',l:[
-  {n:'Flo-Joe — FCE UoE (open cloze, word formation, key word transformation)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
+  {n:'Flo-Joe — FCE UoE (Open Cloze, Word Formation, KWT)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
   {n:'ExamEnglish — FCE Use of English',u:'https://www.examenglish.com/FCE/fce_use_of_english.html'},
-  {n:'Test-English — B2 Use of English (con answers + explicación)',u:'https://test-english.com/use-of-english/b2/'}
+  {n:'Test-English — B2 Use of English (with answers + explanations)',u:'https://test-english.com/use-of-english/b2/'}
  ]},
  {g:'📝 Writing',l:[
-  {n:'Cambridge English — actividades oficiales B2 (writing)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2'},
-  {n:'ExamEnglish — FCE Writing',u:'https://www.examenglish.com/FCE/fce_writing.html'}
+  {n:'Cambridge English — Official B2 Writing Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2'},
+  {n:'ExamEnglish — FCE Writing Guide & Samples',u:'https://www.examenglish.com/FCE/fce_writing.html'}
  ]},
  {g:'🗣️ Speaking',l:[
-  {n:'Cambridge English — actividades oficiales B2 (speaking)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2'},
-  {n:'ExamEnglish — FCE Speaking',u:'https://www.examenglish.com/FCE/fce_speaking.html'}
+  {n:'Cambridge English — Official B2 Speaking Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2'},
+  {n:'ExamEnglish — FCE Speaking Practice',u:'https://www.examenglish.com/FCE/fce_speaking.html'}
  ]},
- {g:'📚 Todo en uno',l:[
-  {n:'Test & Train — app oficial Cambridge (demo gratis)',u:'https://testandtrain.cambridgeenglish.org/'},
-  {n:'Cambridge One — plataforma oficial Cambridge',u:'https://www.cambridgeone.org/'},
-  {n:'Cambridge English — todas las actividades B2',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2'}
+ {g:'📚 All-in-One Resources',l:[
+  {n:'Test & Train — Official Cambridge Practice App (Free Demo)',u:'https://testandtrain.cambridgeenglish.org/'},
+  {n:'Cambridge One — Official Learning Platform',u:'https://www.cambridgeone.org/'},
+  {n:'Cambridge English — Full B2 Learning Catalog',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2'}
  ]}
 ];
 function renderOnline(){
   const el=document.getElementById('onlineList');
   if(!el)return;
-  el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">gratis · online · sin descarga</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm gray" style="text-decoration:none;margin-top:6px">Abrir →</a></div></div>`).join('')).join('');
+  el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico">🔗</div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">Free · Interactive Online · No Download</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm gray" style="text-decoration:none;margin-top:6px">Open →</a></div></div>`).join('')).join('');
 }
 /* ---------- MAT: índice de material por nombre ----------
    Se construye cuando llega /libros.json. Cada key apunta al href
@@ -2903,8 +3028,8 @@ function renderGuides(){
   ue.push(['Online UoE','https://www.flo-joe.co.uk/fce/students/tests/']);
   set('gUeChips',ue);
   set('gWChips',[['Writing S1','wS1'],['S2','wS2'],['FS1','wFS1'],['FS2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson W1','lpW1'],['Lesson W2','lpW2'],['Lesson FS W1','fW1'],['Lesson FS W2','fW2'],['Online','https://www.examenglish.com/FCE/fce_writing.html']]);
-  set('gLChips',[['Preguntas S1','lS1'],['S2','lS2'],['FS1','lFS1'],['FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']]);
-  set('gSpChips',[['Visuales S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+spPart,'lpSp'+spPart],['Lesson FS P'+spPart,'fSp'+spPart],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']]);
+  set('gLChips',[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']]);
+  set('gSpChips',[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+spPart,'lpSp'+spPart],['Lesson FS P'+spPart,'fSp'+spPart],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']]);
 }
 let MATERIALS=[];
 let BOOK_CAT=''; // filtro activo de categoría ('' = todas)
@@ -2915,22 +3040,22 @@ function matCell(m){
   const badge=st?`<div class="meta" style="text-align:center;color:var(--acc);font-weight:700">✓ ${st.n}×<br><span style="font-size:10px;color:var(--dim)">${st.last}</span></div>`:`<div class="meta" style="text-align:center;color:var(--dim)">0×</div>`;
   return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px">
     <div style="display:flex;gap:4px">
-      <button class="chip" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Marcar como hecho (+1)">✓</button>
-      <button class="chip" onclick="matUndo(this)" data-rel="${esc(m.rel)}" title="Deshacer (-1)">↺</button>
+      <button class="chip" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
+      <button class="chip" onclick="matUndo(this)" data-rel="${esc(m.rel)}" title="Undo (-1)">↺</button>
     </div>${badge}</div>`;
 }
 function matDone(el){const r=el.dataset.rel;D.mat=D.mat||{};D.mat[r]=D.mat[r]||{n:0,last:''};D.mat[r].n++;D.mat[r].last=today();save();renderMaterial()}
 function matUndo(el){const r=el.dataset.rel;if(D.mat&&D.mat[r]&&D.mat[r].n>0){D.mat[r].n--;if(!D.mat[r].n)D.mat[r].last='';save();renderMaterial()}}
 function renderMaterial(){
   const el=document.getElementById('matList');
-  if(!MATERIALS.length){el.innerHTML='<div class="empty">📥 Loading material... (the web version http://100.112.213.66:8088 loads it automatically; if you opened the local file there are no PDFs)</div>';return}
+  if(!MATERIALS.length){el.innerHTML='<div class="empty">📥 Loading material... (PDFs and audio assets are loaded dynamically from the server)</div>';return}
   const q=(document.getElementById('matFilter').value||'').toLowerCase().trim();
   const groups={};
   MATERIALS.filter(m=>!q||m.name.toLowerCase().includes(q)||m.folder.toLowerCase().includes(q)).forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
   el.innerHTML=Object.keys(groups).map(f=>{
     const items=groups[f].map(m=>m.ext==='AUDIO'
       ?`<div class="book"><div class="ico">🎧</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div>${matCell(m)}</div>`
-      :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Abrir PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Descargar</a></div>${matCell(m)}</div>`).join('');
+      :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Open PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Download</a></div>${matCell(m)}</div>`).join('');
     return `<h3 class="folder">${esc(f)} <span class="t">${groups[f].length}</span></h3>${items}`;
   }).join('');
 }
@@ -2939,9 +3064,9 @@ function fmtSize(n){
 }
 function renderBookCats(){
   const el=document.getElementById('bookCats');
-  const cats=[...new Set(BUY_BOOKS.map(b=>b.c||'Otros'))];
-  el.innerHTML=`<button class="chip ${!BOOK_CAT?'on':''}" onclick="setBookCat('')">Todos (${BUY_BOOKS.length})</button>`+
-    cats.map(c=>`<button class="chip ${BOOK_CAT===c?'on':''}" onclick="setBookCat('${c}')">${c} (${BUY_BOOKS.filter(b=>(b.c||'Otros')===c).length})</button>`).join('');
+  const cats=[...new Set(BUY_BOOKS.map(b=>b.c||'Other'))];
+  el.innerHTML=`<button class="chip ${!BOOK_CAT?'on':''}" onclick="setBookCat('')">All (${BUY_BOOKS.length})</button>`+
+    cats.map(c=>`<button class="chip ${BOOK_CAT===c?'on':''}" onclick="setBookCat('${c}')">${c} (${BUY_BOOKS.filter(b=>(b.c||'Other')===c).length})</button>`).join('');
 }
 function setBookCat(c){BOOK_CAT=c;renderBookCats();renderBooks()}
 function priceNum(p){const m=(p||'').match(/[\d.,]+/);if(!m)return Infinity;return parseFloat(m[0].replace(/\./g,'').replace(',','.'))}
@@ -2949,20 +3074,20 @@ function renderBooks(){
   const q=(document.getElementById('bookFilter').value||'').toLowerCase().trim();
   const s=document.getElementById('bookSort').value;
   let list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
-  if(BOOK_CAT)list=list.filter(b=>(b.c||'Otros')===BOOK_CAT);
+  if(BOOK_CAT)list=list.filter(b=>(b.c||'Other')===BOOK_CAT);
   if(s==='asc')list=list.slice().sort((a,b)=>priceNum(a.p)-priceNum(b.p));
   else if(s==='desc')list=list.slice().sort((a,b)=>priceNum(b.p)-priceNum(a.p));
-  else list=list.slice().sort((a,b)=>(a.c||'Otros').localeCompare(b.c||'Otros'));
+  else list=list.slice().sort((a,b)=>(a.c||'Other').localeCompare(b.c||'Other'));
   const el=document.getElementById('bookList');
   if(!list.length){el.innerHTML='<div class="empty">No results for "'+esc(q)+'"</div>';return}
   el.innerHTML=list.map(b=>`<div class="book">
     <div class="ico">${b.i||'📖'}</div>
     <div style="flex:1">
       <b>${b.n}</b>
-      <div class="meta"><span class="pill" style="font-size:10px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc)">${b.c||'Otros'}</span> <span style="color:var(--on-surface-variant)">${b.src}</span></div>
+      <div class="meta"><span class="pill" style="font-size:10px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc)">${b.c||'Other'}</span> <span style="color:var(--on-surface-variant)">${b.src}</span></div>
       <div class="meta">${b.m}</div>
-      <div class="meta" style="font-size:11px;color:var(--dim)">usalo en: ${b.use}</div>
-      <a href="${b.u}" target="_blank">Ver oferta →</a>
+      <div class="meta" style="font-size:11px;color:var(--dim)">use in: ${b.use}</div>
+      <a href="${b.u}" target="_blank">View Offer →</a>
     </div>
     <div class="price">${b.v===0?'⚠ ':''}${b.p}</div>
   </div>`).join('');
@@ -3018,7 +3143,7 @@ function renderGrafEvol(){
     s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(e.type==='w'?e.score/20*100:e.correct/e.total*100)}" r="3" fill="${s.color}"/>`});
     g+=svgTxt(xs(s.es.length-1)+6,ys(s.es[s.es.length-1].type==='w'?s.es[s.es.length-1].score/20*100:s.es[s.es.length-1].correct/s.es[s.es.length-1].total*100)+3,s.name,s.color,11,'start');
   });
-  g+=svgTxt(padL,H-4,'← más viejo · más reciente →','var(--dim)',10,'middle');
+  g+=svgTxt(padL,H-4,'← older · more recent →','var(--dim)',10,'middle');
   el.innerHTML=svgChart(W,H,g);
 }
 function renderGrafPart(){
@@ -3034,8 +3159,8 @@ function renderGrafPart(){
   for(let i=1;i<=7;i++)push('UoE P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
   for(let i=1;i<=4;i++)push('Listening P'+i,log.filter(e=>e.type==='lp'&&e.part===i));
   ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('R&UoE completo',rue);
-  const l=log.filter(e=>e.type==='l');if(l.length)push('Listening completo',l);
+  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
+  const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
   if(!rows.length){el.innerHTML='<div class="empty">No data yet — log exercises and you\'ll see your weak spots here.</div>';return}
   rows.sort((a,b)=>a.pct-b.pct);
   el.innerHTML='<div style="max-width:560px">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
@@ -3074,7 +3199,7 @@ function renderGrafCons(){
     const h=(H-padT-padB)*(max?n/max:0);
     const x=padL+i*bw;
     g+=`<rect x="${x+2}" y="${H-padB-h}" width="${bw-4}" height="${h}" rx="3" fill="var(--acc)"/>`;
-    g+=svgTxt(x+bw/2,H-5,'S'+w,'var(--dim)',9,'middle');
+    g+=svgTxt(x+bw/2,H-5,'W'+w,'var(--dim)',9,'middle');
   });
   // Racha: semanas consecutivas (desde la actual hacia atrás) con ≥1 registro
   let streak=0,wCur=isoWeek(new Date());
@@ -3126,12 +3251,26 @@ function renderToday(){
   if(rotTimelineEl){
     rotTimelineEl.innerHTML=s.wCycle.map((g,i)=>{
       const isCur=(g===wT);
-      return `<div class="rot-item ${isCur?'current':''}">
+      return `<div class="rot-q-item ${isCur?'active':''}">
         <span>${i+1}. ${g}</span>
-        ${isCur?'<span class="badge-live">ACTIVE</span>':''}
+        ${isCur?'<span class="q-badge">ACTIVE</span>':''}
       </div>`;
     }).join('');
   }
+
+  // Update redesigned 2-week schedule card statuses
+  const rotCardWkA=document.getElementById('rotCardWkA');
+  const rotCardWkB=document.getElementById('rotCardWkB');
+  const rotWkAStatus=document.getElementById('rotWkAStatus');
+  const rotWkBStatus=document.getElementById('rotWkBStatus');
+  const rotWkBWName=document.getElementById('rotWkBWName');
+  const rotQueueSub=document.getElementById('rotQueueSub');
+  if(rotWkBWName)rotWkBWName.textContent=wT;
+  if(rotQueueSub)rotQueueSub.textContent='Active genre: '+wT;
+  if(rotCardWkA)rotCardWkA.classList.toggle('active-week',isWeekA);
+  if(rotCardWkB)rotCardWkB.classList.toggle('active-week',!isWeekA);
+  if(rotWkAStatus)rotWkAStatus.textContent=isWeekA?'ACTIVE NOW':'UPCOMING';
+  if(rotWkBStatus)rotWkBStatus.textContent=!isWeekA?'ACTIVE NOW':'UPCOMING';
 
   const nb=document.getElementById('nextBox');
   const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -3184,11 +3323,11 @@ function renderToday(){
   const rd=document.getElementById('rotDay'),rdn=document.getElementById('rotDayNext');
   if(rd){
     const daysToMon=(8-wd)%7||7;
-    rd.textContent=isWeekA?'Week A (R&UoE + Listening)':'Week B (Writing + Speaking)';
+    rd.textContent=isWeekA?'WEEK A':'WEEK B';
     if(rdn){
       rdn.textContent=wd===1
-        ?'Active today — automatic 2-week cycle'
-        :'Next switch: Monday (in '+daysToMon+' day'+(daysToMon===1?'':'s')+')';
+        ?'Active today'
+        :'Monday (in '+daysToMon+' day'+(daysToMon===1?'':'s')+')';
     }
   }
   const curEl=document.getElementById('rotVal');
