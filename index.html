@@ -1637,9 +1637,13 @@ footer{
               <div class="rot-queue-section">
                 <div class="rot-queue-head">
                   <span class="rot-queue-label">AUTOMATIC WRITING QUEUE (WEEK B)</span>
-                  <span class="rot-queue-sub" id="rotQueueSub">Next up: Article</span>
+                  <span class="rot-queue-sub" id="rotQueueSub">Active genre: Article</span>
                 </div>
                 <div class="rot-queue-track" id="rotTimeline"></div>
+                <div style="margin-top:9px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:7px">
+                  <label for="ovW" style="font-family:var(--mono);font-size:9.5px;color:var(--on-hero-sub2);text-transform:uppercase;margin:0">Override writing genre:</label>
+                  <select id="ovW" onchange="setOv('w',this.value)" style="background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.20);color:var(--on-hero);font-size:11px;padding:3px 8px;border-radius:4px"></select>
+                </div>
               </div>
 
               <!-- Schedule countdown info -->
@@ -1653,17 +1657,6 @@ footer{
                   <span class="rot-meta-val" id="rotDayNext">Monday</span>
                 </div>
               </div>
-
-              <!-- Quick Overrides Toolbar -->
-              <details open style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:8px">
-                <summary style="font-family:var(--mono);font-size:9.5px;color:var(--on-hero-sub2);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;list-style:none">⚙️ Quick Cycle Adjustments</summary>
-                <div class="rot-override-grid">
-                  <label>R&amp;UoE <select id="ovRue" onchange="setOv('rue',this.value)"></select></label>
-                  <label>Writing <select id="ovW" onchange="setOv('w',this.value)"></select></label>
-                  <label>Listening <select id="ovL" onchange="setOv('l',this.value)"></select></label>
-                  <label>Speaking <select id="ovSp" onchange="setOv('sp',this.value)"></select></label>
-                </div>
-              </details>
             </div>
 
             <div class="card metrics-card">
@@ -3512,27 +3505,16 @@ function renderToday(){
   const isWeekA=(week%2!==0);
   const wIdx=Math.floor(week/2)%s.wCycle.length;
   const autoW=s.wCycle[wIdx];
-  const autoRue=s.rueCycle[week%s.rueCycle.length],autoL=s.lCycle[week%s.lCycle.length],autoSp=s.spCycle[week%s.spCycle.length];
   const wov=D.weekOverrides||{};
-  const rue=wov.rue||autoRue,wT=wov.w||autoW,lP=wov.l||autoL,spP=wov.sp||autoSp;
-  const ovRue=document.getElementById('ovRue');
-  if(ovRue)ovRue.innerHTML=[1,2,3,4,5,6,7].map(p=>`<option value="${p}" ${p==rue?'selected':''}>P${p} — ${partName(p)}</option>`).join('');
+  const wT=wov.w||autoW;
   const ovW=document.getElementById('ovW');
   if(ovW)ovW.innerHTML=s.wCycle.map(t=>`<option ${t==wT?'selected':''}>${t}</option>`).join('');
-  const ovL=document.getElementById('ovL');
-  if(ovL)ovL.innerHTML=[1,2,3,4].map(p=>`<option value="${p}" ${p==lP?'selected':''}>P${p}</option>`).join('');
-  const ovSp=document.getElementById('ovSp');
-  if(ovSp)ovSp.innerHTML=[1,2,3,4].map(p=>`<option value="${p}" ${p==spP?'selected':''}>P${p}</option>`).join('');
-  if(document.getElementById('uePart'))document.getElementById('uePart').value=rue;
-  if(document.getElementById('semanaTxt'))document.getElementById('semanaTxt').textContent='Part '+rue+' — '+partName(rue)+(wov.rue?' (manually chosen)':' (auto, rotation)');
   if(document.getElementById('wTipo'))document.getElementById('wTipo').value=wT;
   if(document.getElementById('navWTag'))document.getElementById('navWTag').textContent=wT;
   if(document.getElementById('wWords')){
     document.getElementById('wWords').min=s.wMin;document.getElementById('wWords').max=s.wMax;
     document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
   }
-  if(document.getElementById('lFocusNote'))document.getElementById('lFocusNote').textContent='🎯 Weekly focus: Listening Part '+lP+' — practice that part in PARTS, or the full test here.';
-  if(document.getElementById('spFocusNote'))document.getElementById('spFocusNote').textContent='🎯 Weekly focus: Speaking Part '+spP+' — with the AI or your teacher.';
   
   // Writing queue visual widget
   const rotTimelineEl=document.getElementById('rotTimeline');

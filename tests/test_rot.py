@@ -13,22 +13,18 @@ with sync_playwright() as p:
     login_owner(pg, URL)
     out["scroll_ok"] = pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("window.innerWidth")
 
-    # rotación: selects llenos + uePart + wTipo
-    out["ovRue_opts"] = pg.eval_on_selector_all("#ovRue option", "els => els.length")
+    # rotación: select de Writing + wTipo
     out["ovW_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
-    out["uePart_value"] = pg.input_value("#uePart")
     out["wTipo_value"] = pg.input_value("#wTipo")
     out["semana_txt"] = pg.evaluate("document.getElementById('semanaTxt').textContent")
-    out["lFocus"] = pg.evaluate("document.getElementById('lFocusNote').textContent.slice(0,40)")
-    out["spFocus"] = pg.evaluate("document.getElementById('spFocusNote').textContent.slice(0,40)")
 
-    # override manual: elegir UoE P1 y guardar
-    pg.select_option("#ovRue", "1")
-    out["override_set"] = pg.evaluate("D.weekOverrides.rue === 1")
-    out["uePart_tras_override"] = pg.input_value("#uePart")
+    # override manual de writing: elegir Report y guardar
+    pg.select_option("#ovW", "Report")
+    out["override_set"] = pg.evaluate("D.weekOverrides.w === 'Report'")
+    out["wTipo_tras_override"] = pg.input_value("#wTipo")
     # limpiar override
-    pg.evaluate("delete D.weekOverrides.rue; save(); renderToday();")
-    out["override_limpio"] = pg.evaluate("!D.weekOverrides.rue")
+    pg.evaluate("delete D.weekOverrides.w; save(); renderToday();")
+    out["override_limpio"] = pg.evaluate("!D.weekOverrides.w")
 
     # stats: cargar datos de ejemplo y ver tabla
     pg.evaluate("""D.log.push({date:'2026-08-16',type:'ue',part:5,correct:4,total:6,min:20});
