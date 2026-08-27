@@ -845,7 +845,7 @@ footer{
       <h2>🎓 Welcome to your B2 First plan</h2>
     </div>
     <p class="onboard-intro">Set your baseline and schedule. You can edit all of this later in <b>PLAN</b>.</p>
-    <div><label>Study plan — days & times</label>
+    <div><label>Study plan — days &amp; times</label>
       <div class="ob-plan-row"><span>Session A</span><select id="obADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obATime" value="15:30"></div>
       <div class="ob-plan-row"><span>Session B</span><select id="obBDay"><option value="5">Friday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obBTime" value="13:00"></div>
     </div>
@@ -858,6 +858,85 @@ footer{
     </div>
     <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
       <button class="btn" onclick="finishOnboarding()">Start preparation →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SOLO PRACTICE MODAL (individual part outside sessions) ============ -->
+<div id="soloModal" class="overlay" style="display:none" onclick="if(event.target===this)closeSoloModal()">
+  <div class="auth-card" style="max-width:520px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:24px">⚡</span>
+        <div>
+          <h3 style="font-size:16px;font-weight:700;color:var(--on-surface)">Log Single Part Practice</h3>
+          <div style="font-size:11.5px;color:var(--on-surface-variant)">Extra practice done outside scheduled sessions</div>
+        </div>
+      </div>
+      <button class="del" onclick="closeSoloModal()" style="font-size:18px;padding:4px 8px">✕</button>
+    </div>
+
+    <div>
+      <label>Skill / Component</label>
+      <select id="soloSkill" onchange="onSoloSkillChange()">
+        <option value="ue">📖 Reading &amp; Use of English (Parts 1–7)</option>
+        <option value="lp">🎧 Listening (Parts 1–4)</option>
+        <option value="w">✍️ Writing (Individual Text / Genre)</option>
+        <option value="sp">🗣️ Speaking (Parts 1–4)</option>
+      </select>
+    </div>
+
+    <div style="margin-top:10px" id="soloPartRow">
+      <label>Part / Exercise</label>
+      <select id="soloPart" onchange="onSoloPartChange()"></select>
+    </div>
+
+    <div class="row" style="margin-top:10px" id="soloScoreRow">
+      <div><label id="soloOkLbl">Correct</label><input type="number" id="soloOk" min="0" value="0"></div>
+      <div><label id="soloTotLbl">Total Questions</label><input type="number" id="soloTot" min="1" value="8"></div>
+      <div><label>Minutes Spent</label><input type="number" id="soloMin" min="0" value="8"></div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <div><label>Source / Book</label>
+        <select id="soloBook">
+          <option value="sample">Official Sample Paper</option>
+          <option value="ptplus">Practice Tests Plus</option>
+          <option value="fce6">FCE 6</option>
+          <option value="gv">Grammar &amp; Vocabulary</option>
+          <option value="flojoe">Flo-Joe (online)</option>
+          <option value="examenglish">ExamEnglish (online)</option>
+          <option value="testenglish">Test-English (online)</option>
+          <option value="other">Other practice</option>
+        </select>
+      </div>
+      <div><label>Reference / Notes</label><input type="text" id="soloRef" placeholder="e.g. Unit 3 / Test 2"></div>
+    </div>
+
+    <div style="margin-top:10px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;text-transform:none">
+        <input type="checkbox" id="soloHasErr" style="width:auto" onchange="document.getElementById('soloErrBox').style.display=this.checked?'block':'none'">
+        <span>Log an error for root-cause analysis</span>
+      </label>
+    </div>
+
+    <div id="soloErrBox" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:10px;margin-top:8px">
+      <div class="row">
+        <div><label>Error Code</label>
+          <select id="soloErrCode">
+            <option value="L-GAP">L-GAP (Lexical gap)</option>
+            <option value="G-ERR">G-ERR (Misapplied rule)</option>
+            <option value="T-MIS">T-MIS (Textual distractor)</option>
+            <option value="T-LIM">T-LIM (Time pressure)</option>
+          </select>
+        </div>
+        <div><label>Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button class="btn ok" style="flex:1" onclick="saveSoloPractice()">✔ Save Solo Practice</button>
+      <button class="btn gray" onclick="closeSoloModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -899,9 +978,12 @@ footer{
           <div>
             <span class="page-kicker">[ COACH_OVERVIEW ]</span>
             <h1 class="page-title">Today</h1>
-            <p class="page-sub">Your high-performance study plan. Sessions, algorithmic rotation and weekly metrics.</p>
+            <p class="page-sub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
           </div>
-          <button class="btn" onclick="document.getElementById('v-hoy').scrollIntoView()">▶ START SESSION</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ok" onclick="openSoloModal()">⚡ Log Single Part</button>
+            <button class="btn" onclick="document.getElementById('sessionNav').scrollIntoView({behavior:'smooth'})">▶ START SESSION</button>
+          </div>
         </div>
 
         <div class="grid-12">
@@ -944,7 +1026,7 @@ footer{
                   <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">📊 Score &amp; Diagnosis</div>
-                    <div class="ps-time">10:00 · Error logging</div>
+                    <div class="ps-time">10:00 · Full test logging</div>
                   </div>
                 </div>
 
@@ -954,7 +1036,7 @@ footer{
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">High-Speed Sprint <span class="t">50 min · Parts 1 to 7</span></div>
+                        <div class="task-title">High-Speed Sprint <span class="t">50 min · Parts 1 to 7 (All 52 Questions)</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">50:00</span></div>
@@ -967,7 +1049,7 @@ footer{
                       • <b>Pacing guide:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
                       • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
                     </div>
-                    <p id="semanaP">Weekly drill focus: <b id="semanaTxt"></b></p>
+                    <p id="semanaP" style="font-size:12.5px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">Full Sprint (Parts 1–7)</b></p>
                     <div style="margin-top:12px">
                       <button class="btn" onclick="switchUePhase('score')">Proceed to Phase 2: Log Score →</button>
                     </div>
@@ -980,10 +1062,22 @@ footer{
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Answer Review &amp; Score Logging</div>
+                        <div class="task-title">Answer Review &amp; Full Session Score Logging</div>
                       </div>
                     </div>
                     <div class="row">
+                      <div><label>Mode</label>
+                        <select id="uePart" onchange="onUePartChange()">
+                          <option value="all" selected>Full Session: All 7 Parts (52 questions)</option>
+                          <option value="1">Part 1 — Multiple-choice cloze (8)</option>
+                          <option value="2">Part 2 — Open cloze (8)</option>
+                          <option value="3">Part 3 — Word Formation (8)</option>
+                          <option value="4">Part 4 — Key Word Transformation (6)</option>
+                          <option value="5">Part 5 — Multiple choice reading (6)</option>
+                          <option value="6">Part 6 — Gapped text (6)</option>
+                          <option value="7">Part 7 — Multiple matching (10)</option>
+                        </select>
+                      </div>
                       <div><label>Source</label>
                         <select id="ueFuente">
                           <option value="sample">Official Sample Paper (Parts 1–7)</option>
@@ -994,25 +1088,17 @@ footer{
                           <option value="flojoe">Flo-Joe (web, self-check)</option>
                         </select>
                       </div>
-                      <div><label>Part / Mode</label>
-                        <select id="uePart">
-                          <option value="1">Part 1 — Multiple-choice cloze (8)</option>
-                          <option value="2">Part 2 — Open cloze (8)</option>
-                          <option value="3">Part 3 — Word Formation (8)</option>
-                          <option value="4">Part 4 — Key Word Transformation (6)</option>
-                          <option value="5">Part 5 — Multiple choice reading (6)</option>
-                          <option value="6">Part 6 — Gapped text (6)</option>
-                          <option value="7">Part 7 — Multiple matching (10)</option>
-                        </select>
-                      </div>
                     </div>
                     <div class="row">
-                      <div><label>Exercise / ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 Full / Test 2"></div>
+                      <div><label>Test / Ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 Full / Test 2"></div>
                       <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
                       <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="50"></div>
                     </div>
-                    <div style="margin-top:12px"><button class="btn ok" onclick="saveUE()">✔ Save UoE / Reading</button></div>
+                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                      <button class="btn ok" onclick="saveUE()">✔ Save R&amp;UoE Session</button>
+                      <button class="btn gray" onclick="openSoloModal('ue')">⚡ Log Single Part Instead</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1360,88 +1446,129 @@ footer{
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Mock</span>
-                    <div class="sesion-title">🧪 Full Mock Exam (Stages 1-2)</div>
-                    <div class="sesion-sub">Whole exam under real conditions, for the Mastery gates.</div>
+                    <span class="badge mon">Full Simulation</span>
+                    <div class="sesion-title">🧪 Full Mock Exam (All 4 Papers)</div>
+                    <div class="sesion-sub">Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Format</span>
-                    <span class="dur-val">FULL</span>
+                    <span class="dur-label">Total Time</span>
+                    <span class="dur-val">209 MIN</span>
                   </div>
                 </div>
+
+                <!-- Paper 1: Reading & Use of English (75 min, 52 questions, Parts 1 to 7) -->
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">1</div>
                     <div>
-                      <div class="task-title">Complete Reading &amp; Use of English <span class="t">limit: 65 min</span></div>
+                      <div class="task-title">Paper 1: Reading &amp; Use of English <span class="t">75 min · Parts 1 to 7 (52 questions)</span></div>
                     </div>
+                  </div>
+                  <div class="guide">
+                    📍 <b>All 7 Parts:</b> Part 1 (Multiple-choice cloze, 8q) · Part 2 (Open cloze, 8q) · Part 3 (Word formation, 8q) · Part 4 (Key word transformation, 6q) · Part 5 (Multiple choice, 6q) · Part 6 (Gapped text, 6q) · Part 7 (Multiple matching, 10q). Total: 52 questions.
                   </div>
                   <div class="row">
                     <div><label>Source</label>
                       <select id="rueFuente">
-                        <option value="sample">Official Sample Paper</option>
+                        <option value="sample">Official Sample Paper (Parts 1–7)</option>
                         <option value="ptplus">Practice Tests Plus</option>
-                        <option value="fce6">FCE 6</option>
-                        <option value="booster">Exam Booster (no key ⚠️)</option>
+                        <option value="fce6">FCE 6 (real tests)</option>
+                        <option value="booster">Exam Booster</option>
                       </select>
                     </div>
-                    <div><label>Ref.</label><input type="text" id="rueRef" placeholder="e.g. Sample 2"></div>
+                    <div><label>Test # / Ref.</label><input type="text" id="rueRef" placeholder="e.g. Sample 1 / Test 2"></div>
                   </div>
                   <div class="row">
-                    <div><label>Correct</label><input type="number" id="rueOk" min="0" value="0"></div>
-                    <div><label>Total</label><input type="number" id="rueTotal" min="1" value="52"></div>
-                    <div><label>Minutes</label><input type="number" id="rueMin" min="0" value="65"></div>
+                    <div><label>Correct (out of 52)</label><input type="number" id="rueOk" min="0" max="52" value="0"></div>
+                    <div><label>Total questions</label><input type="number" id="rueTotal" min="1" value="52"></div>
+                    <div><label>Minutes used</label><input type="number" id="rueMin" min="0" value="75"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save full R&amp;UoE</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save Paper 1 (R&amp;UoE)</button></div>
                 </div>
+
+                <!-- Paper 2: Writing (80 min, 2 texts) -->
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">2</div>
                     <div>
-                      <div class="task-title">Full Writing (Part 1 + Part 2) <span class="t">limit: 1h 20m</span></div>
+                      <div class="task-title">Paper 2: Writing <span class="t">80 min · 2 Complete Texts (140–190 words each)</span></div>
                     </div>
                   </div>
-                  <div class="row">
-                    <div><label>Text 1 score /20</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
-                    <div><label>Text 2 score /20</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
-                    <div><label>Minutes</label><input type="number" id="fwMin" min="0" value="80"></div>
+                  <div class="guide">
+                    📍 <b>Structure:</b> Part 1 Compulsory Essay (5' plan + 35' write) + Part 2 Choice text: Article, Report, Review or Email (5' plan + 30' write) + 5' final audit.
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Full Writing</button></div>
+                  <div class="row">
+                    <div><label>Text 1 score /20 (Essay)</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
+                    <div><label>Text 2 score /20 (Choice)</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
+                    <div><label>Minutes used</label><input type="number" id="fwMin" min="0" value="80"></div>
+                  </div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Paper 2 (Writing)</button></div>
                 </div>
+
+                <!-- Paper 3: Listening (40 min, 30 questions, Parts 1 to 4) -->
                 <div class="task">
                   <div class="task-head">
                     <div class="task-num">3</div>
                     <div>
-                      <div class="task-title">Reading Part 6 — Gapped Text <span class="t">Stage 1 gate</span></div>
+                      <div class="task-title">Paper 3: Listening <span class="t">40 min · Parts 1 to 4 (30 questions)</span></div>
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Where to find it:</b> R&amp;UoE Sample 1/2 and FS1/2 (BOOKS → Material) — Part 6 inside the PDF. 6 gaps, choose the correct sentence for each.
+                    📍 <b>All 4 Parts:</b> Part 1 (Short extracts, 8q) · Part 2 (Sentence completion, 10q) · Part 3 (Multiple matching, 5q) · Part 4 (Multiple choice interview, 7q). Listen to the continuous recording without pausing.
+                  </div>
+                  <div class="row">
+                    <div><label>Audio Source</label>
+                      <select id="mockLFuente">
+                        <option value="sample1">Sample Paper 1</option>
+                        <option value="sample2">Sample Paper 2</option>
+                        <option value="ptplus">Practice Tests Plus</option>
+                        <option value="fce6">FCE 6</option>
+                      </select>
+                    </div>
+                    <div><label>Test Ref.</label><input type="text" id="mockLRef" placeholder="e.g. Sample 1 Full"></div>
+                  </div>
+                  <div class="row">
+                    <div><label>Correct (out of 30)</label><input type="number" id="mockLOk" min="0" max="30" value="0"></div>
+                    <div><label>Part 2 errors</label><input type="number" id="mockLP2" min="0" value="0"></div>
+                    <div><label>Minutes</label><input type="number" id="mockLMin" min="0" value="40"></div>
+                  </div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveMockListening()">✔ Save Paper 3 (Listening)</button></div>
+                </div>
+
+                <!-- Paper 4: Speaking (14 min, Parts 1 to 4) -->
+                <div class="task">
+                  <div class="task-head">
+                    <div class="task-num">4</div>
+                    <div>
+                      <div class="task-title">Paper 4: Speaking <span class="t">14 min · Parts 1 to 4 Complete Simulation</span></div>
+                    </div>
+                  </div>
+                  <div class="guide">
+                    🎙 <b>All 4 Parts:</b> Part 1 (Interview, 2') · Part 2 (Long turn photos, 4') · Part 3 (Collaborative spider diagram, 4') · Part 4 (Discussion, 4').
+                  </div>
+                  <div class="row">
+                    <div><label>Validated at C1 / Completed?</label>
+                      <select id="sfOk"><option value="yes">Yes (Completed &amp; Validated)</option><option value="no">Pending review</option></select>
+                    </div>
+                    <div><label>Examiner / Teacher ref.</label><input type="text" id="sfRef" placeholder="e.g. Teacher / Mock 1"></div>
+                  </div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSF()">✔ Save Paper 4 (Speaking)</button></div>
+                </div>
+
+                <!-- Target Gate Drill: Reading Part 6 -->
+                <div class="task" style="background:var(--surface-container-low);border:1px dashed var(--outline-variant)">
+                  <div class="task-head">
+                    <div class="task-num">★</div>
+                    <div>
+                      <div class="task-title">Specific Gate Drill: Reading Part 6 (Gapped Text) <span class="t">Stage 1 Requirement</span></div>
+                    </div>
                   </div>
                   <div class="row">
                     <div><label>Correct (out of 6)</label><input type="number" id="r6Ok" min="0" max="6" value="0"></div>
                     <div><label>Ref.</label><input type="text" id="r6Ref" placeholder="e.g. Sample 2 Part 6"></div>
                     <div><label>Minutes</label><input type="number" id="r6Min" min="0" value="20"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveR6()">✔ Save Reading Part 6</button></div>
-                </div>
-                <div class="task">
-                  <div class="task-head">
-                    <div class="task-num">4</div>
-                    <div>
-                      <div class="task-title">Speaking Final — Full Simulation <span class="t">Stage 2 · 14 min · validated by teacher at C1</span></div>
-                    </div>
-                  </div>
-                  <div class="guide">
-                    🎙 Complete Speaking paper (Parts 1-4, ~14 min) in exam conditions. Your teacher validates that the overall level is C1.
-                  </div>
-                  <div class="row">
-                    <div><label>Validated at C1 by teacher?</label>
-                      <select id="sfOk"><option value="yes">Yes</option><option value="no">No</option></select>
-                    </div>
-                    <div><label>Teacher / date ref.</label><input type="text" id="sfRef" placeholder="e.g. Prof. M. — 2026-09-01"></div>
-                  </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSF()">✔ Save Speaking final</button></div>
+                  <div style="margin-top:10px"><button class="btn gray sm" onclick="saveR6()">✔ Save Part 6 Drill</button></div>
                 </div>
               </div>
             </div>
@@ -1527,13 +1654,16 @@ footer{
                 </div>
               </div>
 
-              <!-- Manual overrides -->
-              <div class="rot-override-grid">
-                <label>R&amp;UoE <select id="ovRue" onchange="setOv('rue',this.value)"></select></label>
-                <label>Writing <select id="ovW" onchange="setOv('w',this.value)"></select></label>
-                <label>Listening <select id="ovL" onchange="setOv('l',this.value)"></select></label>
-                <label>Speaking <select id="ovSp" onchange="setOv('sp',this.value)"></select></label>
-              </div>
+              <!-- Quick Overrides Toolbar -->
+              <details open style="margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:8px">
+                <summary style="font-family:var(--mono);font-size:9.5px;color:var(--on-hero-sub2);cursor:pointer;text-transform:uppercase;letter-spacing:.08em;list-style:none">⚙️ Quick Cycle Adjustments</summary>
+                <div class="rot-override-grid">
+                  <label>R&amp;UoE <select id="ovRue" onchange="setOv('rue',this.value)"></select></label>
+                  <label>Writing <select id="ovW" onchange="setOv('w',this.value)"></select></label>
+                  <label>Listening <select id="ovL" onchange="setOv('l',this.value)"></select></label>
+                  <label>Speaking <select id="ovSp" onchange="setOv('sp',this.value)"></select></label>
+                </div>
+              </details>
             </div>
 
             <div class="card metrics-card">
@@ -2420,20 +2550,173 @@ function onWritingDraftChange(){
   }
 }
 
-/* ---------- SAVE HANDLERS ----------
-   Cada form de sesión tiene su saveXXX():
-   - saveUE: Use of English (parte elegida en uePart, correcto/total)
-   - saveWR: Sprint de redacción (kind + words + autoeval + nota final)
-   - saveL:  Listening completo (correct/30 + errores Part 2)
-   - saveSP: Speaking (se auto-registra al tocar "Terminar")
-   - saveFull: simulacro completo (R&UoE 52 + 2 textos + listening)
-   Todas: validan, pushean a D.log con fecha de hoy y refreshAll().
-   pct(a,b) = porcentaje redondeado (para % y gates). */
+function onUePartChange(){
+  const val=document.getElementById('uePart').value;
+  const tot=document.getElementById('ueTotal');
+  const min=document.getElementById('ueMin');
+  if(!tot)return;
+  if(val==='all'||val==='full'){
+    tot.value=52;
+    if(min)min.value=50;
+  }else{
+    const qMap={'1':8,'2':8,'3':8,'4':6,'5':6,'6':6,'7':10};
+    const minMap={'1':8,'2':8,'3':8,'4':10,'5':20,'6':20,'7':20};
+    tot.value=qMap[val]||8;
+    if(min)min.value=minMap[val]||8;
+  }
+}
+
+/* ---------- SOLO / SINGLE PART MODAL ---------- */
+const SOLO_PARTS={
+  ue:[
+    {n:1,name:'Part 1 — Multiple-choice cloze',q:8,min:8},
+    {n:2,name:'Part 2 — Open cloze',q:8,min:8},
+    {n:3,name:'Part 3 — Word Formation',q:8,min:8},
+    {n:4,name:'Part 4 — Key Word Transformation',q:6,min:10},
+    {n:5,name:'Part 5 — Multiple choice reading',q:6,min:20},
+    {n:6,name:'Part 6 — Gapped text',q:6,min:20},
+    {n:7,name:'Part 7 — Multiple matching',q:10,min:20},
+    {n:'all',name:'Full Reading & Use of English (Parts 1–7)',q:52,min:50}
+  ],
+  lp:[
+    {n:1,name:'Part 1 — Short extracts (3 options)',q:8,min:8},
+    {n:2,name:'Part 2 — Sentence completion',q:10,min:10},
+    {n:3,name:'Part 3 — Multiple matching',q:5,min:8},
+    {n:4,name:'Part 4 — Multiple choice (long)',q:7,min:10},
+    {n:'all',name:'Full Listening Test (Parts 1–4)',q:30,min:40}
+  ],
+  w:[
+    {n:'Essay',name:'Part 1: Essay',q:20,min:40},
+    {n:'Article',name:'Part 2: Article',q:20,min:35},
+    {n:'Report',name:'Part 2: Report',q:20,min:35},
+    {n:'Review',name:'Part 2: Review',q:20,min:35},
+    {n:'Email',name:'Part 2: Email / Letter',q:20,min:35}
+  ],
+  sp:[
+    {n:1,name:'Part 1 — Interview',q:0,min:2},
+    {n:2,name:'Part 2 — Long turn (compare photos)',q:0,min:4},
+    {n:3,name:'Part 3 — Collaborative task',q:0,min:4},
+    {n:4,name:'Part 4 — Discussion',q:0,min:5},
+    {n:'all',name:'Full Speaking Simulation (Parts 1–4)',q:0,min:15}
+  ]
+};
+
+function openSoloModal(defaultSkill,defaultPart){
+  const el=document.getElementById('soloModal');
+  if(!el)return;
+  el.style.display='flex';
+  if(defaultSkill)document.getElementById('soloSkill').value=defaultSkill;
+  onSoloSkillChange(defaultPart);
+}
+function closeSoloModal(){
+  const el=document.getElementById('soloModal');
+  if(el)el.style.display='none';
+}
+function onSoloSkillChange(defPart){
+  const skill=document.getElementById('soloSkill').value;
+  const list=SOLO_PARTS[skill]||[];
+  const partEl=document.getElementById('soloPart');
+  partEl.innerHTML=list.map(p=>`<option value="${p.n}">${p.name}</option>`).join('');
+  if(defPart)partEl.value=defPart;
+  onSoloPartChange();
+}
+function onSoloPartChange(){
+  const skill=document.getElementById('soloSkill').value;
+  const partVal=document.getElementById('soloPart').value;
+  const item=(SOLO_PARTS[skill]||[]).find(p=>String(p.n)===String(partVal))||{};
+  const okLbl=document.getElementById('soloOkLbl');
+  const totLbl=document.getElementById('soloTotLbl');
+  const okInput=document.getElementById('soloOk');
+  const totInput=document.getElementById('soloTot');
+  const minInput=document.getElementById('soloMin');
+
+  if(skill==='w'){
+    okLbl.textContent='Score /20';
+    totLbl.textContent='Word count';
+    okInput.max=20;okInput.step='0.5';okInput.value=16;
+    totInput.value=160;
+    minInput.value=item.min||35;
+  }else if(skill==='sp'){
+    if(partVal==='all'){
+      okLbl.textContent='Completed (1=Yes)';
+      totLbl.textContent='Target';
+      okInput.value=1;okInput.max=1;
+      totInput.value=15;
+      minInput.value=15;
+    }else{
+      okLbl.textContent='Completed (1=Yes)';
+      totLbl.textContent='Target';
+      okInput.value=1;
+      totInput.value=1;
+      minInput.value=item.min||4;
+    }
+  }else{
+    okLbl.textContent='Correct';
+    totLbl.textContent='Total questions';
+    okInput.max=item.q||52;okInput.step='1';okInput.value=item.q||8;
+    totInput.value=item.q||8;
+    minInput.value=item.min||8;
+  }
+}
+function saveSoloPractice(){
+  const skill=document.getElementById('soloSkill').value;
+  const partVal=document.getElementById('soloPart').value;
+  const ok=+document.getElementById('soloOk').value;
+  const tot=+document.getElementById('soloTot').value;
+  const min=+document.getElementById('soloMin').value||0;
+  const book=document.getElementById('soloBook').value;
+  const ref=document.getElementById('soloRef').value;
+
+  if(skill==='ue'){
+    if(partVal==='all'){
+      log({type:'rue',book,ref:ref||'Solo Full R&UoE',correct:ok,total:tot||52,min});
+    }else{
+      log({type:'ue',part:+partVal,book,ref:ref||'Solo Practice',correct:ok,total:tot||8,min});
+    }
+  }else if(skill==='lp'){
+    if(partVal==='all'){
+      log({type:'l',book,ref:ref||'Solo Full Listening',correct:ok,total:30,p2:0,min});
+    }else{
+      log({type:'lp',part:+partVal,book,ref:ref||'Solo Practice',correct:ok,total:tot||10,min});
+    }
+  }else if(skill==='w'){
+    log({type:'w',kind:partVal,book,prompt:ref||'Solo Writing',words:tot||160,score:ok,min});
+  }else if(skill==='sp'){
+    if(partVal==='all'){
+      log({type:'sf',ok:true,ref:ref||'Solo Speaking Simulation'});
+    }else{
+      log({type:'sp',part:+partVal,note:ref||'Solo Speaking'});
+    }
+  }
+
+  if(document.getElementById('soloHasErr').checked){
+    const code=document.getElementById('soloErrCode').value;
+    const desc=document.getElementById('soloErrDesc').value;
+    if(desc){
+      D.errs.unshift({date:today(),code,desc,fix:'Reviewed in solo practice'});
+      save();
+    }
+  }
+
+  closeSoloModal();
+  refreshAll();
+  alert('Solo practice logged ✓');
+}
+
+/* ---------- SAVE HANDLERS ---------- */
 function log(e){D.log.push(Object.assign({date:today()},e));D.log.sort((a,b)=>b.date.localeCompare(a.date));save();refreshAll()}
 function saveUE(){
-  const correct=+document.getElementById('ueOk').value,total=+document.getElementById('ueTotal').value;
-  if(!total){alert('Set the total number of questions');return}
-  log({type:'ue',part:+document.getElementById('uePart').value,book:document.getElementById('ueFuente').value,ref:document.getElementById('ueRef').value,correct,total,min:+document.getElementById('ueMin').value});
+  const partVal=document.getElementById('uePart').value;
+  const correct=+document.getElementById('ueOk').value;
+  const total=+document.getElementById('ueTotal').value||52;
+  const min=+document.getElementById('ueMin').value||50;
+  const book=document.getElementById('ueFuente').value;
+  const ref=document.getElementById('ueRef').value;
+  if(partVal==='all'||partVal==='full'){
+    log({type:'rue',book,ref:ref||'Full Sprint (Parts 1-7)',correct,total:total||52,min});
+  }else{
+    log({type:'ue',part:+partVal,book,ref,correct,total,min});
+  }
   document.getElementById('ueOk').value=0;document.getElementById('ueRef').value='';
 }
 function saveW(){
@@ -2473,6 +2756,11 @@ function saveR6(){
 function saveSF(){
   log({type:'sf',ok:document.getElementById('sfOk').value==='yes',ref:document.getElementById('sfRef').value});
   document.getElementById('sfRef').value='';
+}
+function saveMockListening(){
+  const correct=+document.getElementById('mockLOk').value;
+  log({type:'l',book:document.getElementById('mockLFuente').value,ref:document.getElementById('mockLRef').value||'Mock Listening',correct,total:30,p2:+document.getElementById('mockLP2').value,min:+document.getElementById('mockLMin').value});
+  document.getElementById('mockLOk').value=0;document.getElementById('mockLRef').value='';
 }
 function saveErr(){
   const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
