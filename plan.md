@@ -12,53 +12,60 @@
 - **Target**: Grade A (nota ≥ 180/200, equivalente C1)
 - **Criterio de éxito global**: ≥ 80% de precisión en simulacros completos con límite de tiempo estricto
 
-## 2. Estructura semanal
+## 2. Estructura semanal (Ciclo Quincenal de 4 Sesiones)
 
-| Bloque | Cuándo | Duración | Contenido |
-|---|---|---|---|
-| **Sesión A** — Ingeniería de Texto | Lunes 15:30 | 1 h | UoE Focus (15') + Sprint de Redacción (30') + Auditoría (15') |
-| **Sesión B** — Procesamiento Auditivo | Viernes 13:00 | 1 h | Full Listening (30') + Post-Mortem (10') + Speaking Sprint (20') |
-| **Clase particular** | externa | 2 h | con la profe (fuera del tracker) |
-| **Simulacro completo** | cuando estés listo | ~3 h 15' | modo EXAMEN del tracker, tiempos reales |
+El entrenamiento se estructura en un **ciclo de 2 semanas (4 sesiones de 1 h)** para trabajar cada habilidad con 100% de foco y sin sobrecargar el tiempo diario:
 
-> Las sesiones están **siempre disponibles** en el tracker — el banner solo indica qué toca hoy, no bloquea.
+| Semana | Bloque | Cuándo | Duración | Contenido |
+|---|---|---|---|---|
+| **Semana A** | **Full Reading & Use of English** | Lunes 15:30 | 1 h | Sprint de 50' (Parts 1–7, 52 preguntas) + 10' revisión/fallos |
+| **Semana A** | **Full Listening** | Viernes 13:00 | 1 h | 40' audio continuo (30 preguntas) + 20' post-mortem en transcript |
+| **Semana B** | **Full Writing (Rotación Automática)** | Lunes 15:30 | 1 h | 5' plan + 35' redacción (140–190 pal.) + 20' auditoría C1/rúbrica |
+| **Semana B** | **Full Speaking** | Viernes 13:00 | 1 h | 15' simulacro completo (Parts 1–4) + 45' pulido léxico C1 y re-toma |
+| *Externa* | **Clase particular** | semanal | 2 h | con la profe (fuera del tracker) |
+| *Hito* | **Simulacro completo** | por etapas | ~3 h 15' | modo EXAMEN del tracker, tiempos reales |
 
-## 3. Rotación semanal de ejercicios (automática + elegible)
+> Las sesiones están **siempre disponibles** en el tracker — el banner indica qué toca hoy de acuerdo al ciclo, pero no bloquea si querés adelantar práctica.
 
-Cada semana el tracker asigna automáticamente (por nº de semana ISO) un ejercicio
-distinto de cada prueba, para que **con el tiempo practiques TODO**:
+## 3. Rotación 100% automática de Writing y Habilidades
 
-- **R&UoE** → ciclo de 7 semanas: P1 Multiple-choice cloze → P2 Open cloze → P3 Word Formation → P4 Key Word Transformation → P5 Multiple choice → P6 Gapped text → P7 Multiple matching
-- **Writing** → ciclo de 5 semanas: Essay → Article → Report → Review → Email
-- **Listening** → ciclo de 4 semanas: P1 → P2 → P3 → P4
-- **Speaking** → ciclo de 4 semanas: P1 → P2 → P3 → P4
+El tracker gestiona la alternancia quincenal y la asignación de géneros de forma **completamente automática para todos los usuarios**:
 
-En la tarjeta **"Rotación de la semana"** (pestaña HOY) podés elegir manualmente qué
-practicar esa semana (override que queda guardado). El orden de los ciclos se edita
-en **PLAN → Rotación de ejercicios**. Además, la pestaña **PARTES** tiene los 15
-ejercicios siempre disponibles para practicar lo que quieras, cuando quieras.
+- **Alternancia Quincenal**:
+  - **Semana A**: Lunes (Full R&UoE) + Viernes (Full Listening).
+  - **Semana B**: Lunes (Full Writing) + Viernes (Full Speaking).
+- **Rotación Cíclica de Writing (sin selección manual)**:
+  Cada vez que llega un Lunes de Writing (Semana B), el tracker asigna automáticamente el siguiente género en secuencia estricta:
+  $$\text{1. Essay} \longrightarrow \text{2. Article} \longrightarrow \text{3. Report} \longrightarrow \text{4. Review} \longrightarrow \text{5. Email} \longrightarrow \text{(vuelve a Essay)}$$
 
-## 4. Sesión A — Ingeniería de Texto (1 h)
+Además, la pestaña **PARTES** tiene los 15 ejercicios del examen siempre disponibles para drills individuales cuando quieras.
 
-1. **UoE Focus (15', límite real 10')**: la parte de R&UoE que toque la rotación
-   (semana por semana). Registro: aciertos/total + minutos.
-2. **Sprint de Redacción (30')**: plan 5' + escritura 22' + revisión 3'.
-   - Tipo: el de la rotación (Essay/Article/Report/Review/Email)
-   - **140–190 palabras** exactas · cero contracciones
-   - ≥ 3 conectores C1 (Furthermore / Nevertheless / Consequently / On the contrary)
-   - 1 pasiva · 1 inversión o condicional complejo
-   - Autoevaluación con la rúbrica (7 checkboxes) + nota del examinador
-3. **Auditoría Algorítmica (15')**: revisión con criterio de examinador Senior Cambridge
-   (4 criterios: Content / Communicative Achievement / Organisation / Language, nota /20).
+## 4. Sesión Semana A — Lunes: Full Reading & UoE (Sprint 50')
 
-## 5. Sesión B — Procesamiento Auditivo (1 h)
+1. **Sprint de Alta Velocidad (50 min)**: resolución de las 7 partes completas (52 preguntas) a ritmo de examen:
+   - Parts 1–4 (Use of English): ~25 min.
+   - Parts 5–7 (Reading & Gapped text): ~25 min.
+2. **Revisión y Registro (10 min)**: control de claves y registro en el tracker (aciertos / 52 + minutos).
 
-1. **Full Listening (30')**: 30 preguntas, **sin pausar el audio nunca**. Registro
-   de aciertos + errores de la Part 2 (sentence completion).
-2. **Post-Mortem Auditivo (10')**: volvé al audio donde fallaste y anotá el error
-   con su taxonomía (abajo).
-3. **Speaking Sprint (20')**: Part 2 Long Turn (grabate 1' comparando y especulando,
-   prohibido solo describir) + Parts 3-4 colaborativas con la IA o la profe.
+## 5. Sesión Semana A — Viernes: Full Listening (40' + 20' Post-Mortem)
+
+1. **Full Listening Test (40 min)**: 30 preguntas (Parts 1 a 4), **sin pausar el audio nunca**.
+2. **Auditory Post-Mortem (20 min)**: análisis en los tapescripts de las preguntas falladas y registro con taxonomía de causa raíz (L-GAP, G-ERR, T-MIS, T-LIM).
+
+## 5b. Sesión Semana B — Lunes: Full Writing (60 min)
+
+1. **Planificación (5 min)**: esquema de 4 párrafos + conectores C1 elegidos.
+2. **Sprint de Redacción (35 min)**:
+   - Tipo: el asignado automáticamente por la rotación (Essay / Article / Report / Review / Email).
+   - **140–190 palabras** exactas · cero contracciones.
+   - ≥ 3 conectores C1 (Furthermore / Nevertheless / Consequently / In light of the above).
+   - 1 pasiva + 1 inversión o condicional complejo.
+3. **Auditoría Algorítmica y Rúbrica (20 min)**: autoevaluación con la rúbrica (7 checkboxes) + nota de examinador Senior Cambridge /20.
+
+## 5c. Sesión Semana B — Viernes: Full Speaking (60 min)
+
+1. **Simulacro Completo (15 min)**: grabación continua de las 4 partes (P1 entrevista, P2 long turn comparando/especulando, P3 tarea colaborativa, P4 debate).
+2. **C1 Upgrade & Re-toma (45 min)**: escucha crítica, eliminación de silencios > 3s, inyección de estructuras de negociación avanzada y segunda grabación.
 
 ## 6. Metric Gates (avance por etapas)
 
