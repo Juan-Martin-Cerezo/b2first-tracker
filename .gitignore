@@ -18,3 +18,7 @@ data/
 # Material de referencia de Stitch (descargas crudas: HTML + screenshots)
 stitch_assets/*.html
 stitch_assets/*.png
+
+# Certificados y llaves TLS
+*.crt
+*.key

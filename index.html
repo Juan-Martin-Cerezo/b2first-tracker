@@ -2056,28 +2056,55 @@ footer{
           <!-- Session Schedules -->
           <div class="col-6">
             <div class="card">
-              <h2>🗓 Session Schedules</h2>
-              <div class="sub">Session A (text) and Session B (audio) — day and time.</div>
-              <div class="row">
-                <div><label>Session A (text) — day</label><select id="pADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
-                <div><label>Session A — time</label><input type="time" id="pATime"></div>
+              <div class="plan-card-head">
+                <h2>🗓 Session Schedules &amp; Frequency</h2>
+                <button type="button" class="btn sm ok" onclick="addScheduleRow()">+ Add Session Day</button>
               </div>
-              <div class="row">
-                <div><label>Session B (audio) — day</label><select id="pBDay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
-                <div><label>Session B — time</label><input type="time" id="pBTime"></div>
+              <div class="sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
+              
+              <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
+
+              <!-- Fallback inputs for test compatibility -->
+              <input type="hidden" id="pADay">
+              <input type="hidden" id="pATime">
+              <input type="hidden" id="pBDay">
+              <input type="hidden" id="pBTime">
+
+              <!-- Advance / Shift Session Controls -->
+              <div style="margin-top:16px;padding:12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                  <div>
+                    <div style="font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px">
+                      <span>⚡ Session Shift / Fast-Forward</span>
+                      <span class="badge mon" id="planOffsetBadge">Offset: +0</span>
+                    </div>
+                    <div class="sub" style="margin-top:2px;font-size:11.5px">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1">⚡ +1 Advance</button>
+                    <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
+                    <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0">↩ Reset (0)</button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Rotation Cycles -->
+          <!-- Rotation Cycles & Schedule Roadmap -->
           <div class="col-6">
             <div class="card plan-green-card">
-              <h2>🔁 Rotation Cycles (2-Week Cycle)</h2>
-              <div class="sub">Alternating 4-session model: 1 hour per session on Mondays &amp; Fridays.</div>
-              <div class="rot-cycles">
+              <div class="plan-card-head">
+                <h2>🔁 Continuous Rotation &amp; Upcoming Slots</h2>
+                <span class="chip-plan"><span class="dot"></span>4-Session Loop</span>
+              </div>
+              <div class="sub">Upcoming sessions automatically mapped across your configured days:</div>
+
+              <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
+
+              <div class="rot-cycles" style="display:none">
                 <div class="cycle-box">
                   <span class="cycle-lbl">Week A (Odd)</span>
-                  <span class="cycle-val">Full R&amp;UoE + Full L</span>
+                  <span class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</span>
                   <div style="margin-top:8px">
                     <label style="margin-top:2px">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
@@ -2085,13 +2112,13 @@ footer{
                 <span class="cycle-swap material-symbols-outlined">swap_horiz</span>
                 <div class="cycle-box">
                   <span class="cycle-lbl">Week B (Even)</span>
-                  <span class="cycle-val">Full W + Full Sp</span>
+                  <span class="cycle-val" id="rotWkBSummary">Full W + Full Sp</span>
                   <div style="margin-top:8px">
                     <label style="margin-top:2px">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
               </div>
-              <div class="sub" style="margin-top:14px">The order you rotate exercises week by week. Fully automatic: Writing cycles through Essay → Article → Report → Review → Email.</div>
+              <div class="sub" style="margin-top:10px">The order you rotate exercises component by component:</div>
               <div><label>R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
               <div><label>Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
               <div><label>Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
@@ -2387,8 +2414,8 @@ function openUserModal(){
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
   const stageNames=['Stage 0 — Foundations (Trap Recognition)','Stage 1 — Precision (Fluency & Time)','Stage 2 — Mastery (Grade A Execution)'];
   const s=D.settings||SETTINGS_DEFAULT;
-  const aDayName=DAYS[s.sesA.day]||'Monday';
-  const bDayName=DAYS[s.sesB.day]||'Friday';
+  const sched=getSchedule();
+  const schedSummary=sched.map(slot=>`${DAYS[slot.day]} (${slot.time})`).join(' & ');
   
   const av=document.getElementById('modalAvatar');
   if(av){av.textContent=initial;av.style.background=USER.color||'var(--primary)';}
@@ -2399,7 +2426,7 @@ function openUserModal(){
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
   const uc=document.getElementById('modalUserSchedule');
-  if(uc)uc.textContent=`${aDayName} (${s.sesA.time}) & ${bDayName} (${s.sesB.time})`;
+  if(uc)uc.textContent=schedSummary;
   
   ov.style.display='flex';
 }
@@ -2961,29 +2988,28 @@ document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCoun
                    guardadas (se llama al guardar y al cargar). */
 function renderPlan(){
   const s=D.settings;
-  document.getElementById('pADay').value=s.sesA.day;document.getElementById('pATime').value=s.sesA.time;
-  document.getElementById('pBDay').value=s.sesB.day;document.getElementById('pBTime').value=s.sesB.time;
+  renderScheduleRows();
   document.getElementById('pUeMin').value=s.ueMin||50;document.getElementById('pPlanMin').value=s.planMin||5;
   document.getElementById('pWriteMin').value=s.writeMin||35;document.getElementById('pRevMin').value=s.revMin||20;
   document.getElementById('pListenMin').value=s.listenMin||40;document.getElementById('pSp1Sec').value=s.sp1Sec||60;document.getElementById('pSp2Sec').value=s.sp2Sec||180;
   document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
-  document.getElementById('pEven').value=s.even;document.getElementById('pOdd').value=s.odd;
-  document.getElementById('pRueCycle').value=s.rueCycle.join(',');
-  document.getElementById('pWCycle').value=s.wCycle.join(',');
-  document.getElementById('pLCycle').value=s.lCycle.join(',');
-  document.getElementById('pSpCycle').value=s.spCycle.join(',');
+  if(document.getElementById('pEven'))document.getElementById('pEven').value=s.even||3;
+  if(document.getElementById('pOdd'))document.getElementById('pOdd').value=s.odd||4;
+  document.getElementById('pRueCycle').value=(s.rueCycle||[1,2,3,4,5,6,7]).join(',');
+  document.getElementById('pWCycle').value=(s.wCycle||['Essay','Article','Report','Review','Email']).join(',');
+  document.getElementById('pLCycle').value=(s.lCycle||[1,2,3,4]).join(',');
+  document.getElementById('pSpCycle').value=(s.spCycle||[1,2,3,4]).join(',');
   document.getElementById('pE0w').value=s.e0.w;document.getElementById('pE0u').value=s.e0.u;document.getElementById('pE0l').value=s.e0.l;
   document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
   document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
 }
 function savePlan(){
-  const s=D.settings,g=id=>document.getElementById(id).value;
-  s.sesA.day=+g('pADay')||1;s.sesA.time=g('pATime')||s.sesA.time;
-  s.sesB.day=+g('pBDay')||5;s.sesB.time=g('pBTime')||s.sesB.time;
+  updateScheduleFromUI();
+  const s=D.settings,g=id=>document.getElementById(id)?document.getElementById(id).value:'';
   s.ueMin=+g('pUeMin')||50;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||35;s.revMin=+g('pRevMin')||20;
   s.listenMin=+g('pListenMin')||40;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
   s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
-  s.even=+g('pEven')||3;s.odd=+g('pOdd')||4;
+  if(g('pEven'))s.even=+g('pEven')||3;if(g('pOdd'))s.odd=+g('pOdd')||4;
   s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];
   s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];
   s.lCycle=String(g('pLCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.lCycle.length)s.lCycle=[1,2,3,4];
@@ -2996,6 +3022,7 @@ function savePlan(){
 function resetPlan(){
   if(!confirm('Restore the original plan? Your changes will be lost.'))return;
   D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+  D.sessionOffset=0;
   save();renderPlan();applyTimers();refreshAll();
 }
 
@@ -3554,27 +3581,227 @@ function renderGrafCons(){
   document.getElementById('gStreak').textContent='🔥 current streak: '+streak+' week'+(streak===1?'':'s');
   el.innerHTML=svgChart(W,H,g);
 }
-/* ---------- TODAY VIEW ----------
-   renderToday(): banner de "qué toca hoy" + tarjeta de ROTACIÓN.
-   La rotación indexa los ciclos de D.settings con el nº de semana ISO
-   (autoRue/autoW/autoL/autoSp) y aplica overrides manuales de
-   D.weekOverrides si existen. Después preselecciona: el select de
-   parte del Paso 1 (uePart), el tipo de texto del Writing (wTipo), y
-   escribe los enfoques de Listening/Speaking de Sesión B.
-   setOv(k,v): guarda un override de rotación para la semana. */
+/* ---------- TODAY VIEW & SESSION ENGINE ---------- */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const CORE_SESSIONS=[
+  {id:'rue',studio:'mon-a',name:'Full Reading & Use of English',fullTitle:'Session A — Full Reading & Use of English Sprint (50 min)',icon:'📚',dur:'50 min',badgeClass:'mon',desc:'52 questions in 50 min. Studio is open below.'},
+  {id:'l',studio:'fri-a',name:'Full Listening',fullTitle:'Session B — Full Listening Test (40 min)',icon:'🎧',dur:'40 min',badgeClass:'fri',desc:'30 questions uninterrupted + 20\' post-mortem. Studio is open below.'},
+  {id:'w',studio:'mon-b',name:'Full Writing',fullTitle:'Session A — Full Writing Studio',icon:'✍️',dur:'60 min',badgeClass:'mon',desc:'5\' plan + 35\' write + 20\' audit. Studio is open below.'},
+  {id:'sp',studio:'fri-b',name:'Full Speaking',fullTitle:'Session B — Full Speaking Simulation (60 min)',icon:'🗣️',dur:'60 min',badgeClass:'fri',desc:'15\' simulation (Parts 1-4) + 45\' C1 upgrade. Studio is open below.'}
+];
+
+function getSchedule(){
+  const s=D.settings||SETTINGS_DEFAULT;
+  if(Array.isArray(s.schedule)&&s.schedule.length>0){
+    return s.schedule;
+  }
+  const legacy=[];
+  if(s.sesA&&typeof s.sesA.day==='number')legacy.push({day:+s.sesA.day,time:s.sesA.time||'15:30'});
+  if(s.sesB&&typeof s.sesB.day==='number')legacy.push({day:+s.sesB.day,time:s.sesB.time||'13:00'});
+  return legacy.length>0?legacy:[{day:1,time:'15:30'},{day:5,time:'13:00'}];
+}
+
+function getSlotSession(weekNumber,slotIndex,scheduleLength){
+  const s=D.settings||SETTINGS_DEFAULT;
+  const offset=D.sessionOffset||0;
+  const globalSlot=(weekNumber-1)*scheduleLength+slotIndex+offset;
+  const sessionIdx=((globalSlot%4)+4)%4;
+  const writingIdx=Math.floor(globalSlot/4);
+  const writingGenre=(s.wCycle&&s.wCycle.length)?s.wCycle[((writingIdx%s.wCycle.length)+s.wCycle.length)%s.wCycle.length]:'Essay';
+  const meta=CORE_SESSIONS[sessionIdx];
+  const activeW=(D.weekOverrides&&D.weekOverrides.w)||writingGenre;
+  const title=meta.id==='w'?`Full Writing (${activeW})`:meta.name;
+  const fullTitle=meta.id==='w'?`Session A — Full Writing Studio: ${activeW} (60 min)`:meta.fullTitle;
+  return {globalSlot,sessionIdx,writingGenre,session:meta,activeWritingGenre:activeW,title,fullTitle};
+}
+
+function getNextScheduledSession(baseDate=new Date()){
+  const sched=getSchedule();
+  if(!sched.length)return null;
+  for(let d=1;d<=7;d++){
+    const targetDate=new Date(baseDate.getTime()+d*86400000);
+    const targetWd=targetDate.getDay();
+    const slotIdx=sched.findIndex(slot=>slot.day===targetWd);
+    if(slotIdx!==-1){
+      const targetWeek=isoWeek(targetDate);
+      const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
+      return {
+        daysAhead:d,
+        date:targetDate,
+        day:targetWd,
+        time:sched[slotIdx].time,
+        slotIdx,
+        ...slotInfo
+      };
+    }
+  }
+  return null;
+}
+
+function advanceSession(delta=1,silent=false){
+  D.sessionOffset=(D.sessionOffset||0)+delta;
+  save();
+  refreshAll();
+  if(!silent){
+    const nextSlot=getNextScheduledSession();
+    if(nextSlot){
+      selectSessionStudio(nextSlot.session.studio);
+    }
+  }
+}
+
+function resetSessionOffset(){
+  D.sessionOffset=0;
+  save();
+  refreshAll();
+}
+
+function doNextSessionNow(){
+  const nextSlot=getNextScheduledSession();
+  if(nextSlot){
+    selectSessionStudio(nextSlot.session.studio);
+    const nav=document.getElementById('sessionNav');
+    if(nav)nav.scrollIntoView({behavior:'smooth'});
+  }
+}
+
+function renderScheduleRows(){
+  const c=document.getElementById('scheduleRowsContainer');
+  if(!c)return;
+  const sched=getSchedule();
+  c.innerHTML=sched.map((slot,i)=>`
+    <div class="row" style="align-items:center;margin:0;gap:8px;background:var(--surface-container-low);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--outline-variant)">
+      <div style="flex:1">
+        <label style="font-size:11px;margin-bottom:2px">Session ${i+1} — Day</label>
+        <select class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
+          ${DAYS.map((d,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;margin-bottom:2px">Time</label>
+        <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-top:16px">
+        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="Delete session day" ${sched.length<=1?'disabled style="opacity:0.4;cursor:not-allowed"':''}>🗑️</button>
+      </div>
+    </div>
+  `).join('');
+  
+  // Sync fallback inputs
+  if(sched[0]){
+    const aD=document.getElementById('pADay'),aT=document.getElementById('pATime');
+    if(aD)aD.value=sched[0].day;
+    if(aT)aT.value=sched[0].time;
+  }
+  if(sched[1]||sched[0]){
+    const bSlot=sched[1]||sched[0];
+    const bD=document.getElementById('pBDay'),bT=document.getElementById('pBTime');
+    if(bD)bD.value=bSlot.day;
+    if(bT)bT.value=bSlot.time;
+  }
+
+  // Update offset badge
+  const offBadge=document.getElementById('planOffsetBadge');
+  if(offBadge){
+    const off=D.sessionOffset||0;
+    offBadge.textContent='Offset: '+(off>=0?'+':'')+off;
+  }
+
+  renderSchedulePreview();
+}
+
+function updateScheduleFromUI(){
+  const dayEls=document.querySelectorAll('.sched-day-select');
+  const timeEls=document.querySelectorAll('.sched-time-input');
+  const newSched=[];
+  dayEls.forEach((el,i)=>{
+    const day=+el.value;
+    const time=(timeEls[i]&&timeEls[i].value)?timeEls[i].value:'15:30';
+    newSched.push({day,time});
+  });
+  if(newSched.length){
+    D.settings.schedule=newSched;
+    D.settings.sesA=newSched[0]||{day:1,time:'15:30'};
+    D.settings.sesB=newSched[1]||newSched[0];
+  }
+  renderSchedulePreview();
+}
+
+function addScheduleRow(){
+  const sched=getSchedule();
+  const usedDays=new Set(sched.map(s=>s.day));
+  let nextDay=1;
+  for(let d=1;d<=7;d++){
+    const cand=d%7;
+    if(!usedDays.has(cand)){
+      nextDay=cand;
+      break;
+    }
+  }
+  sched.push({day:nextDay,time:'17:00'});
+  D.settings.schedule=sched;
+  D.settings.sesA=sched[0];
+  D.settings.sesB=sched[1]||sched[0];
+  renderScheduleRows();
+}
+
+function removeScheduleRow(idx){
+  const sched=getSchedule();
+  if(sched.length<=1)return;
+  sched.splice(idx,1);
+  D.settings.schedule=sched;
+  D.settings.sesA=sched[0];
+  D.settings.sesB=sched[1]||sched[0];
+  renderScheduleRows();
+}
+
+function renderSchedulePreview(){
+  const p=document.getElementById('planUpcomingPreview');
+  if(!p)return;
+  const sched=getSchedule();
+  if(!sched.length)return;
+  const now=new Date();
+  const curWeek=isoWeek(now);
+  const items=[];
+  
+  for(let i=0;i<4;i++){
+    const slotIdx=i%sched.length;
+    const weekOffset=Math.floor(i/sched.length);
+    const targetWeek=curWeek+weekOffset;
+    const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
+    const dayName=DAYS[sched[slotIdx].day];
+    items.push(`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--green-surface);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--green-surface-border);font-size:12.5px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:600;color:var(--on-green-card)">${slotInfo.session.icon} ${dayName} (${sched[slotIdx].time})</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="badge ${slotInfo.session.badgeClass}">${slotInfo.title}</span>
+          <span class="pill-tag">${slotInfo.session.dur}</span>
+        </div>
+      </div>
+    `);
+  }
+  p.innerHTML=items.join('');
+}
+
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
+
 function updatePersonalizedUI(){
   const s=D.settings||SETTINGS_DEFAULT;
-  const aDayName=DAYS[s.sesA.day]||'Monday';
-  const bDayName=DAYS[s.sesB.day]||'Friday';
+  const sched=getSchedule();
+  const aSlot=sched[0]||{day:1,time:'15:30'};
+  const bSlot=sched[1]||sched[0]||{day:5,time:'13:00'};
+  const aDayName=DAYS[aSlot.day]||'Monday';
+  const bDayName=DAYS[bSlot.day]||'Friday';
   const aShort=aDayName.slice(0,3);
   const bShort=bDayName.slice(0,3);
-  const aTime=s.sesA.time||'15:30';
-  const bTime=s.sesB.time||'13:00';
+  const aTime=aSlot.time||'15:30';
+  const bTime=bSlot.time||'13:00';
   const userName=(USER&&USER.name)?USER.name:'Student';
   const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
   const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+  const schedSummary=sched.map(slot=>`${DAYS[slot.day]} (${slot.time})`).join(' & ');
 
   // Dynamic Header
   const kickerEl=document.getElementById('userKicker');
@@ -3582,7 +3809,7 @@ function updatePersonalizedUI(){
   const titleEl=document.getElementById('userTitle');
   if(titleEl)titleEl.textContent=`Today · ${userName}`;
   const subEl=document.getElementById('userSub');
-  if(subEl)subEl.textContent=`Personalized study plan for ${userName} · ${curStageTxt} · Schedule: ${aDayName} (${aTime}) & ${bDayName} (${bTime}).`;
+  if(subEl)subEl.textContent=`Personalized study plan for ${userName} · ${curStageTxt} · Schedule: ${schedSummary}.`;
 
   // Dynamic Navigation Studio Tabs
   const nA=document.getElementById('navLblMonA');
@@ -3630,7 +3857,8 @@ function renderToday(){
   updatePersonalizedUI();
   const d=new Date(),wd=d.getDay();
   const week=isoWeek(d);
-  const s=D.settings;
+  const s=D.settings||SETTINGS_DEFAULT;
+  const sched=getSchedule();
   const isWeekA=(week%2!==0);
   const wIdx=Math.floor(week/2)%s.wCycle.length;
   const autoW=s.wCycle[wIdx];
@@ -3673,45 +3901,24 @@ function renderToday(){
 
   const nb=document.getElementById('nextBox');
   const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const aDay=s.sesA.day,bDay=s.sesB.day;
   const weekLabel=isWeekA?'Week A (R&UoE + Listening)':'Week B (Writing + Speaking)';
   let defaultStudio='mon-a';
 
-  if(wd===aDay){
-    if(isWeekA){
-      defaultStudio='mon-a';
-      nb.innerHTML=`<div class="big">📚 Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Reading &amp; Use of English Sprint (50 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 52 questions in 50 min. Studio is open below.</div>`;
-    }else{
-      defaultStudio='mon-b';
-      nb.innerHTML=`<div class="big">✍️ Today (${DIA[wd]}): <b style="color:var(--green-accent)">Session A — Full Writing Studio: ${wT} (60 min)</b> <span class="badge mon">${s.sesA.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · Auto-rotation genre: <b>${wT}</b> (5' plan + 35' write + 20' audit). Studio is open below.</div>`;
-    }
-  }else if(wd===bDay){
-    if(isWeekA){
-      defaultStudio='fri-a';
-      nb.innerHTML=`<div class="big">🎧 Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Listening Test (40 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 30 questions uninterrupted + 20' post-mortem. Studio is open below.</div>`;
-    }else{
-      defaultStudio='fri-b';
-      nb.innerHTML=`<div class="big">🗣️ Today (${DIA[wd]}): <b style="color:var(--hero-accent)">Session B — Full Speaking Simulation (60 min)</b> <span class="badge fri">${s.sesB.time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · 15' simulation (Parts 1-4) + 45' C1 upgrade. Studio is open below.</div>`;
-    }
+  const todaySlotIdx=sched.findIndex(slot=>slot.day===wd);
+
+  if(todaySlotIdx!==-1){
+    const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
+    defaultStudio=slotInfo.session.studio;
+    nb.innerHTML=`<div class="big">${slotInfo.session.icon} Today (${DIA[wd]}): <b style="color:var(--green-accent)">${slotInfo.fullTitle}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · ${slotInfo.session.desc}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">▶ Start Session</button><button class="btn sm" onclick="advanceSession(1)" title="Adelantar / Correr secuencia (+1)">⚡ Fast-forward (+1)</button></div>`;
   }else{
-    const toA=(aDay-wd+7)%7||7,toB=(bDay-wd+7)%7||7;
-    let nextTitle='',nextDays=0,nextDayName='';
-    if(toA<=toB){
-      nextDays=toA;
-      nextDayName=DIA[aDay];
-      const nextWeek=isoWeek(new Date(d.getTime()+toA*86400000));
-      const nextIsWeekA=(nextWeek%2!==0);
-      const nextWIdx=Math.floor(nextWeek/2)%s.wCycle.length;
-      const nextW=s.wCycle[nextWIdx];
-      defaultStudio=nextIsWeekA?'mon-a':'mon-b';
-      nextTitle=nextIsWeekA?'Session A (Full Reading & UoE 50\')':`Session A (Full Writing — ${nextW})`;
+    const nextSlot=getNextScheduledSession(d);
+    if(nextSlot){
+      defaultStudio=nextSlot.session.studio;
+      const nextTitle=nextSlot.sessionIdx===0?'Session A (Full Reading & UoE 50\')':nextSlot.sessionIdx===1?'Session B (Full Listening 40\')':nextSlot.sessionIdx===2?`Session A (Full Writing — ${nextSlot.activeWritingGenre})`:'Session B (Full Speaking 60\')';
+      nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${DIA[nextSlot.day]} (in ${nextSlot.daysAhead}d) — ${nextTitle}</b>. Cycle: <b>${weekLabel}</b> · Active Writing genre: <b>${wT}</b>. You can switch sessions above.</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="doNextSessionNow()">⚡ Do next session now</button><button class="btn sm" onclick="advanceSession(1)" title="Correr la secuencia 1 lugar">⏩ Shift (+1)</button></div>`;
     }else{
-      nextDays=toB;
-      nextDayName=DIA[bDay];
-      defaultStudio=isWeekA?'fri-a':'fri-b';
-      nextTitle=isWeekA?'Session B (Full Listening 40\')':'Session B (Full Speaking 60\')';
+      nb.innerHTML=`<div class="big">🗓 No session scheduled</div><div class="when">Please configure your study days in PLAN.</div>`;
     }
-    nb.innerHTML=`<div class="big">🗓 No session scheduled today</div><div class="when">Next: <b>${nextDayName} (in ${nextDays}d) — ${nextTitle}</b>. Cycle: <b>${weekLabel}</b> · Active Writing genre: <b>${wT}</b>. You can switch sessions above.</div>`;
   }
   
   // Set initial studio if none selected yet
