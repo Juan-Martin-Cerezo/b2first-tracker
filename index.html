@@ -3841,16 +3841,6 @@ function updatePersonalizedUI(){
   if(st4W)st4W.textContent=`Week B · ${bDayName}`;
   const st4T=document.getElementById('st4TimeBadge');
   if(st4T)st4T.textContent=`${bShort.toUpperCase()} ${bTime}`;
-
-  // Dynamic Rotation Schedule Rows
-  const rASesA=document.getElementById('rotWkASesADay');
-  if(rASesA)rASesA.textContent=`${aDayName} ${aTime}`;
-  const rASesB=document.getElementById('rotWkASesBDay');
-  if(rASesB)rASesB.textContent=`${bDayName} ${bTime}`;
-  const rBSesA=document.getElementById('rotWkBSesADay');
-  if(rBSesA)rBSesA.textContent=`${aDayName} ${aTime}`;
-  const rBSesB=document.getElementById('rotWkBSesBDay');
-  if(rBSesB)rBSesB.textContent=`${bDayName} ${bTime}`;
 }
 
 function renderToday(){
@@ -3885,23 +3875,72 @@ function renderToday(){
     }).join('');
   }
 
-  // Update redesigned 2-week schedule card statuses
+  // Dynamic Sidebar 2-Week Rotation Schedule Cards
   const rotCardWkA=document.getElementById('rotCardWkA');
   const rotCardWkB=document.getElementById('rotCardWkB');
-  const rotWkAStatus=document.getElementById('rotWkAStatus');
-  const rotWkBStatus=document.getElementById('rotWkBStatus');
+
+  if(rotCardWkA){
+    const rowsA=sched.map((slot,idx)=>{
+      const slotInfo=getSlotSession(week,idx,sched.length);
+      const dayName=DAYS[slot.day];
+      const isToday=(slot.day===wd);
+      const idAttr=(idx===0)?'id="rotWkASesADay"':(idx===1)?'id="rotWkASesBDay"':'';
+      const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
+      return `
+        <div class="rot-session-row" style="${isToday?'background:rgba(255,255,255,0.06);border-radius:6px;padding:4px 6px;margin:2px 0':''}">
+          <div class="rot-ses-dot ${dotColor}"></div>
+          <div class="rot-ses-info">
+            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time} ${isToday?'<span class="badge ok" style="font-size:9px;padding:1px 5px;margin-left:4px">TODAY</span>':''}</span>
+            <span class="rot-ses-name">${slotInfo.title}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    rotCardWkA.innerHTML=`
+      <div class="rot-wk-head">
+        <span class="rot-wk-name">WEEK A</span>
+        <span class="rot-wk-status" id="rotWkAStatus">${isWeekA?'ACTIVE NOW':'UPCOMING'}</span>
+      </div>
+      ${rowsA}
+    `;
+    rotCardWkA.classList.toggle('active-week',isWeekA);
+  }
+
+  if(rotCardWkB){
+    const nextWeek=week+1;
+    const rowsB=sched.map((slot,idx)=>{
+      const slotInfo=getSlotSession(nextWeek,idx,sched.length);
+      const dayName=DAYS[slot.day];
+      const idAttr=(idx===0)?'id="rotWkBSesADay"':(idx===1)?'id="rotWkBSesBDay"':'';
+      const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
+      return `
+        <div class="rot-session-row">
+          <div class="rot-ses-dot ${dotColor}"></div>
+          <div class="rot-ses-info">
+            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time}</span>
+            <span class="rot-ses-name">${slotInfo.title}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    rotCardWkB.innerHTML=`
+      <div class="rot-wk-head">
+        <span class="rot-wk-name">WEEK B</span>
+        <span class="rot-wk-status" id="rotWkBStatus">${!isWeekA?'ACTIVE NOW':'UPCOMING'}</span>
+      </div>
+      ${rowsB}
+    `;
+    rotCardWkB.classList.toggle('active-week',!isWeekA);
+  }
+
   const rotWkBWName=document.getElementById('rotWkBWName');
   const rotQueueSub=document.getElementById('rotQueueSub');
   if(rotWkBWName)rotWkBWName.textContent=wT;
   if(rotQueueSub)rotQueueSub.textContent='Active genre: '+wT;
-  if(rotCardWkA)rotCardWkA.classList.toggle('active-week',isWeekA);
-  if(rotCardWkB)rotCardWkB.classList.toggle('active-week',!isWeekA);
-  if(rotWkAStatus)rotWkAStatus.textContent=isWeekA?'ACTIVE NOW':'UPCOMING';
-  if(rotWkBStatus)rotWkBStatus.textContent=!isWeekA?'ACTIVE NOW':'UPCOMING';
 
   const nb=document.getElementById('nextBox');
   const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const weekLabel=isWeekA?'Week A (R&UoE + Listening)':'Week B (Writing + Speaking)';
+  const weekLabel=isWeekA?'Week A':'Week B';
   let defaultStudio='mon-a';
 
   const todaySlotIdx=sched.findIndex(slot=>slot.day===wd);
@@ -3909,7 +3948,7 @@ function renderToday(){
   if(todaySlotIdx!==-1){
     const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
     defaultStudio=slotInfo.session.studio;
-    nb.innerHTML=`<div class="big">${slotInfo.session.icon} Today (${DIA[wd]}): <b style="color:var(--green-accent)">${slotInfo.fullTitle}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">Cycle: <b>${weekLabel}</b> · ${slotInfo.session.desc}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">▶ Start Session</button><button class="btn sm" onclick="advanceSession(1)" title="Adelantar / Correr secuencia (+1)">⚡ Fast-forward (+1)</button></div>`;
+    nb.innerHTML=`<div class="big">${slotInfo.session.icon} Today (${DIA[wd]}): <b style="color:var(--green-accent)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">Schedule: <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · Studio is open below.</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">▶ Open Studio</button><button class="btn sm" onclick="advanceSession(1)" title="Adelantar / Correr secuencia (+1)">⚡ Fast-forward (+1)</button></div>`;
   }else{
     const nextSlot=getNextScheduledSession(d);
     if(nextSlot){
@@ -3938,7 +3977,8 @@ function renderToday(){
   }
   const curEl=document.getElementById('rotVal');
   if(curEl){
-    curEl.textContent=(isWeekA?`Week A: Full R&UoE + Full Listening`:`Week B: Full Writing (${wT}) + Full Speaking`);
+    const currentWeekSlots=sched.map((slot,idx)=>getSlotSession(week,idx,sched.length).title).join(' + ');
+    curEl.textContent=`Week ${isWeekA?'A':'B'}: ${currentWeekSlots}`;
   }
 }
 function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
