@@ -2273,7 +2273,8 @@ const SETTINGS_DEFAULT={
    ===================================================================== */
 const BASE_KEY='b2first_tracker_v1';
 const AUTH_KEY='b2first_user';
-let USER=null; // {id, name, color, token}
+var USER=null; // {id, name, color, token}
+window.USER=USER;
 function userKey(){return USER?BASE_KEY+'_'+USER.id:BASE_KEY}
 function loadUser(){
   try{return JSON.parse(localStorage.getItem(AUTH_KEY))||null}catch(e){return null}
@@ -2285,7 +2286,14 @@ function authHeaders(){
   if(USER&&USER.token)h['Authorization']='Bearer '+USER.token;
   return h;
 }
-function apiUrl(path){return path+(USER?('?user='+encodeURIComponent(USER.id)):'')}
+function apiUrl(path,params={}){
+  let qs=[];
+  if(USER&&USER.id)qs.push('user='+encodeURIComponent(USER.id));
+  for(const k in params){
+    if(params[k]!==undefined&&params[k]!==null)qs.push(encodeURIComponent(k)+'='+encodeURIComponent(params[k]));
+  }
+  return path+(qs.length?('?'+qs.join('&')):'');
+}
 async function apiLogin(name,password){
   const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password})});
   if(!r.ok)throw new Error((await r.text())||'login failed');
@@ -2370,6 +2378,7 @@ function finishOnboarding(){
   s.sesA.time=document.getElementById('obATime').value||s.sesA.time;
   s.sesB.day=+document.getElementById('obBDay').value||5;
   s.sesB.time=document.getElementById('obBTime').value||s.sesB.time;
+  s.schedule=[{day:s.sesA.day,time:s.sesA.time},{day:s.sesB.day,time:s.sesB.time}];
   const plan=document.querySelector('input[name="obPlan"]:checked');
   if(plan&&plan.value==='blank'){
     // Empezar de cero: settings default pero sin criterios de gates pre-cargados
@@ -2436,13 +2445,14 @@ function closeUserModal(){
 }
 
 /* ---------- CARGA / GUARDADO (por usuario) ---------- */
-let D=load();
+var D=load();
+window.D=D;
 function load(){
   const key=userKey();
   try{
     const d=JSON.parse(localStorage.getItem(key))||{};
     // Fallback: el owner con la clave vieja (migración)
-    if(!Object.keys(d).length&&key!==BASE_KEY&&localStorage.getItem(BASE_KEY)){
+    if(!Object.keys(d).length&&key!==BASE_KEY&&USER&&USER.id==='owner'&&localStorage.getItem(BASE_KEY)){
       const old=JSON.parse(localStorage.getItem(BASE_KEY))||{};
       if(old.log||old.errs){Object.assign(d,old)}
     }
@@ -2488,7 +2498,7 @@ function syncPush(){
   },300);
 }
 function syncPull(){
-  return fetch(apiUrl('/api/progress')+'&download=1',{headers:authHeaders()})
+  return fetch(apiUrl('/api/progress',{download:1}),{headers:authHeaders()})
     .then(r=>{if(!r.ok)throw 0;return r.json()})
     .then(d=>{
       if(d&&typeof d==='object'){
@@ -3787,17 +3797,32 @@ function renderSchedulePreview(){
 
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
 
+function getSkillNextOccurrence(skillId,baseDate=new Date()){
+  const sched=getSchedule();
+  if(!sched.length)return {day:1,time:'15:30',dayName:'Monday',dayShort:'Mon',weekLabel:'Week A',weekShort:'A'};
+  const curWeek=isoWeek(baseDate);
+  for(let step=0;step<16;step++){
+    const slotIdx=step%sched.length;
+    const weekOffset=Math.floor(step/sched.length);
+    const targetWeek=curWeek+weekOffset;
+    const isTargetWeekA=(targetWeek%2!==0);
+    const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
+    if(slotInfo.session.id===skillId){
+      const day=sched[slotIdx].day;
+      const time=sched[slotIdx].time;
+      const dayName=DAYS[day];
+      const dayShort=dayName.slice(0,3);
+      const weekLabel=sched.length===2?(isTargetWeekA?'Week A':'Week B'):`Week ${targetWeek}`;
+      const weekShort=sched.length===2?(isTargetWeekA?'A':'B'):'';
+      return {day,time,dayName,dayShort,weekLabel,weekShort};
+    }
+  }
+  return {day:sched[0].day,time:sched[0].time,dayName:DAYS[sched[0].day],dayShort:DAYS[sched[0].day].slice(0,3),weekLabel:'Week A',weekShort:'A'};
+}
+
 function updatePersonalizedUI(){
   const s=D.settings||SETTINGS_DEFAULT;
   const sched=getSchedule();
-  const aSlot=sched[0]||{day:1,time:'15:30'};
-  const bSlot=sched[1]||sched[0]||{day:5,time:'13:00'};
-  const aDayName=DAYS[aSlot.day]||'Monday';
-  const bDayName=DAYS[bSlot.day]||'Friday';
-  const aShort=aDayName.slice(0,3);
-  const bShort=bDayName.slice(0,3);
-  const aTime=aSlot.time||'15:30';
-  const bTime=bSlot.time||'13:00';
   const userName=(USER&&USER.name)?USER.name:'Student';
   const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
   const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
@@ -3811,36 +3836,49 @@ function updatePersonalizedUI(){
   const subEl=document.getElementById('userSub');
   if(subEl)subEl.textContent=`Personalized study plan for ${userName} · ${curStageTxt} · Schedule: ${schedSummary}.`;
 
+  const now=new Date();
+  const rueOccur=getSkillNextOccurrence('rue',now);
+  const lOccur=getSkillNextOccurrence('l',now);
+  const wOccur=getSkillNextOccurrence('w',now);
+  const spOccur=getSkillNextOccurrence('sp',now);
+
+  const aSlot=sched[0]||{day:1,time:'15:30'};
+  const bSlot=sched[1]||sched[0]||{day:5,time:'13:00'};
+  const aDayName=DAYS[aSlot.day]||'Monday';
+  const bDayName=DAYS[bSlot.day]||'Friday';
+  const aShort=aDayName.slice(0,3);
+  const bShort=bDayName.slice(0,3);
+
   // Dynamic Navigation Studio Tabs
   const nA=document.getElementById('navLblMonA');
-  if(nA)nA.textContent=`${aShort} A: Full R&UoE`;
+  if(nA)nA.textContent=sched.length===2?`${aShort} A: Full R&UoE`:`${rueOccur.dayShort}: Full R&UoE`;
   const nFA=document.getElementById('navLblFriA');
-  if(nFA)nFA.textContent=`${bShort} A: Full Listening`;
+  if(nFA)nFA.textContent=sched.length===2?`${bShort} A: Full Listening`:`${lOccur.dayShort}: Full Listening`;
   const nB=document.getElementById('navLblMonB');
-  if(nB)nB.textContent=`${aShort} B: Full Writing`;
+  if(nB)nB.textContent=sched.length===2?`${aShort} B: Full Writing`:`${wOccur.dayShort}: Full Writing`;
   const nFB=document.getElementById('navLblFriB');
-  if(nFB)nFB.textContent=`${bShort} B: Full Speaking`;
+  if(nFB)nFB.textContent=sched.length===2?`${bShort} B: Full Speaking`:`${spOccur.dayShort}: Full Speaking`;
 
   // Dynamic Studio Card Badges
   const st1W=document.getElementById('st1WkBadge');
-  if(st1W)st1W.textContent=`Week A · ${aDayName}`;
+  if(st1W)st1W.textContent=sched.length===2?`Week A · ${aDayName}`:`${rueOccur.weekLabel} · ${rueOccur.dayName}`;
   const st1T=document.getElementById('st1TimeBadge');
-  if(st1T)st1T.textContent=`${aShort.toUpperCase()} ${aTime}`;
+  if(st1T)st1T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${rueOccur.dayShort.toUpperCase()} ${rueOccur.time}`;
 
   const st2W=document.getElementById('st2WkBadge');
-  if(st2W)st2W.textContent=`Week B · ${aDayName}`;
+  if(st2W)st2W.textContent=sched.length===2?`Week B · ${aDayName}`:`${wOccur.weekLabel} · ${wOccur.dayName}`;
   const st2T=document.getElementById('st2TimeBadge');
-  if(st2T)st2T.textContent=`${aShort.toUpperCase()} ${aTime}`;
+  if(st2T)st2T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${wOccur.dayShort.toUpperCase()} ${wOccur.time}`;
 
   const st3W=document.getElementById('st3WkBadge');
-  if(st3W)st3W.textContent=`Week A · ${bDayName}`;
+  if(st3W)st3W.textContent=sched.length===2?`Week A · ${bDayName}`:`${lOccur.weekLabel} · ${lOccur.dayName}`;
   const st3T=document.getElementById('st3TimeBadge');
-  if(st3T)st3T.textContent=`${bShort.toUpperCase()} ${bTime}`;
+  if(st3T)st3T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${lOccur.dayShort.toUpperCase()} ${lOccur.time}`;
 
   const st4W=document.getElementById('st4WkBadge');
-  if(st4W)st4W.textContent=`Week B · ${bDayName}`;
+  if(st4W)st4W.textContent=sched.length===2?`Week B · ${bDayName}`:`${spOccur.weekLabel} · ${spOccur.dayName}`;
   const st4T=document.getElementById('st4TimeBadge');
-  if(st4T)st4T.textContent=`${bShort.toUpperCase()} ${bTime}`;
+  if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
 
 function renderToday(){
