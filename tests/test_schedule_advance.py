@@ -14,6 +14,10 @@ with sync_playwright() as p:
     login_owner(pg, URL)
     pg.wait_for_timeout(300)
 
+    # Backup original state
+    orig_sched = pg.evaluate("JSON.stringify(D.settings.schedule || [])")
+    orig_offset = pg.evaluate("D.sessionOffset || 0")
+
     # 1. Check default schedule rows count
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(200)
@@ -62,9 +66,15 @@ with sync_playwright() as p:
     offset_after_banner = pg.evaluate("D.sessionOffset || 0")
     out["offset_after_banner"] = offset_after_banner
 
-    # 5. Reset offset
-    pg.evaluate("resetSessionOffset();")
-    out["offset_after_reset"] = pg.evaluate("D.sessionOffset || 0")
+    # 5. Restore original state
+    pg.evaluate("""([origSched, origOff]) => {
+        D.settings.schedule = JSON.parse(origSched);
+        D.sessionOffset = origOff;
+        save();
+        renderPlan();
+        renderToday();
+    }""", [orig_sched, orig_offset])
+    out["offset_restored"] = pg.evaluate("D.sessionOffset || 0")
 
     out["errores_js"] = errs
     b.close()
