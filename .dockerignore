@@ -1,0 +1,11 @@
+data/
+.git/
+*.key
+*.crt
+b2f_deleg_watch.py
+tests/
+delegacion/
+__pycache__/
+*.pyc
+stitch_assets/
+.commandcode/
