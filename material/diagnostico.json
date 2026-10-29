@@ -10,7 +10,7 @@
       "options": ["put", "set", "made", "taken"],
       "answer": 1,
       "taxonomy": "L-GAP",
-      "explain": "«Set up a scheme» es la colocación correcta para crear o poner en marcha un programa. «Put up» significa alojar o levantar, y «make up» es inventar o reconciliarse."
+      "explain": "\"Set up a scheme\" is the correct collocation for creating or launching a programme. \"Put up\" means to accommodate or erect, and \"make up\" means to invent or reconcile."
     },
     {
       "id": "d02",
@@ -20,7 +20,7 @@
       "options": ["turned", "came", "ended", "worked"],
       "answer": 0,
       "taxonomy": "L-GAP",
-      "explain": "«Turn out to be» significa resultar ser de una manera inesperada. «End up» no va seguido de «to be», y «work out» sin objeto significa salir bien pero no admite «to be»."
+      "explain": "\"Turn out to be\" means to unexpectedly result in being. \"End up\" is not followed by \"to be\", and \"work out\" without an object means to go well but does not take \"to be\"."
     },
     {
       "id": "d03",
@@ -30,7 +30,7 @@
       "options": ["only", "just", "even", "once"],
       "answer": 0,
       "taxonomy": "G-ERR",
-      "explain": "La inversión negativa al inicio de la oración («Not only did... but it also...») exige «only» como correlativo fijo. Las demás opciones rompen la estructura correlativa."
+      "explain": "Negative inversion at the start of the sentence (\"Not only did... but it also...\") requires \"only\" as the fixed correlative. The other options break the correlative structure."
     },
     {
       "id": "d04",
@@ -40,7 +40,7 @@
       "options": ["unless", "despite", "otherwise", "although"],
       "answer": 2,
       "taxonomy": "G-ERR",
-      "explain": "«Otherwise» equivale a «si no / de lo contrario» y conecta la advertencia («had better») con la consecuencia posible. «Unless» significa «a menos que» e invertiría el sentido."
+      "explain": "\"Otherwise\" means \"if not\" and links the warning (\"had better\") to the possible consequence. \"Unless\" means \"except if\" and would reverse the meaning."
     },
     {
       "id": "d05",
@@ -50,7 +50,7 @@
       "options": ["growing", "growth", "grown", "grower"],
       "answer": 1,
       "taxonomy": "L-GAP",
-      "explain": "Entre el adjetivo «rapid» y la preposición «of» necesitás el sustantivo abstracto «growth» (crecimiento). La trampa típica es elegir «growing», que no funciona como sustantivo acá."
+      "explain": "Between the adjective \"rapid\" and the preposition \"of\" you need the abstract noun \"growth\". The classic trap is choosing \"growing\", which does not work as a noun here."
     },
     {
       "id": "d06",
@@ -65,7 +65,7 @@
       ],
       "answer": 0,
       "taxonomy": "G-ERR",
-      "explain": "El verbo «apologise» rige la preposición «for» seguida de gerundio («for not returning»). Usar infinitivo («to not return» o «for not to return») es la trampa gramatical clásica."
+      "explain": "The verb \"apologise\" takes the preposition \"for\" followed by a gerund (\"for not returning\"). Using an infinitive (\"to not return\" or \"for not to return\") is the classic grammar trap."
     },
     {
       "id": "d07",
@@ -80,7 +80,7 @@
       ],
       "answer": 3,
       "taxonomy": "G-ERR",
-      "explain": "Para expresar crítica o arrepentimiento sobre el pasado se usa «ought to have + participio» («ought to have backed»). «Ought to back» refiere al presente y omitir «to» es incorrecto."
+      "explain": "To express criticism or regret about the past, use \"ought to have + past participle\" (\"ought to have backed\"). \"Ought to back\" refers to the present, and omitting \"to\" is wrong."
     },
     {
       "id": "d08",
@@ -95,7 +95,7 @@
       ],
       "answer": 1,
       "taxonomy": "T-MIS",
-      "explain": "El texto dice que pensó que el ritmo lento la volvería loca, pero terminó detestando volver a la capital. La trampa «city noise» aparece literal pero negada por «instead of»."
+      "explain": "The text says she thought the slow pace would drive her crazy, but she ended up dreading trips back to the capital. The trap \"city noise\" appears literally but is negated by \"instead of\"."
     },
     {
       "id": "d09",
@@ -110,7 +110,7 @@
       ],
       "answer": 2,
       "taxonomy": "T-MIS",
-      "explain": "«Felt more like a university lecture than an interactive experience» equivale a un tono demasiado académico y poco interactivo. «Halfway through» indica cuándo abandonaron, no una falla."
+      "explain": "\"Felt more like a university lecture than an interactive experience\" means the tone was too academic and not engaging enough. \"Halfway through\" states when they gave up, not a fault."
     },
     {
       "id": "d10",
@@ -125,7 +125,7 @@
       ],
       "answer": 0,
       "taxonomy": "T-MIS",
-      "explain": "La oración siguiente usa «those scheduled rest days», que necesita un contraste previo con «training harder every single day». «In fact, the opposite is often true» introduce ese giro."
+      "explain": "The next sentence uses \"those scheduled rest days\", which needs a prior contrast with \"training harder every single day\". \"In fact, the opposite is often true\" introduces that shift."
     },
     {
       "id": "d11",
@@ -135,7 +135,7 @@
       "options": ["Person A", "Person B", "Person C", "Person D"],
       "answer": 1,
       "taxonomy": "T-MIS",
-      "explain": "Person B dice «took the role purely for the high salary» (motivo económico). Person C menciona «pay» como distractor léxico, pero aclara que era bajo («modest»)."
+      "explain": "Person B says \"took the role purely for the high salary\" (financial reason). Person C mentions \"pay\" as a lexical distractor but clarifies it was low (\"modest\")."
     },
     {
       "id": "d12",
@@ -145,7 +145,7 @@
       "options": ["Reviewer A", "Reviewer B", "Reviewer C", "Reviewer D"],
       "answer": 2,
       "taxonomy": "T-MIS",
-      "explain": "Tanto B como C hablan de fotografía e historia predecible, pero sólo C recomienda pagar la entrada («makes the ticket worthwhile»). B dice lo opuesto («cannot rescue»)."
+      "explain": "Both B and C mention photography and a predictable plot, but only C recommends paying for the ticket (\"makes the ticket worthwhile\"). B says the opposite (\"cannot rescue\")."
     }
   ]
 }

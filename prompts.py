@@ -1,47 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Rúbrica oficial de Writing de B2 First (Cambridge) y prompts del corrector IA.
+"""Official B2 First (Cambridge) Writing rubric and AI marker prompts.
 
-Fuente: /home/juan/Descargas/b2-first/05-Handbooks/b2-first-handbook.pdf
-Páginas del PDF: 33–36 (numeración impresa: 31–34).
+Source: /home/juan/Descargas/b2-first/05-Handbooks/b2-first-handbook.pdf
+PDF pages: 33–36 (printed numbering: 31–34).
 """
 
-RUBRIC_SOURCE = "B2 First Handbook, páginas 32-35 (Cambridge University Press)"
+RUBRIC_SOURCE = "B2 First Handbook, pages 32-35 (Cambridge University Press)"
 
 SCHEMA_KEYS = ("content", "communicative_achievement", "organisation", "language")
 SCHEMA_KEYS_EXTRA = ("weaknesses",)
 
 BANDS = {
     "content": {
-        0: "Content is totally irrelevant. Target reader is not informed.",  # pág 35 (impreso 33)
-        1: "Irrelevances and misinterpretation of task may be present. Target reader is minimally informed.",  # pág 35 (impreso 33)
-        2: "Performance shares features of Bands 1 and 3.",  # pág 35 (impreso 33)
-        3: "Minor irrelevances and/or omissions may be present. Target reader is on the whole informed.",  # pág 35 (impreso 33)
-        4: "Performance shares features of Bands 3 and 5.",  # pág 35 (impreso 33)
-        5: "All content is relevant to the task. Target reader is fully informed.",  # pág 35 (impreso 33)
+        0: "Content is totally irrelevant. Target reader is not informed.",  # p. 35 (printed 33)
+        1: "Irrelevances and misinterpretation of task may be present. Target reader is minimally informed.",  # p. 35 (printed 33)
+        2: "Performance shares features of Bands 1 and 3.",  # p. 35 (printed 33)
+        3: "Minor irrelevances and/or omissions may be present. Target reader is on the whole informed.",  # p. 35 (printed 33)
+        4: "Performance shares features of Bands 3 and 5.",  # p. 35 (printed 33)
+        5: "All content is relevant to the task. Target reader is fully informed.",  # p. 35 (printed 33)
     },
     "communicative_achievement": {
-        0: "Performance below Band 1.",  # pág 35 (impreso 33)
-        1: "Uses the conventions of the communicative task in generally appropriate ways to communicate straightforward ideas.",  # pág 35 (impreso 33)
-        2: "Performance shares features of Bands 1 and 3.",  # pág 35 (impreso 33)
-        3: "Uses the conventions of the communicative task to hold the target reader’s attention and communicate straightforward ideas.",  # pág 35 (impreso 33)
-        4: "Performance shares features of Bands 3 and 5.",  # pág 35 (impreso 33)
-        5: "Uses the conventions of the communicative task effectively to hold the target reader’s attention and communicate straightforward and complex ideas, as appropriate.",  # pág 35 (impreso 33)
+        0: "Performance below Band 1.",  # p. 35 (printed 33)
+        1: "Uses the conventions of the communicative task in generally appropriate ways to communicate straightforward ideas.",  # p. 35 (printed 33)
+        2: "Performance shares features of Bands 1 and 3.",  # p. 35 (printed 33)
+        3: "Uses the conventions of the communicative task to hold the target reader’s attention and communicate straightforward ideas.",  # p. 35 (printed 33)
+        4: "Performance shares features of Bands 3 and 5.",  # p. 35 (printed 33)
+        5: "Uses the conventions of the communicative task effectively to hold the target reader’s attention and communicate straightforward and complex ideas, as appropriate.",  # p. 35 (printed 33)
     },
     "organisation": {
-        0: "Performance below Band 1.",  # pág 35 (impreso 33)
-        1: "Text is connected and coherent, using basic linking words and a limited number of cohesive devices.",  # pág 35 (impreso 33)
-        2: "Performance shares features of Bands 1 and 3.",  # pág 35 (impreso 33)
-        3: "Text is generally well organised and coherent, using a variety of linking words and cohesive devices.",  # pág 35 (impreso 33)
-        4: "Performance shares features of Bands 3 and 5.",  # pág 35 (impreso 33)
-        5: "Text is well organised and coherent, using a variety of cohesive devices and organisational patterns to generally good effect.",  # pág 35 (impreso 33)
+        0: "Performance below Band 1.",  # p. 35 (printed 33)
+        1: "Text is connected and coherent, using basic linking words and a limited number of cohesive devices.",  # p. 35 (printed 33)
+        2: "Performance shares features of Bands 1 and 3.",  # p. 35 (printed 33)
+        3: "Text is generally well organised and coherent, using a variety of linking words and cohesive devices.",  # p. 35 (printed 33)
+        4: "Performance shares features of Bands 3 and 5.",  # p. 35 (printed 33)
+        5: "Text is well organised and coherent, using a variety of cohesive devices and organisational patterns to generally good effect.",  # p. 35 (printed 33)
     },
     "language": {
-        0: "Performance below Band 1.",  # pág 35 (impreso 33)
-        1: "Uses everyday vocabulary generally appropriately, while occasionally overusing certain lexis. Uses simple grammatical forms with a good degree of control. While errors are noticeable, meaning can still be determined.",  # pág 35 (impreso 33)
-        2: "Performance shares features of Bands 1 and 3.",  # pág 35 (impreso 33)
-        3: "Uses a range of everyday vocabulary appropriately, with occasional inappropriate use of less common lexis. Uses a range of simple and some complex grammatical forms with a good degree of control. Errors do not impede communication.",  # pág 35 (impreso 33)
-        4: "Performance shares features of Bands 3 and 5.",  # pág 35 (impreso 33)
-        5: "Uses a range of vocabulary, including less common lexis, appropriately. Uses a range of simple and complex grammatical forms with control and flexibility. Occasional errors may be present but do not impede communication.",  # pág 35 (impreso 33)
+        0: "Performance below Band 1.",  # p. 35 (printed 33)
+        1: "Uses everyday vocabulary generally appropriately, while occasionally overusing certain lexis. Uses simple grammatical forms with a good degree of control. While errors are noticeable, meaning can still be determined.",  # p. 35 (printed 33)
+        2: "Performance shares features of Bands 1 and 3.",  # p. 35 (printed 33)
+        3: "Uses a range of everyday vocabulary appropriately, with occasional inappropriate use of less common lexis. Uses a range of simple and some complex grammatical forms with a good degree of control. Errors do not impede communication.",  # p. 35 (printed 33)
+        4: "Performance shares features of Bands 3 and 5.",  # p. 35 (printed 33)
+        5: "Uses a range of vocabulary, including less common lexis, appropriately. Uses a range of simple and complex grammatical forms with control and flexibility. Occasional errors may be present but do not impede communication.",  # p. 35 (printed 33)
     },
 }
 
@@ -87,19 +87,19 @@ Band 2: Performance shares features of Bands 1 and 3.
 Band 1: Uses everyday vocabulary generally appropriately, while occasionally overusing certain lexis. Uses simple grammatical forms with a good degree of control. While errors are noticeable, meaning can still be determined.
 Band 0: Performance below Band 1."""
 
-WRITING_SYSTEM = f"""Sos un examinador senior oficial de Cambridge Assessment English para el examen B2 First (FCE).
-Tu tarea es evaluar textos de Writing aplicando estrictamente la escala oficial de Cambridge que se incluye a continuación:
+WRITING_SYSTEM = f"""You are a senior official Cambridge Assessment English examiner for the B2 First (FCE) exam.
+Your task is to assess Writing texts by strictly applying the official Cambridge scale included below:
 
 {RUBRIC_TEXT}
 
-REGLAS OBLIGATORIAS DE CORRECCIÓN:
-1. Devolvé SÓLO un objeto JSON válido, sin bloques markdown (sin ```json), sin preámbulos ni texto extra.
-2. Evaluá los 4 criterios oficiales: "content", "communicative_achievement", "organisation", "language".
-3. Asigná notas enteras de 0 a 5 en "bands" para cada criterio según los descriptores oficiales.
-4. En "quotes", incluí para cada criterio una cita textual exacta extraída del texto del alumno (en inglés) que justifique la banda asignada. Si no hay cita válida del texto del alumno, la banda es inválida.
-5. En "feedback", redactá la devolución explicativa para el alumno en español rioplatense (vos, tenés, fijate, usaste), manteniendo las citas y las correcciones de inglés en inglés.
-6. En "rewrite", devolvé exactamente 3 strings: 3 oraciones del propio texto del alumno reescritas y mejoradas en inglés a nivel B2+/C1 (no inventes texto nuevo ajeno al escrito del alumno).
-7. Prohibido inventar reglas gramaticales o descriptores que no estén en la rúbrica oficial.
+MANDATORY MARKING RULES:
+1. Return ONLY a valid JSON object, no markdown blocks (no ```json), no preamble and no extra text.
+2. Assess the 4 official criteria: "content", "communicative_achievement", "organisation", "language".
+3. Assign integer scores from 0 to 5 in "bands" for each criterion according to the official descriptors.
+4. In "quotes", include for each criterion an exact verbatim quote taken from the student's text (in English) that justifies the assigned band. If there is no valid quote from the student's text, the band is invalid.
+5. In "feedback", write the explanatory feedback for the student in clear English; keep quotes and English corrections in English.
+6. In "rewrite", return exactly 3 strings: 3 sentences from the student's own text rewritten and improved in English at B2+/C1 level (do not invent new text unrelated to the student's writing).
+7. Do not invent grammatical rules or descriptors that are not in the official rubric.
 
 CALIBRATION RULES (mandatory):
 1. Be strict. Band 5 means performance at the top of B2 / start of C1. Most real B2
@@ -132,10 +132,10 @@ rewrite is an ARRAY of exactly 3 strings. Never return arrays where objects are 
 
 
 def writing_prompt(text, kind):
-    """Construye el prompt completo para evaluar un Writing de tipo `kind`."""
+    """Build the full prompt to assess a Writing task of type `kind`."""
     return (
         f"{WRITING_SYSTEM}\n\n"
-        f"=== TIPO DE TAREA (GENRE) ===\n{kind}\n\n"
-        f"=== TEXTO DEL ALUMNO ===\n{text}\n\n"
-        f"Devolvé únicamente el JSON con las claves bands, feedback, quotes, weaknesses y rewrite."
+        f"=== TASK TYPE (GENRE) ===\n{kind}\n\n"
+        f"=== STUDENT TEXT ===\n{text}\n\n"
+        f"Return only the JSON with the keys bands, feedback, quotes, weaknesses and rewrite."
     )

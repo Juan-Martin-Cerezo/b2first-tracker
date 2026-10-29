@@ -1,123 +1,125 @@
-# AGENTS.md — Guía para quien trabaje en este proyecto
+# AGENTS.md — Guide for anyone working on this project
 
-> Leé esto completo antes de tocar nada. 15 minutos acá ahorran horas.
+> Read this whole thing before touching anything. 15 minutes here save hours.
 
-## Quién es el usuario
+## Who the user is
 
-**Juan**, 16 años, estudiante de secundaria técnica (ET21 Computación, CABA).
-Se prepara **solo** para el Cambridge B2 First apuntando a **Grade A / C1**.
-El producto lo usa él en su celular y su PC, en **español rioplatense**. Todo el
-código, comentarios y mensajes van en español.
+**Juan**, 16 years old, secondary technical school student (ET21 Computación, CABA).
+He prepares **on his own** for the Cambridge B2 First, aiming at **Grade A / C1**.
+He uses the product on his phone and his PC. He is a native Spanish (rioplatense)
+speaker, but the product UI is now in English: everything — UI, code comments,
+and messages — is written in English.
 
-## Reglas duras del proyecto
+## Hard rules of the project
 
-1. **Sin piratería, jamás.** No linkear, buscar ni sugerir copias piratas de libros
-   o exámenes. Siempre: material oficial gratuito de Cambridge, o comprar barato
-   (MercadoLibre usado / Buscalibre).
-2. **Nada de datos inventados.** Precios, métricas, resultados: todo verificado.
-   Si no podés verificar algo, decilo y no lo pongas.
-3. **Precios ARS verificados en la página de producto** (en Buscalibre el `data-precio`
-   del listado miente ~1.5-1.6x; el real está en la página del producto).
-4. **Avisar antes de borrar/reiniciar** cosas del sistema (el usuario lo pidió
-   explícitamente). El deploy con `systemctl restart b2first` es seguro y esperado.
-5. **No tocar** `.env`/config de fcc-claude ni servicios ajenos (docker-proxy en 8080).
+1. **No piracy, ever.** Do not link to, search for, or suggest pirated copies of books
+   or exams. Always: free official Cambridge material, or buy cheap
+   (used on MercadoLibre / Buscalibre).
+2. **No made-up data.** Prices, metrics, results: everything verified.
+   If you cannot verify something, say so and leave it out.
+3. **ARS prices verified on the product page** (on Buscalibre the `data-precio`
+   in the listing lies by ~1.5-1.6x; the real price is on the product page).
+4. **Warn before deleting/restarting** system things (the user explicitly asked
+   for this). Deploying with `systemctl restart b2first` is safe and expected.
+5. **Do not touch** fcc-claude's `.env`/config or other people's services
+   (docker-proxy on 8080).
 
-## Stack (a propósito, mínimo absoluto)
+## Stack (deliberately, the bare minimum)
 
-- **Frontend**: un solo `index.html` (HTML+CSS+JS vanilla). **Cero frameworks,
-  cero build, cero node_modules.** Así se abre desde cualquier dispositivo y se
-  testea con Playwright sin cadena de compilación.
-- **Backend**: `server.py`, Python **solo stdlib** (http.server). No hace falta
-  pip install. No agregues dependencias sin hablar antes.
-- **Datos**: todo en `localStorage` del navegador (clave `b2first_tracker_v1`) y
-  **sincronizado con la Pi** (`data/progress.json` + backups en `data/backups/`).
-  Cada `save()` hace push a `/api/progress` (PUT) y al abrir la página se hace pull
-  (GET). Regla: **último que guarda gana** — el server respalda la versión anterior.
-  No hay base de datos: es un archivo JSON en el repo.
+- **Frontend**: a single `index.html` (vanilla HTML+CSS+JS). **Zero frameworks,
+  zero build, zero node_modules.** This way it opens on any device and can be
+  tested with Playwright without a compilation chain.
+- **Backend**: `server.py`, Python **stdlib only** (http.server). No need for
+  pip install. Do not add dependencies without discussing it first.
+- **Data**: everything in the browser's `localStorage` (key `b2first_tracker_v1`) and
+  **synced with the Pi** (`data/progress.json` + backups in `data/backups/`).
+  Every `save()` pushes to `/api/progress` (PUT) and opening the page pulls
+  (GET). Rule: **last write wins** — the server backs up the previous version.
+  There is no database: it is a JSON file in the repo.
 
-## Modelo de datos (resumen)
+## Data model (summary)
 
-El objeto `D` persiste en localStorage. Ver el header de `<script>` en `index.html`
-para la referencia completa con ejemplos:
+The `D` object persists in localStorage. See the `<script>` header in `index.html`
+for the full reference with examples:
 
-- `D.log[]` — historial de práctica: `{type, date, part?, correct?, total?, min?, score?, kind?, s1?, s2?, p2?, note?}`
-  - types: `ue` (UoE parte 1-7) · `w` (Writing con `kind`) · `l` (Listening completo /30, `p2`=errores Part 2) · `lp` (Listening por parte) · `sp` (Speaking) · `rue` (R&UoE completo, modo examen) · `fw` (Full Writing)
-- `D.errs[]` — errores con taxonomía: `L-GAP` / `G-ERR` / `T-MIS` / `T-LIM`
-- `D.stage` — etapa 0..2 · `D.overrides` — gates marcadas a mano · `D.weekOverrides` — rotación elegida a mano
-- `D.settings` — TODO configurable (SETTINGS_DEFAULT en el JS): horarios, timers,
-  ciclos de rotación (`rueCycle`/`wCycle`/`lCycle`/`spCycle`), umbrales de gates (`e0`/`e1`/`e2`)
+- `D.log[]` — practice history: `{type, date, part?, correct?, total?, min?, score?, kind?, s1?, s2?, p2?, note?}`
+  - types: `ue` (UoE parts 1-7) · `w` (Writing with `kind`) · `l` (full Listening /30, `p2`=Part 2 mistakes) · `lp` (Listening by part) · `sp` (Speaking) · `rue` (full R&UoE, exam mode) · `fw` (Full Writing)
+- `D.errs[]` — errors with taxonomy: `L-GAP` / `G-ERR` / `T-MIS` / `T-LIM`
+- `D.stage` — stage 0..2 · `D.overrides` — gates manually marked · `D.weekOverrides` — manually chosen rotation
+- `D.settings` — everything configurable (SETTINGS_DEFAULT in the JS): schedules, timers,
+  rotation cycles (`rueCycle`/`wCycle`/`lCycle`/`spCycle`), gate thresholds (`e0`/`e1`/`e2`)
 
-**Regla de oro al agregar features**: cualquier cosa nueva que el usuario quiera
-"poder cambiar" va a `D.settings` + inputs en la pestaña PLAN, con default sano.
+**Golden rule when adding features**: anything new the user wants to
+"be able to change" goes into `D.settings` + inputs in the PLAN tab, with a sane default.
 
-## Estructura del código (orden en el `<script>`)
+## Code structure (order inside the `<script>`)
 
 ```
-header (arquitectura + modelo de datos)
+header (architecture + data model)
 SETTINGS_DEFAULT / load / save / helpers
-SYNC             → syncPush/syncPull + badge del footer (save() dispara push)
-TIMER          → makeTimer + timers de sesión (leen D.settings)
+SYNC             → syncPush/syncPull + footer badge (save() triggers the push)
+TIMER          → makeTimer + session timers (read D.settings)
 SAVE HANDLERS  → saveUE / saveWR / saveL / saveSP / saveFull
-LOG TABLE      → renderLog + edición inline + renderStats
-GATES          → calcGates (lee D.settings) / renderGates / advanceStage
-ERRORS         → renderErrs + registro con taxonomía
-BOOKS          → BUY_BOOKS (25 libros, precios verificados) + MATERIAL (libros.json)
-GRÁFICOS       → renderGrafEvol/Part/Err/Cons (SVG puro, sin dependencias)
+LOG TABLE      → renderLog + inline editing + renderStats
+GATES          → calcGates (reads D.settings) / renderGates / advanceStage
+ERRORS         → renderErrs + taxonomy logging
+BOOKS          → BUY_BOOKS (25 books, verified prices) + MATERIAL (libros.json)
+CHARTS       → renderGrafEvol/Part/Err/Cons (pure SVG, no dependencies)
 PLAN           → renderPlan / savePlan / resetPlan / applyTimers
-EXAMEN+PARTES  → modo examen (EX_DUR, tiempos reales) + PARTS[] (15 ejercicios)
-TODAY VIEW     → renderToday (rotación + banner) / setOv
-NAV + INIT     → refreshAll central / loadMaterial
+EXAM+PARTS  → exam mode (EX_DUR, real timings) + PARTS[] (15 exercises)
+TODAY VIEW     → renderToday (rotation + banner) / setOv
+NAV + INIT     → central refreshAll / loadMaterial
 ```
 
-**refreshAll()** es el render central: se llama después de cada cambio de datos.
-Si agregás un render nuevo, agregalo a refreshAll().
+**refreshAll()** is the central render: it is called after every data change.
+If you add a new render, add it to refreshAll().
 
-## Cómo probar
+## How to test
 
 ```bash
-# El servicio debe estar activo (http://127.0.0.1:8088)
+# The service must be running (http://127.0.0.1:8088)
 cd tests
-uv run --with playwright python test_final.py    # suite principal
-uv run --with playwright python test_sync.py     # persistencia + backups (server propio en 8099)
-uv run --with playwright python test_graf.py     # gráficos (server propio en 8100)
-# test_exam.py y test_rot.py cubren modo examen y rotación
+uv run --with playwright python test_final.py    # main suite
+uv run --with playwright python test_sync.py     # persistence + backups (own server on 8099)
+uv run --with playwright python test_graf.py     # charts (own server on 8100)
+# test_exam.py and test_rot.py cover exam mode and rotation
 ```
 
-Los tests de sync/graf levantan su propio server de prueba en un puerto alternativo
-con `data/` temporal: no tocan el servicio real ni tu progreso. El resto corre contra
-el servicio activo en 8088.
+The sync/graf tests spin up their own test server on an alternative port
+with a temporary `data/`: they do not touch the real service or your progress.
+The rest run against the active service on 8088.
 
-## Pitfalls conocidos (no los repitas)
+## Known pitfalls (do not repeat them)
 
-- **PDFs de Writing 2022 = solo-imagen** (sin capa de texto): no se pueden extraer
-  consignas con pypdf. Se resuelve con links directos + ubicación aproximada en la guía.
-- **Puerto 8080 ocupado** por docker-proxy → el servicio corre en **8088**.
-- **Tailscale MagicDNS apagado** → usar IP directa `100.112.213.66` (la Pi se llama `vps-server`).
-- **MercadoLibre bloquea por IP** desde la Pi/VPS (muro + 403). La única vía legítima
-  es el Chrome real del usuario vía CDP (ver skill `linux-desktop-control`).
-- **Buscalibre**: precio real = página de producto, no el del listado.
-- Los nombres de archivo del material tienen espacios → usar `quote()` en las URLs.
-- `node --check` para validar el JS extraído del HTML (nunca deployar con syntax error).
-- Los tests de sync/graf importan `server.py` con `sys.path` y le cambian `DATA_DIR`/
-  `PORT` ANTES de levantar el server — nunca dejes que toquen el `data/` real.
-- El backup se genera copiando el archivo anterior: el primer PUT no crea backup
-  (no hay nada anterior que respaldar), y se conservan los últimos 20 (`BK_KEEP`).
+- **Writing 2022 PDFs = image-only** (no text layer): prompts cannot be extracted
+  with pypdf. The workaround is direct links + approximate location in the guide.
+- **Port 8080 taken** by docker-proxy → the service runs on **8088**.
+- **Tailscale MagicDNS is off** → use the direct IP `100.112.213.66` (the Pi is named `vps-server`).
+- **MercadoLibre blocks by IP** from the Pi/VPS (wall + 403). The only legitimate route
+  is the user's real Chrome via CDP (see skill `linux-desktop-control`).
+- **Buscalibre**: real price = product page, not the listing's.
+- Material file names contain spaces → use `quote()` in URLs.
+- `node --check` to validate the JS extracted from the HTML (never deploy with a syntax error).
+- The sync/graf tests import `server.py` via `sys.path` and change its `DATA_DIR`/
+  `PORT` BEFORE starting the server — never let them touch the real `data/`.
+- The backup is made by copying the previous file: the first PUT creates no backup
+  (there is nothing previous to back up), and the last 20 are kept (`BK_KEEP`).
 
 ## Deploy
 
-El repo es la fuente única: `systemd` corre `server.py` desde acá
-(WorkingDirectory=/home/juan/b2first-tracker). Después de editar:
+The repo is the single source of truth: `systemd` runs `server.py` from here
+(WorkingDirectory=/home/juan/b2first-tracker). After editing:
 
 ```bash
 python3 -c "import re;open('/tmp/app.js','w').write(re.search(r'<script>(.*?)</script>',open('index.html').read(),re.S).group(1))" && node --check /tmp/app.js
 sudo systemctl restart b2first
 ```
 
-## Roadmap / ideas pendientes (hablá con Juan antes)
+## Roadmap / pending ideas (talk to Juan first)
 
-- Repo remoto (GitHub) para que otro agente trabaje desde su máquina.
-- Corrección de Writing automática por el asistente (rol examinador Senior Cambridge).
-- Simulación de Speaking Parts 3-4 con la IA como compañero.
-- Más material (los libros comprados → escanear/agregar PDFs a ~/Descargas/b2-first).
-- ~~Persistencia del progreso entre dispositivos~~ **HECHO** (data/progress.json + backups).
-- ~~Sección de gráficos~~ **HECHO** (pestaña GRÁFICOS, 4 paneles SVG).
+- Remote repo (GitHub) so another agent can work from their own machine.
+- Automatic Writing correction by the assistant (Senior Cambridge examiner role).
+- Speaking Parts 3-4 simulation with the AI as a partner.
+- More material (purchased books → scan/add PDFs to ~/Descargas/b2-first).
+- ~~Progress persistence across devices~~ **DONE** (data/progress.json + backups).
+- ~~Charts section~~ **DONE** (CHARTS tab, 4 SVG panels).
