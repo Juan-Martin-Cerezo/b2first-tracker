@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""B2 First study portal — sirve el tracker + material (PDF/audio) desde la Pi.
+"""B2 First study portal — serves the tracker + material (PDF/audio) from the Pi.
 
-Acceso: http://100.112.213.66:8088 (Tailscale) o http://127.0.0.1:8088 (local).
-Escanea ~/Descargas/b2-first dinámicamente: cualquier PDF/MP3/ZIP que
-agregues a esa carpeta aparece solo en /libros (catálogo con buscador)
-y en /libros.json (que consume la pestaña LIBROS del tracker).
+Access: http://100.112.213.66:8088 (Tailscale) or http://127.0.0.1:8088 (local).
+Dynamically scans ~/Descargas/b2-first: any PDF/MP3/ZIP you add to that folder
+shows up on /libros (catalog with a search box) and on /libros.json (consumed
+by the LIBROS tab of the tracker).
 
 Endpoints:
-  GET /            → index.html (el tracker single-file)
-  GET /libros      → página HTML con todo el material (visor + audios)
-  GET /libros.json → JSON con el catálogo (para el tracker)
-  GET /files/<rel> → sirve un archivo del material con soporte Range
-                     (necesario para que el audio se pueda re-buscar)
-  GET /api/progress?download=1 → descarga el progreso guardado (JSON)
-  GET /api/progress → lista de backups (JSON) {file, size, date}
-  PUT /api/progress → guarda el progreso (body JSON) y respalda el anterior
-  GET /favicon.ico → 204 (no existe, no loguear 404)
+  GET /            → index.html (the single-file tracker)
+  GET /libros      → HTML page with all the material (viewer + audio)
+  GET /libros.json → JSON with the catalog (for the tracker)
+  GET /files/<rel> → serves a material file with Range support
+                     (needed so audio can be seeked)
+  GET /api/progress?download=1 → downloads the saved progress (JSON)
+  GET /api/progress → list of backups (JSON) {file, size, date}
+  PUT /api/progress → saves the progress (JSON body) and backs up the previous one
+  GET /favicon.ico → 204 (does not exist, don't log a 404)
 
-Persistencia: el progreso vive en <repo>/data/progress.json. Cada PUT
-respalda automáticamente la versión anterior en <repo>/data/backups/
-(último gana + backups). Datos SOLO en esta Pi, sin auth (red privada).
+Persistence: progress lives in <repo>/data/progress.json. Each PUT
+automatically backs up the previous version in <repo>/data/backups/
+(latest wins + backups). Data stays ONLY on this Pi, no auth (private network).
 
-Dependencias: SOLO stdlib (http.server, os, re, html, mimetypes).
-Deploy: systemd unit b2first.service (Restart=always) en este dir.
+Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
+Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, secrets, threading
 import urllib.request, urllib.error
@@ -39,29 +39,29 @@ ROOT      = os.path.expanduser("~/Descargas/b2-first")  # material (PDF/MP3/ZIP)
 TRACKER   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
 DIAG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "material", "diagnostico.json")
 _DIAG_CACHE = {"path": None, "mtime": None, "body": None}
-PORT      = int(os.environ.get("PORT", 8088))           # 8080 lo ocupa docker-proxy
+PORT      = int(os.environ.get("PORT", 8088))           # 8080 is taken by docker-proxy
 EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
 DATA_DIR  = os.environ.get("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
 store.DATA_DIR = DATA_DIR
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")
-BK_KEEP   = 20                                          # backups a conservar por usuario
-# Usuarios (sistema multi-cuenta)
+BK_KEEP   = 20                                          # backups to keep per user
+# Users (multi-account system)
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
 USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
-TOKEN_TTL  = 7 * 24 * 3600                              # sesión válida 7 días
-OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # pass del owner al migrar
+TOKEN_TTL  = 7 * 24 * 3600                              # session valid for 7 days
+OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # owner password used when migrating
 B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 
 
 def _is_demo():
-    """Devuelve True si el servidor está en modo demo público (B2_DEMO=1)."""
+    """Return True if the server is in public demo mode (B2_DEMO=1)."""
     if isinstance(B2_DEMO, str):
         return B2_DEMO.strip() in ("1", "true", "True")
     return bool(B2_DEMO)
 
-# Configuración de IA (DeepSeek / Gemini) — inyectable por env para tests sin red
+# AI configuration (DeepSeek / Gemini) — injectable via env for tests without network
 DEFAULT_AI_PROVIDER = "deepseek"
 DEFAULT_DEEPSEEK_BASE = "https://api.deepseek.com"
 DEFAULT_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
@@ -79,7 +79,7 @@ _AI_RATE = {}  # {ip: [timestamps]}
 
 
 def _check_ai_rate(ip):
-    """Rate limit en memoria: máx 10/min y 60/hora por IP."""
+    """In-memory rate limit: max 10/min and 60/hour per IP."""
     now = time.time()
     with _AI_LOCK:
         hist = [t for t in _AI_RATE.get(ip, []) if now - t < 3600.0]
@@ -93,7 +93,7 @@ def _check_ai_rate(ip):
 
 
 def _validate_ai_payload(obj):
-    """Valida el JSON devuelto por el modelo según el schema de Cambridge."""
+    """Validate the JSON returned by the model against the Cambridge schema."""
     if not isinstance(obj, dict):
         return None
     for extra_k in prompts.SCHEMA_KEYS_EXTRA:
@@ -157,12 +157,12 @@ def _validate_ai_payload(obj):
 
 
 # ---------------------------------------------------------------------------
-# Catálogo de archivos
+# File catalog
 # ---------------------------------------------------------------------------
 def scan():
-    """Recorre ROOT y devuelve la lista de archivos {rel, name, ext, size, folder}.
+    """Walk ROOT and return the file list {rel, name, ext, size, folder}.
 
-    rel = ruta relativa (para /files/), folder = carpeta padre (para agrupar).
+    rel = relative path (for /files/), folder = parent folder (for grouping).
     """
     items = []
     for dirpath, _dirs, filenames in os.walk(ROOT):
@@ -182,7 +182,7 @@ def scan():
 
 
 def fmt_size(n):
-    """Formatea bytes → '1.2 MB' legible."""
+    """Format bytes → human-readable '1.2 MB'."""
     for u in ("B", "KB", "MB", "GB"):
         if n < 1024:
             return f"{n:.0f} {u}"
@@ -191,33 +191,33 @@ def fmt_size(n):
 
 
 def esc(s):
-    """Escape HTML (evita inyección por nombres de archivo raros)."""
+    """Escape HTML (prevents injection via weird file names)."""
     return html.escape(str(s))
 
 
 # ---------------------------------------------------------------------------
-# Persistencia del progreso (delegada en store.py)
+# Progress persistence (delegated to store.py)
 # ---------------------------------------------------------------------------
 def read_progress():
-    """Devuelve el progreso guardado del owner o {} si no existe."""
+    """Return the owner's saved progress, or {} if it does not exist."""
     return read_user_progress("owner")
 
 
 def save_progress(data):
-    """Persiste el progreso del owner de forma atómica + backup del anterior."""
+    """Persist the owner's progress atomically + back up the previous one."""
     save_user_progress("owner", data)
 
 
 def list_backups():
-    """Devuelve [{file, size, date}] con los backups del owner, más reciente primero."""
+    """Return [{file, size, date}] with the owner's backups, most recent first."""
     return list_user_backups("owner")
 
 
 # ---------------------------------------------------------------------------
-# Usuarios + sesiones (sistema multi-cuenta)
+# Users + sessions (multi-account system)
 # ---------------------------------------------------------------------------
 def _read_json(path, default):
-    """Lee un JSON o devuelve el default si no existe / está corrupto."""
+    """Read a JSON file or return the default if it does not exist / is corrupt."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -226,7 +226,7 @@ def _read_json(path, default):
 
 
 def _write_json(path, data):
-    """Escribe un JSON de forma atómica (tmp + rename)."""
+    """Write a JSON file atomically (tmp + rename)."""
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
@@ -237,7 +237,7 @@ def _write_json(path, data):
 
 
 def load_users():
-    """Devuelve {user_id: {id, name, salt, hash, color, created}}."""
+    """Return {user_id: {id, name, salt, hash, color, created}}."""
     return store.list_users()
 
 
@@ -247,7 +247,7 @@ def save_users(users):
 
 
 def load_tokens():
-    """Devuelve {token: {user_id, exp}}."""
+    """Return {token: {user_id, exp}}."""
     return _read_json(TOKENS_FILE, {})
 
 
@@ -256,19 +256,19 @@ def save_tokens(tokens):
 
 
 def hash_password(salt, password):
-    """Hash PBKDF2-HMAC-SHA256 con 200.000 iteraciones."""
+    """PBKDF2-HMAC-SHA256 hash with 200,000 iterations."""
     return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 200_000).hex()
 
 
 def _legacy_hash_password(salt, password):
-    """sha256(salt + password) usado antes de la migración a pbkdf2."""
+    """sha256(salt + password) used before the migration to pbkdf2."""
     return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
 
 
 def new_token(user_id):
-    """Crea un token de sesión válido por TOKEN_TTL y lo persiste."""
+    """Create a session token valid for TOKEN_TTL and persist it."""
     tokens = load_tokens()
-    # Podar expirados
+    # Prune expired tokens
     now = time.time()
     tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
     tok = secrets.token_hex(24)
@@ -278,7 +278,7 @@ def new_token(user_id):
 
 
 def user_from_token(token):
-    """Devuelve el user_id del token si es válido, o None."""
+    """Return the token's user_id if it is valid, or None."""
     if not token:
         return None
     tokens = load_tokens()
@@ -296,30 +296,30 @@ def revoke_token(token):
 
 
 def public_user(u):
-    """Usuario sin campos sensibles (sin salt/hash)."""
+    """User without sensitive fields (no salt/hash)."""
     return {"id": u["id"], "name": u["name"], "color": u.get("color", "#1b2b48"),
             "created": u.get("created", "")}
 
 
 def user_prog_file(user_id):
-    """Ruta del progress.json de un usuario."""
+    """Path to a user's progress.json."""
     return store._prog_file(user_id)
 
 
 def user_bk_dir(user_id):
-    """Ruta del directorio de backups de un usuario."""
+    """Path to a user's backup directory."""
     return store._bk_dir(user_id)
 
 
 def register_user(name, password, color=None):
-    """Crea un usuario. Devuelve (user_id, error)."""
+    """Create a user. Return (user_id, error)."""
     users = store.list_users()
     name = name.strip()
     if not name:
-        return None, "name vacío"
+        return None, "name is empty"
     if len(password) < 8:
-        return None, "contraseña muy corta (mín 8)"
-    # Normalizar nombre para id único (slug + sufijo si repetido)
+        return None, "password too short (min 8)"
+    # Normalize the name for a unique id (slug + suffix if repeated)
     base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "user"
     uid = base
     n = 2
@@ -338,7 +338,7 @@ def register_user(name, password, color=None):
 
 
 def login_user(name, password):
-    """Valida credenciales y migra hashes legacy a pbkdf2. Devuelve (user_id, error)."""
+    """Validate credentials and migrate legacy hashes to pbkdf2. Return (user_id, error)."""
     users = store.list_users()
     name = name.strip()
     for u in users.values():
@@ -354,15 +354,15 @@ def login_user(name, password):
                     migrated["algo"] = "pbkdf2"
                     store.create_user(u["id"], migrated)
                     return u["id"], None
-            return None, "contraseña incorrecta"
-    return None, "usuario no encontrado"
+            return None, "wrong password"
+    return None, "user not found"
 
 
 def migrate_legacy():
-    """Migra data/progress.json → data/users/owner/progress.json (una vez).
+    """Migrate data/progress.json → data/users/owner/progress.json (once).
 
-    Si ya existe users.json no hace nada. Crea el usuario 'owner' con la
-    contraseña OWNER_PASSWORD y conserva el progreso actual.
+    If users.json already exists it does nothing. Creates the 'owner' user with
+    the OWNER_PASSWORD and keeps the current progress.
     """
     if store.list_users():
         return
@@ -381,7 +381,7 @@ def migrate_legacy():
             os.remove(PROG_FILE)
         except OSError:
             pass
-    # Mover backups viejos al usuario owner
+    # Move old backups to the owner user
     if os.path.isdir(BK_DIR):
         try:
             for fn in os.listdir(BK_DIR):
@@ -394,18 +394,18 @@ def migrate_legacy():
 
 
 def read_user_progress(user_id):
-    """Devuelve el progreso de un usuario o {} si no existe."""
+    """Return a user's progress, or {} if it does not exist."""
     data = store.get_progress(user_id)
     return data if data is not None else {}
 
 
 def save_user_progress(user_id, data):
-    """Persiste el progreso de un usuario de forma atómica + backup."""
+    """Persist a user's progress atomically + backup."""
     store.put_progress(user_id, data)
 
 
 def list_user_backups(user_id):
-    """Devuelve [{file, size, date}] de los backups de un usuario."""
+    """Return [{file, size, date}] with a user's backups."""
     bk_dir = store._bk_dir(user_id)
     try:
         files = sorted(os.listdir(bk_dir), reverse=True)
@@ -424,12 +424,12 @@ def list_user_backups(user_id):
 
 
 # ---------------------------------------------------------------------------
-# Página /libros (material con visor + audios + buscador)
+# /libros page (material with viewer + audio + search)
 # ---------------------------------------------------------------------------
 def portal():
-    """Genera la página HTML del material agrupada por carpeta."""
+    """Generate the material's HTML page grouped by folder."""
     items = scan()
-    # Agrupar por carpeta conservando el orden natural de las carpetas.
+    # Group by folder, preserving the folders' natural order.
     groups = {}
     for it in items:
         groups.setdefault(it["folder"], []).append(it)
@@ -441,26 +441,26 @@ def portal():
     for folder in sorted(groups, key=key):
         cards = ""
         for it in groups[folder]:
-            href = "/files/" + quote(it["rel"])  # quote → espacios/acentos OK
+            href = "/files/" + quote(it["rel"])  # quote → spaces/accents OK
             if it["ext"] == "AUDIO":
                 cards += f'''<div class="card audio">
                   <div class="top"><span class="ico">🎧</span><div><b>{esc(it["name"])}</b><span class="meta">{it["folder"]} · {fmt_size(it["size"])}</span></div></div>
                   <audio controls preload="none" src="{href}"></audio>
-                  <a class="dl" href="{href}" download>Descargar</a></div>'''
+                  <a class="dl" href="{href}" download>Download</a></div>'''
             elif it["ext"] == "PDF":
                 cards += f'''<div class="card">
                   <div class="top"><span class="ico">📄</span><div><b>{esc(it["name"])}</b><span class="meta">{it["folder"]} · {fmt_size(it["size"])}</span></div></div>
-                  <div class="acts"><a class="btn" href="{href}" target="_blank">Abrir PDF</a><a class="dl" href="{href}" download>Descargar</a></div></div>'''
+                  <div class="acts"><a class="btn" href="{href}" target="_blank">Open PDF</a><a class="dl" href="{href}" download>Download</a></div></div>'''
             else:  # ZIP
                 cards += f'''<div class="card">
                   <div class="top"><span class="ico">🗜️</span><div><b>{esc(it["name"])}</b><span class="meta">{it["folder"]} · {fmt_size(it["size"])}</span></div></div>
-                  <a class="btn" href="{href}" download>Descargar ZIP</a></div>'''
+                  <a class="btn" href="{href}" download>Download ZIP</a></div>'''
         blocks.append(f'<h3 class="folder">{esc(folder)}</h3><div class="grid">{cards}</div>')
 
     total = sum(1 for _ in items)
-    # Página completa con estilos dark (mismo look que el tracker) + buscador
-    # en vivo que oculta tarjetas y carpetas vacías.
-    return f'''<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+    # Full page with dark styles (same look as the tracker) + a live search
+    # that hides cards and empty folders.
+    return f'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Material B2 First</title><style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -486,21 +486,21 @@ audio{{width:100%;margin-top:10px;height:34px;border-radius:8px}}
 #filtro{{width:100%;max-width:440px;background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--txt);padding:11px 13px;font-size:14px;font-family:'Inter',system-ui,sans-serif;margin-bottom:16px;transition:border-color .15s,box-shadow .15s}}
 #filtro:focus{{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(108,140,255,.14)}}
 </style></head><body>
-<a class="back" href="/">← Volver al Tracker</a>
+<a class="back" href="/">← Back to Tracker</a>
 <h1>📚 Material B2 First</h1>
-<div class="sub">{total} archivos · los PDFs abren en el visor del navegador (PC y celular) · los audios se reproducen acá</div>
-<input id="filtro" placeholder="🔍 Buscar material... (ej: listening, speaking, handbook)">
+<div class="sub">{total} files · PDFs open in the browser viewer (desktop and mobile) · audio plays here</div>
+<input id="filtro" placeholder="🔍 Search material... (e.g.: listening, speaking, handbook)">
 <div id="contenido">
 {''.join(blocks)}
 </div>
 <script>
 document.getElementById('filtro').addEventListener('input',function(){{
   var q=this.value.toLowerCase().trim();
-  // Ocultar/mostrar tarjetas según el texto del filtro.
+  // Hide/show cards based on the filter text.
   document.querySelectorAll('#contenido .card').forEach(function(c){{
     c.style.display=(!q||c.textContent.toLowerCase().includes(q))?'':'none';
   }});
-  // Ocultar las carpetas que quedaron sin tarjetas visibles.
+  // Hide folders left with no visible cards.
   document.querySelectorAll('#contenido .folder').forEach(function(h){{
     var sib=[];
     var n=h.nextElementSibling;
@@ -519,11 +519,11 @@ class H(BaseHTTPRequestHandler):
     server_version = "B2FirstPortal/1.0"
 
     def log_message(self, fmt, *a):
-        """Silencia el log por request (ruido en journald)."""
+        """Silence per-request logging (noise in journald)."""
         pass
 
     def _send(self, code, body, ctype, extra=None):
-        """Helper: respuesta con headers mínimos + Content-Length."""
+        """Helper: response with minimal headers + Content-Length."""
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
@@ -534,7 +534,7 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _handle(self):
-        """Router único (usado por GET y HEAD)."""
+        """Single router (used by GET and HEAD)."""
         path = unquote(self.path.split("?")[0])
 
         # Tracker (index.html)
@@ -543,25 +543,25 @@ class H(BaseHTTPRequestHandler):
                 body = open(TRACKER, "rb").read()
                 self._send(200, body, "text/html; charset=utf-8")
             except OSError:
-                self._send(404, b"tracker no encontrado", "text/plain")
+                self._send(404, b"tracker not found", "text/plain")
             return
 
-        # Página de material
+        # Material page
         if path == "/libros":
             self._send(200, portal().encode("utf-8"), "text/html; charset=utf-8")
             return
 
-        # Archivos del material con anti-traversal + soporte Range (audio)
+        # Material files with anti-traversal + Range support (audio)
         if path.startswith("/files/"):
             rel = path[len("/files/"):]
             full = os.path.realpath(os.path.join(ROOT, rel))
-            # Bloquea .. y links fuera de ROOT.
+            # Block .. and links outside ROOT.
             if not full.startswith(os.path.realpath(ROOT)) or not os.path.isfile(full):
-                self._send(404, b"no existe", "text/plain")
+                self._send(404, b"not found", "text/plain")
                 return
             size = os.path.getsize(full)
             ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
-            # Range: el navegador pide chunks para el <audio> (seek/rebobinar).
+            # Range: the browser requests chunks for the <audio> (seek/rewind).
             rng = self.headers.get("Range")
             if rng:
                 m = re.match(r"bytes=(\d*)-(\d*)", rng)
@@ -582,13 +582,13 @@ class H(BaseHTTPRequestHandler):
             self._send(200, data, ctype, {"Accept-Ranges": "bytes"})
             return
 
-        # Assets estáticos del tracker (favicon, manifest, apple-touch-icon)
+        # Static tracker assets (favicon, manifest, apple-touch-icon)
         if path.startswith("/assets/"):
             rel = path[len("/assets/"):]
             root_assets = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets")
             full = os.path.realpath(os.path.join(root_assets, rel))
             if not full.startswith(os.path.realpath(root_assets)) or not os.path.isfile(full):
-                self._send(404, b"no existe", "text/plain")
+                self._send(404, b"not found", "text/plain")
                 return
             ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
             with open(full, "rb") as f:
@@ -596,7 +596,7 @@ class H(BaseHTTPRequestHandler):
             self._send(200, data, ctype)
             return
 
-        # JSON del catálogo (lo consume la pestaña LIBROS del tracker)
+        # Catalog JSON (consumed by the LIBROS tab of the tracker)
         if path == "/libros.json":
             data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
                      "rel": it["rel"], "size": it["size"], "href": "/files/" + quote(it["rel"])}
@@ -605,10 +605,10 @@ class H(BaseHTTPRequestHandler):
             self._send(200, body, "application/json; charset=utf-8")
             return
 
-        # Diagnóstico inicial cold-start (material público sin auth, cacheado en memoria)
+        # Cold-start diagnostic (public material without auth, cached in memory)
         if path == "/diagnostico.json":
             if not os.path.isfile(DIAG_FILE):
-                self._send(404, json.dumps({"error": "diagnostico no encontrado"}).encode("utf-8"), "application/json")
+                self._send(404, json.dumps({"error": "diagnostic not found"}).encode("utf-8"), "application/json")
                 return
             try:
                 st = os.stat(DIAG_FILE)
@@ -622,11 +622,11 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("items != 12")
                 for it in items:
                     if not isinstance(it, dict):
-                        raise ValueError("item no es dict")
+                        raise ValueError("item is not a dict")
                     ans = it.get("answer")
                     opts = it.get("options")
                     if type(ans) is not int or ans < 0 or ans > 3:
-                        raise ValueError("answer fuera de 0-3")
+                        raise ValueError("answer out of 0-3")
                     if not isinstance(opts, list) or len(opts) != 4:
                         raise ValueError("options != 4")
                 body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -635,25 +635,25 @@ class H(BaseHTTPRequestHandler):
                 _DIAG_CACHE["body"] = body
                 self._send(200, body, "application/json")
             except (OSError, ValueError, TypeError):
-                self._send(500, json.dumps({"error": "diagnostico invalido"}).encode("utf-8"), "application/json")
+                self._send(500, json.dumps({"error": "invalid diagnostic"}).encode("utf-8"), "application/json")
             return
 
-        # Configuración pública del servidor (modo demo, versión, soporte IA)
+        # Public server configuration (demo mode, version, AI support)
         if path == "/api/config":
             body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True}, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
 
-        # En modo demo se bloquean cuentas y sincronización (nadie lee ni escribe en data/)
+        # In demo mode accounts and sync are blocked (nobody reads or writes data/)
         if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me", "/api/users", "/api/progress"):
             clen = int(self.headers.get("Content-Length", 0) or 0)
             if clen > 0:
                 self.rfile.read(clen)
-            body = json.dumps({"error": "modo demo: sin cuentas ni sincronización"}, ensure_ascii=False).encode("utf-8")
+            body = json.dumps({"error": "demo mode: no accounts or sync"}, ensure_ascii=False).encode("utf-8")
             self._send(403, body, "application/json; charset=utf-8")
             return
 
-        # ---- API de usuarios / auth ----
+        # ---- User / auth API ----
         if path == "/api/users":
             migrate_legacy()
             users = [public_user(u) for u in store.list_users().values()]
@@ -664,12 +664,12 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/register":
             migrate_legacy()
             if self.command != "POST":
-                self._send(405, b"metodo no permitido", "text/plain"); return
+                self._send(405, b"method not allowed", "text/plain"); return
             raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
             try:
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
-                self._send(400, b"JSON invalido", "text/plain"); return
+                self._send(400, b"invalid JSON", "text/plain"); return
             uid, err = register_user(req.get("name", ""), req.get("password", ""), req.get("color"))
             if err:
                 self._send(400, err.encode("utf-8"), "text/plain"); return
@@ -683,12 +683,12 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/login":
             migrate_legacy()
             if self.command != "POST":
-                self._send(405, b"metodo no permitido", "text/plain"); return
+                self._send(405, b"method not allowed", "text/plain"); return
             raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
             try:
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
-                self._send(400, b"JSON invalido", "text/plain"); return
+                self._send(400, b"invalid JSON", "text/plain"); return
             uid, err = login_user(req.get("name", ""), req.get("password", ""))
             if err:
                 self._send(401, err.encode("utf-8"), "text/plain"); return
@@ -701,12 +701,12 @@ class H(BaseHTTPRequestHandler):
 
         if path == "/api/logout":
             if self.command != "POST":
-                self._send(405, b"metodo no permitido", "text/plain"); return
+                self._send(405, b"method not allowed", "text/plain"); return
             raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
             try:
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
-                self._send(400, b"JSON invalido", "text/plain"); return
+                self._send(400, b"invalid JSON", "text/plain"); return
             revoke_token(req.get("token", ""))
             self._send(200, b"ok", "text/plain")
             return
@@ -715,28 +715,28 @@ class H(BaseHTTPRequestHandler):
             tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
             uid = user_from_token(tok)
             if not uid:
-                self._send(401, b"sesion invalida", "text/plain"); return
+                self._send(401, b"invalid session", "text/plain"); return
             u = store.get_user(uid)
             if not u:
-                self._send(404, b"usuario no existe", "text/plain"); return
+                self._send(404, b"user does not exist", "text/plain"); return
             body = json.dumps(public_user(u), ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
 
-        # Progreso: GET (descargar o listar backups) + PUT (guardar) — por usuario
+        # Progress: GET (download or list backups) + PUT (save) — per user
         if path == "/api/progress":
             migrate_legacy()
             qs = self.path.split("?", 1)[-1]
             user_id = re.search(r"(?:^|&)user=([^&]+)", qs)
             user_id = unquote(user_id.group(1)) if user_id else "owner"
-            # Validar sesión: si hay token, debe pertenecer al user; si no hay
-            # token, se permite solo al owner (compatibilidad con tests antiguos).
+            # Validate the session: if there is a token it must belong to the user; if
+            # there is no token, only the owner is allowed (backwards compat with old tests).
             tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
             uid = user_from_token(tok)
             if uid is None and user_id != "owner":
-                self._send(401, b"sesion requerida", "text/plain"); return
+                self._send(401, b"session required", "text/plain"); return
             if uid is not None and uid != user_id:
-                self._send(403, b"no autorizado para este usuario", "text/plain"); return
+                self._send(403, b"not authorized for this user", "text/plain"); return
             if self.command == "GET":
                 if "download=1" in qs.split("&"):
                     data = read_user_progress(user_id)
@@ -751,7 +751,7 @@ class H(BaseHTTPRequestHandler):
                     raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
                     data = json.loads(raw.decode("utf-8"))
                     if not isinstance(data, dict):
-                        self._send(400, b"formato invalido: debe ser dict JSON", "text/plain")
+                        self._send(400, b"invalid format: must be a JSON object", "text/plain")
                         return
                     if "log" not in data or not isinstance(data["log"], list):
                         data["log"] = []
@@ -763,9 +763,9 @@ class H(BaseHTTPRequestHandler):
                     body = b"ok"
                     self._send(200, body, "text/plain")
                 except (ValueError, OSError):
-                    self._send(400, b"JSON invalido", "text/plain")
+                    self._send(400, b"invalid JSON", "text/plain")
             else:
-                self._send(405, b"metodo no permitido", "text/plain")
+                self._send(405, b"method not allowed", "text/plain")
             return
 
         if path == "/favicon.ico":
@@ -819,7 +819,7 @@ class H(BaseHTTPRequestHandler):
                     "model": model,
                     "messages": [
                         {"role": "system", "content": prompts.WRITING_SYSTEM},
-                        {"role": "user", "content": f"=== TIPO DE TAREA (GENRE) ===\n{kind}\n\n=== TEXTO DEL ALUMNO ===\n{text.strip()}"},
+                        {"role": "user", "content": f"=== TASK TYPE (GENRE) ===\n{kind}\n\n=== STUDENT TEXT ===\n{text.strip()}"},
                     ],
                     "response_format": {"type": "json_object"},
                     "temperature": 0.2,
@@ -885,10 +885,10 @@ class H(BaseHTTPRequestHandler):
 
 
 # ---------------------------------------------------------------------------
-# Arranque
+# Startup
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     if not _is_demo():
         migrate_legacy()
-    print(f"B2First portal en http://0.0.0.0:{PORT} (root={ROOT})")
+    print(f"B2First portal at http://0.0.0.0:{PORT} (root={ROOT})")
     ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()
