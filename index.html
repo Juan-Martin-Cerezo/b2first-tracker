@@ -2188,6 +2188,20 @@ footer{
           </div>
         </div>
 
+        <!-- Plan de la semana (derivado del diagnóstico + taxonomía de errores) -->
+        <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
+          <div class="plan-card-head">
+            <h2>📅 Plan de la semana</h2>
+            <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()">🔄 Regenerar</button>
+          </div>
+          <div class="sub">Slots armados con reglas deterministas a partir de tu diagnóstico y tus errores (sin IA).</div>
+          <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
+          <details id="wpWhy" style="margin-top:12px">
+            <summary style="cursor:pointer;font-weight:600;font-size:13px">¿Por qué esto?</summary>
+            <div id="wpWhyBody" style="font-size:12.5px;color:var(--on-surface-variant);margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
+          </details>
+        </div>
+
         <div class="grid-12">
           <!-- Exam Timers (blanco, como Stitch) -->
           <div class="col-7">
@@ -3453,6 +3467,142 @@ function resetPlan(){
   save();renderPlan();applyTimers();refreshAll();
 }
 
+/* ---------- PLAN SEMANAL (buildWeeklyPlan) ----------
+   Reglas deterministas (SIN IA) que derivan la semana del diagnóstico
+   y la taxonomía de errores:
+   1. Las 3 partes más débiles de D.diag.weakest ocupan 3 slots.
+   2. 1 slot SIEMPRE es Writing (va primero si nunca se practicó).
+   3. 1 slot de Listening, enfocado en la parte con más T-MIS.
+   4. El resto se ajusta por mayoría de taxonomía (L-GAP→1/3,
+      G-ERR→2/4, T-MIS→5/6, T-LIM→timed, empate→rueCycle).
+   5. slotMin (default 45) por slot; total = weekGoal slots.
+   6. Sin repetir la misma parte el mismo día (días lun→vie).
+   buildWeeklyPlan(D) es pura: no muta D ni toca el DOM. */
+function buildWeeklyPlan(D){
+  const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
+  const s=(D&&D.settings)||{};
+  const weekGoal=Math.max(1,Number(s.weekGoal)||5);
+  const slotMin=Math.max(1,Number(s.slotMin)||45);
+  const errs=Array.isArray(D&&D.errs)?D.errs:[];
+  const log=Array.isArray(D&&D.log)?D.log:[];
+  const tax={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
+  const tMisByPart={};
+  errs.forEach(e=>{
+    const code=e.code||e.tax||'';
+    if(tax[code]!==undefined)tax[code]++;
+    if(code==='T-MIS'&&Number(e.part)>=1&&Number(e.part)<=4)tMisByPart[Number(e.part)]=(tMisByPart[Number(e.part)]||0)+1;
+  });
+  const t0=dayKey(new Date());
+  const t14=_addDaysKey(t0,-13);
+  const sessions14=log.filter(e=>e&&e.date&&e.date>=t14&&e.date<=t0).length;
+  const diag=(D&&D.diag)||null;
+  const byPart=(diag&&diag.byPart)||{};
+  const source={
+    diag:diag?{date:diag.date||null,correct:(diag.correct!=null?diag.correct:null),total:(diag.total!=null?diag.total:null),
+      parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
+    tax:tax,sessions14:sessions14,weekGoal:weekGoal
+  };
+  if(!diag||!Array.isArray(diag.weakest)||!diag.weakest.length)return mk({source:source,needDiag:true});
+  const weakest=diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3);
+  if(!weakest.length)return mk({source:source,needDiag:true});
+  const hasW=log.some(e=>e&&e.type==='w');
+  const weakSlots=weakest.map((p,i)=>{
+    const bp=byPart[p]||{ok:0,n:0};
+    return {part:p,type:'ue',min:slotMin,timed:false,
+      reason:(i===0?`parte ${p} es tu punto más flojo`:`parte ${p} es tu debilidad #${i+1}`)+` (${bp.ok}/${bp.n} en el diagnóstico)`};
+  });
+  const wSlot={part:null,type:'w',min:slotMin,timed:false,
+    reason:hasW?'Writing es 25% del examen y ya lo practicás: mantenelo cada semana':'nunca practicaste Writing y es 25% del examen'};
+  let lPart=0,lCount=0;
+  for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
+  if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
+  const lSlot={part:lPart,type:'l',min:slotMin,timed:false,
+    reason:lCount?`refuerzo de Listening: ${lCount} errores T-MIS concentrados en la parte ${lPart}`:`refuerzo de Listening parte ${lPart}: 0 errores T-MIS por parte, rotación lCycle`};
+  const ranked=Object.keys(tax).map(k=>({k:k,n:tax[k]})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+  let fillMode='rot',fillSeq=[];
+  if(ranked.length&&!(ranked.length>1&&ranked[0].n===ranked[1].n)){
+    const top=ranked[0].k;
+    if(top==='L-GAP'){fillMode='lex';fillSeq=[1,3]}
+    else if(top==='G-ERR'){fillMode='gram';fillSeq=[2,4]}
+    else if(top==='T-MIS'){fillMode='text';fillSeq=[5,6]}
+    else if(top==='T-LIM'){fillMode='time';fillSeq=[]}
+  }
+  const rue=(Array.isArray(s.rueCycle)&&s.rueCycle.length)?s.rueCycle.map(Number).filter(p=>p>=1&&p<=7):[1,2,3,4,5,6,7];
+  const seq=fillSeq.concat(rue.filter(p=>fillSeq.indexOf(p)<0));
+  const priority=[wSlot,lSlot].concat(weakSlots);
+  const chosen=[];
+  priority.forEach(sl=>{if(chosen.length<weekGoal)chosen.push(sl)});
+  const ordered=(hasW?weakSlots.concat([wSlot,lSlot]):[wSlot].concat(weakSlots,[lSlot])).filter(sl=>chosen.indexOf(sl)>=0);
+  const usedParts={};
+  chosen.forEach(sl=>{if(sl.part!=null)usedParts[sl.part]=true});
+  while(ordered.length<weekGoal){
+    const i=ordered.length;
+    const dayParts={};
+    ordered.forEach((sl,j)=>{if(j%5===i%5&&sl.part!=null)dayParts[sl.part]=true});
+    let part=null;
+    for(const p of seq){if(!usedParts[p]&&!dayParts[p]){part=p;break}}
+    if(part==null)for(const p of seq){if(!dayParts[p]){part=p;break}}
+    if(part==null)part=seq[0]||1;
+    usedParts[part]=true;
+    const topN=ranked.length?ranked[0].n:0,topK=ranked.length?ranked[0].k:'';
+    let fr;
+    if(fillMode==='lex'||fillMode==='gram'||fillMode==='text')fr=`la mayoría de tus errores son ${topK} (${topN}): parte ${part} — ${partName(part).toLowerCase()}`;
+    else if(fillMode==='time')fr=`modo examen, cronómetro: tus ${topN} errores T-LIM piden la parte ${part} contra reloj`;
+    else fr=`sin mayoría clara de errores: rotación rueCycle, parte ${part} — ${partName(part).toLowerCase()}`;
+    ordered.push({part:part,type:'ue',min:slotMin,timed:fillMode==='time',reason:fr});
+  }
+  const DAYS=['lun','mar','mié','jue','vie'];
+  const slots=ordered.slice(0,weekGoal);
+  slots.forEach((sl,i)=>{sl.day=DAYS[i%5]});
+  const reason={};
+  slots.forEach((sl,i)=>{reason[i]=sl.reason});
+  return {slots:slots,reason:reason,source:source};
+}
+let WEEK_PLAN=null;
+function lpName(p){return {1:'Short extracts',2:'Sentence completion',3:'Multiple matching',4:'Multiple choice (long)'}[p]||'general'}
+function renderWeeklyPlan(){
+  const el=document.getElementById('weeklyPlanCard');
+  if(!el)return;
+  const plan=buildWeeklyPlan(D);
+  WEEK_PLAN=plan;
+  const rows=document.getElementById('wpRows');
+  const whyBox=document.getElementById('wpWhy');
+  const why=document.getElementById('wpWhyBody');
+  if(plan.needDiag){
+    rows.innerHTML=`<div class="empty" id="wpNeedDiag">🧭 Hacé el diagnóstico de 10 min y armo tu semana.</div>
+      <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">Ir al diagnóstico →</button></div>`;
+    if(whyBox)whyBox.style.display='none';
+    return;
+  }
+  if(whyBox)whyBox.style.display='';
+  rows.innerHTML=plan.slots.map((sl,i)=>{
+    const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):('UoE '+partName(sl.part).toLowerCase());
+    const partTxt=sl.part!=null?`Parte ${sl.part} · `:'';
+    return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
+      <div style="flex:1;min-width:220px">
+        <div style="font-weight:600;font-size:13.5px">${sl.day} · ${partTxt}${label} · ${sl.min} min${sl.timed?' · ⏱ modo examen, cronómetro':''}</div>
+        <div class="wp-reason" style="font-size:12px;color:var(--on-surface-variant);margin-top:2px">${esc(sl.reason)}</div>
+      </div>
+      <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">Empezar</button>
+    </div>`;
+  }).join('');
+  const src=plan.source||{};
+  const diagTxt=(src.diag&&src.diag.parts&&src.diag.parts.length)?src.diag.parts.map(p=>`Parte ${p.part}: ${p.ok}/${p.n} aciertos`).join(' · '):'sin diagnóstico';
+  const taxTxt=Object.keys(src.tax||{}).map(k=>`${k}: ${src.tax[k]}`).join(' · ');
+  if(why)why.innerHTML=`<div>· <b>Diagnóstico</b> (partes + aciertos): ${esc(diagTxt)}</div>
+    <div>· <b>Conteo por taxonomía de errores</b>: ${esc(taxTxt)}</div>
+    <div>· <b>Sesiones en los últimos 14 días</b>: ${src.sessions14}</div>
+    <div>· <b>weekGoal</b>: ${src.weekGoal} slots</div>`;
+}
+function regenWeeklyPlan(){renderWeeklyPlan()}
+function wpStart(i){
+  const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
+  if(!sl)return;
+  if(sl.type==='w')goToPartFilter(null);
+  else if(sl.type==='l')goToPartFilter(sl.part,'lp');
+  else goToPartFilter(sl.part);
+}
+
 /* ---------- EXAMEN + PARTES ----------
    MODO EXAMEN (inmersión real): EX_DUR = duraciones oficiales en
    segundos. renderEx() cambia guía + campos de registro según el paper
@@ -3538,22 +3688,30 @@ function setPartsFilter(partNum){
   PARTS_FILTER=partNum||null;
   renderParts();
 }
-function goToPartFilter(partNum){
+function goToPartFilter(partNum, type){
   showView('partes');
-  PARTS_FILTER=partNum||null;
+  PARTS_FILTER=(type&&type!=='ue')?{type:type,part:partNum||null}:(partNum||null);
   renderParts();
 }
 function renderParts(){
   const el=document.getElementById('partsList');
   let html='',last='';
   if(PARTS_FILTER){
+    const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
+    const fType=fObj?PARTS_FILTER.type:'ue';
+    const fNum=fObj?PARTS_FILTER.part:PARTS_FILTER;
+    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':'Reading &amp; UoE';
     html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="badge fri">Filtro activo: Reading &amp; UoE Parte ${PARTS_FILTER}</span>
+      <span class="badge fri">Filtro activo: ${fLabel} Parte ${fNum}</span>
       <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Mostrar las 15 partes</button>
     </div>`;
   }
   PARTS.forEach((p,i)=>{
-    if(PARTS_FILTER && !(p.type==='ue' && p.n===PARTS_FILTER))return;
+    if(PARTS_FILTER){
+      const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
+      const ok=fObj?(p.type===PARTS_FILTER.type&&p.n===PARTS_FILTER.part):(p.type==='ue'&&p.n===PARTS_FILTER);
+      if(!ok)return;
+    }
     if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
     const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
     if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
@@ -5281,7 +5439,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   if(b.dataset.view==='diag')renderDiag();
 });
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
