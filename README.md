@@ -1,29 +1,109 @@
 # B2 First Tracker
 
-A study portal and exam tracker built to prepare for the **Cambridge B2 First (FCE)** exam.
+<p align="center">
+  A study tracker that closes the feedback gap of preparing for the Cambridge B2 First alone.<br>
+  It logs sessions in three taps, diagnoses which exam parts are weak, plans the week from that<br>
+  diagnosis, and grades Writing against the official Cambridge band descriptors.
+</p>
+
+<p align="center">
+  <a href="https://vps-server.tail40095b.ts.net"><b>Live demo</b></a> ·
+  <a href="SUBMISSION.md">How it was built</a> ·
+  <a href="#quick-start">Run locally</a>
+</p>
+
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3f3f46">
+  <img alt="Python 3.13" src="https://img.shields.io/badge/python-3.13-3f3f46">
+  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-none-3f3f46">
+  <img alt="Single file frontend" src="https://img.shields.io/badge/frontend-1%20html%20file-3f3f46">
+</p>
+
+<table>
+  <tr>
+    <td width="72%"><img src="docs/screenshots/desktop.webp" alt="Today view with the session log, streak and exam countdown"></td>
+    <td width="28%"><img src="docs/screenshots/mobile.webp" alt="Mobile layout with the quick-log button"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Desktop: today view, streak and the log of every session</sub></td>
+    <td align="center"><sub>Mobile: same tracker, quick-log in one corner</sub></td>
+  </tr>
+</table>
 
 ## What it is
 
-B2 First Tracker is a single-file web application (`index.html`, 5,380 lines) paired with a pure Python standard-library HTTP server (`server.py`). It covers the full preparation workflow for Cambridge B2 First:
+A self-hosted study tracker for the **Cambridge B2 First (FCE)** exam. One HTML file, one
+Python file, no database: your progress lives in the browser's `localStorage` and syncs to a
+JSON file on whatever machine serves it. It covers the whole preparation loop — practice log,
+streak, exam-mode timers, per-part analytics, error taxonomy, and an AI writing examiner that
+scores against the official Cambridge assessment scales.
 
-- **Scheduled study sessions & timers** — weekly rotation across all 15 exam parts with official Cambridge time limits (Reading & Use of English, Writing, Listening, Speaking) and a 3-tap mobile quick-log.
-- **Daily streak & weekly goal** — derived directly from logged sessions in local time, including a weekly 1-day streak freeze shield (`🛡`) and a 5-day weekly target ring.
-- **12-item cold-start diagnostic** — a 10-minute placement quiz covering all 7 parts of Reading & Use of English that populates the error log (`L-GAP`, `G-ERR`, `T-MIS`, `T-LIM`) and highlights the 3 weakest parts on day one.
-- **Stage gates & progress charts** — 3 preparation stages (Foundations, Precision, Mastery) with automated metric gates and 4 SVG charts (Writing evolution, accuracy by part, error taxonomy breakdown, and weekly consistency).
-- **AI Writing examiner** — grades Essays, Articles, Reports, Reviews, and Emails against the official Cambridge B2 First Writing assessment rubric (Content, Communicative Achievement, Organisation, Language, 0–5 each), quoting exact student sentences, listing 2 actionable weaknesses per criterion, and rewriting 3 weak sentences at B2+/C1 level.
+## Why it exists
 
-## Why it's built this way
+Writing is **25% of the B2 First score**, and it is the one skill you cannot self-mark. Practice
+tests come with answer keys for Reading and Listening; nothing tells you whether your essay is a
+Band 3 or a Band 4, or which of the four criteria is dragging the score down. That gap is what
+this project attacks.
 
-| Decision | Reason |
-|---|---|
-| Single-file `index.html` (5,380 lines, vanilla HTML/CSS/JS, no build step) | Opens instantly on desktop and mobile with zero bundler, transpiler, or `node_modules` maintenance overhead. |
-| `server.py` using only the Python 3 standard library | Runs out of the box on a Raspberry Pi, VPS, or container without `pip install` or dependency drift. |
-| Atomic JSON storage on disk (`store.py` + rotating backups) | Keeps user progress human-readable and easy to back up while isolating filesystem access behind a 6-function seam ready for SQLite. |
-| Hardcoded Cambridge rubric + strict server-side schema validation | The LLM scores against fixed assessment descriptors in `prompts.py`, and `server.py` rejects any malformed or out-of-range JSON (`422`) before it reaches the UI. |
+The second problem is habit. A tracker that records five sessions in sixty-seven days is not a
+tracker, it is a museum. Logging a session had to cost less than fifteen seconds on a phone, so
+the quick-log sits one tap away from any screen, and the streak is derived from the log instead
+of being a separate field that can drift out of sync.
+
+## Who it is for
+
+- **Candidates studying alone**, without a teacher or an examiner to mark their writing.
+- **People preparing on a low budget**, who buy one or two official books and need to extract
+  everything from them.
+- **Anyone who wants their study data to stay theirs**: the app runs on a Raspberry Pi in a
+  living room, writes to a plain JSON file, and only sends the text you choose to correct.
+
+It is deliberately not a course. There is no content behind a paywall, no account to create,
+and no cloud to trust.
+
+## What it does
+
+| Feature | What it actually does |
+| --- | --- |
+| **Quick-log** | Records type, part, score and minutes in three taps, with sane defaults per part |
+| **Streak** | Derived from the log, not stored: today counts, a missed day is shielded once a week, exam days never break it |
+| **Diagnostic** | 12 original items across all seven exam parts, 10 minutes, produces three ranked weaknesses |
+| **Weekly plan** | Deterministic rules, not a model: three slots on your weakest parts, one Writing, one Listening, adjusted by your error taxonomy |
+| **Writing examiner** | Four Cambridge criteria (Content, Communicative Achievement, Organisation, Language), 0–5 each, cited evidence, two mandatory weaknesses per criterion, three rewritten sentences |
+| **Error taxonomy** | Every miss is tagged `L-GAP`, `G-ERR`, `T-MIS` or `T-LIM`, so the plan can target the cause instead of the symptom |
+| **Analytics** | Four SVG panels, no chart library: progress over time, per-part accuracy, error mix, score consistency |
+| **Exam mode** | Real timings for Reading & Use of English, Listening and Writing |
+
+## The grading is calibrated, not generous
+
+A corrector that says 19/20 to a mediocre essay is worse than no corrector: you stop studying
+what is missing. The first version did exactly that. Two changes fixed it.
+
+1. Before scoring, the model must list **two concrete weaknesses per criterion**. If it can name
+   two, that criterion cannot be a 5.
+2. For any criterion scored 4 or 5 it must explain **why it is not one band higher**.
+
+Measured on three graded samples of different quality:
+
+| Sample | Before | After |
+| --- | --- | --- |
+| Weak (A2, frequent basic errors) | 19/20 | **9/20** |
+| Typical B2 | 19/20 | **14/20** |
+| Strong (C1-leaning, inversions, passives) | 19/20 | **20/20** |
+
+The rubric itself is not invented: it is transcribed from the official *B2 First Handbook*
+(pages 32–35), with the page number recorded next to every band descriptor in `prompts.py`.
+
+## Stack
+
+| Layer | Choice | Why |
+| --- | --- | --- |
+| Frontend | One `index.html`, vanilla JS and CSS | No build step, no `node_modules`; it opens on any phone and Playwright can drive it directly |
+| Backend | `server.py`, Python standard library only | No pip install, no framework, no version drift on a small server |
+| Storage | JSON files on disk, with rotated backups | Readable, diffable, trivial to back up; a database would add a dependency without adding a feature |
+| AI | Provider-agnostic proxy, bring your own key | The key never leaves your device except to reach the proxy; the repository ships no credentials |
 
 ## Quick start
-
-No `npm install`, no virtualenv, and no build step required (Python 3.10+):
 
 ```bash
 git clone https://github.com/Juan-Martin-Cerezo/b2first-tracker.git
@@ -31,67 +111,90 @@ cd b2first-tracker
 python3 server.py
 ```
 
-Open `http://127.0.0.1:8088` in your browser.
+Open `http://127.0.0.1:8088`. That is the whole installation: no database, no migrations, no
+environment file required.
+
+Optional exam material can be dropped into `~/Descargas/b2-first/`; the tracker indexes whatever
+it finds and hides the section when the directory is empty.
 
 ## AI writing correction (bring your own key)
 
-**This repository does not include any API key or token.**
+The corrector needs a provider key, and the key is yours:
 
-To use the AI Writing examiner:
-1. Open the **PLAN** tab (or follow the link from the **✨ AI** tab) and paste your API key (DeepSeek or Gemini) into the API key field.
-2. Your key is stored **only in your browser's `localStorage`** (`D.settings.aiKey`) and is stripped before any progress sync.
-3. When you submit a Writing task in the **✨ AI** tab, the browser sends the key in the request body to `/api/ai/writing`. `server.py` acts strictly as a stateless proxy to the upstream provider and **never logs, caches, or persists your key on disk**.
+1. Get one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (Gemini) or
+   [platform.deepseek.com](https://platform.deepseek.com) (DeepSeek).
+2. Paste it in the **PLAN** tab; it is stored in `localStorage` on that device only.
+3. On the server side the key can also come from the environment:
 
-For personal self-hosted setups, you can also pass `B2_AI_KEY` and `B2_AI_PROVIDER` (`deepseek` or `gemini`) as environment variables to `server.py`.
+```bash
+# outside the repository, chmod 600
+B2_AI_PROVIDER=deepseek
+B2_AI_MODEL=deepseek-chat
+B2_AI_KEY=...
+```
+
+`POST /api/ai/writing` is a proxy: it validates the request, enforces a 25-second timeout, rate
+limits to 10 requests per minute and 60 per hour per IP, validates the model's JSON against a
+strict schema, and returns `422` when the shape is wrong. Keys are never logged and never written
+to disk. **The repository contains no keys.**
 
 ## Demo mode
-
-To expose the tracker publicly without user accounts or server-side persistence:
 
 ```bash
 B2_DEMO=1 python3 server.py
 ```
 
-When `B2_DEMO=1` is set:
-- `GET /api/config` returns `{"demo": true, "version": "1.0.0", "ai": true}`.
-- `/api/register`, `/api/login`, `/api/logout`, `/api/me`, `/api/users`, and `/api/progress` (GET and PUT) all return `403 {"error": "modo demo: sin cuentas ni sincronización"}`.
-- The frontend skips authentication and server sync, displays an amber demo banner at the top, and stores all sessions, diagnostics, and charts exclusively in the visitor's `localStorage`.
+In demo mode registration, login and progress sync all return `403`; the tracker runs entirely on
+`localStorage`. This is how the public instance is served: a visitor can use every feature without
+being able to read or write the owner's data.
 
 ## Docker
 
 ```bash
-docker build -t b2first . && docker run -p 8088:8088 -e B2_DEMO=1 b2first
+docker build -t b2first .
+docker run -p 8088:8088 -e B2_DEMO=1 b2first
 ```
-
-The container uses `python:3.13-slim`, copies only the application code and static assets (`data/` is excluded via `.dockerignore`), and listens on `PORT` (default `8088`). `DATA_DIR` can also be overridden via environment variable.
 
 ## Tests
 
-End-to-end and API regression tests live in `tests/` and run with Playwright (headless Chromium):
+No mocks of the app itself: the suites drive a real browser against a real server.
 
-| Suite | Coverage |
-|---|---|
-| `test_final.py` | Mobile viewport (`390×844`) layout, zero horizontal overflow, session cards, weekly rotation, 15 exam parts, stage gates, and zero JS errors. |
-| `test_sync.py` | Multi-user auth, PBKDF2 password hashing, `GET`/`PUT /api/progress`, and automatic backup rotation in `store.py`. |
-| `test_graf.py` | All 4 SVG chart panels (empty states and populated rendering) plus mobile responsiveness. |
-| `test_personalization.py` | Per-user schedules, dynamic session labels, onboarding flow, and profile modal. |
-| `test_streak.py` | Derived streak logic: empty log, consecutive days, 1-day freeze shield (`🛡`), 2-day gap reset, future date filtering, longest record, and 3-tap quick-log. |
-| `test_ai.py` | `/api/ai/writing` validation (`400`/`422`/`429`/`502`), DeepSeek & Gemini wire formats, 8 criterion weaknesses, zero key leakage in logs/errors, and ✨ AI tab E2E flow. |
-| `test_diag.py` | `/diagnostico.json` schema (12 items across Parts 1–7), no `explain` leakage in DOM during quiz, 12/12 and 0/12 scoring, error taxonomy injection, and weakest-part navigation. |
-| `test_demo.py` | `B2_DEMO=1` lockdown (`403` on auth and progress endpoints), `/api/config` detection, demo banner rendering, `B2_DEMO=0` fallback, and zero JS errors in Playwright. |
-
-Run any suite from `tests/`:
+| Suite | Covers |
+| --- | --- |
+| `test_final.py` | Main UI: all views render, no JS errors |
+| `test_sync.py` | Progress persistence, backup rotation, invalid payloads |
+| `test_personalization.py` | Per-user data isolation |
+| `test_ai.py` | The writing proxy: validation, schema rejection, rate limit, no key leakage |
+| `test_diag.py` | Diagnostic flow end to end, error taxonomy writes, result maths |
+| `test_demo.py` | Demo mode returns `403` on every write route |
+| `test_streak.py` | Streak rules: shield, gaps, future dates, records |
+| `test_graf.py`, `test_exam.py`, `test_rot.py` | Analytics, exam mode, rotation |
 
 ```bash
-cd tests && uv run --with playwright python test_demo.py
+cd tests
+uv run --with playwright python test_final.py
 ```
 
-## Data & privacy
+## Data and privacy
 
-- In self-hosted mode, data lives in your browser's `localStorage` and in the local `data/` directory on your machine (gitignored and excluded from Docker builds).
-- In demo mode (`B2_DEMO=1`), data lives exclusively in the visitor's browser `localStorage`.
-- No analytics, telemetry, or third-party scripts are loaded. Nothing leaves your machine except the Writing text you explicitly submit for AI grading using your own API key.
+- Progress lives in `localStorage` and in `data/progress.json` on your machine, with the previous
+  version kept as a rotated backup.
+- `data/` is gitignored: no personal progress is ever committed.
+- The only outbound call is the text you paste into the corrector, sent with your own key.
+- The public demo cannot write to `data/`; those routes answer `403`.
+
+## Project layout
+
+```
+index.html          the entire frontend: views, timers, charts, quick-log, streak
+server.py           standard-library HTTP server, auth, sync API, AI proxy
+store.py            storage seam (swap JSON for SQLite without touching the API)
+prompts.py          Cambridge band descriptors transcribed from the official handbook
+material/           diagnostic items and local exam material index
+tests/              Playwright suites
+docs/               submission notes, video script, screenshots
+```
 
 ## License
 
-Released under the [MIT License](LICENSE). Copyright (c) 2026 Juan Martín Cerezo.
+MIT © 2026 Juan Martín Cerezo
