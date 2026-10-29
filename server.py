@@ -86,14 +86,28 @@ def _validate_ai_payload(obj):
     """Valida el JSON devuelto por el modelo según el schema de Cambridge."""
     if not isinstance(obj, dict):
         return None
+    for extra_k in prompts.SCHEMA_KEYS_EXTRA:
+        if extra_k not in obj:
+            return None
     bands = obj.get("bands")
     feedback = obj.get("feedback")
     quotes = obj.get("quotes")
+    weaknesses = obj.get("weaknesses")
     rewrite = obj.get("rewrite")
-    if not isinstance(bands, dict) or not isinstance(feedback, dict) or not isinstance(quotes, dict):
+    if (
+        not isinstance(bands, dict)
+        or not isinstance(feedback, dict)
+        or not isinstance(quotes, dict)
+        or not isinstance(weaknesses, dict)
+    ):
         return None
     req_keys = set(prompts.SCHEMA_KEYS)
-    if set(bands.keys()) != req_keys or set(feedback.keys()) != req_keys or set(quotes.keys()) != req_keys:
+    if (
+        set(bands.keys()) != req_keys
+        or set(feedback.keys()) != req_keys
+        or set(quotes.keys()) != req_keys
+        or set(weaknesses.keys()) != req_keys
+    ):
         return None
     if not isinstance(rewrite, list) or len(rewrite) != 3:
         return None
@@ -102,24 +116,32 @@ def _validate_ai_payload(obj):
     clean_bands = {}
     clean_feedback = {}
     clean_quotes = {}
+    clean_weaknesses = {}
     for k in prompts.SCHEMA_KEYS:
         b = bands[k]
         if type(b) is not int or b < 0 or b > 5:
             return None
         fb = feedback[k]
         qt = quotes[k]
+        wk = weaknesses[k]
         if not isinstance(fb, str) or not fb.strip():
             return None
         if not isinstance(qt, str) or not qt.strip():
             return None
+        if not isinstance(wk, list) or len(wk) < 2:
+            return None
+        if not all(isinstance(w, str) and w.strip() for w in wk):
+            return None
         clean_bands[k] = b
         clean_feedback[k] = fb.strip()
         clean_quotes[k] = qt.strip()
+        clean_weaknesses[k] = [w.strip() for w in wk]
     return {
         "bands": clean_bands,
         "total": sum(clean_bands.values()),
         "feedback": clean_feedback,
         "quotes": clean_quotes,
+        "weaknesses": clean_weaknesses,
         "rewrite": [s.strip() for s in rewrite],
     }
 

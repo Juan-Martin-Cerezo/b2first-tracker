@@ -39,6 +39,24 @@ VALID_MODEL_JSON = {
         "organisation": "In addition to this, our rivers and seas are in danger",
         "language": "Doing a little steps for protection our environment every day",
     },
+    "weaknesses": {
+        "content": [
+            "Faltó desarrollar el tercer punto propio pedido en la consigna.",
+            "El cierre repite la introducción sin aportar una conclusión concreta.",
+        ],
+        "communicative_achievement": [
+            "Predominan ideas simples sin matices ni argumentación compleja.",
+            "Tono por momentos demasiado general para sostener el interés de principio a fin.",
+        ],
+        "organisation": [
+            "Conectores básicos de enumeración ('First of all', 'In addition to this').",
+            "Párrafos cortos de una sola oración sin desarrollo interno.",
+        ],
+        "language": [
+            "Error de concordancia sujeto-verbo en 'pollution and damage... is'.",
+            "Colocación y preposición incorrectas en 'Doing a little steps for protection'.",
+        ],
+    },
     "rewrite": [
         "Pollution and environmental damage are among the most pressing challenges worldwide.",
         "First of all, transport causes significant harm to the environment.",
@@ -71,6 +89,10 @@ class MockGeminiHandler(BaseHTTPRequestHandler):
             payload_obj["rewrite"] = payload_obj["rewrite"][:2]
         elif mode == "feedback_array":
             payload_obj["feedback"] = ["buen contenido", "buen logro", "buena org", "buen idioma"]
+        elif mode == "no_weaknesses":
+            del payload_obj["weaknesses"]
+        elif mode == "weakness_1":
+            payload_obj["weaknesses"]["language"] = ["Un solo error listado"]
 
         if self.path.endswith("/chat/completions"):
             envelope = {
@@ -295,9 +317,11 @@ with sync_playwright() as p:
     pg.wait_for_selector("#iaCard[data-state='ok']", timeout=5000)
 
     cards_count = pg.eval_on_selector_all("#iaBandsGrid .ia-band-card", "els => els.length")
+    weak_items_count = pg.eval_on_selector_all("#iaBandsGrid .ia-band-weak li", "els => els.length")
     rewrites_count = pg.eval_on_selector_all("#iaRewriteList li", "els => els.length")
     last_log = pg.evaluate("D.log[0]")
     assert cards_count == 4
+    assert weak_items_count == 8
     assert rewrites_count == 3
     assert last_log["type"] == "w" and last_log["kind"] == "Article" and last_log["note"] == "IA"
     assert last_log["total"] == 13 and last_log["kb"] == 4 and last_log["kc"] == 3 and last_log["ko"] == 4 and last_log["kl"] == 2
@@ -335,6 +359,33 @@ assert st13 == 200, f"Expected 200 for provider gemini in body, got {st13}: {bod
 res13 = json.loads(body13)
 assert res13["total"] == 13 and res13["model"] == "gemini-2.0-flash"
 out["13_gemini_provider_200"] = st13
+
+# Assert 14: mock sin weaknesses -> 422
+MOCK_STATE["mode"] = "no_weaknesses"
+st14, body14 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.14")
+assert st14 == 422, f"Expected 422 when weaknesses is missing, got {st14}: {body14}"
+out["14_missing_weaknesses_422"] = st14
+
+# Assert 15: mock con weaknesses.language de 1 solo string -> 422
+MOCK_STATE["mode"] = "weakness_1"
+st15, body15 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.15")
+assert st15 == 422, f"Expected 422 when weaknesses.language has 1 item, got {st15}: {body15}"
+out["15_weaknesses_len_1_422"] = st15
+
+# Assert 16: mock completo con weaknesses -> 200 y la respuesta incluye las 8 debilidades
+MOCK_STATE["mode"] = "ok"
+st16, body16 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.16")
+assert st16 == 200, f"Expected 200 for full payload with weaknesses, got {st16}: {body16}"
+res16 = json.loads(body16)
+assert isinstance(res16.get("weaknesses"), dict) and set(res16["weaknesses"].keys()) == {
+    "content",
+    "communicative_achievement",
+    "organisation",
+    "language",
+}
+total_weaknesses = sum(len(v) for v in res16["weaknesses"].values())
+assert total_weaknesses == 8, f"Expected 8 weaknesses, got {total_weaknesses}"
+out["16_weaknesses_count"] = total_weaknesses
 
 srv.shutdown()
 mock_srv.shutdown()

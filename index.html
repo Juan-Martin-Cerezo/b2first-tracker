@@ -892,6 +892,7 @@ footer{
 .ia-band-card.band-amber .ia-band-score{color:var(--warn-text);background:rgba(217,119,6,0.12)}
 .ia-band-card.band-green .ia-band-score{color:var(--ok-text);background:rgba(22,163,74,0.12)}
 .ia-band-fb{font-size:13px;line-height:1.5;color:var(--on-surface)}
+.ia-band-weak{margin:4px 0 0;padding-left:18px;font-size:12px;line-height:1.45;color:var(--warn-text);display:flex;flex-direction:column;gap:3px;list-style:disc}
 .ia-spinner{
   width:18px;height:18px;border:2.5px solid var(--outline-variant);border-top-color:var(--primary);
   border-radius:50%;display:inline-block;animation:iaSpin .75s linear infinite;flex:none;
@@ -4880,12 +4881,15 @@ function renderIaResult(data){
       const b=Number(data.bands[c.key]??0);
       const cls=b<=2?'band-red':(b===3?'band-amber':'band-green');
       const fb=(data.feedback&&data.feedback[c.key])||'';
+      const wks=(data.weaknesses&&Array.isArray(data.weaknesses[c.key]))?data.weaknesses[c.key]:[];
+      const wkHtml=wks.length?`<ul class="ia-band-weak">${wks.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:'';
       return `<div class="ia-band-card ${cls}" data-criterion="${c.key}" data-band="${b}">
         <div class="ia-band-head">
           <span class="ia-band-name">${esc(c.label)}</span>
           <span class="ia-band-score">${b}/5</span>
         </div>
         <div class="ia-band-fb">${esc(fb)}</div>
+        ${wkHtml}
       </div>`;
     }).join('');
   }
