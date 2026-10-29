@@ -2456,13 +2456,19 @@ function load(){
       const old=JSON.parse(localStorage.getItem(BASE_KEY))||{};
       if(old.log||old.errs){Object.assign(d,old)}
     }
-    d.log=d.log||[];d.errs=d.errs||[];d.stage=d.stage||0;
-    d.settings=Object.assign({},JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),d.settings||{});
-    d.overrides=d.overrides||{};
-    d.weekOverrides=d.weekOverrides||{};
-    d.mat=d.mat||{};
-    return d;
-  }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{}}}
+    return {
+      log: Array.isArray(d.log) ? d.log : [],
+      errs: Array.isArray(d.errs) ? d.errs : [],
+      stage: typeof d.stage==='number' ? d.stage : 0,
+      settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{}),
+      overrides: d.overrides||{},
+      weekOverrides: d.weekOverrides||{},
+      mat: d.mat||{},
+      onboarded: !!d.onboarded,
+      sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
+      updated_at: d.updated_at || 0
+    };
+  }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},onboarded:false,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -2471,7 +2477,7 @@ function save(){
 }
 /* ---------- SINCRONIZACIÓN CON EL SERVIDOR ----------
    Cada save() sube el progreso completo a la Pi/servidor (PUT /api/progress?user=<id>) con
-   el token de sesión. Al entrar o abrir la página se descarga y fusiona la data del usuario. */
+   el token de sesión. Al entrar o abrir la página se descarga y sincroniza la data del usuario. */
 let SYNC_STATE='off'; // 'off' = sin server, 'local' = pendiente, 'ok' = en la Pi
 let syncT=null;
 function syncStatus(s){
@@ -2503,7 +2509,18 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
-          D=Object.assign({},D,d);
+          D = {
+            log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
+            errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
+            stage: typeof d.stage==='number' ? d.stage : (D.stage||0),
+            settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{}),
+            overrides: Object.assign({}, D.overrides||{}, d.overrides||{}),
+            weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
+            mat: Object.assign({}, D.mat||{}, d.mat||{}),
+            onboarded: (d.onboarded!==undefined) ? !!d.onboarded : !!D.onboarded,
+            sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
+            updated_at: d.updated_at || Date.now()
+          };
           localStorage.setItem(userKey(),JSON.stringify(D));
           applyTimers();
           refreshAll();
@@ -2799,7 +2816,13 @@ function saveSoloPractice(){
 }
 
 /* ---------- SAVE HANDLERS ---------- */
-function log(e){D.log.push(Object.assign({date:today()},e));D.log.sort((a,b)=>b.date.localeCompare(a.date));save();refreshAll()}
+function log(e){
+  const entry = Object.assign({date:today(), created_at:Date.now()}, e);
+  D.log.push(entry);
+  D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
+  save();
+  refreshAll();
+}
 function saveUE(){
   const partVal=document.getElementById('uePart').value;
   const correct=+document.getElementById('ueOk').value;
@@ -2887,50 +2910,101 @@ function lastN(type,n){return D.log.filter(e=>e.type===type).slice(0,n)}
 function gate(cond){return cond?{pass:true,val:1}:{pass:false,val:0}}
 function calcGates(){
   const s=D.settings;
-  const w=D.log.filter(e=>e.type==='w').sort((a,b)=>a.date.localeCompare(b.date));
-  let streak=0,best=0;for(const e of w){streak=e.score>=s.e0.w?streak+1:0;best=Math.max(best,streak)}
-  const wE1=D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm);
-  const wE1ok=wE1.length>=6&&wE1.slice(-6).every(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3);
-  const ue4=lastN('ue',5).filter(e=>e.part===4);
-  const ue4a=avg(ue4);
-  const ueAll=avg(D.log.filter(e=>e.type==='ue'));
-  // UoE global: 4 simulacros completos (parts 1-4) — se toman los últimos 4 logs de tipo 'ue' con part<=4
-  const ueSims=lastN('ue',4).filter(e=>e.part<=4);
-  const ueSimsOk=ueSims.length>=4&&ueSims.every(e=>e.correct/e.total*100>=s.e1.u);
-  const l3=lastN('l',3);
-  const l4=lastN('l',4);
-  const l3ok=l3.length>=3&&l3.slice(0,3).every(e=>e.correct>=s.e1.l);
-  const lP2=l3.filter(e=>e.p2!==undefined&&e.p2<=s.e0.l);
-  const lP2ok=l3.length>=3&&l3.slice(0,3).every(e=>e.p2!==undefined&&e.p2<=s.e0.l);
-  const l4ok=l4.length>=s.e2.ln&&l4.slice(0,s.e2.ln).every(e=>e.correct>=s.e2.l);
-  const rue=D.log.filter(e=>e.type==='rue').filter(e=>e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
-  const fw=D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
-  // Speaking Part 2: 1 min sin silencios >3s → logs 'sp' con sil='no' (sin silencios)
-  const sp2=D.log.filter(e=>e.type==='sp'&&e.part===2&&e.sil==='no');
-  const sp2ok=sp2.length>=1;
-  // Reading Part 6 (Gapped Text): ≥4/6 en 3 simulacros consecutivos → logs 'r6'
-  const r6=lastN('r6',3);
-  const r6ok=r6.length>=3&&r6.slice(0,3).every(e=>e.correct>=4&&e.total===6);
-  // Speaking Parts 3-4: 4 simulacros con ≥3 estructuras de negociación → logs 'sp' part 3/4 con neg>=3
-  const sp34=D.log.filter(e=>e.type==='sp'&&(e.part===3||e.part===4)&&e.neg>=3);
-  const sp34ok=sp34.length>=4;
-  // Speaking final (14 min) validado por la profe en C1 → logs 'sf' con ok=true
-  const sf=D.log.filter(e=>e.type==='sf'&&e.ok===true);
-  const sfok=sf.length>=1;
+  // Chronological order helper (oldest to newest)
+  const getChrono = (type) => D.log.filter(e=>e.type===type).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || ((a.created_at||0)-(b.created_at||0)));
+  
+  // Gate 0.1: 4 consecutive Essays with score >= e0.w
+  const chronoEssays = D.log.filter(e=>e.type==='w'&&e.kind==='Essay').slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || ((a.created_at||0)-(b.created_at||0)));
+  let curEssayStreak=0, bestEssayStreak=0;
+  for(const e of chronoEssays){
+    if(e.score>=s.e0.w){curEssayStreak++;bestEssayStreak=Math.max(bestEssayStreak,curEssayStreak);}
+    else{curEssayStreak=0;}
+  }
+  const g0_w_ok = bestEssayStreak >= 4;
+
+  // Gate 0.2: UoE Part 4 avg >= e0.u% in 5 rounds
+  const ue4 = D.log.filter(e=>e.type==='ue'&&e.part===4).slice(0,5);
+  const ue4a = ue4.length>=5 ? avg(ue4) : (ue4.length?avg(ue4):null);
+  const g0_u_ok = ue4.length>=5 && ue4a!==null && ue4a>=s.e0.u;
+
+  // Gate 0.3: Listening Part 2 <= e0.l errors in 3 consecutive tests
+  const chronoL = getChrono('l');
+  let curLP2Streak=0, bestLP2Streak=0;
+  for(const e of chronoL){
+    if(e.p2!==undefined && e.p2!==null && e.p2<=s.e0.l){curLP2Streak++;bestLP2Streak=Math.max(bestLP2Streak,curLP2Streak);}
+    else{curLP2Streak=0;}
+  }
+  const g0_l_ok = bestLP2Streak >= 3;
+
+  // Gate 1.1: 6 texts <= e1.wm min, score >= e1.w/20 + Lexical Injection (pv>=4, col>=3)
+  const wE1 = D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm&&e.lex&&e.lex.pv>=4&&e.lex.col>=3);
+  const g1_w_ok = wE1.length >= 6;
+
+  // Gate 1.2: UoE (Parts 1-4 or full R&UoE) >= e1.u% in 4 full mocks
+  const ueFullMocks = D.log.filter(e=>(e.type==='rue'||(e.type==='ue'&&(e.part===undefined||e.part===null||e.part==='all'||e.total>=28))) && (e.correct/e.total*100>=s.e1.u));
+  const g1_u_ok = ueFullMocks.length >= 4;
+
+  // Gate 1.3: Full Listening >= e1.l/30 in 3 consecutive tests
+  let curL3Streak=0, bestL3Streak=0;
+  for(const e of chronoL){
+    if(e.correct>=s.e1.l){curL3Streak++;bestL3Streak=Math.max(bestL3Streak,curL3Streak);}
+    else{curL3Streak=0;}
+  }
+  const g1_l_ok = bestL3Streak >= 3;
+
+  // Gate 1.4: Speaking Part 2 - 1 min continuous, no silences >3s (sp with part=2 and sil='no')
+  const sp2 = D.log.filter(e=>e.type==='sp'&&e.part===2&&e.sil==='no');
+  const g1_sp2_ok = sp2.length >= 1;
+
+  // Gate 1.5: Reading Part 6 >= 4/6 in 3 consecutive mocks
+  const chronoR6 = getChrono('r6');
+  let curR6Streak=0, bestR6Streak=0;
+  for(const e of chronoR6){
+    if(e.correct>=4 && (e.total===6 || e.total===undefined)){curR6Streak++;bestR6Streak=Math.max(bestR6Streak,curR6Streak);}
+    else{curR6Streak=0;}
+  }
+  const g1_r6_ok = bestR6Streak >= 3;
+
+  // Gate 1.6: Speaking Parts 3-4 - 4 mocks with >= 3 negotiation structures
+  const sp34 = D.log.filter(e=>e.type==='sp'&&(e.part===3||e.part===4)&&e.neg>=3);
+  const g1_sp34_ok = sp34.length >= 4;
+
+  // Gate 2.1: Full R&UoE <= e2.rm min with >= e2.r%
+  const rue = D.log.filter(e=>e.type==='rue'&&e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
+  const g2_rue_ok = rue.length >= 1;
+
+  // Gate 2.2: Full Writing (1h20m) both texts >= e2.w/20
+  const fw = D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
+  const g2_fw_ok = fw.length >= 1;
+
+  // Gate 2.3: Listening >= e2.l/30 in e2.ln consecutive exams
+  let curL4Streak=0, bestL4Streak=0;
+  for(const e of chronoL){
+    if(e.correct>=s.e2.l){curL4Streak++;bestL4Streak=Math.max(bestL4Streak,curL4Streak);}
+    else{curL4Streak=0;}
+  }
+  const g2_l_ok = bestL4Streak >= s.e2.ln;
+
+  // Gate 2.4: Speaking final (14 min) validated by teacher at C1
+  const sf = D.log.filter(e=>e.type==='sf'&&e.ok===true);
+  const g2_sf_ok = sf.length >= 1;
+
   const gates=[
-    {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:best>=4,val:Math.min(best/4,1),txt:`current streak: ${best}/4`},
-    {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:ue4a!==null&&ue4a>=s.e0.u,val:ue4a?Math.min(ue4a/s.e0.u,1):0,txt:ue4a?`last 5 average: ${ue4a.toFixed(0)}%`:'no log yet (5 rounds)'},
-    {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 tests',ok:lP2ok,val:lP2.length/3,txt:`tests with ≤${s.e0.l} err: ${lP2.length}/3`},
-    {name:'6 texts ≤'+s.e1.wm+' min, score ≥'+s.e1.w+'/20 + Lexical Injection (4 phrasal verbs + 3 C1 collocations)',ok:wE1ok,val:Math.min(wE1.filter(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3).length/6,1),txt:`meet it: ${wE1.filter(e=>e.lex&&e.lex.pv>=4&&e.lex.col>=3).length}/6`},
-    {name:'UoE (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:ueSimsOk,val:Math.min(ueSims.length/4,1),txt:`mocks: ${ueSims.length}/4`},
-    {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:l3ok,val:l3.length/3,txt:`tests: ${l3.length}/3`},
-    {name:'Speaking Part 2 — 1 min continuous, no silences >3s',ok:sp2ok,val:Math.min(sp2.length/1,1),txt:`clean runs: ${sp2.length}`},
-    {name:'Reading Part 6 (Gapped Text) ≥4/6 in 3 consecutive mocks',ok:r6ok,val:Math.min(r6.length/3,1),txt:`mocks: ${r6.length}/3`},
-    {name:'Speaking Parts 3-4 — 4 mocks with ≥3 negotiation structures',ok:sp34ok,val:Math.min(sp34.length/4,1),txt:`mocks: ${sp34.length}/4`},
-    {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:rue.length>=1,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
-    {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:fw.length>=1,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
-    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:l4ok,val:Math.min(l4.length/s.e2.ln,1),txt:`tests: ${l4.length}/${s.e2.ln}`},
-    {name:'Speaking final (14 min) validated by teacher at C1',ok:sfok,val:Math.min(sf.length/1,1),txt:`validated: ${sf.length}`}
+    {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:g0_w_ok,val:Math.min(bestEssayStreak/4,1),txt:`best streak: ${bestEssayStreak}/4 (current: ${curEssayStreak})`},
+    {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:g0_u_ok,val:ue4.length<5?(ue4.length/5):Math.min((ue4a||0)/s.e0.u,1),txt:ue4.length>=5?`last 5 avg: ${Math.round(ue4a)}% (req ≥${s.e0.u}%)`:`${ue4.length}/5 rounds logged`},
+    {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 consecutive tests',ok:g0_l_ok,val:Math.min(bestLP2Streak/3,1),txt:`best streak: ${bestLP2Streak}/3 (current: ${curLP2Streak})`},
+    
+    {name:'6 texts ≤'+s.e1.wm+' min, score ≥'+s.e1.w+'/20 + Lexical Injection (4 pv + 3 collocations)',ok:g1_w_ok,val:Math.min(wE1.length/6,1),txt:`qualifying: ${wE1.length}/6`},
+    {name:'UoE (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:g1_u_ok,val:Math.min(ueFullMocks.length/4,1),txt:`mocks passed: ${ueFullMocks.length}/4`},
+    {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:g1_l_ok,val:Math.min(bestL3Streak/3,1),txt:`best streak: ${bestL3Streak}/3 (current: ${curL3Streak})`},
+    {name:'Speaking Part 2 — 1 min continuous, no silences >3s',ok:g1_sp2_ok,val:Math.min(sp2.length/1,1),txt:`clean runs: ${sp2.length}`},
+    {name:'Reading Part 6 (Gapped Text) ≥4/6 in 3 consecutive mocks',ok:g1_r6_ok,val:Math.min(bestR6Streak/3,1),txt:`best streak: ${bestR6Streak}/3 (current: ${curR6Streak})`},
+    {name:'Speaking Parts 3-4 — 4 mocks with ≥3 negotiation structures',ok:g1_sp34_ok,val:Math.min(sp34.length/4,1),txt:`mocks passed: ${sp34.length}/4`},
+    
+    {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:g2_rue_ok,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
+    {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:g2_fw_ok,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
+    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:g2_l_ok,val:Math.min(bestL4Streak/s.e2.ln,1),txt:`best streak: ${bestL4Streak}/${s.e2.ln} (current: ${curL4Streak})`},
+    {name:'Speaking final (14 min) validated by teacher at C1',ok:g2_sf_ok,val:Math.min(sf.length/1,1),txt:`validated: ${sf.length}`}
   ];
   return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5],gates[6],gates[7],gates[8]],[gates[9],gates[10],gates[11],gates[12]]]};
 }
@@ -3436,7 +3510,10 @@ function renderMaterial(){
   const q=(document.getElementById('matFilter').value||'').toLowerCase().trim();
   const groups={};
   MATERIALS.filter(m=>!q||m.name.toLowerCase().includes(q)||m.folder.toLowerCase().includes(q)).forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
-  el.innerHTML=Object.keys(groups).map(f=>{
+  el.innerHTML=(Object.keys(groups).some(f=>/C1|advanced/i.test(f))
+    ?`<div class="note" style="border-left:3px solid var(--warn,#e0a030);padding:8px 12px;margin-bottom:12px;background:rgba(224,160,48,.08);border-radius:6px;font-size:13px">⚠️ <b>C1 Advanced (extra)</b> — este material <b>no</b> es del examen B2 First: son sample papers oficiales C1 que descargaste como práctica de nivel. El plan, los gates y las partes del tracker siguen siendo B2.</div>`
+    :'')
+  + Object.keys(groups).map(f=>{
     const items=groups[f].map(m=>m.ext==='AUDIO'
       ?`<div class="book"><div class="ico">🎧</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div>${matCell(m)}</div>`
       :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Open PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Download</a></div>${matCell(m)}</div>`).join('');
