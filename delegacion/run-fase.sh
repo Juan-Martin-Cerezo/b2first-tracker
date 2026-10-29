@@ -91,6 +91,17 @@ VERDICT="ok"
 [ "$QUOTA" -gt 0 ] && VERDICT="cuota_agotada"
 [ "$EXIT" -ne 0 ] && [ "$VERDICT" = "ok" ] && VERDICT="exit_$EXIT"
 
+# ---------- tests del proyecto (verificación dura) ----------
+TESTS="${RUN_TESTS:-test_sync.py test_personalization.py}"
+TFAIL=""
+for t in $TESTS; do
+  ( cd tests && timeout 300 uv run --with playwright python "$t" >/dev/null 2>&1 )
+  RC=$?
+  echo "== test $t -> exit $RC" | tee -a "$LOG"
+  [ "$RC" -ne 0 ] && TFAIL="$TFAIL $t($RC)"
+done
+if [ -n "$TFAIL" ] && [ "$VERDICT" = "ok" ]; then VERDICT="tests_rojo"; fi
+
 {
   echo "== fin: EXIT=$EXIT commits=$COMMITS head=$HEAD dirty=$DIRTY js=$JS2 svc=$SVC2 quota=$QUOTA noauth=$NOAUTH"
   echo "== VERDICT: $VERDICT"
