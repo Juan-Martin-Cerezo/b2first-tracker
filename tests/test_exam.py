@@ -40,11 +40,12 @@ with sync_playwright() as p:
     out["partes_total"] = pg.eval_on_selector_all("#partsList .step", "els => els.length")
     out["partes_grupos"] = pg.eval_on_selector_all("#partsList .folder", "els => els.length")
     # registrar un part UoE P5
-    pg.evaluate("savePart(4)")  # index 4 = R&UoE Part 5
+    pg.evaluate("""window.__origExamLog = JSON.stringify(D.log);
+                   savePart(4);""")  # index 4 = R&UoE Part 5
     out["log_ue_p5"] = pg.evaluate("D.log.some(e => e.type==='ue' && e.part===5)")
     out["log_modo"] = pg.evaluate("(D.log.find(e => e.type==='ue' && e.part===5)||{}).note")
-    # limpiar test
-    pg.evaluate("D.log = D.log.filter(e => !(e.type==='ue' && e.part===5 && e.note==='Multiple choice (2 textos)')); save(); refreshAll();")
+    # restaurar test
+    pg.evaluate("D.log = JSON.parse(window.__origExamLog); save(); refreshAll();")
 
     out["errores_js"] = errs
     b.close()

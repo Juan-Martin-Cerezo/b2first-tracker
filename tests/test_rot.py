@@ -26,18 +26,20 @@ with sync_playwright() as p:
     pg.evaluate("delete D.weekOverrides.w; save(); renderToday();")
     out["override_limpio"] = pg.evaluate("!D.weekOverrides.w")
 
-    # stats: cargar datos de ejemplo y ver tabla
-    pg.evaluate("""D.log.push({date:'2026-08-16',type:'ue',part:5,correct:4,total:6,min:20});
-                   D.log.push({date:'2026-08-16',type:'ue',part:5,correct:5,total:6,min:19});
-                   D.log.push({date:'2026-08-16',type:'lp',part:2,correct:7,total:10,min:9});
-                   D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:15,min:30});
-                   D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:17,min:28});
+    # stats: guardar estado, cargar datos de ejemplo con flag de test y restaurar
+    pg.evaluate("""const origLog = JSON.stringify(D.log);
+                   window.__origLog = origLog;
+                   D.log.push({date:'2026-08-16',type:'ue',part:5,correct:4,total:6,min:20,_test:true});
+                   D.log.push({date:'2026-08-16',type:'ue',part:5,correct:5,total:6,min:19,_test:true});
+                   D.log.push({date:'2026-08-16',type:'lp',part:2,correct:7,total:10,min:9,_test:true});
+                   D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:15,min:30,_test:true});
+                   D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:17,min:28,_test:true});
                    save(); refreshAll();""")
     pg.wait_for_timeout(300)
     out["stats_rows"] = pg.eval_on_selector_all("#statsTable tbody tr", "els => els.length")
     out["stats_ue_p5"] = pg.evaluate("(document.querySelector('#statsTable tbody tr')||{}).textContent")
-    # limpiar test data
-    pg.evaluate("""D.log = D.log.filter(e => !(e.note === undefined && (e.part === 5 || (e.part === 2 && e.correct === 7) || (e.kind === 'Essay' && e.score === 15) || (e.kind === 'Essay' && e.score === 17))));
+    # restaurar test data exactamente
+    pg.evaluate("""D.log = JSON.parse(window.__origLog);
                    save(); refreshAll();""")
 
     # PLAN ciclos cargados
