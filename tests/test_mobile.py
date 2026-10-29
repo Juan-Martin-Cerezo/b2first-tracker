@@ -13,36 +13,38 @@ with sync_playwright() as p:
     login_owner(pg, URL)
     out["titulo"] = pg.title()
 
-    # overflow horizontal?
+    # horizontal overflow?
     out["scroll_ok"] = pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("window.innerWidth")
 
-    # HOY: sesiones A/B visibles + rotación
+    # TODAY: A/B sessions visible + rotation
     out["sesA"] = pg.evaluate("getComputedStyle(document.getElementById('sesA')).display")
     out["sesB"] = pg.evaluate("getComputedStyle(document.getElementById('sesB')).display")
     out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
     out["rot_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
 
-    # nav completo visible?
+    # full nav present (10 views + More)?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")
 
-    # tab LIBROS
+    # BOOKS tab (hidden behind More in the mobile nav)
+    pg.click("#navMoreBtn")
+    pg.wait_for_timeout(80)
     pg.click("nav button[data-view='libros']")
     pg.wait_for_timeout(300)
     out["libros_comprables"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
 
-    # filtro funciona en mobile
+    # filter works on mobile
     pg.fill("#bookFilter", "fce")
     pg.wait_for_timeout(200)
     out["filtro_fce"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
     pg.fill("#bookFilter", "")
 
-    # PROGRESO: export/import presentes + gates
+    # PROGRESS: export/import present + gates
     pg.click("nav button[data-view='prog']")
     pg.wait_for_timeout(200)
     out["gates"] = pg.eval_on_selector_all(".gate", "els => els.length")
     out["export_btn"] = pg.evaluate("typeof exportData === 'function'")
 
-    # rubric checkboxes existen en el DOM (la Sesion A es la tarea 2 del HOY)
+    # rubric checkboxes exist in the DOM (Session A is task 2 of TODAY)
     out["rubric_items"] = pg.eval_on_selector_all(".rub", "els => els.length")
 
     out["errores_js"] = errs

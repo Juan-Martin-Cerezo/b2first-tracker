@@ -1,7 +1,7 @@
-"""Tests del plan semanal determinista (buildWeeklyPlan) y su card en PLAN.
+"""Tests of the deterministic weekly plan (buildWeeklyPlan) and its PLAN card.
 
-Fixtures inyectadas por page.evaluate con usuario aislado (patrón de
-test_streak.py): no usa datos reales del owner ni toca data/.
+Fixtures injected via page.evaluate with an isolated test user (pattern from
+test_streak.py): it uses no real owner data and does not touch data/.
 """
 
 import asyncio
@@ -27,7 +27,7 @@ async def main():
 
         await page.goto(URL, wait_until="networkidle")
 
-        # Limpiar localStorage al empezar y usar un usuario de prueba aislado
+        # Clear localStorage on start and use an isolated test user
         await page.evaluate(
             """() => {
             localStorage.clear();
@@ -48,7 +48,7 @@ async def main():
         }"""
         )
 
-        # 1. Sin diagnóstico -> needDiag visible y 0 slots
+        # 1. No diagnostic -> needDiag visible and 0 slots
         res1 = await page.evaluate(
             """() => {
             D.log = []; D.errs = []; delete D.diag;
@@ -67,10 +67,10 @@ async def main():
         assert res1["nSlots"] == 0, f"Expected 0 slots, got {res1}"
         assert res1["cardVisible"] is True, f"needDiag card not visible: {res1}"
         assert res1["rows"] == 0, f"Expected 0 rows, got {res1}"
-        assert "Hacé el diagnóstico" in res1["text"], f"Missing CTA: {res1['text']}"
+        assert "Take the diagnostic" in res1["text"], f"Missing CTA: {res1['text']}"
         out["1_sin_diag_needDiag"] = "OK: needDiag visible, 0 slots"
 
-        # 2. Diagnóstico weakest:[3,2,7] -> esas 3 partes aparecen en los slots
+        # 2. Diagnostic weakest:[3,2,7] -> those 3 parts appear in the slots
         await page.evaluate(
             """() => {
             D.diag = %s;
@@ -87,7 +87,7 @@ async def main():
             assert w in parts2, f"Expected weakest part {w} in slots, got {res2}"
         out["2_weakest_en_slots"] = f"OK: parts={res2}"
 
-        # 3. Siempre exactamente 1 slot de Writing y 1 de Listening
+        # 3. Always exactly 1 Writing slot and 1 Listening slot
         res3 = await page.evaluate(
             """() => {
             const cnt = (p, t) => p.slots.filter(s => s.type === t).length;
@@ -112,7 +112,7 @@ async def main():
         assert res4 == {"n3": 3, "n6": 6}, f"Bad slot counts: {res4}"
         out["4_weekGoal_3_y_6"] = f"OK: {res4}"
 
-        # 5. Mayoría L-GAP -> parte 1 o 3; mayoría G-ERR -> parte 2 o 4
+        # 5. L-GAP majority -> part 1 or 3; G-ERR majority -> part 2 or 4
         res5 = await page.evaluate(
             """() => {
             D.diag.weakest = [7,5,6];
@@ -132,7 +132,7 @@ async def main():
         assert any(x in (2, 4) for x in gram_parts), f"G-ERR majority -> no part 2/4: {res5['gram']}"
         out["5_taxonomia_fill"] = f"OK: lex={res5['lex']}, gram={res5['gram']}"
 
-        # 6. Ninguna parte repetida el mismo día (weekGoal 7 -> hay día con 2 slots)
+        # 6. No repeated part on the same day (weekGoal 7 -> some day has 2 slots)
         res6 = await page.evaluate(
             """() => {
             D.settings.weekGoal = 7;
@@ -149,20 +149,20 @@ async def main():
             by_day.setdefault(s["day"], []).append(s["part"])
         for day, ps in by_day.items():
             vals = [x for x in ps if x is not None]
-            assert len(vals) == len(set(vals)), f"Parte repetida el {day}: {ps}"
-        out["6_sin_repetir_por_dia"] = f"OK: por día={by_day}"
+            assert len(vals) == len(set(vals)), f"Repeated part on {day}: {ps}"
+        out["6_sin_repetir_por_dia"] = f"OK: per day={by_day}"
 
-        # 7. reason de cada slot no vacío y menciona el dato que lo justifica
+        # 7. Each slot's reason is non-empty and cites the data that justifies it
         res7 = await page.evaluate(
             "() => buildWeeklyPlan(D).slots.map(s => s.reason)"
         )
         assert len(res7) >= 5, f"Expected >=5 reasons, got {res7}"
         for r in res7:
-            assert isinstance(r, str) and r.strip(), f"reason vacío: {r!r}"
-            assert ("diagnóstico" in r) or ("errores" in r) or ("Writing" in r), f"reason sin dato: {r!r}"
-        out["7_reasons_con_datos"] = f"OK: {len(res7)} reasons citan diagnóstico/errores/Writing"
+            assert isinstance(r, str) and r.strip(), f"Empty reason: {r!r}"
+            assert ("diagnostic" in r) or ("error" in r) or ("Writing" in r), f"Reason without data: {r!r}"
+        out["7_reasons_con_datos"] = f"OK: {len(res7)} reasons cite diagnostic/errors/Writing"
 
-        # UI: filas renderizadas, ¿Por qué esto?, Regenerar y Empezar -> PARTES
+        # UI: rendered rows, "Why this?", Regenerate and Start -> PARTS
         await page.click("nav button[data-view='plan']")
         rows = await page.eval_on_selector_all(
             "#wpRows .wp-row",
@@ -174,11 +174,11 @@ async def main():
         await page.click("#wpWhy summary")
         why_open = await page.evaluate("document.getElementById('wpWhy').open === true")
         why_text = await page.eval_on_selector("#wpWhyBody", "e => e.textContent")
-        assert why_open is True, "details ¿Por qué esto? did not open"
-        assert "weekGoal" in why_text and "14 días" in why_text and "taxonomía" in why_text, f"why incomplete: {why_text}"
+        assert why_open is True, "details 'Why this?' did not open"
+        assert "weekGoal" in why_text and "14 days" in why_text and "taxonomy" in why_text, f"why incomplete: {why_text}"
         await page.click("#wpRegenBtn")
         rows_after = await page.eval_on_selector_all("#wpRows .wp-row", "els => els.length")
-        assert rows_after == 5, f"Regenerar broke rows: {rows_after}"
+        assert rows_after == 5, f"Regenerate broke rows: {rows_after}"
         first_ue = next(i for i, r in enumerate(rows) if r["type"] == "ue")
         ue_part = int(rows[first_ue]["part"])
         await page.eval_on_selector_all(
@@ -188,12 +188,12 @@ async def main():
             "() => ({view: document.querySelector('.view.active')?.id,"
             " filter: PARTS_FILTER, steps: document.querySelectorAll('#partsList .step').length})"
         )
-        assert nav_state["view"] == "v-partes", f"Empezar no navegó a PARTES: {nav_state}"
-        assert nav_state["filter"] == ue_part, f"Filtro mal aplicado: {nav_state}"
-        assert nav_state["steps"] == 1, f"Filtro no dejó 1 parte: {nav_state}"
-        out["ui_card_y_empezar"] = f"OK: rows=5, why abierto, Empezar -> PARTES parte {ue_part}"
+        assert nav_state["view"] == "v-partes", f"Start did not navigate to PARTS: {nav_state}"
+        assert nav_state["filter"] == ue_part, f"Filter not applied: {nav_state}"
+        assert nav_state["steps"] == 1, f"Filter did not leave 1 part: {nav_state}"
+        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> PARTS part {ue_part}"
 
-        # Limpiar localStorage del usuario de prueba
+        # Clean up the test user's localStorage
         await page.evaluate(
             "localStorage.removeItem('b2first_tracker_v1_test_plan_ci'); localStorage.removeItem('b2first_user');"
         )

@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from playwright.sync_api import sync_playwright
 
 # ---------------------------------------------------------------------------
-# 1. Mock Gemini Provider en puerto local (sin red, sin keys reales)
+# 1. Mock Gemini Provider on a local port (no network, no real keys)
 # ---------------------------------------------------------------------------
 MOCK_PORT = 8123
 APP_PORT = 8097
@@ -128,7 +128,7 @@ mock_th = threading.Thread(target=mock_srv.serve_forever, daemon=True)
 mock_th.start()
 
 # ---------------------------------------------------------------------------
-# 2. Server B2First en puerto alternativo con DATA_DIR temporal y log capturado
+# 2. B2First server on an alternative port with temporary DATA_DIR and captured log
 # ---------------------------------------------------------------------------
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
@@ -202,22 +202,22 @@ def post_ai(body, ip="127.0.0.1"):
 
 out = {}
 
-# Assert 1: texto de 10 chars -> 400
+# Assert 1: 10-char text -> 400
 st1, body1 = post_ai({"text": "1234567890", "kind": "Essay", "provider_key": FAKE_KEY})
 assert st1 == 400, f"Expected 400 for 10 chars, got {st1}: {body1}"
 out["1_short_text_400"] = st1
 
-# Assert 2: kind inválido -> 400
+# Assert 2: invalid kind -> 400
 st2, body2 = post_ai({"text": SAMPLE_TEXT, "kind": "Poem", "provider_key": FAKE_KEY})
 assert st2 == 400, f"Expected 400 for invalid kind, got {st2}: {body2}"
 out["2_invalid_kind_400"] = st2
 
-# Assert 3: sin key -> 502
+# Assert 3: no key -> 502
 st3, body3 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": ""})
 assert st3 == 502, f"Expected 502 for missing key, got {st3}: {body3}"
 out["3_no_key_502"] = st3
 
-# Assert 4: mock responde bien -> 200 con las 4 bandas y total = suma
+# Assert 4: mock responds correctly -> 200 with the 4 bands and total = sum
 MOCK_STATE["mode"] = "ok"
 st4, body4 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
 assert st4 == 200, f"Expected 200 for valid response, got {st4}: {body4}"
@@ -232,25 +232,25 @@ assert res4["total"] == sum(res4["bands"].values()) == 13
 assert len(res4["rewrite"]) == 3
 out["4_valid_200_total"] = res4["total"]
 
-# Assert 5: mock responde JSON sin una clave -> 422
+# Assert 5: mock returns JSON without a key -> 422
 MOCK_STATE["mode"] = "missing_key"
 st5, body5 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
 assert st5 == 422, f"Expected 422 for missing key in schema, got {st5}: {body5}"
 out["5_missing_schema_key_422"] = st5
 
-# Assert 6: mock responde banda 7 -> 422
+# Assert 6: mock returns band 7 -> 422
 MOCK_STATE["mode"] = "band_7"
 st6, body6 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
 assert st6 == 422, f"Expected 422 for band 7, got {st6}: {body6}"
 out["6_band_7_422"] = st6
 
-# Assert 7: mock responde rewrite con 2 strings -> 422
+# Assert 7: mock returns rewrite with 2 strings -> 422
 MOCK_STATE["mode"] = "rewrite_2"
 st7, body7 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
 assert st7 == 422, f"Expected 422 for rewrite len 2, got {st7}: {body7}"
 out["7_rewrite_2_422"] = st7
 
-# Assert 8: 11 requests seguidas -> la 11ª es 429
+# Assert 8: 11 requests in a row -> the 11th is 429
 MOCK_STATE["mode"] = "ok"
 S._AI_RATE.clear()
 statuses_11 = []
@@ -261,7 +261,7 @@ assert statuses_11[:10] == [200] * 10, f"Expected first 10 to be 200, got {statu
 assert statuses_11[10] == 429, f"Expected 11th request to be 429, got {statuses_11}"
 out["8_rate_limit_11th"] = statuses_11[10]
 
-# Assert 9: la key enviada NO aparece en el archivo de log del server ni en la respuesta de error
+# Assert 9: the sent key does NOT appear in the server log file nor in the error response
 MOCK_STATE["mode"] = "down"
 st_err, body_err = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.8.99")
 assert st_err == 502, f"Expected 502 when upstream down, got {st_err}"
@@ -271,7 +271,7 @@ assert FAKE_KEY not in body1 and FAKE_KEY not in body5 and FAKE_KEY not in body6
 assert FAKE_KEY not in log_contents and FAKE_KEY not in server_log_buf.getvalue(), "API key leaked in server log!"
 out["9_no_key_leak"] = True
 
-# Assert 10: Flujo E2E en navegador con Playwright (Tab ✨ AI, estados, guardado en D.log)
+# Assert 10: E2E flow in the browser with Playwright (✨ AI tab, states, saved in D.log)
 MOCK_STATE["mode"] = "ok"
 S._AI_RATE.clear()
 with sync_playwright() as p:
@@ -298,19 +298,19 @@ with sync_playwright() as p:
     )
     pg.click("nav button[data-view='ia']")
     pg.wait_for_timeout(150)
-    # Sin key: aviso visible y botón deshabilitado
+    # No key: warning visible and button disabled
     btn_disabled = pg.evaluate("document.getElementById('iaSubmitBtn').disabled")
     warn_visible = pg.evaluate("getComputedStyle(document.getElementById('iaNoKeyWarn')).display !== 'none'")
     assert btn_disabled is True and warn_visible is True
 
-    # Cargar key en PLAN -> D.settings.aiKey
+    # Load key in PLAN -> D.settings.aiKey
     pg.click("nav button[data-view='plan']")
     pg.fill("#pAiKey", FAKE_KEY)
     pg.click("nav button[data-view='ia']")
     pg.wait_for_timeout(100)
     assert pg.evaluate("document.getElementById('iaSubmitBtn').disabled") is False
 
-    # Completar texto y corregir
+    # Fill in the text and correct it
     pg.select_option("#iaKind", "Article")
     pg.fill("#iaText", SAMPLE_TEXT)
     pg.click("#iaSubmitBtn")
@@ -329,7 +329,7 @@ with sync_playwright() as p:
     out["10_ui_e2e_ok"] = True
     b.close()
 
-# Assert 11: Mock con wire DeepSeek (choices[0].message.content) y feedback como objeto -> 200
+# Assert 11: Mock with DeepSeek wire (choices[0].message.content) and feedback as object -> 200
 MOCK_STATE["mode"] = "ok"
 S._AI_RATE.clear()
 S.B2_AI_MODEL = ""
@@ -346,13 +346,13 @@ assert isinstance(res11["feedback"], dict) and set(res11["feedback"].keys()) == 
 assert res11["model"] == "deepseek-chat"
 out["11_deepseek_valid_200"] = st11
 
-# Assert 12: Mock DeepSeek con feedback como array -> 422
+# Assert 12: DeepSeek mock with feedback as array -> 422
 MOCK_STATE["mode"] = "feedback_array"
 st12, body12 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider": "deepseek", "provider_key": FAKE_KEY}, ip="10.9.9.12")
 assert st12 == 422, f"Expected 422 for deepseek feedback array, got {st12}: {body12}"
 out["12_deepseek_feedback_array_422"] = st12
 
-# Assert 13: provider: "gemini" en el body sigue funcionando con el mock Gemini -> 200
+# Assert 13: provider: "gemini" in the body still works with the Gemini mock -> 200
 MOCK_STATE["mode"] = "ok"
 st13, body13 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider": "gemini", "provider_key": FAKE_KEY}, ip="10.9.9.13")
 assert st13 == 200, f"Expected 200 for provider gemini in body, got {st13}: {body13}"
@@ -360,19 +360,19 @@ res13 = json.loads(body13)
 assert res13["total"] == 13 and res13["model"] == "gemini-2.0-flash"
 out["13_gemini_provider_200"] = st13
 
-# Assert 14: mock sin weaknesses -> 422
+# Assert 14: mock without weaknesses -> 422
 MOCK_STATE["mode"] = "no_weaknesses"
 st14, body14 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.14")
 assert st14 == 422, f"Expected 422 when weaknesses is missing, got {st14}: {body14}"
 out["14_missing_weaknesses_422"] = st14
 
-# Assert 15: mock con weaknesses.language de 1 solo string -> 422
+# Assert 15: mock with weaknesses.language as a single string -> 422
 MOCK_STATE["mode"] = "weakness_1"
 st15, body15 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.15")
 assert st15 == 422, f"Expected 422 when weaknesses.language has 1 item, got {st15}: {body15}"
 out["15_weaknesses_len_1_422"] = st15
 
-# Assert 16: mock completo con weaknesses -> 200 y la respuesta incluye las 8 debilidades
+# Assert 16: complete mock with weaknesses -> 200 and the response includes the 8 weaknesses
 MOCK_STATE["mode"] = "ok"
 st16, body16 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.9.16")
 assert st16 == 200, f"Expected 200 for full payload with weaknesses, got {st16}: {body16}"

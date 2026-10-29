@@ -24,7 +24,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(200)
     out["ex_w_timer"] = pg.evaluate("document.getElementById('exTimer').textContent")
     out["ex_w_links"] = pg.eval_on_selector_all("#exGuide a", "els => els.length")
-    # start timer y verificar cuenta regresiva
+    # start timer and verify the countdown
     pg.click("button[onclick='exStart()']")
     pg.wait_for_timeout(2100)
     out["ex_corriendo"] = pg.evaluate("exIv !== null")
@@ -44,7 +44,7 @@ with sync_playwright() as p:
                    savePart(4);""")  # index 4 = R&UoE Part 5
     out["log_ue_p5"] = pg.evaluate("D.log.some(e => e.type==='ue' && e.part===5)")
     out["log_modo"] = pg.evaluate("(D.log.find(e => e.type==='ue' && e.part===5)||{}).note")
-    # restaurar test
+    # restore test data
     pg.evaluate("D.log = JSON.parse(window.__origExamLog); save(); refreshAll();")
 
     out["errores_js"] = errs

@@ -46,6 +46,7 @@
   --txt: oklch(0.22 0.01 250);
   --txt-2: oklch(0.46 0.01 250);
   --acc: oklch(0.55 0.16 255);
+  --acc-text: oklch(0.52 0.16 255);
   --ok: oklch(0.60 0.14 150);
   --warn: oklch(0.72 0.15 75);
   --bad: oklch(0.58 0.19 25);
@@ -84,6 +85,7 @@
   --txt: oklch(0.94 0.004 255);
   --txt-2: oklch(0.72 0.008 255);
   --acc: oklch(0.72 0.13 255);
+  --acc-text: oklch(0.72 0.13 255);
   --ok: oklch(0.74 0.13 150);
   --warn: oklch(0.80 0.13 80);
   --bad: oklch(0.70 0.16 25);
@@ -208,7 +210,7 @@ body{
   overflow-x:hidden;
 }
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
-a{color:var(--acc);text-decoration:none}
+a{color:var(--acc-text);text-decoration:none}
 a:hover{text-decoration:underline}
 h1,h2,h3{text-wrap:balance;font-weight:600}
 h1{font-size:var(--fs-xl);line-height:1.15}
@@ -279,7 +281,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
   color:var(--txt);transition:background-color 150ms ease, color 150ms ease, transform 120ms ease-out;flex:none;
 }
-.theme-toggle:hover{background:var(--line);color:var(--acc)}
+.theme-toggle:hover{background:var(--line);color:var(--acc-text)}
 .theme-toggle:active{transform:scale(0.96)}
 
 /* ---------- NAV (top on desktop) ---------- */
@@ -315,14 +317,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 /* ---------- PAGE HEADERS ---------- */
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
 .page-head .page-kicker{
-  display:block;font-size:var(--fs-xs);letter-spacing:.14em;color:var(--acc);
+  display:block;font-size:var(--fs-xs);letter-spacing:.14em;color:var(--acc-text);
   text-transform:uppercase;margin-bottom:4px;font-weight:600;
 }
 .page-head .page-title{font-size:var(--fs-xl);font-weight:600;letter-spacing:-.02em;color:var(--txt);line-height:1.15}
 .page-head .page-sub{font-size:var(--fs-sm);color:var(--txt-2);margin-top:6px;max-width:680px;line-height:1.5}
 .page-stat{text-align:right;flex:none}
 .page-stat .stat-label{display:block;font-size:var(--fs-xs);letter-spacing:.1em;color:var(--txt-2);text-transform:uppercase}
-.page-stat .stat-val{font-size:var(--fs-xl);font-weight:600;color:var(--acc);line-height:1.1;display:block;margin-top:2px}
+.page-stat .stat-val{font-size:var(--fs-xl);font-weight:600;color:var(--acc-text);line-height:1.1;display:block;margin-top:2px}
 
 /* ---------- GRID ---------- */
 .grid-12{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
@@ -355,7 +357,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   letter-spacing:.02em;text-transform:uppercase;vertical-align:middle;
 }
 .badge.mon{background:var(--ok-soft);color:var(--ok-text)}
-.badge.fri{background:var(--acc-soft);color:var(--acc)}
+.badge.fri{background:var(--acc-soft);color:var(--acc-text)}
 .badge.ok{background:var(--ok-soft);color:var(--ok-text)}
 
 /* ---------- BUTTONS & CHIPS ---------- */
@@ -374,7 +376,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   background:var(--surface);color:var(--txt);
   box-shadow:var(--shadow-1);font-weight:400;
 }
-.btn.gray:hover{background:var(--surface-2);color:var(--acc);box-shadow:var(--shadow-2)}
+.btn.gray:hover{background:var(--surface-2);color:var(--acc-text);box-shadow:var(--shadow-2)}
 .btn.ok{background:var(--ok-strong);color:var(--on-ok)}
 .btn.ok:hover{background:color-mix(in oklch, var(--ok-strong) 90%, var(--txt))}
 .btn:disabled,.btn[disabled]{
@@ -396,13 +398,13 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   min-height:40px;
   transition:border-color 150ms ease, color 150ms ease, background-color 150ms ease, transform 120ms ease-out;
 }
-.chip:hover{border-color:var(--acc);color:var(--acc);background:var(--surface-2)}
+.chip:hover{border-color:var(--acc);color:var(--acc-text);background:var(--surface-2)}
 .chip:active{transform:scale(0.96)}
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-primary)}
 .chips{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
 .chip-plan{
   display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);font-weight:600;
-  color:var(--acc);background:var(--surface-2);border-radius:999px;padding:4px 12px;
+  color:var(--acc-text);background:var(--surface-2);border-radius:999px;padding:4px 12px;
 }
 .chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
@@ -444,11 +446,11 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 }
 .exam-timer{
   font-size:var(--fs-xl);font-weight:600;letter-spacing:-.02em;
-  color:var(--acc);font-variant-numeric:tabular-nums;display:inline-block;
+  color:var(--acc-text);font-variant-numeric:tabular-nums;display:inline-block;
   border:none;background:transparent;
 }
 .exam-dial-wrap{position:relative;max-width:600px;margin:20px auto;display:flex;flex-direction:column;align-items:center}
-.exam-dial-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.15;pointer-events:none;color:var(--acc)}
+.exam-dial-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.15;pointer-events:none;color:var(--acc-text)}
 .exam-dial-bg svg{width:100%;height:100%}
 .exam-guide-card{
   background:var(--surface-2);border-radius:var(--r-panel);padding:14px 16px;
@@ -462,7 +464,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .sesion-card .sesion-head .sesion-sub{font-size:var(--fs-sm);color:var(--txt-2);margin-top:3px}
 .sesion-dur{text-align:right;flex:none}
 .sesion-dur .dur-label{display:block;font-size:var(--fs-xs);letter-spacing:.1em;color:var(--txt-2);text-transform:uppercase}
-.sesion-dur .dur-val{font-size:var(--fs-lg);font-weight:600;color:var(--acc);display:block;margin-top:1px}
+.sesion-dur .dur-val{font-size:var(--fs-lg);font-weight:600;color:var(--acc-text);display:block;margin-top:1px}
 .task{
   background:var(--surface);border-radius:var(--r-panel);padding:16px;margin-bottom:12px;position:relative;
   box-shadow:var(--shadow-1);
@@ -472,7 +474,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .task .task-head{display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap}
 .task .task-num{
   width:36px;height:36px;border-radius:50%;background:var(--acc-soft);
-  color:var(--acc);display:flex;align-items:center;justify-content:center;
+  color:var(--acc-text);display:flex;align-items:center;justify-content:center;
   font-size:var(--fs-sm);font-weight:600;flex:none;
 }
 .task .task-title{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
@@ -485,7 +487,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   padding:12px;font-size:var(--fs-xs);margin:10px 0;line-height:1.55;color:var(--txt-2);
 }
 .guide b{color:var(--txt)}
-.guide a{color:var(--acc);font-weight:600}
+.guide a{color:var(--acc-text);font-weight:600}
 
 /* ---------- GATES ---------- */
 .gate{
@@ -513,18 +515,18 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 }
 .stat-card:hover{box-shadow:var(--shadow-2)}
 .stat-card .stat-card-label{display:block;font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);margin-bottom:8px}
-.stat-card .stat-card-val{font-size:var(--fs-xl);font-weight:600;color:var(--acc);line-height:1.1;display:block}
+.stat-card .stat-card-val{font-size:var(--fs-xl);font-weight:600;color:var(--acc-text);line-height:1.1;display:block}
 .stat-card .stat-card-sub{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px}
 .stat-card .stat-bar{height:7px;background:var(--surface-2);border-radius:4px;margin-top:12px;overflow:hidden}
 .stat-card .stat-bar-fill{height:100%;background:var(--acc);border-radius:4px;transition:width 600ms ease}
-.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;width:80px;height:80px;color:var(--acc);opacity:.08;pointer-events:none}
+.stat-card .stat-ico{position:absolute;right:-8px;top:-8px;width:80px;height:80px;color:var(--acc-text);opacity:.08;pointer-events:none}
 
 /* ---------- PILLS / EMPTY / DELETE ---------- */
 .pill{
   display:inline-flex;align-items:center;font-size:var(--fs-xs);font-weight:600;
   padding:3px 10px;border-radius:999px;margin:2px 4px 2px 0;letter-spacing:.02em;
 }
-.pill.L-GAP{background:var(--acc-soft);color:var(--acc)}
+.pill.L-GAP{background:var(--acc-soft);color:var(--acc-text)}
 .pill.G-ERR{background:var(--bad-soft);color:var(--bad-text)}
 .pill.T-MIS{background:var(--warn-soft);color:var(--warn-text)}
 .pill.T-LIM{background:var(--surface-2);color:var(--txt-2)}
@@ -568,10 +570,10 @@ tbody tr:hover{background:var(--surface-2)}
 .book b{display:block;font-size:var(--fs-sm);font-weight:600;line-height:1.35;color:var(--txt)}
 .book .meta{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px;line-height:1.45}
 .book .price{color:var(--ok-text);font-weight:600;font-size:var(--fs-sm);white-space:nowrap}
-.book a{color:var(--acc);font-size:var(--fs-xs);font-weight:600}
+.book a{color:var(--acc-text);font-size:var(--fs-xs);font-weight:600}
 .book audio{width:100%;margin-top:8px;height:36px;border-radius:var(--r-ctl)}
 .folder{
-  color:var(--acc);font-size:var(--fs-md);font-weight:600;margin:16px 0 8px;
+  color:var(--acc-text);font-size:var(--fs-md);font-weight:600;margin:16px 0 8px;
   text-transform:capitalize;letter-spacing:.02em;
 }
 .folder .t{font-size:var(--fs-xs);color:var(--txt-2);font-weight:400}
@@ -583,7 +585,15 @@ tbody tr:hover{background:var(--surface-2)}
 .step:hover{box-shadow:var(--shadow-2)}
 .step h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--txt);font-size:var(--fs-sm);font-weight:600}
 .step h3 .t{font-size:var(--fs-xs);color:var(--txt-2);font-weight:400}
-.dl{font-size:var(--fs-xs);font-weight:600;color:var(--acc);margin-left:10px}
+.dl{font-size:var(--fs-xs);font-weight:600;color:var(--acc-text);margin-left:10px}
+
+/* ---------- DEMO BANNER ---------- */
+.demo-banner{
+  background:var(--warn-soft);color:var(--warn-text);
+  font-size:var(--fs-xs);font-weight:600;letter-spacing:.02em;
+  padding:10px clamp(16px,4vw,32px);text-align:center;
+  border-bottom:1px solid var(--warn-border);
+}
 
 /* ---------- NOTES ---------- */
 .note{
@@ -603,7 +613,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 .next-session .big{font-size:var(--fs-md);font-weight:600;letter-spacing:-.01em;color:var(--txt)}
 .next-session .when{font-size:var(--fs-xs);color:var(--txt-2);margin-top:3px}
-.next-session .badge{background:var(--acc-soft);color:var(--acc)}
+.next-session .badge{background:var(--acc-soft);color:var(--acc-text)}
 .rot-card-v2{
   background:var(--surface);border-radius:var(--r-card);padding:20px;color:var(--txt);
   box-shadow:var(--shadow-1);position:relative;overflow:hidden;
@@ -617,7 +627,7 @@ tbody tr:hover{background:var(--surface-2)}
 .rot-v2-badge-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .rot-live-pill{
   display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);
-  font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);
+  font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-text);
   background:var(--acc-soft);padding:3px 8px;border-radius:999px;
 }
 .rot-pulse-dot{
@@ -644,7 +654,7 @@ tbody tr:hover{background:var(--surface-2)}
   font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;
   text-transform:uppercase;padding:2px 8px;border-radius:999px;
 }
-.rot-week-card.active-week .rot-wk-status{background:var(--ok);color:var(--on-ok)}
+.rot-week-card.active-week .rot-wk-status{background:var(--ok-strong);color:var(--on-ok)}
 .rot-week-card:not(.active-week) .rot-wk-status{background:var(--line);color:var(--txt-2)}
 .rot-session-row{display:flex;align-items:flex-start;gap:8px;margin-top:5px;padding:4px 6px;border-radius:var(--r-ctl)}
 .rot-session-row.is-today{background:var(--acc-soft)}
@@ -659,7 +669,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 .rot-queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:4px}
 .rot-queue-label{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2)}
-.rot-queue-sub{font-size:var(--fs-xs);color:var(--acc);font-weight:600}
+.rot-queue-sub{font-size:var(--fs-xs);color:var(--acc-text);font-weight:600}
 .rot-queue-track{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
 .rot-queue-track::-webkit-scrollbar{height:4px}
 .rot-q-item{
@@ -714,7 +724,7 @@ tbody tr:hover{background:var(--surface-2)}
 .phase-step.active{border-color:var(--acc);background:var(--acc-soft)}
 .phase-step .ps-num{font-size:var(--fs-xs);color:var(--txt-2);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .phase-step .ps-title{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-top:2px}
-.phase-step .ps-time{font-size:var(--fs-xs);color:var(--acc);margin-top:3px;font-weight:600}
+.phase-step .ps-time{font-size:var(--fs-xs);color:var(--acc-text);margin-top:3px;font-weight:600}
 
 /* ---------- WRITING PAD & METRICS ---------- */
 .writing-live-pad{
@@ -734,7 +744,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 .metrics-card .metrics-title{font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--txt-2);margin-bottom:8px;font-weight:600}
 .metrics-card .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-sm);color:var(--txt);padding:8px 0}
-.metrics-card .metric-val{font-weight:600;color:var(--acc);font-size:var(--fs-sm)}
+.metrics-card .metric-val{font-weight:600;color:var(--acc-text);font-size:var(--fs-sm)}
 .metrics-card .metric-divider{height:1px;background:var(--line)}
 
 /* ---------- PLAN CARDS ---------- */
@@ -795,7 +805,7 @@ footer{
 .exam-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2)}
 .exam-card:active{transform:scale(0.96)}
 .exam-card .exam-card-top{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:6px}
-.exam-card .exam-card-kicker{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.exam-card .exam-card-kicker{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--acc-text);font-weight:600}
 .exam-card .exam-card-min{
   font-size:var(--fs-xs);font-weight:600;background:var(--surface-2);color:var(--txt);
   padding:3px 10px;border-radius:999px;
@@ -818,7 +828,7 @@ footer{
   white-space:nowrap;
 }
 .gates-tab:hover{color:var(--txt)}
-.gates-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.gates-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 
 /* ---------- VIEWS & ANIMATION ---------- */
 .view{display:none}
@@ -857,7 +867,7 @@ footer{
   font-family:var(--font);font-size:var(--fs-sm);font-weight:600;color:var(--txt-2);
   border-bottom:2px solid transparent;transition:color 150ms ease, border-color 150ms ease;
 }
-.auth-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.auth-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 .auth-error{color:var(--bad-text);font-size:var(--fs-xs);margin-top:8px;min-height:16px}
 .onboard-intro{font-size:var(--fs-sm);color:var(--txt-2);margin-bottom:16px;line-height:1.5}
 .ob-plan-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0;font-size:var(--fs-sm)}
@@ -902,7 +912,7 @@ footer{
 .ql-step.active{border-color:var(--acc);background:var(--surface)}
 .ql-step-head{
   font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--acc);margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;
+  text-transform:uppercase;color:var(--acc-text);margin-bottom:8px;display:flex;justify-content:space-between;gap:8px;
 }
 .ql-chips{display:flex;flex-wrap:wrap;gap:6px}
 .ql-chips .chip{margin:0;padding:8px 12px}
@@ -919,7 +929,7 @@ footer{
 .streak-main{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
 .streak-record{font-size:var(--fs-xs);color:var(--txt-2)}
 .streak-shield{
-  font-size:var(--fs-xs);font-weight:600;color:var(--acc);background:var(--acc-soft);
+  font-size:var(--fs-xs);font-weight:600;color:var(--acc-text);background:var(--acc-soft);
   padding:3px 10px;border-radius:999px;
 }
 .streak-week-row{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -928,7 +938,7 @@ footer{
   border-radius:4px;overflow:hidden;
 }
 .streak-bar-fill{height:100%;background:var(--acc);border-radius:4px;transition:width 300ms ease}
-.streak-ascii{font-size:var(--fs-xs);color:var(--acc);letter-spacing:0}
+.streak-ascii{font-size:var(--fs-xs);color:var(--acc-text);letter-spacing:0}
 .streak-week-txt{font-size:var(--fs-xs);color:var(--txt-2)}
 .streak-risk{
   margin-top:8px;font-size:var(--fs-xs);color:var(--warn-text);
@@ -936,7 +946,7 @@ footer{
 }
 .streak-foot-pill{
   display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;
-  background:var(--acc-soft);color:var(--acc);font-weight:600;font-size:var(--fs-xs);
+  background:var(--acc-soft);color:var(--acc-text);font-weight:600;font-size:var(--fs-xs);
 }
 
 /* ---------- IA WRITING CORRECTOR ---------- */
@@ -974,13 +984,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   margin-bottom:16px;
 }
 .diag-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width 200ms ease}
-.diag-progress-label{font-size:var(--fs-xs);font-weight:600;color:var(--acc)}
+.diag-progress-label{font-size:var(--fs-xs);font-weight:600;color:var(--acc-text)}
 .diag-opt{
   justify-content:flex-start;text-align:left;
   min-height:48px;padding:12px 16px;font-size:var(--fs-md);font-family:var(--font);
 }
 .diag-opt .opt-key{
-  font-weight:600;color:var(--acc);margin-right:8px;
+  font-weight:600;color:var(--acc-text);margin-right:8px;
 }
 
 /* ---------- RESPONSIVE ---------- */
@@ -1016,7 +1026,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   }
   #sideNav button[data-view] .nav-label{font-size:var(--fs-xs)}
   #sideNav button[data-view].extra{display:none}
-  #sideNav.more-open button[data-view].extra{display:flex}
+  #sideNav.more-open{flex-wrap:wrap}
+  #sideNav.more-open button[data-view].extra{display:flex;flex:1 0 18%;min-width:60px}
   #navMoreBtn{
     display:flex;flex:1 0 auto;flex-direction:column;gap:2px;min-height:48px;
     min-width:44px;text-align:center;justify-content:center;
@@ -1079,7 +1090,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </head>
 <body>
 
-<!-- ============ AUTH OVERLAY (login / registro) ============ -->
+<!-- ============ AUTH OVERLAY (login / register) ============ -->
 <div id="authOverlay" class="overlay" style="display:none">
   <div class="auth-card">
     <div class="auth-brand">
@@ -1106,7 +1117,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   </div>
 </div>
 
-<!-- ============ ONBOARDING OVERLAY (primera vez) ============ -->
+<!-- ============ ONBOARDING OVERLAY (first time) ============ -->
 <div id="onboardingOverlay" class="overlay" style="display:none">
   <div class="auth-card" style="max-width:520px">
     <div class="auth-brand">
@@ -1234,14 +1245,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px">
         <span style="color:var(--on-surface-variant)">Storage Status:</span>
-        <span style="color:var(--ok);font-weight:600">✔ Dedicated Multi-User Storage</span>
+        <span style="color:var(--ok-text);font-weight:600">✔ Dedicated Multi-User Storage</span>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;flex-direction:column">
       <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')">⚙️ Edit My Study Plan &amp; Schedule</button>
       <button class="btn gray" style="width:100%" onclick="closeUserModal();exportData()">💾 Download My Full Progress Backup (.json)</button>
-      <button class="btn gray" style="width:100%;color:var(--bad)" onclick="doLogout()">⇄ Switch User / Log Out</button>
+      <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()">⇄ Switch User / Log Out</button>
     </div>
   </div>
 </div>
@@ -1395,7 +1406,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div id="demoBanner" class="demo-banner" style="display:none">Demo mode · your progress is saved only in this browser and is erased if you clear site data</div>
 
     <main>
-      <!-- ============ HOY ============ -->
+      <!-- ============ TODAY ============ -->
       <section id="v-hoy" class="view active">
         <div class="page-head">
           <div>
@@ -1437,7 +1448,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">Full</span></button>
             </div>
 
-            <!-- SESION A (MONDAYS) -->
+            <!-- SESSION A (MONDAYS) -->
             <div id="sesA">
               <!-- Studio 1: Full Reading & Use of English Sprint (Week A Monday) -->
               <div id="studioMonA" class="card sesion-card">
@@ -1696,7 +1707,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
             </div>
 
-            <!-- SESION B (FRIDAYS) -->
+            <!-- SESSION B (FRIDAYS) -->
             <div id="sesB">
               <!-- Studio 3: Full Listening (Week A Friday) -->
               <div id="studioFriA" class="card sesion-card">
@@ -1744,7 +1755,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="chips" id="gLChips" style="margin-top:6px"></div>
                       • <b>Rule:</b> complete all 4 parts in one continuous go without pausing. Score out of 30.
                     </div>
-                    <p id="lFocusNote" style="font-size:12px;color:var(--ok);margin:6px 0 0"></p>
+                    <p id="lFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
                     <div class="row" style="margin-top:10px">
                       <div><label>Audio Source</label>
                         <select id="lFuente">
@@ -1832,7 +1843,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       • <b>Part 2 Long Turn:</b> compare and speculate (never just describe) for 1 full minute.<br>
                       • <b>Parts 3-4:</b> negotiate and reach a consensus using advanced discourse markers.
                     </div>
-                    <p id="spFocusNote" style="font-size:12px;color:var(--ok);margin:6px 0 0"></p>
+                    <p id="spFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
                     <div class="row" style="margin-top:10px">
                       <div><label>Speaking part / mode</label>
                         <select id="spPart">
@@ -1878,7 +1889,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
             </div>
 
-            <!-- SIMULACRO COMPLETO -->
+            <!-- FULL MOCK EXAM -->
             <div id="sesFull">
               <div class="card sesion-card">
                 <div class="sesion-head">
@@ -2011,7 +2022,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <!-- Sidebar derecha (HOY) -->
+          <!-- Right sidebar (TODAY) -->
           <div class="col-4">
             <div class="card rot-card-v2">
               <div class="rot-v2-header">
@@ -2110,7 +2121,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ EXAMEN ============ -->
+      <!-- ============ EXAM ============ -->
       <section id="v-exam" class="view">
         <div class="page-head">
           <div>
@@ -2156,7 +2167,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </button>
         </div>
 
-        <!-- Selector avanzado (contrato de tests) -->
+        <!-- Advanced selector (test contract) -->
         <div style="margin:16px 0 0;max-width:480px">
           <label>Or pick the paper manually</label>
           <select id="exPaper" onchange="renderEx()">
@@ -2167,7 +2178,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </select>
         </div>
 
-        <!-- Estado activo del examen -->
+        <!-- Active exam state -->
         <div id="exActive">
           <div class="card" style="text-align:center">
             <h2 id="exActiveTitle" style="justify-content:center">Reading &amp; Use of English</h2>
@@ -2196,7 +2207,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ PARTES ============ -->
+      <!-- ============ PARTS ============ -->
       <section id="v-partes" class="view">
         <div class="page-head">
           <div>
@@ -2212,7 +2223,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="partsList"></div>
       </section>
 
-      <!-- ============ PROGRESO ============ -->
+      <!-- ============ PROGRESS ============ -->
       <section id="v-prog" class="view">
         <div class="page-head">
           <div>
@@ -2340,7 +2351,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ ERRORES ============ -->
+      <!-- ============ ERRORS ============ -->
       <section id="v-err" class="view">
         <div class="page-head">
           <div>
@@ -2413,7 +2424,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
 
         <div class="grid-12">
-          <!-- Exam Timers (blanco, como Stitch) -->
+          <!-- Exam Timers (white, like Stitch) -->
           <div class="col-7">
             <div class="card">
               <div class="plan-card-head">
@@ -2445,7 +2456,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <!-- Thresholds (Gates) navy, como Stitch -->
+          <!-- Thresholds (Gates) navy, like Stitch -->
           <div class="col-5">
             <div class="card plan-dark-card">
               <h2>🎯 Thresholds (Gates)</h2>
@@ -2548,7 +2559,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-12">
             <div class="card">
               <div class="plan-card-head">
-                <h2>✨ Corrector de Writing con IA (Gemini)</h2>
+                <h2>✨ AI writing corrector (Gemini)</h2>
                 <span class="chip-plan"><span class="dot"></span>Local Device Key</span>
               </div>
               <div class="sub">Your key is stored only on this device and travels to the local server.</div>
@@ -2573,7 +2584,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ LIBROS ============ -->
+      <!-- ============ BOOKS ============ -->
       <section id="v-libros" class="view">
         <div class="page-head">
           <div>
@@ -2989,7 +3000,7 @@ function closeUserModal(){
   if(ov)ov.style.display='none';
 }
 
-/* ---------- CARGA / GUARDADO (por usuario) ---------- */
+/* ---------- LOAD / SAVE (per user) ---------- */
 var D=load();
 window.D=D;
 function load(){
@@ -3204,13 +3215,13 @@ function onWritingDraftChange(){
   const meter=document.getElementById('wWordMeter');
   if(meter){
     if(words>=140&&words<=190){
-      meter.style.color='var(--ok)';
+      meter.style.color='var(--ok-text)';
       meter.textContent='✔ Perfect length ('+words+'/140-190 words)';
     }else if(words<140){
-      meter.style.color='var(--warn)';
+      meter.style.color='var(--warn-text)';
       meter.textContent='⚠ Needs '+(140-words)+' more words (min 140)';
     }else{
-      meter.style.color='var(--bad)';
+      meter.style.color='var(--bad-text)';
       meter.textContent='⚠ Over by '+(words-190)+' words (max 190)';
     }
   }
@@ -3593,7 +3604,7 @@ function renderGates(){
     viewGates.map((x,i)=>{
       const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
       return `<div class="gate ${ok?'pass':'fail'}">
-      <h4><span>${x.name}</span><span style="color:${ok?'var(--ok)':'var(--on-surface-variant)'};font-size:12px">${x.txt}</span></h4>
+      <h4><span>${x.name}</span><span style="color:${ok?'var(--ok-text)':'var(--on-surface-variant)'};font-size:12px">${x.txt}</span></h4>
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
@@ -3872,7 +3883,7 @@ function exTick(){
   const el=document.getElementById('exTimer');
   el.textContent=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
   el.classList.toggle('running',!!exIv);
-  el.style.color=(exIv&&exLeft<600)?'var(--bad)':(exIv&&exLeft<1200)?'var(--warn)':'';
+  el.style.color=(exIv&&exLeft<600)?'var(--bad-text)':(exIv&&exLeft<1200)?'var(--warn-text)':'';
   if(exIv&&exLeft===600)alert('⏰ 10 minutes remaining');
   if(exIv&&exLeft===300)alert('⏰ 5 minutes remaining');
 }
@@ -3940,7 +3951,7 @@ function renderParts(){
     const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):chips(sp);
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
-      ${p.note?`<p style="font-size:12px;color:var(--mon)">${p.note}</p>`:''}
+      ${p.note?`<p style="font-size:12px;color:var(--ok-text)">${p.note}</p>`:''}
       <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
       <div class="chips">${donde}</div>
       ${p.type!=='sp'?`<div class="row" style="margin-top:8px">
@@ -4030,8 +4041,8 @@ function renderStats(){
   const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('Full R&UoE',rue);
   const l=D.log.filter(e=>e.type==='l');if(l.length)row('Full Listening',l);
   const r6=D.log.filter(e=>e.type==='r6');if(r6.length)row('Reading P6 (Gapped)',r6);
-  const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--mon)">${sf.filter(e=>e.ok).length} validated at C1</td></tr>`);
-  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--mon)">completed</td></tr>`)}
+  const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--ok-text)">${sf.filter(e=>e.ok).length} validated at C1</td></tr>`);
+  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--ok-text)">completed</td></tr>`)}
   document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5"><div class="empty">No data yet — log exercises and you\'ll see your evolution here.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div></td></tr>';
 }
 
@@ -4241,7 +4252,7 @@ let BOOK_CAT=''; // active category filter ('' = all)
    times in D.mat[rel]={n,last}). Persists with save() → server. */
 function matCell(m){
   const st=D.mat&&D.mat[m.rel];
-  const badge=st?`<div class="meta" style="text-align:center;color:var(--acc);font-weight:600">✓ ${st.n}×<br><span class="t-xs muted">${fmtDate(st.last)}</span></div>`:`<div class="meta" style="text-align:center;color:var(--dim)">0×</div>`;
+  const badge=st?`<div class="meta" style="text-align:center;color:var(--acc-text);font-weight:600">✓ ${st.n}×<br><span class="t-xs muted">${fmtDate(st.last)}</span></div>`:`<div class="meta" style="text-align:center;color:var(--dim)">0×</div>`;
   return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px">
     <div style="display:flex;gap:4px">
       <button class="chip" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
@@ -4291,7 +4302,7 @@ function renderBooks(){
     <div class="ico">${b.i||'📖'}</div>
     <div style="flex:1">
       <b>${b.n}</b>
-      <div class="meta"><span class="pill" style="font-size:12px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc)">${b.c||'Other'}</span> <span style="color:var(--on-surface-variant)">${b.src}</span></div>
+      <div class="meta"><span class="pill" style="font-size:12px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc-text)">${b.c||'Other'}</span> <span style="color:var(--on-surface-variant)">${b.src}</span></div>
       <div class="meta">${b.m}</div>
       <div class="meta" style="font-size:12px;color:var(--dim)">use in: ${b.use}</div>
       <a href="${b.u}" target="_blank">View Offer →</a>
@@ -4328,7 +4339,7 @@ function renderGrafEvol(){
   const el=document.getElementById('gEvol'),log=D.log||[];
   const series=[
     {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
-    {name:'Listening',color:'var(--mon)',es:log.filter(e=>e.type==='l')},
+    {name:'Listening',color:'var(--ok-text)',es:log.filter(e=>e.type==='l')},
     {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
@@ -5217,7 +5228,7 @@ function qlSave(){
    computed from D.log/D.errs. Called from refreshAll(). */
 function renderMetrics(){
   const log=D.log||[],errs=D.errs||[];
-  // --- Weekly (sidebar de HOY) ---
+  // --- Weekly (TODAY sidebar) ---
   const week=isoWeek(new Date());
   const wLog=log.filter(e=>isoWeek(new Date(e.date+'T12:00:00'))===week);
   const mins=wLog.reduce((a,e)=>a+(e.min||0),0);
@@ -5226,11 +5237,11 @@ function renderMetrics(){
   const ue=log.filter(e=>e.type==='ue'||e.type==='rue');
   const ueAvg=ue.length?Math.round(ue.reduce((a,e)=>a+e.correct/e.total,0)/ue.length*100):null;
   set('mUoe',ueAvg!==null?ueAvg+'%':'—');
-  // Racha diaria derivada de calcStreak()
+  // Daily streak derived from calcStreak()
   const streak=calcStreak().current;
   set('mRacha',streak);
   set('mRegs',log.length);
-  // Current exercise de la rot card (HOY sidebar)
+  // Current exercise of the rotation card (TODAY sidebar)
   const curEl=document.getElementById('rotVal');
   if(curEl){
     const weekN=isoWeek(new Date());
@@ -5246,7 +5257,7 @@ function renderMetrics(){
   const gAvg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
   set('pGlobal',gAvg!==null?gAvg+'%':'—');
   const gb=document.getElementById('pGlobalBar');if(gb)gb.style.width=(gAvg||0)+'%';
-  // Mejor parte
+  // Best part
   const parts={};
   log.forEach(e=>{
     const key=e.type==='w'?('Writing '+e.kind):(e.type==='ue'?('UoE P'+e.part):(e.type==='lp'?('Listening P'+e.part):null));
