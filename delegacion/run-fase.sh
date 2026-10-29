@@ -82,7 +82,8 @@ DIRTY=$(git status --porcelain | wc -l)
 js_check
 JS2=$?
 SVC2=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8088/ || echo 000)
-QUOTA=$(grep -icE "usage limit|quota exceeded|RESOURCE_EXHAUSTED|insufficient credit|429" "$LOG" || true)
+# OJO: no matchear "429" pelado — el propio agente imprime 429 en sus tests de rate limit
+QUOTA=$(grep -icE "reached your .*limit|usage limit|quota exceeded|RESOURCE_EXHAUSTED|insufficient credit|exceeded your current quota" "$LOG" || true)
 NOAUTH=$(grep -icE "not authenticated|401|Unauthorized" "$LOG" || true)
 
 VERDICT="ok"
