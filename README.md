@@ -1,113 +1,97 @@
-# B2 First Tracker — Sistema de Alto Rendimiento
+# B2 First Tracker
 
-Tracker web para preparar el **Cambridge B2 First (FCE)** con inmersión real:
-rotación automática de los 15 ejercicios del examen, timers con los tiempos
-oficiales de Cambridge, metric gates por etapas, estadísticas por ejercicio y
-catálogo de material (PDFs + audio) servido desde la misma Pi.
+A study portal and exam tracker built to prepare for the **Cambridge B2 First (FCE)** exam.
 
-> **Idioma del proyecto: español rioplatense.** El plan de estudio completo vive en
-> [plan.md](plan.md). Si vas a trabajar en el código, leé primero [agents.md](agents.md).
+## What it is
 
-## Arquitectura
+B2 First Tracker is a single-file web application (`index.html`, 5,380 lines) paired with a pure Python standard-library HTTP server (`server.py`). It covers the full preparation workflow for Cambridge B2 First:
 
-```
-┌─────────────┐   GET /   ┌────────────────────────────────────────────┐
-│  PC / cel  │ ─────────► │  server.py  (stdlib Python, puerto 8088)  │
-│  Tailscale │            │  · /          → index.html (tracker)      │
-└────────────┘            │  · /libros    → material con visor+audio │
-                          │  · /libros.json → catálogo para el tracker │
-                          │  · /files/…   → PDF/MP3 con Range (audio) │
-                          │  · /api/progress → progreso (GET/PUT)     │
-                          └───────────────────┬────────────────────────┘
-                                              │ escanea dinámicamente
-                                      ~/Descargas/b2-first/
-                                      (6 exámenes oficiales + handbook)
-```
+- **Scheduled study sessions & timers** — weekly rotation across all 15 exam parts with official Cambridge time limits (Reading & Use of English, Writing, Listening, Speaking) and a 3-tap mobile quick-log.
+- **Daily streak & weekly goal** — derived directly from logged sessions in local time, including a weekly 1-day streak freeze shield (`🛡`) and a 5-day weekly target ring.
+- **12-item cold-start diagnostic** — a 10-minute placement quiz covering all 7 parts of Reading & Use of English that populates the error log (`L-GAP`, `G-ERR`, `T-MIS`, `T-LIM`) and highlights the 3 weakest parts on day one.
+- **Stage gates & progress charts** — 3 preparation stages (Foundations, Precision, Mastery) with automated metric gates and 4 SVG charts (Writing evolution, accuracy by part, error taxonomy breakdown, and weekly consistency).
+- **AI Writing examiner** — grades Essays, Articles, Reports, Reviews, and Emails against the official Cambridge B2 First Writing assessment rubric (Content, Communicative Achievement, Organisation, Language, 0–5 each), quoting exact student sentences, listing 2 actionable weaknesses per criterion, and rewriting 3 weak sentences at B2+/C1 level.
 
-- **Frontend**: `index.html` — app single-file (HTML + CSS + JS inline, ~1.300 líneas). Cero dependencias, cero frameworks. Datos en `localStorage` (clave `b2first_tracker_v1`) + **sincronización con la Pi**. Diseño v2: tema oscuro con acento índigo, tipografía Inter, tarjetas y tabs rediseñadas (misma funcionalidad).
-- **Backend**: `server.py` — HTTP server **solo stdlib** (sin pip install). Sirve el tracker, el material y el JSON del catálogo.
-- **Persistencia**: el progreso se guarda en la Pi (`data/progress.json`) con **backups automáticos** en `data/backups/` (último que guarda gana). Cada `save()` del tracker hace push a la Pi; al abrir la página se baja lo más reciente. El estado se ve en el footer (✔ sincronizado / ⚠ modo local).
-- **Servicio**: `b2first.service` — unidad systemd (Restart=always), corre desde este repo.
+## Why it's built this way
 
-## Archivos
-
-| Archivo | Rol |
+| Decision | Reason |
 |---|---|
-| `index.html` | El tracker completo (UI + lógica + comentarios del modelo de datos en el header del `<script>`) |
-| `server.py` | Portal HTTP (comentado línea por línea) + persistencia del progreso |
-| `data/progress.json` | Progreso sincronizado (se crea solo con el primer guardado) |
-| `data/backups/` | Backups automáticos de cada guardado (los últimos 20) |
-| `b2first.service` | Unidad systemd (copiar a `/etc/systemd/system/`) |
-| `plan.md` | **El plan de inglés completo** (objetivo, sesiones, gates, rúbrica, material) |
-| `agents.md` | Onboarding para el próximo agente/desarrollador |
-| `tests/` | Suite de regresión (Playwright + Chromium headless) |
+| Single-file `index.html` (5,380 lines, vanilla HTML/CSS/JS, no build step) | Opens instantly on desktop and mobile with zero bundler, transpiler, or `node_modules` maintenance overhead. |
+| `server.py` using only the Python 3 standard library | Runs out of the box on a Raspberry Pi, VPS, or container without `pip install` or dependency drift. |
+| Atomic JSON storage on disk (`store.py` + rotating backups) | Keeps user progress human-readable and easy to back up while isolating filesystem access behind a 6-function seam ready for SQLite. |
+| Hardcoded Cambridge rubric + strict server-side schema validation | The LLM scores against fixed assessment descriptors in `prompts.py`, and `server.py` rejects any malformed or out-of-range JSON (`422`) before it reaches the UI. |
 
-## Deploy (en la Pi)
+## Quick start
+
+No `npm install`, no virtualenv, and no build step required (Python 3.10+):
 
 ```bash
-# Dependencias: ninguna (solo Python 3 stdlib). El material va en ~/Descargas/b2-first/
-sudo cp b2first.service /etc/systemd/system/
-sudo systemctl daemon-reload && sudo systemctl enable --now b2first
+git clone https://github.com/Juan-Martin-Cerezo/b2first-tracker.git
+cd b2first-tracker
+python3 server.py
 ```
 
-Verificá: `systemctl status b2first` → `active` · `curl http://127.0.0.1:8088/` → 200.
+Open `http://127.0.0.1:8088` in your browser.
 
-## Acceso
+## AI writing correction (bring your own key)
 
-| Desde | URL |
+**This repository does not include any API key or token.**
+
+To use the AI Writing examiner:
+1. Open the **PLAN** tab (or follow the link from the **✨ AI** tab) and paste your API key (DeepSeek or Gemini) into the API key field.
+2. Your key is stored **only in your browser's `localStorage`** (`D.settings.aiKey`) and is stripped before any progress sync.
+3. When you submit a Writing task in the **✨ AI** tab, the browser sends the key in the request body to `/api/ai/writing`. `server.py` acts strictly as a stateless proxy to the upstream provider and **never logs, caches, or persists your key on disk**.
+
+For personal self-hosted setups, you can also pass `B2_AI_KEY` and `B2_AI_PROVIDER` (`deepseek` or `gemini`) as environment variables to `server.py`.
+
+## Demo mode
+
+To expose the tracker publicly without user accounts or server-side persistence:
+
+```bash
+B2_DEMO=1 python3 server.py
+```
+
+When `B2_DEMO=1` is set:
+- `GET /api/config` returns `{"demo": true, "version": "1.0.0", "ai": true}`.
+- `/api/register`, `/api/login`, `/api/logout`, `/api/me`, `/api/users`, and `/api/progress` (GET and PUT) all return `403 {"error": "modo demo: sin cuentas ni sincronización"}`.
+- The frontend skips authentication and server sync, displays an amber demo banner at the top, and stores all sessions, diagnostics, and charts exclusively in the visitor's `localStorage`.
+
+## Docker
+
+```bash
+docker build -t b2first . && docker run -p 8088:8088 -e B2_DEMO=1 b2first
+```
+
+The container uses `python:3.13-slim`, copies only the application code and static assets (`data/` is excluded via `.dockerignore`), and listens on `PORT` (default `8088`). `DATA_DIR` can also be overridden via environment variable.
+
+## Tests
+
+End-to-end and API regression tests live in `tests/` and run with Playwright (headless Chromium):
+
+| Suite | Coverage |
 |---|---|
-| La propia Pi | http://127.0.0.1:8088 |
-| Red Tailscale | http://100.112.213.66:8088 (IP directa; MagicDNS apagado en el tailnet) |
-| LAN | http://<ip-local-de-la-pi>:8088 |
+| `test_final.py` | Mobile viewport (`390×844`) layout, zero horizontal overflow, session cards, weekly rotation, 15 exam parts, stage gates, and zero JS errors. |
+| `test_sync.py` | Multi-user auth, PBKDF2 password hashing, `GET`/`PUT /api/progress`, and automatic backup rotation in `store.py`. |
+| `test_graf.py` | All 4 SVG chart panels (empty states and populated rendering) plus mobile responsiveness. |
+| `test_personalization.py` | Per-user schedules, dynamic session labels, onboarding flow, and profile modal. |
+| `test_streak.py` | Derived streak logic: empty log, consecutive days, 1-day freeze shield (`🛡`), 2-day gap reset, future date filtering, longest record, and 3-tap quick-log. |
+| `test_ai.py` | `/api/ai/writing` validation (`400`/`422`/`429`/`502`), DeepSeek & Gemini wire formats, 8 criterion weaknesses, zero key leakage in logs/errors, and ✨ AI tab E2E flow. |
+| `test_diag.py` | `/diagnostico.json` schema (12 items across Parts 1–7), no `explain` leakage in DOM during quiz, 12/12 and 0/12 scoring, error taxonomy injection, and weakest-part navigation. |
+| `test_demo.py` | `B2_DEMO=1` lockdown (`403` on auth and progress endpoints), `/api/config` detection, demo banner rendering, `B2_DEMO=0` fallback, and zero JS errors in Playwright. |
 
-## Testing
-
-```bash
-cd tests && uv run --with playwright python test_final.py   # suite principal (viewport móvil)
-uv run --with playwright python test_sync.py                # persistencia + backups
-uv run --with playwright python test_graf.py                # gráficos
-```
-
-Los tests abren la página servida con Chromium headless y verifican: sin overflow
-horizontal en 390×844, tabs funcionando, rotación, gates, stats, modo examen,
-cero errores JS, sincronización con la Pi y los 4 paneles de gráficos.
-`test_sync.py` y `test_graf.py` levantan su propio server de prueba en un puerto
-alternativo con datos temporales — no tocan el servicio real ni tu progreso.
-Se ejecutan contra `http://127.0.0.1:8088` (servicio arriba).
-
-## Material
-
-`~/Descargas/b2-first/` contiene 6 exámenes oficiales completos (Sample 1, Sample 2,
-For Schools 1, For Schools 2 + 2 del handbook) con PDFs, audio (MP3) y claves, más el
-handbook. El server lo escanea en cada visita: **agregar un PDF/MP3 = aparece solo**.
-
-## Sincronización
-
-El tracker guarda en el navegador (`localStorage`) y **además sincroniza con la Pi**:
-cada vez que guardás algo se sube automáticamente a `data/progress.json`, y al abrir
-la página se baja lo más reciente. El footer muestra el estado (✔ sincronizado con la
-Pi / ⚠ modo local si la Pi no responde). Regla: **último que guarda gana**, con backup
-automático de la versión anterior (los últimos 20 en `data/backups/`). El Exportar/
-Importar JSON manual de PROGRESO sigue disponible como respaldo extra.
-
-## AI provider setup
+Run any suite from `tests/`:
 
 ```bash
-# en la Pi, fuera del repo:
-~/.config/b2first/ai.env   (chmod 600)
-B2_AI_KEY=...
-B2_AI_PROVIDER=deepseek
-# el server lo lee con:  set -a; . ~/.config/b2first/ai.env; set +a; systemctl restart b2first
+cd tests && uv run --with playwright python test_demo.py
 ```
 
-La key **nunca va al repo** ni se persiste en `data/`. En el deploy público cada visitante
-ingresa su propia key en la pestaña **PLAN** (guardada únicamente en su `localStorage`).
+## Data & privacy
 
-## Notas operativas
+- In self-hosted mode, data lives in your browser's `localStorage` and in the local `data/` directory on your machine (gitignored and excluded from Docker builds).
+- In demo mode (`B2_DEMO=1`), data lives exclusively in the visitor's browser `localStorage`.
+- No analytics, telemetry, or third-party scripts are loaded. Nothing leaves your machine except the Writing text you explicitly submit for AI grading using your own API key.
 
-- **Puerto 8088** (el 8080 lo ocupa un docker-proxy existente — no tocar).
-- **Tailscale**: MagicDNS apagado → usar la IP directa.
-- Los PDFs oficiales de Writing 2022 son **solo-imagen** (sin capa de texto) → las
-  consignas se linkean directamente, no se extraen.
-- El repo es la **única fuente de verdad**: al editar, reiniciar el servicio con
-  `sudo systemctl restart b2first` (el WorkingDirectory ya apunta acá).
+## License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2026 Juan Martín Cerezo.

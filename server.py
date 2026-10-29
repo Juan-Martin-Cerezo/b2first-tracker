@@ -41,7 +41,7 @@ DIAG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "material",
 _DIAG_CACHE = {"path": None, "mtime": None, "body": None}
 PORT      = int(os.environ.get("PORT", 8088))           # 8080 lo ocupa docker-proxy
 EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
-DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+DATA_DIR  = os.environ.get("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
 store.DATA_DIR = DATA_DIR
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")
@@ -52,6 +52,14 @@ TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
 USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
 TOKEN_TTL  = 7 * 24 * 3600                              # sesión válida 7 días
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # pass del owner al migrar
+B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
+
+
+def _is_demo():
+    """Devuelve True si el servidor está en modo demo público (B2_DEMO=1)."""
+    if isinstance(B2_DEMO, str):
+        return B2_DEMO.strip() in ("1", "true", "True")
+    return bool(B2_DEMO)
 
 # Configuración de IA (DeepSeek / Gemini) — inyectable por env para tests sin red
 DEFAULT_AI_PROVIDER = "deepseek"
@@ -630,6 +638,21 @@ class H(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"error": "diagnostico invalido"}).encode("utf-8"), "application/json")
             return
 
+        # Configuración pública del servidor (modo demo, versión, soporte IA)
+        if path == "/api/config":
+            body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True}, ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # En modo demo se bloquean cuentas y sincronización (nadie lee ni escribe en data/)
+        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me", "/api/users", "/api/progress"):
+            clen = int(self.headers.get("Content-Length", 0) or 0)
+            if clen > 0:
+                self.rfile.read(clen)
+            body = json.dumps({"error": "modo demo: sin cuentas ni sincronización"}, ensure_ascii=False).encode("utf-8")
+            self._send(403, body, "application/json; charset=utf-8")
+            return
+
         # ---- API de usuarios / auth ----
         if path == "/api/users":
             migrate_legacy()
@@ -865,6 +888,7 @@ class H(BaseHTTPRequestHandler):
 # Arranque
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    migrate_legacy()
+    if not _is_demo():
+        migrate_legacy()
     print(f"B2First portal en http://0.0.0.0:{PORT} (root={ROOT})")
     ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()

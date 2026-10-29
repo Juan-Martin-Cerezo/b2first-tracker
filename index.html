@@ -1181,6 +1181,7 @@ footer{
 
   <!-- ============ CONTENIDO ============ -->
   <div class="content">
+    <div id="demoBanner" style="display:none;background:#fef3c7;color:#92400e;border-bottom:1px solid #fde68a;font-size:12.5px;font-weight:600;text-align:center;padding:6px 14px;line-height:1.4">Modo demo · tu progreso se guarda sólo en este navegador y se borra si limpiás los datos</div>
     <div class="topbar">
       <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the Pi">—</span></div>
       <div class="top-actions">
@@ -2478,7 +2479,7 @@ footer{
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span> · <span id="syncBadgeFoot">—</span></footer>
+    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot">—</span></footer>
   </div>
 </div>
 
@@ -2581,6 +2582,8 @@ const SETTINGS_DEFAULT={
    ===================================================================== */
 const BASE_KEY='b2first_tracker_v1';
 const AUTH_KEY='b2first_user';
+var DEMO={demo:false};
+window.DEMO=DEMO;
 var USER=null; // {id, name, color, token}
 window.USER=USER;
 function userKey(){return USER?BASE_KEY+'_'+USER.id:BASE_KEY}
@@ -2620,6 +2623,7 @@ async function apiLogout(){
 
 /* ---------- AUTH OVERLAY ---------- */
 function showAuthOverlay(){
+  if(DEMO&&DEMO.demo)return;
   const ov=document.getElementById('authOverlay');
   if(ov)ov.style.display='flex';
 }
@@ -2715,6 +2719,14 @@ async function afterAuth(){
 function renderUserChip(){
   const el=document.getElementById('userChip');
   if(!el)return;
+  if(DEMO&&DEMO.demo){
+    const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
+    const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+    el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>`;
+    el.style.cursor='default';
+    renderGates();
+    return;
+  }
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
     const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
@@ -2726,6 +2738,7 @@ function renderUserChip(){
   }
 }
 function openUserModal(){
+  if(DEMO&&DEMO.demo)return;
   const ov=document.getElementById('userModal');
   if(!ov||!USER)return;
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
@@ -2801,6 +2814,7 @@ function syncStatus(s){
   if(el2)el2.textContent=s==='ok'?'✔ synced with server':s==='local'?'… saving to server':'⚠ local mode';
 }
 function syncPush(){
+  if(DEMO&&DEMO.demo)return;
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
   syncT=setTimeout(()=>{
@@ -2816,6 +2830,7 @@ function syncPush(){
   },300);
 }
 function syncPull(){
+  if(DEMO&&DEMO.demo)return Promise.resolve(null);
   return fetch(apiUrl('/api/progress',{download:1}),{headers:authHeaders()})
     .then(r=>{if(!r.ok)throw 0;return r.json()})
     .then(d=>{
@@ -5309,11 +5324,47 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(btn)btn.onclick=toggleTheme;
 });
 
-/* ---------- ARRANQUE CON SESIÓN ---------- */
-(function initSession(){
+/* ---------- ARRANQUE CON SESIÓN / MODO DEMO ---------- */
+(async function initSession(){
+  try{
+    const r=await fetch('/api/config');
+    if(r.ok){
+      const cfg=await r.json();
+      DEMO=(cfg&&typeof cfg==='object')?cfg:{demo:false};
+    }else{
+      DEMO={demo:false};
+    }
+  }catch(e){
+    DEMO={demo:false};
+  }
+  window.DEMO=DEMO;
+  if(DEMO&&DEMO.demo===true){
+    USER=null;
+    window.USER=null;
+    hideAuthOverlay();
+    hideOnboarding();
+    const db=document.getElementById('demoBanner');
+    if(db)db.style.display='block';
+    const sf=document.getElementById('syncBadgeFoot');
+    if(sf)sf.style.display='none';
+    const ssep=document.getElementById('syncFootSep');
+    if(ssep)ssep.style.display='none';
+    const sb=document.querySelector('.sync-status');
+    if(sb)sb.style.display='none';
+    const sideFoot=document.querySelector('.side-foot');
+    if(sideFoot)sideFoot.style.display='none';
+    D=load();
+    window.D=D;
+    renderUserChip();
+    applyTimers();
+    refreshAll();
+    return;
+  }
   USER=loadUser();
+  window.USER=USER;
   if(USER){
     D=load();
+    window.D=D;
     renderUserChip();
     syncPull();
     applyTimers();
