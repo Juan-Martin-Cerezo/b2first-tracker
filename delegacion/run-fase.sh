@@ -55,6 +55,11 @@ fi
 # ---------- agente ----------
 PROMPT_TXT="$(cat "$PROMPT")"
 echo "== lanzando $HARNESS ($([ "$HARNESS" = agy ] && echo "$AGY_MODEL" || echo "$CC_MODEL"))" | tee -a "$LOG"
+python3 - "$STATE" "$FASE" "$HARNESS" "$LOG" <<'PY'
+import json,sys,time,os
+s,f,h,l=sys.argv[1:5]
+json.dump({"fase":f,"harness":h,"status":"running","pid":os.getppid(),"log":l,"ts":int(time.time())},open(s,"w"))
+PY
 
 if [ "$HARNESS" = "agy" ]; then
   agy -p "$PROMPT_TXT" --model "$AGY_MODEL" --dangerously-skip-permissions \
