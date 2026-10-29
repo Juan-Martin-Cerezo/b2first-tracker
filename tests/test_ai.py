@@ -1,0 +1,296 @@
+import io
+import json
+import os
+import sys
+import tempfile
+import threading
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from playwright.sync_api import sync_playwright
+
+# ---------------------------------------------------------------------------
+# 1. Mock Gemini Provider en puerto local (sin red, sin keys reales)
+# ---------------------------------------------------------------------------
+MOCK_PORT = 8123
+APP_PORT = 8097
+os.environ["B2_AI_BASE"] = f"http://127.0.0.1:{MOCK_PORT}/v1beta"
+os.environ["B2_AI_MODEL"] = "gemini-2.0-flash"
+os.environ.pop("B2_AI_KEY", None)
+
+MOCK_STATE = {"mode": "ok"}
+
+VALID_MODEL_JSON = {
+    "bands": {
+        "content": 4,
+        "communicative_achievement": 3,
+        "organisation": 4,
+        "language": 2,
+    },
+    "feedback": {
+        "content": "Cumpliste bien con los puntos de la consigna, aunque faltó desarrollar el tercer argumento.",
+        "communicative_achievement": "El registro es apropiado para un Essay, sostenés la atención del lector.",
+        "organisation": "Muy buen uso de conectores y división en párrafos claros.",
+        "language": "Tenés errores gramaticales frecuentes que debés pulir para asegurar nivel B2.",
+    },
+    "quotes": {
+        "content": "pollution and damage to the environment is the most serious problem",
+        "communicative_achievement": "First of all, it is widely believed that transport plays a major role",
+        "organisation": "In addition to this, our rivers and seas are in danger",
+        "language": "Doing a little steps for protection our environment every day",
+    },
+    "rewrite": [
+        "Pollution and environmental damage are among the most pressing challenges worldwide.",
+        "First of all, transport causes significant harm to the environment.",
+        "Taking small steps to protect our environment every day will help us save the planet.",
+    ],
+}
+
+
+class MockGeminiHandler(BaseHTTPRequestHandler):
+    def log_message(self, fmt, *a):
+        pass
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", 0))
+        _ = self.rfile.read(length) if length > 0 else b""
+        mode = MOCK_STATE["mode"]
+
+        if mode == "down":
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"internal upstream error")
+            return
+
+        payload_obj = json.loads(json.dumps(VALID_MODEL_JSON))
+        if mode == "missing_key":
+            del payload_obj["bands"]["language"]
+        elif mode == "band_7":
+            payload_obj["bands"]["content"] = 7
+        elif mode == "rewrite_2":
+            payload_obj["rewrite"] = payload_obj["rewrite"][:2]
+
+        gemini_envelope = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [{"text": json.dumps(payload_obj, ensure_ascii=False)}]
+                    }
+                }
+            ]
+        }
+        body = json.dumps(gemini_envelope, ensure_ascii=False).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+mock_srv = ThreadingHTTPServer(("127.0.0.1", MOCK_PORT), MockGeminiHandler)
+mock_th = threading.Thread(target=mock_srv.serve_forever, daemon=True)
+mock_th.start()
+
+# ---------------------------------------------------------------------------
+# 2. Server B2First en puerto alternativo con DATA_DIR temporal y log capturado
+# ---------------------------------------------------------------------------
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S
+import store
+
+_tmp = tempfile.mkdtemp(prefix="b2ai-")
+server_log_path = os.path.join(_tmp, "server.log")
+server_log_buf = io.StringIO()
+
+S.DATA_DIR = _tmp
+store.DATA_DIR = _tmp
+S.PROG_FILE = os.path.join(_tmp, "progress.json")
+S.BK_DIR = os.path.join(_tmp, "backups")
+S.USERS_FILE = os.path.join(_tmp, "users.json")
+S.TOKENS_FILE = os.path.join(_tmp, "tokens.json")
+S.USERS_DIR = os.path.join(_tmp, "users")
+S.PORT = APP_PORT
+S.B2_AI_BASE = f"http://127.0.0.1:{MOCK_PORT}/v1beta"
+S.B2_AI_MODEL = "gemini-2.0-flash"
+
+orig_log_message = S.H.log_message
+
+
+def _capturing_log_message(self, fmt, *a):
+    msg = "%s - - [%s] %s\n" % (
+        self.address_string(),
+        self.log_date_time_string(),
+        fmt % a,
+    )
+    server_log_buf.write(msg)
+    with open(server_log_path, "a", encoding="utf-8") as f:
+        f.write(msg)
+    orig_log_message(self, fmt, *a)
+
+
+S.H.log_message = _capturing_log_message
+S.migrate_legacy()
+
+srv = S.ThreadingHTTPServer(("127.0.0.1", S.PORT), S.H)
+th = threading.Thread(target=srv.serve_forever, daemon=True)
+th.start()
+
+URL = f"http://127.0.0.1:{APP_PORT}"
+SAMPLE_TEXT = (
+    "Nowadays pollution and damage to the environment is the most serious and difficult problem "
+    "for countries all over the world. First of all, transport causes huge damage to the environment "
+    "because people cannot imagine living without cars and planes. In addition to this, our rivers "
+    "and seas are in danger due to factories pouring waste. Every person must contribute to solving "
+    "this problem by taking small steps every day."
+)
+FAKE_KEY = "AIzaSyFAKE_SECRET_TEST_KEY_99887766"
+
+
+def post_ai(body, ip="127.0.0.1"):
+    data = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(
+        URL + "/api/ai/writing",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "X-Forwarded-For": ip,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status, r.read().decode("utf-8")
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8")
+
+
+out = {}
+
+# Assert 1: texto de 10 chars -> 400
+st1, body1 = post_ai({"text": "1234567890", "kind": "Essay", "provider_key": FAKE_KEY})
+assert st1 == 400, f"Expected 400 for 10 chars, got {st1}: {body1}"
+out["1_short_text_400"] = st1
+
+# Assert 2: kind inválido -> 400
+st2, body2 = post_ai({"text": SAMPLE_TEXT, "kind": "Poem", "provider_key": FAKE_KEY})
+assert st2 == 400, f"Expected 400 for invalid kind, got {st2}: {body2}"
+out["2_invalid_kind_400"] = st2
+
+# Assert 3: sin key -> 502
+st3, body3 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": ""})
+assert st3 == 502, f"Expected 502 for missing key, got {st3}: {body3}"
+out["3_no_key_502"] = st3
+
+# Assert 4: mock responde bien -> 200 con las 4 bandas y total = suma
+MOCK_STATE["mode"] = "ok"
+st4, body4 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
+assert st4 == 200, f"Expected 200 for valid response, got {st4}: {body4}"
+res4 = json.loads(body4)
+assert set(res4["bands"].keys()) == {
+    "content",
+    "communicative_achievement",
+    "organisation",
+    "language",
+}
+assert res4["total"] == sum(res4["bands"].values()) == 13
+assert len(res4["rewrite"]) == 3
+out["4_valid_200_total"] = res4["total"]
+
+# Assert 5: mock responde JSON sin una clave -> 422
+MOCK_STATE["mode"] = "missing_key"
+st5, body5 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
+assert st5 == 422, f"Expected 422 for missing key in schema, got {st5}: {body5}"
+out["5_missing_schema_key_422"] = st5
+
+# Assert 6: mock responde banda 7 -> 422
+MOCK_STATE["mode"] = "band_7"
+st6, body6 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
+assert st6 == 422, f"Expected 422 for band 7, got {st6}: {body6}"
+out["6_band_7_422"] = st6
+
+# Assert 7: mock responde rewrite con 2 strings -> 422
+MOCK_STATE["mode"] = "rewrite_2"
+st7, body7 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY})
+assert st7 == 422, f"Expected 422 for rewrite len 2, got {st7}: {body7}"
+out["7_rewrite_2_422"] = st7
+
+# Assert 8: 11 requests seguidas -> la 11ª es 429
+MOCK_STATE["mode"] = "ok"
+S._AI_RATE.clear()
+statuses_11 = []
+for _ in range(11):
+    st_i, _ = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.8.7")
+    statuses_11.append(st_i)
+assert statuses_11[:10] == [200] * 10, f"Expected first 10 to be 200, got {statuses_11}"
+assert statuses_11[10] == 429, f"Expected 11th request to be 429, got {statuses_11}"
+out["8_rate_limit_11th"] = statuses_11[10]
+
+# Assert 9: la key enviada NO aparece en el archivo de log del server ni en la respuesta de error
+MOCK_STATE["mode"] = "down"
+st_err, body_err = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider_key": FAKE_KEY}, ip="10.9.8.99")
+assert st_err == 502, f"Expected 502 when upstream down, got {st_err}"
+log_contents = open(server_log_path, "r", encoding="utf-8").read() if os.path.exists(server_log_path) else ""
+assert FAKE_KEY not in body_err, "API key leaked in error response body!"
+assert FAKE_KEY not in body1 and FAKE_KEY not in body5 and FAKE_KEY not in body6 and FAKE_KEY not in body7
+assert FAKE_KEY not in log_contents and FAKE_KEY not in server_log_buf.getvalue(), "API key leaked in server log!"
+out["9_no_key_leak"] = True
+
+# Assert 10: Flujo E2E en navegador con Playwright (Tab ✨ AI, estados, guardado en D.log)
+MOCK_STATE["mode"] = "ok"
+S._AI_RATE.clear()
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    pg = b.new_page(viewport={"width": 1280, "height": 800})
+    js_errs = []
+    pg.on("pageerror", lambda e: js_errs.append(str(e)))
+    pg.goto(URL + "/", wait_until="networkidle")
+    pg.evaluate(
+        """() => {
+        syncPush = () => {};
+        syncPull = async () => null;
+        const u = {id: 'test_ai_user', name: 'TestAI', color: '#1e3a8a', token: ''};
+        localStorage.setItem('b2first_user', JSON.stringify(u));
+        localStorage.setItem('ob_test_ai_user', '1');
+        USER = u;
+        D = load();
+        D.onboarded = true;
+        D.settings.aiKey = '';
+        hideAuthOverlay();
+        hideOnboarding();
+        refreshAll();
+    }"""
+    )
+    pg.click("nav button[data-view='ia']")
+    pg.wait_for_timeout(150)
+    # Sin key: aviso visible y botón deshabilitado
+    btn_disabled = pg.evaluate("document.getElementById('iaSubmitBtn').disabled")
+    warn_visible = pg.evaluate("getComputedStyle(document.getElementById('iaNoKeyWarn')).display !== 'none'")
+    assert btn_disabled is True and warn_visible is True
+
+    # Cargar key en PLAN -> D.settings.aiKey
+    pg.click("nav button[data-view='plan']")
+    pg.fill("#pAiKey", FAKE_KEY)
+    pg.click("nav button[data-view='ia']")
+    pg.wait_for_timeout(100)
+    assert pg.evaluate("document.getElementById('iaSubmitBtn').disabled") is False
+
+    # Completar texto y corregir
+    pg.select_option("#iaKind", "Article")
+    pg.fill("#iaText", SAMPLE_TEXT)
+    pg.click("#iaSubmitBtn")
+    pg.wait_for_selector("#iaCard[data-state='ok']", timeout=5000)
+
+    cards_count = pg.eval_on_selector_all("#iaBandsGrid .ia-band-card", "els => els.length")
+    rewrites_count = pg.eval_on_selector_all("#iaRewriteList li", "els => els.length")
+    last_log = pg.evaluate("D.log[0]")
+    assert cards_count == 4
+    assert rewrites_count == 3
+    assert last_log["type"] == "w" and last_log["kind"] == "Article" and last_log["note"] == "IA"
+    assert last_log["total"] == 13 and last_log["kb"] == 4 and last_log["kc"] == 3 and last_log["ko"] == 4 and last_log["kl"] == 2
+    assert js_errs == [], f"JS errors: {js_errs}"
+    out["10_ui_e2e_ok"] = True
+    b.close()
+
+srv.shutdown()
+mock_srv.shutdown()
+print(json.dumps(out, ensure_ascii=False, indent=1))

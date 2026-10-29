@@ -704,7 +704,7 @@ footer{
   }
   .sidebar nav::-webkit-scrollbar{display:none}
   .sidebar nav button{
-    flex:1 0 auto;min-width:44px;max-width:68px;
+    flex:1 0 auto;min-width:38px;max-width:68px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
     padding:6px 2px;font-size:9.5px;font-family:var(--mono);font-weight:600;
     border-radius:var(--radius);color:var(--on-surface-variant);text-align:center;
@@ -873,6 +873,30 @@ footer{
   display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--radius);
   background:var(--primary-container);color:var(--on-primary-container);font-weight:700;font-size:11px;
 }
+
+/* ============ IA WRITING CORRECTOR ============ */
+.ia-bands-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;
+}
+.ia-band-card{
+  border-radius:var(--radius);padding:14px 16px;border:1px solid var(--outline-variant);
+  background:var(--surface-container-low);display:flex;flex-direction:column;gap:8px;
+}
+.ia-band-card.band-red{border-color:var(--bad-border);background:var(--bad-soft);border-left:4px solid var(--bad)}
+.ia-band-card.band-amber{border-color:var(--warn-border);background:var(--warn-soft);border-left:4px solid var(--warn)}
+.ia-band-card.band-green{border-color:var(--ok-border);background:var(--ok-soft);border-left:4px solid var(--ok)}
+.ia-band-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ia-band-name{font-family:var(--mono);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--on-surface)}
+.ia-band-score{font-family:var(--mono);font-size:16px;font-weight:800;padding:2px 8px;border-radius:var(--radius)}
+.ia-band-card.band-red .ia-band-score{color:var(--bad-text);background:rgba(220,38,38,0.12)}
+.ia-band-card.band-amber .ia-band-score{color:var(--warn-text);background:rgba(217,119,6,0.12)}
+.ia-band-card.band-green .ia-band-score{color:var(--ok-text);background:rgba(22,163,74,0.12)}
+.ia-band-fb{font-size:13px;line-height:1.5;color:var(--on-surface)}
+.ia-spinner{
+  width:18px;height:18px;border:2.5px solid var(--outline-variant);border-top-color:var(--primary);
+  border-radius:50%;display:inline-block;animation:iaSpin .75s linear infinite;flex:none;
+}
+@keyframes iaSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -1148,6 +1172,7 @@ footer{
       <button data-view="plan"><span class="mat material-symbols-outlined">tune</span>PLAN</button>
       <button data-view="err"><span class="mat material-symbols-outlined">bug_report</span>ERRORS</button>
       <button data-view="libros"><span class="mat material-symbols-outlined">menu_book</span>BOOKS</button>
+      <button data-view="ia">✨ AI</button>
     </nav>
     <div class="side-foot"><span class="dot"></span>Pi Sync Active</div>
   </aside>
@@ -2285,6 +2310,26 @@ footer{
             </div>
           </div>
 
+          <!-- IA Gemini Key -->
+          <div class="col-12">
+            <div class="card">
+              <div class="plan-card-head">
+                <h2>✨ Corrector de Writing con IA (Gemini)</h2>
+                <span class="chip-plan"><span class="dot"></span>Local Device Key</span>
+              </div>
+              <div class="sub">tu key se guarda sólo en este dispositivo y viaja al server local</div>
+              <div class="row">
+                <div>
+                  <label for="pAiKey">Gemini API Key (D.settings.aiKey)</label>
+                  <input type="password" id="pAiKey" placeholder="AIza..." autocomplete="off" oninput="onAiKeyInput(this.value)">
+                </div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)">
+                Conseguí una key gratuita en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
+              </div>
+            </div>
+          </div>
+
           <div class="col-12">
             <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn ok" onclick="savePlan()">💾 Save plan</button>
@@ -2327,6 +2372,83 @@ footer{
             </select>
           </div>
           <div id="bookList"></div>
+        </div>
+      </section>
+
+      <!-- ============ IA (CORRECTOR DE WRITING) ============ -->
+      <section id="v-ia" class="view">
+        <div id="view-ia">
+          <div class="page-head">
+            <div>
+              <span class="page-kicker">[ CAMBRIDGE_AI_EXAMINER ]</span>
+              <h1 class="page-title">Corrector de Writing</h1>
+              <p class="page-sub">Evaluación con la escala oficial de B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).</p>
+            </div>
+          </div>
+
+          <div class="card" id="iaCard" data-state="idle">
+            <h2>✨ Corrector de Writing</h2>
+            <div class="sub">Escribí o pegá tu texto para evaluarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).</div>
+
+            <div id="iaNoKeyWarn" class="note" style="display:none">
+              ⚠️ Necesitás configurar tu API key en la pestaña <a href="#" onclick="showView('plan');return false">PLAN</a> para usar el corrector. Creá una gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
+            </div>
+
+            <div class="row" style="margin-bottom:10px">
+              <div>
+                <label for="iaKind">Tipo de texto (Kind)</label>
+                <select id="iaKind">
+                  <option value="Essay">Essay</option>
+                  <option value="Article">Article</option>
+                  <option value="Report">Report</option>
+                  <option value="Review">Review</option>
+                  <option value="Email">Email</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="iaText">Tu texto en inglés</label>
+              <textarea id="iaText" class="writing-live-pad" rows="8" oninput="onIaTextChange()" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..."></textarea>
+              <div class="live-word-meter">
+                <span>Palabras: <b id="iaWordCount">0</b> <span style="color:var(--on-surface-variant)">(objetivo 140–190)</span></span>
+                <span id="iaWordStatus" style="font-weight:700">Objetivo: 140–190 palabras</span>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <button type="button" class="btn" id="iaSubmitBtn" onclick="submitIaWriting()">Corregir</button>
+              <span id="iaStateLabel" style="font-family:var(--mono);font-size:12px;color:var(--on-surface-variant)">idle</span>
+            </div>
+
+            <div id="iaLoading" style="display:none;margin-top:16px;padding:16px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low);align-items:center;gap:12px">
+              <span class="ia-spinner" aria-hidden="true"></span>
+              <span style="font-family:var(--mono);font-size:13px;font-weight:600">corrigiendo…</span>
+            </div>
+
+            <div id="iaError" class="note" style="display:none;margin-top:16px;background:var(--bad-soft);border-color:var(--bad-border);color:var(--bad-text)">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                <span id="iaErrorMsg">Error al corregir el texto.</span>
+                <button type="button" class="btn sm" id="iaRetryBtn" onclick="submitIaWriting()">Reintentar</button>
+              </div>
+            </div>
+
+            <div id="iaResult" style="display:none;margin-top:20px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+                <h3 style="font-size:16px;font-weight:700">Resultado Cambridge B2 First</h3>
+                <span class="badge ok" id="iaTotalBadge" style="font-size:13px;padding:5px 12px">0/20</span>
+              </div>
+              <div class="ia-bands-grid" id="iaBandsGrid"></div>
+              <details id="iaQuotesDetails" style="margin-top:14px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);padding:12px 14px">
+                <summary style="cursor:pointer;font-weight:600;font-size:13px;font-family:var(--mono)">📌 Citas textuales del alumno (quotes)</summary>
+                <div id="iaQuotesList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:13px"></div>
+              </details>
+              <div style="margin-top:16px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--radius);padding:14px">
+                <h4 style="font-size:13.5px;font-weight:700;margin-bottom:8px;font-family:var(--mono)">✍️ 3 oraciones mejoradas (Rewrite)</h4>
+                <ul id="iaRewriteList" style="padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px"></ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -2417,6 +2539,7 @@ const SETTINGS_DEFAULT={
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
   spCycle:[1,2,3,4],
+  aiKey:'',
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
 /* =====================================================================
@@ -2655,10 +2778,12 @@ function syncPush(){
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
   syncT=setTimeout(()=>{
+    const payload=Object.assign({},D,{settings:Object.assign({},D.settings||{})});
+    delete payload.settings.aiKey;
     fetch(apiUrl('/api/progress'),{
       method:'PUT',
       headers:authHeaders(),
-      body:JSON.stringify(D)
+      body:JSON.stringify(payload)
     })
       .then(r=>{if(!r.ok)throw 0;syncStatus('ok')})
       .catch(()=>syncStatus('off'));
@@ -2670,12 +2795,15 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
+          const localAiKey=(D.settings&&D.settings.aiKey)||'';
+          const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
+          if(localAiKey&&!mergedSettings.aiKey)mergedSettings.aiKey=localAiKey;
           D = {
             log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
             errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
             examDates: Array.isArray(d.examDates) ? d.examDates : (Array.isArray(D.examDates) ? D.examDates : []),
             stage: typeof d.stage==='number' ? d.stage : (D.stage||0),
-            settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{}),
+            settings: mergedSettings,
             overrides: Object.assign({}, D.overrides||{}, d.overrides||{}),
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
@@ -3250,6 +3378,12 @@ function renderPlan(){
   document.getElementById('pE0w').value=s.e0.w;document.getElementById('pE0u').value=s.e0.u;document.getElementById('pE0l').value=s.e0.l;
   document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
   document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
+  if(document.getElementById('pAiKey'))document.getElementById('pAiKey').value=s.aiKey||'';
+}
+function onAiKeyInput(val){
+  D.settings.aiKey=String(val||'').trim();
+  localStorage.setItem(userKey(),JSON.stringify(D));
+  renderIa();
 }
 function savePlan(){
   updateScheduleFromUI();
@@ -3267,6 +3401,7 @@ function savePlan(){
   s.e0.w=+g('pE0w')||14;s.e0.u=+g('pE0u')||60;s.e0.l=+g('pE0l')||3;
   s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
   s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||50;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
+  if(document.getElementById('pAiKey'))s.aiKey=g('pAiKey').trim();
   save();applyTimers();refreshAll();alert('Plan saved ✓');
 }
 function resetPlan(){
@@ -3411,13 +3546,15 @@ const MOD={
 function renderLog(){
   const tb=document.querySelector('#logTable tbody');
   if(!D.log.length){tb.innerHTML='<tr><td colspan="6" class="empty">📭 You haven\'t logged anything yet. Start in TODAY.</td></tr>';return}
-  tb.innerHTML=D.log.map((e,i)=>`<tr>
+  tb.innerHTML=D.log.map((e,i)=>{
+    const wSc=e.score!==undefined?e.score:e.total;
+    return `<tr>
     <td>${e.date}</td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td>
-    <td>${e.type==='w'?e.score+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✔':'pending'):(e.correct+'/'+e.total)}</td>
-    <td>${e.type==='w'?pct(e.score,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
+    <td>${e.type==='w'?wSc+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✔':'pending'):(e.correct+'/'+e.total)}</td>
+    <td>${e.type==='w'?pct(wSc,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td>${e.min??''}</td>
     <td><button class="del" onclick="editLog(${i})" title="Edit">✎</button> <button class="del" onclick="delLog(${i})" title="Delete">✕</button></td>
-  </tr>`).join('');
+  </tr>`;}).join('');
 }
 function editLog(i){
   const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
@@ -3447,7 +3584,7 @@ function renderStats(){
   const rows=[];
   const row=(name,es,type)=>{
     if(!es.length)return;
-    const vals=es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100);
+    const vals=es.map(e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.correct/e.total*100);
     rows.push(`<tr><td>${name}</td><td>${es.length}</td><td>${Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)}%</td><td>${Math.round(Math.max(...vals))}%</td><td>${Math.round(vals[0])}%</td></tr>`);
   };
   for(let i=1;i<=7;i++)row('UoE P'+i+' — '+partName(i),D.log.filter(e=>e.type==='ue'&&e.part===i));
@@ -3757,7 +3894,8 @@ function renderGrafEvol(){
   const n=Math.max(...seriesOk.map(s=>s.es.length));
   const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
   const ys=v=>padT+(H-padT-padB)*(1-v/100);
-  const last=Math.max(...seriesOk.map(s=>s.es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100)).flat());
+  const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
+  const last=Math.max(...seriesOk.map(s=>s.es.map(e=>e.type==='w'?wVal(e):e.correct/e.total*100)).flat());
   const ymax=Math.ceil(Math.max(100,last)/10)*10;
   let g='';
   for(let v=0;v<=ymax;v+=ymax/4){
@@ -3765,10 +3903,10 @@ function renderGrafEvol(){
     g+=svgTxt(padL-4,ys(v)+3,Math.round(v)+'%','var(--dim)',10,'end');
   }
   seriesOk.forEach((s,si)=>{
-    const pts=s.es.map((e,i)=>`${xs(i)},${ys(e.type==='w'?e.score/20*100:e.correct/e.total*100)}`).join(' ');
+    const pts=s.es.map((e,i)=>`${xs(i)},${ys(e.type==='w'?wVal(e):e.correct/e.total*100)}`).join(' ');
     g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
-    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(e.type==='w'?e.score/20*100:e.correct/e.total*100)}" r="3" fill="${s.color}"/>`});
-    g+=svgTxt(xs(s.es.length-1)+6,ys(s.es[s.es.length-1].type==='w'?s.es[s.es.length-1].score/20*100:s.es[s.es.length-1].correct/s.es[s.es.length-1].total*100)+3,s.name,s.color,11,'start');
+    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(e.type==='w'?wVal(e):e.correct/e.total*100)}" r="3" fill="${s.color}"/>`});
+    g+=svgTxt(xs(s.es.length-1)+6,ys(s.es[s.es.length-1].type==='w'?wVal(s.es[s.es.length-1]):s.es[s.es.length-1].correct/s.es[s.es.length-1].total*100)+3,s.name,s.color,11,'start');
   });
   g+=svgTxt(padL,H-4,'← older · more recent →','var(--dim)',10,'middle');
   el.innerHTML=svgChart(W,H,g);
@@ -3779,7 +3917,7 @@ function renderGrafPart(){
   const rows=[];
   const push=(label,es,extra)=>{
     if(!es.length)return;
-    const vals=es.map(e=>e.type==='w'?e.score/20*100:e.correct/e.total*100);
+    const vals=es.map(e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.correct/e.total*100);
     const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
     rows.push({label,pct:avg,min:MIN});
   };
@@ -4599,7 +4737,7 @@ function renderMetrics(){
     curEl.textContent=(isWkA?`Week A: Full R&UoE + Full Listening`:`Week B: Full Writing (${wT}) + Full Speaking`);
   }
   // --- Progress (stat cards) ---
-  const pctOf=e=>e.type==='w'?e.score/20*100:e.type==='fw'?(e.s1+e.s2)/40*100:e.type==='sp'?null:e.correct/e.total*100;
+  const pctOf=e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.type==='fw'?(e.s1+e.s2)/40*100:e.type==='sp'?null:e.correct/e.total*100;
   const vals=log.map(pctOf).filter(v=>v!==null);
   const gAvg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
   set('pGlobal',gAvg!==null?gAvg+'%':'—');
@@ -4626,21 +4764,161 @@ function renderMetrics(){
   set('gRacha',streak);
 }
 
+/* ---------- IA WRITING CORRECTOR ---------- */
+let IA_STATE='idle';
+const IA_CRITERIA=[
+  {key:'content',label:'Content'},
+  {key:'communicative_achievement',label:'Communicative Achievement'},
+  {key:'organisation',label:'Organisation'},
+  {key:'language',label:'Language'}
+];
+function setIaState(st,errMsg){
+  IA_STATE=st;
+  const card=document.getElementById('iaCard');
+  if(card)card.setAttribute('data-state',st);
+  const lbl=document.getElementById('iaStateLabel');
+  if(lbl)lbl.textContent=st;
+  const loadEl=document.getElementById('iaLoading');
+  if(loadEl)loadEl.style.display=st==='loading'?'flex':'none';
+  const errEl=document.getElementById('iaError');
+  if(errEl)errEl.style.display=st==='error'?'block':'none';
+  const msgEl=document.getElementById('iaErrorMsg');
+  if(msgEl&&errMsg)msgEl.textContent=errMsg;
+  renderIa();
+}
+function renderIa(){
+  const hasKey=!!(D.settings&&D.settings.aiKey&&String(D.settings.aiKey).trim());
+  const warn=document.getElementById('iaNoKeyWarn');
+  if(warn)warn.style.display=hasKey?'none':'block';
+  const btn=document.getElementById('iaSubmitBtn');
+  if(btn)btn.disabled=!hasKey||IA_STATE==='loading';
+}
+function onIaTextChange(){
+  const el=document.getElementById('iaText');
+  if(!el)return;
+  const text=el.value.trim();
+  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  const wc=document.getElementById('iaWordCount');
+  if(wc)wc.textContent=String(words);
+  const st=document.getElementById('iaWordStatus');
+  if(st){
+    if(words>=140&&words<=190){
+      st.style.color='var(--ok)';
+      st.textContent='✔ En rango ('+words+'/140–190 palabras)';
+    }else if(words<140){
+      st.style.color='var(--warn)';
+      st.textContent='Faltan '+(140-words)+' palabras (objetivo 140–190)';
+    }else{
+      st.style.color='var(--bad)';
+      st.textContent='Excedido por '+(words-190)+' palabras (máx 190)';
+    }
+  }
+}
+async function submitIaWriting(){
+  const key=(D.settings&&D.settings.aiKey)?String(D.settings.aiKey).trim():'';
+  if(!key){renderIa();return;}
+  const textEl=document.getElementById('iaText');
+  const kindEl=document.getElementById('iaKind');
+  const text=textEl?textEl.value.trim():'';
+  const kind=kindEl?kindEl.value:'Essay';
+  if(text.length<50||text.length>3000){
+    setIaState('error','El texto debe tener entre 50 y 3000 caracteres.');
+    return;
+  }
+  setIaState('loading');
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),28000);
+  try{
+    const r=await fetch('/api/ai/writing',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,kind,provider_key:key}),
+      signal:ctrl.signal
+    });
+    clearTimeout(timer);
+    let data=null;
+    try{data=await r.json();}catch(e){}
+    if(!r.ok||!data||!data.bands){
+      const msg=(data&&data.error)?`Error (${r.status}): ${data.error}`:`Error del servidor (${r.status})`;
+      setIaState('error',msg);
+      return;
+    }
+    renderIaResult(data);
+    setIaState('ok');
+    const kb=data.bands.content;
+    const kc=data.bands.communicative_achievement;
+    const ko=data.bands.organisation;
+    const kl=data.bands.language;
+    const total=typeof data.total==='number'?data.total:(kb+kc+ko+kl);
+    D.log.push({
+      type:'w',
+      date:dayKey(new Date()),
+      kind,
+      kb,kc,ko,kl,
+      total,
+      score:total,
+      min:0,
+      note:'IA',
+      text
+    });
+    D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((b.created_at||0)-(a.created_at||0)));
+    save();
+    refreshAll();
+  }catch(err){
+    clearTimeout(timer);
+    setIaState('error','No se pudo conectar con el corrector. Revisá tu conexión e intentá de nuevo.');
+  }
+}
+function renderIaResult(data){
+  const resBox=document.getElementById('iaResult');
+  if(resBox)resBox.style.display='block';
+  const totBadge=document.getElementById('iaTotalBadge');
+  if(totBadge)totBadge.textContent=`Total: ${data.total}/20`;
+  const grid=document.getElementById('iaBandsGrid');
+  if(grid){
+    grid.innerHTML=IA_CRITERIA.map(c=>{
+      const b=Number(data.bands[c.key]??0);
+      const cls=b<=2?'band-red':(b===3?'band-amber':'band-green');
+      const fb=(data.feedback&&data.feedback[c.key])||'';
+      return `<div class="ia-band-card ${cls}" data-criterion="${c.key}" data-band="${b}">
+        <div class="ia-band-head">
+          <span class="ia-band-name">${esc(c.label)}</span>
+          <span class="ia-band-score">${b}/5</span>
+        </div>
+        <div class="ia-band-fb">${esc(fb)}</div>
+      </div>`;
+    }).join('');
+  }
+  const qList=document.getElementById('iaQuotesList');
+  if(qList&&data.quotes){
+    qList.innerHTML=IA_CRITERIA.map(c=>`<div><b>${esc(c.label)}:</b> <i>"${esc(data.quotes[c.key]||'')}"</i></div>`).join('');
+  }
+  const rwList=document.getElementById('iaRewriteList');
+  if(rwList&&Array.isArray(data.rewrite)){
+    rwList.innerHTML=data.rewrite.map(s=>`<li>${esc(s)}</li>`).join('');
+  }
+}
+
 /* ---------- NAV + INIT ----------
-   Las 7 vistas (hoy/exam/partes/prog/plan/err/libros) se alternan
+   Las vistas (hoy/exam/partes/prog/graf/plan/err/libros/ia) se alternan
    con la clase .active en <nav> y <section>.
    refreshAll() es el render central: lo llama TODO guardado/cambio.
    loadMaterial() trae el catálogo de archivos del server y al fallar
    (ej: abierto como file:// sin server) usa una lista mínima local.
    init: setea listeners, aplica timers del PLAN, y refresca todo. */
+function showView(viewId){
+  const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
+  if(btn)btn.click();
+}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('v-'+b.dataset.view).classList.add('active');
+  const sec=document.getElementById('v-'+b.dataset.view)||document.getElementById('view-'+b.dataset.view);
+  if(sec)sec.classList.add('active');
 });
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
