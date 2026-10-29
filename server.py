@@ -25,10 +25,12 @@ respalda automáticamente la versión anterior en <repo>/data/backups/
 Dependencias: SOLO stdlib (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) en este dir.
 """
-import os, re, html, mimetypes, json, shutil, time, hashlib, secrets
+import os, re, html, mimetypes, json, shutil, time, hashlib, secrets, threading
+import urllib.request, urllib.error
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
+import prompts
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -48,6 +50,71 @@ TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
 USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
 TOKEN_TTL  = 7 * 24 * 3600                              # sesión válida 7 días
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # pass del owner al migrar
+
+# Configuración de IA (Gemini) — inyectable por env para tests sin red
+DEFAULT_AI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+DEFAULT_AI_MODEL = "gemini-2.0-flash"
+B2_AI_BASE = os.environ.get("B2_AI_BASE", DEFAULT_AI_BASE)
+B2_AI_MODEL = os.environ.get("B2_AI_MODEL", DEFAULT_AI_MODEL)
+AI_ALLOWED_KINDS = ("Essay", "Article", "Report", "Review", "Email")
+AI_TIMEOUT = 25
+_AI_LOCK = threading.Lock()
+_AI_RATE = {}  # {ip: [timestamps]}
+
+
+def _check_ai_rate(ip):
+    """Rate limit en memoria: máx 10/min y 60/hora por IP."""
+    now = time.time()
+    with _AI_LOCK:
+        hist = [t for t in _AI_RATE.get(ip, []) if now - t < 3600.0]
+        last_min = sum(1 for t in hist if now - t < 60.0)
+        if last_min >= 10 or len(hist) >= 60:
+            _AI_RATE[ip] = hist
+            return False
+        hist.append(now)
+        _AI_RATE[ip] = hist
+        return True
+
+
+def _validate_ai_payload(obj):
+    """Valida el JSON devuelto por el modelo según el schema de Cambridge."""
+    if not isinstance(obj, dict):
+        return None
+    bands = obj.get("bands")
+    feedback = obj.get("feedback")
+    quotes = obj.get("quotes")
+    rewrite = obj.get("rewrite")
+    if not isinstance(bands, dict) or not isinstance(feedback, dict) or not isinstance(quotes, dict):
+        return None
+    if not isinstance(rewrite, list) or len(rewrite) != 3:
+        return None
+    if not all(isinstance(s, str) and s.strip() for s in rewrite):
+        return None
+    clean_bands = {}
+    clean_feedback = {}
+    clean_quotes = {}
+    for k in prompts.SCHEMA_KEYS:
+        if k not in bands or k not in feedback or k not in quotes:
+            return None
+        b = bands[k]
+        if type(b) is not int or b < 0 or b > 5:
+            return None
+        fb = feedback[k]
+        qt = quotes[k]
+        if not isinstance(fb, str) or not fb.strip():
+            return None
+        if not isinstance(qt, str) or not qt.strip():
+            return None
+        clean_bands[k] = b
+        clean_feedback[k] = fb.strip()
+        clean_quotes[k] = qt.strip()
+    return {
+        "bands": clean_bands,
+        "total": sum(clean_bands.values()),
+        "feedback": clean_feedback,
+        "quotes": clean_quotes,
+        "rewrite": [s.strip() for s in rewrite],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -603,6 +670,8 @@ class H(BaseHTTPRequestHandler):
                         data["log"] = []
                     if "errs" not in data or not isinstance(data["errs"], list):
                         data["errs"] = []
+                    if isinstance(data.get("settings"), dict):
+                        data["settings"].pop("aiKey", None)
                     save_user_progress(user_id, data)
                     body = b"ok"
                     self._send(200, body, "text/plain")
@@ -614,6 +683,78 @@ class H(BaseHTTPRequestHandler):
 
         if path == "/favicon.ico":
             self._send(204, b"", "image/x-icon")
+            return
+
+        if path == "/api/ai/writing":
+            if self.command != "POST":
+                self._send(405, json.dumps({"error": "method not allowed"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            xff = self.headers.get("X-Forwarded-For")
+            client_ip = xff.split(",")[0].strip() if xff else (self.client_address[0] if self.client_address else "local")
+            if not _check_ai_rate(client_ip):
+                self._send(429, json.dumps({"error": "rate limit"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                raw = self.rfile.read(length) if length > 0 else b"{}"
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send(400, json.dumps({"error": "invalid json"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            text = req.get("text")
+            kind = req.get("kind")
+            if not isinstance(text, str) or not (50 <= len(text.strip()) <= 3000) or not (50 <= len(text) <= 3000):
+                self._send(400, json.dumps({"error": "text must be between 50 and 3000 chars"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            if kind not in AI_ALLOWED_KINDS:
+                self._send(400, json.dumps({"error": "invalid kind"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            api_key = (req.get("provider_key") or req.get("key") or os.environ.get("B2_AI_KEY") or "").strip()
+            if not api_key:
+                self._send(502, json.dumps({"error": "missing provider key"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            base = B2_AI_BASE if B2_AI_BASE != DEFAULT_AI_BASE else os.environ.get("B2_AI_BASE", DEFAULT_AI_BASE)
+            model = B2_AI_MODEL if B2_AI_MODEL != DEFAULT_AI_MODEL else os.environ.get("B2_AI_MODEL", DEFAULT_AI_MODEL)
+            url = f"{base.rstrip('/')}/models/{model}:generateContent"
+            prompt_text = prompts.writing_prompt(text.strip(), kind)
+            payload = json.dumps({
+                "contents": [{"parts": [{"text": prompt_text}]}],
+                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
+            }).encode("utf-8")
+            up_req = urllib.request.Request(
+                url,
+                data=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key,
+                },
+                method="POST",
+            )
+            try:
+                with urllib.request.urlopen(up_req, timeout=AI_TIMEOUT) as resp:
+                    up_raw = resp.read().decode("utf-8")
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+                self._send(502, json.dumps({"error": "upstream provider failed"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            try:
+                up_json = json.loads(up_raw)
+                if isinstance(up_json, dict) and "candidates" in up_json:
+                    cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
+                    cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
+                    model_obj = json.loads(cand_text)
+                else:
+                    model_obj = up_json
+            except (ValueError, KeyError, IndexError, TypeError):
+                self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            validated = _validate_ai_payload(model_obj)
+            if not validated:
+                self._send(422, json.dumps({"error": "schema validation failed"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            validated["model"] = model
+            self._send(200, json.dumps(validated, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
             return
 
         self._send(404, b"not found", "text/plain")
