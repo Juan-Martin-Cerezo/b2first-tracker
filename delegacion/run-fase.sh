@@ -29,7 +29,11 @@ BASE=$(git rev-parse HEAD)
 SUCIO=$(git status --porcelain | wc -l)
 
 # ---------- baseline ----------
-node --check <(python3 -c "import re,sys;print(re.search(r'<script>(.*?)</script>',open('index.html').read(),re.S).group(1))") 2>/dev/null
+js_check() {
+  python3 -c "import re;open('/tmp/b2f_app.js','w').write(re.search(r'<script>(.*?)</script>',open('index.html').read(),re.S).group(1))"
+  node --check /tmp/b2f_app.js 2>/dev/null
+}
+js_check
 JS_EXIT=$?
 SVC=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8088/ || echo 000)
 
@@ -70,7 +74,7 @@ fi
 COMMITS=$(git log --format=%s "$BASE"..HEAD | grep -vcE '^(docs|chore)\(delegacion\)' || true)
 HEAD=$(git rev-parse --short HEAD)
 DIRTY=$(git status --porcelain | wc -l)
-node --check <(python3 -c "import re,sys;print(re.search(r'<script>(.*?)</script>',open('index.html').read(),re.S).group(1))") 2>/dev/null
+js_check
 JS2=$?
 SVC2=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8088/ || echo 000)
 QUOTA=$(grep -icE "usage limit|quota exceeded|RESOURCE_EXHAUSTED|insufficient credit|429" "$LOG" || true)
