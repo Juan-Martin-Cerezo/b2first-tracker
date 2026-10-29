@@ -8,6 +8,7 @@ Páginas del PDF: 33–36 (numeración impresa: 31–34).
 RUBRIC_SOURCE = "B2 First Handbook, páginas 32-35 (Cambridge University Press)"
 
 SCHEMA_KEYS = ("content", "communicative_achievement", "organisation", "language")
+SCHEMA_KEYS_EXTRA = ("weaknesses",)
 
 BANDS = {
     "content": {
@@ -100,12 +101,33 @@ REGLAS OBLIGATORIAS DE CORRECCIÓN:
 6. En "rewrite", devolvé exactamente 3 strings: 3 oraciones del propio texto del alumno reescritas y mejoradas en inglés a nivel B2+/C1 (no inventes texto nuevo ajeno al escrito del alumno).
 7. Prohibido inventar reglas gramaticales o descriptores que no estén en la rúbrica oficial.
 
+CALIBRATION RULES (mandatory):
+1. Be strict. Band 5 means performance at the top of B2 / start of C1. Most real B2
+   candidates land in 3-4, and a typical school essay is 3.
+2. Before assigning any band, silently list at least 2 concrete weaknesses of the text
+   for EACH criterion. If you can name 2 weaknesses in a criterion, that criterion
+   CANNOT be 5.
+3. For every criterion you score 4 or 5, state in the feedback WHY IT IS NOT ONE BAND HIGHER.
+   This justification is mandatory and goes in the feedback text.
+4. Band 5 on 'language' requires: a wide range of structures (conditionals, passives,
+   relative clauses, perfect tenses) AND no more than one minor slip.
+   Simple but correct sentences = 3, not 5.
+5. Band 5 on 'organisation' requires: clear paragraphing with a developed argument in
+   each paragraph AND a range of linking devices. A list of 'Firstly/Secondly' with
+   one sentence each = 3.
+6. Do not reward effort, length or neatness. Only observable features in the rubric.
+7. If the text is under 120 words for a Part 1 task (140-190 expected), 'content'
+   cannot exceed 3.
+
 Return ONLY this exact JSON shape (no markdown, no extra text):
 {{"bands":{{"content":N,"communicative_achievement":N,"organisation":N,"language":N}},
  "feedback":{{"content":"...","communicative_achievement":"...","organisation":"...","language":"..."}},
  "quotes":{{"content":"...","communicative_achievement":"...","organisation":"...","language":"..."}},
+ "weaknesses":{{"content":["...","..."],"communicative_achievement":["...","..."],
+               "organisation":["...","..."],"language":["...","..."]}},
  "rewrite":["...","...","..."]}}
-N is an integer 0-5. feedback and quotes are OBJECTS with exactly those 4 keys.
+N is an integer 0-5. feedback, quotes and weaknesses are OBJECTS with exactly those 4 keys.
+Each value in weaknesses is an ARRAY of at least 2 non-empty strings (concrete weaknesses).
 rewrite is an ARRAY of exactly 3 strings. Never return arrays where objects are required."""
 
 
@@ -115,5 +137,5 @@ def writing_prompt(text, kind):
         f"{WRITING_SYSTEM}\n\n"
         f"=== TIPO DE TAREA (GENRE) ===\n{kind}\n\n"
         f"=== TEXTO DEL ALUMNO ===\n{text}\n\n"
-        f"Devolvé únicamente el JSON con las claves bands, feedback, quotes y rewrite."
+        f"Devolvé únicamente el JSON con las claves bands, feedback, quotes, weaknesses y rewrite."
     )
