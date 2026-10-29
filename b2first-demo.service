@@ -1,0 +1,24 @@
+[Unit]
+Description=B2 First tracker - DEMO publica (aislada, sin datos del owner)
+After=network-online.target
+
+[Service]
+Type=simple
+User=juan
+WorkingDirectory=/home/juan/b2first-tracker
+# Aislada a proposito: sin EnvironmentFile, asi NO hereda la key de DeepSeek.
+# DATA_DIR temporal => no toca data/ real.
+Environment=B2_DEMO=1
+Environment=PORT=8098
+Environment=DATA_DIR=/home/juan/.local/share/b2first-demo
+ExecStart=/usr/bin/python3 /home/juan/b2first-tracker/server.py
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/juan/.local/share/b2first-demo
+
+[Install]
+WantedBy=multi-user.target

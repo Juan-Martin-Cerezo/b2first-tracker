@@ -1,0 +1,17 @@
+{
+  "queue": [
+    {
+      "id": "5",
+      "tests": "test_final.py",
+      "title": "Submission pack del hackathon (docs, sin código de app)",
+      "status": "pending"
+    },
+    {
+      "id": "6",
+      "tests": "test_final.py test_diag.py",
+      "title": "Plan semanal generado desde el diagnóstico + errores",
+      "status": "pending"
+    }
+  ],
+  "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
+}
