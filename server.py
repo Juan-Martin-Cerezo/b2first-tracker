@@ -28,6 +28,7 @@ Deploy: systemd unit b2first.service (Restart=always) en este dir.
 import os, re, html, mimetypes, json, shutil, time, hashlib, secrets
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+import store
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -37,9 +38,10 @@ TRACKER   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html
 PORT      = int(os.environ.get("PORT", 8088))           # 8080 lo ocupa docker-proxy
 EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
 DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+store.DATA_DIR = DATA_DIR
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")
-BK_KEEP   = 100                                         # backups a conservar por usuario
+BK_KEEP   = 20                                          # backups a conservar por usuario
 # Usuarios (sistema multi-cuenta)
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
@@ -88,58 +90,21 @@ def esc(s):
 
 
 # ---------------------------------------------------------------------------
-# Persistencia del progreso (data/progress.json + backups/ultimo-gato-gana)
+# Persistencia del progreso (delegada en store.py)
 # ---------------------------------------------------------------------------
 def read_progress():
-    """Devuelve el progreso guardado o {} si no existe / está corrupto."""
-    try:
-        with open(PROG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return {}
+    """Devuelve el progreso guardado del owner o {} si no existe."""
+    return read_user_progress("owner")
 
 
 def save_progress(data):
-    """Persiste el progreso (dict) de forma atómica + backup del anterior."""
-    os.makedirs(BK_DIR, exist_ok=True)
-    if os.path.exists(PROG_FILE):
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        try:
-            shutil.copy2(PROG_FILE, os.path.join(BK_DIR, f"progress-{stamp}.json"))
-        except OSError:
-            pass  # si el backup falla, seguimos con el guardado principal
-    tmp = PROG_FILE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False)
-    os.replace(tmp, PROG_FILE)  # atómico: nunca queda un archivo a medias
-    # Podar backups viejos (conservar los BK_KEEP más recientes).
-    try:
-        bks = sorted(os.listdir(BK_DIR))
-        for old in bks[:-BK_KEEP]:
-            os.remove(os.path.join(BK_DIR, old))
-    except OSError:
-        pass
+    """Persiste el progreso del owner de forma atómica + backup del anterior."""
+    save_user_progress("owner", data)
 
 
 def list_backups():
-    """Devuelve [{file, size, date}] con los backups, más reciente primero."""
-    try:
-        files = sorted(os.listdir(BK_DIR), reverse=True)
-    except OSError:
-        return []
-    out = []
-    for fn in files:
-        full = os.path.join(BK_DIR, fn)
-        try:
-            st = os.stat(full)
-        except OSError:
-            continue
-        out.append({
-            "file": fn,
-            "size": st.st_size,
-            "date": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime)),
-        })
-    return out
+    """Devuelve [{file, size, date}] con los backups del owner, más reciente primero."""
+    return list_user_backups("owner")
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +121,9 @@ def _read_json(path, default):
 
 def _write_json(path, data):
     """Escribe un JSON de forma atómica (tmp + rename)."""
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
@@ -164,11 +132,12 @@ def _write_json(path, data):
 
 def load_users():
     """Devuelve {user_id: {id, name, salt, hash, color, created}}."""
-    return _read_json(USERS_FILE, {})
+    return store.list_users()
 
 
 def save_users(users):
-    _write_json(USERS_FILE, users)
+    for uid, rec in users.items():
+        store.create_user(uid, rec)
 
 
 def load_tokens():
@@ -181,7 +150,12 @@ def save_tokens(tokens):
 
 
 def hash_password(salt, password):
-    """sha256(salt + password). Salt de 16 bytes hex (32 chars)."""
+    """Hash PBKDF2-HMAC-SHA256 con 200.000 iteraciones."""
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 200_000).hex()
+
+
+def _legacy_hash_password(salt, password):
+    """sha256(salt + password) usado antes de la migración a pbkdf2."""
     return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
 
 
@@ -223,22 +197,22 @@ def public_user(u):
 
 def user_prog_file(user_id):
     """Ruta del progress.json de un usuario."""
-    return os.path.join(USERS_DIR, user_id, "progress.json")
+    return store._prog_file(user_id)
 
 
 def user_bk_dir(user_id):
     """Ruta del directorio de backups de un usuario."""
-    return os.path.join(USERS_DIR, user_id, "backups")
+    return store._bk_dir(user_id)
 
 
 def register_user(name, password, color=None):
     """Crea un usuario. Devuelve (user_id, error)."""
-    users = load_users()
+    users = store.list_users()
     name = name.strip()
     if not name:
         return None, "name vacío"
-    if len(password) < 4:
-        return None, "contraseña muy corta (mín 4)"
+    if len(password) < 8:
+        return None, "contraseña muy corta (mín 8)"
     # Normalizar nombre para id único (slug + sufijo si repetido)
     base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "user"
     uid = base
@@ -247,25 +221,33 @@ def register_user(name, password, color=None):
         uid = f"{base}-{n}"
         n += 1
     salt = secrets.token_hex(8)  # 16 chars
-    users[uid] = {
+    store.create_user(uid, {
         "id": uid, "name": name, "salt": salt,
         "hash": hash_password(salt, password),
+        "algo": "pbkdf2",
         "color": color or "#1b2b48",
         "created": time.strftime("%Y-%m-%d %H:%M"),
-    }
-    save_users(users)
-    os.makedirs(user_bk_dir(uid), exist_ok=True)
+    })
     return uid, None
 
 
 def login_user(name, password):
-    """Valida credenciales. Devuelve (user_id, error)."""
-    users = load_users()
+    """Valida credenciales y migra hashes legacy a pbkdf2. Devuelve (user_id, error)."""
+    users = store.list_users()
     name = name.strip()
     for u in users.values():
         if u["name"].lower() == name.lower():
-            if u["hash"] == hash_password(u["salt"], password):
-                return u["id"], None
+            algo = u.get("algo")
+            if algo == "pbkdf2":
+                if u["hash"] == hash_password(u["salt"], password):
+                    return u["id"], None
+            elif not algo:
+                if u["hash"] == _legacy_hash_password(u["salt"], password):
+                    migrated = dict(u)
+                    migrated["hash"] = hash_password(u["salt"], password)
+                    migrated["algo"] = "pbkdf2"
+                    store.create_user(u["id"], migrated)
+                    return u["id"], None
             return None, "contraseña incorrecta"
     return None, "usuario no encontrado"
 
@@ -276,29 +258,30 @@ def migrate_legacy():
     Si ya existe users.json no hace nada. Crea el usuario 'owner' con la
     contraseña OWNER_PASSWORD y conserva el progreso actual.
     """
-    if os.path.exists(USERS_FILE):
+    if store.list_users():
         return
-    os.makedirs(USERS_DIR, exist_ok=True)
     uid = "owner"
     salt = secrets.token_hex(8)
-    users = {
-        uid: {"id": uid, "name": "Owner", "salt": salt,
-              "hash": hash_password(salt, OWNER_PASSWORD),
-              "color": "#1b2b48", "created": time.strftime("%Y-%m-%d %H:%M")}
-    }
-    save_users(users)
-    os.makedirs(user_bk_dir(uid), exist_ok=True)
+    store.create_user(uid, {
+        "id": uid, "name": "Owner", "salt": salt,
+        "hash": hash_password(salt, OWNER_PASSWORD),
+        "algo": "pbkdf2",
+        "color": "#1b2b48", "created": time.strftime("%Y-%m-%d %H:%M"),
+    })
     if os.path.exists(PROG_FILE):
-        shutil.move(PROG_FILE, user_prog_file(uid))
-    elif not os.path.exists(user_prog_file(uid)):
-        _write_json(user_prog_file(uid), {})
+        legacy_data = _read_json(PROG_FILE, {})
+        store.put_progress(uid, legacy_data)
+        try:
+            os.remove(PROG_FILE)
+        except OSError:
+            pass
     # Mover backups viejos al usuario owner
     if os.path.isdir(BK_DIR):
         try:
             for fn in os.listdir(BK_DIR):
                 src = os.path.join(BK_DIR, fn)
                 if os.path.isfile(src):
-                    shutil.move(src, os.path.join(user_bk_dir(uid), fn))
+                    shutil.move(src, os.path.join(store._bk_dir(uid), fn))
             os.rmdir(BK_DIR)
         except OSError:
             pass
@@ -306,38 +289,25 @@ def migrate_legacy():
 
 def read_user_progress(user_id):
     """Devuelve el progreso de un usuario o {} si no existe."""
-    return _read_json(user_prog_file(user_id), {})
+    data = store.get_progress(user_id)
+    return data if data is not None else {}
 
 
 def save_user_progress(user_id, data):
     """Persiste el progreso de un usuario de forma atómica + backup."""
-    os.makedirs(user_bk_dir(user_id), exist_ok=True)
-    pf = user_prog_file(user_id)
-    if os.path.exists(pf):
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        try:
-            shutil.copy2(pf, os.path.join(user_bk_dir(user_id), f"progress-{stamp}.json"))
-        except OSError:
-            pass
-    _write_json(pf, data)
-    # Podar backups viejos
-    try:
-        bks = sorted(os.listdir(user_bk_dir(user_id)))
-        for old in bks[:-BK_KEEP]:
-            os.remove(os.path.join(user_bk_dir(user_id), old))
-    except OSError:
-        pass
+    store.put_progress(user_id, data)
 
 
 def list_user_backups(user_id):
     """Devuelve [{file, size, date}] de los backups de un usuario."""
+    bk_dir = store._bk_dir(user_id)
     try:
-        files = sorted(os.listdir(user_bk_dir(user_id)), reverse=True)
+        files = sorted(os.listdir(bk_dir), reverse=True)
     except OSError:
         return []
     out = []
     for fn in files:
-        full = os.path.join(user_bk_dir(user_id), fn)
+        full = os.path.join(bk_dir, fn)
         try:
             st = os.stat(full)
         except OSError:
@@ -532,7 +502,7 @@ class H(BaseHTTPRequestHandler):
         # ---- API de usuarios / auth ----
         if path == "/api/users":
             migrate_legacy()
-            users = [public_user(u) for u in load_users().values()]
+            users = [public_user(u) for u in store.list_users().values()]
             body = json.dumps(users, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
@@ -550,8 +520,8 @@ class H(BaseHTTPRequestHandler):
             if err:
                 self._send(400, err.encode("utf-8"), "text/plain"); return
             tok = new_token(uid)
-            users = load_users()
-            body = json.dumps({"id": uid, "name": users[uid]["name"], "color": users[uid]["color"], "token": tok},
+            u = store.get_user(uid)
+            body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
                               ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
@@ -569,8 +539,8 @@ class H(BaseHTTPRequestHandler):
             if err:
                 self._send(401, err.encode("utf-8"), "text/plain"); return
             tok = new_token(uid)
-            users = load_users()
-            body = json.dumps({"id": uid, "name": users[uid]["name"], "color": users[uid]["color"], "token": tok},
+            u = store.get_user(uid)
+            body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
                               ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
@@ -592,8 +562,7 @@ class H(BaseHTTPRequestHandler):
             uid = user_from_token(tok)
             if not uid:
                 self._send(401, b"sesion invalida", "text/plain"); return
-            users = load_users()
-            u = users.get(uid)
+            u = store.get_user(uid)
             if not u:
                 self._send(404, b"usuario no existe", "text/plain"); return
             body = json.dumps(public_user(u), ensure_ascii=False).encode("utf-8")
