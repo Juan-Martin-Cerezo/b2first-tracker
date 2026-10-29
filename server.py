@@ -37,6 +37,8 @@ import prompts
 # ---------------------------------------------------------------------------
 ROOT      = os.path.expanduser("~/Descargas/b2-first")  # material (PDF/MP3/ZIP)
 TRACKER   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+DIAG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "material", "diagnostico.json")
+_DIAG_CACHE = {"path": None, "mtime": None, "body": None}
 PORT      = int(os.environ.get("PORT", 8088))           # 8080 lo ocupa docker-proxy
 EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
 DATA_DIR  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -593,6 +595,39 @@ class H(BaseHTTPRequestHandler):
                     for it in scan()]
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # Diagnóstico inicial cold-start (material público sin auth, cacheado en memoria)
+        if path == "/diagnostico.json":
+            if not os.path.isfile(DIAG_FILE):
+                self._send(404, json.dumps({"error": "diagnostico no encontrado"}).encode("utf-8"), "application/json")
+                return
+            try:
+                st = os.stat(DIAG_FILE)
+                if _DIAG_CACHE["body"] is not None and _DIAG_CACHE["path"] == DIAG_FILE and _DIAG_CACHE["mtime"] == st.st_mtime:
+                    self._send(200, _DIAG_CACHE["body"], "application/json")
+                    return
+                with open(DIAG_FILE, "r", encoding="utf-8") as f:
+                    obj = json.load(f)
+                items = obj.get("items") if isinstance(obj, dict) else None
+                if not isinstance(items, list) or len(items) != 12:
+                    raise ValueError("items != 12")
+                for it in items:
+                    if not isinstance(it, dict):
+                        raise ValueError("item no es dict")
+                    ans = it.get("answer")
+                    opts = it.get("options")
+                    if type(ans) is not int or ans < 0 or ans > 3:
+                        raise ValueError("answer fuera de 0-3")
+                    if not isinstance(opts, list) or len(opts) != 4:
+                        raise ValueError("options != 4")
+                body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+                _DIAG_CACHE["path"] = DIAG_FILE
+                _DIAG_CACHE["mtime"] = st.st_mtime
+                _DIAG_CACHE["body"] = body
+                self._send(200, body, "application/json")
+            except (OSError, ValueError, TypeError):
+                self._send(500, json.dumps({"error": "diagnostico invalido"}).encode("utf-8"), "application/json")
             return
 
         # ---- API de usuarios / auth ----

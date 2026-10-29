@@ -1174,6 +1174,7 @@ footer{
       <button data-view="err"><span class="mat material-symbols-outlined">bug_report</span>ERRORS</button>
       <button data-view="libros"><span class="mat material-symbols-outlined">menu_book</span>BOOKS</button>
       <button data-view="ia">✨ AI</button>
+      <button data-view="diag">🧭 Diag</button>
     </nav>
     <div class="side-foot"><span class="dot"></span>Pi Sync Active</div>
   </aside>
@@ -1206,6 +1207,13 @@ footer{
         <div class="grid-12">
           <!-- Main column -->
           <div class="col-8">
+            <div class="card" id="diagBanner" style="display:none;background:var(--hero-bg);color:var(--on-hero);border:1px solid var(--hero-border);padding:16px 20px;margin-bottom:18px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-weight:700;font-size:15px">Diagnóstico inicial · 10 min · 12 preguntas</div>
+                <div style="font-size:12.5px;color:var(--on-hero-sub);margin-top:2px">Detectá tus debilidades en las 7 partes de Reading &amp; Use of English para personalizar tu estudio.</div>
+              </div>
+              <button type="button" class="btn ok" id="diagBannerBtn" onclick="openDiagAndStart()">Empezar</button>
+            </div>
             <div class="card streak-card" id="streakCard"></div>
             <div class="next-session" id="nextBox"></div>
 
@@ -2452,6 +2460,22 @@ footer{
           </div>
         </div>
       </section>
+
+      <!-- ============ DIAGNÓSTICO INICIAL ============ -->
+      <section id="view-diag" class="view">
+        <div class="page-head">
+          <div>
+            <span class="page-kicker">[ COLD_START_PLACEMENT ]</span>
+            <h1 class="page-title">Diagnóstico inicial</h1>
+            <p class="page-sub">Diagnóstico inicial · 10 min · 12 preguntas de nivel B2 (Partes 1 a 7) sin pistas durante la prueba.</p>
+          </div>
+          <div class="page-stat">
+            <span class="stat-label">Tiempo global</span>
+            <span class="timer" id="diagTimer" style="font-size:20px;padding:6px 14px">⏱ 10:00</span>
+          </div>
+        </div>
+        <div id="diagBody"></div>
+      </section>
     </main>
 
     <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span> · <span id="syncBadgeFoot">—</span></footer>
@@ -2749,11 +2773,12 @@ function load(){
       overrides: d.overrides||{},
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
+      diag: d.diag||null,
       onboarded: !!d.onboarded,
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},onboarded:false,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,onboarded:false,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -2808,6 +2833,7 @@ function syncPull(){
             overrides: Object.assign({}, D.overrides||{}, d.overrides||{}),
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
+            diag: d.diag!==undefined ? d.diag : (D.diag||null),
             onboarded: (d.onboarded!==undefined) ? !!d.onboarded : !!D.onboarded,
             sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
             updated_at: d.updated_at || Date.now()
@@ -3492,10 +3518,27 @@ const PARTS=[
  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'}
 ];
+let PARTS_FILTER=null;
+function setPartsFilter(partNum){
+  PARTS_FILTER=partNum||null;
+  renderParts();
+}
+function goToPartFilter(partNum){
+  showView('partes');
+  PARTS_FILTER=partNum||null;
+  renderParts();
+}
 function renderParts(){
   const el=document.getElementById('partsList');
   let html='',last='';
+  if(PARTS_FILTER){
+    html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="badge fri">Filtro activo: Reading &amp; UoE Parte ${PARTS_FILTER}</span>
+      <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Mostrar las 15 partes</button>
+    </div>`;
+  }
   PARTS.forEach((p,i)=>{
+    if(PARTS_FILTER && !(p.type==='ue' && p.n===PARTS_FILTER))return;
     if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
     const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
     if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
@@ -3542,7 +3585,8 @@ const MOD={
   rue:e=>`Full R&UoE`,
   fw:e=>`Full Writing`,
   r6:e=>`Reading P6 (Gapped)`,
-  sf:e=>`Speaking Final`
+  sf:e=>`Speaking Final`,
+  diag:e=>`Diagnóstico inicial`
 };
 function renderLog(){
   const tb=document.querySelector('#logTable tbody');
@@ -3606,12 +3650,17 @@ function renderStats(){
 function renderErrs(){
   const el=document.getElementById('errList');
   if(!D.errs.length){el.innerHTML='<div class="empty">🔖 No errors logged. Every mistake you note gets you closer to Grade A.</div>';return}
-  el.innerHTML=D.errs.map((e,i)=>`<div class="card" style="padding:13px 14px">
-    <span class="pill ${e.code}">${e.code}</span> <span style="font-size:12px;color:var(--dim)">${e.date}</span>
-    <div style="margin-top:7px;font-size:13.5px">${esc(e.desc)}</div>
+  const diagRunning=(typeof DIAG_STATE==='object'&&DIAG_STATE.status==='running');
+  el.innerHTML=D.errs.map((e,i)=>{
+    const tax=e.code||e.tax||'G-ERR';
+    const desc=diagRunning&&e.src==='diag'?`Ítem de diagnóstico Parte ${e.part||''}`:(e.desc||e.note||'');
+    return `<div class="card" style="padding:13px 14px">
+    <span class="pill ${tax}">${tax}</span> <span style="font-size:12px;color:var(--dim)">${e.date}</span>
+    <div style="margin-top:7px;font-size:13.5px">${esc(desc)}</div>
     ${e.fix?`<div style="font-size:12.5px;color:var(--mon);margin-top:5px">→ ${esc(e.fix)}</div>`:''}
     <button class="del" style="float:right" onclick="delErr(${i})">✕</button>
-  </div>`).join('');
+  </div>`;
+  }).join('');
 }
 function renderErrPills(){
   const el=document.getElementById('errPills');
@@ -3622,7 +3671,7 @@ function renderErrPills(){
   const names={'L-GAP':'Lexical gap','G-ERR':'Misapplied rule','T-MIS':'Textual distractor','T-LIM':'Rush / attention'};
   const total=errs.length;
   el.innerHTML=codes.map(c=>{
-    const n=errs.filter(e=>e.code===c).length;
+    const n=errs.filter(e=>(e.code||e.tax)===c).length;
     const pct=Math.round(n/total*100);
     return `<div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
@@ -3936,7 +3985,7 @@ function renderGrafErr(){
   if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet.</div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
-  const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>e.code===c).length}));
+  const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
   const max=Math.max(...counts.map(c=>c.n));
   const W=340,H=140,padL=110,padB=18,padT=8,padR=8;
   const bw=(H-padT-padB)/counts.length;
@@ -4265,6 +4314,11 @@ function updatePersonalizedUI(){
 
 function renderToday(){
   updatePersonalizedUI();
+  const diagBanner=document.getElementById('diagBanner');
+  if(diagBanner){
+    const hasDiag=Array.isArray(D.log)&&D.log.filter(x=>x&&x.type==='diag').length>0;
+    diagBanner.style.display=hasDiag?'none':'flex';
+  }
   const d=new Date(),wd=d.getDay();
   const week=isoWeek(d);
   const s=D.settings||SETTINGS_DEFAULT;
@@ -4903,6 +4957,282 @@ function renderIaResult(data){
   }
 }
 
+/* ---------- DIAGNÓSTICO INICIAL (12 ÍTEMS COLD-START) ---------- */
+const DIAG_RECS={
+  1:'Reforzá colocaciones fijas, phrasal verbs y diferencias de uso entre cuasi-sinónimos.',
+  2:'Practicá conectores, preposiciones dependientes, pronombres relativos e inversiones.',
+  3:'Repasá familias de palabras: prefijos negativos y sufijos de sustantivos y adjetivos.',
+  4:'Entrená paráfrasis gramaticales: voz pasiva, condicionales, reported speech y modales perfectos.',
+  5:'Buscá la evidencia exacta en el texto antes de leer las opciones para esquivar distractores.',
+  6:'Rastreá pronombres demostrativos, conectores de contraste y continuidad temática antes y después del hueco.',
+  7:'Escaneá ideas parafraseadas en lugar de buscar las mismas palabras literales del enunciado.'
+};
+const DIAG_STATE={
+  status:'idle', // 'idle' | 'loading' | 'running' | 'done' | 'error'
+  items:[],
+  idx:0,
+  answers:{},
+  leftSec:600,
+  totalSec:600,
+  startedAt:0,
+  iv:null,
+  errorMsg:''
+};
+function _updateDiagTimerEl(){
+  const el=document.getElementById('diagTimer');
+  if(!el)return;
+  const s=Math.max(0,DIAG_STATE.leftSec||0);
+  el.textContent='⏱ '+fmtMin(s);
+  el.classList.toggle('running',DIAG_STATE.status==='running');
+}
+function _stopDiagTimer(){
+  if(DIAG_STATE.iv){
+    clearInterval(DIAG_STATE.iv);
+    DIAG_STATE.iv=null;
+  }
+}
+async function openDiagAndStart(){
+  showView('diag');
+  await startDiag();
+}
+async function startDiag(){
+  _stopDiagTimer();
+  DIAG_STATE.status='loading';
+  DIAG_STATE.errorMsg='';
+  renderDiag();
+  try{
+    const r=await fetch('/diagnostico.json');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!data||!Array.isArray(data.items)||data.items.length!==12){
+      throw new Error('Diagnóstico inválido');
+    }
+    DIAG_STATE.items=data.items;
+    DIAG_STATE.idx=0;
+    DIAG_STATE.answers={};
+    DIAG_STATE.totalSec=(Number(data.min)||10)*60;
+    DIAG_STATE.leftSec=DIAG_STATE.totalSec;
+    DIAG_STATE.startedAt=Date.now();
+    DIAG_STATE.status='running';
+    _updateDiagTimerEl();
+    DIAG_STATE.iv=setInterval(()=>{
+      if(DIAG_STATE.status!=='running'){_stopDiagTimer();return;}
+      DIAG_STATE.leftSec--;
+      _updateDiagTimerEl();
+      if(DIAG_STATE.leftSec<=0){
+        DIAG_STATE.leftSec=0;
+        _updateDiagTimerEl();
+        finishDiag(true);
+      }
+    },1000);
+    renderErrs();
+    renderDiag();
+  }catch(err){
+    _stopDiagTimer();
+    DIAG_STATE.status='error';
+    DIAG_STATE.errorMsg='No se pudo cargar /diagnostico.json. Verificá tu conexión e intentá nuevamente.';
+    renderDiag();
+  }
+}
+function answerDiagItem(optIdx){
+  if(DIAG_STATE.status!=='running')return;
+  const timedOut=(DIAG_STATE.leftSec<=0);
+  DIAG_STATE.answers[DIAG_STATE.idx]={choice:Number(optIdx),timedOut};
+  DIAG_STATE.idx++;
+  if(DIAG_STATE.idx>=DIAG_STATE.items.length||timedOut){
+    finishDiag(timedOut);
+  }else{
+    renderDiag();
+  }
+}
+function skipDiagItem(){
+  if(DIAG_STATE.status!=='running')return;
+  DIAG_STATE.answers[DIAG_STATE.idx]={choice:null,timedOut:false};
+  DIAG_STATE.idx++;
+  if(DIAG_STATE.idx>=DIAG_STATE.items.length){
+    finishDiag(false);
+  }else{
+    renderDiag();
+  }
+}
+function finishDiag(timedOut=false){
+  if(DIAG_STATE.status!=='running')return;
+  _stopDiagTimer();
+  DIAG_STATE.status='done';
+  const elapsedSec=Math.max(0,DIAG_STATE.totalSec-(DIAG_STATE.leftSec||0));
+  const elapsedWallMin=(Date.now()-(DIAG_STATE.startedAt||Date.now()))/60000;
+  const elapsedMin=Math.max(elapsedSec/60,elapsedWallMin);
+  const date=dayKey(new Date());
+  const byPart={1:{ok:0,n:0},2:{ok:0,n:0},3:{ok:0,n:0},4:{ok:0,n:0},5:{ok:0,n:0},6:{ok:0,n:0},7:{ok:0,n:0}};
+  let correct=0;
+  const total=12;
+  for(let i=0;i<DIAG_STATE.items.length;i++){
+    const item=DIAG_STATE.items[i];
+    const p=Number(item.part)||1;
+    if(!byPart[p])byPart[p]={ok:0,n:0};
+    byPart[p].n++;
+    const ans=DIAG_STATE.answers[i];
+    const hasAnswer=ans&&ans.choice!==null&&ans.choice!==undefined&&!ans.timedOut&&!timedOut;
+    const isOk=hasAnswer&&Number(ans.choice)===Number(item.answer);
+    if(isOk){
+      correct++;
+      byPart[p].ok++;
+    }else{
+      const tax=(!hasAnswer||timedOut)?'T-LIM':(item.taxonomy||'G-ERR');
+      D.errs.push({
+        date,
+        tax,
+        part:p,
+        note:String(item.explain||'').slice(0,120),
+        src:'diag'
+      });
+    }
+  }
+  const weakest=Object.keys(byPart).map(Number).sort((a,b)=>{
+    const ra=byPart[a].n?(byPart[a].ok/byPart[a].n):0;
+    const rb=byPart[b].n?(byPart[b].ok/byPart[b].n):0;
+    return (ra-rb)||(a-b);
+  }).slice(0,3);
+  D.log.push({
+    type:'diag',
+    date,
+    correct,
+    total:12,
+    min:Math.round(elapsedMin),
+    note:'diagnóstico inicial'
+  });
+  D.diag={
+    date,
+    correct,
+    total:12,
+    byPart,
+    weakest
+  };
+  save();
+  refreshAll();
+}
+async function repeatDiag(){
+  delete D.diag;
+  DIAG_STATE.status='idle';
+  DIAG_STATE.answers={};
+  DIAG_STATE.idx=0;
+  save();
+  refreshAll();
+  await startDiag();
+}
+function renderDiag(){
+  const el=document.getElementById('diagBody');
+  if(!el)return;
+  _updateDiagTimerEl();
+  if(DIAG_STATE.status==='error'){
+    el.innerHTML=`<div class="card" id="diagErrorCard" style="border-color:var(--bad-border);background:var(--bad-soft);color:var(--bad-text)">
+      <h2>⚠️ Error al cargar el diagnóstico</h2>
+      <p style="margin:8px 0 14px;font-size:13.5px">${esc(DIAG_STATE.errorMsg||'No se pudo obtener /diagnostico.json.')}</p>
+      <button type="button" class="btn sm" onclick="startDiag()">Reintentar</button>
+    </div>`;
+    return;
+  }
+  if(DIAG_STATE.status==='loading'){
+    el.innerHTML=`<div class="card"><div class="empty">Cargando diagnóstico inicial…</div></div>`;
+    return;
+  }
+  if(DIAG_STATE.status==='running'&&DIAG_STATE.items.length===12){
+    const idx=DIAG_STATE.idx;
+    const item=DIAG_STATE.items[idx];
+    const total=DIAG_STATE.items.length;
+    el.innerHTML=`<div class="card" id="diagQuestionCard" data-idx="${idx}" data-id="${esc(item.id)}" data-part="${item.part}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="badge fri" id="diagPartLabel">Parte ${item.part}/7 · ${esc(item.skill||'')}</span>
+        <span style="font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--primary)" id="diagProgressLabel">Pregunta ${idx+1}/${total}</span>
+      </div>
+      <div id="diagStem" style="font-size:15.5px;font-weight:600;line-height:1.55;margin:14px 0 18px;color:var(--on-surface)">${esc(item.stem)}</div>
+      <div id="diagOptions" style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px">
+        ${item.options.map((opt,oi)=>`<button type="button" class="btn gray diag-opt" data-opt="${oi}" onclick="answerDiagItem(${oi})" style="justify-content:flex-start;text-align:left;padding:12px 16px;font-size:14px;font-family:var(--font)">
+          <span style="font-family:var(--mono);font-weight:700;color:var(--primary);margin-right:8px">${['A','B','C','D'][oi]}.</span> ${esc(opt)}
+        </button>`).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--on-surface-variant)">Sin feedback durante la prueba</span>
+        <button type="button" class="btn gray sm" id="diagSkipBtn" onclick="skipDiagItem()">Saltar</button>
+      </div>
+    </div>`;
+    return;
+  }
+  if(D.diag&&D.diag.byPart){
+    const d=D.diag;
+    const c=Number(d.correct||0),tot=Number(d.total||12);
+    const scoreColor=c<=4?'var(--bad)':(c<=8?'var(--warn)':'var(--ok)');
+    const scoreClass=c<=4?'diag-red':(c<=8?'diag-amber':'diag-green');
+    const partsKeys=Object.keys(d.byPart).map(Number).sort((a,b)=>a-b);
+    const rowsHtml=partsKeys.map(p=>{
+      const bp=d.byPart[p]||{ok:0,n:0};
+      const ratioPct=bp.n?Math.round(bp.ok/bp.n*100):0;
+      const barCol=ratioPct>=70?'var(--ok)':(ratioPct>=50?'var(--warn)':'var(--bad)');
+      return `<tr>
+        <td><b>Parte ${p}</b> — ${esc(partName(p))}</td>
+        <td style="font-family:var(--mono);font-weight:700">${bp.ok}/${bp.n}</td>
+        <td style="min-width:140px">
+          <div style="height:8px;background:var(--surface-container-low);border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${ratioPct}%;background:${barCol};border-radius:4px"></div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+    const weakHtml=(d.weakest||[]).slice(0,3).map((p,wi)=>{
+      const bp=(d.byPart&&d.byPart[p])||{ok:0,n:0};
+      const rec=DIAG_RECS[p]||'Practicá ejercicios cronometrados de esta parte.';
+      return `<div class="step diag-weak-card" data-part="${p}" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <h3>#${wi+1} Debilidad: Parte ${p} — ${esc(partName(p))} <span class="t">${bp.ok}/${bp.n} aciertos</span></h3>
+          <p style="font-size:13px;color:var(--on-surface-variant);margin-top:4px">${esc(rec)}</p>
+        </div>
+        <button type="button" class="btn sm diag-go-part" data-part="${p}" onclick="goToPartFilter(${p})">Ir a Parte ${p} →</button>
+      </div>`;
+    }).join('');
+    const explainHtml=(DIAG_STATE.status==='done'&&DIAG_STATE.items&&DIAG_STATE.items.length)
+      ?`<div style="margin-top:18px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">📖 Revisión de respuestas y explicaciones</h3>
+          ${DIAG_STATE.items.map((it,idx)=>{
+            const ans=DIAG_STATE.answers[idx];
+            const ok=ans&&ans.choice===it.answer&&!ans.timedOut;
+            return `<div class="step" style="padding:12px 14px">
+              <div style="font-size:12.5px;font-weight:700;color:${ok?'var(--ok)':'var(--bad)'}">${ok?'✔':'✘'} Pregunta ${idx+1} (Parte ${it.part}) — Correcta: ${esc(it.options[it.answer])}</div>
+              <div class="diag-explain" style="font-size:12.5px;color:var(--on-surface-variant);margin-top:4px">${esc(it.explain)}</div>
+            </div>`;
+          }).join('')}
+        </div>`
+      :'';
+    el.innerHTML=`<div class="card" id="diagResultCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div>
+          <h2>🎯 Resultado del Diagnóstico Inicial</h2>
+          <div class="sub" style="margin-bottom:0">Completado el ${esc(d.date||'hoy')}</div>
+        </div>
+        <div id="diagTotalScore" class="${scoreClass}" style="font-family:var(--mono);font-size:28px;font-weight:800;color:${scoreColor}">${c}/${tot}</div>
+      </div>
+      <div class="table-wrap" style="margin-bottom:18px">
+        <table id="diagPartsTable">
+          <thead><tr><th>Parte</th><th>Aciertos/Total</th><th>Barra</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:10px">⚠️ Tus 3 debilidades prioritarias</h3>
+      <div id="diagWeakList" style="margin-bottom:16px">${weakHtml}</div>
+      ${explainHtml}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button type="button" class="btn" id="diagRepeatBtn" onclick="repeatDiag()">Repetir diagnóstico</button>
+        <button type="button" class="btn gray" id="diagPlanBtn" onclick="showView('plan')">Ver plan</button>
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML=`<div class="card" id="diagIntroCard">
+    <h2>🧭 Diagnóstico inicial · 10 min · 12 preguntas</h2>
+    <p class="sub">Respondé 12 ítems originales de las 7 partes de Reading &amp; Use of English para detectar tus puntos débiles y poblar tu registro de errores.</p>
+    <button type="button" class="btn ok" id="diagStartBtn" onclick="startDiag()">Empezar</button>
+  </div>`;
+}
+
 /* ---------- NAV + INIT ----------
    Las vistas (hoy/exam/partes/prog/graf/plan/err/libros/ia) se alternan
    con la clase .active en <nav> y <section>.
@@ -4910,19 +5240,33 @@ function renderIaResult(data){
    loadMaterial() trae el catálogo de archivos del server y al fallar
    (ej: abierto como file:// sin server) usa una lista mínima local.
    init: setea listeners, aplica timers del PLAN, y refresca todo. */
+(function ensureDiagNav(){
+  const nav=document.getElementById('sideNav')||document.querySelector('nav');
+  if(nav&&!nav.querySelector('button[data-view="diag"]')){
+    const btn=document.createElement('button');
+    btn.setAttribute('data-view','diag');
+    btn.textContent='🧭 Diag';
+    nav.appendChild(btn);
+  }
+})();
 function showView(viewId){
   const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
   if(btn)btn.click();
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
+    PARTS_FILTER=null;
+    renderParts();
+  }
   document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const sec=document.getElementById('v-'+b.dataset.view)||document.getElementById('view-'+b.dataset.view);
   if(sec)sec.classList.add('active');
+  if(b.dataset.view==='diag')renderDiag();
 });
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();

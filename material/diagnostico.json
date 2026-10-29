@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "min": 10,
+  "items": [
+    {
+      "id": "d01",
+      "part": 1,
+      "skill": "Multiple-choice cloze",
+      "stem": "The local council has ______ up a new scheme to encourage residents to recycle electronic waste.",
+      "options": ["put", "set", "made", "taken"],
+      "answer": 1,
+      "taxonomy": "L-GAP",
+      "explain": "«Set up a scheme» es la colocación correcta para crear o poner en marcha un programa. «Put up» significa alojar o levantar, y «make up» es inventar o reconciliarse."
+    },
+    {
+      "id": "d02",
+      "part": 1,
+      "skill": "Multiple-choice cloze",
+      "stem": "Despite the heavy rain, the outdoor concert went ahead and ______ out to be a huge success.",
+      "options": ["turned", "came", "ended", "worked"],
+      "answer": 0,
+      "taxonomy": "L-GAP",
+      "explain": "«Turn out to be» significa resultar ser de una manera inesperada. «End up» no va seguido de «to be», y «work out» sin objeto significa salir bien pero no admite «to be»."
+    },
+    {
+      "id": "d03",
+      "part": 2,
+      "skill": "Open cloze",
+      "stem": "Not ______ did the documentary win several awards, but it also changed public opinion on marine conservation.",
+      "options": ["only", "just", "even", "once"],
+      "answer": 0,
+      "taxonomy": "G-ERR",
+      "explain": "La inversión negativa al inicio de la oración («Not only did... but it also...») exige «only» como correlativo fijo. Las demás opciones rompen la estructura correlativa."
+    },
+    {
+      "id": "d04",
+      "part": 2,
+      "skill": "Open cloze",
+      "stem": "We had better leave for the station right away, ______ we might miss the last train home.",
+      "options": ["unless", "despite", "otherwise", "although"],
+      "answer": 2,
+      "taxonomy": "G-ERR",
+      "explain": "«Otherwise» equivale a «si no / de lo contrario» y conecta la advertencia («had better») con la consecuencia posible. «Unless» significa «a menos que» e invertiría el sentido."
+    },
+    {
+      "id": "d05",
+      "part": 3,
+      "skill": "Word formation",
+      "stem": "The rapid ______ (GROW) of remote working has transformed the way modern offices are designed.",
+      "options": ["growing", "growth", "grown", "grower"],
+      "answer": 1,
+      "taxonomy": "L-GAP",
+      "explain": "Entre el adjetivo «rapid» y la preposición «of» necesitás el sustantivo abstracto «growth» (crecimiento). La trampa típica es elegir «growing», que no funciona como sustantivo acá."
+    },
+    {
+      "id": "d06",
+      "part": 4,
+      "skill": "Key word transformation",
+      "stem": "\"I am sorry I forgot to return your call yesterday,\" Clara said to Leo. (APOLOGISED) → Clara ______ Leo's call the previous day.",
+      "options": [
+        "apologised for not returning",
+        "apologised to not return",
+        "apologised that she forgot returning",
+        "apologised for not to return"
+      ],
+      "answer": 0,
+      "taxonomy": "G-ERR",
+      "explain": "El verbo «apologise» rige la preposición «for» seguida de gerundio («for not returning»). Usar infinitivo («to not return» o «for not to return») es la trampa gramatical clásica."
+    },
+    {
+      "id": "d07",
+      "part": 4,
+      "skill": "Key word transformation",
+      "stem": "It was a mistake not to back up the files before updating the system. (OUGHT) → We ______ up the files before updating the system.",
+      "options": [
+        "ought have backed",
+        "ought to back",
+        "ought backing",
+        "ought to have backed"
+      ],
+      "answer": 3,
+      "taxonomy": "G-ERR",
+      "explain": "Para expresar crítica o arrepentimiento sobre el pasado se usa «ought to have + participio» («ought to have backed»). «Ought to back» refiere al presente y omitir «to» es incorrecto."
+    },
+    {
+      "id": "d08",
+      "part": 5,
+      "skill": "Multiple choice reading",
+      "stem": "\"When I first moved to the coastal village, I assumed the slow pace of life would drive me crazy within a month. Yet, instead of missing the city noise, I found myself dreading my occasional trips back to the capital.\" — What surprised the writer after moving?",
+      "options": [
+        "How quickly the village became noisy in summer.",
+        "How easily she adapted to and preferred the quiet routine.",
+        "How difficult it was to travel back to the capital.",
+        "How unfriendly the local residents were at first."
+      ],
+      "answer": 1,
+      "taxonomy": "T-MIS",
+      "explain": "El texto dice que pensó que el ritmo lento la volvería loca, pero terminó detestando volver a la capital. La trampa «city noise» aparece literal pero negada por «instead of»."
+    },
+    {
+      "id": "d09",
+      "part": 5,
+      "skill": "Multiple choice reading",
+      "stem": "\"Although the new museum audio guide was praised by critics for its detailed historical commentary, most teenage visitors abandoned the tour halfway through, complaining it felt more like a university lecture than an interactive experience.\" — Why did teenagers dislike the audio guide?",
+      "options": [
+        "The historical information was inaccurate.",
+        "The equipment stopped working halfway through.",
+        "The tone was too academic and lacked engagement.",
+        "The critics had given them false expectations."
+      ],
+      "answer": 2,
+      "taxonomy": "T-MIS",
+      "explain": "«Felt more like a university lecture than an interactive experience» equivale a un tono demasiado académico y poco interactivo. «Halfway through» indica cuándo abandonaron, no una falla."
+    },
+    {
+      "id": "d10",
+      "part": 6,
+      "skill": "Gapped text",
+      "stem": "Many amateur runners believe that training harder every single day is the fastest route to a personal best. ______ Without those scheduled rest days, muscles cannot repair themselves and performance inevitably drops.",
+      "options": [
+        "In fact, the opposite is often true when it comes to building endurance.",
+        "For this reason, professional athletes never take a break before a race.",
+        "This means that running shoes should be replaced every six months.",
+        "Similarly, swimming requires a great deal of upper-body strength."
+      ],
+      "answer": 0,
+      "taxonomy": "T-MIS",
+      "explain": "La oración siguiente usa «those scheduled rest days», que necesita un contraste previo con «training harder every single day». «In fact, the opposite is often true» introduce ese giro."
+    },
+    {
+      "id": "d11",
+      "part": 7,
+      "skill": "Multiple matching",
+      "stem": "A: \"I joined for the flexible hours.\" | B: \"I took the role purely for the high salary, though the shifts were brutal.\" | C: \"The pay was modest, but the training was great.\" | D: \"I wanted to work near home.\" — Which person initially accepted the job for financial reasons?",
+      "options": ["Person A", "Person B", "Person C", "Person D"],
+      "answer": 1,
+      "taxonomy": "T-MIS",
+      "explain": "Person B dice «took the role purely for the high salary» (motivo económico). Person C menciona «pay» como distractor léxico, pero aclara que era bajo («modest»)."
+    },
+    {
+      "id": "d12",
+      "part": 7,
+      "skill": "Multiple matching",
+      "stem": "A: \"The cast saved a weak script.\" | B: \"Stunning visuals cannot rescue a predictable plot.\" | C: \"Even though the storyline is familiar, the breathtaking photography alone makes the ticket worthwhile.\" | D: \"The soundtrack was the only highlight.\" — Which reviewer recommends the film for its visual quality despite a predictable plot?",
+      "options": ["Reviewer A", "Reviewer B", "Reviewer C", "Reviewer D"],
+      "answer": 2,
+      "taxonomy": "T-MIS",
+      "explain": "Tanto B como C hablan de fotografía e historia predecible, pero sólo C recomienda pagar la entrada («makes the ticket worthwhile»). B dice lo opuesto («cannot rescue»)."
+    }
+  ]
+}
