@@ -807,6 +807,72 @@ footer{
 .auth-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
 .auth-error{color:var(--bad);font-size:12.5px;margin-top:8px;min-height:16px}
 .onboard-intro{font-size:13.5px;color:var(--on-surface-variant);margin-bottom:16px;line-height:1.5}
+
+/* ============ QUICK-LOG FAB & MODAL ============ */
+#qlFab{
+  position:fixed;right:16px;bottom:76px;width:56px;height:56px;border-radius:50%;z-index:60;
+  background:var(--primary);color:var(--on-primary);border:none;font-size:28px;font-weight:700;
+  line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:var(--shadow-md);transition:transform .15s ease,background .15s ease;
+}
+#qlFab:hover{background:var(--primary-hover);transform:scale(1.05)}
+#qlFab:active{transform:scale(0.96)}
+#qlFab.ql-flash{background:var(--ok);transform:scale(1.12)}
+@media (min-width:900px){
+  #qlFab{bottom:24px;right:24px}
+}
+.ql-toast{
+  position:fixed;right:16px;bottom:142px;z-index:210;background:var(--hero-bg);color:var(--on-hero);
+  border:1px solid var(--hero-border);border-radius:var(--radius);padding:8px 14px;
+  font-family:var(--mono);font-size:12px;font-weight:600;box-shadow:var(--shadow-md);
+  opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .15s,transform .15s;
+}
+.ql-toast.show{opacity:1;transform:translateY(0)}
+@media (min-width:900px){
+  .ql-toast{bottom:90px;right:24px}
+}
+.ql-step{
+  border:1px solid var(--outline-variant);border-radius:var(--radius);padding:12px;
+  margin-bottom:10px;background:var(--surface-container-low);transition:border-color .15s;
+}
+.ql-step.active{border-color:var(--primary);background:var(--surface-container-lowest)}
+.ql-step-head{
+  font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--primary);margin-bottom:8px;display:flex;justify-content:space-between;
+}
+.ql-chips{display:flex;flex-wrap:wrap;gap:6px}
+.ql-chips .chip{margin:0;padding:7px 11px;font-size:12px}
+
+/* ============ STREAK CARD & FOOTER PILL ============ */
+.streak-card{
+  background:var(--hero-bg);color:var(--on-hero);border:1px solid var(--hero-border);
+  padding:16px 20px;margin-bottom:18px;transition:transform 150ms ease;
+}
+.streak-card.streak-bump{animation:streakScale 150ms ease}
+@keyframes streakScale{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+.streak-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:14px}
+.streak-main{font-size:16px;font-weight:700;color:var(--on-hero)}
+.streak-record{font-size:12.5px;color:var(--on-hero-sub)}
+.streak-shield{
+  font-size:12px;font-weight:700;color:var(--hero-accent);background:var(--hero-surface);
+  border:1px solid var(--hero-surface-border);padding:2px 8px;border-radius:var(--radius);
+}
+.streak-week-row{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.streak-bar{
+  flex:1;min-width:120px;max-width:220px;height:8px;background:var(--hero-surface);
+  border:1px solid var(--hero-surface-border);border-radius:4px;overflow:hidden;
+}
+.streak-bar-fill{height:100%;background:var(--hero-accent);border-radius:4px;transition:width .3s ease}
+.streak-ascii{font-family:var(--mono);font-size:11px;color:var(--hero-accent);letter-spacing:0}
+.streak-week-txt{font-family:var(--mono);font-size:12px;color:var(--on-hero-sub)}
+.streak-risk{
+  margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--warn-text);
+  background:var(--warn-soft);border:1px solid var(--warn-border);padding:5px 10px;border-radius:var(--radius);
+}
+.streak-foot-pill{
+  display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--radius);
+  background:var(--primary-container);color:var(--on-primary-container);font-weight:700;font-size:11px;
+}
 </style>
 </head>
 <body>
@@ -978,6 +1044,94 @@ footer{
   </div>
 </div>
 
+<!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
+<button id="qlFab" type="button" onclick="openQuickLog()" title="Quick-log (3 toques)" aria-label="Quick-log">+</button>
+<div id="qlToast" class="ql-toast" role="status" aria-live="polite">✔ Sesión registrada</div>
+
+<div id="qlModal" class="overlay" style="display:none" onclick="if(event.target===this)closeQuickLog()">
+  <div class="auth-card" style="max-width:440px;padding:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div>
+        <h3 style="font-size:16px;font-weight:700;color:var(--on-surface);margin:0">⚡ Quick-log de sesión</h3>
+        <div style="font-size:11.5px;color:var(--on-surface-variant)">Registrá tu práctica en 3 toques</div>
+      </div>
+      <button class="del" type="button" onclick="closeQuickLog()" style="font-size:18px;padding:4px 8px">✕</button>
+    </div>
+
+    <!-- Paso 1: Tipo -->
+    <div id="qlStep1" class="ql-step active">
+      <div class="ql-step-head"><span>Paso 1 · Tipo de sesión</span><span id="qlTypeLabel">Use of English</span></div>
+      <div class="ql-chips" id="qlTypeChips">
+        <button type="button" class="chip on" data-ql-type="ue" onclick="qlSetType('ue')">Use of English</button>
+        <button type="button" class="chip" data-ql-type="lp" onclick="qlSetType('lp')">Listening</button>
+        <button type="button" class="chip" data-ql-type="w" onclick="qlSetType('w')">Writing</button>
+        <button type="button" class="chip" data-ql-type="sp" onclick="qlSetType('sp')">Speaking</button>
+        <button type="button" class="chip" data-ql-type="rue" onclick="qlSetType('rue')">Examen completo</button>
+      </div>
+    </div>
+
+    <!-- Paso 2: Resultado / Numpad -->
+    <div id="qlStep2" class="ql-step">
+      <div class="ql-step-head"><span>Paso 2 · Resultado</span><span id="qlStep2Hint">correct / total</span></div>
+      <div id="qlKindRow" style="display:none;margin-bottom:8px">
+        <div class="ql-chips" id="qlKindChips">
+          <button type="button" class="chip on" data-ql-kind="Essay" onclick="qlSetKind('Essay')">Essay</button>
+          <button type="button" class="chip" data-ql-kind="Article" onclick="qlSetKind('Article')">Article</button>
+          <button type="button" class="chip" data-ql-kind="Report" onclick="qlSetKind('Report')">Report</button>
+          <button type="button" class="chip" data-ql-kind="Review" onclick="qlSetKind('Review')">Review</button>
+          <button type="button" class="chip" data-ql-kind="Email" onclick="qlSetKind('Email')">Email</button>
+        </div>
+      </div>
+      <div class="ql-chips" id="qlRangeChips" style="margin-bottom:8px">
+        <button type="button" class="chip" data-ql-range="0-5" onclick="qlPickRange(0,5)">0-5</button>
+        <button type="button" class="chip" data-ql-range="6-10" onclick="qlPickRange(6,10)">6-10</button>
+        <button type="button" class="chip" data-ql-range="11-15" onclick="qlPickRange(11,15)">11-15</button>
+        <button type="button" class="chip" data-ql-range="16-20" onclick="qlPickRange(16,20)">16-20</button>
+        <button type="button" class="chip" data-ql-range="21-25" onclick="qlPickRange(21,25)">21-25</button>
+        <button type="button" class="chip" data-ql-range="26-30" onclick="qlPickRange(26,30)">26-30</button>
+      </div>
+      <div class="ql-chips" id="qlSpChips" style="display:none;margin-bottom:8px">
+        <button type="button" class="chip" onclick="qlPickNum(0)">0</button>
+        <button type="button" class="chip" onclick="qlPickNum(1)">1</button>
+        <button type="button" class="chip" onclick="qlPickNum(2)">2</button>
+        <button type="button" class="chip" onclick="qlPickNum(3)">3</button>
+        <button type="button" class="chip" onclick="qlPickNum(4)">4</button>
+        <button type="button" class="chip on" onclick="qlPickNum(5)">5</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label id="qlCorrectLbl" style="margin-top:0">Correct</label>
+          <input type="number" inputmode="numeric" id="qlCorrect" min="0" value="16">
+        </div>
+        <div id="qlTotalWrap">
+          <label id="qlTotalLbl" style="margin-top:0">Total</label>
+          <input type="number" inputmode="numeric" id="qlTotal" min="1" value="20">
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 3: Minutos + Nota -->
+    <div id="qlStep3" class="ql-step">
+      <div class="ql-step-head"><span>Paso 3 · Tiempo y nota</span><span id="qlPartBadge">P3</span></div>
+      <div style="display:grid;grid-template-columns:100px 1fr;gap:8px">
+        <div>
+          <label style="margin-top:0">Minutos</label>
+          <input type="number" inputmode="numeric" id="qlMin" min="0" value="50">
+        </div>
+        <div>
+          <label style="margin-top:0">Nota (opcional)</label>
+          <input type="text" id="qlNote" placeholder="Ej. Sample 1 / Test 2">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button type="button" class="btn gray" id="qlNextBtn" onclick="qlNext()">Siguiente →</button>
+      <button type="button" class="btn ok" id="qlSaveBtn" style="flex:1" onclick="qlSave()">✔ Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside class="sidebar">
@@ -1026,6 +1180,7 @@ footer{
         <div class="grid-12">
           <!-- Main column -->
           <div class="col-8">
+            <div class="card streak-card" id="streakCard"></div>
             <div class="next-session" id="nextBox"></div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
@@ -2024,6 +2179,10 @@ footer{
                 <div><label>Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
                 <div><label>Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
               </div>
+              <div class="row">
+                <div><label>Streak freeze / week (🛡)</label><input type="number" id="pStreakFreeze" min="0" max="7" value="1"></div>
+                <div><label>Weekly goal (days/week)</label><input type="number" id="pWeekGoal" min="1" max="7" value="5"></div>
+              </div>
             </div>
           </div>
 
@@ -2172,7 +2331,7 @@ footer{
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="syncBadgeFoot">—</span></footer>
+    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span> · <span id="syncBadgeFoot">—</span></footer>
   </div>
 </div>
 
@@ -2253,6 +2412,7 @@ const SETTINGS_DEFAULT={
   sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
+  streakFreeze:1,weekGoal:5,
   rueCycle:[1,2,3,4,5,6,7],
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
@@ -2459,6 +2619,7 @@ function load(){
     return {
       log: Array.isArray(d.log) ? d.log : [],
       errs: Array.isArray(d.errs) ? d.errs : [],
+      examDates: Array.isArray(d.examDates) ? d.examDates : [],
       stage: typeof d.stage==='number' ? d.stage : 0,
       settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{}),
       overrides: d.overrides||{},
@@ -2468,7 +2629,7 @@ function load(){
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},onboarded:false,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},onboarded:false,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -2512,6 +2673,7 @@ function syncPull(){
           D = {
             log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
             errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
+            examDates: Array.isArray(d.examDates) ? d.examDates : (Array.isArray(D.examDates) ? D.examDates : []),
             stage: typeof d.stage==='number' ? d.stage : (D.stage||0),
             settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{}),
             overrides: Object.assign({}, D.overrides||{}, d.overrides||{}),
@@ -2532,7 +2694,7 @@ function syncPull(){
     })
     .catch(()=>{syncStatus('off');return null;});
 }
-function today(){return new Date().toISOString().slice(0,10)}
+function today(){return new Date().toLocaleDateString('sv-SE')}
 function isoWeek(d){d=new Date(d);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const wn=new Date(Date.UTC(w.getUTCFullYear(),0,4));return Math.round((((w-wn)/86400000)+wn.getUTCDay()-1)/7)}
 function pad(n){return String(n).padStart(2,'0')}
 function fmtMin(m){return pad(Math.floor(m/60))+':'+pad(m%60)}
@@ -3077,6 +3239,8 @@ function renderPlan(){
   document.getElementById('pWriteMin').value=s.writeMin||35;document.getElementById('pRevMin').value=s.revMin||20;
   document.getElementById('pListenMin').value=s.listenMin||40;document.getElementById('pSp1Sec').value=s.sp1Sec||60;document.getElementById('pSp2Sec').value=s.sp2Sec||180;
   document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
+  if(document.getElementById('pStreakFreeze'))document.getElementById('pStreakFreeze').value=s.streakFreeze??1;
+  if(document.getElementById('pWeekGoal'))document.getElementById('pWeekGoal').value=s.weekGoal??5;
   if(document.getElementById('pEven'))document.getElementById('pEven').value=s.even||3;
   if(document.getElementById('pOdd'))document.getElementById('pOdd').value=s.odd||4;
   document.getElementById('pRueCycle').value=(s.rueCycle||[1,2,3,4,5,6,7]).join(',');
@@ -3093,6 +3257,8 @@ function savePlan(){
   s.ueMin=+g('pUeMin')||50;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||35;s.revMin=+g('pRevMin')||20;
   s.listenMin=+g('pListenMin')||40;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
   s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
+  if(g('pStreakFreeze')!=='')s.streakFreeze=Math.max(0,+g('pStreakFreeze'));
+  if(g('pWeekGoal')!=='')s.weekGoal=Math.max(1,+g('pWeekGoal'));
   if(g('pEven'))s.even=+g('pEven')||3;if(g('pOdd'))s.odd=+g('pOdd')||4;
   s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];
   s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];
@@ -4098,6 +4264,312 @@ function renderToday(){
 }
 function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
 
+/* ---------- STREAK ---------- */
+let _prevStreakVal=null;
+function dayKey(d=new Date()){
+  if(typeof d==='string'){
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d;
+    d=new Date(d+'T12:00:00');
+  }
+  return d.toLocaleDateString('sv-SE');
+}
+function _parseLocalDay(k){
+  const p=String(k).split('-').map(Number);
+  return new Date(p[0],(p[1]||1)-1,p[2]||1,12,0,0);
+}
+function _addDaysKey(k,delta){
+  const dt=_parseLocalDay(k);
+  dt.setDate(dt.getDate()+delta);
+  return dayKey(dt);
+}
+function _isoWeekKey(k){
+  const dt=_parseLocalDay(k);
+  const w=isoWeek(dt);
+  dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate()+3-((dt.getDay()+6)%7));
+  return dt.getFullYear()+'-W'+String(w).padStart(2,'0');
+}
+function sessionDays(){
+  const todayStr=dayKey(new Date());
+  const set=new Set();
+  for(const e of (D.log||[])){
+    if(!e||!e.date)continue;
+    const k=dayKey(e.date);
+    if(k<=todayStr)set.add(k);
+  }
+  return set;
+}
+function _walkStreakBack(startKey,days,examSet,maxFreeze,minDayKey){
+  let count=1,curKey=startKey,totalFreezes=0;
+  let freezesByWeek={};
+  while(true){
+    let probe=_addDaysKey(curKey,-1);
+    let gapDead=0,tempTotal=totalFreezes;
+    let tempWeek=Object.assign({},freezesByWeek);
+    let possible=true;
+    while(!days.has(probe)){
+      if(probe<minDayKey){possible=false;break;}
+      if(!examSet.has(probe)){
+        gapDead++;
+        if(gapDead>maxFreeze){possible=false;break;}
+        const wk=_isoWeekKey(probe);
+        if((tempWeek[wk]||0)+1>maxFreeze){possible=false;break;}
+        tempWeek[wk]=(tempWeek[wk]||0)+1;
+        tempTotal++;
+      }
+      probe=_addDaysKey(probe,-1);
+    }
+    if(!possible)break;
+    freezesByWeek=tempWeek;
+    totalFreezes=tempTotal;
+    count++;
+    curKey=probe;
+  }
+  return {count,freezeUsed:totalFreezes};
+}
+function calcStreak(){
+  const todayStr=dayKey(new Date());
+  const days=sessionDays();
+  const sorted=Array.from(days).sort();
+  const s=D.settings||SETTINGS_DEFAULT;
+  const maxFreeze=(typeof s.streakFreeze==='number'&&!isNaN(s.streakFreeze))?Math.max(0,s.streakFreeze):1;
+  const examSet=new Set(Array.isArray(D.examDates)?D.examDates.map(x=>dayKey(x)):[]);
+
+  const todayDt=_parseLocalDay(todayStr);
+  const dow=(todayDt.getDay()+6)%7;
+  const monKey=_addDaysKey(todayStr,-dow);
+  const sunKey=_addDaysKey(monKey,6);
+  let weekCount=0;
+  for(const k of sorted){
+    if(k>=monKey&&k<=sunKey)weekCount++;
+  }
+
+  if(!sorted.length){
+    return {current:0,longest:0,todayDone:false,atRisk:false,lastDate:null,freezeUsed:0,weekCount:0};
+  }
+
+  const minDayKey=sorted[0];
+  const lastDate=sorted[sorted.length-1];
+  const todayDone=days.has(todayStr);
+  let current=0,atRisk=false,freezeUsed=0;
+
+  if(todayDone){
+    const res=_walkStreakBack(todayStr,days,examSet,maxFreeze,minDayKey);
+    current=res.count;
+    freezeUsed=res.freezeUsed;
+  }else{
+    let yKey=_addDaysKey(todayStr,-1);
+    while(examSet.has(yKey)&&!days.has(yKey)&&yKey>=minDayKey){
+      yKey=_addDaysKey(yKey,-1);
+    }
+    if(days.has(yKey)){
+      atRisk=true;
+      const res=_walkStreakBack(yKey,days,examSet,maxFreeze,minDayKey);
+      current=res.count;
+      freezeUsed=res.freezeUsed;
+    }
+  }
+
+  let longest=current;
+  for(const k of sorted){
+    const r=_walkStreakBack(k,days,examSet,maxFreeze,minDayKey);
+    if(r.count>longest)longest=r.count;
+  }
+
+  return {current,longest,todayDone,atRisk,lastDate,freezeUsed,weekCount};
+}
+function renderStreak(){
+  const st=calcStreak();
+  const s=D.settings||SETTINGS_DEFAULT;
+  const goal=(typeof s.weekGoal==='number'&&s.weekGoal>0)?s.weekGoal:5;
+  const card=document.getElementById('streakCard');
+  if(card){
+    const pctW=Math.min(100,Math.round((st.weekCount/Math.max(1,goal))*100));
+    const filled=Math.max(0,Math.min(12,Math.round((st.weekCount/Math.max(1,goal))*12)));
+    const asciiBar='█'.repeat(filled)+'░'.repeat(12-filled);
+    const mainTxt=st.current===0?'Sin racha — empezá hoy':`🔥 ${st.current} ${st.current===1?'día':'días'}`;
+    const shieldHtml=st.freezeUsed?`<span class="streak-shield" id="streakShield">🛡 ${st.freezeUsed}</span>`:'';
+    const riskHtml=st.atRisk?`<div class="streak-risk" id="streakRisk">⏰ hoy sin sesión — se corta a medianoche</div>`:'';
+    card.innerHTML=`
+      <div class="streak-top">
+        <span class="streak-main" id="streakCurrent">${mainTxt}</span>
+        <span class="streak-record" id="streakLongest">récord ${st.longest}</span>
+        ${shieldHtml}
+      </div>
+      <div class="streak-week-row">
+        <div class="streak-bar" aria-hidden="true"><div class="streak-bar-fill" style="width:${pctW}%"></div></div>
+        <span class="streak-ascii">[ ${asciiBar} ]</span>
+        <span class="streak-week-txt" id="streakWeek">${st.weekCount}/${goal} esta semana</span>
+      </div>
+      ${riskHtml}
+    `;
+    if(_prevStreakVal!==null&&st.current>_prevStreakVal){
+      card.classList.remove('streak-bump');
+      void card.offsetWidth;
+      card.classList.add('streak-bump');
+    }
+    _prevStreakVal=st.current;
+  }
+  const pill=document.getElementById('streakFootPill');
+  if(pill)pill.textContent=`🔥 ${st.current}`;
+}
+
+/* ---------- QUICK-LOG (3 TOQUES) ---------- */
+const QL_STATE={type:'ue',step:1,part:3,kind:'Essay'};
+function _qlRenderStep(){
+  for(let i=1;i<=3;i++){
+    const el=document.getElementById('qlStep'+i);
+    if(el)el.classList.toggle('active',QL_STATE.step===i);
+  }
+  const nextBtn=document.getElementById('qlNextBtn');
+  if(nextBtn)nextBtn.style.display=QL_STATE.step<3?'inline-flex':'none';
+}
+function openQuickLog(){
+  const m=document.getElementById('qlModal');
+  if(!m)return;
+  const noteEl=document.getElementById('qlNote');
+  if(noteEl)noteEl.value='';
+  qlSetType(QL_STATE.type||'ue');
+  QL_STATE.step=1;
+  _qlRenderStep();
+  m.style.display='flex';
+}
+function closeQuickLog(){
+  const m=document.getElementById('qlModal');
+  if(m)m.style.display='none';
+}
+function qlSetType(t){
+  QL_STATE.type=t;
+  const s=D.settings||SETTINGS_DEFAULT;
+  const isEven=(isoWeek(new Date())%2===0);
+  const focusPart=isEven?(s.even||3):(s.odd||4);
+  const names={ue:'Use of English',lp:'Listening',w:'Writing',sp:'Speaking',rue:'Examen completo'};
+  const lbl=document.getElementById('qlTypeLabel');
+  if(lbl)lbl.textContent=names[t]||t;
+  document.querySelectorAll('#qlTypeChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.qlType===t));
+
+  const kindRow=document.getElementById('qlKindRow');
+  const rangeRow=document.getElementById('qlRangeChips');
+  const spRow=document.getElementById('qlSpChips');
+  const cLbl=document.getElementById('qlCorrectLbl');
+  const tWrap=document.getElementById('qlTotalWrap');
+  const cIn=document.getElementById('qlCorrect');
+  const tIn=document.getElementById('qlTotal');
+  const mIn=document.getElementById('qlMin');
+  const pBadge=document.getElementById('qlPartBadge');
+  const hint=document.getElementById('qlStep2Hint');
+
+  if(kindRow)kindRow.style.display=(t==='w'?'block':'none');
+  if(spRow)spRow.style.display=(t==='sp'?'flex':'none');
+  if(rangeRow)rangeRow.style.display=(t==='sp'?'none':'flex');
+  if(tWrap)tWrap.style.display=(t==='sp'?'none':'block');
+
+  if(t==='ue'){
+    QL_STATE.part=focusPart;
+    if(cLbl)cLbl.textContent='Correct';
+    if(cIn){cIn.max=52;cIn.value=16;}
+    if(tIn)tIn.value=20;
+    if(mIn)mIn.value=s.ueMin||50;
+    if(pBadge)pBadge.textContent='P'+QL_STATE.part;
+    if(hint)hint.textContent='correct / total';
+  }else if(t==='lp'){
+    QL_STATE.part=1;
+    if(cLbl)cLbl.textContent='Correct';
+    if(cIn){cIn.max=30;cIn.value=8;}
+    if(tIn)tIn.value=10;
+    if(mIn)mIn.value=s.listenMin||40;
+    if(pBadge)pBadge.textContent='P1';
+    if(hint)hint.textContent='correct / total';
+  }else if(t==='w'){
+    QL_STATE.part=1;
+    QL_STATE.kind=(s.wCycle&&s.wCycle[0])||'Essay';
+    qlSetKind(QL_STATE.kind);
+    if(cLbl)cLbl.textContent='Score /20';
+    if(cIn){cIn.max=20;cIn.value=16;}
+    if(tIn)tIn.value=20;
+    if(mIn)mIn.value=s.writeMin||35;
+    if(pBadge)pBadge.textContent=QL_STATE.kind;
+    if(hint)hint.textContent='tipo + nota /20';
+  }else if(t==='sp'){
+    QL_STATE.part=1;
+    if(cLbl)cLbl.textContent='Nota (0-5)';
+    if(cIn){cIn.max=5;cIn.value=5;}
+    if(tIn)tIn.value=5;
+    if(mIn)mIn.value=Math.max(1,Math.round(((s.sp1Sec||60)+(s.sp2Sec||180))/60));
+    if(pBadge)pBadge.textContent='Speaking';
+    if(hint)hint.textContent='nota 0-5';
+  }else if(t==='rue'){
+    QL_STATE.part=focusPart;
+    if(cLbl)cLbl.textContent='Correct';
+    if(cIn){cIn.max=52;cIn.value=26;}
+    if(tIn)tIn.value=30;
+    if(mIn)mIn.value=s.ueMin||50;
+    if(pBadge)pBadge.textContent='Foco P'+focusPart;
+    if(hint)hint.textContent='correct / total';
+  }
+  QL_STATE.step=2;
+  _qlRenderStep();
+}
+function qlSetKind(k){
+  QL_STATE.kind=k;
+  document.querySelectorAll('#qlKindChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.qlKind===k));
+  const pBadge=document.getElementById('qlPartBadge');
+  if(pBadge&&QL_STATE.type==='w')pBadge.textContent=k;
+}
+function qlPickRange(lo,hi){
+  const cIn=document.getElementById('qlCorrect');
+  const tIn=document.getElementById('qlTotal');
+  const val=Math.round((lo+hi)/2);
+  if(cIn)cIn.value=val;
+  if(tIn&&(+tIn.value<hi))tIn.value=hi;
+  document.querySelectorAll('#qlRangeChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.qlRange===`${lo}-${hi}`));
+  QL_STATE.step=3;
+  _qlRenderStep();
+}
+function qlPickNum(n){
+  const cIn=document.getElementById('qlCorrect');
+  if(cIn)cIn.value=n;
+  document.querySelectorAll('#qlSpChips .chip').forEach(b=>b.classList.toggle('on',+b.textContent===n));
+  QL_STATE.step=3;
+  _qlRenderStep();
+}
+function qlNext(){
+  QL_STATE.step=Math.min(3,(QL_STATE.step||1)+1);
+  _qlRenderStep();
+}
+function qlSave(){
+  const type=QL_STATE.type||'ue';
+  const date=dayKey(new Date());
+  const part=QL_STATE.part||1;
+  const correct=Math.max(0,+(document.getElementById('qlCorrect')?.value??0));
+  const total=Math.max(1,+(document.getElementById('qlTotal')?.value??20));
+  const min=Math.max(0,+(document.getElementById('qlMin')?.value??0));
+  const note=(document.getElementById('qlNote')?.value||'').trim();
+
+  const entry={type,date,part,correct,total,min,note};
+  if(type==='w'){
+    entry.kind=QL_STATE.kind||'Essay';
+    entry.score=correct;
+  }else if(type==='sp'){
+    entry.score=correct;
+  }
+  D.log.push(entry);
+  save();
+  refreshAll();
+  closeQuickLog();
+
+  const fab=document.getElementById('qlFab');
+  if(fab){
+    fab.classList.add('ql-flash');
+    setTimeout(()=>fab.classList.remove('ql-flash'),450);
+  }
+  const toast=document.getElementById('qlToast');
+  if(toast){
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),1400);
+  }
+}
+
 /* ---------- METRICS (Weekly / Progress / Analytics) ----------
    Puebla las tarjetas de métricas de HOY, PROGRESO y GRÁFICOS con
    datos calculados de D.log/D.errs. Se llama desde refreshAll(). */
@@ -4112,10 +4584,8 @@ function renderMetrics(){
   const ue=log.filter(e=>e.type==='ue'||e.type==='rue');
   const ueAvg=ue.length?Math.round(ue.reduce((a,e)=>a+e.correct/e.total,0)/ue.length*100):null;
   set('mUoe',ueAvg!==null?ueAvg+'%':'—');
-  // Racha diaria: días consecutivos con ≥1 registro hasta hoy
-  const days=new Set(log.map(e=>e.date));
-  let streak=0;const d=new Date();
-  while(days.has(d.toISOString().slice(0,10))){streak++;d.setDate(d.getDate()-1)}
+  // Racha diaria derivada de calcStreak()
+  const streak=calcStreak().current;
   set('mRacha',streak);
   set('mRegs',log.length);
   // Current exercise de la rot card (HOY sidebar)
@@ -4170,7 +4640,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.getElementById('v-'+b.dataset.view).classList.add('active');
 });
 
-function refreshAll(){renderToday();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderEx();renderParts();renderMetrics();renderErrPills()}
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
