@@ -1,8 +1,8 @@
-"""Helper para los tests: login como owner antes de interactuar con la app.
+"""Helpers for the tests: log in as the owner before interacting with the app.
 
-El frontend ahora exige sesión (overlay de login). Los tests existentes
-verifican la app funcional, así que se loguean como el usuario 'owner'
-(creado por la migración) con la contraseña por defecto.
+The frontend now requires a session (login overlay). The existing tests
+verify the working app, so they log in as the 'owner' user (created by the
+migration) with the default password.
 """
 
 OWNER_NAME = "Owner"
@@ -10,7 +10,7 @@ OWNER_PASS = "b2first"
 
 
 def login_owner(pg, url):
-    """Loguea al owner vía la API y setea la sesión en localStorage."""
+    """Log in as the owner via the API and set the session in localStorage."""
     import json
     import urllib.request
 
@@ -26,7 +26,7 @@ def login_owner(pg, url):
     )
     pg.reload(wait_until="networkidle")
     pg.wait_for_timeout(400)
-    # Cerrar el onboarding de primer ingreso si aparece (usuario sin D.onboarded)
+    # Close the first-run onboarding if it appears (user without D.onboarded)
     if pg.evaluate("typeof finishOnboarding==='function' && document.getElementById('onboardingOverlay') && document.getElementById('onboardingOverlay').style.display==='flex'"):
         pg.evaluate("finishOnboarding()")
         pg.wait_for_timeout(300)

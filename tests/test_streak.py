@@ -19,7 +19,7 @@ async def main():
 
         await page.goto(URL, wait_until="networkidle")
 
-        # Configurar usuario de prueba aislado en localStorage sin tocar data/ del dueño
+        # Set up an isolated test user in localStorage without touching the owner's data/
         await page.evaluate(
             """() => {
             syncPush = () => {};
@@ -36,7 +36,7 @@ async def main():
         }"""
         )
 
-        # (a) Log vacío -> Sin racha
+        # (a) Empty log -> No streak
         res_a = await page.evaluate(
             """() => {
             D.log = [];
@@ -52,10 +52,10 @@ async def main():
         }"""
         )
         assert res_a["st"]["current"] == 0, f"Expected 0, got {res_a}"
-        assert "Sin racha" in res_a["text"], f"Expected 'Sin racha' in {res_a['text']}"
+        assert "No streak" in res_a["text"], f"Expected 'No streak' in {res_a['text']}"
         out["a_empty"] = "OK: " + res_a["text"].splitlines()[0].strip()
 
-        # (b) Hoy + ayer -> 2
+        # (b) Today + yesterday -> 2
         res_b = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -78,7 +78,7 @@ async def main():
         assert "2" in res_b["text"] and "2" in res_b["pill"]
         out["b_today_yesterday"] = f"OK: current={res_b['st']['current']} ({res_b['text']})"
 
-        # (c) Hueco de 1 día con escudo disponible -> racha viva y 🛡
+        # (c) 1-day gap with a shield available -> streak alive and 🛡
         res_c = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -102,7 +102,7 @@ async def main():
         assert "🛡" in res_c["cardText"], f"Expected 🛡 in {res_c['cardText']}"
         out["c_freeze_1day"] = f"OK: current={res_c['st']['current']}, freezeUsed={res_c['st']['freezeUsed']} (🛡 visible)"
 
-        # (d) Hueco de 2 días -> cortada
+        # (d) 2-day gap -> broken
         res_d = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -126,7 +126,7 @@ async def main():
         assert res_d["cutWithToday"]["current"] == 1, f"Expected 1 (previous cut) after 2-day gap, got {res_d}"
         out["d_gap_2days_cut"] = f"OK: noToday={res_d['cutNoToday']['current']}, withToday={res_d['cutWithToday']['current']}"
 
-        # (e) Fecha futura ignorada
+        # (e) Future date ignored
         res_e = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -146,7 +146,7 @@ async def main():
         assert res_e["st"]["current"] == 1
         out["e_future_ignored"] = f"OK: days={res_e['days']}, current={res_e['st']['current']}"
 
-        # (f) Récord histórico correcto (longest)
+        # (f) Correct all-time record (longest)
         res_f = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -168,10 +168,10 @@ async def main():
         }"""
         )
         assert res_f["st"]["current"] == 2 and res_f["st"]["longest"] == 5, f"Expected 2/5, got {res_f}"
-        assert "récord 5" in res_f["recText"]
+        assert "record 5" in res_f["recText"]
         out["f_longest_record"] = f"OK: current={res_f['st']['current']}, longest={res_f['st']['longest']}"
 
-        # (g) weekCount correcto + Quick-Log 3 toques a 360px
+        # (g) Correct weekCount + 3-tap Quick-Log at 360px
         res_g = await page.evaluate(
             """() => {
             const t0 = dayKey(new Date());
@@ -199,7 +199,7 @@ async def main():
         assert res_g["after"] == res_g["expectedAfter"], f"Expected weekCount={res_g['expectedAfter']}, got {res_g}"
         out["g_week_count"] = f"OK: weekCount={res_g['after']} ({res_g['weekText']})"
 
-        # Limpiar localStorage del usuario de prueba
+        # Clean up the test user's localStorage
         await page.evaluate("localStorage.removeItem('b2first_tracker_v1_test_streak_ci'); localStorage.removeItem('b2first_user');")
         assert len(errs) == 0, f"JS errors: {errs}"
         out["js_errors"] = errs

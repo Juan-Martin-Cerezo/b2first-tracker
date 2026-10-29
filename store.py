@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Seam de almacenamiento en JSON para usuarios, progreso y backups.
+"""JSON storage seam for users, progress and backups.
 
-Este módulo aísla todos los accesos al filesystem de datos de la lógica HTTP.
-No conoce tokens ni depende de http.server.
+This module isolates all data-filesystem access from the HTTP logic.
+It knows nothing about tokens and does not depend on http.server.
 """
 import json
 import os
@@ -26,7 +26,7 @@ BK_KEEP = 20
 
 
 def _data_dir() -> str:
-    """Devuelve el directorio de datos activo (respeta server.DATA_DIR en tests)."""
+    """Return the active data directory (respects server.DATA_DIR in tests)."""
     if DATA_DIR != _DEFAULT_DATA_DIR:
         return DATA_DIR
     srv = sys.modules.get("server")
@@ -48,7 +48,7 @@ def _bk_dir(uid: str) -> str:
 
 
 def _read_json(path: str, default):
-    """Lee un JSON o devuelve default si no existe o está corrupto."""
+    """Read a JSON file or return default if it is missing or corrupt."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -57,7 +57,7 @@ def _read_json(path: str, default):
 
 
 def _write_json(path: str, data) -> None:
-    """Escribe un JSON de forma atómica (tmp + rename)."""
+    """Write a JSON file atomically (tmp + rename)."""
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
@@ -68,18 +68,18 @@ def _write_json(path: str, data) -> None:
 
 
 def list_users() -> dict:
-    """Devuelve {uid: record} leído desde data/users.json."""
+    """Return {uid: record} read from data/users.json."""
     data = _read_json(_users_file(), {})
     return data if isinstance(data, dict) else {}
 
 
 def get_user(uid: str) -> dict | None:
-    """Devuelve el record del usuario uid o None si no existe."""
+    """Return the record of user uid, or None if it does not exist."""
     return list_users().get(uid)
 
 
 def create_user(uid: str, record: dict) -> None:
-    """Persiste o actualiza el record del usuario uid y asegura su carpeta de backups."""
+    """Persist or update the record of user uid and ensure its backups folder."""
     users = list_users()
     users[uid] = record
     _write_json(_users_file(), users)
@@ -87,13 +87,13 @@ def create_user(uid: str, record: dict) -> None:
 
 
 def get_progress(uid: str) -> dict | None:
-    """Devuelve el progreso guardado del usuario o None si todavía no existe."""
+    """Return the saved progress of the user, or None if it does not exist yet."""
     data = _read_json(_prog_file(uid), None)
     return data if isinstance(data, dict) else None
 
 
 def backup(uid: str, label: str | None = None) -> str:
-    """Copia el progress.json actual a backups/ y devuelve el path creado."""
+    """Copy the current progress.json into backups/ and return the created path."""
     pf = _prog_file(uid)
     if not os.path.exists(pf):
         return ""
@@ -107,7 +107,7 @@ def backup(uid: str, label: str | None = None) -> str:
 
 
 def put_progress(uid: str, data: dict) -> None:
-    """Persiste el progreso del usuario de forma atómica y rota backups (BK_KEEP=20)."""
+    """Persist the user's progress atomically and rotate backups (BK_KEEP=20)."""
     bk_dir = _bk_dir(uid)
     os.makedirs(bk_dir, exist_ok=True)
     pf = _prog_file(uid)

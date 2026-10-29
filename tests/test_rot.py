@@ -18,7 +18,7 @@ with sync_playwright() as p:
     out["wTipo_value"] = pg.input_value("#wTipo")
     out["semana_txt"] = pg.evaluate("document.getElementById('semanaTxt').textContent")
 
-    # override manual de writing: elegir Report y guardar
+    # manual writing override: pick Report and save
     pg.select_option("#ovW", "Report")
     out["override_set"] = pg.evaluate("D.weekOverrides.w === 'Report'")
     out["wTipo_tras_override"] = pg.input_value("#wTipo")
@@ -26,7 +26,7 @@ with sync_playwright() as p:
     pg.evaluate("delete D.weekOverrides.w; save(); renderToday();")
     out["override_limpio"] = pg.evaluate("!D.weekOverrides.w")
 
-    # stats: guardar estado, cargar datos de ejemplo con flag de test y restaurar
+    # stats: save state, load sample data with test flag and restore
     pg.evaluate("""const origLog = JSON.stringify(D.log);
                    window.__origLog = origLog;
                    D.log.push({date:'2026-08-16',type:'ue',part:5,correct:4,total:6,min:20,_test:true});
@@ -38,7 +38,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     out["stats_rows"] = pg.eval_on_selector_all("#statsTable tbody tr", "els => els.length")
     out["stats_ue_p5"] = pg.evaluate("(document.querySelector('#statsTable tbody tr')||{}).textContent")
-    # restaurar test data exactamente
+    # restore test data exactly
     pg.evaluate("""D.log = JSON.parse(window.__origLog);
                    save(); refreshAll();""")
 
