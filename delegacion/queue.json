@@ -1,29 +1,35 @@
 {
- "queue": [
-  {
-   "id": "5",
-   "tests": "test_final.py",
-   "title": "Submission pack del hackathon (docs, sin c\u00f3digo de app)",
-   "status": "done"
-  },
-  {
-   "id": "6",
-   "tests": "test_final.py test_diag.py",
-   "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
-   "status": "done"
-  },
-  {
-   "id": "7",
-   "tests": "test_final.py test_diag.py test_plan.py test_demo.py",
-   "title": "UI overhaul: design tokens, dark mode real, toda la app en ingles",
-   "status": "running"
-  },
-  {
-   "id": "8",
-   "tests": "test_register.py test_sync.py test_demo.py",
-   "title": "Cuenta real con registro cerrado + cambio de contrasena",
-   "status": "running"
-  }
- ],
- "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
+  "queue": [
+    {
+      "id": "5",
+      "tests": "test_final.py",
+      "title": "Submission pack del hackathon (docs, sin c\u00f3digo de app)",
+      "status": "done"
+    },
+    {
+      "id": "6",
+      "tests": "test_final.py test_diag.py",
+      "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
+      "status": "done"
+    },
+    {
+      "id": "7",
+      "tests": "test_final.py test_diag.py test_plan.py test_demo.py",
+      "title": "UI overhaul: design tokens, dark mode real, toda la app en ingles",
+      "status": "done"
+    },
+    {
+      "id": "8",
+      "tests": "test_register.py test_sync.py test_demo.py",
+      "title": "Cuenta real con registro cerrado + cambio de contrasena",
+      "status": "done"
+    },
+    {
+      "id": "9",
+      "tests": "test_onboard.py test_final.py test_plan.py",
+      "title": "Onboarding: welcome card + coach marks + empty states",
+      "status": "pending"
+    }
+  ],
+  "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
 }
