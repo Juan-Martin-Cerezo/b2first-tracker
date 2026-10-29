@@ -90,6 +90,19 @@ Pi / ⚠ modo local si la Pi no responde). Regla: **último que guarda gana**, c
 automático de la versión anterior (los últimos 20 en `data/backups/`). El Exportar/
 Importar JSON manual de PROGRESO sigue disponible como respaldo extra.
 
+## AI provider setup
+
+```bash
+# en la Pi, fuera del repo:
+~/.config/b2first/ai.env   (chmod 600)
+B2_AI_KEY=...
+B2_AI_PROVIDER=deepseek
+# el server lo lee con:  set -a; . ~/.config/b2first/ai.env; set +a; systemctl restart b2first
+```
+
+La key **nunca va al repo** ni se persiste en `data/`. En el deploy público cada visitante
+ingresa su propia key en la pestaña **PLAN** (guardada únicamente en su `localStorage`).
+
 ## Notas operativas
 
 - **Puerto 8088** (el 8080 lo ocupa un docker-proxy existente — no tocar).

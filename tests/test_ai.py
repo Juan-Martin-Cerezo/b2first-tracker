@@ -69,17 +69,31 @@ class MockGeminiHandler(BaseHTTPRequestHandler):
             payload_obj["bands"]["content"] = 7
         elif mode == "rewrite_2":
             payload_obj["rewrite"] = payload_obj["rewrite"][:2]
+        elif mode == "feedback_array":
+            payload_obj["feedback"] = ["buen contenido", "buen logro", "buena org", "buen idioma"]
 
-        gemini_envelope = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [{"text": json.dumps(payload_obj, ensure_ascii=False)}]
+        if self.path.endswith("/chat/completions"):
+            envelope = {
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": json.dumps(payload_obj, ensure_ascii=False),
+                        }
                     }
-                }
-            ]
-        }
-        body = json.dumps(gemini_envelope, ensure_ascii=False).encode("utf-8")
+                ]
+            }
+        else:
+            envelope = {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [{"text": json.dumps(payload_obj, ensure_ascii=False)}]
+                        }
+                    }
+                ]
+            }
+        body = json.dumps(envelope, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -290,6 +304,37 @@ with sync_playwright() as p:
     assert js_errs == [], f"JS errors: {js_errs}"
     out["10_ui_e2e_ok"] = True
     b.close()
+
+# Assert 11: Mock con wire DeepSeek (choices[0].message.content) y feedback como objeto -> 200
+MOCK_STATE["mode"] = "ok"
+S._AI_RATE.clear()
+S.B2_AI_MODEL = ""
+os.environ.pop("B2_AI_MODEL", None)
+st11, body11 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider": "deepseek", "provider_key": FAKE_KEY}, ip="10.9.9.11")
+assert st11 == 200, f"Expected 200 for deepseek valid object feedback, got {st11}: {body11}"
+res11 = json.loads(body11)
+assert isinstance(res11["feedback"], dict) and set(res11["feedback"].keys()) == {
+    "content",
+    "communicative_achievement",
+    "organisation",
+    "language",
+}
+assert res11["model"] == "deepseek-chat"
+out["11_deepseek_valid_200"] = st11
+
+# Assert 12: Mock DeepSeek con feedback como array -> 422
+MOCK_STATE["mode"] = "feedback_array"
+st12, body12 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider": "deepseek", "provider_key": FAKE_KEY}, ip="10.9.9.12")
+assert st12 == 422, f"Expected 422 for deepseek feedback array, got {st12}: {body12}"
+out["12_deepseek_feedback_array_422"] = st12
+
+# Assert 13: provider: "gemini" en el body sigue funcionando con el mock Gemini -> 200
+MOCK_STATE["mode"] = "ok"
+st13, body13 = post_ai({"text": SAMPLE_TEXT, "kind": "Essay", "provider": "gemini", "provider_key": FAKE_KEY}, ip="10.9.9.13")
+assert st13 == 200, f"Expected 200 for provider gemini in body, got {st13}: {body13}"
+res13 = json.loads(body13)
+assert res13["total"] == 13 and res13["model"] == "gemini-2.0-flash"
+out["13_gemini_provider_200"] = st13
 
 srv.shutdown()
 mock_srv.shutdown()

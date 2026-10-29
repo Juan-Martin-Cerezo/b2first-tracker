@@ -100,32 +100,13 @@ REGLAS OBLIGATORIAS DE CORRECCIÓN:
 6. En "rewrite", devolvé exactamente 3 strings: 3 oraciones del propio texto del alumno reescritas y mejoradas en inglés a nivel B2+/C1 (no inventes texto nuevo ajeno al escrito del alumno).
 7. Prohibido inventar reglas gramaticales o descriptores que no estén en la rúbrica oficial.
 
-Formato exacto del JSON de salida:
-{{
-  "bands": {{
-    "content": 0,
-    "communicative_achievement": 0,
-    "organisation": 0,
-    "language": 0
-  }},
-  "feedback": {{
-    "content": "...",
-    "communicative_achievement": "...",
-    "organisation": "...",
-    "language": "..."
-  }},
-  "quotes": {{
-    "content": "...",
-    "communicative_achievement": "...",
-    "organisation": "...",
-    "language": "..."
-  }},
-  "rewrite": [
-    "...",
-    "...",
-    "..."
-  ]
-}}"""
+Return ONLY this exact JSON shape (no markdown, no extra text):
+{{"bands":{{"content":N,"communicative_achievement":N,"organisation":N,"language":N}},
+ "feedback":{{"content":"...","communicative_achievement":"...","organisation":"...","language":"..."}},
+ "quotes":{{"content":"...","communicative_achievement":"...","organisation":"...","language":"..."}},
+ "rewrite":["...","...","..."]}}
+N is an integer 0-5. feedback and quotes are OBJECTS with exactly those 4 keys.
+rewrite is an ARRAY of exactly 3 strings. Never return arrays where objects are required."""
 
 
 def writing_prompt(text, kind):
