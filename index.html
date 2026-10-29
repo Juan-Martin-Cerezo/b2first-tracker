@@ -1099,8 +1099,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Login</button>
-      <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Create account</button>
+      <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')">Create account</button>
     </div>
+    <div id="regClosedNote" class="auth-error" style="display:none">Registration is closed. This instance is private.</div>
     <div id="authLogin">
       <div><label>User name</label><input type="text" id="authName" placeholder="e.g. Owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div><label>Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -1247,6 +1248,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <span style="color:var(--on-surface-variant)">Storage Status:</span>
         <span style="color:var(--ok-text);font-weight:600">✔ Dedicated Multi-User Storage</span>
       </div>
+    </div>
+
+    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px">Change password</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="password" id="pwCurrent" placeholder="Current password" autocomplete="current-password">
+        <input type="password" id="pwNew" placeholder="New password (min 8 chars)" autocomplete="new-password">
+        <input type="password" id="pwRepeat" placeholder="Repeat new password" autocomplete="new-password">
+      </div>
+      <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+      <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()">Update password</button>
     </div>
 
     <div style="display:flex;gap:8px;flex-direction:column">
@@ -2899,6 +2911,34 @@ async function doLogout(){
   await apiLogout();
   clearUserSession();
   location.reload();
+}
+async function doChangePassword(){
+  const cur=document.getElementById('pwCurrent').value;
+  const nxt=document.getElementById('pwNew').value;
+  const rep=document.getElementById('pwRepeat').value;
+  const st=document.getElementById('pwStatus');
+  const btn=document.getElementById('pwBtn');
+  const setStatus=(msg,color)=>{st.textContent=msg;st.style.color=color||''};
+  if(nxt.length<8){setStatus('❌ New password must be at least 8 characters','var(--bad-text)');return}
+  if(nxt!==rep){setStatus('❌ New passwords do not match','var(--bad-text)');return}
+  btn.disabled=true;
+  setStatus('Updating…','var(--on-surface-variant)');
+  try{
+    const r=await fetch('/api/password',{method:'POST',headers:authHeaders(),body:JSON.stringify({current:cur,next:nxt})});
+    if(!r.ok){
+      let msg='password change failed';
+      try{msg=(await r.json()).error||msg}catch(e){}
+      throw new Error(msg);
+    }
+    document.getElementById('pwCurrent').value='';
+    document.getElementById('pwNew').value='';
+    document.getElementById('pwRepeat').value='';
+    setStatus('✔ Password updated. Other sessions were signed out.','var(--ok-text)');
+  }catch(e){
+    setStatus('❌ '+e.message,'var(--bad-text)');
+  }finally{
+    btn.disabled=false;
+  }
 }
 
 /* ---------- ONBOARDING ---------- */
@@ -5793,6 +5833,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     DEMO={demo:false};
   }
   window.DEMO=DEMO;
+  if(DEMO&&DEMO.register==='closed'){
+    const regTab=document.getElementById('authRegisterTab');
+    if(regTab)regTab.style.display='none';
+    const regPanel=document.getElementById('authRegister');
+    if(regPanel)regPanel.style.display='none';
+    const regNote=document.getElementById('regClosedNote');
+    if(regNote)regNote.style.display='block';
+  }
   if(DEMO&&DEMO.demo===true){
     USER=null;
     window.USER=null;

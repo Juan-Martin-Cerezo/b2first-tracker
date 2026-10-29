@@ -53,6 +53,7 @@ USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progre
 TOKEN_TTL  = 7 * 24 * 3600                              # session valid for 7 days
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # owner password used when migrating
 B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
+B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
 
 
 def _is_demo():
@@ -60,6 +61,14 @@ def _is_demo():
     if isinstance(B2_DEMO, str):
         return B2_DEMO.strip() in ("1", "true", "True")
     return bool(B2_DEMO)
+
+
+def _register_mode():
+    """Return "open" or "closed" (B2_REGISTER). Demo always reports "closed"."""
+    if _is_demo():
+        return "closed"
+    val = B2_REGISTER if isinstance(B2_REGISTER, str) else ("open" if B2_REGISTER else "closed")
+    return "closed" if val.strip().lower() == "closed" else "open"
 
 # AI configuration (DeepSeek / Gemini) — injectable via env for tests without network
 DEFAULT_AI_PROVIDER = "deepseek"
@@ -358,6 +367,31 @@ def login_user(name, password):
     return None, "user not found"
 
 
+def change_password(user_id, current, new_password):
+    """Verify `current` and set `new_password` (pbkdf2). Return (error, http_code)."""
+    u = store.get_user(user_id)
+    if not u:
+        return "user not found", 401
+    algo = u.get("algo")
+    if algo == "pbkdf2":
+        ok = u["hash"] == hash_password(u["salt"], current)
+    elif not algo:
+        ok = u["hash"] == _legacy_hash_password(u["salt"], current)
+    else:
+        ok = False
+    if not isinstance(new_password, str) or len(new_password) < 8:
+        return "password too short (min 8)", 400
+    if not ok:
+        return "wrong password", 401
+    salt = secrets.token_hex(8)  # 16 chars
+    rec = dict(u)
+    rec["salt"] = salt
+    rec["hash"] = hash_password(salt, new_password)
+    rec["algo"] = "pbkdf2"
+    store.create_user(user_id, rec)
+    return None, 200
+
+
 def migrate_legacy():
     """Migrate data/progress.json → data/users/owner/progress.json (once).
 
@@ -638,14 +672,15 @@ class H(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"error": "invalid diagnostic"}).encode("utf-8"), "application/json")
             return
 
-        # Public server configuration (demo mode, version, AI support)
+        # Public server configuration (demo mode, version, AI support, registration)
         if path == "/api/config":
-            body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True}, ensure_ascii=False).encode("utf-8")
+            body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True,
+                               "register": _register_mode()}, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
 
         # In demo mode accounts and sync are blocked (nobody reads or writes data/)
-        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me", "/api/users", "/api/progress"):
+        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me", "/api/users", "/api/progress", "/api/password"):
             clen = int(self.headers.get("Content-Length", 0) or 0)
             if clen > 0:
                 self.rfile.read(clen)
@@ -665,6 +700,13 @@ class H(BaseHTTPRequestHandler):
             migrate_legacy()
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
+            if _register_mode() == "closed":
+                clen = int(self.headers.get("Content-Length", 0) or 0)
+                if clen > 0:
+                    self.rfile.read(clen)
+                body = json.dumps({"error": "registration is closed"}, ensure_ascii=False).encode("utf-8")
+                self._send(403, body, "application/json; charset=utf-8")
+                return
             raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
             try:
                 req = json.loads(raw.decode("utf-8"))
@@ -721,6 +763,32 @@ class H(BaseHTTPRequestHandler):
                 self._send(404, b"user does not exist", "text/plain"); return
             body = json.dumps(public_user(u), ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # Password change (Bearer auth). Invalidates every other session of the user.
+        if path == "/api/password":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
+            uid = user_from_token(tok)
+            if not uid:
+                self._send(401, json.dumps({"error": "invalid session"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            raw = self.rfile.read(int(self.headers.get("Content-Length", 0) or 0))
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send(400, json.dumps({"error": "invalid JSON"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            err, code = change_password(uid, req.get("current", ""), req.get("next", ""))
+            if err:
+                self._send(code, json.dumps({"error": err}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            # Keep only the current session: a leaked password must not keep old sessions alive.
+            tokens = load_tokens()
+            tokens = {t: v for t, v in tokens.items() if t == tok or v.get("user_id") != uid}
+            save_tokens(tokens)
+            self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json; charset=utf-8")
             return
 
         # Progress: GET (download or list backups) + PUT (save) — per user
