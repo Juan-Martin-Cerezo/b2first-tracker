@@ -11,6 +11,18 @@
       "tests": "test_final.py test_diag.py",
       "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
       "status": "done"
+    },
+    {
+      "id": "7",
+      "tests": "test_final.py test_diag.py test_plan.py test_demo.py",
+      "title": "UI overhaul: design tokens, dark mode real, toda la app en ingles",
+      "status": "pending"
+    },
+    {
+      "id": "8",
+      "tests": "test_register.py test_sync.py test_demo.py",
+      "title": "Cuenta real con registro cerrado + cambio de contrasena",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
