@@ -1,17 +1,17 @@
 {
- "queue": [
-  {
-   "id": "5",
-   "tests": "test_final.py",
-   "title": "Submission pack del hackathon (docs, sin c\u00f3digo de app)",
-   "status": "done"
-  },
-  {
-   "id": "6",
-   "tests": "test_final.py test_diag.py",
-   "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
-   "status": "running"
-  }
- ],
- "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
+  "queue": [
+    {
+      "id": "5",
+      "tests": "test_final.py",
+      "title": "Submission pack del hackathon (docs, sin c\u00f3digo de app)",
+      "status": "done"
+    },
+    {
+      "id": "6",
+      "tests": "test_final.py test_diag.py",
+      "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
+      "status": "done"
+    }
+  ],
+  "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
 }
