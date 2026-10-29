@@ -51,11 +51,17 @@ USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progre
 TOKEN_TTL  = 7 * 24 * 3600                              # sesión válida 7 días
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # pass del owner al migrar
 
-# Configuración de IA (Gemini) — inyectable por env para tests sin red
-DEFAULT_AI_BASE = "https://generativelanguage.googleapis.com/v1beta"
-DEFAULT_AI_MODEL = "gemini-2.0-flash"
-B2_AI_BASE = os.environ.get("B2_AI_BASE", DEFAULT_AI_BASE)
-B2_AI_MODEL = os.environ.get("B2_AI_MODEL", DEFAULT_AI_MODEL)
+# Configuración de IA (DeepSeek / Gemini) — inyectable por env para tests sin red
+DEFAULT_AI_PROVIDER = "deepseek"
+DEFAULT_DEEPSEEK_BASE = "https://api.deepseek.com"
+DEFAULT_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+DEFAULT_DEEPSEEK_MODEL = "deepseek-chat"
+DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
+DEFAULT_AI_BASE = DEFAULT_DEEPSEEK_BASE
+DEFAULT_AI_MODEL = DEFAULT_DEEPSEEK_MODEL
+B2_AI_PROVIDER = os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
+B2_AI_BASE = os.environ.get("B2_AI_BASE", "")
+B2_AI_MODEL = os.environ.get("B2_AI_MODEL", "")
 AI_ALLOWED_KINDS = ("Essay", "Article", "Report", "Review", "Email")
 AI_TIMEOUT = 25
 _AI_LOCK = threading.Lock()
@@ -86,6 +92,9 @@ def _validate_ai_payload(obj):
     rewrite = obj.get("rewrite")
     if not isinstance(bands, dict) or not isinstance(feedback, dict) or not isinstance(quotes, dict):
         return None
+    req_keys = set(prompts.SCHEMA_KEYS)
+    if set(bands.keys()) != req_keys or set(feedback.keys()) != req_keys or set(quotes.keys()) != req_keys:
+        return None
     if not isinstance(rewrite, list) or len(rewrite) != 3:
         return None
     if not all(isinstance(s, str) and s.strip() for s in rewrite):
@@ -94,8 +103,6 @@ def _validate_ai_payload(obj):
     clean_feedback = {}
     clean_quotes = {}
     for k in prompts.SCHEMA_KEYS:
-        if k not in bands or k not in feedback or k not in quotes:
-            return None
         b = bands[k]
         if type(b) is not int or b < 0 or b > 5:
             return None
@@ -715,21 +722,46 @@ class H(BaseHTTPRequestHandler):
             if not api_key:
                 self._send(502, json.dumps({"error": "missing provider key"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            base = B2_AI_BASE if B2_AI_BASE != DEFAULT_AI_BASE else os.environ.get("B2_AI_BASE", DEFAULT_AI_BASE)
-            model = B2_AI_MODEL if B2_AI_MODEL != DEFAULT_AI_MODEL else os.environ.get("B2_AI_MODEL", DEFAULT_AI_MODEL)
-            url = f"{base.rstrip('/')}/models/{model}:generateContent"
+            env_prov = B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
+            provider = (req.get("provider") or env_prov or DEFAULT_AI_PROVIDER).strip().lower()
+            if provider not in ("deepseek", "gemini"):
+                self._send(400, json.dumps({"error": "invalid provider"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            default_base = DEFAULT_DEEPSEEK_BASE if provider == "deepseek" else DEFAULT_GEMINI_BASE
+            default_model = DEFAULT_DEEPSEEK_MODEL if provider == "deepseek" else DEFAULT_GEMINI_MODEL
+            base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
+            env_model = B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or ""
+            model = (req.get("model") or env_model or default_model).strip()
             prompt_text = prompts.writing_prompt(text.strip(), kind)
-            payload = json.dumps({
-                "contents": [{"parts": [{"text": prompt_text}]}],
-                "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
-            }).encode("utf-8")
+            if provider == "deepseek":
+                url = f"{base.rstrip('/')}/chat/completions"
+                payload = json.dumps({
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": prompts.WRITING_SYSTEM},
+                        {"role": "user", "content": f"=== TIPO DE TAREA (GENRE) ===\n{kind}\n\n=== TEXTO DEL ALUMNO ===\n{text.strip()}"},
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.2,
+                }).encode("utf-8")
+                req_headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {api_key}",
+                }
+            else:
+                url = f"{base.rstrip('/')}/models/{model}:generateContent"
+                payload = json.dumps({
+                    "contents": [{"parts": [{"text": prompt_text}]}],
+                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
+                }).encode("utf-8")
+                req_headers = {
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key,
+                }
             up_req = urllib.request.Request(
                 url,
                 data=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": api_key,
-                },
+                headers=req_headers,
                 method="POST",
             )
             try:
@@ -740,13 +772,13 @@ class H(BaseHTTPRequestHandler):
                 return
             try:
                 up_json = json.loads(up_raw)
-                if isinstance(up_json, dict) and "candidates" in up_json:
-                    cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
-                    cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
-                    model_obj = json.loads(cand_text)
+                if provider == "deepseek":
+                    cand_text = up_json["choices"][0]["message"]["content"]
                 else:
-                    model_obj = up_json
-            except (ValueError, KeyError, IndexError, TypeError):
+                    cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
+                cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
+                model_obj = json.loads(cand_text)
+            except (ValueError, KeyError, IndexError, TypeError, AttributeError):
                 self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
             validated = _validate_ai_payload(model_obj)
