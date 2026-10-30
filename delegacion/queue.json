@@ -125,6 +125,22 @@
       "tests": "tools/audit-host.sh",
       "title": "Host multi-proposito: nft sin duplicados, docker deja de saltear firewall, SSH duro",
       "status": "done"
+    },
+    {
+      "id": "28",
+      "status": "pending"
+    },
+    {
+      "id": "29",
+      "status": "pending"
+    },
+    {
+      "id": "27",
+      "status": "pending"
+    },
+    {
+      "id": "26",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
