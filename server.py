@@ -1061,6 +1061,29 @@ def scan():
     return items
 
 
+_LIBROS_CACHE = {"ts": 0.0, "body": b""}
+_LIBROS_TTL = 60.0
+
+
+def _libros_json():
+    """The /libros.json payload, memoised for 60 s.
+
+    scan() walks the whole material tree; calling it on every page load was pure
+    waste (and the response was sent without cache headers, so every visitor paid
+    for it). 60 s is short enough that adding a book shows up without a restart.
+    """
+    now = time.time()
+    if _LIBROS_CACHE["body"] and now - _LIBROS_CACHE["ts"] < _LIBROS_TTL:
+        return _LIBROS_CACHE["body"]
+    data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
+             "rel": it["rel"], "size": it["size"], "href": "/files/" + quote(it["rel"])}
+            for it in scan()]
+    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    _LIBROS_CACHE["ts"] = now
+    _LIBROS_CACHE["body"] = body
+    return body
+
+
 def fmt_size(n):
     """Format bytes → human-readable '1.2 MB'."""
     for u in ("B", "KB", "MB", "GB"):
@@ -2606,13 +2629,27 @@ class H(BaseHTTPRequestHandler):
             self._serve_cached_static(full, ctype)
             return
 
-        # Catalog JSON (consumed by the LIBROS tab of the tracker)
+        # Catalog JSON (consumed by the LIBROS tab of the tracker).
+        # `scan()` walks the whole material tree on every call: memoise it for 60 s
+        # and answer 304 when the client already has the same ETag. Without this,
+        # every page load re-walks the filesystem and re-sends the JSON.
         if path == "/libros.json":
-            data = [{"name": it["name"], "folder": it["folder"], "ext": it["ext"],
-                     "rel": it["rel"], "size": it["size"], "href": "/files/" + quote(it["rel"])}
-                    for it in scan()]
-            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-            self._send(200, body, "application/json; charset=utf-8")
+            body = _libros_json()
+            etag = '"' + hashlib.sha256(body).hexdigest()[:16] + '"'
+            inm = self.headers.get("If-None-Match") or ""
+            if etag in [t.strip() for t in inm.split(",")] or inm.strip() == "*":
+                self._status = 304
+                self.send_response(304)
+                for k, v in _security_headers(self.path).items():
+                    self.send_header(k, v)
+                self.send_header("X-Request-Id", self._rid)
+                self.send_header("ETag", etag)
+                self.send_header("Cache-Control", "public, max-age=300, stale-while-revalidate=86400")
+                self.end_headers()
+                return
+            self._send(200, body, "application/json; charset=utf-8",
+                       {"Cache-Control": "public, max-age=300, stale-while-revalidate=86400",
+                        "ETag": etag})
             return
 
         # Cold-start diagnostic (public material without auth, cached in memory)

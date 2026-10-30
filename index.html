@@ -8298,7 +8298,12 @@ document.getElementById('bookSort').addEventListener('change',renderBooks);
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
 document.getElementById('uePart').addEventListener('change',renderGuides);
 document.getElementById('spPart').addEventListener('change',renderGuides);
-loadMaterial();
+/* The material catalogue is not needed to paint the first screen: it costs a
+   request (and on the Funnel a full RTT) that competes with /api/config and the
+   progress pull. Defer it to idle time; refreshAll() renders an empty state until
+   it lands, and the Retry button covers a failed fetch. */
+if('requestIdleCallback' in window){requestIdleCallback(function(){loadMaterial()},{timeout:2500});}
+else{setTimeout(loadMaterial,1200);}
 applyTimers();
 refreshAll();
 
