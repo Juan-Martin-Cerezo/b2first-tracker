@@ -1355,10 +1355,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div class="ob-step-count tnum" id="obStepCount">1/6</div>
     <div id="obStepBody"></div>
     <div class="ob-actions">
-      <button type="button" class="btn gray" id="obBackBtn" onclick="obBack()" style="visibility:hidden">Back</button>
-      <button type="button" class="btn" id="obNextBtn" onclick="obNext()">Continue</button>
+      <button type="button" class="btn gray" id="obBackBtn" onclick="obBack()" style="visibility:hidden" data-i18n="common_back">Back</button>
+      <button type="button" class="btn" id="obNextBtn" onclick="obNext()" data-i18n="common_continue">Continue</button>
     </div>
-    <div style="text-align:center"><button type="button" class="btn sm gray ob-skip" id="obSkipBtn" onclick="dismissOnboarding()">Skip for now</button></div>
+    <div style="text-align:center"><button type="button" class="btn sm gray ob-skip" id="obSkipBtn" onclick="dismissOnboarding()" data-i18n="ob_skip">Skip for now</button></div>
   </div>
 </div>
 
@@ -3476,6 +3476,8 @@ const I18N={
     ob1_title:'Build your B2 First in two habits',
     ob1_body:'It tells you which exam parts are weak, and it makes every practice session cost 15 seconds to log.',
     ob1_demo:'This is the demo: nothing is stored on the server.',
+    ob_skip:'Skip for now',
+    ob_start:'Start',
     week_a:'Week A',
     week_b:'Week B',
     day_sunday:'Sunday',
@@ -3988,6 +3990,8 @@ const I18N={
     ob1_title:'Construí tu B2 First en dos hábitos',
     ob1_body:'Te dice qué partes del examen son débiles y hace que cada sesión de práctica cueste 15 segundos registrar.',
     ob1_demo:'Esto es la demo: no se guarda nada en el servidor.',
+    ob_skip:'Saltar por ahora',
+    ob_start:'Empezar',
     week_a:'Semana A',
     week_b:'Semana B',
     day_sunday:'Domingo',
@@ -4840,7 +4844,7 @@ function obRender(){
   const next=document.getElementById('obNextBtn');
   if(next){
     next.style.display=OB.step>=6?'none':'';
-    next.textContent=OB.step===1?'Start':'Continue';
+    next.textContent=OB.step===1?t('ob_start'):t('common_continue');
   }
   body.innerHTML=obStepHtml();
   const f=body.querySelector('input,select,button')||next;
@@ -6094,7 +6098,11 @@ function makeLiveTransport(cfg){
       ws.onopen=function(){
         send({setup:{
           model:'models/'+(cfg.model||SPK_DEFAULT_MODEL),
-          responseModalities:['AUDIO'],
+          // responseModalities belongs INSIDE generationConfig. At the root the
+          // API answers 1007 'Unknown name "responseModalities"' and closes the
+          // socket, which is what left the examiner "offline" with no visible
+          // error. Verified against the live endpoint, not the docs.
+          generationConfig:{responseModalities:['AUDIO']},
           systemInstruction:{parts:[{text:cfg.instruction}]},
           inputAudioTranscription:{},
           outputAudioTranscription:{}
@@ -6112,8 +6120,12 @@ function makeLiveTransport(cfg){
       ws.onerror=function(){
         if(!closed&&on.error)on.error(new Error('live connection error'));
       };
-      ws.onclose=function(){
-        if(!closed&&on.error)on.error(new Error('live connection closed'));
+      ws.onclose=function(ev){
+        // A silent close hid a protocol bug for hours: the API had answered
+        // 1007 'Unknown name responseModalities' and the UI only said "offline".
+        // Keep the reason in the error so the HUD can show it.
+        const why=(ev&&(ev.reason||ev.code))?((ev.reason||'')+' ('+ev.code+')'):'closed';
+        if(!closed&&on.error)on.error(new Error('live connection closed: '+why));
       };
     },
     sendAudio:function(pcm){
