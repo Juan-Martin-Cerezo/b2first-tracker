@@ -40,6 +40,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
 import speech
+import speaking_prompts
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -142,6 +143,25 @@ SPK_PA_MAX_B64 = 2 * 1024 * 1024     # base64 characters of audio (2 MB)
 SPK_PA_MAX_BODY = SPK_PA_MAX_B64 + 4096
 SPK_PA_RATE_PER_MIN = 30             # calls per minute per user
 SPK_PA_DAILY_DEFAULT = 60            # calls per day per user
+
+# --- Gemini Live examiner (S3) ---------------------------------------------
+# The Google key only mints short-lived ephemeral tokens: the browser connects
+# straight to Google and the Pi never sees a byte of audio. The key itself is
+# never sent to the browser, never logged and never written under data/.
+# Verified against ai.google.dev/gemini-api/docs/ephemeral-tokens and
+# .../docs/live-api/get-started-websocket on 2026-10-30.
+SPK_TOKEN_TTL_S = 30 * 60            # expireTime: the session may send for 30 min
+SPK_TOKEN_NEW_SESSION_S = 60         # newSessionExpireTime: open it within 1 min
+SPK_TOKEN_RATE_PER_MIN = 10          # token mints per minute per user
+SPK_MIN_DAILY_DEFAULT = 20           # minutes per user per day
+SPK_MIN_DAILY_TOTAL_DEFAULT = 120    # minutes per instance per day
+SPK_MINUTE_MAX_BODY = 4096           # POST /api/speaking/minute body cap
+SPK_MINUTE_MAX_CALL_S = 300          # max seconds accepted in one report
+DEFAULT_SPK_MODEL = "gemini-3.8-live"
+DEFAULT_SPK_TOKEN_URL = "https://generativelanguage.googleapis.com/v1beta/auth_tokens"
+DEFAULT_SPK_WS_URL = ("wss://generativelanguage.googleapis.com/ws/"
+                      "google.ai.generativelanguage.v1beta.GenerativeService"
+                      ".BidiGenerateContentConstrained")
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -437,6 +457,11 @@ def build_metrics():
     now = time.time()
     out = pack(_metrics_window(now - 24 * 3600))
     out["last_7d"] = pack(_metrics_window(now - 7 * 24 * 3600))
+    # S3: spoken minutes are the one budget that is not count-based, and minted
+    # tokens are the abuse signal. Both read from the persisted per-user ledger.
+    minutes, tokens = _spk_metrics_today()
+    out["speaking_minutes_today"] = minutes
+    out["speaking_tokens_minted"] = tokens
     return out
 
 
@@ -586,6 +611,112 @@ def _spk_pa_url():
     if not region:
         return ""
     return f"https://{region}.stt.speech.microsoft.com{SPK_PA_PATH}"
+
+
+# --- Gemini Live: token minting + speaking-minute budget (S3) --------------
+def _spk_google_key():
+    """Google API key from env only (never from the module constant cache)."""
+    value = os.environ.get("B2_SPK_GOOGLE_KEY", "")
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _spk_model():
+    value = os.environ.get("B2_SPK_GOOGLE_MODEL", DEFAULT_SPK_MODEL)
+    value = value.strip() if isinstance(value, str) else ""
+    return value or DEFAULT_SPK_MODEL
+
+
+def _spk_token_url():
+    """Token provisioning URL (B2_SPK_GOOGLE_TOKEN_URL overrides it for tests)."""
+    value = os.environ.get("B2_SPK_GOOGLE_TOKEN_URL", DEFAULT_SPK_TOKEN_URL)
+    value = value.strip() if isinstance(value, str) else ""
+    return value or DEFAULT_SPK_TOKEN_URL
+
+
+def _spk_ws_url():
+    """WSS endpoint the browser connects to (no token in it)."""
+    value = os.environ.get("B2_SPK_WS_URL", DEFAULT_SPK_WS_URL)
+    value = value.strip() if isinstance(value, str) else ""
+    return value or DEFAULT_SPK_WS_URL
+
+
+def _spk_iso_after(seconds):
+    """UTC ISO-8601 timestamp `seconds` in the future, e.g. ...Z."""
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + seconds))
+
+
+def _spk_mint_token(api_key):
+    """Mint a single-use ephemeral token. Return (token, error).
+
+    Contract verified against ai.google.dev/gemini-api/docs/ephemeral-tokens:
+    POST /v1beta/auth_tokens with `uses`, `expireTime` and
+    `newSessionExpireTime`; the token is the `name` field of the response.
+    """
+    body = json.dumps({
+        "uses": 1,
+        "expireTime": _spk_iso_after(SPK_TOKEN_TTL_S),
+        "newSessionExpireTime": _spk_iso_after(SPK_TOKEN_NEW_SESSION_S),
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        _spk_token_url(),
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "x-goog-api-key": api_key,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            raw = resp.read(64 * 1024)
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+        return None, "upstream_failed"
+    try:
+        obj = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return None, "invalid_upstream"
+    token = obj.get("name") if isinstance(obj, dict) else None
+    if not isinstance(token, str) or not token.strip():
+        return None, "invalid_upstream"
+    return token.strip(), None
+
+
+def _spk_min_limits():
+    """(minutes per user, minutes for the instance) for today."""
+    def _int(name, default):
+        try:
+            return max(0, int(os.environ.get(name, str(default))))
+        except ValueError:
+            return default
+    return (_int("B2_SPK_MIN_DAILY_PER_USER", SPK_MIN_DAILY_DEFAULT),
+            _int("B2_SPK_MIN_DAILY_TOTAL", SPK_MIN_DAILY_TOTAL_DEFAULT))
+
+
+def _spk_today():
+    return date.today().isoformat()
+
+
+def _spk_remaining_s(uid):
+    """Seconds left today, the stricter of the per-user and instance budgets."""
+    per_user_min, total_min = _spk_min_limits()
+    rec = store.speaking_read(uid, _spk_today())
+    total_used = sum(store.speaking_read(other, _spk_today())["seconds"]
+                     for other in store.list_users())
+    remaining = min(per_user_min * 60 - rec["seconds"],
+                    total_min * 60 - total_used)
+    return max(0, int(remaining))
+
+
+def _spk_metrics_today():
+    """(minutes spoken today across users, tokens minted today)."""
+    today = _spk_today()
+    seconds = 0.0
+    tokens = 0
+    for uid in store.list_users():
+        rec = store.speaking_read(uid, today)
+        seconds += rec["seconds"]
+        tokens += rec["tokens_minted"]
+    return round(seconds / 60.0, 1), tokens
 
 
 def _validate_ai_payload(obj):
@@ -1457,17 +1588,35 @@ the speech service is not configured on this instance, the endpoint answers
 "speech not configured" and pronunciation is reported as <b>not measured</b> —
 the app never invents that score.</p>
 
-<h2>8. Do Not Track</h2>
+<h2>8. Live examiner — what Google receives</h2>
+<p>The live examiner (Speaking Parts 1 and 2) runs on <b>Google Gemini Live</b>,
+a realtime voice service. Your browser connects <b>directly to Google</b> with a
+short-lived, single-use token that this server mints for you; the token opens
+exactly one session and lives about 30 minutes.</p>
+<p>What Google receives: your <b>microphone audio</b> (16 kHz PCM, streamed
+while the exam runs) and the examiner's own instructions (the exam script). It
+returns the examiner's voice (24 kHz PCM) and two transcripts: what you said and
+what the examiner said.</p>
+<p>What we receive: only the token request, the number of minutes you spent (for
+the daily limit) and, if you later choose to save the session, the transcript.
+Your audio <b>never passes through our server</b> and is <b>never stored here</b>,
+not even temporarily. Google processes the audio outside Argentina under
+Google's own retention policy for the Live API. The Google key lives in this
+server's environment and never reaches your browser. If this instance has no
+speech key, the examiner falls back to a clearly-labelled simulated voice and no
+audio leaves your browser.</p>
+
+<h2>9. Do Not Track</h2>
 <p>If your browser sends <code>Do Not Track: 1</code> (or the global privacy
 control signal), the app sends <b>no telemetry at all</b> — no usage events,
 no error reports. Every feature keeps working exactly the same.</p>
 
-<h2>9. Contact</h2>
+<h2>10. Contact</h2>
 <p>Questions or requests about your data: <b>{PRIVACY_TODO_EMAIL}</b>
 (this placeholder is replaced with the real owner address before public
 deployment).</p>
 
-<h2>10. Applicable law</h2>
+<h2>11. Applicable law</h2>
 <p>This policy is written with Argentina's Personal Data Protection Law
 (<b>Ley 25.326</b>) in mind, including access, correction and deletion
 rights. This document describes how the app actually handles data; it does
@@ -1637,10 +1786,14 @@ SECURITY_HEADERS = {
     "Referrer-Policy": "no-referrer",
     # microphone=(self): the speaking studio captures audio in this tab only.
     "Permissions-Policy": "geolocation=(), camera=(), microphone=(self)",
+    # connect-src also allows wss://generativelanguage.googleapis.com explicitly:
+    # the S3 examiner talks to Gemini Live directly with an ephemeral token, so
+    # the socket must reach Google and nothing else (no wildcard, no *).
     "Content-Security-Policy": (
         "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
         "script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; "
-        "connect-src 'self'; frame-ancestors 'none'; "
+        "connect-src 'self' wss://generativelanguage.googleapis.com; "
+        "frame-ancestors 'none'; "
         "base-uri 'none'; form-action 'self'"
     ),
 }
@@ -2332,6 +2485,93 @@ class H(BaseHTTPRequestHandler):
 
         if path == "/favicon.ico":
             self._send(204, b"", "image/x-icon")
+            return
+
+        # --- S3: Gemini Live examiner — ephemeral token + minute ledger -------
+        # The browser connects straight to Google with a single-use token, so no
+        # audio ever reaches this process. The key only signs the mint request.
+        if path == "/api/speaking/token":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._rate_limited("spk_tok:" + uid, SPK_TOKEN_RATE_PER_MIN, 60):
+                return
+            if self._clen() > 0:
+                self._drain()
+            api_key = _spk_google_key()
+            if not api_key:
+                # One line, no secret: only the missing knob is named.
+                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
+                        f"rid={self._rid} speaking/token disabled: "
+                        f"B2_SPK_GOOGLE_KEY missing\n")
+                with _LOG_LOCK:
+                    print(line, end="", flush=True)
+                self._send_json(503, {"error": "speech_not_configured"})
+                return
+            if _spk_remaining_s(uid) <= 0:
+                reset = (date.today() + timedelta(days=1)).isoformat()
+                self._send_json(429, {"error": "daily speaking limit reached",
+                                      "reset": reset})
+                return
+            token, mint_err = _spk_mint_token(api_key)
+            if not token:
+                self._send_json(502, {"error": "token_mint_failed",
+                                      "reason": mint_err})
+                return
+            store.speaking_add(uid, _spk_today(), 0, 1)
+            # `instruction` is the examiner's own system prompt (not a secret):
+            # the browser has to send it in the setup message itself.
+            self._send_json(200, {
+                "token": token,
+                "expires_in": SPK_TOKEN_TTL_S,
+                "model": _spk_model(),
+                "ws_url": _spk_ws_url(),
+                "instruction": speaking_prompts.EXAMINER_SYSTEM,
+            })
+            return
+
+        # Client-reported spoken seconds. The browser is the clock (it owns the
+        # session), so the ledger is advisory but persisted: 0600 per user,
+        # one file per day, the same lock as progress.json.
+        if path == "/api/speaking/minute":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._clen() > SPK_MINUTE_MAX_BODY:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid json"})
+                return
+            seconds = req.get("seconds")
+            if (isinstance(seconds, bool) or not isinstance(seconds, (int, float))
+                    or not math.isfinite(seconds)
+                    or seconds < 0 or seconds > SPK_MINUTE_MAX_CALL_S):
+                self._send_json(422, {"error": "invalid seconds"})
+                return
+            rec = store.speaking_add(uid, _spk_today(), float(seconds))
+            per_user_min, _total_min = _spk_min_limits()
+            self._send_json(200, {
+                "remaining_s": _spk_remaining_s(uid),
+                "used_s": int(round(rec["seconds"])),
+                "cap_s": per_user_min * 60,
+            })
             return
 
         # --- S2: Azure Pronunciation Assessment --------------------------------

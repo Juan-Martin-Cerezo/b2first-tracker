@@ -22,6 +22,9 @@ __all__ = [
     "get_progress",
     "put_progress",
     "backup",
+    "speaking_read",
+    "speaking_add",
+    "speaking_file",
     "StoreBusy",
     "PROGRESS_SCHEMA",
 ]
@@ -98,6 +101,11 @@ def _user_dir(uid: str) -> str:
 
 def _prog_file(uid: str) -> str:
     return os.path.join(_user_dir(uid), "progress.json")
+
+
+def speaking_file(uid: str) -> str:
+    """Path to a user's speaking-minute ledger (data/users/<uid>/speaking.json)."""
+    return os.path.join(_user_dir(uid), "speaking.json")
 
 
 def _bk_dir(uid: str) -> str:
@@ -234,6 +242,56 @@ def backup(uid: str, label: str | None = None) -> str:
     dst = os.path.join(bk_dir, f"progress-{stamp}{suffix}.json")
     shutil.copy2(pf, dst)
     return dst
+
+
+def _nonneg_float(value) -> float:
+    """Coerce to a finite, non-negative float (0.0 for anything else)."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    if number != number or number in (float("inf"), float("-inf")) or number < 0:
+        return 0.0
+    return number
+
+
+def speaking_read(uid: str, day: str) -> dict:
+    """Today's speaking ledger for one user, without creating the file.
+
+    Returns {date, seconds, tokens_minted}. A ledger from another day reads as
+    zero: minutes are a per-day budget and the reset happens on access.
+    """
+    _safe_uid(uid)
+    rec = _read_json(speaking_file(uid), None)
+    if not isinstance(rec, dict) or rec.get("date") != day:
+        return {"date": day, "seconds": 0.0, "tokens_minted": 0}
+    return {
+        "date": day,
+        "seconds": round(_nonneg_float(rec.get("seconds")), 3),
+        "tokens_minted": int(_nonneg_float(rec.get("tokens_minted"))),
+    }
+
+
+def speaking_add(uid: str, day: str, seconds: float = 0.0, tokens: int = 0) -> dict:
+    """Accumulate spoken seconds and minted tokens for today (atomic, 0600, locked).
+
+    Uses the same per-user lock as progress.json, so two browsers reporting at
+    once cannot lose a write. The ledger survives a restart.
+    """
+    _safe_uid(uid)
+    with _locked(_prog_lock(uid)):
+        _ensure_user_dirs(uid)
+        rec = _read_json(speaking_file(uid), None)
+        if not isinstance(rec, dict) or rec.get("date") != day:
+            rec = {"date": day, "seconds": 0.0, "tokens_minted": 0}
+        out = {
+            "date": day,
+            "seconds": round(_nonneg_float(rec.get("seconds")) + _nonneg_float(seconds), 3),
+            "tokens_minted": (int(_nonneg_float(rec.get("tokens_minted")))
+                              + int(_nonneg_float(tokens))),
+        }
+        _write_json(speaking_file(uid), out)
+        return out
 
 
 def put_progress(uid: str, data: dict) -> None:

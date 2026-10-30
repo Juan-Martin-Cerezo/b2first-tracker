@@ -94,18 +94,39 @@ the speech service is not configured on this instance, the endpoint answers
 "speech not configured" and pronunciation is reported as **not measured** — the
 app never invents that score.
 
-## 8. Do Not Track
+## 8. Live examiner — what Google receives
+
+The live examiner (Speaking Parts 1 and 2) runs on **Google Gemini Live**, a
+realtime voice service. Your browser connects **directly to Google** with a
+short-lived, single-use token that this server mints for you; the token opens
+exactly one session and lives about 30 minutes.
+
+What Google receives: your **microphone audio** (16 kHz PCM, streamed while the
+exam runs) and the examiner's own instructions (the exam script). It returns the
+examiner's voice (24 kHz PCM) and two transcripts: what you said and what the
+examiner said.
+
+What we receive: only the token request, the number of minutes you spent (for
+the daily limit) and, if you later choose to save the session, the transcript.
+Your audio **never passes through our server** and is **never stored here**, not
+even temporarily. Google processes the audio outside Argentina under Google's
+own retention policy for the Live API. The Google key lives in this server's
+environment and never reaches your browser. If this instance has no speech key,
+the examiner falls back to a clearly-labelled simulated voice and no audio
+leaves your browser.
+
+## 9. Do Not Track
 
 If your browser sends `Do Not Track: 1` (or the global privacy control signal),
 the app sends **no telemetry at all** — no usage events, no error reports. Every
 feature keeps working exactly the same.
 
-## 9. Contact
+## 10. Contact
 
 Questions or requests about your data: **TODO_OWNER_EMAIL** (this placeholder is
 replaced with the real owner address before public deployment — see the README).
 
-## 10. Applicable law
+## 11. Applicable law
 
 This policy is written with Argentina's Personal Data Protection Law
 (**Ley 25.326**) in mind, including access, correction and deletion rights.
