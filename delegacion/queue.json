@@ -112,7 +112,7 @@
       "id": "23",
       "tests": "test_capacity.py test_final.py test_sync.py",
       "title": "Capacidad: gzip cache + ETag/304, rate limit por usuario, 512 sockets",
-      "status": "pending"
+      "status": "running"
     },
     {
       "id": "24",
