@@ -35,6 +35,12 @@
       "tests": "test_multiuser.py test_sync.py test_demo.py test_ai.py",
       "title": "Multiusuario real: limites, cuotas, exportar/borrar cuenta, tokens con TTL",
       "status": "done"
+    },
+    {
+      "id": "11",
+      "tests": "test_hardening.py test_legacy_guard.py test_multiuser.py test_demo.py",
+      "title": "Blindaje: ids, locks, headers, request id, health, migraciones, reset de password",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
