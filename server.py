@@ -27,7 +27,7 @@ automatically backs up the previous version in <repo>/data/backups/
 Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
-import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading
+import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading, gzip
 import calendar
 import urllib.request, urllib.error
 import ipaddress
@@ -1718,12 +1718,22 @@ class H(BaseHTTPRequestHandler):
             pass
 
     def _send(self, code, body, ctype, extra=None):
-        """Helper: response with security headers + Content-Length."""
+        """Helper: response with security headers + Content-Length.
+
+        Compresses compressible payloads when the client advertises gzip: index.html is
+        342 KB raw and ~83 KB gzipped, so this is the single biggest win for slow phones.
+        """
         self._status = code
         if code == 405:
             # Every 405 advertises the supported methods, wherever it comes from.
             extra = dict(extra or {})
             extra.setdefault("Allow", ALLOW_HEADER)
+        enc = None
+        if (len(body) >= 1024 and code not in (204, 304)
+                and not ctype.startswith(("image/", "audio/", "video/", "application/zip"))
+                and "gzip" in (self.headers.get("Accept-Encoding") or "").lower()):
+            body = gzip.compress(body, 6)
+            enc = "gzip"
         self.send_response(code)
         for k, v in SECURITY_HEADERS.items():
             self.send_header(k, v)
@@ -1731,6 +1741,9 @@ class H(BaseHTTPRequestHandler):
         if self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Type", ctype)
+        if enc:
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
         self.send_header("Content-Length", str(len(body)))
         if extra:
             for k, v in extra.items():
