@@ -58,7 +58,7 @@
       "id": "14",
       "tests": "docs only",
       "title": "Sincronizar toda la documentacion (README, SUBMISSION, SECURITY, agents, docs/)",
-      "status": "pending"
+      "status": "done"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
