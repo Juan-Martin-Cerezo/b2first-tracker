@@ -64,7 +64,7 @@
       "id": "15",
       "tests": "test_telemetry.py test_hardening.py test_final.py",
       "title": "Telemetria de producto (privacidad primero) + pagina /privacy",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "16",
