@@ -14,7 +14,12 @@ proveer."
 | --- | --- | --- | --- | --- |
 | `free` | default for every account | **3 / day** | **1 mock / week** (5 min) | preview only |
 | `byo` | set your own key (phase 30) | unlimited to us (per-IP limits still apply) | unlimited, **their key** | if they configured Azure |
-| `pro` | activation code from the owner | 40 / day | 8 mocks / day | full |
+| `pro` | activation code **or subscription (phase 33)** | 60 / month | 6 mocks / month | full |
+
+Cost ceiling per plan (measured inputs: ~US$0.25 per speaking mock, ~US$0.01 per
+writing correction): free ≈ $0.10/month, pro ≈ $2.10/month against a US$5 price —
+Stripe takes ~$0.45, so pro nets ~$2.45. **Do not raise the pro limits** without
+recomputing that; 8 mocks/day at $0.25 would be US$60/month.
 
 `free` is deliberately tight: it exists to let someone try the loop, not to run a
 preparation for free.
