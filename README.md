@@ -139,6 +139,35 @@ limits to 10 requests per minute and 60 per hour per IP, validates the model's J
 strict schema, and returns `422` when the shape is wrong. Keys are never logged and never written
 to disk. **The repository contains no keys.**
 
+## Accounts
+
+Registration is open on the public instance, and every account gets its own progress file
+and backup history under `data/users/<id>/` (directory `0700`, files `0600`).
+
+| Protection | Limit |
+| --- | --- |
+| Registration | 5 / hour / IP |
+| Login | 10 / 10 min / IP and 20 / hour / username |
+| Progress write | 2 MB per save, 60 saves / min |
+| AI corrections | 8 / day per account, 80 / day across the instance |
+| Session token | 30 days, sliding |
+
+Users who paste their own provider key are not charged against the instance quota — the
+owner's key stays for people who just want to try it.
+
+Every account can **export its data** as JSON, **change its password** (which invalidates the
+other sessions) and **delete itself**, which removes the files from disk.
+
+To lock an instance to a fixed set of accounts after you have created yours:
+
+```bash
+B2_REGISTER=closed python3 server.py
+```
+
+Requests that arrive through a proxy (Tailscale Funnel, Cloudflare) always carry
+`X-Forwarded-For`, and the progress API requires a session token for those. Only a direct
+local request may use the legacy no-token owner path.
+
 ## Demo mode
 
 ```bash
