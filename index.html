@@ -7763,31 +7763,31 @@ const BUY_BOOKS=[
 ];
 const ONLINE=[
  {g:'🎧 Listening',l:[
-  {n:'Cambridge English — Official B2 Listening Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2'},
-  {n:'ExamEnglish — FCE Listening (4 tests)',u:'https://www.examenglish.com/FCE/fce_listening.html'},
-  {n:'Test-English — B2 Listening (with answers + transcript)',u:'https://test-english.com/listening/b2/'}
+  {n:'Cambridge English — Official B2 Listening Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=independent'},
+  {n:'ExamEnglish — FCE Listening (2 full tests)',u:'https://www.examenglish.com/FCE/fce_listening.html'},
+  {n:'Test-English — B2 Listening (with answers)',u:'https://test-english.com/listening/b2/'}
  ]},
  {g:'📖 Reading',l:[
-  {n:'Cambridge English — Official B2 Reading Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2'},
+  {n:'Cambridge English — Official B2 Reading Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=independent'},
   {n:'ExamEnglish — FCE Reading Practice',u:'https://www.examenglish.com/FCE/fce_reading.html'}
  ]},
  {g:'✍️ Use of English',l:[
   {n:'Flo-Joe — FCE UoE (Open Cloze, Word Formation, KWT)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
   {n:'ExamEnglish — FCE Use of English',u:'https://www.examenglish.com/FCE/fce_use_of_english.html'},
-  {n:'Test-English — B2 Use of English (with answers + explanations)',u:'https://test-english.com/use-of-english/b2/'}
+  {n:'Test-English — B2 Use of English (with answers)',u:'https://test-english.com/use-of-english/b2/'}
  ]},
  {g:'📝 Writing',l:[
-  {n:'Cambridge English — Official B2 Writing Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2'},
-  {n:'ExamEnglish — FCE Writing Guide & Samples',u:'https://www.examenglish.com/FCE/fce_writing.html'}
+  {n:'Cambridge English — Official B2 Writing Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=independent'},
+  {n:'ExamEnglish — FCE Writing Tasks & Guides',u:'https://www.examenglish.com/FCE/fce_writing.html'}
  ]},
  {g:'🗣️ Speaking',l:[
-  {n:'Cambridge English — Official B2 Speaking Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2'},
-  {n:'ExamEnglish — FCE Speaking Practice',u:'https://www.examenglish.com/FCE/fce_speaking.html'}
+  {n:'Cambridge English — Official B2 Speaking Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=independent'},
+  {n:'ExamEnglish — FCE Speaking Format',u:'https://www.examenglish.com/FCE/fce_speaking.html'}
  ]},
  {g:'📚 All-in-One Resources',l:[
   {n:'Test & Train — Official Cambridge Practice App (Free Demo)',u:'https://testandtrain.cambridgeenglish.org/'},
   {n:'Cambridge One — Official Learning Platform',u:'https://www.cambridgeone.org/'},
-  {n:'Cambridge English — Full B2 Learning Catalog',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2'}
+  {n:'Cambridge English — Full Learning Catalog (Independent)',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=independent'}
  ]}
 ];
 function renderOnline(){
@@ -7801,32 +7801,32 @@ function renderOnline(){
    separate tools/check_sources.py re-checks them without gating the suite.
    part:[] means the source trains the whole paper. */
 const PRACTICE_SOURCES=[
- {n:"Cambridge English — B2 learning activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2",skill:"rue",kind:"free",part:[],what:"Official Cambridge interactive activities for every B2 skill, no sign-up needed.",mins:20},
- {n:"Cambridge English — B2 First preparation",url:"https://www.cambridgeenglish.org/exams-and-tests/first/preparation/",skill:"rue",kind:"free",part:[],what:"Free official sample papers, answer keys and exam-day guidance from Cambridge.",mins:30},
- {n:"Flo-Joe — FCE Use of English",url:"https://www.flo-joe.co.uk/fce/students/tests/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Word formation, open cloze and key word transformation drills with instant answers.",mins:15},
- {n:"Exam English — FCE Use of English",url:"https://www.examenglish.com/FCE/fce_use_of_english.html",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Timed Use of English sections with automatic marking and answer explanations.",mins:20},
- {n:"Test-English — B2 Use of English",url:"https://test-english.com/use-of-english/b2/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Part-by-part B2 grammar and vocabulary exercises with answers after each set.",mins:15},
- {n:"Exam English — FCE Reading",url:"https://www.examenglish.com/FCE/fce_reading.html",skill:"rue",kind:"free",part:["5","6","7"],what:"Full FCE reading sections: multiple choice, gapped text and multiple matching.",mins:25},
- {n:"Cambridge English — B2 reading activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2",skill:"rue",kind:"free",part:["5","6","7"],what:"Short official reading tasks that train skimming, detail and text structure.",mins:20},
+ {n:"Cambridge English — learning activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=independent",skill:"rue",kind:"free",part:[],what:"96 official Cambridge interactive activities at Independent level, no sign-up needed.",mins:20},
+ {n:"Cambridge English — B2 First preparation",url:"https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/",skill:"rue",kind:"free",part:[],what:"Free official sample papers, answer keys and tapescripts, plus exam-day tips from Cambridge.",mins:30},
+ {n:"Flo-Joe — FCE Use of English",url:"https://www.flo-joe.co.uk/fce/students/tests/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Multiple-choice cloze, open cloze, word formation and key word transformation across four tests, marked instantly.",mins:15},
+ {n:"Exam English — FCE Use of English",url:"https://www.examenglish.com/FCE/fce_use_of_english.html",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Eight interactive Use of English tests covering parts 1 to 4, marked as you go.",mins:20},
+ {n:"Test-English — B2 Use of English",url:"https://test-english.com/use-of-english/b2/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Eleven B2 multiple-choice gap tests with the answers shown after each set.",mins:15},
+ {n:"Exam English — FCE Reading",url:"https://www.examenglish.com/FCE/fce_reading.html",skill:"rue",kind:"free",part:["5","6","7"],what:"Two full FCE reading sets covering multiple choice, gapped text and multiple matching.",mins:25},
+ {n:"Cambridge English — reading activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=independent",skill:"rue",kind:"free",part:["5","6","7"],what:"16 official Independent-level reading tasks on scanning, implied meaning and reading for detail.",mins:20},
  {n:"British Council — B2 reading",url:"https://learnenglish.britishcouncil.org/free-resources/reading/b2",skill:"rue",kind:"free",part:["5","6","7"],what:"B2 articles and reviews with preparation tasks and comprehension questions.",mins:20},
 
- {n:"Write & Improve",url:"https://writeandimprove.com/",skill:"w",kind:"freemium",part:[],what:"Cambridge's writing tool grades a draft and shows what to fix; free tier available.",mins:20},
- {n:"Cambridge English — B2 writing activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2",skill:"w",kind:"free",part:[],what:"Official B2 writing tasks with model answers and language focus notes.",mins:25},
+ {n:"Write & Improve",url:"https://writeandimprove.com/",skill:"w",kind:"free",part:[],what:"Cambridge's free tool marks a draft against the CEFR and shows where to improve.",mins:20},
+ {n:"Cambridge English — writing activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=independent",skill:"w",kind:"free",part:[],what:"11 official Independent-level writing tasks on linking words, register and paragraphing.",mins:25},
  {n:"British Council — B2 writing",url:"https://learnenglish.britishcouncil.org/free-resources/writing/b2",skill:"w",kind:"free",part:[],what:"Essays, reports, reviews and emails with preparation tasks and model texts.",mins:20},
- {n:"Exam English — FCE Writing",url:"https://www.examenglish.com/FCE/fce_writing.html",skill:"w",kind:"free",part:[],what:"FCE writing guide, sample answers and examiner-style comments for each task type.",mins:20},
- {n:"LangCorrect",url:"https://langcorrect.com/",skill:"w",kind:"free",part:[],what:"Write short texts and get corrections from native speakers in a moderated community.",mins:15},
+ {n:"Exam English — FCE Writing",url:"https://www.examenglish.com/FCE/fce_writing.html",skill:"w",kind:"free",part:[],what:"Writing tasks for both parts plus how-to guides for essay, article, report, review and email.",mins:20},
+ {n:"LangCorrect",url:"https://langcorrect.com/",skill:"w",kind:"free",part:[],what:"Free journal exchange where native speakers correct your writing sentence by sentence.",mins:15},
 
  {n:"BBC Learning English",url:"https://www.bbc.co.uk/learningenglish/",skill:"l",kind:"free",part:[],what:"News, drama and 6 Minute English audio with transcripts and vocabulary support.",mins:15},
  {n:"British Council — B2 listening",url:"https://learnenglish.britishcouncil.org/free-resources/listening/b2",skill:"l",kind:"free",part:[],what:"B2 listening lessons with preparation tasks, audio and comprehension questions.",mins:20},
- {n:"Exam English — FCE Listening",url:"https://www.examenglish.com/FCE/fce_listening.html",skill:"l",kind:"free",part:["1","2","3","4"],what:"Four full FCE listening tests with automatic scoring and audio transcripts.",mins:30},
- {n:"Test-English — B2 Listening",url:"https://test-english.com/listening/b2/",skill:"l",kind:"free",part:["1","2","3","4"],what:"B2 listening exercises with answers and transcripts for self-checking.",mins:15},
- {n:"Cambridge English — B2 listening activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2",skill:"l",kind:"free",part:["1","2","3","4"],what:"Official short listening tasks that train detail, attitude and gist.",mins:20},
+ {n:"Exam English — FCE Listening",url:"https://www.examenglish.com/FCE/fce_listening.html",skill:"l",kind:"free",part:["1","2","3","4"],what:"Two full FCE listening tests, four parts each, with automatic scoring.",mins:30},
+ {n:"Test-English — B2 Listening",url:"https://test-english.com/listening/b2/",skill:"l",kind:"free",part:["1","2","3","4"],what:"Dozens of B2 listening tests with comprehension questions and answers.",mins:15},
+ {n:"Cambridge English — listening activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=independent",skill:"l",kind:"free",part:["1","2","3","4"],what:"31 official Independent-level listening tasks on gist, detail and unstressed words.",mins:20},
  {n:"Youglish",url:"https://youglish.com/",skill:"l",kind:"free",part:[],what:"Hear any word or phrase in real YouTube clips with subtitles and slow playback.",mins:10},
- {n:"LyricsTraining",url:"https://lyricstraining.com/",skill:"l",kind:"freemium",part:[],what:"Gap-fill listening practice with licensed song lyrics and adjustable difficulty.",mins:10},
+ {n:"LyricsTraining",url:"https://lyricstraining.com/",skill:"l",kind:"freemium",part:[],what:"Gap-fill and karaoke listening practice with hundreds of songs and adjustable difficulty.",mins:10},
 
- {n:"Cambridge English — B2 speaking activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2",skill:"sp",kind:"free",part:[],what:"Official B2 speaking tasks with useful phrases and model interactions.",mins:20},
- {n:"Exam English — FCE Speaking",url:"https://www.examenglish.com/FCE/fce_speaking.html",skill:"sp",kind:"free",part:["1","2","3","4"],what:"FCE speaking format, sample questions and tips for all four parts.",mins:20},
- {n:"British Council — B2 speaking",url:"https://learnenglish.britishcouncil.org/free-resources/speaking/b2",skill:"sp",kind:"free",part:[],what:"Video lessons with functional phrases, pronunciation practice and speaking tasks.",mins:20},
+ {n:"Cambridge English — speaking activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=independent",skill:"sp",kind:"free",part:[],what:"Four official Independent-level activities on conversational phrases and spoken vs written English.",mins:20},
+ {n:"Exam English — FCE Speaking",url:"https://www.examenglish.com/FCE/fce_speaking.html",skill:"sp",kind:"free",part:["1","2","3","4"],what:"The four speaking parts explained, with guidance on how to do well on the day.",mins:20},
+ {n:"British Council — B2 speaking",url:"https://learnenglish.britishcouncil.org/free-resources/speaking/b2",skill:"sp",kind:"free",part:[],what:"Video lessons with functional phrases and follow-up tasks to check understanding.",mins:20},
  {n:"Conversation Exchange",url:"https://www.conversationexchange.com/",skill:"sp",kind:"free",part:[],what:"Find a free tandem partner for face-to-face or online conversation practice.",mins:20},
  {n:"Tandem",url:"https://tandem.net/",skill:"sp",kind:"freemium",part:[],what:"Language-exchange app that pairs you with native speakers for real conversation.",mins:15},
  {n:"HelloTalk",url:"https://www.hellotalk.com/",skill:"sp",kind:"freemium",part:[],what:"Chat and call with native English speakers; core exchange features are free.",mins:15}
