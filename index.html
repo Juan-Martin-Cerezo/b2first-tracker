@@ -2661,27 +2661,27 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ COACH_CONFIGURATION ]</span>
-            <h1 class="page-title">Plan Configuration</h1>
-            <p class="page-sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
+            <h1 class="page-title" data-i18n="plan_title">Plan Configuration</h1>
+            <p class="page-sub" data-i18n="plan_sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="openIntake()">✏️ Edit my intake</button>
-            <button class="btn gray" onclick="startTour()">🎬 Show the walkthrough again</button>
-            <button class="btn gray" onclick="exportData()">💾 Export JSON</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Import Backup</button>
+            <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake">✏️ Edit my intake</button>
+            <button class="btn gray" onclick="startTour()" data-i18n="plan_walkthrough">🎬 Show the walkthrough again</button>
+            <button class="btn gray" onclick="exportData()" data-i18n="plan_export_json">💾 Export JSON</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup">📥 Import Backup</button>
           </div>
         </div>
 
         <!-- Week plan (derived from the diagnostic + error taxonomy) -->
         <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
           <div class="plan-card-head">
-            <h2>Week plan</h2>
-            <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()">Regenerate</button>
+            <h2 data-i18n="plan_week_plan">Week plan</h2>
+            <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
-          <div class="sub">Slots built with deterministic rules from your diagnostic and your errors (no AI).</div>
+          <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no AI).</div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
           <details id="wpWhy" style="margin-top:12px">
-            <summary>Why this?</summary>
+            <summary data-i18n="plan_why">Why this?</summary>
             <div id="wpWhyBody" style="font-size:14px;color:var(--txt-2);margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
           </details>
         </div>
@@ -2704,30 +2704,30 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-7">
             <div class="card">
               <div class="plan-card-head">
-                <h2>🧪 Exam Timers</h2>
-                <span class="chip-plan"><span class="dot"></span>FCE Format</span>
+                <h2 data-i18n="plan_exam_timers">🧪 Exam Timers</h2>
+                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_fce_format">FCE Format</span></span>
               </div>
-              <div class="sub">Official durations for each paper.</div>
+              <div class="sub" data-i18n="plan_official_durations">Official durations for each paper.</div>
               <div class="row">
-                <div><label>UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
-                <div><label>Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
-              </div>
-              <div class="row">
-                <div><label>Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
-                <div><label>Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
-                <div><label>Review (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
+                <div><label data-i18n="plan_uoe_focus">UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
+                <div><label data-i18n="plan_listening_min">Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
               </div>
               <div class="row">
-                <div><label>Speaking Part 2 (sec)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
-                <div><label>Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
+                <div><label data-i18n="plan_plan_writing">Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
+                <div><label data-i18n="plan_write_min">Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
+                <div><label data-i18n="plan_review_min">Review (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
               </div>
               <div class="row">
-                <div><label>Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
-                <div><label>Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
+                <div><label data-i18n="plan_speaking_p2">Speaking Part 2 (sec)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
+                <div><label data-i18n="plan_speaking_p34">Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
               </div>
               <div class="row">
-                <div><label>Streak freeze / week (🛡)</label><input type="number" id="pStreakFreeze" min="0" max="7" value="1"></div>
-                <div><label>Weekly goal (days/week)</label><input type="number" id="pWeekGoal" min="1" max="7" value="5"></div>
+                <div><label data-i18n="plan_wmin">Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
+                <div><label data-i18n="plan_wmax">Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
+              </div>
+              <div class="row">
+                <div><label data-i18n="plan_streak_freeze">Streak freeze / week (🛡)</label><input type="number" id="pStreakFreeze" min="0" max="7" value="1"></div>
+                <div><label data-i18n="plan_week_goal">Weekly goal (days/week)</label><input type="number" id="pWeekGoal" min="1" max="7" value="5"></div>
               </div>
             </div>
           </div>
@@ -2735,25 +2735,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <!-- Thresholds (Gates) navy, like Stitch -->
           <div class="col-5">
             <div class="card plan-dark-card">
-              <h2>🎯 Thresholds (Gates)</h2>
-              <div class="sub">Numerical criteria per stage.</div>
-              <div class="sub" style="margin-top:10px">Stage 0</div>
+              <h2 data-i18n="plan_thresholds">🎯 Thresholds (Gates)</h2>
+              <div class="sub" data-i18n="plan_thresholds_sub">Numerical criteria per stage.</div>
+              <div class="sub" style="margin-top:10px" data-i18n="plan_stage0">Stage 0</div>
               <div class="row">
-                <div><label>Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
-                <div><label>UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
-                <div><label>L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
+                <div><label data-i18n="plan_g_e0w">Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
+                <div><label data-i18n="plan_g_e0u">UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
+                <div><label data-i18n="plan_g_e0l">L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
               </div>
-              <div class="sub" style="margin-top:10px">Stage 1</div>
+              <div class="sub" style="margin-top:10px" data-i18n="plan_stage1">Stage 1</div>
               <div class="row">
-                <div><label>Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
-                <div><label>UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
-                <div><label>L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
+                <div><label data-i18n="plan_g_e1w">Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
+                <div><label data-i18n="plan_g_e1u">UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
+                <div><label data-i18n="plan_g_e1l">L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
               </div>
-              <div class="sub" style="margin-top:10px">Stage 2</div>
+              <div class="sub" style="margin-top:10px" data-i18n="plan_stage2">Stage 2</div>
               <div class="row">
-                <div><label>R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
-                <div><label>Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
-                <div><label>L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
+                <div><label data-i18n="plan_g_e2r">R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
+                <div><label data-i18n="plan_g_e2w">Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
+                <div><label data-i18n="plan_g_e2l">L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
             </div>
           </div>
@@ -2762,10 +2762,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-6">
             <div class="card">
               <div class="plan-card-head">
-                <h2>🗓 Session Schedules &amp; Frequency</h2>
-                <button type="button" class="btn sm ok" onclick="addScheduleRow()">+ Add Session Day</button>
+                <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
+                <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
               </div>
-              <div class="sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
+              <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
               
               <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
 
@@ -2780,15 +2780,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
                   <div>
                     <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
-                      <span>⚡ Session Shift / Fast-Forward</span>
+                      <span data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</span>
                       <span class="badge mon" id="planOffsetBadge">Offset: +0</span>
                     </div>
-                    <div class="sub" style="margin-top:2px;font-size:12px">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
+                    <div class="sub" style="margin-top:2px;font-size:12px" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
                   </div>
                   <div style="display:flex;gap:6px;align-items:center">
-                    <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1">⚡ +1 Advance</button>
+                    <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
                     <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
-                    <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0">↩ Reset (0)</button>
+                    <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
                   </div>
                 </div>
               </div>
@@ -2799,35 +2799,35 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-6">
             <div class="card plan-green-card">
               <div class="plan-card-head">
-                <h2>🔁 Continuous Rotation &amp; Upcoming Slots</h2>
-                <span class="chip-plan"><span class="dot"></span>4-Session Loop</span>
+                <h2 data-i18n="plan_rotation">🔁 Continuous Rotation &amp; Upcoming Slots</h2>
+                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_rotation_chip">4-Session Loop</span></span>
               </div>
-              <div class="sub">Upcoming sessions automatically mapped across your configured days:</div>
+              <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
 
               <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
 
               <div class="rot-cycles" style="display:none">
                 <div class="cycle-box">
-                  <span class="cycle-lbl">Week A (Odd)</span>
+                  <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
                   <span class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</span>
                   <div style="margin-top:8px">
-                    <label style="margin-top:2px">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                    <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
                 <span class="cycle-swap material-symbols-outlined">swap_horiz</span>
                 <div class="cycle-box">
-                  <span class="cycle-lbl">Week B (Even)</span>
+                  <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
                   <span class="cycle-val" id="rotWkBSummary">Full W + Full Sp</span>
                   <div style="margin-top:8px">
-                    <label style="margin-top:2px">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                    <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
               </div>
-              <div class="sub" style="margin-top:10px">The order you rotate exercises component by component:</div>
-              <div><label>R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
-              <div><label>Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
-              <div><label>Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
-              <div><label>Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
+              <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
+              <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
+              <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
+              <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
+              <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
             </div>
           </div>
 
@@ -2835,13 +2835,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-12">
             <div class="card">
               <div class="plan-card-head">
-                <h2>✨ AI writing corrector (Gemini)</h2>
-                <span class="chip-plan"><span class="dot"></span>Local Device Key</span>
+                <h2 data-i18n="plan_ai">✨ AI writing corrector (Gemini)</h2>
+                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_ai_chip">Local Device Key</span></span>
               </div>
-              <div class="sub">Your key is stored only on this device and travels to the local server.</div>
+              <div class="sub" data-i18n="plan_ai_sub">Your key is stored only on this device and travels to the local server.</div>
               <div class="row">
                 <div>
-                  <label for="pAiKey">Gemini API Key (D.settings.aiKey)</label>
+                  <label for="pAiKey" data-i18n="plan_gemini_key">Gemini API Key (D.settings.aiKey)</label>
                   <input type="password" id="pAiKey" placeholder="AIza..." autocomplete="off" oninput="onAiKeyInput(this.value)">
                 </div>
               </div>
@@ -2853,8 +2853,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
           <div class="col-12">
             <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn ok" onclick="savePlan()">💾 Save plan</button>
-              <button class="btn gray" onclick="resetPlan()">↩ Restore original plan</button>
+              <button class="btn ok" onclick="savePlan()" data-i18n="plan_save">💾 Save plan</button>
+              <button class="btn gray" onclick="resetPlan()" data-i18n="plan_restore">↩ Restore original plan</button>
             </div>
           </div>
         </div>
@@ -3295,6 +3295,12 @@ const I18N={
     plan_regenerate:'Regenerate',
     plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no AI).',
     plan_why:'Why this?',
+    plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
+    plan_go_diag:'Go to the diagnostic →',
+    plan_session_day:'Session {n} — Day',
+    plan_time:'Time',
+    plan_delete_day:'Delete session day',
+    plan_offset:'Offset: {offset}',
     plan_exam_timers:'🧪 Exam Timers',
     plan_fce_format:'FCE Format',
     plan_official_durations:'Official durations for each paper.',
@@ -3680,6 +3686,12 @@ const I18N={
     plan_regenerate:'Regenerar',
     plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin IA).',
     plan_why:'¿Por qué esto?',
+    plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
+    plan_go_diag:'Ir al diagnóstico →',
+    plan_session_day:'Sesión {n} — Día',
+    plan_time:'Hora',
+    plan_delete_day:'Eliminar día de sesión',
+    plan_offset:'Desfase: {offset}',
     plan_exam_timers:'🧪 Cronómetros del examen',
     plan_fce_format:'Formato FCE',
     plan_official_durations:'Duraciones oficiales de cada prueba.',
@@ -7165,8 +7177,8 @@ function renderWeeklyPlan(){
   const whyBox=document.getElementById('wpWhy');
   const why=document.getElementById('wpWhyBody');
   if(plan.needDiag){
-    rows.innerHTML=`<div class="empty" id="wpNeedDiag">Take the diagnostic (10 min) and I'll build your week.</div>
-      <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">Go to the diagnostic →</button></div>`;
+    rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t('plan_need_diag')}</div>
+      <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">${t('plan_go_diag')}</button></div>`;
     if(whyBox)whyBox.style.display='none';
     return;
   }
@@ -7179,7 +7191,7 @@ function renderWeeklyPlan(){
         <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${sl.timed?' · timed (exam mode)':''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">Start</button>
+      <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
     </div>`;
   }).join('');
   const src=plan.source||{};
@@ -7904,17 +7916,17 @@ function renderScheduleRows(){
   c.innerHTML=sched.map((slot,i)=>`
     <div class="row" style="align-items:center;margin:0;gap:8px;background:var(--surface-container-low);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--outline-variant)">
       <div style="flex:1">
-        <label style="font-size:12px;margin-bottom:2px">Session ${i+1} — Day</label>
+        <label style="font-size:12px;margin-bottom:2px">${t('plan_session_day',{n:i+1})}</label>
         <select class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
-          ${DAYS.map((d,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${d}</option>`).join('')}
+          ${Array.from({length:7},(_,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${dayFull(dIdx)}</option>`).join('')}
         </select>
       </div>
       <div style="flex:1">
-        <label style="font-size:12px;margin-bottom:2px">Time</label>
+        <label style="font-size:12px;margin-bottom:2px">${t('plan_time')}</label>
         <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
       </div>
       <div style="display:flex;align-items:flex-end;padding-top:16px">
-        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="Delete session day" ${sched.length<=1?'disabled style="opacity:0.4;cursor:not-allowed"':''}>🗑️</button>
+        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" ${sched.length<=1?'disabled style="opacity:0.4;cursor:not-allowed"':''}>🗑️</button>
       </div>
     </div>
   `).join('');
@@ -7936,7 +7948,7 @@ function renderScheduleRows(){
   const offBadge=document.getElementById('planOffsetBadge');
   if(offBadge){
     const off=D.sessionOffset||0;
-    offBadge.textContent='Offset: '+(off>=0?'+':'')+off;
+    offBadge.textContent=t('plan_offset',{offset:(off>=0?'+':'')+off});
   }
 
   renderSchedulePreview();
