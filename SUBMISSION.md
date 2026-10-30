@@ -7,6 +7,7 @@ Preparing for Cambridge B2 First (FCE) alone means one gap is almost impossible 
 ## What it does
 
 - **Study sessions and streak** — a weekly rotation across all 15 exam parts with official Cambridge time limits, a 3-tap mobile quick-log (FAB + 3-step modal), a daily streak with a 1-day freeze shield, and a weekly goal ring.
+- **Onboarding intake** — six questions on first open (exam date, target grade, self-rated skills, hours per week, available days, what is hard) that seed a 5-session weekly plan before a single session is logged, followed by a 3-step feature tour.
 - **12-item diagnostic** — a 10-minute cold-start quiz covering all 7 parts of Reading & Use of English that populates the error log and highlights the 3 weakest parts on day one.
 - **Progress charts** — 4 SVG charts: Writing evolution, accuracy by part, error taxonomy breakdown, and weekly consistency, plus 3 stage gates (Foundations, Precision, Mastery) with automated metric gates.
 - **AI Writing examiner** — grades Essays, Articles, Reports, Reviews, and Emails against the official Cambridge B2 First Writing assessment scale: 4 bands (Content, Communicative Achievement, Organisation, Language) scored 0–5 each for a total of 20. Every band must be backed by an exact quote from the student's text, each criterion must list 2 concrete weaknesses, and the examiner rewrites 3 weak sentences from the student's own text at B2+/C1 level.

@@ -65,6 +65,7 @@ and no cloud to trust.
 
 | Feature | What it actually does |
 | --- | --- |
+| **Onboarding intake** | Six questions before the first session: exam date, target grade, self-rated skills, hours per week, available days, what is hard. The answers seed the weekly plan, so the app is useful before you have logged anything |
 | **Quick-log** | Records type, part, score and minutes in three taps, with sane defaults per part |
 | **Streak** | Derived from the log, not stored: today counts, a missed day is shielded once a week, exam days never break it |
 | **Diagnostic** | 12 original items across all seven exam parts, 10 minutes, produces three ranked weaknesses |
