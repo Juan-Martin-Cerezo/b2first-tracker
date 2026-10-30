@@ -18,6 +18,8 @@ Endpoints:
   GET /api/progress?download=1 → downloads the saved progress (JSON)
   GET /api/progress → list of backups (JSON) {file, size, date}
   PUT /api/progress → saves the progress (JSON body) and backs up the previous one
+  POST /api/speaking/report → four-scale speaking report (pronunciation from Azure PA,
+                     interactive communication as proxies only)
   GET /favicon.ico → 204 (does not exist, don't log a 404)
 
 Persistence: progress lives in <repo>/data/progress.json. Each PUT
@@ -41,6 +43,7 @@ import store
 import prompts
 import speech
 import speaking_prompts
+import speaking_report
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -162,6 +165,15 @@ DEFAULT_SPK_TOKEN_URL = "https://generativelanguage.googleapis.com/v1beta/auth_t
 DEFAULT_SPK_WS_URL = ("wss://generativelanguage.googleapis.com/ws/"
                       "google.ai.generativelanguage.v1beta.GenerativeService"
                       ".BidiGenerateContentConstrained")
+
+# --- S5: four-scale speaking report ----------------------------------------
+# One text-model call per report. Pronunciation never comes from here: it is
+# mapped from the Azure PA scores (speaking_report.band_from_pa), so the model
+# cannot invent it. Interactive Communication stays null with proxies beside it.
+SPK_REPORT_RATE_PER_MIN = 6          # reports per minute per user
+SPK_REPORT_MAX_BODY = 512 * 1024     # request body cap (transcript + PA words)
+SPK_REPORT_CACHE_MAX = 200           # idempotent replays kept in memory
+SPK_REPORT_CACHE_TTL = 3600          # seconds a replay stays valid
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -719,6 +731,40 @@ def _spk_metrics_today():
     return round(seconds / 60.0, 1), tokens
 
 
+# --- S5 report idempotency: a retry must not buy a second LLM call ----------
+_SPK_REPORT_LOCK = threading.Lock()
+_SPK_REPORT_CACHE = {}   # {(uid, request_id): (timestamp, result)}
+
+
+def _spk_report_cache_get(uid, request_id):
+    """A previous successful report for this (user, request_id), or None."""
+    if not request_id:
+        return None
+    now = time.time()
+    with _SPK_REPORT_LOCK:
+        for key, (stamp, _result) in list(_SPK_REPORT_CACHE.items()):
+            if now - stamp > SPK_REPORT_CACHE_TTL:
+                _SPK_REPORT_CACHE.pop(key, None)
+        hit = _SPK_REPORT_CACHE.get((uid, request_id))
+        return hit[1] if hit else None
+
+
+def _spk_report_cache_put(uid, request_id, result):
+    """Remember a successful report so a retry replays it without the model."""
+    if not request_id:
+        return
+    with _SPK_REPORT_LOCK:
+        _SPK_REPORT_CACHE[(uid, request_id)] = (time.time(), result)
+        while len(_SPK_REPORT_CACHE) > SPK_REPORT_CACHE_MAX:
+            _SPK_REPORT_CACHE.pop(next(iter(_SPK_REPORT_CACHE)))
+
+
+def _speaking_report_cache_clear():
+    """Test hook: drop every cached report."""
+    with _SPK_REPORT_LOCK:
+        _SPK_REPORT_CACHE.clear()
+
+
 def _validate_ai_payload(obj):
     """Validate the JSON returned by the model against the Cambridge schema."""
     if not isinstance(obj, dict):
@@ -868,16 +914,83 @@ def _ai_abuse_reason(text):
     return ""
 
 
-def _leaks_system_prompt(text):
-    """True when a model response echoes the internal system prompt."""
+def _leaks_system_prompt(text, strong_only=False):
+    """True when a model response echoes the internal system prompt.
+
+    `strong_only` is used by the speaking report: its fixes legitimately talk
+    about "band 4", "band 5" or "cohesive devices", so the weak (Writing
+    rubric) markers would reject honest output. The strong markers cover the
+    speaking prompt as well, so the leak guard is not weakened.
+    """
     low = text.lower()
     if any(marker in low for marker in _AI_LEAK_STRONG):
         return True
+    if strong_only:
+        return False
     return sum(1 for marker in _AI_LEAK_WEAK if marker in low) >= 3
 
 
 def _word_count(text):
     return len(text.split())
+
+
+def _ai_text_complete(system, user_block):
+    """One text-model call (DeepSeek/Gemini) for the speaking report.
+
+    Returns ``(content, error)``: on success ``error`` is None; on failure
+    ``content`` is None and ``error`` is a slug the HTTP handler maps to a
+    status. The raw provider body is never returned, echoed or logged.
+    """
+    api_key = (os.environ.get("B2_AI_KEY") or "").strip()
+    if not api_key:
+        return None, "ai_not_configured"
+    env_provider = (B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER
+                    else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER))
+    provider = (env_provider or DEFAULT_AI_PROVIDER).strip().lower()
+    if provider not in ("deepseek", "gemini"):
+        return None, "ai_not_configured"
+    default_base = DEFAULT_DEEPSEEK_BASE if provider == "deepseek" else DEFAULT_GEMINI_BASE
+    default_model = DEFAULT_DEEPSEEK_MODEL if provider == "deepseek" else DEFAULT_GEMINI_MODEL
+    base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
+    model = (B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or default_model).strip()
+    if provider == "deepseek":
+        url = f"{base.rstrip('/')}/chat/completions"
+        payload = json.dumps({
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user_block},
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.2,
+        }).encode("utf-8")
+        headers = {"Content-Type": "application/json",
+                   "Authorization": f"Bearer {api_key}"}
+    else:
+        url = f"{base.rstrip('/')}/models/{model}:generateContent"
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": f"{system}\n\n{user_block}"}]}],
+            "generationConfig": {"responseMimeType": "application/json",
+                                 "temperature": 0.2},
+        }).encode("utf-8")
+        headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
+    request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(request, timeout=AI_TIMEOUT) as response:
+            raw = response.read(64 * 1024).decode("utf-8")
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+        return None, "upstream_failed"
+    try:
+        body = json.loads(raw)
+        if provider == "deepseek":
+            content = body["choices"][0]["message"]["content"]
+        else:
+            content = body["candidates"][0]["content"]["parts"][0]["text"]
+        if not isinstance(content, str):
+            raise ValueError("not text")
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+        return None, "upstream_failed"
+    return content, None
 
 
 # ---------------------------------------------------------------------------
@@ -2600,6 +2713,138 @@ class H(BaseHTTPRequestHandler):
                 "used_s": int(round(rec["seconds"])),
                 "cap_s": per_user_min * 60,
             })
+            return
+
+        # --- S5: four-scale speaking report ------------------------------------
+        # The transcript is data, not instructions: it reaches the text model
+        # only inside the phase-17 fence. Pronunciation is NOT asked from the
+        # model — it is mapped here from the Azure PA scores (or reported as
+        # "not measured"). The report is also the only place the log entry is
+        # born, and it is born on the client: a failure here never touches the
+        # log, the streak or the progress document.
+        if path == "/api/speaking/report":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._clen() > SPK_REPORT_MAX_BODY:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            if self._rate_limited("spk_rep:" + uid, SPK_REPORT_RATE_PER_MIN, 60):
+                return
+            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid_json"})
+                return
+            del raw
+            clean, bad = speaking_report.validate_payload(req)
+            if bad:
+                self._send_json(422, {"error": bad})
+                return
+            request_id = clean["request_id"]
+            cached = _spk_report_cache_get(uid, request_id)
+            if cached is not None:
+                # Same request_id: replay the exact result, no second LLM call.
+                self._send_json(200, cached)
+                return
+            if not (os.environ.get("B2_AI_KEY") or "").strip():
+                # No shared text-model key: fail before spending a quota unit.
+                self._send_json(503, {"error": "ai_not_configured"})
+                return
+            quota_key = "user:" + uid
+            if _ai_quota_left(quota_key) <= 0:
+                _audit("quota_hit", uid, _real_ip(self), self._rid)
+                reset = (date.today() + timedelta(days=1)).isoformat()
+                self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
+                return
+            # Only the candidate's own turns are graded. Examiner and partner
+            # turns are context for the proxies, never text for the model.
+            candidate = speaking_report.candidate_text(clean["transcript"])
+            abuse = _ai_abuse_reason(candidate)
+            if abuse:
+                # An injection attempt is audited but still graded as text:
+                # the fence is the barrier, not a heuristic that can drop a
+                # legitimate session.
+                _audit("ai_blocked", uid, _real_ip(self), self._rid,
+                       {"reason": abuse, "chars": len(candidate)})
+            user_block, _nonce = speaking_report.report_message(_fit_ai_text(candidate))
+            _ai_quota_consume(quota_key)
+            content, ai_err = _ai_text_complete(speaking_report.REPORT_SYSTEM, user_block)
+            if ai_err:
+                code = 503 if ai_err == "ai_not_configured" else 502
+                self._send_json(code, {"error": ai_err})
+                return
+            if content is None or len(content.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
+                self._send_json(502, {"error": "bad_model_output"})
+                return
+            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+            if _leaks_system_prompt(text, strong_only=True):
+                _audit("ai_blocked", uid, _real_ip(self), self._rid,
+                       {"reason": "prompt_leak"})
+                self._send_json(502, {"error": "unsafe_output"})
+                return
+            try:
+                model_obj = json.loads(text)
+            except (ValueError, TypeError):
+                self._send_json(502, {"error": "bad_model_output"})
+                return
+            graded = speaking_report.parse_model_output(model_obj)
+            if graded is None:
+                # Never echo the raw output: it is untrusted text.
+                self._send_json(502, {"error": "bad_model_output"})
+                return
+            pron = speaking_report.band_from_pa(clean["pa"])
+            result = {
+                "bands": {
+                    "grammar_vocabulary": graded["bands"]["grammar_vocabulary"],
+                    "discourse_management": graded["bands"]["discourse_management"],
+                    "pronunciation": pron["band"],
+                    "interactive_communication": None,
+                },
+                "derived": {
+                    "pronunciation_score": pron["score"],
+                    "pronunciation_source": pron["source"],
+                },
+                "proxies": speaking_report.proxies(clean["transcript"],
+                                                   clean["metrics"]),
+                "evidence": graded["evidence"],
+                "fixes": graded["fixes"],
+                "worst": pron["worst"],
+                "part": clean["part"],
+                "duration_s": clean["duration_s"],
+                "metrics": clean["metrics"],
+                "stored_transcript": False,
+                "request_id": request_id,
+            }
+            if clean["store_transcript"]:
+                try:
+                    stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+                    stamp += f"-{int(time.time() * 1000) % 1000:03d}"
+                    store.write_speaking_transcript(uid, stamp, {
+                        "type": "sp",
+                        "date": date.today().isoformat(),
+                        "part": clean["part"],
+                        "duration_s": clean["duration_s"],
+                        "request_id": request_id,
+                        "transcript": clean["transcript"],
+                        "metrics": clean["metrics"],
+                        "bands": result["bands"],
+                        "derived": result["derived"],
+                    })
+                    result["stored_transcript"] = True
+                except (OSError, ValueError):
+                    result["stored_transcript"] = False
+            _spk_report_cache_put(uid, request_id, result)
+            self._send_json(200, result)
             return
 
         # --- S2: Azure Pronunciation Assessment --------------------------------

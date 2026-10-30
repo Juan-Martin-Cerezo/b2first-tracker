@@ -533,6 +533,35 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .live-stat .val[data-state="offline"]{color:var(--bad-text)}
 .spk-line.spk-partner .txt{color:var(--txt-2)}
 
+/* ---------- S5: four-scale speaking report ---------- */
+.spk-report{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.spk-report-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.spk-report-title{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
+.spk-report-title .t{font-size:var(--fs-xs);color:var(--txt-2);font-weight:400;margin-left:6px}
+.spk-report-actions{display:flex;gap:8px;flex-wrap:wrap}
+.spk-report .btn.sm,#spkReportBtn{min-height:44px;min-width:44px}
+.spk-scales{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+.spk-scale{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;border:1px solid var(--line)}
+.spk-scale .lbl{display:block;font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.spk-scale .band{display:block;font-size:var(--fs-lg);font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums;margin-top:2px}
+.spk-scale .band.nm{font-size:var(--fs-sm);font-weight:600;color:var(--warn-text)}
+.spk-scale .note{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.spk-ns{display:inline-block;font-size:var(--fs-xs);font-weight:600;color:var(--warn-text);background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:999px;padding:2px 8px}
+.spk-report-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+@media (max-width:640px){.spk-report-grid{grid-template-columns:1fr}}
+.spk-report-h{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600;margin-top:12px}
+.spk-proxies{font-size:var(--fs-sm);color:var(--txt);line-height:1.6;margin-top:4px}
+.spk-words{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.spk-word{font-size:var(--fs-xs);background:var(--bad-soft);color:var(--txt);border:1px solid var(--bad-border);border-radius:999px;padding:3px 9px}
+.spk-word b{color:var(--bad-text)}
+.spk-word .ph{color:var(--txt-2)}
+.spk-dim{font-size:var(--fs-sm);color:var(--txt-2)}
+.spk-evidence,.spk-fixes{margin:6px 0 0 18px;padding:0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
+.spk-evidence li,.spk-fixes li{margin-bottom:6px}
+.spk-evidence .q{color:var(--txt);font-style:italic}
+.spk-evidence .n{display:block;font-size:var(--fs-xs);color:var(--txt-2)}
+.spk-report-err{display:none;margin-top:10px;font-size:var(--fs-sm);font-weight:600;color:var(--bad-text);background:var(--bad-soft);border:1px solid var(--bad-border);border-radius:var(--r-ctl);padding:8px 10px}
+
 /* ---------- GATES ---------- */
 .gate{
   padding:14px 16px;margin-bottom:12px;
@@ -2022,6 +2051,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="live-sub" id="spkStatus" role="status">Examiner off</div>
                       </div>
                       <div class="live-actions">
+                        <button class="btn sm gray" id="spkReportBtn" onclick="spkReport()" disabled>📊 Report</button>
                         <button class="btn sm gray" id="spkStopBtn" onclick="spkStop()" disabled>■ Stop</button>
                         <button class="btn sm gray" id="spkCloseBtn" onclick="spkDiscard()">✕ Close</button>
                       </div>
@@ -2054,6 +2084,35 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="spk-col-h">Examiner &amp; Partner <span class="t">two voices, one director</span></div>
                         <div class="spk-lines" id="spkOutText"></div>
                       </div>
+                    </div>
+
+                    <!-- S5: four-scale report. Pronunciation is never produced by
+                         the text model: it is the Azure PA band, or "not measured".
+                         Interactive Communication is never a band — only proxies. -->
+                    <div class="spk-report" id="spkReportPanel" style="display:none" aria-live="polite">
+                      <div class="spk-report-head">
+                        <div class="spk-report-title">Assessment report <span class="t">Cambridge speaking scales · 0–5</span></div>
+                        <div class="spk-report-actions">
+                          <button class="btn sm gray" id="spkReportRetryBtn" onclick="spkReport()">↻ Retry report</button>
+                          <button class="btn sm ok" id="spkReportSaveBtn" onclick="spkSaveReport()">✔ Save to log</button>
+                        </div>
+                      </div>
+                      <div class="spk-scales" id="spkScales"></div>
+                      <div class="spk-report-grid">
+                        <div>
+                          <div class="spk-report-h">Interactive communication <span class="spk-ns">not scored — proxies only</span></div>
+                          <div class="spk-proxies" id="spkProxies"></div>
+                        </div>
+                        <div>
+                          <div class="spk-report-h">Worst words · Azure pronunciation</div>
+                          <div class="spk-words" id="spkWorst"></div>
+                        </div>
+                      </div>
+                      <div class="spk-report-h">Evidence</div>
+                      <ul class="spk-evidence" id="spkEvidence"></ul>
+                      <div class="spk-report-h">Three fixes</div>
+                      <ol class="spk-fixes" id="spkFixes"></ol>
+                      <div class="spk-report-err" id="spkReportErr" role="alert"></div>
                     </div>
                   </div>
                 </div>
@@ -4703,7 +4762,13 @@ const SPK={
   raf:null,micCtx:null,micStream:null,micNode:null,micSource:null,micSink:null,
   speechSince:0,silSince:0,simSpeechUntil:0,
   micSpeaking:false,lastSpeechEnd:0,candSilenceMs:9999,lastExaminerText:'',
-  lastExaminerAt:0,lastOut:null
+  lastExaminerAt:0,lastOut:null,
+  /* S5 report state: the session's own silences, the payload cached for a
+     retry (same request_id, so the server never pays for a second call) and
+     the last report rendered. `lastPA` is filled by the Azure PA endpoint. */
+  silences:[],silStartedAt:0,speechMs:0,lastFrameAt:0,
+  lastPA:null,reportId:'',reportPayload:null,reportData:null,
+  reportSaved:false,reportDuration:0
 };
 window.SPK=SPK;
 window.spkDirectorTick=spkDirectorTick;
@@ -4801,6 +4866,16 @@ function spkBargeIn(){
 function spkVad(speaking){
   const now=performance.now();
   if(speaking){
+    /* A pause just ended: keep it for the report (the client owns the clock,
+       so silences are measured here and never asked from the model). */
+    if(SPK.silStartedAt){
+      const dur=(now-SPK.silStartedAt)/1000;
+      if(dur>=0.3&&SPK.silences.length<500){
+        SPK.silences.push({start:Math.max(0,(SPK.silStartedAt-SPK.startedAt)/1000),
+          dur:Math.round(dur*100)/100});
+      }
+      SPK.silStartedAt=0;
+    }
     SPK.silSince=0;
     if(!SPK.speechSince)SPK.speechSince=now;
     /* A playback queue has tiny gaps (a 200 ms tone every 210 ms). Treat the
@@ -4809,6 +4884,7 @@ function spkVad(speaking){
     const examinerNear=SPK.speaking||(SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800);
     if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=300)spkBargeIn();
   }else{
+    if(SPK.running&&!SPK.silStartedAt)SPK.silStartedAt=now;
     SPK.speechSince=0;
     if(SPK.muted){
       if(!SPK.silSince)SPK.silSince=now;
@@ -4845,6 +4921,8 @@ function spkAddLine(side,text,who){
   SPK.lines.push({side:side,who:who,t:Math.round(ts*1000)/1000,text:text});
   if(side==='in'){
     SPK.inCount++;
+    const repBtn=document.getElementById('spkReportBtn');
+    if(repBtn)repBtn.disabled=false;
   }else{
     SPK.outCount++;
     SPK.turns.push({n:SPK.outCount,who:who,text:text,
@@ -4864,7 +4942,16 @@ function spkReset(){
   SPK.activeVoices=0;SPK.billedSeconds=0;
   SPK.micSpeaking=false;SPK.lastSpeechEnd=0;SPK.candSilenceMs=9999;
   SPK.lastExaminerText='';SPK.lastExaminerAt=0;SPK.lastOut=null;
+  SPK.silences=[];SPK.silStartedAt=0;SPK.speechMs=0;SPK.lastFrameAt=0;
+  SPK.reportId='';SPK.reportPayload=null;SPK.reportData=null;
+  SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.voices={};
+  const repBtn=document.getElementById('spkReportBtn');
+  if(repBtn)repBtn.disabled=true;
+  const repPanel=document.getElementById('spkReportPanel');
+  if(repPanel)repPanel.style.display='none';
+  const repErr=document.getElementById('spkReportErr');
+  if(repErr)repErr.style.display='none';
   ['spkInText','spkOutText'].forEach(function(id){
     const el=document.getElementById(id);if(el)el.replaceChildren();
   });
@@ -4982,6 +5069,8 @@ function spkDirectorInput(now){
 function spkLoop(){
   if(!SPK.running)return;
   const now=performance.now();
+  if(SPK.lastFrameAt&&SPK.micSpeaking)SPK.speechMs+=now-SPK.lastFrameAt;
+  SPK.lastFrameAt=now;
   SPK.elapsed=(now-SPK.startedAt)/1000;
   const e=document.getElementById('spkElapsed');
   if(e)e.textContent=spkClock(SPK.elapsed);
@@ -5216,6 +5305,11 @@ async function spkStop(limitHit){
   const billable=elapsed*(SPK.activeVoices||1);
   SPK.billedSeconds+=billable;
   SPK.running=false;
+  /* Freeze the session length for the report. The payload is rebuilt here so
+     it carries the final metrics; a retry after a failure reuses it as-is
+     (same request_id), which is what makes the endpoint idempotent. */
+  SPK.reportDuration=Math.max(1,Math.round(SPK.elapsed));
+  SPK.reportPayload=null;
   if(SPK.raf){cancelAnimationFrame(SPK.raf);SPK.raf=null}
   SPK.simSpeechUntil=0;
   ['examiner','partner'].forEach(function(w){
@@ -5249,6 +5343,187 @@ async function spkDiscard(){
   if(panel)panel.style.display='none';
   spkReset();
   spkSetStatus('Examiner off');
+}
+
+/* ---------- S5 REPORT: four scales, proxies, three fixes ----------
+   The payload is built once per session and every retry resends the same
+   `request_id`, so the server replays the cached result instead of paying for
+   a second model call. A failed report writes nothing: D.log, the streak and
+   progress.json are untouched until "Save to log" is pressed. */
+const SPK_SCALE_LABELS={
+  grammar_vocabulary:'Grammar & Vocabulary',
+  discourse_management:'Discourse Management',
+  pronunciation:'Pronunciation',
+  interactive_communication:'Interactive Communication'
+};
+
+function spkBuildPayload(){
+  if(!SPK.reportId){
+    SPK.reportId='sp-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+  }
+  const dur=Math.max(1,Math.round(SPK.reportDuration||SPK.elapsed||0));
+  const turns=(SPK.lines||[]).filter(function(l){
+    return l&&typeof l.text==='string'&&l.text.trim();
+  }).slice(-200).map(function(l){
+    return {who:(l.who==='examiner'||l.who==='partner')?l.who:'candidate',
+      t:Math.max(0,Math.round((l.t||0)*1000)/1000),
+      text:String(l.text).slice(0,500)};
+  });
+  const cand=turns.filter(function(t){return t.who==='candidate'})
+    .map(function(t){return t.text}).join(' ');
+  const words=(cand.match(/[A-Za-z][A-Za-z'-]*/g)||[]).length;
+  const fillers=(cand.match(/\b(?:um+|uh+|erm+|like|you know)\b/gi)||[]).length;
+  const silences=(SPK.silences||[]).slice(-500).map(function(s){
+    return {start:Math.round(s.start*100)/100,dur:Math.round(s.dur*100)/100};
+  });
+  const longest=silences.reduce(function(m,s){return Math.max(m,s.dur)},0);
+  return {
+    part:SPK.part||1,
+    duration_s:dur,
+    transcript:turns,
+    metrics:{
+      wpm:Math.round(words/(dur/60)),
+      fillers:fillers,
+      filler_ratio:words?Math.round(fillers/words*1000)/10:0,
+      silences:silences,
+      longest_silence:Math.round(longest*100)/100,
+      speech_ratio:Math.min(1,Math.round((SPK.speechMs/1000)/dur*100)/100),
+      overlap_ms:Math.round(SPK.overlapMs||0),
+      interrupted_turns:SPK.interrupted||0
+    },
+    pa:SPK.lastPA||null,
+    store_transcript:false,
+    request_id:SPK.reportId
+  };
+}
+
+function spkReportError(msg){
+  const panel=document.getElementById('spkReportPanel');
+  if(panel)panel.style.display='block';
+  const el=document.getElementById('spkReportErr');
+  if(el){el.textContent=msg;el.style.display='block'}
+}
+
+function spkScaleCard(key,band,note){
+  let value;
+  if(key==='interactive_communication'){
+    value='<span class="band nm">not scored — proxies only</span>';
+  }else if(typeof band==='number'){
+    value='<span class="band">'+band+' / 5</span>';
+  }else{
+    value='<span class="band nm">not measured</span>';
+  }
+  return '<div class="spk-scale"><span class="lbl">'+esc(SPK_SCALE_LABELS[key])+'</span>'
+    +value+(note?'<span class="note">'+esc(note)+'</span>':'')+'</div>';
+}
+
+function renderSpeakingReport(data){
+  const panel=document.getElementById('spkReportPanel');
+  if(!panel)return;
+  if(data!==undefined)SPK.reportData=data;
+  const r=SPK.reportData;
+  if(!r||!r.bands){panel.style.display='none';return}
+  panel.style.display='block';
+  const errEl=document.getElementById('spkReportErr');
+  if(errEl)errEl.style.display='none';
+  const b=r.bands||{},d=r.derived||{},m=r.metrics||{};
+  const scales=document.getElementById('spkScales');
+  if(scales){
+    const pronNote=(d.pronunciation_source==='azure'&&typeof d.pronunciation_score==='number')
+      ? 'Azure PA · '+d.pronunciation_score+'/100'
+      : 'Azure did not score this session';
+    scales.innerHTML=[
+      spkScaleCard('grammar_vocabulary',b.grammar_vocabulary,''),
+      spkScaleCard('discourse_management',b.discourse_management,''),
+      spkScaleCard('pronunciation',b.pronunciation,pronNote),
+      spkScaleCard('interactive_communication',null,'Proxies below — never a band.')
+    ].join('');
+  }
+  const px=r.proxies||{};
+  const pr=document.getElementById('spkProxies');
+  if(pr){
+    pr.innerHTML='Initiations <b>'+esc(px.initiations||0)+'</b> · response p50 <b>'
+      +esc(px.response_latency_ms_p50||0)+' ms</b> · questions <b>'
+      +Math.round((px.question_ratio||0)*100)+'%</b> · overlap <b>'
+      +((px.overlap_ms||0)/1000).toFixed(1)+' s</b><br>'
+      +'<span class="spk-dim">'+esc(m.wpm||0)+' wpm · '+esc(m.fillers||0)
+      +' fillers · longest silence '+esc(m.longest_silence||0)+' s · speech '
+      +Math.round((m.speech_ratio||0)*100)+'%</span>';
+  }
+  const wr=document.getElementById('spkWorst');
+  if(wr){
+    const worst=r.worst||[];
+    wr.innerHTML=worst.length?worst.map(function(w){
+      const ph=w.phoneme?(' <span class="ph">/'+esc(w.phoneme)+'/ '
+        +esc(w.phoneme_score)+'</span>'):'';
+      return '<span class="spk-word">'+esc(w.w)+' <b>'+esc(w.score)+'</b>'+ph+'</span>';
+    }).join(''):'<span class="spk-dim">No Azure assessment attached to this session.</span>';
+  }
+  const ev=document.getElementById('spkEvidence');
+  if(ev){
+    const items=r.evidence||[];
+    ev.innerHTML=items.length?items.map(function(e){
+      return '<li><span class="q">“'+esc(e.quote)+'”</span>'
+        +(e.note?'<span class="n">'+esc(e.note)+'</span>':'')+'</li>';
+    }).join(''):'<li class="spk-dim">No evidence returned.</li>';
+  }
+  const fx=document.getElementById('spkFixes');
+  if(fx){
+    fx.innerHTML=(r.fixes||[]).map(function(f){return '<li>'+esc(f)+'</li>'}).join('');
+  }
+  const saveBtn=document.getElementById('spkReportSaveBtn');
+  if(saveBtn)saveBtn.disabled=!!SPK.reportSaved;
+}
+
+async function spkReport(){
+  if(!USER||!USER.token){spkReportError('Sign in again to request a report.');return false}
+  if(!SPK.reportPayload)SPK.reportPayload=spkBuildPayload();
+  const payload=SPK.reportPayload;
+  const hasSpeech=(payload.transcript||[]).some(function(t){
+    return t.who==='candidate'&&t.text;
+  });
+  if(!hasSpeech){
+    spkReportError('No candidate speech to assess yet — speak first, then request the report.');
+    return false;
+  }
+  if(!(payload.duration_s>=30)){
+    spkReportError('A session of at least 30 seconds is needed for a report. Keep talking and try again.');
+    return false;
+  }
+  const retry=document.getElementById('spkReportRetryBtn');
+  if(retry)retry.disabled=true;
+  const errEl=document.getElementById('spkReportErr');
+  if(errEl)errEl.style.display='none';
+  try{
+    const r=await fetch(apiUrl('/api/speaking/report'),{
+      method:'POST',headers:authHeaders(),body:JSON.stringify(payload)});
+    if(r.status===401){sessionExpired();throw new Error('session expired')}
+    let j=null;
+    try{j=await r.json()}catch(e){}
+    if(!r.ok||!j||!j.bands){
+      throw new Error((j&&j.error)||('report failed ('+r.status+')'));
+    }
+    SPK.reportSaved=false;
+    renderSpeakingReport(j);
+    track('speaking_report',{part:payload.part||0});
+    return true;
+  }catch(e){
+    /* The log, the streak and progress.json stay untouched: only the panel
+       shows the error, and "Retry report" resends the same cached payload. */
+    spkReportError('Report failed — '+((e&&e.message)||'network error')
+      +'. Nothing was logged; retry whenever you want.');
+    return false;
+  }finally{
+    if(retry)retry.disabled=false;
+  }
+}
+
+function spkSaveReport(){
+  if(!SPK.reportData||SPK.reportSaved)return;
+  saveSP(SPK.reportData);
+  SPK.reportSaved=true;
+  const btn=document.getElementById('spkReportSaveBtn');
+  if(btn)btn.disabled=true;
 }
 
 SPK.setPart=function(part){
@@ -5523,7 +5798,37 @@ function saveL(){
   log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min:+document.getElementById('lMin').value});
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
-function saveSP(){
+function saveSP(report){
+  /* S5: a report is saved without the transcript (bands + metrics only).
+     The manual "Save Speaking" button still calls saveSP() with no argument
+     and keeps its original behaviour. */
+  if(report&&report.bands){
+    const b=report.bands||{};
+    const graded=['grammar_vocabulary','discourse_management','pronunciation']
+      .map(k=>b[k]).filter(v=>typeof v==='number');
+    const score=graded.length?Math.round(graded.reduce((a,v)=>a+v,0)/graded.length):null;
+    const m=report.metrics||{};
+    const entry={
+      type:'sp',
+      part:+(report.part||SPK.part||2),
+      min:Math.max(1,Math.round((report.duration_s||0)/60)),
+      bands:{
+        grammar_vocabulary:typeof b.grammar_vocabulary==='number'?b.grammar_vocabulary:null,
+        discourse_management:typeof b.discourse_management==='number'?b.discourse_management:null,
+        pronunciation:typeof b.pronunciation==='number'?b.pronunciation:null,
+        interactive_communication:null
+      },
+      metrics:{
+        wpm:Math.round(+m.wpm||0),
+        fillers:Math.round(+m.fillers||0),
+        longest_silence:Math.round((+m.longest_silence||0)*100)/100,
+        overlap_ms:Math.round(+m.overlap_ms||0)
+      }
+    };
+    if(score!==null)entry.score=score;
+    log(entry);
+    return;
+  }
   log({type:'sp',part:+document.getElementById('spPart').value,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0});
 }
 function saveRUE(){
@@ -6168,7 +6473,7 @@ function renderLog(){
     const wSc=e.score!==undefined?e.score:e.total;
     return `<tr>
     <td class="tnum">${fmtDate(e.date)}</td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td>
-    <td class="tnum">${e.type==='w'?wSc+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total)}</td>
+    <td class="tnum">${e.type==='w'?wSc+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total)}</td>
     <td class="tnum">${e.type==='w'?pct(wSc,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td class="tnum">${e.min??''}</td>
     <td><button class="del" onclick="editLog(${i})" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-edit"/></svg></button> <button class="del" onclick="delLog(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>
@@ -6177,9 +6482,10 @@ function renderLog(){
 function editLog(i){
   const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
   if(!tr)return;
-  if(e.type==='sp'||e.type==='sf'){alert(e.type==='sf'?'Speaking final has no numeric fields to edit — delete it and log it again.':'Speaking has no numeric fields to edit — delete it and log it again.');return}
+  if(e.type==='sf'||(e.type==='sp'&&typeof e.score!=='number')){alert(e.type==='sf'?'Speaking final has no numeric fields to edit — delete it and log it again.':'This Speaking entry has no band to edit — delete it and log it again.');return}
   let fields='';
   if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:12px">score/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
+  else if(e.type==='sp')fields=`<input type="number" id="ed1" min="0" max="5" step="0.5" value="${e.score}"> <label style="font-size:12px">band/5</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:12px">text 1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:12px">text 2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:12px">correct</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:12px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   tr.innerHTML=`<td><input type="date" id="edDate" value="${e.date}"></td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td><td>${fields}</td><td></td><td></td>
@@ -6192,6 +6498,7 @@ function saveEdit(i){
   const vm=document.getElementById('edMin')?+document.getElementById('edMin').value:null;
   const vd=document.getElementById('edDate').value;
   if(e.type==='w'){e.score=v1;e.min=vm}
+  else if(e.type==='sp'){e.score=Math.max(0,Math.min(5,v1));e.min=vm}
   else if(e.type==='fw'){e.s1=v1;e.s2=v2;e.min=vm}
   else{e.correct=v1;e.total=v2;e.min=vm}
   if(vd)e.date=vd;
@@ -6212,7 +6519,18 @@ function renderStats(){
   const l=D.log.filter(e=>e.type==='l');if(l.length)row('Full Listening',l);
   const r6=D.log.filter(e=>e.type==='r6');if(r6.length)row('Reading P6 (Gapped)',r6);
   const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--ok-text)">${sf.filter(e=>e.ok).length} validated at C1</td></tr>`);
-  for(let i=1;i<=4;i++){const es=D.log.filter(e=>e.type==='sp'&&e.part===i);if(es.length)rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--ok-text)">completed</td></tr>`)}
+  for(let i=1;i<=4;i++){
+    const es=D.log.filter(e=>e.type==='sp'&&e.part===i);
+    if(!es.length)continue;
+    const scored=es.filter(e=>typeof e.score==='number');
+    if(!scored.length){
+      rows.push(`<tr><td>Speaking P${i}</td><td>${es.length}</td><td colspan="3" style="color:var(--ok-text)">completed</td></tr>`);
+      continue;
+    }
+    const avg=scored.reduce((a,e)=>a+e.score,0)/scored.length;
+    const best=Math.max(...scored.map(e=>e.score));
+    rows.push(`<tr><td>Speaking P${i} — band</td><td>${es.length}</td><td>${avg.toFixed(1)}/5</td><td>${best}/5</td><td>${scored[0].score}/5</td></tr>`);
+  }
   document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5"><div class="empty">No data yet — log exercises and you\'ll see your evolution here.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div></td></tr>';
 }
 
@@ -6507,10 +6825,15 @@ function svgBar(label,pct,min,color){
 }
 function renderGrafEvol(){
   const el=document.getElementById('gEvol'),log=D.log||[];
+  /* A speaking entry has no correct/total: its band (0-5) is scaled to the
+     same 0-100 axis as the other series. Old "done" entries are skipped. */
+  const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
+  const pctVal=e=>e.type==='w'?wVal(e):(e.type==='sp'?e.score/5*100:e.correct/e.total*100);
   const series=[
     {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
     {name:'Listening',color:'var(--ok-text)',es:log.filter(e=>e.type==='l')},
-    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')}
+    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')},
+    {name:'Speaking',color:'var(--warn-text)',es:log.filter(e=>e.type==='sp'&&typeof e.score==='number')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
   if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
@@ -6518,8 +6841,7 @@ function renderGrafEvol(){
   const n=Math.max(...seriesOk.map(s=>s.es.length));
   const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
   const ys=v=>padT+(H-padT-padB)*(1-v/100);
-  const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
-  const last=Math.max(...seriesOk.map(s=>s.es.map(e=>e.type==='w'?wVal(e):e.correct/e.total*100)).flat());
+  const last=Math.max(...seriesOk.map(s=>s.es.map(pctVal)).flat());
   const ymax=Math.ceil(Math.max(100,last)/10)*10;
   let g='';
   for(let v=0;v<=ymax;v+=ymax/4){
@@ -6527,10 +6849,10 @@ function renderGrafEvol(){
     g+=svgTxt(padL-4,ys(v)+3,Math.round(v)+'%','var(--dim)',10,'end');
   }
   seriesOk.forEach((s,si)=>{
-    const pts=s.es.map((e,i)=>`${xs(i)},${ys(e.type==='w'?wVal(e):e.correct/e.total*100)}`).join(' ');
+    const pts=s.es.map((e,i)=>`${xs(i)},${ys(pctVal(e))}`).join(' ');
     g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
-    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(e.type==='w'?wVal(e):e.correct/e.total*100)}" r="3" fill="${s.color}"/>`});
-    g+=svgTxt(xs(s.es.length-1)+6,ys(s.es[s.es.length-1].type==='w'?wVal(s.es[s.es.length-1]):s.es[s.es.length-1].correct/s.es[s.es.length-1].total*100)+3,s.name,s.color,11,'start');
+    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(pctVal(e))}" r="3" fill="${s.color}"/>`});
+    g+=svgTxt(xs(s.es.length-1)+6,ys(pctVal(s.es[s.es.length-1]))+3,s.name,s.color,11,'start');
   });
   g+=svgTxt(padL,H-4,'← older · more recent →','var(--dim)',10,'middle');
   el.innerHTML=svgChart(W,H,g);
@@ -7083,7 +7405,7 @@ function renderRecent(){
   const rows=(D.log||[]).slice(0,5);
   if(!rows.length){el.innerHTML='<div class="empty">Nothing logged yet. Your first session takes 15 seconds.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   el.innerHTML=rows.map(e=>{
-    const sc=e.type==='w'?((e.score!==undefined?e.score:e.total)+'/20'):e.type==='fw'?((e.s1||'-')+'/'+(e.s2||'-')):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total);
+    const sc=e.type==='w'?((e.score!==undefined?e.score:e.total)+'/20'):e.type==='fw'?((e.s1||'-')+'/'+(e.s2||'-')):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total);
     return `<div class="metric-row"><span>${MOD[e.type]?MOD[e.type](e):e.type} <span class="muted">· ${fmtDate(e.date)}</span></span><span class="metric-val tnum">${sc}</span></div>`;
   }).join('');
 }
@@ -7931,7 +8253,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
