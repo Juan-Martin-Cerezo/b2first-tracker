@@ -106,7 +106,25 @@
       "id": "22",
       "tests": "test_speaking_report.py",
       "title": "S5: reporte de 4 escalas integrado al log y a los graficos",
-      "status": "running"
+      "status": "done"
+    },
+    {
+      "id": "23",
+      "tests": "test_capacity.py test_final.py test_sync.py",
+      "title": "Capacidad: gzip cache + ETag/304, rate limit por usuario, 512 sockets",
+      "status": "pending"
+    },
+    {
+      "id": "24",
+      "tests": "test_security3.py test_hardening.py test_security2.py test_legacy_guard.py",
+      "title": "Seguridad app nivel certificable: ASVS L2 + audit.sh 25 checks + checklist verificable",
+      "status": "pending"
+    },
+    {
+      "id": "25",
+      "tests": "tools/audit-host.sh",
+      "title": "Host multi-proposito: nft sin duplicados, docker deja de saltear firewall, SSH duro",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
