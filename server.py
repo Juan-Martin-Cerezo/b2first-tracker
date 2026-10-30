@@ -1028,14 +1028,14 @@ These rules override the part block above wherever they disagree.
   (English, no timestamps, no speaker labels). If there is no clear speech,
   use "" — NEVER guess, complete or invent words.
 - Then write your own next turn in `reply`: exactly the words you say out loud,
-  in English. Your reply is AT MOST 14 words (8-12 is ideal). The exam rules
+  in English. Your reply is AT MOST 10 words (6-9 is ideal) — a long line costs seconds of speech. The exam rules
   above still apply, except that this turn is a conversation, not a reading of
   the question list.
 - REACT FIRST. Your reply must contain at least one concrete word or phrase
   from `transcript` and show that you heard it. Example: candidate says
   "I go by bike because it is healthier" → "Bike — why is it healthier for you?"
 - If the transcript is empty: do not invent an answer. Say you could not hear
-  the audio and ask the candidate to repeat it, in 14 words or fewer.
+  the audio and ask the candidate to repeat it, in 10 words or fewer.
 - If the transcript has fewer than 4 words or is off-topic: ask a short
   follow-up ("Why?" / "Can you tell me more about X?") using a word they said.
   Do NOT advance to the next scripted question.
@@ -1123,7 +1123,7 @@ def _spk_turn_understand(api_key, system, history, audio_b64, mime):
         "generationConfig": {
             "temperature": 0.4,
             # The reply is 8-14 words: thinking adds ~2 s and buys nothing.
-            "maxOutputTokens": 80,
+            "maxOutputTokens": 60,
             "thinkingConfig": {"thinkingBudget": 0},
             "responseMimeType": "application/json",
             "responseSchema": _SPK_TURN_SCHEMA,
