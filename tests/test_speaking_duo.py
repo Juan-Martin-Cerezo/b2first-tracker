@@ -112,11 +112,25 @@ def main():
         out["3_text_bridge"] = pg.evaluate("SPK.voices.partner.transport.sent.length")
 
         # 4. Part 3 overlap is allowed and measured, and the panel shows it.
+        #    NOTE: a forced 900 ms overlap cannot fully register — the director
+        #    legitimately hands the floor to the partner ~180 ms after the
+        #    examiner stops, which mutes the examiner. So we assert (a) overlap
+        #    IS measured and painted, and (b) it STOPS growing while the
+        #    examiner is muted. Asserting >= 300 ms would have been asserting
+        #    the director does not do its job.
         pg.evaluate("SPK.simOverlap(900)")
-        assert wait_until(pg, "SPK.overlapMs >= 300", 15), \
+        assert wait_until(pg, "SPK.overlapMs > 0", 15), \
             "overlap was not measured"
         panel = pg.evaluate("document.getElementById('spkOverlap').textContent")
         assert panel not in ("0.0s", "", None), f"overlap panel still zero: {panel}"
+        assert wait_until(pg, "SPK.dir.phase==='partner' && "
+                              "SPK.voices.examiner.muted===true", 10), \
+            "the examiner was never muted after the handoff"
+        ov_a = pg.evaluate("SPK.overlapMs")
+        pg.wait_for_timeout(700)
+        ov_b = pg.evaluate("SPK.overlapMs")
+        assert ov_b <= ov_a + 30, \
+            f"overlap kept growing with the examiner muted: {ov_a} -> {ov_b}"
         out["4_overlap"] = pg.evaluate(
             "({ms: SPK.overlapMs, panel: document.getElementById('spkOverlap')"
             ".textContent})")
