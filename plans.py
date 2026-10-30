@@ -45,6 +45,7 @@ __all__ = [
     "set_plan",
     "forget_user",
     "usage_snapshot",
+    "usage_row",
     "writing_used",
     "writing_consume",
     "speaking_used",
@@ -62,13 +63,18 @@ __all__ = [
     "LICENSE_PREFIX",
 ]
 
-USAGE_KEEP_DAYS = 60
+USAGE_KEEP_DAYS = 396   # 13 months on write (the retention tool enforces the same)
 MAX_DAYS = 400
 LICENSE_PREFIX = "FT"
 CODE_BODY_CHARS = 12
 _DAY = 24 * 3600
 
-PLANS = ("free", "byo", "pro")
+PLANS = ("free", "byo", "pro", "owner")
+
+# The account(s) that run the product. No per-account caps: the owner is the one
+# paying the bill, and testing the limits must not require editing env vars.
+# B2_OWNER_UIDS overrides the default (comma separated user ids).
+OWNER_UID_DEFAULT = "owner"
 
 # The cost ceiling per plan lives here and nowhere else. Measured inputs:
 # ~US$0.25 per speaking mock, ~US$0.01 per writing correction / report.
@@ -83,6 +89,13 @@ LIMITS = {
         "writing": None,
         "speaking": None,
         "pronunciation": "preview",
+    },
+    "owner": {
+        # Deliberately not None: several call sites read limits as dicts, and an
+        # unlimited-owner bug must never be a 500 on a paid route.
+        "writing": {"limit": 1000000, "window": "day"},
+        "speaking": {"mocks": 1000000, "minutes": 1000000, "window": "day"},
+        "pronunciation": "full",
     },
     "pro": {
         "writing": {"limit": 60, "window": "month"},
@@ -204,6 +217,18 @@ def _is_active(rec, ts):
     return until > iso(ts)
 
 
+def owner_uids():
+    """User ids treated as the owner (no caps). B2_OWNER_UIDS overrides."""
+    raw = (os.environ.get("B2_OWNER_UIDS") or "").strip()
+    if not raw:
+        return {OWNER_UID_DEFAULT}
+    return {x.strip() for x in raw.split(",") if x.strip()}
+
+
+def is_owner(uid):
+    return bool(uid) and uid in owner_uids()
+
+
 def effective_plan(uid, byo=False, now=None):
     """The one place that answers 'what may this account do right now'.
 
@@ -212,6 +237,9 @@ def effective_plan(uid, byo=False, now=None):
     left untouched (the mirror in the UI shows the real ``until``).
     """
     ts = _now(now)
+    if uid and is_owner(uid):
+        return {"plan": "owner", "since": None, "until": None,
+                "source": "owner", "limits": LIMITS["owner"]}
     rec = plan_record(uid) if uid else None
     if rec and rec.get("plan") in ("pro",) and _is_active(rec, ts):
         plan = "pro"
@@ -421,6 +449,12 @@ def speaking_add_seconds(uid, seconds, now=None):
     except (TypeError, ValueError):
         return
     _speaking_bump(uid, _now(now), seconds=value)
+
+
+def usage_row(uid):
+    """Raw metering row for one account ({} when it has never used anything)."""
+    rec = _usage()["accounts"].get(uid)
+    return dict(rec) if isinstance(rec, dict) else {}
 
 
 def usage_snapshot(uid, plan_limits, now=None):
