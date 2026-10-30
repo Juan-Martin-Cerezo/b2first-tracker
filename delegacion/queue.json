@@ -28,7 +28,7 @@
       "id": "9",
       "tests": "test_onboard.py test_final.py test_plan.py",
       "title": "Onboarding: welcome card + coach marks + empty states",
-      "status": "running"
+      "status": "done"
     },
     {
       "id": "10",

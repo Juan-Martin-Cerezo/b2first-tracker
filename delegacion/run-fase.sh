@@ -66,7 +66,8 @@ if [ "$HARNESS" = "agy" ]; then
       --print-timeout 45m >>"$LOG" 2>&1
   EXIT=$?
 else
-  command-code -p "$PROMPT_TXT" -m "$CC_MODEL" --trust --dangerously-skip-permissions \
+  # tope duro: un agente colgado no puede dejar la fase abierta para siempre
+  timeout 4500 command-code -p "$PROMPT_TXT" -m "$CC_MODEL" --trust --dangerously-skip-permissions \
       --tools-all --skip-onboarding --max-turns 240 >>"$LOG" 2>&1
   EXIT=$?
 fi
