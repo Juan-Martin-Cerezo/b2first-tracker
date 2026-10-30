@@ -121,8 +121,17 @@ def main():
         pg.evaluate("SPK.simOverlap(900)")
         assert wait_until(pg, "SPK.overlapMs > 0", 15), \
             "overlap was not measured"
-        panel = pg.evaluate("document.getElementById('spkOverlap').textContent")
-        assert panel not in ("0.0s", "", None), f"overlap panel still zero: {panel}"
+        # The panel is repainted once per director tick and renders one decimal,
+        # so it can lag or legitimately read 0.0s for a sub-50 ms overlap. Assert
+        # consistency with the measured value instead of a fixed string.
+        assert wait_until(
+            pg,
+            "document.getElementById('spkOverlap').textContent === "
+            "(SPK.overlapMs/1000).toFixed(1)+'s'", 10), \
+            "the overlap panel does not match the measured overlap"
+        pg.evaluate("SPK.simOverlap(900)")
+        assert wait_until(pg, "SPK.overlapMs >= 120", 15), \
+            f"overlap stayed tiny: {pg.evaluate('SPK.overlapMs')}"
         assert wait_until(pg, "SPK.dir.phase==='partner' && "
                               "SPK.voices.examiner.muted===true", 10), \
             "the examiner was never muted after the handoff"
