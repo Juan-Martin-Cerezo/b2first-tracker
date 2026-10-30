@@ -90,6 +90,9 @@ with sync_playwright() as p:
     errores_js = []
     pg.on("pageerror", lambda e: errores_js.append(str(e)))
     pg.goto(URL1 + "/", wait_until="networkidle")
+    # initSession() resolves /api/config asynchronously; give it a beat before
+    # sampling the UI state (same pattern as test_multiuser).
+    pg.wait_for_timeout(500)
     demo_state = pg.evaluate(
         """() => ({
         demo: window.DEMO && window.DEMO.demo === true,
