@@ -128,9 +128,9 @@ uv run --with playwright python test_final.py    # main suite
 
 Two groups:
 
-- **Live service** (must be running on `http://127.0.0.1:8088`): `test_final`, `test_mobile`,
-  `test_tracker`, `test_personalization`, `test_plan`, `test_streak`, `test_schedule_advance`,
-  `test_rot`, `test_exam`, `test_speaking_metrics` (fake mic, 90 s real-time run).
+- **Live service** (must be running on `http://127.0.0.1:8088`): `test_final`, `test_layout`,
+  `test_mobile`, `test_tracker`, `test_personalization`, `test_plan`, `test_streak`,
+  `test_schedule_advance`, `test_rot`, `test_exam`, `test_speaking_metrics` (fake mic, 90 s real-time run).
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
   `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
   `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,

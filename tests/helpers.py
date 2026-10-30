@@ -12,39 +12,45 @@ OWNER_NAME = os.environ.get("B2_TEST_USER", "test-runner")
 OWNER_PASS = os.environ.get("B2_TEST_PASS", "test-runner-pass-9")
 
 
-def _ensure_test_user(url):
-    """Register the test account if it does not exist yet (ignore 409)."""
+def _api(url, path, payload, token=None):
     import json
-    import urllib.error
     import urllib.request
 
     req = urllib.request.Request(
-        url + "api/register",
-        data=json.dumps({"name": OWNER_NAME, "password": OWNER_PASS}).encode(),
+        url + path,
+        data=json.dumps(payload).encode(),
         headers={"Content-Type": "application/json"},
     )
+    if token:
+        req.add_header("Authorization", "Bearer " + token)
+    with urllib.request.urlopen(req) as r:
+        body = r.read().decode()
+        return json.loads(body) if body else None
+
+
+def _ensure_account(url, name, password):
+    """Register the account if it does not exist yet (ignore 409)."""
+    import urllib.error
+
     try:
-        with urllib.request.urlopen(req) as r:
-            r.read()
+        _api(url, "api/register", {"name": name, "password": password})
     except urllib.error.HTTPError:
         return  # already registered (409) or registration closed: try login
     except Exception:
         return
 
 
-def login_owner(pg, url):
-    """Log in as the owner via the API and set the session in localStorage."""
-    import json
-    import urllib.request
+def login_user(pg, url, name, password, register=True):
+    """Log an arbitrary account in via the API and set the session locally.
 
-    _ensure_test_user(url)
-    req = urllib.request.Request(
-        url + "api/login",
-        data=json.dumps({"name": OWNER_NAME, "password": OWNER_PASS}).encode(),
-        headers={"Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req) as r:
-        u = json.loads(r.read().decode())
+    Returns the user record (id, name, color, token) so suites can seed their
+    own progress document without borrowing the shared test account.
+    """
+    import json
+
+    if register:
+        _ensure_account(url, name, password)
+    u = _api(url, "api/login", {"name": name, "password": password})
     pg.evaluate(
         "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(u))
     )
@@ -54,3 +60,9 @@ def login_owner(pg, url):
     if pg.evaluate("typeof finishOnboarding==='function' && document.getElementById('onboardingOverlay') && document.getElementById('onboardingOverlay').style.display==='flex'"):
         pg.evaluate("finishOnboarding()")
         pg.wait_for_timeout(300)
+    return u
+
+
+def login_owner(pg, url):
+    """Log in as the shared throwaway test account."""
+    return login_user(pg, url, OWNER_NAME, OWNER_PASS)

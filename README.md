@@ -270,6 +270,7 @@ a standalone script; `tests/helpers.py` registers a throwaway account (`B2_TEST_
 | Suite | Covers |
 | --- | --- |
 | `test_final.py` | Main UI: every view renders, dark mode persists, contrast and focus rings, no JS errors |
+| `test_layout.py` | Phase 27 layout gate: every view at 360/768/1440 px in English and Spanish — no horizontal scroll, no overlapping cards, no button under 40 px, nothing past the viewport, zero console errors |
 | `test_mobile.py` | 390x844 layout: no horizontal overflow, bottom nav, quick-log button |
 | `test_tracker.py` | Books and material views: cards, filters, links, audio players |
 | `test_onboard.py` | Six-step intake wizard, `D.profile`, profile-driven plan, feature tour, empty states |
