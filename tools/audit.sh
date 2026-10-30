@@ -12,7 +12,7 @@
 # are reported as N/A (neither pass nor fail) — the default target is public.
 set -u
 
-BASE="${1:-https://vps-server.tail40095b.ts.net}"
+BASE="${1:-https://firsttracker.app}"
 BASE="${BASE%/}"
 MAX=20
 case "$BASE" in
