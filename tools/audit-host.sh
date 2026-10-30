@@ -78,7 +78,7 @@ else
     'ip saddr 192.168.1.0/24 ct state new tcp dport 22 limit rate 6/minute burst 3 packets accept' \
     'ip saddr 10.0.1.0/24 ct state new tcp dport 22 accept' \
     'ct state new tcp dport 22 drop' \
-    'ip saddr 192.168.1.0/24 tcp dport { 2283, 8089, 9100 } accept'; do
+    'ip saddr 192.168.1.0/24 tcp dport { 2283, 8088, 8089, 9100 } accept'; do
     if nft_has "$spec"; then
       row "nft rule: $spec" "PASS" "present"
     else
@@ -107,11 +107,8 @@ else
     row "LAN cannot reach panel ports 8000/6001-6002" "PASS" "LAN rule is { 2283, 8089, 9100 } only"
   fi
 
-  if printf '%s\n' "$LAN_RULE" | grep -Eq '\b8088\b'; then
-    row "LAN cannot reach app port 8088" "FAIL" "LAN rule includes 8088 (app is loopback/tailnet only)"
-  else
-    row "LAN cannot reach app port 8088" "PASS" "8088 is loopback/tailnet only"
-  fi
+  # 8088 is checked with the listening-port placement below: the LAN fast path
+  # is only acceptable when the app deliberately binds 0.0.0.0 (zz-lan.conf).
 
   if nft_has "counter drop"; then
     row "Default drop has a counter" "PASS" "counter drop"
@@ -166,7 +163,7 @@ fi
 port_binds() { ss -lntH "sport = :$1" 2>/dev/null | awk '{print $4}' | sort -u; }
 port_listening() { [ -n "$(port_binds "$1")" ]; }
 
-for p in 8088 3306 8799; do
+for p in 3306 8799; do
   binds=$(port_binds "$p")
   if [ -z "$binds" ]; then
     row "Port ${p} listens on loopback only" "FAIL" "nothing listening (expected 127.0.0.1:${p})"
@@ -176,6 +173,31 @@ for p in 8088 3306 8799; do
     row "Port ${p} listens on loopback only" "PASS" "$(printf '%s ' $binds)"
   fi
 done
+
+# 8088: loopback by default; 0.0.0.0 is accepted only when the LAN fast-path
+# drop-in asks for it AND nft opens exactly that port to 192.168.1.0/24.
+BINDS8088=$(port_binds 8088)
+B2HOST=$(systemctl show b2first -p Environment --value 2>/dev/null \
+  | tr ' ' '\n' | sed -n 's/^B2_HOST=//p' | tail -1)
+LAN8088=no
+printf '%s\n' "$LAN_RULE" | grep -Eq '\b8088\b' && LAN8088=yes
+if [ -z "$BINDS8088" ]; then
+  row "App 8088 exposure matches its documented bind" "FAIL" "nothing listening"
+elif printf '%s\n' "$BINDS8088" | grep -Eq '^(127\.0\.0\.1|\[::1\]):8088$'; then
+  if [ "$LAN8088" = yes ]; then
+    row "App 8088 exposure matches its documented bind" "FAIL" \
+      "loopback bind but the LAN rule still accepts 8088"
+  else
+    row "App 8088 exposure matches its documented bind" "PASS" "127.0.0.1 only"
+  fi
+elif printf '%s\n' "$BINDS8088" | grep -Fq '0.0.0.0:8088' \
+     && [ "$B2HOST" = "0.0.0.0" ] && [ "$LAN8088" = yes ]; then
+  row "App 8088 exposure matches its documented bind" "PASS" \
+    "0.0.0.0 (zz-lan.conf; LAN + tailnet, nft-filtered)"
+else
+  row "App 8088 exposure matches its documented bind" "FAIL" \
+    "bind=$(printf '%s ' $BINDS8088) B2_HOST=${B2HOST:-unset} LAN8088=$LAN8088"
+fi
 
 for p in 22 2283 8089 9100; do
   if port_listening "$p"; then
@@ -283,22 +305,50 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Ingress: Funnel public surface + health + egress
+# Ingress: exactly one public edge (Cloudflare tunnel, or the retired Funnel)
+# + health + egress
 # ---------------------------------------------------------------------------
 FUNNEL=$(tailscale funnel status 2>/dev/null || true)
 PUBLIC=$(printf '%s\n' "$FUNNEL" | grep -E '^https://[^ ]+ \(Funnel on\)' || true)
 PUBLIC_N=$(printf '%s\n' "$PUBLIC" | grep -c . || true)
-
-if [ "$PUBLIC_N" -eq 1 ] && printf '%s\n' "$PUBLIC" | grep -Eq '^https://[^:]+ \(Funnel on\)$'; then
-  row "Funnel exposes exactly one public URL (443)" "PASS" "$(printf '%s' "$PUBLIC" | sed 's/ (Funnel on)//')"
-else
-  row "Funnel exposes exactly one public URL (443)" "FAIL" "${PUBLIC_N} public URL(s): $(printf '%s ' $PUBLIC)"
+CF_UNIT=""
+if systemctl is-active --quiet cloudflared-b2first 2>/dev/null; then
+  CF_UNIT="cloudflared-b2first"
+elif systemctl is-active --quiet cloudflared 2>/dev/null; then
+  CF_UNIT="cloudflared"
 fi
 
-if printf '%s\n' "$FUNNEL" | grep -A1 -F '(Funnel on)' | grep -Fq 'proxy http://127.0.0.1:8088'; then
-  row "Public Funnel proxies to 127.0.0.1:8088" "PASS" "8088"
+if [ "$PUBLIC_N" -eq 1 ]; then
+  if printf '%s\n' "$PUBLIC" | grep -Eq '^https://[^:]+ \(Funnel on\)$'; then
+    row "Public edge exposes exactly one URL" "PASS" "$(printf '%s' "$PUBLIC" | sed 's/ (Funnel on)//')"
+  else
+    row "Public edge exposes exactly one URL" "FAIL" "${PUBLIC_N} public URL(s): $(printf '%s ' $PUBLIC)"
+  fi
+  if printf '%s\n' "$FUNNEL" | grep -A1 -F '(Funnel on)' | grep -Fq 'proxy http://127.0.0.1:8088'; then
+    row "Public edge proxies to 127.0.0.1:8088" "PASS" "8088"
+  else
+    row "Public edge proxies to 127.0.0.1:8088" "FAIL" "unexpected public target"
+  fi
+elif [ -n "$CF_UNIT" ]; then
+  CF_CONF=/etc/cloudflared-b2first/config.yml
+  [ -f "$CF_CONF" ] || CF_CONF=/etc/cloudflared/config.yml
+  HOSTS=$(grep -Ec '^[[:space:]]*-[[:space:]]*hostname:' "$CF_CONF" 2>/dev/null || true)
+  TARGETS=$(grep -Ec '^[[:space:]]*service:[[:space:]]*http://127\.0\.0\.1:8088' "$CF_CONF" 2>/dev/null || true)
+  if [ "${HOSTS:-0}" -ge 1 ] && [ "${HOSTS:-0}" = "${TARGETS:-0}" ]; then
+    row "Public edge exposes exactly one URL" "PASS" \
+      "Cloudflare $CF_UNIT: ${HOSTS} hostname(s)"
+  else
+    row "Public edge exposes exactly one URL" "FAIL" \
+      "Cloudflare ingress hostnames=$HOSTS matching-targets=$TARGETS"
+  fi
+  if [ "${HOSTS:-0}" -ge 1 ] && [ "${HOSTS:-0}" = "${TARGETS:-0}" ]; then
+    row "Public edge proxies to 127.0.0.1:8088" "PASS" "$CF_CONF"
+  else
+    row "Public edge proxies to 127.0.0.1:8088" "FAIL" "not every ingress targets 8088"
+  fi
 else
-  row "Public Funnel proxies to 127.0.0.1:8088" "FAIL" "unexpected public target"
+  row "Public edge exposes exactly one URL" "FAIL" "no active Funnel and no cloudflared unit"
+  row "Public edge proxies to 127.0.0.1:8088" "FAIL" "no public edge"
 fi
 
 if printf '%s\n' "$FUNNEL" | grep -q ':8443 (tailnet only)'; then
@@ -314,12 +364,23 @@ else
   row "Local /api/health" "FAIL" "HTTP ${HEALTH:-000}"
 fi
 
-FHEALTH=$(curl -s -o /dev/null --max-time 10 -w '%{http_code}' \
-  https://vps-server.tail40095b.ts.net/api/health 2>/dev/null)
-if [ "$FHEALTH" = "200" ]; then
-  row "Public /api/health through Funnel" "PASS" "HTTP 200"
+if [ "$PUBLIC_N" -eq 1 ]; then
+  PUBLIC_URL=$(printf '%s' "$PUBLIC" | sed 's/ (Funnel on)//')
+elif [ -n "$CF_UNIT" ]; then
+  PUBLIC_URL="https://firsttracker.app"
 else
-  row "Public /api/health through Funnel" "FAIL" "HTTP ${FHEALTH:-000}"
+  PUBLIC_URL=""
+fi
+if [ -n "$PUBLIC_URL" ]; then
+  FHEALTH=$(curl -s -o /dev/null --max-time 10 -w '%{http_code}' \
+    "${PUBLIC_URL}/api/health" 2>/dev/null)
+else
+  FHEALTH=000
+fi
+if [ "$FHEALTH" = "200" ]; then
+  row "Public /api/health through the edge" "PASS" "$PUBLIC_URL -> HTTP 200"
+else
+  row "Public /api/health through the edge" "FAIL" "${PUBLIC_URL:-no edge} -> HTTP ${FHEALTH:-000}"
 fi
 
 EGRESS=$(curl -s -o /dev/null --max-time 8 -w '%{http_code}' https://api.deepseek.com 2>/dev/null)
