@@ -875,6 +875,47 @@ footer{
 .ob-plan-row select{flex:1;min-width:120px}
 .ob-plan-row input[type=time]{flex:1;min-width:110px}
 
+/* ---------- ONBOARDING WIZARD (intake) + FEATURE TOUR ---------- */
+.ob-card{max-width:560px}
+.ob-progress{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.ob-progress-fill{height:100%;background:var(--acc);width:16.6%;transition:width 200ms ease}
+.ob-step-count{font-size:var(--fs-xs);color:var(--txt-2);margin-bottom:10px}
+.ob-title{font-size:var(--fs-lg);font-weight:600;color:var(--txt);margin:0 0 10px}
+.ob-body{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;margin:0 0 12px}
+.ob-demo{font-size:var(--fs-xs);color:var(--warn-text);background:var(--warn-soft);padding:8px 10px;border-radius:var(--r-ctl);margin:0 0 12px}
+.ob-field{margin:12px 0}
+.ob-field>label,.ob-field-label{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-bottom:6px}
+.ob-radio-cards{display:flex;gap:8px;flex-wrap:wrap}
+.ob-radio-card{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px 12px;cursor:pointer;font-size:var(--fs-sm);color:var(--txt);margin:0;text-transform:none}
+.ob-radio-card input{width:auto;margin:0}
+.ob-radio-card:has(input:checked){border-color:var(--acc);background:var(--acc-soft)}
+.ob-rate-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.ob-rate-label{font-size:var(--fs-sm);color:var(--txt)}
+.ob-rate{display:flex;gap:6px}
+.ob-rate-btn{width:36px;height:36px;min-height:36px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);font-weight:600;padding:0}
+.ob-rate-btn[aria-pressed=true]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
+.ob-rate-legend{font-size:var(--fs-xs);color:var(--txt-2);margin:6px 0 10px}
+.ob-chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip-btn{border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:40px;background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);font-weight:600}
+.chip-btn[aria-pressed=true]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
+.ob-link{background:none;border:none;color:var(--acc-text);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);padding:4px 0;text-decoration:underline}
+.ob-hint{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px}
+.ob-actions{display:flex;justify-content:space-between;gap:8px;margin-top:16px}
+.ob-skip{margin-top:8px}
+.ob-plan-preview{display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto}
+.ob-preview-row{border:1px solid var(--line);border-radius:var(--r-ctl);padding:8px 10px}
+.ob-preview-row .t{font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
+.ob-preview-row .r{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.ob-cta-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.tour-card{position:fixed;z-index:220;max-width:320px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-modal);box-shadow:var(--shadow-3);padding:16px}
+.tour-card h3{font-size:var(--fs-md);font-weight:600;color:var(--txt);margin:0 0 6px}
+.tour-card p{font-size:var(--fs-sm);color:var(--txt-2);margin:0;line-height:1.5}
+.tour-count{font-size:var(--fs-xs);color:var(--txt-2);margin-bottom:6px}
+.tour-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+@media (prefers-reduced-motion: reduce){
+  .ob-progress-fill,.tour-card,.chip-btn,.ob-rate-btn,.ob-radio-card{transition:none!important;animation:none!important}
+}
+
 /* ---------- QUICK-LOG FAB & TOAST ---------- */
 #qlFab{
   position:fixed;right:16px;z-index:60;
@@ -1118,27 +1159,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   </div>
 </div>
 
-<!-- ============ ONBOARDING OVERLAY (first time) ============ -->
-<div id="onboardingOverlay" class="overlay" style="display:none">
-  <div class="auth-card" style="max-width:520px">
-    <div class="auth-brand">
-      <h2>🎓 Welcome to your B2 First plan</h2>
+<!-- ============ ONBOARDING (intake wizard: 6 steps) ============ -->
+<div id="onboardingOverlay" class="overlay" style="display:none" onclick="if(event.target===this)dismissOnboarding()">
+  <div class="auth-card ob-card" id="obDialog" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+    <div class="ob-progress" aria-hidden="true"><div class="ob-progress-fill" id="obProgressFill"></div></div>
+    <div class="ob-step-count tnum" id="obStepCount">1/6</div>
+    <div id="obStepBody"></div>
+    <div class="ob-actions">
+      <button type="button" class="btn gray" id="obBackBtn" onclick="obBack()" style="visibility:hidden">Back</button>
+      <button type="button" class="btn" id="obNextBtn" onclick="obNext()">Continue</button>
     </div>
-    <p class="onboard-intro">Set your baseline and schedule. You can edit all of this later in <b>PLAN</b>.</p>
-    <div><label>Study plan — days &amp; times</label>
-      <div class="ob-plan-row"><span>Session A</span><select id="obADay"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obATime" value="15:30"></div>
-      <div class="ob-plan-row"><span>Session B</span><select id="obBDay"><option value="5">Friday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="6">Saturday</option><option value="0">Sunday</option></select><input type="time" id="obBTime" value="13:00"></div>
-    </div>
-    <div style="margin-top:14px"><label>Preparation stage</label>
-      <select id="obStage">
-        <option value="0">Stage 0 — Foundations (Learn structures and trap recognition)</option>
-        <option value="1">Stage 1 — Precision (Optimal solving times and fluency)</option>
-        <option value="2">Stage 2 — Mastery (Execution under fatigue · Release Candidate)</option>
-      </select>
-    </div>
-    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end">
-      <button class="btn" onclick="finishOnboarding()">Start preparation →</button>
-    </div>
+    <div style="text-align:center"><button type="button" class="btn sm gray ob-skip" id="obSkipBtn" onclick="dismissOnboarding()">Skip for now</button></div>
   </div>
 </div>
 
@@ -1271,6 +1302,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 <!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
 <button id="qlFab" type="button" onclick="openQuickLog()" title="Quick-log (3 taps)" aria-label="Quick-log"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg></button>
+
+<!-- ============ FEATURE TOUR (3 coach marks) ============ -->
+<div id="tourCard" class="tour-card" role="dialog" aria-labelledby="tourTitle" style="display:none">
+  <div class="tour-count tnum" id="tourCount"></div>
+  <h3 id="tourTitle"></h3>
+  <p id="tourBody"></p>
+  <div class="tour-actions">
+    <button type="button" class="btn sm gray" onclick="endTour()">Skip</button>
+    <button type="button" class="btn sm ok" id="tourNext" onclick="tourNext()">Next</button>
+  </div>
+</div>
 <div id="qlToast" class="ql-toast" role="status" aria-live="polite">Session logged</div>
 
 <div id="qlModal" class="overlay" style="display:none" onclick="if(event.target===this)closeQuickLog()">
@@ -2416,6 +2458,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <p class="page-sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn gray" onclick="openIntake()">✏️ Edit my intake</button>
+            <button class="btn gray" onclick="startTour()">🎬 Show the walkthrough again</button>
             <button class="btn gray" onclick="exportData()">💾 Export JSON</button>
             <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Import Backup</button>
           </div>
@@ -2825,7 +2869,8 @@ const SETTINGS_DEFAULT={
    (syncPush/syncPull) sends `?user=<id>` + `Authorization: Bearer <token>`.
    With no session, the login overlay (#authOverlay) is shown.
    Onboarding (#onboardingOverlay) appears the first time a user signs
-   in (picks class days and confirms the suggested plan).
+   in (6-step intake: exam date, goal, skills, time and struggles; it
+   builds D.profile and the first real weekly plan).
    ===================================================================== */
 const BASE_KEY='b2first_tracker_v1';
 const AUTH_KEY='b2first_user';
@@ -2941,40 +2986,285 @@ async function doChangePassword(){
   }
 }
 
-/* ---------- ONBOARDING ---------- */
-function showOnboarding(){
+/* ---------- ONBOARDING (intake wizard + feature tour) ----------
+   First-run intake: 6 steps (one question per screen) that evaluate what
+   the user wants and produce D.profile (exam date, target grade, skills
+   1-5, hours/week, study days, declared struggles + taxonomy mapping).
+   buildWeeklyPlan() consumes D.profile, so the very first plan is real.
+   Esc / backdrop / "Skip for now" closes and marks onboarded WITHOUT
+   inventing a profile. Finishing the 6 steps saves the profile and plays
+   a 3-step feature tour (nav -> quick-log FAB -> diagnostic button),
+   anchored with getBoundingClientRect(), repositioned on resize/scroll,
+   skipping steps whose target is not visible. */
+const STRUGGLE_MAP=[['Vocabulary','L-GAP'],['Grammar accuracy','G-ERR'],['Reading speed','T-MIS'],['Listening speed','T-MIS'],['Writing structure','G-ERR'],['Speaking fluency','L-GAP']];
+const OB_DAYS=[['mon','Mon'],['tue','Tue'],['wed','Wed'],['thu','Thu'],['fri','Fri'],['sat','Sat'],['sun','Sun']];
+const OB_SKILLS=[['rue','Reading & Use of English'],['w','Writing'],['l','Listening'],['sp','Speaking']];
+var OB={step:1,active:false,editing:false,draft:null,opener:null,after:null};
+function obDefaultDraft(){
+  return {examDate:'',targetGrade:'B',skills:{rue:3,w:3,l:3,sp:3},hoursWeek:6,days:['mon','wed','sat'],strugglesDeclared:[]};
+}
+function obCodes(d){
+  return STRUGGLE_MAP.filter(([label])=>d.strugglesDeclared.indexOf(label)>=0).map(([,code])=>code).filter((c,i,a)=>a.indexOf(c)===i);
+}
+function obDraftProfile(){
+  const d=OB.draft||obDefaultDraft();
+  return {
+    examDate:d.examDate||null,
+    targetGrade:d.targetGrade,
+    skills:{rue:d.skills.rue,w:d.skills.w,l:d.skills.l,sp:d.skills.sp},
+    hoursWeek:d.hoursWeek,
+    days:d.days.slice(),
+    struggles:obCodes(d),
+    strugglesDeclared:d.strugglesDeclared.slice(),
+    declaredAt:new Date().toISOString()
+  };
+}
+function showOnboarding(edit){
   const ov=document.getElementById('onboardingOverlay');
-  if(ov){ov.style.display='flex';renderOnboardingPlan()}
+  if(!ov)return;
+  OB.active=true;
+  OB.editing=!!edit;
+  OB.after=null;
+  OB.opener=document.activeElement;
+  const p=(typeof D!=='undefined'&&D&&D.profile)||null;
+  OB.draft=p?{
+    examDate:p.examDate||'',
+    targetGrade:p.targetGrade||'B',
+    skills:Object.assign({rue:3,w:3,l:3,sp:3},p.skills||{}),
+    hoursWeek:Number(p.hoursWeek)||6,
+    days:(Array.isArray(p.days)&&p.days.length)?p.days.slice():['mon','wed','sat'],
+    strugglesDeclared:(Array.isArray(p.strugglesDeclared)?p.strugglesDeclared:[]).slice()
+  }:obDefaultDraft();
+  OB.step=edit?2:1;
+  ov.style.display='flex';
+  obRender();
 }
 function hideOnboarding(){
   const ov=document.getElementById('onboardingOverlay');
   if(ov)ov.style.display='none';
+  OB.active=false;
 }
-function renderOnboardingPlan(){
-  const el=document.getElementById('obPlan');
-  if(!el)return;
-  const s=D.settings;
-  el.innerHTML=`<div class="ob-plan-row"><span>Session A day</span><select id="obADay">${['Monday','Tuesday','Wednesday','Thursday','Friday'].map((d,i)=>`<option value="${i+1}" ${s.sesA.day===i+1?'selected':''}>${d}</option>`).join('')}</select><input type="time" id="obATime" value="${s.sesA.time}"></div>
-    <div class="ob-plan-row"><span>Session B day</span><select id="obBDay">${['Monday','Tuesday','Wednesday','Thursday','Friday'].map((d,i)=>`<option value="${i+1}" ${s.sesB.day===i+1?'selected':''}>${d}</option>`).join('')}</select><input type="time" id="obBTime" value="${s.sesB.time}"></div>
-    <div class="ob-plan-row"><span>Plan</span><label style="display:flex;gap:6px;align-items:center;margin:0;text-transform:none"><input type="radio" name="obPlan" value="suggested" checked> Use suggested plan (current gates/stages)</label>
-    <label style="display:flex;gap:6px;align-items:center;margin:0;text-transform:none"><input type="radio" name="obPlan" value="blank"> Start blank and edit everything</label></div>`;
+function openIntake(){showOnboarding(true)}
+function obStepHtml(){
+  const d=OB.draft;
+  if(OB.step===1){
+    return `<h2 class="ob-title" id="obTitle">Build your B2 First in two habits</h2>
+      <p class="ob-body">It tells you which exam parts are weak, and it makes every practice session cost 15 seconds to log.</p>
+      ${(window.DEMO&&DEMO.demo===true)?'<p class="ob-demo">This is the demo: nothing is stored on the server.</p>':''}`;
+  }
+  if(OB.step===2){
+    return `<h2 class="ob-title" id="obTitle">Exam date &amp; target grade</h2>
+      <div class="ob-field"><label for="obExamDate">Exam date</label>
+        <input type="date" id="obExamDate" min="${today()}" value="${esc(d.examDate)}" onchange="OB.draft.examDate=this.value"></div>
+      <fieldset class="ob-field" style="border:none;padding:0;margin:12px 0"><legend class="ob-field-label">Target grade</legend>
+        <div class="ob-radio-cards">${[['A','A (C1 level)'],['B','B (solid B2)'],['C','C (pass)']].map(([v,l])=>`
+          <label class="ob-radio-card"><input type="radio" name="obGrade" value="${v}" ${d.targetGrade===v?'checked':''} onchange="OB.draft.targetGrade=this.value"><span>${l}</span></label>`).join('')}
+        </div></fieldset>`;
+  }
+  if(OB.step===3){
+    return `<h2 class="ob-title" id="obTitle">How do you feel about each skill?</h2>
+      ${OB_SKILLS.map(([k,label])=>`
+        <div class="ob-rate-row" role="group" aria-label="${label}">
+          <span class="ob-rate-label">${label}</span>
+          <div class="ob-rate">${[1,2,3,4,5].map(n=>`
+            <button type="button" class="ob-rate-btn" data-skill="${k}" data-val="${n}" aria-pressed="${d.skills[k]===n}" title="${n} = ${n===1?'starting':'confident'}" aria-label="${label}: ${n} = ${n===1?'starting':'confident'}" onclick="obRate('${k}',${n})">${n}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div class="ob-rate-legend">1 = starting · 5 = confident</div>
+      <button type="button" class="ob-link" onclick="obSkipToDiagnostic()">Not sure? Take the 10-minute diagnostic instead</button>`;
+  }
+  if(OB.step===4){
+    return `<h2 class="ob-title" id="obTitle">How much time can you study?</h2>
+      <div class="ob-field"><span class="ob-field-label" id="obHoursLbl">Hours per week</span>
+        <div class="ob-chips" role="group" aria-labelledby="obHoursLbl">${[[2,'2'],[4,'4'],[6,'6'],[10,'10+']].map(([v,l])=>`
+          <button type="button" class="chip-btn" data-hours="${v}" aria-pressed="${d.hoursWeek===v}" onclick="obSetHours(${v})">${l}</button>`).join('')}
+        </div></div>
+      <div class="ob-field"><span class="ob-field-label" id="obDaysLbl">Days you can study</span>
+        <div class="ob-chips" role="group" aria-labelledby="obDaysLbl">${OB_DAYS.map(([k,l])=>`
+          <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay('${k}')">${l}</button>`).join('')}
+        </div></div>`;
+  }
+  if(OB.step===5){
+    return `<h2 class="ob-title" id="obTitle">What costs you the most?</h2>
+      <p class="ob-body">Pick up to 3. Your plan adds a reinforcement slot for each one.</p>
+      <div class="ob-chips" role="group" aria-label="Struggles">${STRUGGLE_MAP.map(([label],i)=>`
+        <button type="button" class="chip-btn" data-str="${i}" aria-pressed="${d.strugglesDeclared.indexOf(label)>=0}" onclick="obToggleStruggle(${i})">${label}</button>`).join('')}
+      </div>
+      <div class="ob-hint" id="obStrCount">${d.strugglesDeclared.length}/3</div>`;
+  }
+  const plan=buildWeeklyPlan(Object.assign({},D,{profile:obDraftProfile()}));
+  return `<h2 class="ob-title" id="obTitle">Your plan is ready</h2>
+    <p class="ob-body">This is the week the app just built from your answers. You can regenerate it any time in <b>Plan</b>.</p>
+    <div class="ob-plan-preview" id="obPlanPreview">${plan.slots.map(sl=>{
+      const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening · '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking · part '+sl.part):('UoE · '+partName(sl.part).toLowerCase());
+      return `<div class="ob-preview-row"><div class="t">${sl.day} · ${label} · ${sl.min} min${sl.timed?' · timed':''}</div><div class="r">${esc(sl.reason)}</div></div>`;
+    }).join('')}</div>
+    <div class="ob-cta-row">
+      <button type="button" class="btn ok" id="obDiagCta" onclick="obFinish('diag')">Start the diagnostic</button>
+      <button type="button" class="btn gray" onclick="obFinish('hoy')">Go to Today</button>
+    </div>`;
+}
+function obRender(){
+  const body=document.getElementById('obStepBody');
+  if(!body)return;
+  const cnt=document.getElementById('obStepCount');
+  if(cnt)cnt.textContent=OB.step+'/6';
+  const fill=document.getElementById('obProgressFill');
+  if(fill)fill.style.width=(OB.step/6*100)+'%';
+  const back=document.getElementById('obBackBtn');
+  if(back)back.style.visibility=OB.step>1?'visible':'hidden';
+  const next=document.getElementById('obNextBtn');
+  if(next){
+    next.style.display=OB.step>=6?'none':'';
+    next.textContent=OB.step===1?'Start':'Continue';
+  }
+  body.innerHTML=obStepHtml();
+  const f=body.querySelector('input,select,button')||next;
+  if(f&&f.focus)f.focus();
+}
+function obNext(){
+  if(!OB.active||OB.step>=6)return;
+  if(OB.step===2){
+    const inp=document.getElementById('obExamDate');
+    if(inp)OB.draft.examDate=inp.value||'';
+    const g=document.querySelector('input[name="obGrade"]:checked');
+    if(g)OB.draft.targetGrade=g.value;
+  }
+  OB.step++;
+  obRender();
+}
+function obBack(){
+  if(!OB.active||OB.step<=1)return;
+  OB.step--;
+  obRender();
+}
+function obSkipToDiagnostic(){OB.step=5;obRender()}
+function obRate(k,n){
+  OB.draft.skills[k]=n;
+  document.querySelectorAll('.ob-rate-btn[data-skill="'+k+'"]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.val===n)));
+}
+function obSetHours(v){
+  OB.draft.hoursWeek=v;
+  document.querySelectorAll('.chip-btn[data-hours]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.hours===v)));
+}
+function obToggleDay(k){
+  const i=OB.draft.days.indexOf(k);
+  if(i>=0)OB.draft.days.splice(i,1);else OB.draft.days.push(k);
+  const b=document.querySelector('.chip-btn[data-day="'+k+'"]');
+  if(b)b.setAttribute('aria-pressed',String(i<0));
+}
+function obToggleStruggle(i){
+  const label=STRUGGLE_MAP[i][0];
+  const d=OB.draft;
+  const j=d.strugglesDeclared.indexOf(label);
+  if(j>=0)d.strugglesDeclared.splice(j,1);
+  else if(d.strugglesDeclared.length<3)d.strugglesDeclared.push(label);
+  STRUGGLE_MAP.forEach(([l],k)=>{
+    const b=document.querySelector('.chip-btn[data-str="'+k+'"]');
+    if(b)b.setAttribute('aria-pressed',String(d.strugglesDeclared.indexOf(l)>=0));
+  });
+  const c=document.getElementById('obStrCount');
+  if(c)c.textContent=d.strugglesDeclared.length+'/3';
+}
+function obCommit(){
+  D.profile=obDraftProfile();
+  D.onboarded=true;
+  save();
+}
+function obClose(){
+  hideOnboarding();
+  const o=OB.opener;
+  OB.opener=null;
+  try{if(o&&o.focus&&document.contains(o))o.focus()}catch(e){}
 }
 function finishOnboarding(){
-  const s=D.settings;
-  s.sesA.day=+document.getElementById('obADay').value||1;
-  s.sesA.time=document.getElementById('obATime').value||s.sesA.time;
-  s.sesB.day=+document.getElementById('obBDay').value||5;
-  s.sesB.time=document.getElementById('obBTime').value||s.sesB.time;
-  s.schedule=[{day:s.sesA.day,time:s.sesA.time},{day:s.sesB.day,time:s.sesB.time}];
-  const plan=document.querySelector('input[name="obPlan"]:checked');
-  if(plan&&plan.value==='blank'){
-    // Start from scratch: default settings but without pre-loaded gate criteria
-    D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
-  }
-  D.onboarded=true;
-  save();renderPlan();applyTimers();refreshAll();
-  hideOnboarding();
+  if(OB.active&&OB.draft)obCommit();
+  else{D.onboarded=true;save()}
+  obClose();
+  refreshAll();
 }
+function dismissOnboarding(){
+  D.onboarded=true;
+  save();
+  obClose();
+  refreshAll();
+}
+function obFinish(dest){
+  finishOnboarding();
+  OB.after=dest||null;
+  if(dest==='hoy')showView('hoy');
+  startTour();
+}
+document.addEventListener('keydown',e=>{
+  if(!OB.active)return;
+  if(e.key==='Escape'){e.preventDefault();dismissOnboarding();return}
+  if(e.key==='Enter'&&e.target&&!e.target.closest('button')&&!e.target.closest('a')){e.preventDefault();obNext();return}
+  if(e.key==='Tab'){
+    const dlg=document.getElementById('obDialog');
+    if(!dlg)return;
+    const f=Array.prototype.filter.call(dlg.querySelectorAll('button,input,select,textarea,a[href]'),el=>!el.disabled&&el.getClientRects().length>0);
+    if(!f.length)return;
+    const first=f[0],last=f[f.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
+});
+
+/* ---------- FEATURE TOUR (3 coach marks) ----------
+   Anchored with getBoundingClientRect(), repositioned on resize/scroll.
+   A step whose target is not visible is skipped. */
+const TOUR_STEPS=[
+  {sel:'#sideNav',title:'Everything is one tap away',body:'Today, Exam, Parts, Progress and Plan: your whole B2 First lives in this navigation.'},
+  {sel:'#qlFab',title:'Quick log',body:'Log any practice session in 15 seconds — 3 taps from anywhere in the app.'},
+  {sel:'#diagBannerBtn',title:'Take the diagnostic',body:'10 minutes, 12 questions: it pins your weakest exam parts and tightens the plan.'}
+];
+var TOUR={i:0,active:false};
+function tourVisible(sel){
+  const el=document.querySelector(sel);
+  if(!el)return false;
+  return el.getClientRects().length>0&&el.getBoundingClientRect().width>0;
+}
+function tourPosition(){
+  if(!TOUR.active)return;
+  const card=document.getElementById('tourCard');
+  const st=TOUR_STEPS[TOUR.i];
+  if(!card||!st)return;
+  const el=document.querySelector(st.sel);
+  if(!el)return;
+  const r=el.getBoundingClientRect();
+  const cw=card.offsetWidth||320,ch=card.offsetHeight||140;
+  const left=Math.min(Math.max(8,r.left),Math.max(8,window.innerWidth-cw-8));
+  let top=r.bottom+12;
+  if(top+ch>window.innerHeight-8)top=Math.max(8,r.top-ch-12);
+  card.style.left=left+'px';
+  card.style.top=top+'px';
+}
+function tourShow(){
+  while(TOUR.active&&TOUR.i<TOUR_STEPS.length&&!tourVisible(TOUR_STEPS[TOUR.i].sel))TOUR.i++;
+  const card=document.getElementById('tourCard');
+  if(!card)return;
+  if(TOUR.i>=TOUR_STEPS.length){endTour();return}
+  const st=TOUR_STEPS[TOUR.i];
+  document.getElementById('tourCount').textContent=(TOUR.i+1)+'/'+TOUR_STEPS.length;
+  document.getElementById('tourTitle').textContent=st.title;
+  document.getElementById('tourBody').textContent=st.body;
+  card.style.display='block';
+  tourPosition();
+  const nxt=document.getElementById('tourNext');
+  if(nxt){nxt.textContent=(TOUR.i>=TOUR_STEPS.length-1)?'Done':'Next';nxt.focus()}
+}
+function startTour(){TOUR.i=0;TOUR.active=true;tourShow()}
+function tourNext(){if(!TOUR.active)return;TOUR.i++;tourShow()}
+function endTour(){
+  TOUR.active=false;
+  const card=document.getElementById('tourCard');
+  if(card)card.style.display='none';
+  const after=OB.after;
+  OB.after=null;
+  if(after==='diag'&&typeof openDiagAndStart==='function')openDiagAndStart();
+}
+window.addEventListener('resize',tourPosition);
+window.addEventListener('scroll',tourPosition,true);
 
 /* ---------- SESSION INIT ---------- */
 async function afterAuth(){
@@ -3062,11 +3352,12 @@ function load(){
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
       diag: d.diag||null,
+      profile: (d.profile&&typeof d.profile==='object') ? d.profile : null,
       onboarded: !!d.onboarded,
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,onboarded:false,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,onboarded:false,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -3124,6 +3415,7 @@ function syncPull(){
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
             diag: d.diag!==undefined ? d.diag : (D.diag||null),
+            profile: (d.profile&&typeof d.profile==='object') ? d.profile : (D.profile||null),
             onboarded: (d.onboarded!==undefined) ? !!d.onboarded : !!D.onboarded,
             sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
             updated_at: d.updated_at || Date.now()
@@ -3738,20 +4030,31 @@ function resetPlan(){
 }
 
 /* ---------- WEEKLY PLAN (buildWeeklyPlan) ----------
-   Deterministic rules (NO AI) that derive the week from the diagnostic
-   and the error taxonomy:
-   1. The 3 weakest parts in D.diag.weakest take 3 slots.
-   2. 1 slot is ALWAYS Writing (first if it was never practised).
-   3. 1 Listening slot, focused on the part with the most T-MIS.
-   4. The rest follows the taxonomy majority (L-GAP→1/3,
-      G-ERR→2/4, T-MIS→5/6, T-LIM→timed, tie→rueCycle).
-   5. slotMin (default 45) per slot; total = weekGoal slots.
-   6. Never repeat the same part on the same day (Mon→Fri).
+   Deterministic rules (NO AI) that derive the week from the diagnostic,
+   the error taxonomy and the intake profile (D.profile):
+   1. With a diagnostic, the 3 weakest parts take 3 slots (as always).
+   2. Without a diagnostic but with D.profile, the 2 lowest rated skills
+      define the slots (w→Writing, l→Listening, rue→Reading & UoE,
+      sp→Speaking); the rest fills from the rating order + rotation.
+   3. With D.profile the weekly slot count comes from hoursWeek:
+      2h→3 slots, 4h→4, 6h→5, 10+→6 (no profile: weekGoal).
+   4. With D.profile the slot days come from profile.days (not Mon–Fri).
+   5. profile.struggles adds one reinforcement slot per mapped taxonomy
+      code (L-GAP→part 3, G-ERR→part 2, T-MIS→part 6, T-LIM→timed p4).
+   6. Slot reasons are in English and cite the real datum ("you rated
+      Writing 2/5", "you flagged reading speed", "part 3 is your weakest
+      (2/8 in the diagnostic)").
+   7. slotMin (default 45) per slot. Never repeat the same part on the
+      same day. Without D.profile and without a diagnostic the plan is
+      empty with needDiag (previous behaviour).
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
 function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
   const weekGoal=Math.max(1,Number(s.weekGoal)||5);
+  const prof=(D&&D.profile)||null;
+  const hoursWeek=prof?(Number(prof.hoursWeek)||4):null;
+  const slotsPerWeek=prof?(hoursWeek<=2?3:hoursWeek<=4?4:hoursWeek<=6?5:6):weekGoal;
   const slotMin=Math.max(1,Number(s.slotMin)||45);
   const errs=Array.isArray(D&&D.errs)?D.errs:[];
   const log=Array.isArray(D&&D.log)?D.log:[];
@@ -3767,27 +4070,17 @@ function buildWeeklyPlan(D){
   const sessions14=log.filter(e=>e&&e.date&&e.date>=t14&&e.date<=t0).length;
   const diag=(D&&D.diag)||null;
   const byPart=(diag&&diag.byPart)||{};
+  const useDiag=!!(diag&&Array.isArray(diag.weakest)&&diag.weakest.map(Number).filter(p=>p>=1&&p<=7).length);
   const source={
     diag:diag?{date:diag.date||null,correct:(diag.correct!=null?diag.correct:null),total:(diag.total!=null?diag.total:null),
       parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
-    tax:tax,sessions14:sessions14,weekGoal:weekGoal
+    tax:tax,sessions14:sessions14,weekGoal:slotsPerWeek,
+    profile:prof?{examDate:prof.examDate||null,targetGrade:prof.targetGrade||null,skills:prof.skills||null,
+      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
   };
-  if(!diag||!Array.isArray(diag.weakest)||!diag.weakest.length)return mk({source:source,needDiag:true});
-  const weakest=diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3);
-  if(!weakest.length)return mk({source:source,needDiag:true});
+  if(!useDiag&&!prof)return mk({source:source,needDiag:true});
+  const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3):[];
   const hasW=log.some(e=>e&&e.type==='w');
-  const weakSlots=weakest.map((p,i)=>{
-    const bp=byPart[p]||{ok:0,n:0};
-    return {part:p,type:'ue',min:slotMin,timed:false,
-      reason:(i===0?`part ${p} is your weakest`:`part ${p} is weakness #${i+1}`)+` (${bp.ok}/${bp.n} in the diagnostic)`};
-  });
-  const wSlot={part:null,type:'w',min:slotMin,timed:false,
-    reason:hasW?'Writing is 25% of the exam and you already practise it: keep it every week':'you never practised Writing and it is 25% of the exam'};
-  let lPart=0,lCount=0;
-  for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
-  if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
-  const lSlot={part:lPart,type:'l',min:slotMin,timed:false,
-    reason:lCount?`Listening boost: ${lCount} T-MIS errors concentrated in part ${lPart}`:`Listening boost part ${lPart}: 0 T-MIS errors per part, lCycle rotation`};
   const ranked=Object.keys(tax).map(k=>({k:k,n:tax[k]})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
   let fillMode='rot',fillSeq=[];
   if(ranked.length&&!(ranked.length>1&&ranked[0].n===ranked[1].n)){
@@ -3799,16 +4092,62 @@ function buildWeeklyPlan(D){
   }
   const rue=(Array.isArray(s.rueCycle)&&s.rueCycle.length)?s.rueCycle.map(Number).filter(p=>p>=1&&p<=7):[1,2,3,4,5,6,7];
   const seq=fillSeq.concat(rue.filter(p=>fillSeq.indexOf(p)<0));
-  const priority=[wSlot,lSlot].concat(weakSlots);
-  const chosen=[];
-  priority.forEach(sl=>{if(chosen.length<weekGoal)chosen.push(sl)});
-  const ordered=(hasW?weakSlots.concat([wSlot,lSlot]):[wSlot].concat(weakSlots,[lSlot])).filter(sl=>chosen.indexOf(sl)>=0);
+  let lPart=0,lCount=0;
+  for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
+  if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
+  const DAY_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+  const DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
+  let DAYS=['Mon','Tue','Wed','Thu','Fri'];
+  if(prof&&Array.isArray(prof.days)&&prof.days.length){
+    const dd=DAY_ORDER.filter(k=>prof.days.indexOf(k)>=0).map(k=>DAY_LABELS[k]);
+    if(dd.length)DAYS=dd;
+  }
+  const dayN=DAYS.length;
   const usedParts={};
-  chosen.forEach(sl=>{if(sl.part!=null)usedParts[sl.part]=true});
-  while(ordered.length<weekGoal){
+  const pickPart=()=>{
+    for(const p of seq){if(!usedParts[p]){usedParts[p]=true;return p}}
+    const p=seq[0]||1;usedParts[p]=true;return p;
+  };
+  let ordered=[];
+  if(useDiag){
+    const weakSlots=weakest.map((p,i)=>{
+      const bp=byPart[p]||{ok:0,n:0};
+      return {part:p,type:'ue',min:slotMin,timed:false,
+        reason:(i===0?`part ${p} is your weakest`:`part ${p} is weakness #${i+1}`)+` (${bp.ok}/${bp.n} in the diagnostic)`};
+    });
+    const wSlot={part:null,type:'w',min:slotMin,timed:false,
+      reason:hasW?'Writing is 25% of the exam and you already practise it: keep it every week':'you never practised Writing and it is 25% of the exam'};
+    const lSlot={part:lPart,type:'l',min:slotMin,timed:false,
+      reason:lCount?`Listening boost: ${lCount} T-MIS errors concentrated in part ${lPart}`:`Listening boost part ${lPart}: 0 T-MIS errors per part, lCycle rotation`};
+    const priority=[wSlot,lSlot].concat(weakSlots);
+    const chosen=[];
+    priority.forEach(sl=>{if(chosen.length<slotsPerWeek)chosen.push(sl)});
+    ordered=(hasW?weakSlots.concat([wSlot,lSlot]):[wSlot].concat(weakSlots,[lSlot])).filter(sl=>chosen.indexOf(sl)>=0);
+    chosen.forEach(sl=>{if(sl.part!=null)usedParts[sl.part]=true});
+  }else{
+    // Intake profile without diagnostic: the 2 lowest rated skills define
+    // the first slots; the rest follows the rating order + rotation.
+    const skills=(prof&&prof.skills)||{};
+    const skillLabel={rue:'Reading & Use of English',w:'Writing',l:'Listening',sp:'Speaking'};
+    const rated=['rue','w','l','sp'].map(k=>({k:k,n:Math.min(5,Math.max(1,Number(skills[k])||3))})).sort((a,b)=>a.n-b.n);
+    const spPart=(Array.isArray(s.spCycle)&&s.spCycle.length)?(Number(s.spCycle[0])||1):1;
+    rated.forEach(sk=>{
+      if(ordered.length>=slotsPerWeek)return;
+      const n=sk.n;
+      if(sk.k==='w')ordered.push({part:null,type:'w',min:slotMin,timed:false,
+        reason:`you rated Writing ${n}/5 and it is 25% of the exam`});
+      else if(sk.k==='l'){usedParts[lPart]=true;ordered.push({part:lPart,type:'l',min:slotMin,timed:false,
+        reason:`you rated Listening ${n}/5: listening boost part ${lPart}`})}
+      else if(sk.k==='sp'){usedParts[spPart]=true;ordered.push({part:spPart,type:'sp',min:slotMin,timed:false,
+        reason:`you rated Speaking ${n}/5: speaking part ${spPart}`})}
+      else{const p=pickPart();ordered.push({part:p,type:'ue',min:slotMin,timed:false,
+        reason:`you rated ${skillLabel[sk.k]} ${n}/5: part ${p} — ${partName(p).toLowerCase()}`})}
+    });
+  }
+  while(ordered.length<slotsPerWeek){
     const i=ordered.length;
     const dayParts={};
-    ordered.forEach((sl,j)=>{if(j%5===i%5&&sl.part!=null)dayParts[sl.part]=true});
+    ordered.forEach((sl,j)=>{if(j%dayN===i%dayN&&sl.part!=null)dayParts[sl.part]=true});
     let part=null;
     for(const p of seq){if(!usedParts[p]&&!dayParts[p]){part=p;break}}
     if(part==null)for(const p of seq){if(!dayParts[p]){part=p;break}}
@@ -3816,14 +4155,34 @@ function buildWeeklyPlan(D){
     usedParts[part]=true;
     const topN=ranked.length?ranked[0].n:0,topK=ranked.length?ranked[0].k:'';
     let fr;
-    if(fillMode==='lex'||fillMode==='gram'||fillMode==='text')fr=`most of your errors are ${topK} (${topN}): part ${part} — ${partName(part).toLowerCase()}`;
+    if(!useDiag&&prof)fr=`${hoursWeek}h per week (your intake): part ${part} — ${partName(part).toLowerCase()} (weekly rotation)`;
+    else if(fillMode==='lex'||fillMode==='gram'||fillMode==='text')fr=`most of your errors are ${topK} (${topN}): part ${part} — ${partName(part).toLowerCase()}`;
     else if(fillMode==='time')fr=`exam mode, timed: your ${topN} T-LIM errors call for part ${part} against the clock`;
     else fr=`no clear error majority: rueCycle rotation, part ${part} — ${partName(part).toLowerCase()}`;
     ordered.push({part:part,type:'ue',min:slotMin,timed:fillMode==='time',reason:fr});
   }
-  const DAYS=['Mon','Tue','Wed','Thu','Fri'];
-  const slots=ordered.slice(0,weekGoal);
-  slots.forEach((sl,i)=>{sl.day=DAYS[i%5]});
+  if(prof){
+    // Rule 5: one reinforcement slot per mapped struggle code
+    const REINF={'L-GAP':{part:3},'G-ERR':{part:2},'T-MIS':{part:6},'T-LIM':{part:4,timed:true}};
+    const REINF_LABEL={'L-GAP':'vocabulary','G-ERR':'grammar accuracy','T-MIS':'reading speed','T-LIM':'timing'};
+    const declared=Array.isArray(prof.strugglesDeclared)?prof.strugglesDeclared:[];
+    const codes=[];
+    (Array.isArray(prof.struggles)?prof.struggles:[]).forEach(c=>{
+      if(REINF[c]&&codes.indexOf(c)<0)codes.push(c);
+    });
+    codes.forEach(c=>{
+      const r=REINF[c];
+      let decl=REINF_LABEL[c];
+      declared.forEach(label=>{
+        const m=STRUGGLE_MAP.filter(([l])=>l===label)[0];
+        if(m&&m[1]===c)decl=label;
+      });
+      ordered.push({part:r.part,type:'ue',min:slotMin,timed:!!r.timed,
+        reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
+    });
+  }
+  const slots=ordered;
+  slots.forEach((sl,i)=>{sl.day=DAYS[i%dayN]});
   const reason={};
   slots.forEach((sl,i)=>{reason[i]=sl.reason});
   return {slots:slots,reason:reason,source:source};
@@ -3846,7 +4205,7 @@ function renderWeeklyPlan(){
   }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):('UoE '+partName(sl.part).toLowerCase());
+    const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking part '+sl.part):('UoE '+partName(sl.part).toLowerCase());
     const partTxt=sl.part!=null?`Part ${sl.part} · `:'';
     return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}">
       <div class="wp-main">
@@ -3862,7 +4221,10 @@ function renderWeeklyPlan(){
   if(why)why.innerHTML=`<div>· <b>Diagnostic</b> (parts + correct answers): ${esc(diagTxt)}</div>
     <div>· <b>Error taxonomy counts</b>: ${esc(taxTxt)}</div>
     <div>· <b>Sessions in the last 14 days</b>: ${src.sessions14}</div>
-    <div>· <b>weekGoal</b>: ${src.weekGoal} slots</div>`;
+    <div>· <b>weekGoal</b>: ${src.weekGoal} slots`+(src.profile?` (from your intake: ${src.profile.hoursWeek}h/week)`:'')+`</div>`;
+  if(why&&src.profile){
+    why.innerHTML+=`<div>· <b>Intake</b>: exam ${esc(src.profile.examDate||'not set')} · target ${esc(src.profile.targetGrade||'-')} · days ${esc((src.profile.days||[]).join(', ')||'-')} · struggles ${esc((src.profile.struggles||[]).join(', ')||'none')}</div>`;
+  }
 }
 function regenWeeklyPlan(){renderWeeklyPlan()}
 function wpStart(i){
@@ -3870,6 +4232,7 @@ function wpStart(i){
   if(!sl)return;
   if(sl.type==='w')goToPartFilter(null);
   else if(sl.type==='l')goToPartFilter(sl.part,'lp');
+  else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
   else goToPartFilter(sl.part);
 }
 
@@ -4092,7 +4455,7 @@ function renderStats(){
    attention slip). renderErrs() lists + per-item delete + clear. */
 function renderErrs(){
   const el=document.getElementById('errList');
-  if(!D.errs.length){el.innerHTML='<div class="empty">No errors logged. Every mistake you note gets you closer to Grade A.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
+  if(!D.errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
   const diagRunning=(typeof DIAG_STATE==='object'&&DIAG_STATE.status==='running');
   el.innerHTML=D.errs.map((e,i)=>{
     const tax=e.code||e.tax||'G-ERR';
@@ -4109,7 +4472,7 @@ function renderErrPills(){
   const el=document.getElementById('errPills');
   if(!el)return;
   const errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
+  if(!errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const names={'L-GAP':'Lexical gap','G-ERR':'Misapplied rule','T-MIS':'Textual distractor','T-LIM':'Rush / attention'};
   const total=errs.length;
@@ -4383,7 +4746,7 @@ function renderGrafEvol(){
     {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
-  if(!seriesOk.length){el.innerHTML='<div class="empty">Log Writing, Listening or UoE to see your evolution.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div>';return}
+  if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
   const n=Math.max(...seriesOk.map(s=>s.es.length));
   const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
@@ -4420,13 +4783,13 @@ function renderGrafPart(){
   ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
   const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
   const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
-  if(!rows.length){el.innerHTML='<div class="empty">No data yet — log exercises and you\'ll see your weak spots here.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div>';return}
+  if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   rows.sort((a,b)=>a.pct-b.pct);
   el.innerHTML='<div style="max-width:560px">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
 }
 function renderGrafErr(){
   const el=document.getElementById('gErr'),errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
+  if(!errs.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
   const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
@@ -4445,7 +4808,7 @@ function renderGrafErr(){
 }
 function renderGrafCons(){
   const el=document.getElementById('gCons'),log=D.log||[];
-  if(!log.length){el.innerHTML='<div class="empty">No logs yet — every session counts toward your streak.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div>';return}
+  if(!log.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   const byWeek={};
   log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
   const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
@@ -4903,13 +5266,15 @@ function renderToday(){
   renderRecent();
 }
 
-/* Exam countdown card (uses D.examDates — exam days never break the streak) */
+/* Exam countdown card: prefers D.profile.examDate (intake); falls back to
+   D.examDates (exam days never break the streak). */
 function renderExamCountdown(){
   const el=document.getElementById('examCountdown');
   if(!el)return;
   const todayStr=dayKey(new Date());
+  const profDate=(D.profile&&D.profile.examDate)?dayKey(D.profile.examDate):null;
   const dates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(Boolean).sort();
-  const next=dates.find(x=>x>=todayStr);
+  const next=((profDate&&profDate>=todayStr)?profDate:null)||dates.find(x=>x>=todayStr);
   if(next){
     const days=Math.round((_parseLocalDay(next)-_parseLocalDay(todayStr))/86400000);
     el.innerHTML=`<h2>Exam countdown</h2>
@@ -4923,6 +5288,7 @@ function renderExamCountdown(){
     el.innerHTML=`<h2>Exam countdown</h2>
       <div class="sub">No exam date set. Add one to get a countdown (exam days never break your streak).</div>
       <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+        <button type="button" class="btn ok sm" onclick="openIntake()">Set your exam date</button>
         <div style="flex:1;min-width:160px"><label for="examDateInput">Exam date</label><input type="date" id="examDateInput"></div>
         <button type="button" class="btn ok" onclick="setExamDate()">Save date</button>
       </div>`;
@@ -4939,6 +5305,7 @@ function setExamDate(){
 function clearExamDate(){
   const todayStr=dayKey(new Date());
   D.examDates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(x=>x<todayStr);
+  if(D.profile)D.profile.examDate=null;
   save();refreshAll();
 }
 
@@ -4947,7 +5314,7 @@ function renderRecent(){
   const el=document.getElementById('recentList');
   if(!el)return;
   const rows=(D.log||[]).slice(0,5);
-  if(!rows.length){el.innerHTML='<div class="empty">Nothing logged yet — your last sessions will show up here.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div>';return}
+  if(!rows.length){el.innerHTML='<div class="empty">Nothing logged yet. Your first session takes 15 seconds.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   el.innerHTML=rows.map(e=>{
     const sc=e.type==='w'?((e.score!==undefined?e.score:e.total)+'/20'):e.type==='fw'?((e.s1||'-')+'/'+(e.s2||'-')):e.type==='sp'?'done':e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total);
     return `<div class="metric-row"><span>${MOD[e.type]?MOD[e.type](e):e.type} <span class="muted">· ${fmtDate(e.date)}</span></span><span class="metric-val tnum">${sc}</span></div>`;
