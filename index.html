@@ -1291,8 +1291,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div class="row" style="margin-top:10px" id="soloScoreRow">
-      <div><label id="soloOkLbl" data-i18n="solo_correct">Correct</label><input type="number" id="soloOk" min="0" value="0"></div>
-      <div><label id="soloTotLbl" data-i18n="solo_total">Total Questions</label><input type="number" id="soloTot" min="1" value="8"></div>
+      <div><label id="soloOkLbl">Correct</label><input type="number" id="soloOk" min="0" value="0"></div>
+      <div><label id="soloTotLbl">Total Questions</label><input type="number" id="soloTot" min="1" value="8"></div>
       <div><label data-i18n="solo_minutes">Minutes Spent</label><input type="number" id="soloMin" min="0" value="8"></div>
     </div>
 
@@ -2949,7 +2949,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <div id="iaError" class="note" style="display:none;margin-top:16px;background:var(--bad-soft);border-left-color:var(--bad);color:var(--bad-text)">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-                <span id="iaErrorMsg" data-i18n="ai_failed">Failed to correct the text.</span>
+                <span id="iaErrorMsg">Failed to correct the text.</span>
                 <button type="button" class="btn sm" id="iaRetryBtn" onclick="submitIaWriting()" data-i18n="common_retry">Retry</button>
               </div>
             </div>
@@ -3423,6 +3423,11 @@ const I18N={
     solo_part:'Part / Exercise',
     solo_correct:'Correct',
     solo_total:'Total Questions',
+    solo_score20:'Score /20',
+    solo_word_count:'Word count',
+    solo_completed:'Completed (1=Yes)',
+    solo_target:'Target',
+    solo_total_q:'Total questions',
     solo_minutes:'Minutes Spent',
     solo_source:'Source / Book',
     solo_ref:'Reference / Notes',
@@ -3839,6 +3844,11 @@ const I18N={
     solo_part:'Parte / Ejercicio',
     solo_correct:'Correctas',
     solo_total:'Total de preguntas',
+    solo_score20:'Nota /20',
+    solo_word_count:'Cantidad de palabras',
+    solo_completed:'Completado (1=Sí)',
+    solo_target:'Objetivo',
+    solo_total_q:'Total de preguntas',
     solo_minutes:'Minutos dedicados',
     solo_source:'Fuente / Libro',
     solo_ref:'Referencia / Notas',
@@ -6658,28 +6668,28 @@ function onSoloPartChange(){
   const minInput=document.getElementById('soloMin');
 
   if(skill==='w'){
-    okLbl.textContent='Score /20';
-    totLbl.textContent='Word count';
+    okLbl.textContent=t('solo_score20');
+    totLbl.textContent=t('solo_word_count');
     okInput.max=20;okInput.step='0.5';okInput.value=16;
     totInput.value=160;
     minInput.value=item.min||35;
   }else if(skill==='sp'){
     if(partVal==='all'){
-      okLbl.textContent='Completed (1=Yes)';
-      totLbl.textContent='Target';
+      okLbl.textContent=t('solo_completed');
+      totLbl.textContent=t('solo_target');
       okInput.value=1;okInput.max=1;
       totInput.value=15;
       minInput.value=15;
     }else{
-      okLbl.textContent='Completed (1=Yes)';
-      totLbl.textContent='Target';
+      okLbl.textContent=t('solo_completed');
+      totLbl.textContent=t('solo_target');
       okInput.value=1;
       totInput.value=1;
       minInput.value=item.min||4;
     }
   }else{
-    okLbl.textContent='Correct';
-    totLbl.textContent='Total questions';
+    okLbl.textContent=t('solo_correct');
+    totLbl.textContent=t('solo_total_q');
     okInput.max=item.q||52;okInput.step='1';okInput.value=item.q||8;
     totInput.value=item.q||8;
     minInput.value=item.min||8;
@@ -7735,7 +7745,7 @@ function renderMaterial(){
   }).join('');
 }
 function fmtSize(n){
-  if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return n.toFixed(1)+' MB';
+  if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return Number(n.toFixed(1)).toLocaleString(currentLocale())+' MB';
 }
 function renderBookCats(){
   const el=document.getElementById('bookCats');
@@ -8075,7 +8085,7 @@ function renderSchedulePreview(){
     const weekOffset=Math.floor(i/sched.length);
     const targetWeek=curWeek+weekOffset;
     const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
-    const dayName=DAYS[sched[slotIdx].day];
+    const dayName=dayFull(sched[slotIdx].day);
     items.push(`
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--green-surface);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--green-surface-border);font-size:12px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -8106,14 +8116,14 @@ function getSkillNextOccurrence(skillId,baseDate=new Date()){
     if(slotInfo.session.id===skillId){
       const day=sched[slotIdx].day;
       const time=sched[slotIdx].time;
-      const dayName=DAYS[day];
-      const dayShort=dayName.slice(0,3);
+      const dayName=dayFull(day);
+      const dayShort=dayFull(day).slice(0,3);
       const weekLabel=sched.length===2?(isTargetWeekA?'Week A':'Week B'):`Week ${targetWeek}`;
       const weekShort=sched.length===2?(isTargetWeekA?'A':'B'):'';
       return {day,time,dayName,dayShort,weekLabel,weekShort};
     }
   }
-  return {day:sched[0].day,time:sched[0].time,dayName:DAYS[sched[0].day],dayShort:DAYS[sched[0].day].slice(0,3),weekLabel:'Week A',weekShort:'A'};
+  return {day:sched[0].day,time:sched[0].time,dayName:dayFull(sched[0].day),dayShort:dayFull(sched[0].day).slice(0,3),weekLabel:'Week A',weekShort:'A'};
 }
 
 function updatePersonalizedUI(){
@@ -8764,7 +8774,7 @@ function setIaState(st,errMsg){
   const errEl=document.getElementById('iaError');
   if(errEl)errEl.style.display=st==='error'?'block':'none';
   const msgEl=document.getElementById('iaErrorMsg');
-  if(msgEl&&errMsg)msgEl.textContent=errMsg;
+  if(msgEl){if(errMsg)msgEl.textContent=errMsg;else if(st==='error')msgEl.textContent=t('ai_failed')}
   renderIa();
 }
 function renderIa(){
