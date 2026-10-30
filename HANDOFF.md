@@ -115,6 +115,7 @@ Configuration lives in a systemd drop-in, not in the repo:
   Environment=B2_REGISTER=open
   Environment=B2_AI_DAILY_PER_USER=8
   Environment=B2_AI_DAILY_TOTAL=80
+  Environment=B2_HOST=127.0.0.1
 ```
 
 `~/.config/b2first/ai.env` holds `B2_AI_KEY`, `B2_AI_PROVIDER`, `B2_AI_MODEL`. **Never print the
@@ -258,6 +259,7 @@ Two audits, both exit non-zero on failure:
 | No version banner (`Server: B2First`, `sys_version=""`) | found by `tools/audit.sh` |
 | AI: instruction hierarchy, per-request nonce fence, injection/off-topic heuristics, output leak guard | phase 17 |
 | Host input filter: default drop, LAN no longer blanket-trusted, explicit ports `2283/8089/9100`, SSH new connections only from LAN (6/min burst 3), tailnet and Coolify bridge `10.0.1.0/24`; WAN SSH dropped | phase 25 (`nft-hardened.service`) |
+| App `8088` is loopback + tailnet only: the LAN rule excludes it and the process binds `127.0.0.1` (Funnel reaches it over loopback) | phase 25 (`nft-hardened.service`, `B2_HOST=127.0.0.1`) |
 | Docker published ports filtered in `FORWARD/DOCKER-USER`: LAN only `2283`/`8089`, panel and `6001-6002` tailnet-only, container egress preserved | phase 25 (`docker-user-hardening.service`) |
 | sshd: `MaxAuthTries 3`, `LoginGraceTime 20`, `AllowUsers juan root@10.0.1.*`, `X11Forwarding no`, `ClientAliveInterval 120` | phase 25 drop-in |
 | fail2ban `sshd` jail: `maxretry 4`, `bantime 1h`, systemd backend, LAN ignored as recovery path | phase 25 |
@@ -514,6 +516,7 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 | Tunnel down | `tailscale funnel status`; re-run `tailscale funnel --https=443 http://127.0.0.1:8088` |
 | Suspected compromise | `grep -i fail data/audit.log`, rotate every token (delete `tokens.json`), reset passwords |
 | Host firewall mistake / locked out of LAN | wait 150 s for `/root/nft-rollback.sh`, or run it; verify `nft -s list table inet hardened \| sha256sum`; stop `nft-auto-rollback.timer` |
+| App reachable from LAN on `:8088` | check `Environment=B2_HOST=127.0.0.1` in the b2first drop-in and that the nft LAN rule is `{ 2283, 8089, 9100 }`; then `systemctl daemon-reload && systemctl restart b2first` |
 | Undo Docker FORWARD filtering | `systemctl disable --now docker-user-hardening`, then `iptables -F DOCKER-USER` |
 | A legitimate IP got banned | `sudo fail2ban-client set sshd unbanip <IP>` (LAN is in `ignoreip`) |
 | Monthly patching | `docs/HOST-HARDENING.md` §6 (manual by design; `unattended-upgrades` stays off) |

@@ -122,6 +122,28 @@ Notes:
   the day of this phase. That is a pre-existing state, not caused by phase 25;
   the Funnel mapping is unchanged and tailnet-only.
 
+### 8088: LAN exposure removed (2026-10-30 reconciliation)
+
+A re-measure against the phase brief found two drifts from the matrix above:
+
+| Drift | Measured | Fixed |
+| --- | --- | --- |
+| `table inet hardened` LAN rule | `{ 2283, 8088, 8089, 9100 }` | `{ 2283, 8089, 9100 }` |
+| App bind | `0.0.0.0:8088` (`B2_HOST=0.0.0.0` in the drop-in) | `127.0.0.1:8088` (`B2_HOST=127.0.0.1`) |
+
+The Funnel reaches `127.0.0.1:8088`, so the loopback bind is the intended
+posture. Tailnet still reaches `8088` through `iifname "tailscale0" accept`
+(deliberate, and the phase rules forbid narrowing the tailnet rules). Re-probed
+from a simulated LAN source: `8088 -> 000`, `22 -> open`, `2283 -> 200`,
+`8089 -> 302`, `9100 -> 200`, `8000/6001/6002 -> 000`.
+
+Stateless sha256 after the change (two consecutive applications):
+`e5101ed09970b80285310d180ac50c2cecff2b202fdd8746d9a3b4bea2b1adbd`.
+
+`tools/audit-host.sh` now asserts both: the LAN rule must not contain `8088`,
+and `8088` must listen on loopback only (the previous row printed PASS
+unconditionally, which hid exactly this drift).
+
 ### Why the literal `DOCKER-USER` snippet was tightened
 
 The phase specified `-A DOCKER-USER -s 192.168.1.0/24 -j RETURN`. That returns
@@ -365,9 +387,11 @@ post-reboot `audit-host.sh` is part of the runbook, not optional.
 
 ## 7. Residual risks (honest)
 
-- SSH accepts new connections from any routable source at 6/min (the explicit
-  phase rule). The home NAT does not forward 22. Tighten with `ip saddr
-  192.168.1.0/24` if that changes.
+- SSH is **LAN + tailnet only**; internet sources are dropped in `input`. There
+  is no unqualified `dport 22 ... accept` — `tools/audit-host.sh` fails if one
+  reappears. The Coolify bridge (`10.0.1.0/24`) is the only other exception.
+- `8088` is loopback + tailnet, never LAN. The public surface is the Funnel on
+  `443`, which is intentional; access control there is the app's auth layer.
 - `pi-thermal-monitor` has no authentication. Network placement (LAN/tailnet)
   is the only control.
 - Coolify `root` over SSH from `10.0.1.0/24` is key-only but privileged. The
