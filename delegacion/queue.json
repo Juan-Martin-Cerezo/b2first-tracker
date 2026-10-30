@@ -52,7 +52,7 @@
       "id": "13",
       "tests": "tools/audit.sh",
       "title": "SECURITY.md + auditoria externa reproducible + README/guion actualizados",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "14",
