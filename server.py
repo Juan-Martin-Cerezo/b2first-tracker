@@ -32,13 +32,14 @@ Deploy: systemd unit b2first.service (Restart=always) in this dir.
 import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading, gzip
 import base64, binascii
 import calendar
+import socket
 import urllib.request, urllib.error
 import ipaddress
 import traceback
 from collections import deque
 from datetime import date, timedelta
 from email.utils import formatdate, parsedate_to_datetime
-from urllib.parse import quote, unquote
+from urllib.parse import quote, unquote, urlsplit
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
@@ -145,6 +146,27 @@ AI_TEXT_MIN_WORDS = 40
 AI_TEXT_MAX_WORDS = 700
 AI_OUTPUT_MAX_BYTES = 8 * 1024
 AI_TIMEOUT = 25
+
+# --- Phase 30: bring-your-own provider key (writing + speaking report) ------
+# The key arrives in X-Provider-Key and lives only in memory for the duration
+# of one request: it is never written under data/, never logged, never put in
+# the audit chain and never echoed back. Only OpenAI-compatible wire formats
+# are supported for BYO keys, so one adapter covers every listed provider.
+PROVIDER_TIMEOUT = 20                    # seconds per outbound completion call
+PROVIDER_MAX_RESPONSE = 256 * 1024       # max bytes read from the provider
+BYO_RATE_PER_HOUR = 120                  # BYO calls per hour per account
+BYO_TEST_RATE_PER_MIN = 10               # provider test calls per minute
+BYO_KEY_MAX = 512                        # max key characters
+BYO_MODEL_MAX = 200                      # max model-id characters
+_BYO_MODEL_RE = re.compile(r"^[A-Za-z0-9._:/@+-]{1,%d}$" % BYO_MODEL_MAX)
+# Exact operator-controlled origins allowed without the public-https checks
+# (self-hosted gateways and the local stubs used by the test suites). Empty by
+# default: a client-supplied base can never be trusted on its own.
+BYO_TRUSTED_BASES = tuple(
+    item.strip().rstrip("/")
+    for item in os.environ.get("B2_BYO_TRUSTED_BASES", "").split(",")
+    if item.strip()
+)
 
 # --- Azure Pronunciation Assessment (S2) -----------------------------------
 # The key lives only in the systemd environment, is never sent to the browser,
@@ -977,28 +999,160 @@ def _word_count(text):
     return len(text.split())
 
 
-def _ai_text_complete(system, user_block):
-    """One text-model call (DeepSeek/Gemini) for the speaking report.
+# ---------------------------------------------------------------------------
+# Phase 30: BYO provider plumbing
+# ---------------------------------------------------------------------------
+def _validate_provider_base(raw):
+    """Return a normalised https base or None.
 
-    Returns ``(content, error)``: on success ``error`` is None; on failure
-    ``content`` is None and ``error`` is a slug the HTTP handler maps to a
-    status. The raw provider body is never returned, echoed or logged.
+    Refusing everything that is not a public https origin is what keeps this
+    header from becoming an SSRF gadget: no plain http, no IP literal, no
+    localhost, no private/link-local/reserved address and no port other than
+    443. Hostnames are resolved once and every answer must be public.
     """
-    api_key = (os.environ.get("B2_AI_KEY") or "").strip()
-    if not api_key:
-        return None, "ai_not_configured"
-    env_provider = (B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER
-                    else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER))
-    provider = (env_provider or DEFAULT_AI_PROVIDER).strip().lower()
-    if provider not in ("deepseek", "gemini"):
-        return None, "ai_not_configured"
-    default_base = DEFAULT_DEEPSEEK_BASE if provider == "deepseek" else DEFAULT_GEMINI_BASE
-    default_model = DEFAULT_DEEPSEEK_MODEL if provider == "deepseek" else DEFAULT_GEMINI_MODEL
-    base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
-    model = (B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or default_model).strip()
-    if provider == "deepseek":
-        url = f"{base.rstrip('/')}/chat/completions"
-        payload = json.dumps({
+    text = (raw or "").strip().rstrip("/")
+    if not text or len(text) > 300:
+        return None
+    if text in BYO_TRUSTED_BASES:
+        return text
+    try:
+        parts = urlsplit(text)
+        port = parts.port
+    except ValueError:
+        return None
+    if parts.scheme != "https" or parts.username or parts.password:
+        return None
+    if port not in (None, 443) or parts.query or parts.fragment:
+        return None
+    host = (parts.hostname or "").lower().rstrip(".")
+    if not host or "." not in host or host == "localhost" or host.endswith(".localhost"):
+        return None
+    try:
+        ipaddress.ip_address(host)
+        return None
+    except ValueError:
+        pass
+    try:
+        infos = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    except OSError:
+        return None
+    for info in infos:
+        try:
+            ip = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            return None
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
+            return None
+    path = parts.path.rstrip("/")
+    return "https://" + host + path
+
+
+def _byo_from_headers(headers):
+    """Parse the optional X-Provider-* headers.
+
+    Returns ``(byo, error)`` where ``byo`` is ``{key, base, model}`` or None.
+    No key means "use the owner's key and quota". Error slugs never contain
+    the submitted value: the caller answers 400 with the slug only.
+    """
+    key = (headers.get("X-Provider-Key") or "").strip()
+    if not key:
+        return None, None
+    if len(key) > BYO_KEY_MAX or any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in key):
+        return None, "invalid_provider_key"
+    model = (headers.get("X-Provider-Model") or "").strip()
+    if model and not _BYO_MODEL_RE.match(model):
+        return None, "invalid_provider_model"
+    if not model:
+        model = DEFAULT_DEEPSEEK_MODEL
+    raw_base = (headers.get("X-Provider-Base") or "").strip()
+    if raw_base:
+        base = _validate_provider_base(raw_base)
+        if not base:
+            return None, "invalid_provider_base"
+    else:
+        base = DEFAULT_DEEPSEEK_BASE
+    return {"key": key, "base": base, "model": model}, None
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Turn every 3xx into an HTTPError instead of following it."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _provider_complete(base, key, model, payload, wire="openai",
+                       timeout=PROVIDER_TIMEOUT,
+                       max_bytes=PROVIDER_MAX_RESPONSE):
+    """One outbound completion request shared by the owner and BYO paths.
+
+    Returns ``(parsed_body, error)``. The key is used only in the request
+    headers: it is never logged, stored or returned. Redirects are refused,
+    the read is capped and the timeout is fixed, so a hostile endpoint cannot
+    turn this into an unbounded request.
+    """
+    if wire == "gemini":
+        url = base.rstrip("/") + "/models/" + model + ":generateContent"
+        headers = {"Content-Type": "application/json", "x-goog-api-key": key}
+    else:
+        url = base.rstrip("/") + "/chat/completions"
+        headers = {"Content-Type": "application/json",
+                   "Authorization": "Bearer " + key}
+    try:
+        data = json.dumps(payload).encode("utf-8")
+    except (TypeError, ValueError):
+        return None, "bad_payload"
+    request = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    opener = urllib.request.build_opener(_NoRedirect())
+    try:
+        with opener.open(request, timeout=timeout) as response:
+            raw = response.read(max_bytes + 1)
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
+            OSError, ValueError):
+        return None, "upstream_failed"
+    if len(raw) > max_bytes:
+        return None, "upstream_failed"
+    try:
+        body = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return None, "upstream_failed"
+    if not isinstance(body, dict):
+        return None, "upstream_failed"
+    return body, None
+
+
+def _ai_text_complete(system, user_block, byo=None):
+    """One text-model call for the speaking report.
+
+    With ``byo`` the call runs on the user's own key and base (OpenAI wire);
+    without it, on the owner's key (DeepSeek or Gemini) and quota. Returns
+    ``(content, error)``; the raw provider body is never returned, echoed or
+    logged.
+    """
+    if byo:
+        api_key, base, model, wire = byo["key"], byo["base"], byo["model"], "openai"
+    else:
+        api_key = (os.environ.get("B2_AI_KEY") or "").strip()
+        if not api_key:
+            return None, "ai_not_configured"
+        env_provider = (B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER
+                        else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER))
+        wire = (env_provider or DEFAULT_AI_PROVIDER).strip().lower()
+        if wire not in ("deepseek", "gemini"):
+            return None, "ai_not_configured"
+        default_base = DEFAULT_DEEPSEEK_BASE if wire == "deepseek" else DEFAULT_GEMINI_BASE
+        default_model = DEFAULT_DEEPSEEK_MODEL if wire == "deepseek" else DEFAULT_GEMINI_MODEL
+        base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
+        model = (B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or default_model).strip()
+    if wire == "gemini":
+        payload = {
+            "contents": [{"parts": [{"text": f"{system}\n\n{user_block}"}]}],
+            "generationConfig": {"responseMimeType": "application/json",
+                                 "temperature": 0.2},
+        }
+    else:
+        payload = {
             "model": model,
             "messages": [
                 {"role": "system", "content": system},
@@ -1006,34 +1160,21 @@ def _ai_text_complete(system, user_block):
             ],
             "response_format": {"type": "json_object"},
             "temperature": 0.2,
-        }).encode("utf-8")
-        headers = {"Content-Type": "application/json",
-                   "Authorization": f"Bearer {api_key}"}
-    else:
-        url = f"{base.rstrip('/')}/models/{model}:generateContent"
-        payload = json.dumps({
-            "contents": [{"parts": [{"text": f"{system}\n\n{user_block}"}]}],
-            "generationConfig": {"responseMimeType": "application/json",
-                                 "temperature": 0.2},
-        }).encode("utf-8")
-        headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
-    request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        }
+    body, error = _provider_complete(base, api_key, model, payload, wire=wire)
+    if error:
+        return None, error
     try:
-        with urllib.request.urlopen(request, timeout=AI_TIMEOUT) as response:
-            raw = response.read(64 * 1024).decode("utf-8")
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
-        return None, "upstream_failed"
-    try:
-        body = json.loads(raw)
-        if provider == "deepseek":
-            content = body["choices"][0]["message"]["content"]
-        else:
+        if wire == "gemini":
             content = body["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            content = body["choices"][0]["message"]["content"]
         if not isinstance(content, str):
             raise ValueError("not text")
     except (ValueError, KeyError, IndexError, TypeError, AttributeError):
         return None, "upstream_failed"
     return content, None
+
 
 
 # ---------------------------------------------------------------------------
@@ -3432,39 +3573,80 @@ class H(BaseHTTPRequestHandler):
             elif not (50 <= len(raw_text.strip()) <= 3000) or not (50 <= len(raw_text) <= 3000):
                 self._send(400, json.dumps({"error": "text must be between 50 and 3000 chars"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            # A key sent in the request is the user's own: it never touches the
-            # owner's key nor the server quota. Otherwise the shared server key
-            # is used and the daily quota (per user + total) applies.
-            api_key = (req.get("provider_key") or req.get("key") or "").strip()
-            if not api_key:
-                quota_uid, _auth_err = self._auth() if self._bearer() else (None, None)
-                quota_key = "user:" + quota_uid if quota_uid else "ip:" + client_ip
+            # Three key paths, in order of precedence:
+            #   1. X-Provider-* headers (phase 30): the user's own key, their
+            #      cost, so the daily server quota is skipped. The key lives in
+            #      this request only and is never logged or stored.
+            #   2. `provider_key`/`key` in the body: the same deal, kept for
+            #      older clients.
+            #   3. The owner's key: the daily quota protects it.
+            byo, byo_err = _byo_from_headers(self.headers)
+            if byo_err:
+                self._send_json(400, {"error": byo_err})
+                return
+            legacy_key = req.get("provider_key") or req.get("key") or ""
+            legacy_key = legacy_key.strip() if isinstance(legacy_key, str) else ""
+            env_prov = B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
+            requested = req.get("provider") or env_prov or DEFAULT_AI_PROVIDER
+            requested = requested.strip().lower() if isinstance(requested, str) else DEFAULT_AI_PROVIDER
+            auth_uid = None
+            if self._bearer():
+                auth_uid, _auth_err = self._auth()
+            user_key = False
+            if byo:
+                api_key, base, model, wire = byo["key"], byo["base"], byo["model"], "openai"
+                user_key = True
+            elif legacy_key:
+                if (len(legacy_key) > BYO_KEY_MAX
+                        or any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in legacy_key)):
+                    self._send_json(400, {"error": "invalid_provider_key"})
+                    return
+                if requested not in ("deepseek", "gemini"):
+                    self._send_json(400, {"error": "invalid provider"})
+                    return
+                api_key, wire = legacy_key, requested
+                default_base = DEFAULT_DEEPSEEK_BASE if wire == "deepseek" else DEFAULT_GEMINI_BASE
+                default_model = DEFAULT_DEEPSEEK_MODEL if wire == "deepseek" else DEFAULT_GEMINI_MODEL
+                base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
+                model = (req.get("model") or B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or default_model).strip()
+                user_key = True
+            else:
+                if requested not in ("deepseek", "gemini"):
+                    self._send_json(400, {"error": "invalid provider"})
+                    return
+                quota_key = "user:" + auth_uid if auth_uid else "ip:" + client_ip
                 if _ai_quota_left(quota_key) <= 0:
-                    _audit("quota_hit", quota_uid or "", client_ip, self._rid)
+                    _audit("quota_hit", auth_uid or "", client_ip, self._rid)
                     reset = (date.today() + timedelta(days=1)).isoformat()
-                    self._send(429, json.dumps({"error": "daily AI quota reached", "reset": reset}).encode("utf-8"), "application/json; charset=utf-8")
+                    self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
                     return
                 api_key = (os.environ.get("B2_AI_KEY") or "").strip()
                 if not api_key:
-                    self._send(502, json.dumps({"error": "missing provider key"}).encode("utf-8"), "application/json; charset=utf-8")
+                    self._send_json(502, {"error": "missing provider key"})
                     return
                 _ai_quota_consume(quota_key)
-            env_prov = B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
-            provider = (req.get("provider") or env_prov or DEFAULT_AI_PROVIDER).strip().lower()
-            if provider not in ("deepseek", "gemini"):
-                self._send(400, json.dumps({"error": "invalid provider"}).encode("utf-8"), "application/json; charset=utf-8")
-                return
-            default_base = DEFAULT_DEEPSEEK_BASE if provider == "deepseek" else DEFAULT_GEMINI_BASE
-            default_model = DEFAULT_DEEPSEEK_MODEL if provider == "deepseek" else DEFAULT_GEMINI_MODEL
-            base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
-            env_model = B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or ""
-            model = (req.get("model") or env_model or default_model).strip()
+                wire = requested
+                default_base = DEFAULT_DEEPSEEK_BASE if wire == "deepseek" else DEFAULT_GEMINI_BASE
+                default_model = DEFAULT_DEEPSEEK_MODEL if wire == "deepseek" else DEFAULT_GEMINI_MODEL
+                base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
+                model = (req.get("model") or B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or default_model).strip()
+            if user_key:
+                # The user's key pays, so no daily quota — but the per-IP rate
+                # limit above and this per-account ceiling still apply.
+                account = ("user:" + auth_uid) if auth_uid else ("ip:" + client_ip)
+                if self._rate_limited("ai:byo:hour:" + account, BYO_RATE_PER_HOUR, 3600,
+                                      "user" if auth_uid else "ip"):
+                    return
             # Fresh nonce per request: the fence cannot be predicted or
             # pre-closed by a text prepared in advance.
             student_block, _nonce = prompts.student_message(_fit_ai_text(clean_text), kind)
-            if provider == "deepseek":
-                url = f"{base.rstrip('/')}/chat/completions"
-                payload = json.dumps({
+            if wire == "gemini":
+                payload = {
+                    "contents": [{"parts": [{"text": f"{prompts.WRITING_SYSTEM}\n\n{student_block}"}]}],
+                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
+                }
+            else:
+                payload = {
                     "model": model,
                     "messages": [
                         {"role": "system", "content": prompts.WRITING_SYSTEM},
@@ -3472,43 +3654,20 @@ class H(BaseHTTPRequestHandler):
                     ],
                     "response_format": {"type": "json_object"},
                     "temperature": 0.2,
-                }).encode("utf-8")
-                req_headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
                 }
-            else:
-                url = f"{base.rstrip('/')}/models/{model}:generateContent"
-                payload = json.dumps({
-                    "contents": [{"parts": [{"text": f"{prompts.WRITING_SYSTEM}\n\n{student_block}"}]}],
-                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
-                }).encode("utf-8")
-                req_headers = {
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": api_key,
-                }
-            up_req = urllib.request.Request(
-                url,
-                data=payload,
-                headers=req_headers,
-                method="POST",
-            )
-            try:
-                with urllib.request.urlopen(up_req, timeout=AI_TIMEOUT) as resp:
-                    up_raw = resp.read().decode("utf-8")
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
-                self._send(502, json.dumps({"error": "upstream provider failed"}).encode("utf-8"), "application/json; charset=utf-8")
+            up_json, up_err = _provider_complete(base, api_key, model, payload, wire=wire)
+            if up_err:
+                self._send_json(502, {"error": "upstream provider failed"})
                 return
             try:
-                up_json = json.loads(up_raw)
-                if provider == "deepseek":
-                    cand_text = up_json["choices"][0]["message"]["content"]
-                else:
+                if wire == "gemini":
                     cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    cand_text = up_json["choices"][0]["message"]["content"]
                 if not isinstance(cand_text, str):
                     raise ValueError("not text")
             except (ValueError, KeyError, IndexError, TypeError, AttributeError):
-                self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
+                self._send_json(422, {"error": "invalid model json"})
                 return
             if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
                 self._send_json(502, {"error": "model output too large"})
