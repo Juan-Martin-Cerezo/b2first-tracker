@@ -1157,6 +1157,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div><label>Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
+      <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center">By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
   </div>
 </div>
@@ -1296,6 +1297,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()">Update password</button>
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Recent activity</div>
       <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
+      <div id="diagMetricsBox" style="display:none">
+        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Diagnostics (owner · last 24 h)</div>
+        <div id="diagMetricsBody" style="font-size:11.5px;color:var(--on-surface-variant)"></div>
+      </div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -2785,7 +2790,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot">—</span></footer>
+    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot">—</span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
   </div>
 </div>
 
@@ -2887,6 +2892,99 @@ const SETTINGS_DEFAULT={
    in (6-step intake: exam date, goal, skills, time and struggles; it
    builds D.profile and the first real weekly plan).
    ===================================================================== */
+/* =====================================================================
+   TELEMETRY (privacy-first product events) — fase 15
+   ---------------------------------------------------------------------
+   RULE: events only, NEVER content. No free text, no emails, no names,
+   no tokens, no answers/writings. Only whitelisted event names and
+   whitelisted scalar props (<=64 chars; message_trunc <=120).
+   Buffered in memory and flushed every 10 s or at 20 events with
+   navigator.sendBeacon (fetch keepalive fallback) to POST /api/events.
+   `sid` is a random per-tab id (crypto.randomUUID, not persisted).
+   Do Not Track is respected: with navigator.doNotTrack==='1' nothing is
+   ever sent and the app behaves exactly the same.
+   ===================================================================== */
+const TEV_VER='1.0.0';
+const TEV_NAMES=['app_open','view_change','onboarding_step','onboarding_done','onboarding_skip','quicklog_open','quicklog_save','session_save','diag_start','diag_finish','plan_generate','ai_request','ai_success','ai_error','ai_blocked','theme_toggle','export_data','delete_account','login','register','js_error','fetch_error','slow_view'];
+const TEV_PROPS=['view','part','kind','ms','count','ok','code','step','theme','ver','message_trunc','stack_hash','status','endpoint'];
+const TEV_PROP_MAX=64;
+const TEV_MSG_MAX=120;
+const TEV_FLUSH_MS=10000;
+const TEV_MAX_BUF=20;
+const TEV_DNT=(typeof navigator!=='undefined')&&(navigator.doNotTrack==='1'||window.doNotTrack==='1');
+var TEV_SID=(function(){
+  try{if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID()}catch(e){}
+  return 's'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+})();
+var TEV_BUF=[];
+var TEV_VIEW='hoy';
+function track(n,p){
+  try{
+    if(TEV_DNT)return;
+    if(TEV_NAMES.indexOf(n)<0)return;
+    const props={};
+    if(p&&typeof p==='object'){
+      for(const k in p){
+        if(TEV_PROPS.indexOf(k)<0)continue;
+        const v=p[k];
+        if(typeof v==='number'){if(isFinite(v))props[k]=v}
+        else if(typeof v==='boolean')props[k]=v;
+        else if(typeof v==='string')props[k]=v.slice(0,k==='message_trunc'?TEV_MSG_MAX:TEV_PROP_MAX);
+      }
+    }
+    TEV_BUF.push({n:n,t:Date.now(),p:props});
+    if(TEV_BUF.length>=TEV_MAX_BUF)tevFlush();
+  }catch(e){}
+}
+function tevFlush(){
+  try{
+    if(TEV_DNT){TEV_BUF.length=0;return}
+    if(!TEV_BUF.length)return;
+    const body=JSON.stringify({sid:TEV_SID,events:TEV_BUF.splice(0,TEV_BUF.length)});
+    if(navigator.sendBeacon&&navigator.sendBeacon('/api/events',new Blob([body],{type:'application/json'})))return;
+    fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){});
+  }catch(e){}
+}
+setInterval(tevFlush,TEV_FLUSH_MS);
+window.addEventListener('pagehide',tevFlush);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')tevFlush()});
+function tevErrProps(msg,stack){
+  const m=String(msg==null?'unknown error':msg).slice(0,TEV_MSG_MAX);
+  const s=String((stack==null?msg:stack)||'');
+  let h=0;
+  for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0}
+  return {message_trunc:m,stack_hash:'h'+(h>>>0).toString(16),view:TEV_VIEW};
+}
+window.onerror=function(msg,src,line,col,err){
+  try{track('js_error',tevErrProps(msg,err&&err.stack))}catch(e){}
+  return false;
+};
+window.addEventListener('unhandledrejection',function(e){
+  try{
+    const r=e&&e.reason;
+    track('js_error',tevErrProps((r&&r.message)?r.message:String(r||'unhandled rejection'),r&&r.stack));
+  }catch(err){}
+});
+/* fetch_error: failed requests only (status + endpoint, never the query
+   string or the body). /api/events is skipped to avoid self-feeding. */
+(function(){
+  if(typeof window.fetch!=='function')return;
+  const native=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    let url='';
+    try{url=typeof input==='string'?input:((input&&input.url)||'')}catch(e){}
+    const path=url.split('?')[0].split('#')[0];
+    const skip=path==='/api/events';
+    return native(input,init).then(function(r){
+      try{if(!skip&&r&&r.status>=400)track('fetch_error',{status:r.status,endpoint:path.slice(0,TEV_PROP_MAX)})}catch(e){}
+      return r;
+    },function(err){
+      try{if(!skip)track('fetch_error',{status:0,endpoint:path.slice(0,TEV_PROP_MAX)})}catch(e){}
+      throw err;
+    });
+  };
+})();
+
 const BASE_KEY='b2first_tracker_v1';
 const AUTH_KEY='b2first_user';
 var DEMO={demo:false};
@@ -2956,6 +3054,7 @@ async function doLogin(){
   try{
     const u=await apiLogin(name,pass);
     saveUserSession(u);
+    track('login');
     hideAuthOverlay();
     await afterAuth();
   }catch(e){err.textContent='❌ '+e.message}
@@ -2969,6 +3068,7 @@ async function doRegister(){
   try{
     const u=await apiRegister(name,pass,color);
     saveUserSession(u);
+    track('register');
     hideAuthOverlay();
     await afterAuth();
   }catch(e){err.textContent='❌ '+e.message}
@@ -3019,6 +3119,7 @@ async function doExportAccount(){
     const r=await fetch('/api/export',{headers:authHeaders()});
     if(r.status===401){sessionExpired();return}
     if(!r.ok)throw await apiError(r,'export failed');
+    track('export_data',{kind:'account'});
     const blob=await r.blob();
     const a=document.createElement('a');
     a.href=window.URL.createObjectURL(blob);
@@ -3054,6 +3155,8 @@ async function doDeleteAccount(){
     const r=await fetch('/api/account',{method:'DELETE',headers:authHeaders(),
       body:JSON.stringify({password:document.getElementById('delPass').value})});
     if(!r.ok)throw await apiError(r,'delete failed');
+    track('delete_account');
+    tevFlush();
     clearUserSession();
     location.reload();
   }catch(e){
@@ -3197,6 +3300,7 @@ function obRender(){
   body.innerHTML=obStepHtml();
   const f=body.querySelector('input,select,button')||next;
   if(f&&f.focus)f.focus();
+  track('onboarding_step',{step:OB.step});
 }
 function obNext(){
   if(!OB.active||OB.step>=6)return;
@@ -3256,12 +3360,14 @@ function obClose(){
 function finishOnboarding(){
   if(OB.active&&OB.draft)obCommit();
   else{D.onboarded=true;save()}
+  track('onboarding_done');
   obClose();
   refreshAll();
 }
 function dismissOnboarding(){
   D.onboarded=true;
   save();
+  track('onboarding_skip');
   obClose();
   refreshAll();
 }
@@ -3401,6 +3507,7 @@ function openUserModal(){
 
   ov.style.display='flex';
   loadAccountActivity();
+  loadDiagnostics();
 }
 function closeUserModal(){
   const ov=document.getElementById('userModal');
@@ -3434,6 +3541,32 @@ async function loadAccountActivity(){
       box.appendChild(row);
     });
   }catch(err){box.textContent='Activity unavailable.'}
+}
+/* Owner-only product diagnostics: aggregates from GET /api/metrics.
+   No personal data — event counts, truncated error messages and the AI
+   counters. Visible only when the signed-in user is the owner. */
+async function loadDiagnostics(){
+  const box=document.getElementById('diagMetricsBox');
+  if(!box)return;
+  if(!USER||USER.id!=='owner'){box.style.display='none';return}
+  const body=document.getElementById('diagMetricsBody');
+  try{
+    const r=await fetch('/api/metrics',{headers:authHeaders()});
+    if(!r.ok)throw 0;
+    const m=await r.json();
+    const evs=m.events||{};
+    const evRows=Object.keys(evs).sort((a,b)=>evs[b]-evs[a])
+      .map(k=>`<tr><td>${esc(k)}</td><td class="tnum" style="text-align:right">${evs[k]}</td></tr>`).join('');
+    const errs=(m.errors||[]).map(e=>`<tr><td>${esc(e.n)}</td><td class="tnum" style="text-align:right">${e.count}</td><td>${esc(String(e.last_message_trunc||''))}</td></tr>`).join('');
+    const ai=m.ai||{};
+    body.innerHTML=`
+      <div>${m.users_active||0} active sessions · p50 view ${m.p50_view_ms||0} ms</div>
+      <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${evRows||'<tr><td>No events yet.</td></tr>'}</tbody></table>
+      <div style="font-weight:600;color:var(--on-surface)">Top errors</div>
+      <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${errs||'<tr><td>No errors ✔</td></tr>'}</tbody></table>
+      <div style="font-weight:600;color:var(--on-surface)">AI: ${ai.requests||0} requests · ${ai.success||0} ok · ${ai.errors||0} errors · ${ai.blocked||0} blocked</div>`;
+    box.style.display='block';
+  }catch(e){box.style.display='none'}
 }
 
 /* ---------- LOAD / SAVE (per user) ---------- */
@@ -3837,6 +3970,7 @@ function log(e){
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
   save();
   refreshAll();
+  track('session_save',{kind:(e&&e.type)||'?',part:(e&&e.part)||0});
 }
 function saveUE(){
   const partVal=document.getElementById('uePart').value;
@@ -4064,6 +4198,7 @@ function stageDown(){
   save();refreshAll();
 }
 function exportData(){
+  track('export_data',{kind:'local'});
   const a=document.createElement('a');
   a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(D,null,2));
   a.download='b2first-backup-'+today()+'.json';a.click();
@@ -4127,7 +4262,9 @@ function savePlan(){
   s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
   s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||50;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
   if(document.getElementById('pAiKey'))s.aiKey=g('pAiKey').trim();
-  save();applyTimers();refreshAll();alert('Plan saved ✓');
+  save();applyTimers();refreshAll();
+  track('plan_generate',{count:(getSchedule()||[]).length});
+  alert('Plan saved ✓');
 }
 function resetPlan(){
   if(!confirm('Restore the original plan? Your changes will be lost.'))return;
@@ -5594,6 +5731,7 @@ function _qlRenderStep(){
 function openQuickLog(){
   const m=document.getElementById('qlModal');
   if(!m)return;
+  track('quicklog_open');
   const noteEl=document.getElementById('qlNote');
   if(noteEl)noteEl.value='';
   qlSetType(QL_STATE.type||'ue');
@@ -5724,6 +5862,7 @@ function qlSave(){
   save();
   refreshAll();
   closeQuickLog();
+  track('quicklog_save',{kind:type,part:part});
 
   const fab=document.getElementById('qlFab');
   if(fab){
@@ -5845,7 +5984,7 @@ function onIaTextChange(){
 }
 async function submitIaWriting(){
   const key=(D.settings&&D.settings.aiKey)?String(D.settings.aiKey).trim():'';
-  if(!key){renderIa();return;}
+  if(!key){track('ai_blocked',{code:0});renderIa();return;}
   const textEl=document.getElementById('iaText');
   const kindEl=document.getElementById('iaKind');
   const text=textEl?textEl.value.trim():'';
@@ -5855,6 +5994,8 @@ async function submitIaWriting(){
     return;
   }
   setIaState('loading');
+  track('ai_request',{kind});
+  const aiT0=Date.now();
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),28000);
   try{
@@ -5869,9 +6010,12 @@ async function submitIaWriting(){
     try{data=await r.json();}catch(e){}
     if(!r.ok||!data||!data.bands){
       const msg=(data&&data.error)?`Error (${r.status}): ${data.error}`:`Server error (${r.status})`;
+      if(r.status===429)track('ai_blocked',{code:429});
+      else track('ai_error',{code:r.status||0});
       setIaState('error',msg);
       return;
     }
+    track('ai_success',{kind,ms:Date.now()-aiT0});
     renderIaResult(data);
     setIaState('ok');
     const kb=data.bands.content;
@@ -5895,6 +6039,7 @@ async function submitIaWriting(){
     refreshAll();
   }catch(err){
     clearTimeout(timer);
+    track('ai_error',{code:0});
     setIaState('error','Could not reach the corrector. Check your connection and try again.');
   }
 }
@@ -5988,6 +6133,7 @@ async function startDiag(){
     DIAG_STATE.leftSec=DIAG_STATE.totalSec;
     DIAG_STATE.startedAt=Date.now();
     DIAG_STATE.status='running';
+    track('diag_start');
     _updateDiagTimerEl();
     DIAG_STATE.iv=setInterval(()=>{
       if(DIAG_STATE.status!=='running'){_stopDiagTimer();return;}
@@ -6084,6 +6230,7 @@ function finishDiag(timedOut=false){
   };
   save();
   refreshAll();
+  track('diag_finish',{ok:!timedOut,count:correct});
 }
 async function repeatDiag(){
   delete D.diag;
@@ -6229,6 +6376,7 @@ function showView(viewId){
   if(btn)btn.click();
 }
 document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
+  const _tevT0=Date.now();
   if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
     PARTS_FILTER=null;
     renderParts();
@@ -6241,6 +6389,8 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(b.dataset.view==='diag')renderDiag();
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
+  TEV_VIEW=b.dataset.view;
+  track('view_change',{view:b.dataset.view,ms:Date.now()-_tevT0});
 });
 (function(){
   const more=document.getElementById('navMoreBtn');
@@ -6249,6 +6399,15 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
 })();
 
 function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag()}
+/* slow_view: report full re-renders that take more than 800 ms. */
+(function(){
+  const orig=refreshAll;
+  refreshAll=function(){
+    const t0=Date.now();
+    try{return orig.apply(this,arguments)}
+    finally{const ms=Date.now()-t0;if(ms>800)track('slow_view',{ms:ms})}
+  };
+})();
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
@@ -6283,6 +6442,7 @@ function applyTheme(t){
 function toggleTheme(){
   const next=currentTheme()==='dark'?'light':'dark';
   applyTheme(next);
+  track('theme_toggle',{theme:next});
   try{localStorage.setItem(THEME_KEY,next)}catch(e){}
 }
 document.addEventListener('DOMContentLoaded',()=>{
@@ -6307,6 +6467,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     DEMO={demo:false};
   }
   window.DEMO=DEMO;
+  track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
   if(DEMO&&DEMO.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
     if(regTab)regTab.style.display='none';
