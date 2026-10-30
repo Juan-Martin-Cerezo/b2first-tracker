@@ -46,7 +46,7 @@
       "id": "12",
       "tests": "test_security2.py test_hardening.py test_legacy_guard.py test_multiuser.py",
       "title": "Blindaje ronda 2: lockout, tokens hasheados, schema de payload, audit log",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "13",
