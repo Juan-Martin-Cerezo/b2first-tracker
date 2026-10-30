@@ -22,7 +22,7 @@
 
 ## Shot 2 — Accounts and the six-step intake `[0:08–0:28]` (20 s)
 
-**What you see:** The live instance. Register the throwaway account (username + password only — no email asked), land on an empty tracker, and the intake wizard opens: 6 steps, one question per screen — exam date & target grade (A/B/C), rate each skill 1–5 (with "take the 10-minute diagnostic instead" as an alternative), hours per week and study days, "what costs you the most?" (pick up to 3). The last step shows "Your plan is ready" with the week just built.
+**What you see:** The live instance. Register the throwaway account (username + password only — no email asked), land on an empty tracker, and the intake wizard opens: 6 steps — a welcome screen, exam date & target grade (A/B/C), rate each skill 1–5 (with "take the 10-minute diagnostic instead" as an alternative), hours per week and study days, "what costs you the most?" (pick up to 3), and finally "Your plan is ready" with the week just built.
 
 **What you say:**
 > This is a real multi-user app: create an account and your progress lives in your own private space. Then it interviews you in six quick steps — your exam date and target grade, how you feel about each skill, how much time you can study, and what you struggle with.
@@ -66,7 +66,7 @@
 
 ## Shot 6 — Closing `[1:36–1:48]` (12 s)
 
-**What you see:** The repository on GitHub, then a terminal: `git clone` → `python3 server.py` → the app opening at `http://127.0.0.1:8088` and the account picker. Optionally flash the Account view (export, change password, Recent activity, delete) to end on the multi-user reality.
+**What you see:** The repository on GitHub, then a terminal: `git clone` → `python3 server.py` → the app opening at `http://127.0.0.1:8088` and the login screen. Optionally flash the Account view (export, change password, Recent activity, delete) to end on the multi-user reality.
 
 **What you say:**
 > It's open source — pure Python standard library, one HTML file, no build step. Clone the repo, run `python3 server.py`, create your account, and you're studying. Every account keeps its own data. Links are in the submission.

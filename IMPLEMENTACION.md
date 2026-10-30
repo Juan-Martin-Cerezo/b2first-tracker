@@ -1,3 +1,5 @@
+> Status: historical plan (phases 0-5). Current state: see [README](README.md) + [SECURITY.md](SECURITY.md)
+
 # IMPLEMENTACIÓN — paso por paso
 
 > Documento de ejecución. Cada tarea tiene archivo, ancla, criterio de aceptación y cómo
