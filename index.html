@@ -843,6 +843,13 @@ tbody tr:hover{background:var(--surface-2)}
 .cycle-swap svg{width:20px;height:20px}
 .plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
 
+/* language switcher (PLAN) */
+.lang-switch{display:inline-flex;gap:6px;margin-top:12px;padding:4px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface-2)}
+.lang-btn{border:0;background:transparent;color:var(--txt-2);font:inherit;font-size:var(--fs-sm);font-weight:600;padding:7px 16px;border-radius:calc(var(--r-panel) - 3px);cursor:pointer}
+.lang-btn:hover{color:var(--txt)}
+.lang-btn.active{background:var(--primary);color:#fff}
+.lang-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
 /* weekly plan rows */
 .wp-row{
   display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
@@ -1217,25 +1224,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <h2>B2 First Tracker</h2>
     </div>
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Log in</button>
-      <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')">Create account</button>
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')" data-i18n="auth_login">Log in</button>
+      <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')" data-i18n="auth_register">Create account</button>
     </div>
-    <div class="auth-note">Your progress is stored on this server, not in a cloud.</div>
-    <div id="regClosedNote" class="auth-error" style="display:none">Registration is closed. This instance is private.</div>
+    <div class="auth-note" data-i18n="auth_note">Your progress is stored on this server, not in a cloud.</div>
+    <div id="regClosedNote" class="auth-error" style="display:none" data-i18n="auth_closed">Registration is closed. This instance is private.</div>
     <div id="authLogin">
-      <div><label>User name</label><input type="text" id="authName" placeholder="e.g. Owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div><label>Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="e.g. Owner" data-i18n-placeholder="auth_ph_owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="authError"></div>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()">Enter</button>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
     </div>
     <div id="authRegister" style="display:none">
-      <div><label>New username</label><input type="text" id="regName" placeholder="e.g. maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div><label>Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" oninput="onRegPwInput(this.value)" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px">10+ characters. Avoid common passwords.</div>
-      <div><label>Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
+      <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label data-i18n="auth_password_min">Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" oninput="onRegPwInput(this.value)" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">10+ characters. Avoid common passwords.</div>
+      <div><label data-i18n="auth_avatar_color">Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
-      <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center">By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()" data-i18n="auth_create_enter">Create account &amp; enter</button>
+      <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
   </div>
 </div>
@@ -1531,26 +1538,26 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <img src="/assets/logo-192.png" alt="B2 First logo" class="logo-img">
       <span>B2 FIRST</span>
     </div>
-    <div class="sync-status"><span id="syncBadge" class="sync-badge state-off" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server"></span></div>
+    <div class="sync-status"><span id="syncBadge" class="sync-badge state-off" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span></div>
     <div class="top-actions">
-      <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
-      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
+      <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
     </div>
   </div>
 
   <!-- ============ NAV: top row on desktop, bottom bar (5 + More) on mobile ============ -->
-  <nav id="sideNav" aria-label="Main navigation">
-    <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label">Today</span></button>
-    <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label">Exam</span></button>
-    <button data-view="partes"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label">Parts</span></button>
-    <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label">Progress</span></button>
-    <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label">Plan</span></button>
-    <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label">Charts</span></button>
-    <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label">Errors</span></button>
-    <button data-view="libros" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label">Books</span></button>
-    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label">AI</span></button>
-    <button data-view="diag" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-diag"/></svg><span class="nav-label">Diag</span></button>
-    <button id="navMoreBtn" type="button" aria-label="More sections"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label">More</span></button>
+  <nav id="sideNav" aria-label="Main navigation" data-i18n-aria-label="nav_aria">
+    <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
+    <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
+    <button data-view="partes"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_parts">Parts</span></button>
+    <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
+    <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
+    <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
+    <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
+    <button data-view="libros" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label" data-i18n="nav_books">Books</span></button>
+    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">AI</span></button>
+    <button data-view="diag" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-diag"/></svg><span class="nav-label" data-i18n="nav_diag">Diag</span></button>
+    <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
   </nav>
 
   <!-- ============ CONTENT ============ -->
@@ -2679,6 +2686,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </details>
         </div>
 
+        <!-- Language (English by default, Spanish available) -->
+        <div class="card" id="languageCard" style="margin-bottom:16px">
+          <div class="plan-card-head">
+            <h2 data-i18n="plan_language">Language</h2>
+            <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_language_chip">Interface</span></span>
+          </div>
+          <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
+          <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
+            <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
+            <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
+          </div>
+        </div>
+
         <div class="grid-12">
           <!-- Exam Timers (white, like Stitch) -->
           <div class="col-7">
@@ -3047,7 +3067,167 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
    Listening 40', full 195'). On reaching 0 (or earlier, with Start +
    Save) it logs rue/fw/l entries that feed the Stage 2 gates.
    ===================================================================== */
+/* =====================================================================
+   I18N — English by default, Spanish available in-app
+   ---------------------------------------------------------------------
+   Every user-facing string lives in I18N.en and I18N.es. Static markup
+   carries data-i18n="key" (textContent), data-i18n-html="key"
+   (innerHTML), or data-i18n-title / data-i18n-aria-label /
+   data-i18n-placeholder (attributes). Code that builds DOM calls t().
+   LANG follows D.settings.lang (persisted per account). Dates and
+   numbers keep en-GB in English mode and es-AR in Spanish mode.
+   ===================================================================== */
+const I18N={
+  en:{
+    app_title:'B2 First Tracker — Grade A',
+    nav_aria:'Main navigation',
+    nav_today:'Today',
+    nav_exam:'Exam',
+    nav_parts:'Parts',
+    nav_progress:'Progress',
+    nav_plan:'Plan',
+    nav_charts:'Charts',
+    nav_errors:'Errors',
+    nav_books:'Books',
+    nav_ai:'AI',
+    nav_diag:'Diag',
+    nav_more:'More',
+    nav_more_aria:'More sections',
+    theme_toggle:'Toggle dark mode',
+    sync_status:'Save status on the server',
+    user_chip:'View profile & switch user',
+    sync_ok:'Progress saved to the server',
+    sync_local:'Saving…',
+    sync_off:'Offline — changes stay on this device',
+    auth_login:'Log in',
+    auth_register:'Create account',
+    auth_note:'Your progress is stored on this server, not in a cloud.',
+    auth_closed:'Registration is closed. This instance is private.',
+    auth_username:'User name',
+    auth_password:'Password',
+    auth_enter:'Enter',
+    auth_new_username:'New username',
+    auth_password_min:'Password (10+ characters)',
+    auth_pw_hint:'10+ characters. Avoid common passwords.',
+    auth_avatar_color:'Avatar color',
+    auth_create_enter:'Create account & enter',
+    auth_privacy_html:'By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
+    auth_ph_owner:'e.g. Owner',
+    auth_ph_maria:'e.g. maria',
+    common_cancel:'Cancel',
+    common_save:'Save',
+    common_start:'Start',
+    common_next:'Next',
+    common_close:'Close',
+    common_retry:'Retry',
+    common_back:'Back',
+    common_continue:'Continue',
+    plan_language:'Language',
+    plan_language_sub:'English is the default. Switching to Spanish translates the interface and is saved to your account.',
+    plan_language_chip:'Interface',
+    lang_en:'English',
+    lang_es:'Español',
+    footer_privacy:'Privacy'
+  },
+  es:{
+    app_title:'B2 First Tracker — Nota A',
+    nav_aria:'Navegación principal',
+    nav_today:'Hoy',
+    nav_exam:'Examen',
+    nav_parts:'Partes',
+    nav_progress:'Progreso',
+    nav_plan:'Plan',
+    nav_charts:'Gráficos',
+    nav_errors:'Errores',
+    nav_books:'Libros',
+    nav_ai:'IA',
+    nav_diag:'Diagn.',
+    nav_more:'Más',
+    nav_more_aria:'Más secciones',
+    theme_toggle:'Cambiar modo oscuro',
+    sync_status:'Estado de guardado en el servidor',
+    user_chip:'Ver perfil y cambiar de usuario',
+    sync_ok:'Progreso guardado en el servidor',
+    sync_local:'Guardando…',
+    sync_off:'Sin conexión — los cambios quedan en este dispositivo',
+    auth_login:'Iniciar sesión',
+    auth_register:'Crear cuenta',
+    auth_note:'Tu progreso se guarda en este servidor, no en la nube.',
+    auth_closed:'El registro está cerrado. Esta instancia es privada.',
+    auth_username:'Usuario',
+    auth_password:'Contraseña',
+    auth_enter:'Entrar',
+    auth_new_username:'Nuevo usuario',
+    auth_password_min:'Contraseña (10+ caracteres)',
+    auth_pw_hint:'10+ caracteres. Evitá contraseñas comunes.',
+    auth_avatar_color:'Color del avatar',
+    auth_create_enter:'Crear cuenta y entrar',
+    auth_privacy_html:'Al crear una cuenta aceptás la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
+    auth_ph_owner:'ej. Owner',
+    auth_ph_maria:'ej. maria',
+    common_cancel:'Cancelar',
+    common_save:'Guardar',
+    common_start:'Empezar',
+    common_next:'Siguiente',
+    common_close:'Cerrar',
+    common_retry:'Reintentar',
+    common_back:'Atrás',
+    common_continue:'Continuar',
+    plan_language:'Idioma',
+    plan_language_sub:'El inglés es el valor por defecto. Al cambiar a español se traduce la interfaz y se guarda en tu cuenta.',
+    plan_language_chip:'Interfaz',
+    lang_en:'English',
+    lang_es:'Español',
+    footer_privacy:'Privacidad'
+  }
+};
+let LANG='en';
+function normalizeLang(code){return code==='es'?'es':'en'}
+function currentLocale(){return LANG==='es'?'es-AR':'en-GB'}
+function t(key,vars){
+  if(key==null)return '';
+  const table=I18N[LANG]||I18N.en;
+  let s=table[key];
+  if(s===undefined||s===null)s=I18N.en[key];
+  if(s===undefined||s===null)return '';
+  s=String(s);
+  if(vars)for(const k in vars)s=s.split('{'+k+'}').join(vars[k]);
+  return s;
+}
+function applyI18n(){
+  const html=document.documentElement;
+  html.setAttribute('lang',LANG);
+  document.title=t('app_title');
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const v=t(el.getAttribute('data-i18n'));
+    if(v)el.textContent=v;
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>{
+    const v=t(el.getAttribute('data-i18n-html'));
+    if(v)el.innerHTML=v;
+  });
+  ['title','aria-label','placeholder'].forEach(attr=>{
+    document.querySelectorAll('[data-i18n-'+attr+']').forEach(el=>{
+      const v=t(el.getAttribute('data-i18n-'+attr));
+      if(v)el.setAttribute(attr,v);
+    });
+  });
+  const enBtn=document.getElementById('langEnBtn');
+  const esBtn=document.getElementById('langEsBtn');
+  if(enBtn){enBtn.setAttribute('aria-pressed',LANG==='en'?'true':'false');enBtn.classList.toggle('active',LANG==='en')}
+  if(esBtn){esBtn.setAttribute('aria-pressed',LANG==='es'?'true':'false');esBtn.classList.toggle('active',LANG==='es')}
+}
+function setLang(code){
+  const next=normalizeLang(code);
+  LANG=next;
+  if(D&&D.settings)D.settings.lang=next;
+  applyI18n();
+  save();
+  refreshAll();
+  if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
+}
 const SETTINGS_DEFAULT={
+  lang:'en',
   sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
@@ -3776,6 +3956,7 @@ async function loadDiagnostics(){
 /* ---------- LOAD / SAVE (per user) ---------- */
 var D=load();
 window.D=D;
+LANG=normalizeLang(D.settings&&D.settings.lang);
 function load(){
   const key=userKey();
   try{
@@ -3819,7 +4000,7 @@ const SYNC_LABEL={
 };
 function syncStatus(s){
   SYNC_STATE=s;
-  const label=SYNC_LABEL[s]||SYNC_LABEL.off;
+  const label=t('sync_'+s)||SYNC_LABEL[s]||SYNC_LABEL.off;
   const cls='sync-badge '+(s==='ok'?'state-ok':s==='local'?'state-local':'state-off');
   const el=document.getElementById('syncBadge');
   if(el){
@@ -8293,7 +8474,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport()}
+function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
