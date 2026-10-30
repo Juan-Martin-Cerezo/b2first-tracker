@@ -6115,6 +6115,17 @@ function makeLiveTransport(cfg){
         if(!text)return;
         let msg=null;
         try{msg=JSON.parse(text)}catch(e){return}
+        if(msg&&msg.setupComplete){
+          // The model never speaks on its own: without a first turn the examiner
+          // sits silent until the candidate talks, which reads as "the examiner
+          // does not start". One bracketed client turn kicks it off. Brackets are
+          // there so the transcript is obvious about who said it.
+          send({clientContent:{
+            turns:[{role:'user',parts:[{text:'[(Examiner: begin the exam now — greet the candidate and ask your first question.)]'}]}],
+            turnComplete:true}});
+          if(on.ready)on.ready();
+          return;
+        }
         if(msg&&msg.serverContent)handle(msg.serverContent);
       };
       ws.onerror=function(){
@@ -6286,7 +6297,11 @@ function spkVad(speaking){
        examiner as still talking for 800 ms after its last busy frame, so the
        300 ms of candidate speech accumulates instead of restarting on a gap. */
     const examinerNear=SPK.speaking||(SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800);
-    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=300)spkBargeIn();
+    /* Barge-in needs 600 ms of sustained speech, not 300. At 300 a cough, a
+       chair or a noisy room muted the examiner mid-word, so it never finished a
+       question and kept re-asking — "repite constantemente" and "habla trabado"
+       were the same bug. */
+    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=600)spkBargeIn();
   }else{
     if(SPK.running&&!SPK.silStartedAt)SPK.silStartedAt=now;
     SPK.speechSince=0;
