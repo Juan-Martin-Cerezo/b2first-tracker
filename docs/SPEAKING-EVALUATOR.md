@@ -1,5 +1,9 @@
 # Speaking: real-time evaluator and AI partner — feasibility plan
 
+> **Superseded in part.** The staging in §4 below is replaced by `docs/SPEAKING-REALTIME-PLAN.md`
+> (2026-10-30), which covers the full-duplex examiner + partner, phoneme-level pronunciation and
+> live silence detection. This document is kept as the research record; §1, §2 and §5 still hold.
+
 > Status: **research + plan**, nothing implemented. Written 2026-10-30.
 > Every number marked *(verify)* is an assumption to check against current pricing/docs before
 > committing to it. The exam facts below were read from cambridgeenglish.org on that date.
