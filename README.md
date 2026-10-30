@@ -74,6 +74,7 @@ and no cloud to trust.
 | **Error taxonomy** | Every miss is tagged `L-GAP`, `G-ERR`, `T-MIS` or `T-LIM`, so the plan can target the cause instead of the symptom |
 | **Analytics** | Four SVG panels, no chart library: progress over time, per-part accuracy, error mix, score consistency |
 | **Exam mode** | Real timings for Reading & Use of English, Listening and Writing |
+| **Recent activity** | Your account's security log (logins, password changes, deletion) in the Account view, straight from the server's audit log — only your own events |
 
 ## The grading is calibrated, not generous
 
@@ -204,6 +205,22 @@ No mocks of the app itself: the suites drive a real browser against a real serve
 cd tests
 uv run --with playwright python test_final.py
 ```
+
+## Security
+
+- **Accounts are isolated**: each one gets its own `data/users/<id>/` (directories `0700`, files
+  `0600`), and a session token for one account can never read another's data (`403`).
+- **Limits and quotas**: 5 failed logins lock a username for 15 minutes, every endpoint is rate
+  limited, and AI corrections are capped at 8/day per account and 80/day per instance.
+- **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token;
+  passwords are PBKDF2-HMAC-SHA256 with 200,000 iterations.
+- **Audit log**: authentication events land in `data/audit.log` (never tokens or passwords), and
+  each account can see its own **Recent activity**.
+- **Backups verified**: per-save rotation plus a daily tarball whose every run does a test
+  restore and parses every JSON file before it counts.
+
+Threat model, control checklist and the tested restore runbook: [SECURITY.md](SECURITY.md).
+Reproducible external audit of the live instance: `bash tools/audit.sh`.
 
 ## Data and privacy
 
