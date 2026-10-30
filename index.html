@@ -869,6 +869,7 @@ footer{
 }
 .auth-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 .auth-error{color:var(--bad-text);font-size:var(--fs-xs);margin-top:8px;min-height:16px}
+.auth-note{color:var(--dim);font-size:var(--fs-xs);margin:-10px 0 14px;text-align:center}
 .onboard-intro{font-size:var(--fs-sm);color:var(--txt-2);margin-bottom:16px;line-height:1.5}
 .ob-plan-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0;font-size:var(--fs-sm)}
 .ob-plan-row>span{min-width:110px;color:var(--txt-2)}
@@ -1139,9 +1140,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <h2>B2 First Tracker</h2>
     </div>
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Log in</button>
       <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')">Create account</button>
     </div>
+    <div class="auth-note">Your progress is stored on this server, not in a cloud.</div>
     <div id="regClosedNote" class="auth-error" style="display:none">Registration is closed. This instance is private.</div>
     <div id="authLogin">
       <div><label>User name</label><input type="text" id="authName" placeholder="e.g. Owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
@@ -1151,7 +1153,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div id="authRegister" style="display:none">
       <div><label>New username</label><input type="text" id="regName" placeholder="e.g. maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div><label>Password (min 4 chars)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label>Password (8+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
       <div><label>Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
@@ -1282,19 +1284,30 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px">Change password</div>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px">Account</div>
+      <button class="btn gray" style="width:100%" onclick="doExportAccount()">💾 Export my data</button>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="password" id="pwCurrent" placeholder="Current password" autocomplete="current-password">
-        <input type="password" id="pwNew" placeholder="New password (min 8 chars)" autocomplete="new-password">
+        <input type="password" id="pwNew" placeholder="New password (8+ characters)" autocomplete="new-password">
         <input type="password" id="pwRepeat" placeholder="Repeat new password" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
       <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()">Update password</button>
+      <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px">Delete my account</div>
+      <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()">Delete my account</button>
+      <div id="delConfirmBox" style="display:none;margin-top:8px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input type="password" id="delPass" placeholder="Your password" autocomplete="current-password">
+          <input type="text" id="delText" placeholder="Type DELETE to confirm" autocomplete="off" oninput="checkDeleteConfirm()">
+        </div>
+        <div id="delStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+        <button class="btn" id="delBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" disabled onclick="doDeleteAccount()">Permanently delete my account</button>
+      </div>
     </div>
 
     <div style="display:flex;gap:8px;flex-direction:column">
       <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')">⚙️ Edit My Study Plan &amp; Schedule</button>
-      <button class="btn gray" style="width:100%" onclick="closeUserModal();exportData()">💾 Download My Full Progress Backup (.json)</button>
       <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()">⇄ Switch User / Log Out</button>
     </div>
   </div>
@@ -2897,14 +2910,20 @@ function apiUrl(path,params={}){
   }
   return path+(qs.length?('?'+qs.join('&')):'');
 }
+async function apiError(r,fallback){
+  let msg='';
+  try{const j=await r.json();msg=(j&&j.error)?j.error:''}catch(e){}
+  if(msg==='session expired')msg='Session expired, please log in again.';
+  return new Error(msg||fallback);
+}
 async function apiLogin(name,password){
   const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password})});
-  if(!r.ok)throw new Error((await r.text())||'login failed');
+  if(!r.ok)throw await apiError(r,'login failed');
   return r.json();
 }
 async function apiRegister(name,password,color){
   const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password,color})});
-  if(!r.ok)throw new Error((await r.text())||'register failed');
+  if(!r.ok)throw await apiError(r,'register failed');
   return r.json();
 }
 async function apiLogout(){
@@ -2944,7 +2963,7 @@ async function doRegister(){
   const pass=document.getElementById('regPass').value;
   const color=document.getElementById('regColor').value||'#1b2b48';
   const err=document.getElementById('regError');
-  if(pass.length<4){err.textContent='❌ Password must be at least 4 characters';return}
+  if(pass.length<8){err.textContent='❌ Password must be at least 8 characters.';return}
   try{
     const u=await apiRegister(name,pass,color);
     saveUserSession(u);
@@ -2956,6 +2975,12 @@ async function doLogout(){
   await apiLogout();
   clearUserSession();
   location.reload();
+}
+function sessionExpired(){
+  clearUserSession();
+  const err=document.getElementById('authError');
+  if(err)err.textContent='❌ Session expired, please log in again.';
+  showAuthOverlay();
 }
 async function doChangePassword(){
   const cur=document.getElementById('pwCurrent').value;
@@ -2982,6 +3007,55 @@ async function doChangePassword(){
   }catch(e){
     setStatus('❌ '+e.message,'var(--bad-text)');
   }finally{
+    btn.disabled=false;
+  }
+}
+
+/* ---------- ACCOUNT (export / delete) ---------- */
+async function doExportAccount(){
+  try{
+    const r=await fetch('/api/export',{headers:authHeaders()});
+    if(r.status===401){sessionExpired();return}
+    if(!r.ok)throw await apiError(r,'export failed');
+    const blob=await r.blob();
+    const a=document.createElement('a');
+    a.href=window.URL.createObjectURL(blob);
+    a.download='b2first-export-'+today()+'.json';
+    a.click();
+    window.URL.revokeObjectURL(a.href);
+  }catch(e){
+    const st=document.getElementById('pwStatus');
+    if(st)st.textContent='❌ Export failed: '+e.message;
+  }
+}
+function openDeleteAccount(){
+  const btn=document.getElementById('delOpenBtn');
+  if(btn)btn.style.display='none';
+  const box=document.getElementById('delConfirmBox');
+  if(box)box.style.display='block';
+}
+function checkDeleteConfirm(){
+  const ok=(document.getElementById('delText').value||'').trim().toUpperCase()==='DELETE';
+  const btn=document.getElementById('delBtn');
+  if(btn)btn.disabled=!ok;
+}
+async function doDeleteAccount(){
+  const st=document.getElementById('delStatus');
+  const btn=document.getElementById('delBtn');
+  const setStatus=(msg,color)=>{if(st){st.textContent=msg;if(color)st.style.color=color}};
+  if((document.getElementById('delText').value||'').trim().toUpperCase()!=='DELETE'){
+    setStatus('❌ Type DELETE to confirm.','var(--bad-text)');return;
+  }
+  btn.disabled=true;
+  setStatus('Deleting…','var(--on-surface-variant)');
+  try{
+    const r=await fetch('/api/account',{method:'DELETE',headers:authHeaders(),
+      body:JSON.stringify({password:document.getElementById('delPass').value})});
+    if(!r.ok)throw await apiError(r,'delete failed');
+    clearUserSession();
+    location.reload();
+  }catch(e){
+    setStatus('❌ '+e.message,'var(--bad-text)');
     btn.disabled=false;
   }
 }
@@ -3371,13 +3445,14 @@ let SYNC_STATE='off'; // 'off' = no server, 'local' = pending, 'ok' = saved on t
 let syncT=null;
 function syncStatus(s){
   SYNC_STATE=s;
+  const label=s==='ok'?'Synced':s==='local'?'Saving…':'Offline';
   const el=document.getElementById('syncBadge');
   if(el){
-    el.textContent=s==='ok'?'✔ synced with server':s==='local'?'… saving to server':'⚠ local mode';
+    el.textContent=label;
     el.style.color=s==='ok'?'var(--ok)':s==='local'?'var(--warn)':'var(--on-surface-variant)';
   }
   const el2=document.getElementById('syncBadgeFoot');
-  if(el2)el2.textContent=s==='ok'?'✔ synced with server':s==='local'?'… saving to server':'⚠ local mode';
+  if(el2)el2.textContent=label;
 }
 function syncPush(){
   if(DEMO&&DEMO.demo)return;
@@ -3391,14 +3466,14 @@ function syncPush(){
       headers:authHeaders(),
       body:JSON.stringify(payload)
     })
-      .then(r=>{if(!r.ok)throw 0;syncStatus('ok')})
+      .then(r=>{if(r.status===401){sessionExpired();throw 0}if(!r.ok)throw 0;syncStatus('ok')})
       .catch(()=>syncStatus('off'));
   },300);
 }
 function syncPull(){
   if(DEMO&&DEMO.demo)return Promise.resolve(null);
   return fetch(apiUrl('/api/progress',{download:1}),{headers:authHeaders()})
-    .then(r=>{if(!r.ok)throw 0;return r.json()})
+    .then(r=>{if(r.status===401){sessionExpired();throw 0}if(!r.ok)throw 0;return r.json()})
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
@@ -5753,7 +5828,7 @@ async function submitIaWriting(){
   try{
     const r=await fetch('/api/ai/writing',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:authHeaders(),
       body:JSON.stringify({text,kind,provider_key:key}),
       signal:ctrl.signal
     });
@@ -6232,7 +6307,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   USER=loadUser();
   window.USER=USER;
-  if(USER){
+  if(USER&&USER.token){
     D=load();
     window.D=D;
     renderUserChip();
@@ -6241,6 +6316,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     refreshAll();
     if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id))showOnboarding();
   }else{
+    clearUserSession();
     showAuthOverlay();
   }
 })();
