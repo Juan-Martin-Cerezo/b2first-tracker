@@ -94,13 +94,13 @@
       "id": "20",
       "tests": "test_speaking_live.py",
       "title": "S3: examinador en vivo (token efimero + transporte sim)",
-      "status": "running"
+      "status": "done"
     },
     {
       "id": "21",
       "tests": "test_speaking_director.py test_speaking_duo.py",
       "title": "S4: examinador + companero hablando a la vez (director de turnos)",
-      "status": "pending"
+      "status": "running"
     },
     {
       "id": "22",
