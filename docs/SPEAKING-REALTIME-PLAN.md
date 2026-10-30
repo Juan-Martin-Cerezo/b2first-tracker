@@ -265,12 +265,44 @@ no scores. That is the correct behaviour with one key absent and it needs to be 
 
 ## 11. Non-goals
 
-- Grading Interactive Communication with a number. It gets proxies, labelled as proxies.
+- **Grading Interactive Communication from nothing.** Phase 35 does grade it, but only inside the
+  exam flow, only from the fenced dialogue (candidate + examiner + partner turns), and only when
+  the client declares `interactive: true`. Every other caller still gets `null` and proxies, so a
+  report can never invent IC from a monologue.
 - Replacing a human examiner for certification. This trains; it does not certify.
 - Storing audio. Ever. Not for "quality", not for "debugging".
 - A three-way session (examiner + two candidates). Out of scope until S4 is stable.
 - Running ASR on the Pi. `whisper.cpp` tiny on ARM produces transcripts of a quality that would
   make the Grammar band fiction.
+
+---
+
+## 11.1 S6 — Phase 35: the exam, not a conversation
+
+The complaint was concrete: *"no entiendo cómo funciona y no es fácil de interpretar para el
+usuario"*. S1–S5 built a correct audio pipeline with no visible exam inside it. Phase 35 adds the
+exam as a layer on top, without touching the audio path:
+
+| Piece | Where | What it does |
+| --- | --- | --- |
+| Task bank | `material/speaking.json` | Pure data: 8 Part 1 questions, 3 photo pairs, 2 topic cards, 2 discussion sets. Grows without touching the UI |
+| Photos | `img/spk/` + `CREDITS.md` | Wikimedia Commons only, CC BY / CC BY-SA, linked from the Part 2 card |
+| Screens | `SP_EXAM` in `index.html` | `choose → brief → exam → feedback → report`, five dots, one sentence per screen |
+| Clock | `SP_EXAM` | Part 1 2 min · Part 2 1 min + 30 s response + follow-up · Part 3 2 min + 1 min decision · Part 4 4 min; red in the last 15 s |
+| Examiner | `speaking_prompts.examiner_instruction(part, task)` | The task travels with the token mint; the prompt names the exact questions, the 80%/100% clock rule and the 5 s/10 s silence rule |
+| Partner | `speaking_prompts.partner_instruction(part, task)` | One turn per examiner turn, two sentences maximum, never answers for the candidate |
+| Report | `speaking_report` | Opt-in IC band; pronunciation still Azure-or-nothing |
+
+Timings measured on this machine with `?spk=sim` (no key, no network): a full Part 2 run takes
+**~146 s** end to end, saves `min: 3`, and produces `GV 4 / DM 3 / IC 4` with Pronunciation
+`null` → "not measured".
+
+What a real Cambridge examiner would still find missing: the partner is synthetic (no real
+interlocutor bias, no genuine disagreement), the IC band is inferred from text rather than
+observed, pronunciation is absent without Azure, and there is no human moderation of the bands —
+the tool trains, it does not certify. These are stated in the UI (each one renders as
+"not measured" or as a proxy) instead of being papered over.
+
 
 ---
 

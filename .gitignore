@@ -15,6 +15,9 @@ node_modules/
 # Datos del usuario (progreso sincronizado + backups)
 data/
 
+# Capturas que generan las suites (test_speaking_exam, test_layout)
+tests/out/
+
 # Material de referencia de Stitch (descargas crudas: HTML + screenshots)
 stitch_assets/*.html
 stitch_assets/*.png

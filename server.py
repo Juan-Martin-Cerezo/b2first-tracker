@@ -2813,6 +2813,33 @@ class H(BaseHTTPRequestHandler):
             self._serve_cached_static(full, ctype)
             return
 
+        # Speaking Part 2 photographs (Wikimedia Commons, credits in the folder).
+        # Same traversal guard as /assets: realpath must stay inside img/.
+        if path.startswith("/img/"):
+            rel = path[len("/img/"):]
+            root_img = os.path.join(os.path.dirname(os.path.abspath(__file__)), "img")
+            full = os.path.realpath(os.path.join(root_img, rel))
+            if not full.startswith(os.path.realpath(root_img)) or not os.path.isfile(full):
+                self._send(404, b"not found", "text/plain")
+                return
+            ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
+            self._serve_cached_static(full, ctype)
+            return
+
+        # Phase 35: the speaking task bank. Pure data, so the exam can grow
+        # without touching index.html; served like /diagnostico.json but
+        # without the item-count validation (the client validates its shape).
+        if path == "/material/speaking.json":
+            full = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "material", "speaking.json")
+            if not os.path.isfile(full):
+                self._send(404, json.dumps({"error": "speaking bank not found"}).encode("utf-8"),
+                           "application/json")
+                return
+            ctype = "application/json; charset=utf-8"
+            self._serve_cached_static(full, ctype)
+            return
+
         # Catalog JSON (consumed by the LIBROS tab of the tracker).
         # `scan()` walks the whole material tree on every call: memoise it for 60 s
         # and answer 304 when the client already has the same ETag. Without this,
@@ -3293,7 +3320,7 @@ class H(BaseHTTPRequestHandler):
                 return
             # S4: one token per voice. `role` picks the system instruction
             # (examiner or partner); `part` is echoed for the client's director.
-            role, part = "examiner", 0
+            role, part, task = "examiner", 0, None
             if self._clen() > 0:
                 left = self._clen()
                 raw = self.rfile.read(min(left, 4096))
@@ -3316,6 +3343,11 @@ class H(BaseHTTPRequestHandler):
                         part = 0
                     if part not in (1, 2, 3, 4):
                         part = 0
+                    # Phase 35: the task the candidate sees on screen travels with
+                    # the mint so the examiner asks exactly those questions.
+                    # `clean_task()` whitelists and caps it; a malformed task
+                    # degrades to the generic exam, it never rejects the mint.
+                    task = req.get("task")
             api_key = _spk_google_key()
             if not api_key:
                 # One line, no secret: only the missing knob is named.
@@ -3346,8 +3378,11 @@ class H(BaseHTTPRequestHandler):
                    {"part": part, "role": role})
             # `instruction` is the examiner's own system prompt (not a secret):
             # the browser has to send it in the setup message itself.
-            instruction = (speaking_prompts.PARTNER_SYSTEM if role == "partner"
-                           else speaking_prompts.EXAMINER_SYSTEM)
+            # Phase 35: it is built from the part AND the task on screen, so the
+            # examiner asks those questions, in that order, and nothing else.
+            instruction = (speaking_prompts.partner_instruction(part or 1, task)
+                           if role == "partner"
+                           else speaking_prompts.examiner_instruction(part or 1, task))
             self._send_json(200, {
                 "token": token,
                 "expires_in": SPK_TOKEN_TTL_S,
@@ -3474,11 +3509,14 @@ class H(BaseHTTPRequestHandler):
                 # legitimate session.
                 _audit("ai_blocked", uid, _real_ip(self), self._rid,
                        {"reason": abuse, "chars": len(candidate)})
-            user_block, _nonce = speaking_report.report_message(_fit_ai_text(candidate))
+            user_block, _nonce = speaking_report.report_message(
+                _fit_ai_text(candidate),
+                dialogue=_fit_ai_text(speaking_report.dialogue_text(clean["transcript"]))
+                if clean["interactive"] else None)
             if not byo:
                 self._writing_consume(uid, _real_ip(self))
-            content, ai_err = _ai_text_complete(speaking_report.REPORT_SYSTEM, user_block,
-                                                byo=byo)
+            content, ai_err = _ai_text_complete(
+                speaking_report.system_prompt(clean["interactive"]), user_block, byo=byo)
             if ai_err:
                 code = 503 if ai_err == "ai_not_configured" else 502
                 self._send_json(code, {"error": ai_err})
@@ -3497,7 +3535,7 @@ class H(BaseHTTPRequestHandler):
             except (ValueError, TypeError):
                 self._send_json(502, {"error": "bad_model_output"})
                 return
-            graded = speaking_report.parse_model_output(model_obj)
+            graded = speaking_report.parse_model_output(model_obj, clean["interactive"])
             if graded is None:
                 # Never echo the raw output: it is untrusted text.
                 self._send_json(502, {"error": "bad_model_output"})
@@ -3508,7 +3546,11 @@ class H(BaseHTTPRequestHandler):
                     "grammar_vocabulary": graded["bands"]["grammar_vocabulary"],
                     "discourse_management": graded["bands"]["discourse_management"],
                     "pronunciation": pron["band"],
-                    "interactive_communication": None,
+                    # Phase 35: graded only when the client declares that the
+                    # session had an interlocutor (a partner voice). Without that
+                    # declaration it stays null and the UI says "not scored".
+                    "interactive_communication":
+                        graded["bands"].get("interactive_communication"),
                 },
                 "derived": {
                     "pronunciation_score": pron["score"],

@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "parts": [
+    {
+      "part": 1,
+      "minutes": 2,
+      "sets": [
+        {
+          "id": "p1-a",
+          "questions": [
+            "Where are you from?",
+            "What do you enjoy about studying English?",
+            "Do you work, or are you a student?",
+            "What do you like most about your school or your job?",
+            "What do you usually do at the weekend?",
+            "Do you prefer spending your free time indoors or outdoors? Why?",
+            "Do you enjoy travelling? What kind of holidays do you like?",
+            "How do you use technology in your daily life?"
+          ]
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "minutes": 4,
+      "tasks": [
+        {
+          "id": "p2-1",
+          "photos": ["img/spk/p2-1-a.jpg", "img/spk/p2-1-b.jpg"],
+          "title": "Two ways of travelling to work",
+          "prompts": [
+            "Compare the photographs and say why the people might have chosen these ways of travelling.",
+            "Which of these two ways of travelling do you think is more enjoyable? Why?"
+          ]
+        },
+        {
+          "id": "p2-2",
+          "photos": ["img/spk/p2-2-a.jpg", "img/spk/p2-2-b.jpg"],
+          "title": "Two places to study",
+          "prompts": [
+            "Compare the photographs and say why the people might have chosen these places to study.",
+            "Which of these two places would you prefer to study in? Why?"
+          ]
+        },
+        {
+          "id": "p2-3",
+          "photos": ["img/spk/p2-3-a.jpg", "img/spk/p2-3-b.jpg"],
+          "title": "Two ways of shopping",
+          "prompts": [
+            "Compare the photographs and say why the people might have chosen to shop in these ways.",
+            "Which of these two ways of shopping do you think is better? Why?"
+          ]
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "minutes": 4,
+      "tasks": [
+        {
+          "id": "p3-1",
+          "topic": "A school trip abroad",
+          "prompts": [
+            "where to go",
+            "how to travel",
+            "where to stay",
+            "what to do in the evenings",
+            "how to raise the money"
+          ],
+          "decision": "Which two ideas would be best?"
+        },
+        {
+          "id": "p3-2",
+          "topic": "A new community centre",
+          "prompts": [
+            "a sports hall",
+            "a cafe",
+            "a library corner",
+            "a music room",
+            "a garden"
+          ],
+          "decision": "Which two ideas would be best?"
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "minutes": 4,
+      "tasks": [
+        {
+          "id": "p4-1",
+          "linkedTo": "p3-1",
+          "questions": [
+            "Why do you think school trips are useful for students?",
+            "Should parents pay for school trips, or should the school pay?",
+            "What can students learn from travelling with their class?",
+            "Is it better to travel with friends or with family? Why?",
+            "How has the way people travel changed in your country?",
+            "Would you like to work in the travel industry? Why or why not?"
+          ]
+        },
+        {
+          "id": "p4-2",
+          "linkedTo": "p3-2",
+          "questions": [
+            "Why do people need places like community centres?",
+            "What activities are popular with young people in your area?",
+            "Should the government pay for community centres?",
+            "How can a community centre bring people together?",
+            "Do you think online activities will replace places like this?",
+            "Would you use a community centre? Why or why not?"
+          ]
+        }
+      ]
+    }
+  ]
+}

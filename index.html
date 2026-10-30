@@ -618,6 +618,68 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spk-evidence .n{display:block;font-size:var(--fs-xs);color:var(--txt-2)}
 .spk-report-err{display:none;margin-top:10px;font-size:var(--fs-sm);font-weight:600;color:var(--bad-text);background:var(--bad-soft);border:1px solid var(--bad-border);border-radius:var(--r-ctl);padding:8px 10px}
 
+/* ---------- PHASE 35: SPEAKING EXAM (SP_EXAM) ----------
+   Five screens, one instruction sentence each, a progress dot per screen and
+   one rule: the examiner runs the exam, the clock runs the part. */
+.spx{margin-top:12px}
+.spx-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.spx-dots{display:flex;gap:8px;margin:14px 0 4px;list-style:none;padding:0}
+.spx-dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+.spx-dot[aria-current="step"]{background:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.spx-dot.done{background:var(--ok-strong)}
+.spx-screen{display:none}
+.spx-screen.is-on{display:block}
+.spx-sentence{font-size:var(--fs-md);color:var(--txt);margin:12px 0 10px;line-height:1.45}
+.spx-parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:8px 0 14px}
+.spx-part{text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:12px;cursor:pointer;font:inherit;color:var(--txt);min-height:44px}
+.spx-part[aria-checked="true"]{border-color:var(--acc);background:var(--acc-soft)}
+.spx-part:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.spx-part .n{display:block;font-size:var(--fs-sm);font-weight:600}
+.spx-part .d{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px;line-height:1.4}
+.spx-part .m{display:block;font-size:var(--fs-xs);color:var(--acc-text);margin-top:6px;font-weight:600}
+.spx-brief{display:grid;gap:8px;margin:10px 0;padding:0;list-style:none}
+.spx-brief li{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;font-size:var(--fs-sm);color:var(--txt);line-height:1.45}
+.spx-rule{font-size:var(--fs-sm);font-weight:600;color:var(--warn-text);background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--r-ctl);padding:10px 12px;margin:12px 0}
+.spx-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.spx-actions .btn{min-height:44px}
+.spx-exam-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:12px;flex-wrap:wrap}
+.spx-phase{font-size:var(--fs-sm);color:var(--txt-2)}
+.spx-phase b{display:block;font-size:var(--fs-md);color:var(--txt)}
+.spx-clockwrap{text-align:right}
+.spx-clock-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2)}
+.spx-clock{display:block;font-size:40px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
+.spx-clock[data-low="1"]{color:var(--bad-text)}
+.spx-who{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-sm);font-weight:700;border-radius:999px;padding:6px 14px;margin:8px 0 12px;background:var(--surface-2);color:var(--txt-2)}
+.spx-who::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
+.spx-who[data-who="examiner"]{background:var(--acc-soft);color:var(--acc-text)}
+.spx-who[data-who="partner"]{background:var(--warn-soft);color:var(--warn-text)}
+.spx-who[data-who="candidate"]{background:var(--ok-soft);color:var(--ok-text)}
+.spx-task{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:14px;margin-bottom:12px}
+.spx-task h4{margin:0 0 8px;font-size:var(--fs-md);color:var(--txt)}
+.spx-task p{margin:0 0 8px;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
+.spx-prompts{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.spx-prompts li{font-size:var(--fs-sm);color:var(--txt);padding:6px 10px;border-radius:var(--r-ctl);background:var(--surface);line-height:1.4}
+.spx-prompts li.on{background:var(--acc-soft);color:var(--acc-text);font-weight:600}
+.spx-decision{margin-top:10px;font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
+.spx-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+@media (max-width:640px){.spx-photos{grid-template-columns:1fr}}
+.spx-photo{min-width:0;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
+.spx-photo img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;background:var(--line)}
+.spx-photo figcaption{font-size:var(--fs-xs);color:var(--txt-2);padding:4px 8px}
+.spx-credit{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px}
+.spx-credit a{color:var(--acc-text);font-weight:600}
+.spx-tx{max-height:150px;overflow-y:auto;font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;display:grid;gap:3px;margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r-ctl);border:1px solid var(--line)}
+.spx-tx-line{overflow-wrap:anywhere}
+.spx-tx-candidate{color:var(--txt)}
+.spx-next{margin-top:12px}
+.spx-next-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.spx-next p{margin:4px 0 0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
+.spx-saved{font-size:var(--fs-sm);color:var(--txt);background:var(--ok-soft);border:1px solid var(--ok-border);border-radius:var(--r-ctl);padding:10px 12px;line-height:1.5}
+.spx-scale-q{display:block;font-size:var(--fs-xs);color:var(--txt-2);font-style:italic;margin-top:4px}
+.spx-note{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+#spxFbScales{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){#spxFbScales{grid-template-columns:1fr}}
+
 /* ---------- GATES ---------- */
 .gate{
   padding:14px 16px;margin-bottom:12px;
@@ -2119,6 +2181,94 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <!-- Phase 1: Mock -->
                 <div id="spPhase1">
+
+                  <!-- PHASE 35: the Cambridge Speaking test, part by part.
+                       Five screens, in order: choose → brief → exam → feedback → report.
+                       The task comes from material/speaking.json; every chrome string
+                       is an I18N key, and the exam text stays in English on purpose. -->
+                  <div class="live-panel spx" id="spxPanel" style="display:none" aria-labelledby="spxTitle">
+                    <div class="spx-head">
+                      <div>
+                        <div class="live-title" id="spxTitle" data-i18n="spx_title">Speaking exam</div>
+                        <div class="live-sub" data-i18n="spx_sub">Cambridge B2 First · part by part</div>
+                      </div>
+                      <div class="live-actions">
+                        <button class="btn sm gray" id="spxCloseBtn" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
+                      </div>
+                    </div>
+
+                    <div class="spx-dots" id="spxDots" role="list"></div>
+
+                    <section class="spx-screen" data-spx-screen="choose">
+                      <p class="spx-sentence" id="spxChooseSentence"></p>
+                      <div class="spx-parts" id="spxParts" role="radiogroup" aria-labelledby="spxChooseSentence"></div>
+                      <div class="spk-report-err" id="spxChooseErr" role="alert"></div>
+                      <div class="spx-actions">
+                        <button class="btn ok" id="spxStartBtn" onclick="SP_EXAM.start()" data-i18n="spx_start">Start</button>
+                      </div>
+                    </section>
+
+                    <section class="spx-screen" data-spx-screen="brief">
+                      <p class="spx-sentence" id="spxBriefSentence"></p>
+                      <ul class="spx-brief">
+                        <li data-i18n="spx_brief_b1">The examiner asks the questions and you answer in English.</li>
+                        <li data-i18n="spx_brief_b2">The task and a countdown stay on screen the whole time.</li>
+                        <li data-i18n="spx_brief_b3">A partner joins you in Parts 2, 3 and 4.</li>
+                      </ul>
+                      <p class="live-sub" id="spxBriefTime"></p>
+                      <p class="spx-rule" data-i18n="spx_rule">Speak in English. If you go quiet for 5 seconds I will ask you a question.</p>
+                      <div class="spk-report-err" id="spxBriefErr" role="alert"></div>
+                      <div class="spx-actions">
+                        <button class="btn ok" id="spxReadyBtn" onclick="SP_EXAM.ready()" data-i18n="spx_ready">I'm ready</button>
+                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back">Back</button>
+                      </div>
+                    </section>
+
+                    <section class="spx-screen" data-spx-screen="exam">
+                      <div class="spx-exam-head">
+                        <div class="spx-phase">
+                          <span id="spxPhasePart"></span>
+                          <b id="spxPhaseName"></b>
+                        </div>
+                        <div class="spx-clockwrap">
+                          <span class="spx-clock-lbl" data-i18n="spx_clock_label">Time left in this turn</span>
+                          <span class="spx-clock" id="spxClock" role="timer">00:00</span>
+                        </div>
+                      </div>
+                      <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
+                      <div class="spx-task" id="spxTask" data-exam-task></div>
+                      <div class="spk-report-err" id="spxExamErr" role="alert"></div>
+                      <div class="spx-tx" id="spxTx" aria-label="Transcript" data-exam-task data-i18n-aria-label="spx_transcript"></div>
+                      <div class="spx-actions">
+                        <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early">End this part</button>
+                      </div>
+                    </section>
+
+                    <section class="spx-screen" data-spx-screen="feedback">
+                      <p class="spx-sentence" id="spxFbSentence"></p>
+                      <div class="spk-scales" id="spxFbScales"></div>
+                      <div class="spx-next">
+                        <span class="spx-next-lbl" data-i18n="spx_feedback_next">One thing to work on next time</span>
+                        <p id="spxFbNext"></p>
+                      </div>
+                      <div class="spx-actions">
+                        <button class="btn ok" id="spxFbSave" onclick="SP_EXAM.saveReport()" data-i18n="spx_save">Save report</button>
+                        <button class="btn gray" id="spxFbRetry" onclick="SP_EXAM.retry()" data-i18n="spx_retry">Try the report again</button>
+                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back">Back</button>
+                      </div>
+                      <div class="spk-report-err" id="spxFbErr" role="alert"></div>
+                    </section>
+
+                    <section class="spx-screen" data-spx-screen="report">
+                      <p class="spx-sentence" id="spxRpSentence"></p>
+                      <div class="spx-saved" id="spxRpSaved"></div>
+                      <div class="spx-actions">
+                        <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again">Practise another part</button>
+                        <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
+                      </div>
+                    </section>
+                  </div>
+
                   <div class="task">
                     <div class="task-head">
                       <div class="task-num">1</div>
@@ -2159,6 +2309,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
                       <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
                       <button class="btn" id="liveOpenBtn" onclick="liveOpen()">🎧 Live studio</button>
+                      <button class="btn ok" id="spxOpenBtn" onclick="SP_EXAM.open()" data-i18n="spx_open">🎓 Speaking exam</button>
                       <button class="btn" id="spkOpenBtn" onclick="spkStart()">🗣 Live examiner</button>
                     </div>
                   </div>
@@ -3823,7 +3974,75 @@ const I18N={
     alert_5min:'⏰ 5 minutes remaining',
     alert_result_saved:'Result saved ✓',
     alert_speaking_final:'Speaking final has no numeric fields to edit — delete it and log it again.',
-    alert_speaking_no_band:'This Speaking entry has no band to edit — delete it and log it again.'
+    alert_speaking_no_band:'This Speaking entry has no band to edit — delete it and log it again.',
+
+    spx_open:'🎓 Speaking exam',
+    spx_title:'Speaking exam',
+    spx_sub:'Cambridge B2 First · part by part',
+    spx_dot_choose:'Choose a part',
+    spx_dot_brief:'Before you start',
+    spx_dot_exam:'Exam',
+    spx_dot_feedback:'Feedback',
+    spx_dot_report:'Report',
+    spx_choose_sentence:'Choose the part of the Speaking test you want to practise.',
+    spx_part_title:'Part {n} · {min} min',
+    spx_part_mode_1:'you and the examiner',
+    spx_part_mode_2:'you, the examiner and a partner',
+    spx_part_desc_1:'Personal questions about you, your studies and your free time.',
+    spx_part_desc_2:'Compare two photographs for a minute, answer a question about them, then listen to your partner.',
+    spx_part_desc_3:'Talk with your partner about a task card and reach a decision together.',
+    spx_part_desc_4:'Discussion questions that follow the Part 3 topic.',
+    spx_start:'Start',
+    spx_brief_sentence:'Here is what will happen in Part {n}.',
+    spx_brief_b1:'The examiner asks the questions and you answer in English.',
+    spx_brief_b2:'The task and a countdown stay on screen the whole time.',
+    spx_brief_b3:'A partner joins you in Parts 2, 3 and 4.',
+    spx_brief_time:'Part {n} · {min} min · {turns} turns · the clock changes colour in the last 15 seconds.',
+    spx_rule:'Speak in English. If you go quiet for 5 seconds I will ask you a question.',
+    spx_ready:'I\'m ready',
+    spx_clock_label:'Time left in this turn',
+    spx_transcript:'Transcript',
+    spx_examiner:'Examiner speaking',
+    spx_your_turn:'Your turn',
+    spx_partner:'Partner speaking',
+    spx_examiner_tag:'Examiner',
+    spx_partner_tag:'Partner',
+    spx_phase_part:'Part {n}',
+    spx_photo_1:'Photograph 1',
+    spx_photo_2:'Photograph 2',
+    spx_credit:'Photos: Wikimedia Commons, CC BY / CC BY-SA — see credits',
+    spx_decision:'Decision: {q}',
+    spx_topic:'Topic: {q}',
+    spx_listen:'Listen to the examiner',
+    spx_long_turn:'Your long turn',
+    spx_response:'Your partner\'s turn',
+    spx_follow_up:'Your follow-up question',
+    spx_discuss:'Talk together',
+    spx_decide:'Reach a decision',
+    spx_closing:'Closing',
+    spx_pr_model_note:'Measured from the audio, never by the text model.',
+    spx_voice_offline:'{who} is offline — {reason}. The rest of the exam continues.',
+    spx_end_early:'End this part',
+    spx_feedback_sentence:'How you did in Part {n}.',
+    spx_feedback_next:'One thing to work on next time',
+    spx_scale_gv:'Grammar & Vocabulary',
+    spx_scale_dm:'Discourse Management',
+    spx_scale_pr:'Pronunciation',
+    spx_scale_ic:'Interactive Communication',
+    spx_not_measured:'not measured',
+    spx_pr_note_azure:'Measured by Azure Pronunciation Assessment: {score}/100.',
+    spx_pr_note_none:'Pronunciation is not measured in this session.',
+    spx_no_evidence:'No evidence quoted for this scale.',
+    spx_save:'Save report',
+    spx_retry:'Try the report again',
+    spx_report_sentence:'Part {n} is saved to your log.',
+    spx_report_saved:'{min} min · {bands} · silence prompts: {silences}',
+    spx_again:'Practise another part',
+    spx_no_task:'The task bank could not be loaded. Check your connection and try again.',
+    spx_no_bank:'No task found for Part {n}.',
+    spx_report_failed:'The report could not be produced, so nothing was logged.',
+    spx_report_working:'Marking your part…',
+    spx_saved_bands:'Bands: {bands}'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -4337,7 +4556,75 @@ const I18N={
     alert_5min:'⏰ Quedan 5 minutos',
     alert_result_saved:'Resultado guardado ✓',
     alert_speaking_final:'El speaking final no tiene campos numéricos para editar — borralo y registralo de nuevo.',
-    alert_speaking_no_band:'Esta entrada de Speaking no tiene banda para editar — borrala y registrala de nuevo.'
+    alert_speaking_no_band:'Esta entrada de Speaking no tiene banda para editar — borrala y registrala de nuevo.',
+
+    spx_open:'🎓 Examen oral',
+    spx_title:'Examen oral',
+    spx_sub:'Cambridge B2 First · parte por parte',
+    spx_dot_choose:'Elegir una parte',
+    spx_dot_brief:'Antes de empezar',
+    spx_dot_exam:'Examen',
+    spx_dot_feedback:'Devolución',
+    spx_dot_report:'Informe',
+    spx_choose_sentence:'Elegí la parte del examen oral que querés practicar.',
+    spx_part_title:'Parte {n} · {min} min',
+    spx_part_mode_1:'vos y el examinador',
+    spx_part_mode_2:'vos, el examinador y un compañero',
+    spx_part_desc_1:'Preguntas personales sobre vos, tus estudios y tu tiempo libre.',
+    spx_part_desc_2:'Compará dos fotografías durante un minuto, respondé una pregunta sobre ellas y escuchá a tu compañero.',
+    spx_part_desc_3:'Hablá con tu compañero sobre una tarjeta y lleguen juntos a una decisión.',
+    spx_part_desc_4:'Preguntas de debate que siguen el tema de la Parte 3.',
+    spx_start:'Empezar',
+    spx_brief_sentence:'Esto es lo que va a pasar en la Parte {n}.',
+    spx_brief_b1:'El examinador hace las preguntas y vos respondés en inglés.',
+    spx_brief_b2:'La consigna y la cuenta regresiva quedan en pantalla todo el tiempo.',
+    spx_brief_b3:'Un compañero se suma en las Partes 2, 3 y 4.',
+    spx_brief_time:'Parte {n} · {min} min · {turns} turnos · el reloj cambia de color en los últimos 15 segundos.',
+    spx_rule:'Hablá en inglés. Si te quedás en silencio 5 segundos, te voy a hacer una pregunta.',
+    spx_ready:'Estoy listo',
+    spx_clock_label:'Tiempo restante de este turno',
+    spx_transcript:'Transcripción',
+    spx_examiner:'Habla el examinador',
+    spx_your_turn:'Tu turno',
+    spx_partner:'Habla tu compañero',
+    spx_examiner_tag:'Examinador',
+    spx_partner_tag:'Compañero',
+    spx_phase_part:'Parte {n}',
+    spx_photo_1:'Fotografía 1',
+    spx_photo_2:'Fotografía 2',
+    spx_credit:'Fotos: Wikimedia Commons, CC BY / CC BY-SA — ver créditos',
+    spx_decision:'Decisión: {q}',
+    spx_topic:'Tema: {q}',
+    spx_listen:'Escuchá al examinador',
+    spx_long_turn:'Tu turno largo',
+    spx_response:'Turno de tu compañero',
+    spx_follow_up:'Tu pregunta de seguimiento',
+    spx_discuss:'Hablen juntos',
+    spx_decide:'Lleguen a una decisión',
+    spx_closing:'Cierre',
+    spx_pr_model_note:'Se mide desde el audio, nunca con el modelo de texto.',
+    spx_voice_offline:'{who} está desconectado — {reason}. El resto del examen sigue.',
+    spx_end_early:'Terminar esta parte',
+    spx_feedback_sentence:'Cómo te fue en la Parte {n}.',
+    spx_feedback_next:'Una cosa para trabajar la próxima vez',
+    spx_scale_gv:'Gramática y vocabulario',
+    spx_scale_dm:'Gestión del discurso',
+    spx_scale_pr:'Pronunciación',
+    spx_scale_ic:'Comunicación interactiva',
+    spx_not_measured:'no medida',
+    spx_pr_note_azure:'Medida con Azure Pronunciation Assessment: {score}/100.',
+    spx_pr_note_none:'La pronunciación no se mide en esta sesión.',
+    spx_no_evidence:'No hay evidencia citada para esta escala.',
+    spx_save:'Guardar informe',
+    spx_retry:'Probar el informe de nuevo',
+    spx_report_sentence:'La Parte {n} quedó guardada en tu registro.',
+    spx_report_saved:'{min} min · {bands} · avisos de silencio: {silences}',
+    spx_again:'Practicar otra parte',
+    spx_no_task:'No se pudo cargar el banco de tareas. Revisá la conexión y probá de nuevo.',
+    spx_no_bank:'No hay tarea para la Parte {n}.',
+    spx_report_failed:'No se pudo generar el informe, así que no se guardó nada.',
+    spx_report_working:'Corrigiendo tu parte…',
+    spx_saved_bands:'Bandas: {bands}'
   }
 };
 let LANG='en';
@@ -4387,6 +4674,7 @@ function setLang(code){
   LANG=next;
   if(D&&D.settings)D.settings.lang=next;
   applyI18n();
+  if(typeof spxRerender==='function')spxRerender();
   save();
   refreshAll();
   if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
@@ -5296,6 +5584,9 @@ function applyTimers(){ueTimer.set(D.settings.ueMin||50);lTimer.set(D.settings.l
 /* ---------- INTERACTIVE SESSION STUDIO & STEPPERS ---------- */
 let CURRENT_STUDIO='mon-a';
 function selectSessionStudio(id){
+  /* Leaving the speaking studio must not leave an exam voice talking to an
+     empty card. The panel lives in the Friday B studio. */
+  if(id!=='fri-b'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
   CURRENT_STUDIO=id;
   document.querySelectorAll('.session-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.ses===id));
   const sMonA=document.getElementById('studioMonA');
@@ -5339,6 +5630,7 @@ function switchUePhase(p){
 }
 
 function switchSpPhase(p){
+  if(p!=='mock'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
   document.querySelectorAll('#spPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
   const p1=document.getElementById('spPhase1'),p2=document.getElementById('spPhase2');
   if(p1)p1.style.display=(p==='mock'?'block':'none');
@@ -6026,6 +6318,10 @@ function makeSimTransport(cfg){
   const role=(cfg&&cfg.role)||'examiner';
   const part=(cfg&&cfg.part)||1;
   const script=spkSimScript(role,part);
+  /* `driven` is the exam mode: the SP_EXAM state machine calls say()/hear() at
+     the exact moment the task needs a voice, so nothing may be scheduled from
+     start(). The free-conversation panel keeps the timed script below. */
+  const driven=!!(cfg&&cfg.driven);
   const sent=[];
   let closed=false,muted=false;
   const timers=[];
@@ -6037,6 +6333,7 @@ function makeSimTransport(cfg){
   return {
     on:on,role:role,sent:sent,
     start:function(){
+      if(driven)return;
       const gap=role==='partner'?2800:2400;
       /* 80 ms of head start so the director has applied the first mutes before
          any scripted line: a muted voice must not speak into the mix. */
@@ -6048,6 +6345,20 @@ function makeSimTransport(cfg){
           if(pair.a)later(function(){if(!closed&&!muted&&on.inText)on.inText(pair.a)},1400);
         },80+i*gap);
       });
+    },
+    /* Exam voices: say() is the examiner/partner speaking, hear() is the
+       candidate's own turn. Both go through the same playback queue, so the
+       speaker indicator, barge-in and the director see exactly what a real
+       voice would produce. */
+    say:function(text,ms){
+      if(closed||muted)return;
+      if(typeof text==='string'&&text&&on.outText)on.outText(text);
+      const frames=Math.max(1,Math.round(Math.max(300,ms||1200)/200));
+      for(let k=0;k<frames;k++)later(emitTone,k*200);
+    },
+    hear:function(text){
+      if(closed)return;
+      if(typeof text==='string'&&text&&on.inText)on.inText(text);
     },
     sendAudio:function(){},
     sendText:function(s){if(typeof s==='string'&&s)sent.push(s)},
@@ -6183,7 +6494,10 @@ const SPK={
      the last report rendered. `lastPA` is filled by the Azure PA endpoint. */
   silences:[],silStartedAt:0,speechMs:0,lastFrameAt:0,
   lastPA:null,reportId:'',reportPayload:null,reportData:null,
-  reportSaved:false,reportDuration:0
+  reportSaved:false,reportDuration:0,
+  /* Phase 35 exam mode: the SP_EXAM screen owns the floor, the transport is
+     driven by the task, and `interactive` asks the report for the IC scale. */
+  examMode:false,examDriven:false,interactive:false,lastReportError:''
 };
 window.SPK=SPK;
 window.spkDirectorTick=spkDirectorTick;
@@ -6426,6 +6740,20 @@ function spkRenderVoices(out){
   }
 }
 
+/* Exam mode: the clock (SP_EXAM) owns whose turn it is, so the director keeps
+   measuring overlap and barge-in but the mute policy comes from the phase. The
+   partner is live only on its own turn — that is also the cost control. */
+function spkExamDirectorOut(out){
+  if(!out)return;
+  out.examiner.live=true;
+  out.examiner.muted=!!SPK.barged;
+  const ph=(window.SP_EXAM&&window.SP_EXAM.phases)?window.SP_EXAM.phases[window.SP_EXAM.phase]:null;
+  const partnerTurn=!!ph&&ph.who==='partner';
+  out.partner.live=true;
+  out.partner.muted=!partnerTurn||!SPK.voices.partner;
+  out.addressed=partnerTurn?'partner':'candidate';
+}
+
 /* Ducking: when both voices talk at once, the one that was not addressed
    drops 5 dB (a soft setTargetAtTime, 50 ms). No compression, no effects. */
 const SPK_DUCK_GAIN=Math.pow(10,-5/20);
@@ -6460,8 +6788,17 @@ function spkVoiceError(who,err){
   try{if(v.transport)v.transport.close()}catch(e){}
   v.transport=null;
   const label=who==='partner'?'Partner':'Examiner';
-  spkSetStatus(label+' offline — the other voice continues');
-  spkSetBadge(label+' offline — session continues');
+  /* The reason travels with the error: a silent close is how the phase-35
+     `responseModalities` bug hid for a whole session. In exam mode the old
+     panel is hidden, so the same line goes on the exam screen too. */
+  const line=label+' offline — '+((err&&err.message)||'connection closed');
+  spkSetStatus(line);
+  spkSetBadge(line);
+  if(SPK.examMode){
+    spxSetError(t('spx_voice_offline',{
+      who:t(who==='partner'?'spx_partner_tag':'spx_examiner_tag'),
+      reason:(err&&err.message)||'connection closed'}));
+  }
   spkRenderVoices(SPK.lastOut||null);
 }
 
@@ -6514,6 +6851,7 @@ function spkLoop(){
   }
   const r=spkDirectorTick(SPK.dir,spkDirectorInput(now));
   SPK.dir=r.state;
+  if(SPK.examMode)spkExamDirectorOut(r.out);
   spkApplyDirector(r.out);
 
   if(now-SPK.lastReport>=30000){
@@ -6628,7 +6966,9 @@ async function spkStart(){
   if(SPK.running||SPK.starting)return;
   SPK.starting=true;
   const panel=document.getElementById('spkPanel');
-  if(panel)panel.style.display='block';
+  /* In exam mode the SP_EXAM screen is the UI: the old free-conversation panel
+     stays hidden so the two transcripts never compete for the same space. */
+  if(panel&&!SPK.examMode)panel.style.display='block';
   spkReset();
   spkSetStatus('Checking daily limit…');
   const stopBtn=document.getElementById('spkStopBtn');
@@ -6682,7 +7022,8 @@ async function spkStart(){
       const c=cfgs[role];
       const v=spkVoice(role);
       v.transport=makeTransport(Object.assign(
-        {mode:c.mode,role:role,part:part,on:spkHandlers(role)},c.liveCfg||{}));
+        {mode:c.mode,role:role,part:part,driven:!!SPK.examDriven,
+         on:spkHandlers(role)},c.liveCfg||{}));
       v.offline=false;v.muted=null;v.gainLevel=null;
     });
     SPK.activeVoices=roles.length;
@@ -6702,7 +7043,7 @@ async function spkStart(){
         roles.forEach(function(role){
           const v=spkVoice(role);
           v.transport=makeTransport({mode:'sim',role:role,part:part,
-            on:spkHandlers(role)});
+            driven:!!SPK.examDriven,on:spkHandlers(role)});
         });
         spkSetBadge('Microphone unavailable — simulated voices');
       }
@@ -6821,6 +7162,7 @@ function spkBuildPayload(){
     },
     pa:SPK.lastPA||null,
     store_transcript:false,
+    interactive:!!SPK.interactive,
     request_id:SPK.reportId
   };
 }
@@ -6904,17 +7246,24 @@ function renderSpeakingReport(data){
 }
 
 async function spkReport(){
-  if(!USER||!USER.token){spkReportError('Sign in again to request a report.');return false}
+  /* The exam screen has its own error line, so every failure keeps a message
+     here too instead of only painting the old panel. */
+  SPK.lastReportError='';
+  if(!USER||!USER.token){
+    SPK.lastReportError=t('spx_report_failed');
+    spkReportError('Sign in again to request a report.');return false}
   if(!SPK.reportPayload)SPK.reportPayload=spkBuildPayload();
   const payload=SPK.reportPayload;
   const hasSpeech=(payload.transcript||[]).some(function(t){
     return t.who==='candidate'&&t.text;
   });
   if(!hasSpeech){
+    SPK.lastReportError='No candidate speech to assess.';
     spkReportError('No candidate speech to assess yet — speak first, then request the report.');
     return false;
   }
   if(!(payload.duration_s>=30)){
+    SPK.lastReportError='The session was shorter than 30 seconds.';
     spkReportError('A session of at least 30 seconds is needed for a report. Keep talking and try again.');
     return false;
   }
@@ -6942,8 +7291,10 @@ async function spkReport(){
   }catch(e){
     /* The log, the streak and progress.json stay untouched: only the panel
        shows the error, and "Retry report" resends the same cached payload. */
-    spkReportError('Report failed — '+((e&&e.message)||'network error')
-      +'. Nothing was logged; retry whenever you want.');
+    const msg='Report failed — '+((e&&e.message)||'network error')
+      +'. Nothing was logged; retry whenever you want.';
+    SPK.lastReportError=msg;
+    spkReportError(msg);
     return false;
   }finally{
     if(retry)retry.disabled=false;
@@ -7002,6 +7353,812 @@ SPK.queueEmpty=function(){
   const v=SPK.voices.examiner;
   if(!v||!SPK.ctx)return true;
   return v.sources.length===0&&v.nextTime<=SPK.ctx.currentTime+0.02;
+};
+
+/* ---------- PHASE 35: SP_EXAM — one part of the Cambridge Speaking test ----------
+   The live panel used to be a free conversation with a director. This is the
+   exam instead: five screens (choose → brief → exam → feedback → report), the
+   task from material/speaking.json on screen, one clock per turn, and one
+   examiner voice that follows the task word for word.
+
+   Nothing about the audio path changed: makeLiveTransport (real) and the exam
+   variant of makeSimTransport (`?spk=sim`) still feed the same playback queue,
+   the same spkVad and the same director. What is new is who decides:
+     - SP_EXAM owns the clock and the floor (phase → who should speak);
+     - the examiner prompt owns the questions (the server builds it from the
+       same task, see speaking_prompts.py);
+     - the report owns the honesty (pronunciation stays "not measured" without
+       Azure, and Interactive Communication is only a band when the session had
+       an interlocutor).
+
+   Sim mode is a demo: the candidate's lines below are canned so the flow can be
+   watched with no key. They are labelled as simulated in the badge and they are
+   never presented as the user's own words outside the exam transcript. */
+const SPX_SCREENS=['choose','brief','exam','feedback','report'];
+const SPX_TICK_MS=250;
+const SPX_SILENCE_PROMPT_S=5;     // one prompt, never a loop
+const SPX_SILENCE_MOVE_S=10;      // then the phase moves on
+const SPX_LOW_SECONDS=15;         // the clock turns red here
+const SPX_ANSWER_DELAY_MS=2600;   // candidate starts after the examiner stops
+
+const SPX_PART_META={
+  1:{minutes:2,mode:'spx_part_mode_1',desc:'spx_part_desc_1'},
+  2:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_2'},
+  3:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_3'},
+  4:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_4'}
+};
+
+/* Spoken by the examiner/partner, so always English: this is the exam, not the
+   interface. The UI chrome around them is translated. */
+const SPX_LINES={
+  closing:'Thank you, that is the end of Part {n}.',
+  handoff:'Thank you. Now your partner will answer.',
+  followUp:'Thank you. Now …',
+  silence:'Take your time. Can you tell me a little more?',
+  early:'Thank you. We will stop this part here.',
+  partner2:'Thanks. I liked the photo with the bicycle, because the man looks much'+
+           ' happier than the people on the train. What about you?',
+  partner3:'Shall I start? I think the most important thing is the price.'+
+           ' What do you think?',
+  partner3b:'That\'s a good point. So shall we go with that idea?',
+  partner4:'I agree with you, actually. Do you think that will change in the future?'
+};
+
+/* Canned candidate lines for ?spk=sim. Demo material only: they exist so the
+   flow can be shown (and tested) without a microphone or a model. */
+const SPX_SIM_ANSWERS={
+  1:[
+    'My name is Juan and I\'m from Buenos Aires.',
+    'I enjoy it because I can watch series and films in English without subtitles.',
+    'I\'m a student. I\'m in my last year of secondary school.',
+    'I like the computing classes most, because we build small projects.',
+    'At the weekend I usually play football with my friends and then study a bit.',
+    'I prefer outdoors, definitely. I spend too much time indoors during the week.',
+    'Yes, I love travelling. I prefer city breaks because there is always something to do.',
+    'I use my phone for everything: messages, music, and a lot of study apps.'
+  ],
+  2:[
+    'Well, the first photograph shows a very crowded metro at rush hour, and the'+
+    ' second one shows a man cycling on a busy road.',
+    'The people on the train probably chose it because it is fast and cheap, and'+
+    ' maybe they can read or listen to music on the way. The cyclist might have'+
+    ' chosen the bike to keep fit and avoid the traffic.',
+    'I think the metro looks more stressful, but cycling in the rain cannot be much'+
+    ' fun either. Maybe it depends on the distance and on the weather.'
+  ],
+  3:[
+    'Shall we start with where to go? I think somewhere in Europe would be cheapest.',
+    'That is a good point. Maybe Italy, because there is history and the food is amazing.',
+    'Yes, and what about how to travel? A coach is cheaper than a plane for a group.',
+    'Mmm, I agree. So shall we say a coach to Italy, and hostels for the nights?',
+    'Okay, so those are our two best ideas: Italy by coach, and staying in hostels.'
+  ],
+  4:[
+    'I think school trips are really useful because you learn things you cannot read in a book.',
+    'I would say the school should pay most of it, because not every family can afford a trip.',
+    'They learn how to organise themselves and how to get on with people for a week.',
+    'With friends, definitely. It is more fun, although you argue more about what to do.',
+    'People travel much more now, and much more cheaply, so it is normal for students to go abroad.',
+    'Maybe not in travel, but I would like a job where I can travel sometimes.'
+  ]
+};
+
+const SP_EXAM={
+  screen:'',part:2,bank:null,task:null,
+  phases:[],phase:0,phaseStart:0,
+  timer:null,silencePrompts:0,awaitSince:0,promptUsed:false,
+  micMuted:false,txShown:0,answerTimer:null,
+  reportData:null,saved:false,entry:null,
+  busy:false,error:'',startedAt:0
+};
+window.SP_EXAM=SP_EXAM;
+
+function spx$(id){return document.getElementById(id)}
+function spxSetError(msg){
+  const el=spx$('spxExamErr');
+  if(!el)return;
+  el.textContent=msg||'';
+  el.style.display=msg?'block':'none';
+}
+
+/* --- Task bank (pure data, fetched on demand and cached) ------------------ */
+async function spxLoadBank(force){
+  if(SP_EXAM.bank&&!force)return SP_EXAM.bank;
+  const r=await fetch('/material/speaking.json',{cache:'no-cache'});
+  if(!r.ok)throw new Error('bank '+r.status);
+  const bank=await r.json();
+  if(!bank||!Array.isArray(bank.parts)||!bank.parts.length)throw new Error('bank shape');
+  SP_EXAM.bank=bank;
+  return bank;
+}
+function spxPartData(bank,part){
+  return (bank.parts||[]).find(function(p){return Number(p.part)===Number(part)})||null;
+}
+function spxTaskFor(bank,part){
+  const data=spxPartData(bank,part);
+  if(!data)return null;
+  if(Number(part)===1){
+    const set=(data.sets||[])[0];
+    return set?{id:set.id,questions:(set.questions||[]).slice(0,8)}:null;
+  }
+  return (data.tasks||[])[0]||null;
+}
+
+/* --- Screens and dots ---------------------------------------------------- */
+function spxRenderDots(){
+  const box=spx$('spxDots');
+  if(!box)return;
+  const keys=['spx_dot_choose','spx_dot_brief','spx_dot_exam','spx_dot_feedback','spx_dot_report'];
+  const idx=SPX_SCREENS.indexOf(SP_EXAM.screen);
+  box.replaceChildren();
+  keys.forEach(function(key,i){
+    const d=document.createElement('span');
+    d.className='spx-dot'+(i<idx?' done':'');
+    d.setAttribute('role','listitem');
+    d.setAttribute('aria-label',t(key));
+    d.title=t(key);
+    if(i===idx)d.setAttribute('aria-current','step');
+    box.appendChild(d);
+  });
+}
+function spxSetScreen(name){
+  SP_EXAM.screen=name;
+  document.querySelectorAll('#spxPanel .spx-screen').forEach(function(el){
+    el.classList.toggle('is-on',el.getAttribute('data-spx-screen')===name);
+  });
+  if(name==='exam')spxPhaseHeader();
+  spxRenderDots();
+}
+function spxPhaseHeader(){
+  const ph=SP_EXAM.phases[SP_EXAM.phase];
+  const name=spx$('spxPhaseName');
+  if(name)name.textContent=t(ph?(ph.key||'spx_long_turn'):'spx_long_turn');
+  const partEl=spx$('spxPhasePart');
+  if(partEl)partEl.textContent=t('spx_phase_part',{n:SP_EXAM.part});
+}
+
+function spxRenderChoose(){
+  spx$('spxChooseSentence').textContent=t('spx_choose_sentence');
+  const box=spx$('spxParts');
+  if(!box)return;
+  box.replaceChildren();
+  [1,2,3,4].forEach(function(n){
+    const meta=SPX_PART_META[n];
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='spx-part';
+    b.setAttribute('role','radio');
+    b.setAttribute('aria-checked',SP_EXAM.part===n?'true':'false');
+    b.dataset.part=String(n);
+    b.innerHTML='<span class="n">'+esc(t('spx_part_title',{n:n,min:meta.minutes}))+'</span>'
+      +'<span class="d">'+esc(t(meta.desc))+'</span>'
+      +'<span class="m">'+esc(t(meta.mode))+'</span>';
+    b.onclick=function(){SP_EXAM.select(n)};
+    b.onkeydown=function(ev){
+      let next=0;
+      if(ev.key==='ArrowRight'||ev.key==='ArrowDown')next=n===4?1:n+1;
+      else if(ev.key==='ArrowLeft'||ev.key==='ArrowUp')next=n===1?4:n-1;
+      else return;
+      ev.preventDefault();
+      SP_EXAM.select(next);
+      const el=box.querySelector('[data-part="'+next+'"]');
+      if(el)el.focus();
+    };
+    box.appendChild(b);
+  });
+  const err=spx$('spxChooseErr');
+  if(err){err.textContent=SP_EXAM.error||'';err.style.display=SP_EXAM.error?'block':'none'}
+}
+
+function spxRenderBrief(){
+  const meta=SPX_PART_META[SP_EXAM.part];
+  spx$('spxBriefSentence').textContent=t('spx_brief_sentence',{n:SP_EXAM.part});
+  spx$('spxBriefTime').textContent=t('spx_brief_time',{
+    n:SP_EXAM.part,min:meta.minutes,turns:spxPhases().length});
+}
+
+/* --- The exam clock ------------------------------------------------------ */
+function spxPhases(){
+  const part=SP_EXAM.part,task=SP_EXAM.task||{};
+  function close(sec){return {key:'spx_closing',who:'examiner',sec:sec,untilQuiet:true,
+    line:SPX_LINES.closing.replace('{n}',String(part))}}
+  if(part===1){
+    const qs=(task.questions||[]).slice(0,8);
+    if(!qs.length)qs.push('Where are you from?');
+    const answers=SPX_SIM_ANSWERS[1];
+    const events=qs.slice(1).map(function(q,i){
+      return {at:Math.round((i+1)*90/Math.max(1,qs.length-1)),who:'examiner',
+        text:q,qi:i+1,answer:answers[(i+1)%answers.length]};
+    });
+    return [
+      {key:'spx_listen',who:'examiner',sec:24,untilQuiet:true,
+       line:'Good morning. '+qs[0],qi:0,answer:answers[0]}
+    ].concat([{key:'spx_long_turn',who:'candidate',sec:96,events:events}]);
+  }
+  if(part===2){
+    const prompts=(task.prompts||[]).slice(0,2);
+    const p1=prompts[0]||'Compare the photographs.';
+    const p2=prompts[1]||p1;
+    return [
+      {key:'spx_listen',who:'examiner',sec:28,untilQuiet:true,qi:0,
+       line:'In this part of the test, I\'m going to show you two photographs.'+
+        ' Here they are. '+p1},
+      {key:'spx_long_turn',who:'candidate',sec:60,qi:0,events:[
+        {at:0,who:'candidate',text:SPX_SIM_ANSWERS[2][0],ms:18000},
+        {at:19,who:'candidate',text:SPX_SIM_ANSWERS[2][1],ms:18000},
+        {at:38,who:'candidate',text:SPX_SIM_ANSWERS[2][2],ms:18000}
+      ]},
+      {key:'spx_listen',who:'examiner',sec:10,untilQuiet:true,qi:0,
+       line:SPX_LINES.handoff},
+      {key:'spx_response',who:'partner',sec:30,qi:0,line:SPX_LINES.partner2},
+      {key:'spx_follow_up',who:'examiner',sec:10,untilQuiet:true,qi:1,
+       line:SPX_LINES.followUp+' '+p2},
+      {key:'spx_follow_up',who:'candidate',sec:30,qi:1,events:[
+        {at:1,who:'candidate',text:SPX_SIM_ANSWERS[2][1],ms:26000}
+      ]},
+      close(15)
+    ];
+  }
+  if(part===3){
+    const prompts=(task.prompts||[]).slice(0,5);
+    const answers=SPX_SIM_ANSWERS[3];
+    const events=[];
+    prompts.forEach(function(item,i){
+      events.push({at:8+i*19,who:'examiner',text:'What about '+item+'?',
+        answer:answers[i%answers.length]});
+      if(i===1||i===3){
+        events.push({at:15+i*19,who:'partner',
+          text:i===1?SPX_LINES.partner3:SPX_LINES.partner3b});
+      }
+    });
+    return [
+      {key:'spx_listen',who:'examiner',sec:24,untilQuiet:true,
+       line:'Now I\'d like you to talk about something together for about two'+
+         ' minutes. Here is a card with some ideas for a task. '+(task.topic||'')},
+      {key:'spx_discuss',who:'candidate',sec:110,events:events},
+      {key:'spx_decide',who:'examiner',sec:10,untilQuiet:true,
+       line:'Thank you. Now, '+(task.decision||'which two ideas would be best?')},
+      {key:'spx_decide',who:'candidate',sec:60,events:[
+        {at:30,who:'partner',text:SPX_LINES.partner3b}]},
+      close(15)
+    ];
+  }
+  const qs=(task.questions||[]).slice(0,6);
+  const answers=SPX_SIM_ANSWERS[4];
+  const events=qs.map(function(q,i){
+    return {at:Math.round(4+i*36),who:'examiner',text:q,qi:i,
+      answer:answers[i%answers.length]};
+  });
+  return [
+    {key:'spx_listen',who:'examiner',sec:14,untilQuiet:true,
+     line:'Now we are going to talk about the task you have just done.'},
+    {key:'spx_discuss',who:'candidate',sec:226,events:events},
+    close(15)
+  ];
+}
+
+function spxQueueQuiet(){
+  const ex=SPK.voices&&SPK.voices.examiner;
+  const pa=SPK.voices&&SPK.voices.partner;
+  return !(ex&&ex.speaking)&&!(pa&&pa.speaking);
+}
+function spxVoiceBusy(who){
+  const v=SPK.voices&&SPK.voices[who];
+  return !!(v&&v.speaking);
+}
+
+function spxSpeechMs(text){
+  /* A real voice takes time: ~2.5 words a second, capped both ways. This is
+     what makes the examiner turn last as long as it sounds, instead of ending
+     the phase on a fixed 200 ms tone. */
+  const words=String(text||'').split(/\s+/).filter(Boolean).length;
+  return Math.min(24000,Math.max(1200,Math.round(words*380)));
+}
+function spxSay(who,text,ms){
+  const v=SPK.voices&&SPK.voices[who];
+  if(!v||!v.transport||v.offline||typeof text!=='string'||!text)return;
+  const duration=ms||spxSpeechMs(text);
+  if(SPK.mode==='sim'&&v.transport.say){v.transport.say(text,duration);return}
+  /* Live: the model owns the words, the controller owns the stage. */
+  if(v.transport.sendText){
+    v.transport.sendText('EXAM CONTROLLER: say exactly this and nothing else: "'+text+'"');
+  }
+}
+function spxHear(text){
+  const v=SPK.voices&&SPK.voices.examiner;
+  if(v&&v.transport&&v.transport.hear)v.transport.hear(text);
+}
+/* The candidate's own turn, in sim mode only. `micSpeaking` becomes true for a
+   plausible length, so the VAD, the silence detector and the director all see
+   it exactly as they see a real microphone. */
+function spxCandidateLine(text,ms){
+  if(SPK.mode!=='sim')return;
+  if(SP_EXAM.micMuted||!text)return;
+  spxHear(text);
+  const words=String(text).split(/\s+/).filter(Boolean).length;
+  const now=performance.now();
+  SPK.simSpeechUntil=now+(ms||Math.min(18000,Math.max(2000,words*420)));
+  SP_EXAM.awaitSince=0;
+  SP_EXAM.promptUsed=false;
+}
+function spxScriptAnswer(text,delay){
+  if(SPK.mode!=='sim')return;
+  if(SP_EXAM.answerTimer)clearTimeout(SP_EXAM.answerTimer);
+  SP_EXAM.answerTimer=setTimeout(function(){
+    if(SP_EXAM.screen!=='exam'||SP_EXAM.micMuted||!SPK.running)return;
+    spxCandidateLine(text);
+  },delay||SPX_ANSWER_DELAY_MS);
+}
+
+function spxHighlight(qi){
+  if(qi===undefined||qi===null)return;
+  document.querySelectorAll('#spxTask [data-q]').forEach(function(el){
+    el.classList.toggle('on',Number(el.getAttribute('data-q'))===Number(qi));
+  });
+}
+
+function spxFireEvent(ev){
+  if(!ev)return;
+  if(ev.who==='candidate'){spxCandidateLine(ev.text,ev.ms);return}
+  if(!ev.text)return;
+  const ms=ev.ms||spxSpeechMs(ev.text);
+  spxSay(ev.who==='partner'?'partner':'examiner',ev.text,ms);
+  if(ev.qi!==undefined)spxHighlight(ev.qi);
+  if(ev.answer&&!SP_EXAM.micMuted){
+    /* A question was just asked: the 5-second rule starts now. The scripted
+       answer waits for the examiner to finish, so it can never barge in. */
+    SP_EXAM.awaitSince=performance.now();
+    SP_EXAM.promptUsed=false;
+    spxScriptAnswer(ev.answer,ev.delay||(ms+900));
+  }
+}
+
+function spxEnterPhase(i){
+  const ph=SP_EXAM.phases[i];
+  if(!ph)return;
+  SP_EXAM.phase=i;
+  SP_EXAM.phaseStart=performance.now();
+  SP_EXAM.promptUsed=false;
+  SP_EXAM.awaitSince=ph.who==='candidate'?SP_EXAM.phaseStart:0;
+  (ph.events||[]).forEach(function(ev){ev.done=false});
+  spxPhaseHeader();
+  if(ph.line)spxFireEvent({who:ph.who==='partner'?'partner':'examiner',
+    text:ph.line,qi:ph.qi,answer:ph.answer});
+  else spxHighlight(ph.qi);
+  spxTickRender(ph.sec);
+}
+
+function spxNextPhase(){
+  SP_EXAM.phase++;
+  if(SP_EXAM.phase>=SP_EXAM.phases.length){spxEndExam();return}
+  spxEnterPhase(SP_EXAM.phase);
+}
+
+function spxRenderClock(left){
+  const el=spx$('spxClock');
+  if(!el)return;
+  const secs=Math.max(0,Math.ceil(left));
+  el.textContent=liveClock(secs);
+  el.setAttribute('data-low',secs<=SPX_LOW_SECONDS?'1':'0');
+}
+
+function spxRenderWho(){
+  const el=spx$('spxWho');
+  if(!el)return;
+  const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
+  let who='candidate',key='spx_your_turn';
+  if(spxVoiceBusy('examiner')){who='examiner';key='spx_examiner'}
+  else if(spxVoiceBusy('partner')){who='partner';key='spx_partner'}
+  else if(ph&&ph.who==='examiner'){who='examiner';key='spx_examiner'}
+  else if(ph&&ph.who==='partner'){who='partner';key='spx_partner'}
+  el.setAttribute('data-who',who);
+  const text=t(key);
+  if(el.textContent!==text)el.textContent=text;
+}
+
+function spxRenderTx(){
+  const box=spx$('spxTx');
+  if(!box)return;
+  const lines=SPK.lines||[];
+  if(lines.length===SP_EXAM.txShown)return;
+  for(let i=SP_EXAM.txShown;i<lines.length;i++){
+    const line=lines[i];
+    if(!line||typeof line.text!=='string')continue;
+    const row=document.createElement('div');
+    row.className='spx-tx-line spx-tx-'+line.who;
+    if(line.who==='partner')row.textContent=t('spx_partner_tag')+': '+line.text;
+    else if(line.who==='candidate')row.textContent=line.text;
+    else row.textContent=t('spx_examiner_tag')+': '+line.text;
+    box.appendChild(row);
+  }
+  SP_EXAM.txShown=lines.length;
+  box.scrollTop=box.scrollHeight;
+}
+
+function spxTickRender(left){
+  spxRenderClock(left);
+  spxRenderWho();
+}
+
+function spxSilence(now){
+  if(SPK.micSpeaking){SP_EXAM.awaitSince=0;SP_EXAM.promptUsed=false;return}
+  if(!SP_EXAM.awaitSince)return;            // nobody is waiting for an answer
+  const quiet=(now-SP_EXAM.awaitSince)/1000;
+  if(quiet>=SPX_SILENCE_MOVE_S){spxNextPhase();return}
+  if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed){
+    SP_EXAM.promptUsed=true;
+    SP_EXAM.silencePrompts++;
+    spxSay('examiner',SPX_LINES.silence);
+  }
+}
+
+function spxTickLoop(){
+  if(SP_EXAM.screen!=='exam')return;
+  const ph=SP_EXAM.phases[SP_EXAM.phase];
+  if(!ph)return;
+  const now=performance.now();
+  const elapsed=(now-SP_EXAM.phaseStart)/1000;
+  (ph.events||[]).forEach(function(ev){
+    if(!ev.done&&elapsed>=ev.at){ev.done=true;spxFireEvent(ev)}
+  });
+  spxTickRender(ph.sec-elapsed);
+  spxRenderTx();
+  const quiet=spxQueueQuiet();
+  if(elapsed>=ph.sec){
+    /* An examiner turn lasts as long as the voice: the cap is a safety net,
+       not the length of the turn. */
+    if(ph.untilQuiet&&!quiet&&elapsed<ph.sec+8)return;
+    spxNextPhase();
+    return;
+  }
+  if(ph.untilQuiet&&elapsed>=1.2&&quiet){spxNextPhase();return}
+  if(ph.who==='candidate')spxSilence(now);
+}
+
+function spxStopTimer(){
+  if(SP_EXAM.timer){clearInterval(SP_EXAM.timer);SP_EXAM.timer=null}
+  if(SP_EXAM.answerTimer){clearTimeout(SP_EXAM.answerTimer);SP_EXAM.answerTimer=null}
+}
+
+/* --- Task card ----------------------------------------------------------- */
+function spxRenderTask(){
+  const box=spx$('spxTask');
+  if(!box)return;
+  const part=SP_EXAM.part,task=SP_EXAM.task||{};
+  box.replaceChildren();
+  function list(items,cls){
+    const ul=document.createElement('ul');
+    ul.className=cls||'spx-prompts';
+    items.forEach(function(text,i){
+      const li=document.createElement('li');
+      li.textContent=text;
+      li.setAttribute('data-q',String(i));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+  if(part===2){
+    const h=document.createElement('h4');
+    h.textContent=task.title||'';
+    box.appendChild(h);
+    const wrap=document.createElement('div');
+    wrap.className='spx-photos';
+    (task.photos||[]).slice(0,2).forEach(function(src,i){
+      const fig=document.createElement('figure');
+      fig.className='spx-photo';
+      const img=document.createElement('img');
+      img.src='/'+String(src).replace(/^\/+/,'');
+      img.alt=t(i===0?'spx_photo_1':'spx_photo_2');
+      img.width=960;
+      img.height=640;
+      img.loading='lazy';
+      img.decoding='async';
+      const cap=document.createElement('figcaption');
+      cap.textContent=img.alt;
+      fig.appendChild(img);
+      fig.appendChild(cap);
+      wrap.appendChild(fig);
+    });
+    box.appendChild(wrap);
+    box.appendChild(list(task.prompts||[]));
+    const credit=document.createElement('p');
+    credit.className='spx-credit';
+    const a=document.createElement('a');
+    a.href='/img/spk/CREDITS.md';
+    a.target='_blank';
+    a.rel='noopener';
+    a.textContent=t('spx_credit');
+    credit.appendChild(a);
+    box.appendChild(credit);
+  }else if(part===3){
+    const h=document.createElement('h4');
+    h.textContent=t('spx_topic',{q:task.topic||''});
+    box.appendChild(h);
+    const ul=list(task.prompts||[]);
+    ul.removeAttribute('data-q');
+    ul.querySelectorAll('[data-q]').forEach(function(li){li.removeAttribute('data-q')});
+    box.appendChild(ul);
+    const dec=document.createElement('p');
+    dec.className='spx-decision';
+    dec.textContent=t('spx_decision',{q:task.decision||''});
+    box.appendChild(dec);
+  }else{
+    box.appendChild(list(task.questions||[]));
+  }
+}
+
+/* --- Exam lifecycle ------------------------------------------------------ */
+SP_EXAM.open=async function(){
+  const panel=spx$('spxPanel');
+  if(panel)panel.style.display='block';
+  SP_EXAM.error='';
+  SP_EXAM.micMuted=false;
+  spxSetScreen('choose');
+  spxRenderChoose();
+  try{
+    await spxLoadBank();
+    spxRenderChoose();
+  }catch(e){
+    SP_EXAM.error=t('spx_no_task');
+    spxRenderChoose();
+  }
+  const btn=spx$('spxStartBtn');
+  if(btn)btn.focus();
+};
+
+SP_EXAM.select=function(part){
+  const n=Math.max(1,Math.min(4,parseInt(part,10)||1));
+  SP_EXAM.part=n;
+  SPK.part=n;
+  const box=spx$('spxParts');
+  if(box){
+    box.querySelectorAll('[data-part]').forEach(function(el){
+      el.setAttribute('aria-checked',Number(el.dataset.part)===n?'true':'false');
+    });
+  }
+};
+
+SP_EXAM.start=async function(){
+  SP_EXAM.error='';
+  try{await spxLoadBank()}catch(e){
+    SP_EXAM.error=t('spx_no_task');
+    spxRenderChoose();
+    return;
+  }
+  SP_EXAM.task=spxTaskFor(SP_EXAM.bank,SP_EXAM.part);
+  if(!SP_EXAM.task){
+    SP_EXAM.error=t('spx_no_bank',{n:SP_EXAM.part});
+    spxRenderChoose();
+    return;
+  }
+  spxRenderBrief();
+  spxSetScreen('brief');
+  const btn=spx$('spxReadyBtn');
+  if(btn)btn.focus();
+};
+
+SP_EXAM.back=function(){
+  if(SP_EXAM.screen==='brief'){spxSetScreen('choose');return}
+  if(SP_EXAM.screen==='feedback'){SP_EXAM.toChoose();return}
+};
+
+SP_EXAM.toChoose=function(){
+  spxStopTimer();
+  if(SPK.running)spkStop();
+  SP_EXAM.screen='';
+  SPK.examMode=false;SPK.examDriven=false;SPK.interactive=false;
+  spxSetScreen('choose');
+  spxRenderChoose();
+};
+
+SP_EXAM.ready=async function(){
+  if(SP_EXAM.busy||SP_EXAM.screen==='exam')return;
+  SP_EXAM.busy=true;
+  spxSetError('');
+  const briefErr=spx$('spxBriefErr');
+  if(briefErr){briefErr.textContent='';briefErr.style.display='none'}
+  SP_EXAM.phases=spxPhases();
+  SP_EXAM.phase=0;
+  SP_EXAM.silencePrompts=0;
+  SP_EXAM.saved=false;
+  SP_EXAM.entry=null;
+  SP_EXAM.txShown=0;
+  SPK.simSpeechUntil=0;
+  SPK.reportData=null;
+  SPK.reportPayload=null;
+  SPK.reportId='';
+  spx$('spxTx').replaceChildren();
+  spxRenderTask();
+  spxSetScreen('exam');
+  SPK.examMode=true;
+  SPK.examDriven=true;
+  SPK.interactive=true;
+  SPK.part=SP_EXAM.part;
+  await spkStart();
+  SP_EXAM.busy=false;
+  if(!SPK.running){
+    /* The cap, the mic or the token failed: say so, never fake a session. */
+    const status=(document.getElementById('spkStatus')||{}).textContent||'';
+    spxSetScreen('brief');
+    if(briefErr){briefErr.textContent=status||t('spx_report_failed');briefErr.style.display='block'}
+    return;
+  }
+  SP_EXAM.startedAt=performance.now();
+  spxEnterPhase(0);
+  spxStopTimer();
+  SP_EXAM.timer=setInterval(spxTickLoop,SPX_TICK_MS);
+};
+
+SP_EXAM.muteMic=function(muted){
+  SP_EXAM.micMuted=!!muted;
+  if(SP_EXAM.micMuted&&SP_EXAM.answerTimer){clearTimeout(SP_EXAM.answerTimer);SP_EXAM.answerTimer=null}
+  SPK.simSpeechUntil=0;
+  if(SPK.micStream)SPK.micStream.getAudioTracks().forEach(function(tr){tr.enabled=!SP_EXAM.micMuted});
+  return SP_EXAM.micMuted;
+};
+
+SP_EXAM.stopEarly=function(){
+  if(SP_EXAM.screen!=='exam')return;
+  spxSay('examiner',SPX_LINES.early);
+  spxEndExam();
+};
+
+async function spxEndExam(){
+  if(SP_EXAM.screen!=='exam')return;
+  spxStopTimer();
+  spxSetScreen('feedback');
+  spxRenderFeedbackPending();
+  await spkStop();
+  /* The exam voices are gone; the flags must not leak into the legacy live
+     panel. `SPK.interactive` stays true until close: the payload is built
+     after the stop and needs it for the IC band. */
+  SPK.examDriven=false;
+  SPK.examMode=false;
+  const ok=await spkReport();
+  if(ok)spxRenderFeedback();
+  else spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
+}
+
+/* --- Feedback ------------------------------------------------------------ */
+function spxScaleCard(label,band,extra){
+  const value=typeof band==='number'
+    ?'<span class="band">'+band+' / 5</span>'
+    :'<span class="band nm">'+esc(t('spx_not_measured'))+'</span>';
+  return '<div class="spk-scale"><span class="lbl">'+esc(label)+'</span>'+value+extra+'</div>';
+}
+
+function spxRenderFeedbackPending(){
+  spx$('spxFbSentence').textContent=t('spx_report_working');
+  spx$('spxFbScales').innerHTML='';
+  spx$('spxFbNext').textContent='';
+  const err=spx$('spxFbErr');
+  if(err){err.textContent='';err.style.display='none'}
+  const save=spx$('spxFbSave');
+  if(save)save.disabled=true;
+  const retry=spx$('spxFbRetry');
+  if(retry)retry.style.display='none';
+}
+
+function spxRenderFeedback(){
+  const r=SPK.reportData||{};
+  const b=r.bands||{};
+  spx$('spxFbSentence').textContent=t('spx_feedback_sentence',{n:SP_EXAM.part});
+  const rows=[
+    ['grammar_vocabulary','spx_scale_gv'],
+    ['discourse_management','spx_scale_dm'],
+    ['pronunciation','spx_scale_pr'],
+    ['interactive_communication','spx_scale_ic']
+  ];
+  spx$('spxFbScales').innerHTML=rows.map(function(pair){
+    const key=pair[0];
+    const ev=(r.evidence||[]).find(function(e){return e.scale===key});
+    let extra='';
+    if(key==='pronunciation'){
+      const derived=r.derived||{};
+      extra=(typeof b.pronunciation==='number'&&derived.pronunciation_source==='azure')
+        ?'<span class="spx-note">'+esc(t('spx_pr_note_azure',{score:derived.pronunciation_score}))+'</span>'
+        :'<span class="spx-note">'+esc(t('spx_pr_note_none'))+'</span>';
+      extra+='<span class="spx-scale-q">'+esc(t('spx_pr_model_note'))+'</span>';
+    }else{
+      extra+='<span class="spx-scale-q">'+(ev
+        ?'“'+esc(ev.quote)+'”'+(ev.note?' — '+esc(ev.note):'')
+        :esc(t('spx_no_evidence')))+'</span>';
+    }
+    return spxScaleCard(t(pair[1]),b[key],extra);
+  }).join('');
+  spx$('spxFbNext').textContent=(r.fixes||[])[0]||'';
+  const err=spx$('spxFbErr');
+  if(err){err.textContent='';err.style.display='none'}
+  const save=spx$('spxFbSave');
+  if(save)save.disabled=!!SP_EXAM.saved;
+  const retry=spx$('spxFbRetry');
+  if(retry)retry.style.display='inline-flex';
+  const old=document.getElementById('spkReportPanel');
+  if(old)old.style.display='none';
+}
+
+function spxRenderFeedbackError(msg){
+  spx$('spxFbSentence').textContent=t('spx_feedback_sentence',{n:SP_EXAM.part});
+  spx$('spxFbScales').innerHTML=['spx_scale_gv','spx_scale_dm','spx_scale_pr','spx_scale_ic']
+    .map(function(key){return spxScaleCard(t(key),null,
+      '<span class="spx-scale-q">'+esc(t('spx_no_evidence'))+'</span>')}).join('');
+  spx$('spxFbNext').textContent='';
+  const err=spx$('spxFbErr');
+  if(err){err.textContent=msg||t('spx_report_failed');err.style.display='block'}
+  const save=spx$('spxFbSave');
+  if(save)save.disabled=true;
+  const retry=spx$('spxFbRetry');
+  if(retry)retry.style.display='inline-flex';
+}
+
+SP_EXAM.retry=async function(){
+  if(SP_EXAM.screen!=='feedback'||!SPK.reportPayload)return;
+  spxRenderFeedbackPending();
+  const ok=await spkReport();
+  if(ok)spxRenderFeedback();else spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
+};
+
+function spxRenderReportScreen(){
+  const data=SPK.reportData||{};
+  const bands=data.bands||{};
+  const parts=[
+    ['gv',bands.grammar_vocabulary],['dm',bands.discourse_management],
+    ['pr',bands.pronunciation],['ic',bands.interactive_communication]
+  ].filter(function(p){return typeof p[1]==='number'})
+   .map(function(p){return p[0].toUpperCase()+' '+p[1]});
+  spx$('spxRpSentence').textContent=t('spx_report_sentence',{n:SP_EXAM.part});
+  spx$('spxRpSaved').textContent=t('spx_report_saved',{
+    min:SP_EXAM.entry?SP_EXAM.entry.min:Math.ceil((data.duration_s||0)/60),
+    bands:parts.join(' · ')||t('spx_not_measured'),
+    silences:SP_EXAM.entry?SP_EXAM.entry.silence_prompts:SP_EXAM.silencePrompts});
+}
+
+SP_EXAM.saveReport=function(){
+  if(!SPK.reportData||SP_EXAM.saved)return;
+  SP_EXAM.entry=saveSP(SPK.reportData)||null;
+  SP_EXAM.saved=true;
+  spxRenderReportScreen();
+  spxSetScreen('report');
+};
+
+/* Re-render the live screen after a language switch: every string on the exam
+   panel comes from t(), so switching mid-flow has to repaint, not reload. */
+function spxRerender(){
+  const screen=SP_EXAM.screen;
+  if(!screen)return;
+  if(screen==='choose'){spxRenderChoose();return}
+  if(screen==='brief'){spxRenderBrief();return}
+  if(screen==='exam'){
+    const ph=SP_EXAM.phases[SP_EXAM.phase];
+    spxRenderTask();
+    if(ph)spxHighlight(ph.qi);
+    spxPhaseHeader();
+    if(ph)spxTickRender(ph.sec-(performance.now()-SP_EXAM.phaseStart)/1000);
+    return;
+  }
+  if(screen==='feedback'){
+    if(SPK.reportData&&SPK.reportData.bands)spxRenderFeedback();
+    else if(SPK.lastReportError)spxRenderFeedbackError(SPK.lastReportError);
+    else spxRenderFeedbackPending();
+    return;
+  }
+  if(screen==='report')spxRenderReportScreen();
+}
+
+SP_EXAM.restart=function(){
+  SP_EXAM.close();
+  SP_EXAM.open();
+};
+
+SP_EXAM.close=function(){
+  spxStopTimer();
+  if(SPK.running)spkStop();
+  SPK.examMode=false;
+  SPK.examDriven=false;
+  SPK.interactive=false;
+  SP_EXAM.screen='';
+  const panel=spx$('spxPanel');
+  if(panel)panel.style.display='none';
 };
 
 /* One definition of "word" for the whole app: a whitespace-separated token
@@ -7243,23 +8400,27 @@ function saveL(){
 function saveSP(report){
   /* S5: a report is saved without the transcript (bands + metrics only).
      The manual "Save Speaking" button still calls saveSP() with no argument
-     and keeps its original behaviour. */
+     and keeps its original behaviour. Phase 35 adds the Interactive
+     Communication band (when the report produced one) and the silence prompts
+     the examiner had to give, so the row explains an interrupted part. */
   if(report&&report.bands){
     const b=report.bands||{};
-    const graded=['grammar_vocabulary','discourse_management','pronunciation']
-      .map(k=>b[k]).filter(v=>typeof v==='number');
+    const graded=['grammar_vocabulary','discourse_management','pronunciation',
+      'interactive_communication'].map(k=>b[k]).filter(v=>typeof v==='number');
     const score=graded.length?Math.round(graded.reduce((a,v)=>a+v,0)/graded.length):null;
     const m=report.metrics||{};
     const entry={
       type:'sp',
       part:+(report.part||SPK.part||2),
-      min:Math.max(1,Math.round((report.duration_s||0)/60)),
+      min:Math.max(1,Math.ceil((report.duration_s||0)/60)),
       bands:{
         grammar_vocabulary:typeof b.grammar_vocabulary==='number'?b.grammar_vocabulary:null,
         discourse_management:typeof b.discourse_management==='number'?b.discourse_management:null,
         pronunciation:typeof b.pronunciation==='number'?b.pronunciation:null,
-        interactive_communication:null
+        interactive_communication:typeof b.interactive_communication==='number'
+          ?b.interactive_communication:null
       },
+      silence_prompts:(window.SP_EXAM?window.SP_EXAM.silencePrompts:0)||0,
       metrics:{
         wpm:Math.round(+m.wpm||0),
         fillers:Math.round(+m.fillers||0),
@@ -7269,7 +8430,7 @@ function saveSP(report){
     };
     if(score!==null)entry.score=score;
     log(entry);
-    return;
+    return entry;
   }
   log({type:'sp',part:+document.getElementById('spPart').value,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0});
 }
