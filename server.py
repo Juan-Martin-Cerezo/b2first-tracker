@@ -3128,7 +3128,10 @@ class H(BaseHTTPRequestHandler):
                 if "errs" not in data:
                     data["errs"] = []
                 if isinstance(data.get("settings"), dict):
+                    # Secrets never belong in the synced document: the legacy
+                    # aiKey and any stray BYO block are dropped server-side too.
                     data["settings"].pop("aiKey", None)
+                    data["settings"].pop("byo", None)
                 if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
                     self._send_json(413, {"error": "progress too large"}); return
                 save_user_progress(user_id, data)
@@ -3299,16 +3302,28 @@ class H(BaseHTTPRequestHandler):
                 # Same request_id: replay the exact result, no second LLM call.
                 self._send_json(200, cached)
                 return
-            if not (os.environ.get("B2_AI_KEY") or "").strip():
-                # No shared text-model key: fail before spending a quota unit.
-                self._send_json(503, {"error": "ai_not_configured"})
+            # Phase 30: the report can run on the user's own key too. With a
+            # user key the daily server quota is skipped (their cost) but the
+            # per-minute limit above and the hourly account cap still apply.
+            byo, byo_err = _byo_from_headers(self.headers)
+            if byo_err:
+                self._send_json(400, {"error": byo_err})
                 return
-            quota_key = "user:" + uid
-            if _ai_quota_left(quota_key) <= 0:
-                _audit("quota_hit", uid, _real_ip(self), self._rid)
-                reset = (date.today() + timedelta(days=1)).isoformat()
-                self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
-                return
+            if byo:
+                if self._rate_limited("ai:byo:hour:user:" + uid, BYO_RATE_PER_HOUR,
+                                      3600, "user"):
+                    return
+            else:
+                if not (os.environ.get("B2_AI_KEY") or "").strip():
+                    # No shared text-model key: fail before spending a quota unit.
+                    self._send_json(503, {"error": "ai_not_configured"})
+                    return
+                quota_key = "user:" + uid
+                if _ai_quota_left(quota_key) <= 0:
+                    _audit("quota_hit", uid, _real_ip(self), self._rid)
+                    reset = (date.today() + timedelta(days=1)).isoformat()
+                    self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
+                    return
             # Only the candidate's own turns are graded. Examiner and partner
             # turns are context for the proxies, never text for the model.
             candidate = speaking_report.candidate_text(clean["transcript"])
@@ -3320,8 +3335,10 @@ class H(BaseHTTPRequestHandler):
                 _audit("ai_blocked", uid, _real_ip(self), self._rid,
                        {"reason": abuse, "chars": len(candidate)})
             user_block, _nonce = speaking_report.report_message(_fit_ai_text(candidate))
-            _ai_quota_consume(quota_key)
-            content, ai_err = _ai_text_complete(speaking_report.REPORT_SYSTEM, user_block)
+            if not byo:
+                _ai_quota_consume(quota_key)
+            content, ai_err = _ai_text_complete(speaking_report.REPORT_SYSTEM, user_block,
+                                                byo=byo)
             if ai_err:
                 code = 503 if ai_err == "ai_not_configured" else 502
                 self._send_json(code, {"error": ai_err})
@@ -3523,6 +3540,9 @@ class H(BaseHTTPRequestHandler):
             if self._bearer():
                 auth_uid, _auth_err = self._auth()
             account = ("user:" + auth_uid) if auth_uid else ("ip:" + _real_ip(self))
+            if self._rate_limited("ai:byo:hour:" + account, BYO_RATE_PER_HOUR, 3600,
+                                  "user" if auth_uid else "ip"):
+                return
             if self._rate_limited("ai:byo:test:" + account, BYO_TEST_RATE_PER_MIN, 60,
                                   "user" if auth_uid else "ip"):
                 return

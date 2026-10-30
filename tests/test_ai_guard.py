@@ -24,6 +24,7 @@ MOCK_PORT = 8124
 APP_PORT = 8098
 os.environ["B2_AI_BASE"] = f"http://127.0.0.1:{MOCK_PORT}"
 os.environ["B2_AI_MODEL"] = "deepseek-chat"
+os.environ["B2_BYO_TRUSTED_BASES"] = f"http://127.0.0.1:{MOCK_PORT}"
 os.environ.pop("B2_AI_KEY", None)
 
 FAKE_KEY = "sk-guard-test-key-1122334455"
@@ -261,12 +262,15 @@ with sync_playwright() as p:
         USER = u;
         D = load();
         D.onboarded = true;
-        D.settings.aiKey = 'guard-test-key';
+        localStorage.setItem('b2first_byo_test_guard_user', JSON.stringify({
+            provider: 'custom', key: 'guard-test-key',
+            base: %s, model: 'deepseek-chat'
+        }));
         hideAuthOverlay();
         hideOnboarding();
         refreshAll();
         renderIa();
-    }"""
+    }""" % json.dumps(f"http://127.0.0.1:{MOCK_PORT}")
     )
     pg.click("nav button[data-view='ia']")
     pg.wait_for_timeout(150)

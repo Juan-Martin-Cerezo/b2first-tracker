@@ -2916,23 +2916,49 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <!-- IA Gemini Key -->
+          <!-- AI provider (bring your own key) -->
           <div class="col-12">
-            <div class="card">
+            <div class="card" id="byoCard">
               <div class="plan-card-head">
-                <h2 data-i18n="plan_ai">✨ AI writing corrector (Gemini)</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_ai_chip">Local Device Key</span></span>
+                <h2 data-i18n="byo_title">✨ AI provider</h2>
+                <span class="chip-plan"><span class="dot"></span><span data-i18n="byo_chip">Your key, your cost</span></span>
               </div>
-              <div class="sub" data-i18n="plan_ai_sub">Your key is stored only on this device and travels to the local server.</div>
+              <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
               <div class="row">
                 <div>
-                  <label for="pAiKey" data-i18n="plan_gemini_key">Gemini API Key (D.settings.aiKey)</label>
-                  <input type="password" id="pAiKey" placeholder="AIza..." autocomplete="off" oninput="onAiKeyInput(this.value)">
+                  <label for="byoProvider" data-i18n="byo_provider">Provider</label>
+                  <select id="byoProvider" onchange="onByoProviderChange()">
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="groq">Groq</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="custom" data-i18n="byo_provider_custom">Custom</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="byoKey" data-i18n="byo_key">API key</label>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <input type="password" id="byoKey" placeholder="sk-..." autocomplete="off" oninput="onByoKeyInput(this.value)" style="flex:1">
+                    <button type="button" class="btn sm gray" id="byoKeyToggle" onclick="toggleByoKeyVisibility()" data-i18n="byo_show">Show</button>
+                  </div>
                 </div>
               </div>
-              <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)">
-                Get a free key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
+              <div class="row">
+                <div>
+                  <label for="byoBase" data-i18n="byo_base">Base URL (optional)</label>
+                  <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" oninput="onByoConfigInput()">
+                </div>
+                <div>
+                  <label for="byoModel" data-i18n="byo_model">Model (optional)</label>
+                  <input type="text" id="byoModel" placeholder="deepseek-chat" autocomplete="off" oninput="onByoConfigInput()">
+                </div>
               </div>
+              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button type="button" class="btn" onclick="testByoConnection()" data-i18n="byo_test">Test connection</button>
+                <button type="button" class="btn gray" onclick="clearByoKey()" data-i18n="byo_clear">Clear key</button>
+                <span id="byoTestStatus" class="t-xs muted" role="status"></span>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
             </div>
           </div>
 
@@ -3024,10 +3050,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="ai_title">Writing corrector</h2>
             <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
-            <div id="iaNoKeyWarn" class="note" style="display:none">
-              <span data-i18n="ai_no_key">Set your API key in the</span> <a href="#" onclick="showView('plan');return false">PLAN</a> <span data-i18n="ai_no_key_tail">tab to use the corrector. Get one for free at</span> <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
-            </div>
-
             <div class="row" style="margin-bottom:10px">
               <div>
                 <label for="iaKind" data-i18n="ai_kind">Text type (kind)</label>
@@ -3053,6 +3075,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
               <button type="button" class="btn" id="iaSubmitBtn" onclick="submitIaWriting()" data-i18n="ai_submit">Correct it</button>
               <span id="iaStateLabel" class="t-xs muted tnum">idle</span>
+              <span id="iaByoBadge" class="badge ok" style="display:none" data-i18n="ai_byo_badge">using your key</span>
+              <span id="iaQuota" class="t-xs muted tnum" style="display:none"></span>
             </div>
 
             <div id="iaLoading" class="panel" style="display:none;margin-top:16px;align-items:center;gap:12px">
@@ -3501,10 +3525,23 @@ const I18N={
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
-    plan_ai:'✨ AI writing corrector (Gemini)',
-    plan_ai_chip:'Local Device Key',
-    plan_ai_sub:'Your key is stored only on this device and travels to the local server.',
-    plan_gemini_key:'Gemini API Key (D.settings.aiKey)',
+    byo_title:'✨ AI provider',
+    byo_chip:'Your key, your cost',
+    byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
+    byo_provider:'Provider',
+    byo_provider_custom:'Custom',
+    byo_key:'API key',
+    byo_show:'Show',
+    byo_hide:'Hide',
+    byo_base:'Base URL (optional)',
+    byo_model:'Model (optional)',
+    byo_test:'Test connection',
+    byo_clear:'Clear key',
+    byo_hint:'Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.',
+    byo_test_need_key:'Add a key first.',
+    byo_testing:'Testing…',
+    byo_test_ok:'Connected · {model}',
+    byo_test_fail:'Failed · {code}',
     plan_save:'💾 Save plan',
     plan_restore:'↩ Restore original plan',
     books_title:'Resource Library',
@@ -3523,8 +3560,8 @@ const I18N={
     ai_title:'Writing corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
-    ai_no_key:'Set your API key in the',
-    ai_no_key_tail:'tab to use the corrector. Get one for free at',
+    ai_byo_badge:'using your key',
+    ai_quota_left:'{n} corrections left today',
     ai_kind:'Text type (kind)',
     ai_text:'Your text in English',
     ai_text_ph:'Write or paste your Essay, Article, Report, Review or Email here (140–190 words)...',
@@ -3948,10 +3985,23 @@ const I18N={
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
-    plan_ai:'✨ Corrector de writing con IA (Gemini)',
-    plan_ai_chip:'Clave local del dispositivo',
-    plan_ai_sub:'Tu clave se guarda solo en este dispositivo y viaja al servidor local.',
-    plan_gemini_key:'Clave de API de Gemini (D.settings.aiKey)',
+    byo_title:'✨ Proveedor de IA',
+    byo_chip:'Tu clave, tu costo',
+    byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
+    byo_provider:'Proveedor',
+    byo_provider_custom:'Personalizado',
+    byo_key:'Clave de API',
+    byo_show:'Mostrar',
+    byo_hide:'Ocultar',
+    byo_base:'URL base (opcional)',
+    byo_model:'Modelo (opcional)',
+    byo_test:'Probar conexión',
+    byo_clear:'Borrar clave',
+    byo_hint:'Solo se aceptan endpoints https que hablen la API compatible con OpenAI /chat/completions.',
+    byo_test_need_key:'Primero agregá una clave.',
+    byo_testing:'Probando…',
+    byo_test_ok:'Conectado · {model}',
+    byo_test_fail:'Falló · {code}',
     plan_save:'💾 Guardar plan',
     plan_restore:'↩ Restaurar plan original',
     books_title:'Biblioteca de recursos',
@@ -3970,8 +4020,8 @@ const I18N={
     ai_title:'Corrector de writing',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
-    ai_no_key:'Configurá tu clave de API en la',
-    ai_no_key_tail:'para usar el corrector. Conseguí una gratis en',
+    ai_byo_badge:'usando tu clave',
+    ai_quota_left:'{n} correcciones disponibles hoy',
     ai_kind:'Tipo de texto',
     ai_text:'Tu texto en inglés',
     ai_text_ph:'Escribí o pegá tu Essay, Article, Report, Review o Email acá (140–190 palabras)...',
@@ -4157,7 +4207,6 @@ const SETTINGS_DEFAULT={
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
   spCycle:[1,2,3,4],
-  aiKey:'',
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
 /* =====================================================================
@@ -4888,12 +4937,17 @@ function load(){
       const old=JSON.parse(localStorage.getItem(BASE_KEY))||{};
       if(old.log||old.errs){Object.assign(d,old)}
     }
+    const settings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{});
+    // Keys never live in D: they belong to the BYO store (localStorage, per
+    // user) and must not be synced. Drop anything a legacy document carries.
+    delete settings.aiKey;
+    delete settings.byo;
     return {
       log: Array.isArray(d.log) ? d.log : [],
       errs: Array.isArray(d.errs) ? d.errs : [],
       examDates: Array.isArray(d.examDates) ? d.examDates : [],
       stage: typeof d.stage==='number' ? d.stage : 0,
-      settings: Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{}),
+      settings: settings,
       overrides: d.overrides||{},
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
@@ -4943,7 +4997,10 @@ function syncPush(){
   syncStatus('local');
   syncT=setTimeout(()=>{
     const payload=Object.assign({},D,{settings:Object.assign({},D.settings||{})});
+    // The provider key must never leave this browser in the progress document.
+    // It lives under b2first_byo_<userId> and is sent only as request headers.
     delete payload.settings.aiKey;
+    delete payload.settings.byo;
     fetch(apiUrl('/api/progress'),{
       method:'PUT',
       headers:authHeaders(),
@@ -4960,9 +5017,9 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
-          const localAiKey=(D.settings&&D.settings.aiKey)||'';
           const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
-          if(localAiKey&&!mergedSettings.aiKey)mergedSettings.aiKey=localAiKey;
+          delete mergedSettings.aiKey;
+          delete mergedSettings.byo;
           D = {
             log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
             errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
@@ -6640,7 +6697,7 @@ async function spkReport(){
   if(errEl)errEl.style.display='none';
   try{
     const r=await fetch(apiUrl('/api/speaking/report'),{
-      method:'POST',headers:authHeaders(),body:JSON.stringify(payload)});
+      method:'POST',headers:Object.assign({},authHeaders(),byoHeaders()),body:JSON.stringify(payload)});
     if(r.status===401){sessionExpired();throw new Error('session expired')}
     let j=null;
     try{j=await r.json()}catch(e){}
@@ -7210,12 +7267,119 @@ function renderPlan(){
   document.getElementById('pE0w').value=s.e0.w;document.getElementById('pE0u').value=s.e0.u;document.getElementById('pE0l').value=s.e0.l;
   document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
   document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
-  if(document.getElementById('pAiKey'))document.getElementById('pAiKey').value=s.aiKey||'';
+  renderByoSettings();
 }
-function onAiKeyInput(val){
-  D.settings.aiKey=String(val||'').trim();
-  localStorage.setItem(userKey(),JSON.stringify(D));
+/* ---------- BRING YOUR OWN KEY (phase 30) ----------
+   The key lives in localStorage under `b2first_byo_<userId>`, never in D:
+   D is synced to the server on every save(), so storing the key there would
+   ship it to /api/progress and into the backups. It is sent only as
+   X-Provider-* headers on the AI requests that need it. */
+const BYO_STORE_PREFIX='b2first_byo_';
+const BYO_PROVIDERS={
+  deepseek:{base:'https://api.deepseek.com',model:'deepseek-chat'},
+  openai:{base:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+  groq:{base:'https://api.groq.com/openai/v1',model:'llama-3.1-8b-instant'},
+  openrouter:{base:'https://openrouter.ai/api/v1',model:'openai/gpt-4o-mini'},
+  custom:{base:'',model:''}
+};
+function byoStoreKey(){return (USER&&USER.id)?(BYO_STORE_PREFIX+USER.id):''}
+function loadByo(){
+  const empty={provider:'deepseek',key:'',base:'',model:''};
+  const k=byoStoreKey();
+  if(!k)return empty;
+  try{
+    const o=JSON.parse(localStorage.getItem(k)||'null')||{};
+    return {
+      provider:BYO_PROVIDERS[o.provider]?o.provider:'deepseek',
+      key:typeof o.key==='string'?o.key:'',
+      base:typeof o.base==='string'?o.base:'',
+      model:typeof o.model==='string'?o.model:''
+    };
+  }catch(e){return empty}
+}
+function saveByo(o){
+  const k=byoStoreKey();
+  if(!k)return;
+  localStorage.setItem(k,JSON.stringify({provider:o.provider,key:o.key,base:o.base,model:o.model}));
+}
+function byoHeaders(){
+  const o=loadByo();
+  if(!o.key)return {};
+  const h={'X-Provider-Key':o.key};
+  if(o.base)h['X-Provider-Base']=o.base;
+  if(o.model)h['X-Provider-Model']=o.model;
+  return h;
+}
+function renderByoSettings(){
+  const o=loadByo();
+  const p=document.getElementById('byoProvider');
+  if(p)p.value=o.provider;
+  const k=document.getElementById('byoKey');
+  if(k)k.value=o.key;
+  const def=BYO_PROVIDERS[o.provider]||BYO_PROVIDERS.custom;
+  const b=document.getElementById('byoBase');
+  if(b)b.value=o.base||def.base||'';
+  const m=document.getElementById('byoModel');
+  if(m)m.value=o.model||def.model||'';
+}
+function onByoProviderChange(){
+  const el=document.getElementById('byoProvider');
+  const o=loadByo();
+  o.provider=(el&&el.value)||'deepseek';
+  const def=BYO_PROVIDERS[o.provider]||BYO_PROVIDERS.custom;
+  if(o.provider!=='custom'){o.base=def.base;o.model=def.model}
+  saveByo(o);renderByoSettings();
+}
+function onByoKeyInput(val){
+  const o=loadByo();
+  o.key=String(val||'').trim();
+  saveByo(o);
   renderIa();
+}
+function onByoConfigInput(){
+  const o=loadByo();
+  const b=document.getElementById('byoBase');
+  const m=document.getElementById('byoModel');
+  o.base=b?String(b.value||'').trim():'';
+  o.model=m?String(m.value||'').trim():'';
+  saveByo(o);
+}
+function toggleByoKeyVisibility(){
+  const el=document.getElementById('byoKey');
+  const btn=document.getElementById('byoKeyToggle');
+  if(!el||!btn)return;
+  const show=el.type==='password';
+  el.type=show?'text':'password';
+  btn.textContent=t(show?'byo_hide':'byo_show');
+  btn.setAttribute('data-i18n',show?'byo_hide':'byo_show');
+}
+function clearByoKey(){
+  // Remove the whole per-user BYO record: no key, no base, no model stays.
+  const k=byoStoreKey();
+  if(k)localStorage.removeItem(k);
+  const el=document.getElementById('byoKey');
+  if(el)el.value='';
+  const st=document.getElementById('byoTestStatus');
+  if(st)st.textContent='';
+  renderByoSettings();
+  renderIa();
+}
+async function testByoConnection(){
+  const st=document.getElementById('byoTestStatus');
+  const o=loadByo();
+  if(!o.key){if(st)st.textContent=t('byo_test_need_key');return;}
+  if(st)st.textContent=t('byo_testing');
+  try{
+    const r=await fetch('/api/ai/provider/test',{
+      method:'POST',
+      headers:Object.assign({},authHeaders(),byoHeaders())
+    });
+    let j={};
+    try{j=await r.json()}catch(e){}
+    if(st)st.textContent=j.ok?t('byo_test_ok',{model:j.model||o.model||''}):t('byo_test_fail',{code:j.code||('HTTP '+r.status)});
+  }catch(e){
+    if(st)st.textContent=t('byo_test_fail',{code:'network'});
+  }
 }
 function savePlan(){
   updateScheduleFromUI();
@@ -7233,7 +7397,6 @@ function savePlan(){
   s.e0.w=+g('pE0w')||14;s.e0.u=+g('pE0u')||60;s.e0.l=+g('pE0l')||3;
   s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
   s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||50;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
-  if(document.getElementById('pAiKey'))s.aiKey=g('pAiKey').trim();
   save();applyTimers();refreshAll();
   track('plan_generate',{count:(getSchedule()||[]).length});
   alert(t('alert_plan_saved'));
@@ -9056,16 +9219,36 @@ function setIaState(st,errMsg){
   renderIa();
 }
 function renderIa(){
-  const hasKey=!!(D.settings&&D.settings.aiKey&&String(D.settings.aiKey).trim());
-  const warn=document.getElementById('iaNoKeyWarn');
-  if(warn)warn.style.display=hasKey?'none':'block';
+  const hasKey=!!loadByo().key;
   const btn=document.getElementById('iaSubmitBtn');
-  if(btn)btn.disabled=!hasKey||IA_STATE==='loading';
+  if(btn)btn.disabled=IA_STATE==='loading';
+  const badge=document.getElementById('iaByoBadge');
+  if(badge)badge.style.display=hasKey?'inline-flex':'none';
+  const quota=document.getElementById('iaQuota');
+  if(quota){
+    if(hasKey)quota.style.display='none';
+    else refreshIaQuota();
+  }
   const wc=document.getElementById('iaWordCount');
   const ws=document.getElementById('iaWordStatus');
   if(ws&&wc&&(!wc.textContent||wc.textContent==='0'))ws.textContent=t('ai_target_words');
   const lbl=document.getElementById('iaStateLabel');
   if(lbl&&IA_STATE==='idle')lbl.textContent=t('ai_state_idle');
+}
+let _iaQuotaAt=0;
+async function refreshIaQuota(){
+  const el=document.getElementById('iaQuota');
+  if(!el||!USER||!USER.token)return;
+  if(loadByo().key){el.style.display='none';return}
+  if(Date.now()-_iaQuotaAt<30000)return;
+  _iaQuotaAt=Date.now();
+  try{
+    const r=await fetch('/api/account',{headers:authHeaders()});
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    el.textContent=t('ai_quota_left',{n:Math.max(0,Number(j.ai_left_today)||0)});
+    el.style.display='';
+  }catch(e){el.style.display='none'}
 }
 function onIaTextChange(){
   const el=document.getElementById('iaText');
@@ -9089,8 +9272,6 @@ function onIaTextChange(){
   }
 }
 async function submitIaWriting(){
-  const key=(D.settings&&D.settings.aiKey)?String(D.settings.aiKey).trim():'';
-  if(!key){track('ai_blocked',{code:0});renderIa();return;}
   const textEl=document.getElementById('iaText');
   const kindEl=document.getElementById('iaKind');
   const text=textEl?textEl.value.trim():'';
@@ -9112,8 +9293,8 @@ async function submitIaWriting(){
   try{
     const r=await fetch('/api/ai/writing',{
       method:'POST',
-      headers:authHeaders(),
-      body:JSON.stringify({text,task:kind.toLowerCase(),kind,provider_key:key}),
+      headers:Object.assign({},authHeaders(),byoHeaders()),
+      body:JSON.stringify({text,task:kind.toLowerCase(),kind}),
       signal:ctrl.signal
     });
     clearTimeout(timer);
@@ -9151,6 +9332,7 @@ async function submitIaWriting(){
       text
     });
     D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((b.created_at||0)-(a.created_at||0)));
+    _iaQuotaAt=0;
     save();
     refreshAll();
   }catch(err){
