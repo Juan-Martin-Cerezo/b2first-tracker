@@ -100,6 +100,7 @@ the material; the app is the coach that tells you which page of them to open ton
 | **Error taxonomy** | Every miss is tagged `L-GAP`, `G-ERR`, `T-MIS` or `T-LIM`, so the plan can target the cause instead of the symptom |
 | **Analytics** | Four SVG panels, no chart library: progress over time, per-part accuracy, error mix, score consistency |
 | **Exam mode** | Real timings for Reading & Use of English, Listening and Writing |
+| **Speaking exam** | The B2 First Speaking test part by part: the task on screen (photo pair, topic card), a countdown for every turn, a scripted examiner who only asks the questions, and four Cambridge bands with evidence quoted from your own words |
 | **Recent activity** | Your account's security log (logins, password changes, deletion) in the Account view, straight from the server's audit log — only your own events |
 | **Accounts** | Multi-user: register with a name and a password, sync across devices, and export, change password or delete your account |
 | **Interface** | English UI with light and dark themes; the choice is saved per device |

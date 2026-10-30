@@ -47,6 +47,9 @@ for the full reference with examples:
 
 - `D.log[]` — practice history: `{type, date, part?, correct?, total?, min?, score?, kind?, s1?, s2?, p2?, note?}`
   - types: `ue` (UoE parts 1-7) · `w` (Writing with `kind`) · `l` (full Listening /30, `p2`=Part 2 mistakes) · `lp` (Listening by part) · `sp` (Speaking) · `rue` (full R&UoE, exam mode) · `fw` (Full Writing)
+  - a speaking EXAM report (`sp`) also carries `bands` (grammar_vocabulary, discourse_management,
+    pronunciation, interactive_communication), `metrics` and `silence_prompts`; pronunciation is
+    `null` when Azure did not score the session, and the UI renders "not measured"
 - `D.errs[]` — errors with taxonomy: `L-GAP` / `G-ERR` / `T-MIS` / `T-LIM`
 - `D.profile` — the intake profile (first-run wizard): `{examDate, targetGrade (A|B|C), skills {rue,w,l,sp} 1-5, hoursWeek (2|4|6|10), days [mon..sun], struggles [taxonomy codes], strugglesDeclared [labels], declaredAt}`
 - `D.diag` — diagnostic result (or `null`); `diag.weakest` is the ranked list of weak parts (1-7) that seeds the weekly plan
@@ -102,6 +105,9 @@ SERVER SYNC             → syncPush/syncPull + footer badge (save() triggers th
 TIMER + SESSION STUDIO  → makeTimer, interactive steppers, solo/single-part modal
 LIVE STUDIO (S1)        → mic + AudioWorklet VAD (from a Blob) + rAF HUD
                           (liveOpen / liveStop / liveDiscard; window.LIVE state)
+SPEAKING EXAM (S6)      → SP_EXAM: choose → brief → exam(part) → feedback → report,
+                          driven by material/speaking.json, with the per-turn clock,
+                          the audio-derived speaker indicator and the silence rule
 SAVE HANDLERS           → saveUE / saveWR / saveL / saveSP / saveFull
 GATES / PLAN / WEEKLY   → calcGates, renderPlan, buildWeeklyPlan(D) (pure, no AI)
 EXAM + PARTS            → exam mode (EX_DUR, real timings) + PARTS[] (15 exercises)
@@ -140,7 +146,14 @@ Two groups:
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
   `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
   `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,
-  `test_security3`, `test_server_hardening`, `test_telemetry`, `test_byokey`, `test_plans`.
+  `test_security3`, `test_server_hardening`, `test_telemetry`, `test_byokey`, `test_plans`,
+  `test_speaking_exam`.
+
+Speaking exam note (phase 35): `test_speaking_exam.py` boots its own server, stubs the text model
+and runs a **full 146 s Part 2** in `?spk=sim`, so it takes ~3 minutes by design. It writes one
+screenshot per screen to `tests/out/`. `material/speaking.json` and `img/spk/*` are served by
+`server.py` at `/material/speaking.json` and `/img/...`; the photos are Wikimedia Commons only —
+never add Cambridge or textbook images.
 
 The delegation runner gates each phase with `RUN_TESTS` (default `test_sync.py
 test_personalization.py`) — see [delegacion/README.md](delegacion/README.md).

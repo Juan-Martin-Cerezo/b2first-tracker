@@ -462,14 +462,24 @@ All five stages of `docs/SPEAKING-REALTIME-PLAN.md` §8 are in the tree:
   `renderStats` pick it up. A failed report writes nothing and "Retry report" resends the same
   `request_id` (server-side cache, no second model call). `tests/test_speaking_report.py`.
 
+**S6 (the exam on screen)**, phase 35 — the five screens, the task bank, the clock and the
+scripted examiner. `material/speaking.json` holds the content, `img/spk/` the Wikimedia photos
+(credits in `CREDITS.md`), and `SP_EXAM` in `index.html` runs `choose → brief → exam → feedback →
+report`. The examiner prompt is now built per part **and per task** (`speaking_prompts.
+examiner_instruction(part, task)`, the task travels with the token mint), and the report accepts an
+opt-in `interactive: true` that adds the Interactive Communication band from the fenced dialogue;
+without that flag the old behaviour is unchanged. `tests/test_speaking_exam.py` runs a full Part 2
+in `?spk=sim` (~146 s) and writes one screenshot per screen to `tests/out/`.
+
 What is still needed to leave simulation mode: a real **Google/Gemini API key** (Live session) and
 a real **Azure Speech key + region** (PA). Without them the app degrades honestly — sim voices and
 `not measured` — which is the correct behaviour, not a bug. The minute caps (`B2_SPK_MIN_DAILY_*`)
 and the AI daily quota already protect the budget.
 
 Summary of the four scales: Grammar & Vocabulary and Discourse Management come from the
-transcript, Pronunciation only from a phoneme-level API, and **Interactive Communication is not
-gradeable** without a second human — it is reported as proxies, never as a band.
+transcript, Pronunciation only from a phoneme-level API, and **Interactive Communication is only
+graded when the client declares an interlocutor** (`interactive: true`, the exam flow): then it
+comes from the fenced dialogue. Without that declaration it is never a band — only proxies.
 
 ### 12.3 Decisions waiting on Juan
 
