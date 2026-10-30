@@ -306,3 +306,56 @@ def partner_instruction(part=1, task=None):
 
 
 PARTNER_SYSTEM = partner_instruction(1, None)
+
+
+def scripted_lines(part=1, task=None, role="examiner"):
+    """The lines this part will say aloud, for TTS pre-generation.
+
+    The client normally sends its own list (it knows the exact stage lines it
+    will speak). This is the server-side fallback built from the same task bank,
+    so a warm request without `lines` still fills the cache.
+    """
+    try:
+        part = int(part)
+    except (TypeError, ValueError):
+        part = 1
+    if part not in (1, 2, 3, 4):
+        part = 1
+    task = clean_task(task)
+    lines = []
+    if role == "partner":
+        if part == 2:
+            lines = [task.get("title") or "Two photographs"]
+            lines += task.get("prompts") or []
+        elif part == 3:
+            lines = [task.get("topic") or ""] + (task.get("prompts") or [])
+            lines.append(task.get("decision") or "Which two ideas would be best?")
+        return [line for line in lines if isinstance(line, str) and line.strip()]
+
+    if part == 1:
+        questions = task.get("questions") or list(PART1_QUESTIONS)
+        lines = [str(q) for q in questions]
+        if lines:
+            lines.insert(0, "Good morning. " + lines[0])
+    elif part == 2:
+        prompts = task.get("prompts") or [
+            "Compare the photographs and say why the people might have chosen these things."]
+        title = task.get("title") or "Two photographs"
+        lines = [PART2_INSTRUCTION,
+                 "These photographs show {}. {}".format(title, prompts[0]),
+                 prompts[0]]
+        if len(prompts) > 1:
+            lines.append(prompts[1])
+        lines.append(PART2_PARTNER_TURN)
+    elif part == 3:
+        prompts = task.get("prompts") or ["two or three ideas"]
+        topic = task.get("topic") or "a task"
+        lines = [PART3_INSTRUCTION,
+                 topic + ". " + " ".join(
+                     item if item.endswith(".") else item + "." for item in prompts),
+                 task.get("decision") or "Which two ideas would be best?"]
+    else:
+        questions = task.get("questions") or [
+            "What did you think about the task you have just done?"]
+        lines = [PART4_INSTRUCTION] + [str(q) for q in questions]
+    return [line for line in lines if isinstance(line, str) and line.strip()]

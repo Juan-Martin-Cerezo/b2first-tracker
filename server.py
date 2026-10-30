@@ -240,6 +240,8 @@ DEFAULT_SPK_TURN_MODEL = "gemini-2.5-flash"
 DEFAULT_SPK_TTS_MODEL = "gemini-2.5-flash-preview-tts"
 SPK_TTS_VOICES = {"examiner": "Puck", "partner": "Kore"}
 SPK_TURN_MIMES = ("audio/pcm", "audio/wav", "audio/x-wav", "audio/wave", "audio/l16")
+SPK_TTS_CACHE_MAX = 40               # cached scripted lines, LRU by mtime
+SPK_WARM_MAX_LINES = 24              # lines one warm request may pre-generate
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -1017,12 +1019,30 @@ def _spk_gemini_text(body):
     return text or None
 
 
+_SPK_TURN_REPEAT = "Sorry, I did not catch that. Could you say it again, please?"
+
 _SPK_TURN_RULE = """
 VOICE LINE, TURN BY TURN
+These rules override the part block above wherever they disagree.
 - The candidate's audio is ONE turn. Transcribe it verbatim in `transcript`
-  (English, no timestamps, no speaker labels). If it is unintelligible, use "".
+  (English, no timestamps, no speaker labels). If there is no clear speech,
+  use "" — NEVER guess, complete or invent words.
 - Then write your own next turn in `reply`: exactly the words you say out loud,
-  in English, one or two short sentences. The exam rules above still apply.
+  in English. Your reply is AT MOST 14 words (8-12 is ideal). The exam rules
+  above still apply, except that this turn is a conversation, not a reading of
+  the question list.
+- REACT FIRST. Your reply must contain at least one concrete word or phrase
+  from `transcript` and show that you heard it. Example: candidate says
+  "I go by bike because it is healthier" → "Bike — why is it healthier for you?"
+- If the transcript is empty: do not invent an answer. Say you could not hear
+  the audio and ask the candidate to repeat it, in 14 words or fewer.
+- If the transcript has fewer than 4 words or is off-topic: ask a short
+  follow-up ("Why?" / "Can you tell me more about X?") using a word they said.
+  Do NOT advance to the next scripted question.
+- Only when the answer is on-topic and at least 4 words long may you move to
+  the next scripted question — and even then, refer to what they said first.
+- The scripted question list is a FALLBACK for silence, not a script to read.
+  Never ask a question that could have been asked without listening.
 - Never describe the audio, never mention transcription, never add JSON prose.
 Return only the JSON object.
 """
@@ -1059,12 +1079,21 @@ def _spk_turn_history(raw):
     return out
 
 
+_SPK_TURN_WHO = {"candidate": "Candidate", "partner": "Candidate B",
+                 "examiner": "Examiner"}
+
+
 def _spk_turn_contents(history):
-    """History as Gemini `contents` (consecutive same-role turns are merged)."""
+    """History as Gemini `contents`, each turn labelled with who said it.
+
+    Labels matter: the reply must react to the candidate, not to its own
+    previous line. Consecutive same-role turns are merged.
+    """
     contents = []
     for turn in history:
         role = "model" if turn["who"] == "examiner" else "user"
-        text = turn["text"] if turn["who"] != "partner" else "Candidate B: " + turn["text"]
+        text = "{}: {}".format(_SPK_TURN_WHO.get(turn["who"], "Candidate"),
+                               turn["text"])
         if contents and contents[-1]["role"] == role:
             contents[-1]["parts"].append({"text": text})
         else:
@@ -1093,6 +1122,9 @@ def _spk_turn_understand(api_key, system, history, audio_b64, mime):
         "contents": contents,
         "generationConfig": {
             "temperature": 0.4,
+            # The reply is 8-14 words: thinking adds ~2 s and buys nothing.
+            "maxOutputTokens": 80,
+            "thinkingConfig": {"thinkingBudget": 0},
             "responseMimeType": "application/json",
             "responseSchema": _SPK_TURN_SCHEMA,
         },
@@ -1158,6 +1190,143 @@ def _spk_tts(api_key, text, voice):
     if not pcm:
         return None, ms, "upstream_failed"
     return _spk_wav_bytes(pcm), ms, None
+
+
+# --- Phase 37: TTS cache for the scripted lines -----------------------------
+# The scripted lines never change between sessions, so paying 0.3 s + audio
+# duration for each one on every turn is waste. They are cached by the sha256
+# of (text, voice): the filename carries no text, the bytes are WAV only. The
+# cache is the ONLY thing this feature writes under data/, and it is LRU-capped.
+_SPK_TTS_LOCK = threading.Lock()
+_SPK_WARM_LOCK = threading.Lock()
+_SPK_WARM_INFLIGHT = set()
+
+
+def _spk_tts_dir():
+    return os.path.join(DATA_DIR, "tts")
+
+
+def _spk_tts_cache_path(text, voice):
+    digest = hashlib.sha256((text + "\x00" + voice).encode("utf-8")).hexdigest()
+    return os.path.join(_spk_tts_dir(), digest + ".wav")
+
+
+def _spk_tts_cache_get(text, voice):
+    """Cached WAV for (text, voice) or None. A hit refreshes the LRU stamp."""
+    path = _spk_tts_cache_path(text, voice)
+    try:
+        with open(path, "rb") as fh:
+            data = fh.read(4 * 1024 * 1024 + 1)
+        if not data or len(data) > 4 * 1024 * 1024:
+            return None
+        os.utime(path, None)
+        return data
+    except OSError:
+        return None
+
+
+def _spk_tts_cache_prune():
+    """Keep the newest SPK_TTS_CACHE_MAX .wav files, drop the rest."""
+    try:
+        entries = [(entry.stat().st_mtime, entry.path)
+                   for entry in os.scandir(_spk_tts_dir())
+                   if entry.is_file() and entry.name.endswith(".wav")]
+    except OSError:
+        return
+    entries.sort()
+    for _mtime, path in entries[:-SPK_TTS_CACHE_MAX]:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+
+def _spk_tts_cache_put(text, voice, wav):
+    """Write a WAV as 0600, atomically, and prune the cache to its cap."""
+    directory = _spk_tts_dir()
+    try:
+        os.makedirs(directory, mode=0o700, exist_ok=True)
+        try:
+            os.chmod(directory, 0o700)
+        except OSError:
+            pass
+        tmp = os.path.join(directory, ".tmp-" + secrets.token_hex(8))
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        try:
+            with os.fdopen(fd, "wb") as fh:
+                fh.write(wav)
+                fh.flush()
+                os.fsync(fh.fileno())
+        except Exception:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+            raise
+        os.replace(tmp, _spk_tts_cache_path(text, voice))
+        try:
+            os.chmod(_spk_tts_cache_path(text, voice), 0o600)
+        except OSError:
+            pass
+        _spk_tts_cache_prune()
+    except OSError:
+        return
+
+
+def _spk_tts_cached(api_key, text, voice):
+    """``(wav, ms, cached, error)``: cache first, upstream TTS on a miss."""
+    started = time.time()
+    with _SPK_TTS_LOCK:
+        cached = _spk_tts_cache_get(text, voice)
+    if cached is not None:
+        return cached, int((time.time() - started) * 1000), True, None
+    wav, ms, error = _spk_tts(api_key, text, voice)
+    if error:
+        return None, ms, False, error
+    with _SPK_TTS_LOCK:
+        _spk_tts_cache_put(text, voice, wav)
+    return wav, ms, False, None
+
+
+def _spk_warm_lines(raw):
+    """Sanitise the scripted lines a client asks to pre-generate."""
+    if not isinstance(raw, list):
+        return []
+    out, seen = [], set()
+    for item in raw[:SPK_WARM_MAX_LINES]:
+        if not isinstance(item, str):
+            continue
+        text = item.strip()[:SPK_TURN_MAX_SAY]
+        if text and text not in seen:
+            seen.add(text)
+            out.append(text)
+    return out
+
+
+def _spk_warm_async(api_key, lines, voice):
+    """Generate the missing scripted lines in the background; return queued N."""
+    lines = [line for line in lines if isinstance(line, str) and line.strip()]
+    if not lines:
+        return 0
+    key = (voice, tuple(lines))
+    with _SPK_WARM_LOCK:
+        if key in _SPK_WARM_INFLIGHT:
+            return 0
+        _SPK_WARM_INFLIGHT.add(key)
+
+    def run():
+        try:
+            for line in lines:
+                try:
+                    _spk_tts_cached(api_key, line.strip(), voice)
+                except Exception:
+                    pass
+        finally:
+            with _SPK_WARM_LOCK:
+                _SPK_WARM_INFLIGHT.discard(key)
+
+    threading.Thread(target=run, name="spk-tts-warm", daemon=True).start()
+    return len(lines)
 
 
 # --- S5 report idempotency: a retry must not buy a second LLM call ----------
@@ -2776,6 +2945,31 @@ class H(BaseHTTPRequestHandler):
         if body:
             self.wfile.write(body)
 
+    def _send_ndjson_start(self):
+        """Begin a close-delimited NDJSON stream (HTTP/1.0, no Content-Length).
+
+        Used by the speaking turn so the reply text reaches the browser before
+        the TTS call finishes: the UI can show what the examiner said while the
+        audio is still being generated.
+        """
+        self._status = 200
+        self.close_connection = True
+        self.send_response(200)
+        for key, value in _security_headers(self.path).items():
+            self.send_header(key, value)
+        self.send_header("X-Request-Id", self._rid)
+        self.send_header("Server-Timing", _server_timing(self._t0))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+        self.send_header("Connection", "close")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+
+    def _send_ndjson(self, obj):
+        """Write one JSON line and flush it immediately."""
+        self.wfile.write(json.dumps(obj, ensure_ascii=False).encode("utf-8") + b"\n")
+        self.wfile.flush()
+
     def _send(self, code, body, ctype, extra=None):
         """Helper: response with security headers + Content-Length.
 
@@ -3752,6 +3946,19 @@ class H(BaseHTTPRequestHandler):
             task = speaking_prompts.clean_task(req.get("task"))
             voice = SPK_TTS_VOICES.get(role, SPK_TTS_VOICES["examiner"])
 
+            # Phase 37: the client asks once, when a part opens, to pre-generate
+            # the scripted lines it is about to speak. Free: no model call, no
+            # mock, no minutes, and it returns immediately (the work is a
+            # daemon thread).
+            if req.get("warm") is True:
+                lines = _spk_warm_lines(req.get("lines"))
+                if not lines:
+                    lines = speaking_prompts.scripted_lines(part or 1, task, role)
+                lines.append(_SPK_TURN_REPEAT)
+                queued = _spk_warm_async(api_key, lines, voice)
+                self._send_json(200, {"warmed": queued, "voice": voice})
+                return
+
             # One mock per session, not per turn: the gate runs the first time a
             # session id is seen, and a known session keeps working afterwards.
             session_id = req.get("session_id")
@@ -3769,7 +3976,7 @@ class H(BaseHTTPRequestHandler):
             say = req.get("say")
             if "audio_b64" not in req and isinstance(say, str) and say.strip():
                 text = say.strip()[:SPK_TURN_MAX_SAY]
-                wav, tts_ms, tts_err = _spk_tts(api_key, text, voice)
+                wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, text, voice)
                 if tts_err:
                     self._send_json(502, {"error": "tts_failed", "reason": tts_err})
                     return
@@ -3777,12 +3984,14 @@ class H(BaseHTTPRequestHandler):
                     _spk_turn_session_mark(uid, session_id)
                     plans.speaking_add_mock(uid)
                 _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                       {"part": part, "role": role, "ms": tts_ms, "say": True})
+                       {"part": part, "role": role, "ms": tts_ms,
+                        "say": True, "cached": cached})
                 self._send_json(200, {
                     "transcript": "", "reply": text,
                     "audio_b64": base64.b64encode(wav).decode("ascii"),
                     "mime": "audio/wav",
-                    "ms": {"stt": 0, "llm": 0, "tts": tts_ms, "total": tts_ms},
+                    "ms": {"stt": 0, "llm": 0, "tts": tts_ms,
+                           "total": tts_ms, "cached": cached},
                 })
                 return
 
@@ -3813,13 +4022,49 @@ class H(BaseHTTPRequestHandler):
             del decoded
 
             history = _spk_turn_history(req.get("history"))
+            stream = req.get("stream") is True
             system = _spk_turn_instruction(role, part, task)
             transcript, reply, llm_ms, llm_err = _spk_turn_understand(
                 api_key, system, history, audio_b64, mime)
             if llm_err:
                 self._send_json(502, {"error": "turn_failed", "reason": llm_err})
                 return
-            wav, tts_ms, tts_err = _spk_tts(api_key, reply, voice)
+            transcript = (transcript or "").strip()
+            reply = (reply or "").strip()
+            # Never invent what was not heard: an empty transcript gets the
+            # server's own repeat request, whatever the model tried to say.
+            if not transcript or not reply:
+                reply = _SPK_TURN_REPEAT
+
+            if stream:
+                # Text first, audio second: the examiner's words reach the UI
+                # while TTS is still running, and playback starts on arrival.
+                self._send_ndjson_start()
+                self._send_ndjson({
+                    "type": "text", "transcript": transcript, "reply": reply,
+                    "ms": {"stt": 0, "llm": llm_ms},
+                })
+                wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
+                if tts_err:
+                    self._send_ndjson({"type": "error", "error": "turn_failed",
+                                       "reason": tts_err})
+                    return
+                total = int((time.time() - started) * 1000)
+                if session_id and not known:
+                    _spk_turn_session_mark(uid, session_id)
+                    plans.speaking_add_mock(uid)
+                _audit("speaking_turn", uid, _real_ip(self), self._rid,
+                       {"part": part, "role": role, "ms": total, "cached": cached})
+                self._send_ndjson({
+                    "type": "audio",
+                    "audio_b64": base64.b64encode(wav).decode("ascii"),
+                    "mime": "audio/wav",
+                    "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
+                           "total": total, "cached": cached},
+                })
+                return
+
+            wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
             if tts_err:
                 # The examiner did not speak: say so instead of returning text
                 # as if the turn had happened.
@@ -3830,13 +4075,14 @@ class H(BaseHTTPRequestHandler):
                 _spk_turn_session_mark(uid, session_id)
                 plans.speaking_add_mock(uid)
             _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                   {"part": part, "role": role, "ms": total})
+                   {"part": part, "role": role, "ms": total, "cached": cached})
             self._send_json(200, {
                 "transcript": transcript,
                 "reply": reply,
                 "audio_b64": base64.b64encode(wav).decode("ascii"),
                 "mime": "audio/wav",
-                "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms, "total": total},
+                "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
+                       "total": total, "cached": cached},
             })
             return
 
