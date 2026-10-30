@@ -164,8 +164,9 @@ reads:
 | `B2_AI_BASE` | (empty) | Override the provider base URL |
 | `B2_AI_MODEL` | (empty) | Override the model name |
 | `B2_AI_KEY` | (empty) | Server-side provider key; users can still bring their own |
-| `B2_AI_DAILY_PER_USER` | `8` | AI corrections per account per day on the server key |
-| `B2_AI_DAILY_TOTAL` | `80` | AI corrections per day for the whole instance on the server key |
+| `B2_AI_DAILY_TOTAL` | `80` | LLM calls per day for the whole instance (the ceiling that protects the Pi) |
+| `B2_LICENSE_SECRET` | (empty) | 32+ byte secret that signs pro activation codes. Without it `POST /api/plan/redeem` answers `503`. Keep it out of the repo (systemd drop-in); generate with `python3 tools/issue_license.py --gen-secret` |
+| `B2_AI_DAILY_PER_USER` | (unset) | **Legacy** emergency cap. Leave it unset: when set it overrides the plan allowance and responds with the old `daily AI quota reached` body |
 | `B2_TEST_USER` | `test-runner` | Account the Playwright suites register (`tests/helpers.py`) |
 | `B2_TEST_PASS` | `test-runner-pass-9` | Password for that account (`tests/helpers.py`) |
 
@@ -224,11 +225,47 @@ and backup history under `data/users/<id>/` (directory `0700`, files `0600`).
 | Anonymous API | 300 requests / min / IP |
 | Login / register / password | 30 requests / min / IP |
 | Progress write | 2 MB per save, 60 saves / min |
-| AI corrections | 8 / day per account, 80 / day across the instance |
+| AI calls (free plan) | 3 / day per account |
+| AI calls (pro plan) | 60 / month per account |
+| Speaking mocks (free / pro) | 1 / week (5 min) / 6 per month (90 min) |
+| Instance ceiling | 80 LLM calls / day (`B2_AI_DAILY_TOTAL`) |
 | Session token | 30 days, sliding |
 
+### Plans
+
+Every account starts on **free**. There are three effective plans:
+
+| Plan | How you get it | AI corrections & reports | Speaking mocks | Pronunciation |
+| --- | --- | --- | --- | --- |
+| `free` | default | 3 / day | 1 / week (5 min) | preview |
+| `byo` | paste your own provider key (Settings → AI provider) | unlimited for this app | whatever your key pays for* | preview |
+| `pro` | activation code (or, later, a subscription) | 60 / month | 6 / month (90 min) | full |
+
+\* the Gemini Live token still comes from the server, so mocks on a BYO key stay on the
+free/pro allowance. Writing corrections and speaking reports go to the user's key and are
+not metered.
+
 Users who paste their own provider key are not charged against the instance quota — the
-owner's key stays for people who just want to try it.
+owner's key stays for people who just want to try it. Plan state lives in `data/plans.json`
+and the meters in `data/usage.json` (both `0600`, gitignored); the progress document only
+carries a read-only mirror so the UI can render it.
+
+**Issuing a pro code** (stdlib only, run on the Pi):
+
+```bash
+# once: generate the signing secret and store it OUTSIDE the repo
+python3 tools/issue_license.py --gen-secret   # copy the value into ~/.config/b2first/ai.env
+# from a shell that carries the same secret as the server:
+export B2_LICENSE_SECRET=...                  # never commit it
+python3 tools/issue_license.py pro 30         # prints FT-PRO-1M-XXXX-XXXX-XXXX (single use)
+python3 tools/issue_license.py --list         # issued codes as hashes + who redeemed them
+```
+
+The code is signed with HMAC-SHA256 and the server stores only `sha256(code)` in
+`data/licenses.json`, so the ledger cannot be used to redeem anything. Redemption
+(`POST /api/plan/redeem`) is limited to 5 attempts / hour / account and answers the same
+`400 {"error":"invalid_code"}` for a wrong, reused or unknown code (no oracle). Expiry is
+evaluated on read: once `until` passes, the next request is `free` again.
 
 Every account can **export its data** as JSON, **change its password** (which invalidates the
 other sessions) and **delete itself**, which removes the files from disk.
@@ -310,8 +347,9 @@ touch the real one; the other nine run against the live service on `127.0.0.1:80
   `0600`), and a session token for one account can never read another's data (`403`).
 - **Limits and quotas**: 5 failed logins lock a username for 15 minutes, with exponential backoff
   (5/15/60 s) after the 3rd/4th/5th failure; authenticated API traffic is limited per account
-  (600/min), anonymous traffic and credential endpoints per IP; AI corrections are capped at
-  8/day per account and 80/day per instance.
+  (600/min), anonymous traffic and credential endpoints per IP; the plans cap AI calls (3/day
+  free, 60/month pro, 80/day across the instance) and activation codes are single-use,
+  stored only as `sha256`, with 5 redemption attempts/hour/account.
 - **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token; sessions
   use a 30-day sliding TTL capped by a 90-day absolute limit; passwords are
   PBKDF2-HMAC-SHA256 with 600,000 iterations (older hashes are upgraded on login).

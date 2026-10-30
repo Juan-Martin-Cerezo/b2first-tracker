@@ -40,7 +40,6 @@ import store
 __all__ = [
     "PLANS",
     "LIMITS",
-    "EFFECTIVE_PLANS",
     "plan_record",
     "effective_plan",
     "set_plan",
@@ -52,7 +51,6 @@ __all__ = [
     "speaking_add_mock",
     "speaking_add_seconds",
     "reset_at",
-    "window_key",
     "issue_code",
     "verify_code",
     "normalize_code",
@@ -64,7 +62,6 @@ __all__ = [
     "LICENSE_PREFIX",
 ]
 
-PRO_DEFAULT_DAYS = 30
 USAGE_KEEP_DAYS = 60
 MAX_DAYS = 400
 LICENSE_PREFIX = "FT"
@@ -72,7 +69,6 @@ CODE_BODY_CHARS = 12
 _DAY = 24 * 3600
 
 PLANS = ("free", "byo", "pro")
-EFFECTIVE_PLANS = PLANS
 
 # The cost ceiling per plan lives here and nowhere else. Measured inputs:
 # ~US$0.25 per speaking mock, ~US$0.01 per writing correction / report.
@@ -95,9 +91,8 @@ LIMITS = {
     },
 }
 
-_LOCK = threading.Lock()
+_LOCK = threading.RLock()  # re-entrant: set_plan -> mark_redeemed can nest
 _LABEL_RE = re.compile(r"^(\d{1,4})([MD])$")
-_B32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
 
 # ---------------------------------------------------------------------------
@@ -124,15 +119,6 @@ def month_key(ts):
 def week_key(ts):
     """Monday-based week index, e.g. W02995 (1970-01-01 was a Thursday)."""
     return "W%05d" % ((int(ts) // _DAY + 3) // 7)
-
-
-def window_key(window, now=None):
-    ts = _now(now)
-    if window == "day":
-        return day_key(ts)
-    if window == "month":
-        return month_key(ts)
-    return week_key(ts)
 
 
 def reset_at(window, now=None):
@@ -166,16 +152,31 @@ def _parse_iso(value):
 # ---------------------------------------------------------------------------
 # Small private JSON helpers (0600, atomic), resolved per call.
 # ---------------------------------------------------------------------------
+def _data_dir():
+    """Active data directory.
+
+    server.py sets its own DATA_DIR from the environment at import; a tool that
+    only imports plans (tools/issue_license.py) never loads server, so the
+    variable has to be read here too — the same convention as
+    tools/verify_audit.py. An explicit store.DATA_DIR (tests) always wins.
+    """
+    current = store.data_dir()
+    env = (os.environ.get("DATA_DIR") or "").strip()
+    if env and current == store._DEFAULT_DATA_DIR:
+        return env
+    return current
+
+
 def _plans_path():
-    return os.path.join(store.data_dir(), "plans.json")
+    return os.path.join(_data_dir(), "plans.json")
 
 
 def _usage_path():
-    return os.path.join(store.data_dir(), "usage.json")
+    return os.path.join(_data_dir(), "usage.json")
 
 
 def _licenses_path():
-    return os.path.join(store.data_dir(), "licenses.json")
+    return os.path.join(_data_dir(), "licenses.json")
 
 
 def _read(path, default):
@@ -247,25 +248,26 @@ def set_plan(uid, plan, days, source="code", code_hash="", now=None):
     if plan not in ("pro",):
         raise ValueError("only paid plans can be stored")
     ts = _now(now)
-    rows = _plans()
-    current = rows.get(uid) if isinstance(rows.get(uid), dict) else {}
-    base = ts
-    until = current.get("until")
-    if isinstance(until, str) and until > iso(ts):
-        parsed = _parse_iso(until)
-        if parsed is not None:
-            base = parsed
-    since = current.get("since") if current.get("plan") == plan else iso(ts)
-    rec = {
-        "plan": plan,
-        "since": since or iso(ts),
-        "until": iso(base + max(0, int(days)) * _DAY),
-        "source": source,
-        "code_hash": code_hash or "",
-    }
-    rows[uid] = rec
-    store.write_json_private(_plans_path(), rows)
-    return rec
+    with _LOCK:
+        rows = _plans()
+        current = rows.get(uid) if isinstance(rows.get(uid), dict) else {}
+        base = ts
+        until = current.get("until")
+        if isinstance(until, str) and until > iso(ts):
+            parsed = _parse_iso(until)
+            if parsed is not None:
+                base = parsed
+        since = current.get("since") if current.get("plan") == plan else iso(ts)
+        rec = {
+            "plan": plan,
+            "since": since or iso(ts),
+            "until": iso(base + max(0, int(days)) * _DAY),
+            "source": source,
+            "code_hash": code_hash or "",
+        }
+        rows[uid] = rec
+        store.write_json_private(_plans_path(), rows)
+        return rec
 
 
 def forget_user(uid):
@@ -571,18 +573,19 @@ def verify_code(code, secret):
 def record_issue(code, plan, days, now=None):
     """Tool-side ledger row: lets --list show what was issued and to whom."""
     ts = _now(now)
-    rows = _licenses()
     key = code_hash(code)
-    rows[key] = {
-        "plan": plan,
-        "days": int(days),
-        "label": label_for_days(days),
-        "issued_at": iso(ts),
-        "user_id": None,
-        "redeemed_at": None,
-        "until": None,
-    }
-    store.write_json_private(_licenses_path(), rows)
+    with _LOCK:
+        rows = _licenses()
+        rows[key] = {
+            "plan": plan,
+            "days": int(days),
+            "label": label_for_days(days),
+            "issued_at": iso(ts),
+            "user_id": None,
+            "redeemed_at": None,
+            "until": None,
+        }
+        store.write_json_private(_licenses_path(), rows)
     return key
 
 
@@ -593,17 +596,18 @@ def license_row(code):
 def mark_redeemed(code, uid, until, now=None):
     """Mark a code as used. Returns the stored row (created if it was unknown)."""
     ts = _now(now)
-    rows = _licenses()
     key = code_hash(code)
-    row = rows.get(key) if isinstance(rows.get(key), dict) else {}
-    row.setdefault("plan", "pro")
-    row.setdefault("issued_at", iso(ts))
-    row["user_id"] = uid
-    row["redeemed_at"] = iso(ts)
-    row["until"] = until
-    rows[key] = row
-    store.write_json_private(_licenses_path(), rows)
-    return row
+    with _LOCK:
+        rows = _licenses()
+        row = rows.get(key) if isinstance(rows.get(key), dict) else {}
+        row.setdefault("plan", "pro")
+        row.setdefault("issued_at", iso(ts))
+        row["user_id"] = uid
+        row["redeemed_at"] = iso(ts)
+        row["until"] = until
+        rows[key] = row
+        store.write_json_private(_licenses_path(), rows)
+        return row
 
 
 def list_issues():
