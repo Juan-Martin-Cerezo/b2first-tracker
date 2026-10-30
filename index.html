@@ -1226,7 +1226,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div id="authRegister" style="display:none">
       <div><label>New username</label><input type="text" id="regName" placeholder="e.g. maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div><label>Password (8+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label>Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" oninput="onRegPwInput(this.value)" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px">10+ characters. Avoid common passwords.</div>
       <div><label>Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()">Create account & enter</button>
@@ -1363,7 +1364,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="password" id="pwCurrent" placeholder="Current password" autocomplete="current-password">
-        <input type="password" id="pwNew" placeholder="New password (8+ characters)" autocomplete="new-password">
+        <input type="password" id="pwNew" placeholder="New password (10+ characters)" autocomplete="new-password">
         <input type="password" id="pwRepeat" placeholder="Repeat new password" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
@@ -3234,12 +3235,31 @@ async function doLogin(){
     await afterAuth();
   }catch(e){err.textContent='❌ '+e.message}
 }
+function passwordStrength(pass){
+  if(typeof pass!=='string')return 0;
+  let classes=0;
+  if(/[a-z]/.test(pass))classes++;
+  if(/[A-Z]/.test(pass))classes++;
+  if(/[0-9]/.test(pass))classes++;
+  if(/[^A-Za-z0-9]/.test(pass))classes++;
+  if(pass.length>=14&&classes>=3)return 2;
+  if(pass.length>=10&&classes>=2)return 1;
+  return 0;
+}
+function onRegPwInput(val){
+  const el=document.getElementById('regPwHint');
+  if(!el)return;
+  if(!val){el.textContent='10+ characters. Avoid common passwords.';el.style.color='var(--on-surface-variant)';return}
+  const s=passwordStrength(val);
+  el.textContent=['Too weak: 10+ characters, letters and numbers','Fair strength','Strong password'][s];
+  el.style.color=s===0?'var(--bad-text)':(s===1?'var(--on-surface-variant)':'var(--ok-text)');
+}
 async function doRegister(){
   const name=document.getElementById('regName').value.trim();
   const pass=document.getElementById('regPass').value;
   const color=document.getElementById('regColor').value||'#1b2b48';
   const err=document.getElementById('regError');
-  if(pass.length<8){err.textContent='❌ Password must be at least 8 characters.';return}
+  if(pass.length<10){err.textContent='❌ Password must be at least 10 characters.';return}
   try{
     const u=await apiRegister(name,pass,color);
     saveUserSession(u);
@@ -3266,7 +3286,7 @@ async function doChangePassword(){
   const st=document.getElementById('pwStatus');
   const btn=document.getElementById('pwBtn');
   const setStatus=(msg,color)=>{st.textContent=msg;st.style.color=color||''};
-  if(nxt.length<8){setStatus('❌ New password must be at least 8 characters','var(--bad-text)');return}
+  if(nxt.length<10){setStatus('❌ New password must be at least 10 characters','var(--bad-text)');return}
   if(nxt!==rep){setStatus('❌ New passwords do not match','var(--bad-text)');return}
   btn.disabled=true;
   setStatus('Updating…','var(--on-surface-variant)');
@@ -3277,10 +3297,15 @@ async function doChangePassword(){
       try{msg=(await r.json()).error||msg}catch(e){}
       throw new Error(msg);
     }
+    // Every session was revoked, including this one: keep the fresh token the
+    // server returned for this tab so it does not keep a dead credential.
+    let data={};
+    try{data=await r.json()}catch(e){}
+    if(data&&data.token&&USER){USER.token=data.token;saveUserSession(USER)}
     document.getElementById('pwCurrent').value='';
     document.getElementById('pwNew').value='';
     document.getElementById('pwRepeat').value='';
-    setStatus('✔ Password updated. Other sessions were signed out.','var(--ok-text)');
+    setStatus('✔ Password updated. Every other session was signed out.','var(--ok-text)');
   }catch(e){
     setStatus('❌ '+e.message,'var(--bad-text)');
   }finally{

@@ -161,7 +161,7 @@ check("10_nul_byte_400", st == 400, f"{st}")
 st, _b, h = get("/")
 check("11_security_headers",
       st == 200
-      and h.get("Strict-Transport-Security") == "max-age=31536000; includeSubDomains"
+      and h.get("Strict-Transport-Security") == "max-age=63072000; includeSubDomains; preload"
       and h.get("Cross-Origin-Opener-Policy") == "same-origin"
       and h.get("Cross-Origin-Resource-Policy") == "same-origin",
       f"{st} {h}")

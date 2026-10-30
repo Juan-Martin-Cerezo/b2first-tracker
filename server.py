@@ -65,6 +65,7 @@ USERS_FILE = os.path.join(DATA_DIR, "users.json")
 TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
 USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
 TOKEN_TTL  = 30 * 24 * 3600                             # session valid for 30 days (sliding)
+TOKEN_ABSOLUTE_TTL = 90 * 24 * 3600                     # hard ceiling: never extended
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # owner password used when migrating
 B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
@@ -156,7 +157,7 @@ SPK_PA_PATH = ("/speech/recognition/conversation/cognitiveservices/v1"
                "?language=en-US&format=detailed")
 SPK_PA_TIMEOUT = speech.PA_TIMEOUT
 SPK_PA_MAX_B64 = 2 * 1024 * 1024     # base64 characters of audio (2 MB)
-SPK_PA_MAX_BODY = SPK_PA_MAX_B64 + 4096
+SPK_PA_MAX_BODY = 2 * 1024 * 1024    # hard body cap for /api/speaking/pa (2 MB)
 SPK_PA_RATE_PER_MIN = 30             # calls per minute per user
 SPK_PA_DAILY_DEFAULT = 60            # calls per day per user
 
@@ -522,7 +523,9 @@ _LOGIN_FAIL_LOCK = threading.Lock()
 _LOGIN_FAIL = {}  # {username-lower: {"count": int, "until": ts}}
 LOGIN_FAIL_MAX = 5                      # failed attempts before the username is locked
 LOGIN_LOCK_S = 15 * 60                  # lockout window (15 minutes)
-LOGIN_DELAY = (0.0, 0.0, 0.2, 0.5, 1.0)  # progressive delay from the 3rd failure (max 1s)
+# Exponential backoff by consecutive failures: #3 → 5 s, #4 → 15 s, #5 → 60 s
+# (the 5th also arms the 15-minute lockout). Index = failures - 1.
+LOGIN_BACKOFF = (0.0, 0.0, 5.0, 15.0, 60.0)
 DUMMY_SALT = "0" * 16                   # timing equalizer for unknown usernames
 _DUMMY_DIGEST = None
 
@@ -569,8 +572,8 @@ def _login_succeeded(key):
 
 
 def _login_delay(count):
-    """Progressive delay: 0/0/0.2/0.5/1s from the 3rd consecutive failure."""
-    return LOGIN_DELAY[min(max(count, 1) - 1, len(LOGIN_DELAY) - 1)]
+    """Exponential backoff: 0/0/5/15/60 s from the 3rd consecutive failure."""
+    return LOGIN_BACKOFF[min(max(count, 1) - 1, len(LOGIN_BACKOFF) - 1)]
 
 
 # --- Daily AI quota (protects the owner's key: in-memory, resets on date change) ---
@@ -1147,14 +1150,27 @@ def _ua_hash(ua):
     return hashlib.sha256((ua or "").encode("utf-8")).hexdigest()
 
 
-def hash_password(salt, password):
-    """PBKDF2-HMAC-SHA256 hash with 200,000 iterations."""
-    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 200_000).hex()
+PBKDF2_ITERATIONS = store.PBKDF2_ITERATIONS
+
+
+def hash_password(salt, password, iterations=None):
+    """PBKDF2-HMAC-SHA256 hash (600,000 iterations by default, OWASP 2023)."""
+    iters = iterations or PBKDF2_ITERATIONS
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), iters).hex()
 
 
 def _legacy_hash_password(salt, password):
     """sha256(salt + password) used before the migration to pbkdf2."""
     return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+
+
+def _record_iterations(u):
+    """PBKDF2 iterations of a stored record (200k for hashes written before 600k)."""
+    try:
+        iters = int(u.get("iters") or 200_000)
+    except (TypeError, ValueError):
+        iters = 200_000
+    return max(1, iters)
 
 
 def verify_password(user_id, password):
@@ -1167,22 +1183,31 @@ def verify_password(user_id, password):
         return False
     algo = u.get("algo")
     if algo == "pbkdf2":
-        return hmac.compare_digest(u["hash"], hash_password(u["salt"], password))
+        return hmac.compare_digest(
+            u["hash"], hash_password(u["salt"], password, _record_iterations(u)))
     if not algo:
         return hmac.compare_digest(u["hash"], _legacy_hash_password(u["salt"], password))
     return False
 
 
 def new_token(user_id, ua=""):
-    """Create a session token valid for TOKEN_TTL and persist only its hash."""
+    """Create a session token and persist only its hash.
+
+    Two expiry clocks: `exp` slides on activity (TOKEN_TTL, 30 days) and
+    `absolute_exp` is a hard ceiling (TOKEN_ABSOLUTE_TTL, 90 days) that is
+    never extended, so a stolen token cannot be kept alive forever.
+    """
     with _TOKENS_LOCK:
         tokens = load_tokens()
         # Prune expired tokens
         now = time.time()
-        tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
+        tokens = {t: v for t, v in tokens.items()
+                  if v.get("exp", 0) > now
+                  and v.get("absolute_exp", now + 1) > now}
         tok = secrets.token_hex(24)
         tokens[_token_key(tok)] = {
             "user_id": user_id, "exp": now + TOKEN_TTL, "issued": now,
+            "absolute_exp": now + TOKEN_ABSOLUTE_TTL,
             "last_seen": now, "ua_hash": _ua_hash(ua),
         }
         save_tokens(tokens)
@@ -1193,7 +1218,9 @@ def auth_from_token(token, ua="", ip="", rid=""):
     """Return (user_id, error) for a session token and extend its expiry (sliding).
 
     Tokens are stored hashed; a legacy plaintext record is migrated to its hash
-    on first use. A User-Agent change is logged as `ua_changed` (never blocked).
+    on first use. The sliding expiry is capped by `absolute_exp`, which is set
+    once and never moved. A User-Agent change is logged as `ua_changed`
+    (never blocked).
 
     error is None, "session expired" or "invalid session".
     """
@@ -1208,10 +1235,18 @@ def auth_from_token(token, ua="", ip="", rid=""):
             tokens[key] = v
         if not v:
             return None, "invalid session"
-        if v.get("exp", 0) < time.time():
-            return None, "session expired"
         now = time.time()
-        v["exp"] = now + TOKEN_TTL  # sliding expiration
+        abs_exp = v.get("absolute_exp")
+        if not isinstance(abs_exp, (int, float)):
+            # Records written before the absolute ceiling existed: anchor it to
+            # `issued` so the token cannot gain a fresh 90 days on every use.
+            abs_exp = v.get("issued", now) + TOKEN_ABSOLUTE_TTL
+            v["absolute_exp"] = abs_exp
+        if now >= abs_exp or v.get("exp", 0) < now:
+            tokens.pop(key, None)
+            save_tokens(tokens)
+            return None, "session expired"
+        v["exp"] = min(now + TOKEN_TTL, abs_exp)  # sliding, never past the ceiling
         v["last_seen"] = now
         ua_h = _ua_hash(ua)
         if v.get("ua_hash") and v["ua_hash"] != ua_h:
@@ -1223,13 +1258,27 @@ def auth_from_token(token, ua="", ip="", rid=""):
 
 
 def revoke_token(token):
+    """Delete one session; return the user id it belonged to ("" when unknown)."""
     with _TOKENS_LOCK:
         tokens = load_tokens()
         key = _token_key(token)
-        if key in tokens or token in tokens:
-            tokens.pop(key, None)
-            tokens.pop(token, None)
+        rec = tokens.pop(key, None)
+        if rec is None:
+            rec = tokens.pop(token, None)
+        if rec is not None:
             save_tokens(tokens)
+        return rec.get("user_id", "") if isinstance(rec, dict) else ""
+
+
+def revoke_user_sessions(user_id):
+    """Delete every session of one user; return how many were revoked."""
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        kept = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
+        revoked = len(tokens) - len(kept)
+        if revoked:
+            save_tokens(kept)
+        return revoked
 
 
 def public_user(u):
@@ -1248,45 +1297,13 @@ def user_bk_dir(user_id):
     return store._bk_dir(user_id)
 
 
-# --- Password policy (fase 12): embedded list, no dependencies, no downloads ---
-COMMON_PASSWORDS = frozenset("""
-1234 12345 123456 1234567 12345678 123456789 1234567890 12345678910 111111 11111111
-000000 00000000 121212 123123 123321 112233 12121212 12344321 159753 654321 87654321
-666666 66666666 7777777 888888 88888888 999999 987654321 102030 101010 12341234
-password password1 password12 password123 password1234 password12345 password123456
-passwordpassword passw0rd p@ssw0rd p@ssword p@ssw0rd123 passw0rd123 passwd password1!
-password! password2 password123! motdepasse senha senha123 contrasena qwerty qwerty123
-qwerty1234 qwerty12345 qwertyui qwertyuiop qwerty12 qwe123 qweasd qweasdzxc asd123
-asdfgh asdfghjkl asdfghjkl; zxcvbnm zxcvbn 1q2w3e 1q2w3e4r 1q2w3e4r5t qazwsx qazwsxedc
-zaq12wsx 1qaz2wsx 1qazxsw2 abc123 abcd1234 abcdefg abcdefgh abc12345 a1b2c3 a123456
-iloveyou iloveyou1 ilovemyself love love123 lovely lovely123 amor tequiero angel
-angel123 baby baby123 babygirl babyboy boy boy123 girl girl123 princess princess1
-princess123 prince sunshine sunshine1 sunflower flower flower123 butterfly rainbow
-letmein letmein1 letmein123 welcome welcome1 welcome123 welcome1234 welkom benvenuto
-monkey monkey123 dragon dragon123 tiger tiger123 lion lion123 shadow shadow123
-master master1 master123 admin admin123 admin1234 administrator root root123 toor
-guest guest123 user user123 usuario test test123 testtest test1 demo demo123 demo1
-changeme changeme123 change default default123 login login123 access123 secret secret123
-trustno1 trustno123 freedom freedom123 whatever hello hello123 hello1 hola hola123
-football football1 football123 baseball basketball soccer soccer123 hockey hockey123
-jordan michael michael1 jennifer joshua ashley nicole daniel thomas matrix matrix123
-starwars starwars1 pokemon pokemon1 batman batman123 superman superman123 spiderman
-harley harley123 ranger hunter hunter123 buster killer george sexy sex sex123
-computer computer123 internet internet123 server server123 system system123 oracle
-mysql database windows linux apple android samsung google facebook twitter instagram
-whatsapp snapchat linkedin youtube amazon netflix spotify minecraft fortnite roblox
-cambridge cambridge1 english english123 ingles b2first b2first123 firstcertificate
-january february march april may june july august september october november december
-monday tuesday wednesday thursday friday saturday sunday summer winter spring autumn
-cookie cookies chocolate peanut banana orange apple123 cherry mango strawberry
-red123 blue123 green123 black123 white123 yellow silver golden diamond gold123
-money money123 rich rich123 forever forever123 nothing nothing123 nopassword
-asdf1234 123abc abc1234 abcd123 aaa111 q1w2e3r4 z1x2c3v4 555555 55555555 444444
-""".split())
+# --- Password policy (fase 12/24): embedded list, no dependencies, no downloads ---
+COMMON_PASSWORDS = store.COMMON_PASSWORDS
+PASSWORD_MIN_LEN = 10
 
 
 _PASSWORD_ERRORS = {
-    "password too short (min 8)": "Password must be at least 8 characters.",
+    "password too short (min 10)": "Password must be at least 10 characters.",
     "password too common": "Password is too common. Choose something harder to guess.",
     "password equals username": "Password must not be your username.",
 }
@@ -1294,13 +1311,30 @@ _PASSWORD_ERRORS = {
 
 def password_problem(name, password):
     """Return the error key when the password is too weak, else None."""
-    if not isinstance(password, str) or len(password) < 8:
-        return "password too short (min 8)"
+    if not isinstance(password, str) or len(password) < PASSWORD_MIN_LEN:
+        return "password too short (min 10)"
     if isinstance(name, str) and password.strip().lower() == name.strip().lower():
         return "password equals username"
     if password.strip().lower() in COMMON_PASSWORDS:
         return "password too common"
     return None
+
+
+def password_strength(password):
+    """Coarse strength signal for the registration notice: 0=weak, 1=fair, 2=strong."""
+    if not isinstance(password, str):
+        return 0
+    classes = sum((
+        any(ch.islower() for ch in password),
+        any(ch.isupper() for ch in password),
+        any(ch.isdigit() for ch in password),
+        any(not ch.isalnum() for ch in password),
+    ))
+    if len(password) >= 14 and classes >= 3:
+        return 2
+    if len(password) >= PASSWORD_MIN_LEN and classes >= 2:
+        return 1
+    return 0
 
 
 def register_user(name, password, color=None):
@@ -1309,8 +1343,8 @@ def register_user(name, password, color=None):
     name = name.strip() if isinstance(name, str) else ""
     if not name:
         return None, "name is empty"
-    if not isinstance(password, str) or len(password) < 8:
-        return None, "password too short (min 8)"
+    if not isinstance(password, str) or len(password) < PASSWORD_MIN_LEN:
+        return None, "password too short (min 10)"
     for u in users.values():
         if u.get("name", "").lower() == name.lower():
             return None, "username taken"
@@ -1325,15 +1359,29 @@ def register_user(name, password, color=None):
     store.create_user(uid, {
         "id": uid, "name": name, "salt": salt,
         "hash": hash_password(salt, password),
-        "algo": "pbkdf2",
+        "algo": "pbkdf2", "iters": PBKDF2_ITERATIONS,
         "color": color or "#1b2b48",
         "created": time.strftime("%Y-%m-%d %H:%M"),
     })
     return uid, None
 
 
+def _needs_rehash(u):
+    """True when a stored hash is legacy (sha256) or below the 600k iteration target."""
+    if not u.get("algo"):
+        return True
+    if u.get("algo") != "pbkdf2":
+        return False
+    return _record_iterations(u) < PBKDF2_ITERATIONS
+
+
 def login_user(name, password):
-    """Validate credentials and migrate legacy hashes to pbkdf2. Return (user_id, error)."""
+    """Validate credentials and migrate legacy hashes. Return (user_id, error).
+
+    Transparent upgrade: on a successful login, a sha256 hash or a PBKDF2 hash
+    below 600,000 iterations is re-hashed with the current parameters and saved,
+    so nobody is locked out and old hashes do not stay weak at rest.
+    """
     users = store.list_users()
     name = name.strip() if isinstance(name, str) else ""
     match = None
@@ -1347,10 +1395,12 @@ def login_user(name, password):
         hmac.compare_digest(_dummy_digest(), hash_password(DUMMY_SALT, pw))
         return None, "user not found"
     if verify_password(match["id"], password):
-        if not match.get("algo"):
+        if _needs_rehash(match):
             migrated = dict(match)
-            migrated["hash"] = hash_password(match["salt"], password)
+            migrated["salt"] = secrets.token_hex(8)
+            migrated["hash"] = hash_password(migrated["salt"], password)
             migrated["algo"] = "pbkdf2"
+            migrated["iters"] = PBKDF2_ITERATIONS
             store.create_user(match["id"], migrated)
         return match["id"], None
     return None, "wrong password"
@@ -1371,6 +1421,7 @@ def change_password(user_id, current, new_password):
     rec["salt"] = salt
     rec["hash"] = hash_password(salt, new_password)
     rec["algo"] = "pbkdf2"
+    rec["iters"] = PBKDF2_ITERATIONS
     store.create_user(user_id, rec)
     return None, 200
 
@@ -1397,7 +1448,7 @@ def migrate_legacy():
     store.create_user(uid, {
         "id": uid, "name": "Owner", "salt": salt,
         "hash": hash_password(salt, OWNER_PASSWORD),
-        "algo": "pbkdf2",
+        "algo": "pbkdf2", "iters": PBKDF2_ITERATIONS,
         "color": "#1b2b48", "created": time.strftime("%Y-%m-%d %H:%M"),
     })
     if os.path.exists(PROG_FILE):
@@ -1655,7 +1706,7 @@ raised), never what you wrote, answered or typed.</p>
 <h2>1. What we store</h2>
 <ul>
 <li><b>Account</b> — your chosen username and a salted, hashed password
-(PBKDF2-HMAC-SHA256, 200,000 iterations). The password itself is never stored.</li>
+(PBKDF2-HMAC-SHA256, 600,000 iterations). The password itself is never stored.</li>
 <li><b>Study progress</b> — your practice log, error log, plan and settings,
 as JSON files on this server (one folder per account).</li>
 <li><b>Session tokens, hashed</b> — sessions are stored as
@@ -1782,22 +1833,53 @@ not claim certified compliance with any regulation.</p>
 
 
 # ---------------------------------------------------------------------------
-# Audit log (fase 12): append-only JSON lines with the auth events.
-# NEVER stores tokens, passwords or hashes. Rotates at 5 MB → audit.log.1.
+# Audit log (fase 12/24): append-only, hash-chained JSON lines.
+# NEVER stores tokens, passwords, hashes or student content. Every line carries
+# `prev` = sha256 of the previous raw line (first line: 64 zeros), so editing or
+# deleting a line breaks the chain. tools/verify_audit.py checks it.
+# Rotates at 5 MB → audit.log.1; the chain continues across the rotation.
 # ---------------------------------------------------------------------------
 _AUDIT_LOCK = threading.Lock()
 AUDIT_MAX_BYTES = 5 * 1024 * 1024
+AUDIT_GENESIS = "0" * 64
 
 
 def _audit_file():
     return os.path.join(DATA_DIR, "audit.log")
 
 
-def _audit(event, user="", ip="", rid="", detail=None):
-    """Append one event line to data/audit.log (0600). Best-effort: never raises.
+def _audit_tail_hash(path):
+    """sha256 hex of the last complete line of `path`, or None when empty/missing.
 
-    `detail` may carry scalar metadata only (lengths, reason slugs, statuses).
-    Callers must never pass content: the student's text is not logged.
+    Reads only the tail (64 KB), so the cost does not grow with the log size.
+    """
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            f.seek(max(0, size - 65536))
+            tail = f.read()
+    except OSError:
+        return None
+    lines = [ln for ln in tail.split(b"\n") if ln.strip()]
+    if not lines:
+        return None
+    return hashlib.sha256(lines[-1]).hexdigest()
+
+
+def _audit_prev(path):
+    """`prev` for the next line: tail of the current file, else of the rotated one."""
+    return (_audit_tail_hash(path)
+            or _audit_tail_hash(path + ".1")
+            or AUDIT_GENESIS)
+
+
+def _audit(event, user="", ip="", rid="", detail=None):
+    """Append one hash-chained event line to data/audit.log (0600).
+
+    Best-effort: never raises. `detail` may carry scalar metadata only
+    (lengths, reason slugs, statuses). Callers must never pass content or
+    secrets: the student's text is not logged.
     """
     record = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -1811,7 +1893,6 @@ def _audit(event, user="", ip="", rid="", detail=None):
             if k in record or not isinstance(v, (str, int, float, bool)):
                 continue
             record[k] = v[:120] if isinstance(v, str) else v
-    line = json.dumps(record, ensure_ascii=False)
     try:
         with _AUDIT_LOCK:
             path = _audit_file()
@@ -1820,6 +1901,8 @@ def _audit(event, user="", ip="", rid="", detail=None):
                     os.replace(path, path + ".1")
             except OSError:
                 pass
+            record["prev"] = _audit_prev(path)
+            line = json.dumps(record, ensure_ascii=False)
             fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
             try:
                 os.write(fd, (line + "\n").encode("utf-8"))
@@ -1928,29 +2011,77 @@ def _validate_progress(data):
 
 
 # ---------------------------------------------------------------------------
+# /.well-known/security.txt (RFC 9116)
+# ---------------------------------------------------------------------------
+PUBLIC_BASE = os.environ.get("B2_PUBLIC_URL", "https://vps-server.tail40095b.ts.net").rstrip("/")
+SECURITY_CONTACT_PLACEHOLDER = "TODO_OWNER_EMAIL"
+
+
+def security_txt():
+    """RFC 9116 security.txt body.
+
+    There is no verified mailbox on this project, so the Contact lines are the
+    GitHub advisory form (a real, working channel) plus the documented
+    TODO_OWNER_EMAIL placeholder that the owner must replace before claiming
+    a mail contact. Expires is always in the future (180 days).
+    """
+    expires = time.strftime("%Y-%m-%dT%H:%M:%S.000Z",
+                            time.gmtime(time.time() + 180 * 24 * 3600))
+    return (
+        "Contact: https://github.com/Juan-Martin-Cerezo/b2first-tracker/security/advisories/new\n"
+        f"Contact: mailto:{SECURITY_CONTACT_PLACEHOLDER}\n"
+        f"Expires: {expires}\n"
+        "Preferred-Languages: en, es\n"
+        f"Canonical: {PUBLIC_BASE}/.well-known/security.txt\n"
+        f"Policy: {PUBLIC_BASE}/privacy\n"
+    )
+
+
+# ---------------------------------------------------------------------------
 # HTTP handler
 # ---------------------------------------------------------------------------
+PERMISSIONS_NONE = "geolocation=(), camera=(), microphone=()"
+PERMISSIONS_MIC = "geolocation=(), camera=(), microphone=(self)"
+
 SECURITY_HEADERS = {
-    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
     "Cross-Origin-Opener-Policy": "same-origin",
     "Cross-Origin-Resource-Policy": "same-origin",
     "X-Permitted-Cross-Domain-Policies": "none",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
-    # microphone=(self): the speaking studio captures audio in this tab only.
-    "Permissions-Policy": "geolocation=(), camera=(), microphone=(self)",
-    # connect-src also allows wss://generativelanguage.googleapis.com explicitly:
-    # the S3 examiner talks to Gemini Live directly with an ephemeral token, so
-    # the socket must reach Google and nothing else (no wildcard, no *).
+    # microphone=(self) is only advertised on the tracker page, which is the one
+    # place the speaking studio captures audio. Everything else gets the minimum.
+    "Permissions-Policy": PERMISSIONS_NONE,
+    # 'unsafe-inline' is still required by the single-file UI (197 inline event
+    # handlers); 'unsafe-eval' is not present. object-src/base-uri close the
+    # plugin and <base> injection paths. See SECURITY.md §"Residual risks".
     "Content-Security-Policy": (
         "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
         "script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; "
         "connect-src 'self' wss://generativelanguage.googleapis.com; "
-        "frame-ancestors 'none'; "
+        "object-src 'none'; frame-ancestors 'none'; "
         "base-uri 'none'; form-action 'self'"
     ),
 }
+
+
+def _security_headers(path):
+    """Return the security headers for one request path.
+
+    `microphone=(self)` is only granted to the tracker itself; every other
+    response advertises no device capability at all.
+    """
+    headers = dict(SECURITY_HEADERS)
+    if (path or "").split("?", 1)[0] in ("/", "/index.html"):
+        headers["Permissions-Policy"] = PERMISSIONS_MIC
+    return headers
+
+
+def _server_timing(t0):
+    """`Server-Timing` value with the internal processing time in milliseconds."""
+    return "app;dur=%.1f" % max(0.0, (time.time() - t0) * 1000.0)
 
 
 def _allowed_hosts():
@@ -1995,7 +2126,9 @@ def _bad_path_code(raw_target):
         candidate = decoded
     if "//" in path or "//" in candidate:
         return 400
-    for seg in candidate.split("/"):
+    for i, seg in enumerate(candidate.split("/")):
+        if i == 1 and seg == ".well-known":
+            continue                         # RFC 9116 lives under a dot folder
         if seg not in ("", ".") and seg.startswith("."):
             return 403                       # hidden files: no existence oracle
     return None
@@ -2206,9 +2339,10 @@ class H(BaseHTTPRequestHandler):
             # Every 405 advertises the supported methods, wherever it comes from.
             extra.setdefault("Allow", ALLOW_HEADER)
         self.send_response(code)
-        for k, v in SECURITY_HEADERS.items():
+        for k, v in _security_headers(self.path).items():
             self.send_header(k, v)
         self.send_header("X-Request-Id", self._rid)
+        self.send_header("Server-Timing", _server_timing(self._t0))
         if self.path.startswith("/api/") and "Cache-Control" not in extra:
             self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Type", ctype)
@@ -2239,9 +2373,10 @@ class H(BaseHTTPRequestHandler):
         """304 with validators and no body (no Content-Length, so nothing is sent)."""
         self._status = 304
         self.send_response(304)
-        for k, v in SECURITY_HEADERS.items():
+        for k, v in _security_headers(self.path).items():
             self.send_header(k, v)
         self.send_header("X-Request-Id", self._rid)
+        self.send_header("Server-Timing", _server_timing(self._t0))
         self.send_header("ETag", etag)
         self.send_header("Last-Modified", last_modified)
         self.send_header("Vary", "Accept-Encoding")
@@ -2301,6 +2436,11 @@ class H(BaseHTTPRequestHandler):
         if _rate(key, limit, window_s):
             return False
         _rate_stat(kind)
+        if kind == "user":
+            # No personal data, no content: just who hit the bucket and where.
+            uid = key.split(":", 1)[1] if ":" in key else ""
+            _audit("rate_limited_by_user", uid, _real_ip(self), self._rid,
+                   {"path": self.path.split("?", 1)[0][:120]})
         self._drain()
         retry = _retry_after(key, window_s)
         self._send_json(429, {"error": "too many requests", "retry_after": retry},
@@ -2356,12 +2496,23 @@ class H(BaseHTTPRequestHandler):
         if bad:
             self._reject(bad, {"error": "invalid path" if bad == 400 else "forbidden"})
             return
-        if self._clen() > MAX_BODY_BYTES:
-            # Reject before reading the body; closing stops the upload.
-            self._reject(413, {"error": "payload too large"})
-            return
 
         path = unquote(self.path.split("?")[0])
+        clen = self._clen()
+
+        # Body ceilings are decided from Content-Length before a single byte of
+        # the body is read (no drain, no allocation): closing the connection is
+        # what stops the upload.
+        if clen > MAX_BODY_BYTES:
+            self._reject(413, {"error": "payload too large"})
+            return
+        if path == "/api/speaking/pa" and clen > SPK_PA_MAX_BODY:
+            _audit("pa_rejected", "", _real_ip(self), self._rid, {"reason": "too_large"})
+            self._reject(413, {"error": "audio too large"})
+            return
+        if path == "/api/progress" and self.command == "PUT" and clen > PROGRESS_MAX_BYTES:
+            self._reject(413, {"error": "progress too large"})
+            return
 
         # Rate limits: authenticated traffic is bucketed by user_id, everything
         # else by IP. A shared CGNAT/school IP therefore cannot 429 a logged-in
@@ -2383,6 +2534,15 @@ class H(BaseHTTPRequestHandler):
         # CORS is closed: answer preflights without any permissive header.
         if self.command == "OPTIONS":
             self._send(204, b"", "text/plain")
+            return
+
+        # RFC 9116 vulnerability-disclosure metadata (public, no auth).
+        if path == "/.well-known/security.txt":
+            if self.command not in ("GET", "HEAD"):
+                self._send(405, b"method not allowed", "text/plain")
+                return
+            self._send(200, security_txt().encode("utf-8"),
+                       "text/plain; charset=utf-8", {"Cache-Control": "public, max-age=3600"})
             return
 
         # Tracker (index.html) — cached, revalidated by ETag so a redeploy is
@@ -2546,7 +2706,7 @@ class H(BaseHTTPRequestHandler):
             if err:
                 code, msg = {
                     "username taken": (409, "That username is taken."),
-                    "password too short (min 8)": (400, "Password must be at least 8 characters."),
+                    "password too short (min 10)": (400, "Password must be at least 10 characters."),
                     "name is empty": (400, "Username is required."),
                 }.get(err, (400, err))
                 self._send_json(code, {"error": msg})
@@ -2554,8 +2714,10 @@ class H(BaseHTTPRequestHandler):
             _audit("register", req.get("name", ""), _real_ip(self), self._rid)
             tok = new_token(uid, self.headers.get("User-Agent", ""))
             u = store.get_user(uid)
-            body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
-                              ensure_ascii=False).encode("utf-8")
+            body = json.dumps({
+                "id": uid, "name": u["name"], "color": u["color"], "token": tok,
+                "strength": password_strength(req.get("password", "")),
+            }, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
             return
 
@@ -2604,7 +2766,9 @@ class H(BaseHTTPRequestHandler):
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
                 self._send(400, b"invalid JSON", "text/plain"); return
-            revoke_token(req.get("token", ""))
+            revoked_uid = revoke_token(req.get("token", ""))
+            _audit("session_revoked", revoked_uid, _real_ip(self), self._rid,
+                   {"reason": "logout"})
             self._send(200, b"ok", "text/plain")
             return
 
@@ -2619,13 +2783,13 @@ class H(BaseHTTPRequestHandler):
             self._send(200, body, "application/json; charset=utf-8")
             return
 
-        # Password change (Bearer auth). Invalidates every other session of the user.
+        # Password change (Bearer auth). Revokes every session, including this one,
+        # and mints a replacement token for the caller.
         if path == "/api/password":
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
             if self._rate_limited("password:" + _real_ip(self), 5, 3600):
                 return
-            tok = self._bearer()
             uid, auth_err = self._auth()
             if not uid:
                 self._send_json(401, {"error": auth_err or "invalid session"})
@@ -2640,16 +2804,18 @@ class H(BaseHTTPRequestHandler):
             if err:
                 self._send(code, json.dumps({"error": err}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            # Keep only the current session: a leaked password must not keep old sessions alive.
-            keep_key = _token_key(tok)
-            with _TOKENS_LOCK:
-                tokens = load_tokens()
-                tokens = {t: v for t, v in tokens.items()
-                          if t in (keep_key, tok) or v.get("user_id") != uid}
-                save_tokens(tokens)
+            # A password change revokes EVERY session of the user, including the
+            # one making the request: a leaked password must not keep any old
+            # token alive. A fresh token is minted and returned in the same
+            # response, so this client is not left holding a dead credential.
+            revoked = revoke_user_sessions(uid)
+            fresh = new_token(uid, self.headers.get("User-Agent", ""))
             u = store.get_user(uid)
             _audit("password_change", u.get("name", uid) if u else uid, _real_ip(self), self._rid)
-            self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json; charset=utf-8")
+            _audit("session_revoked", uid, _real_ip(self), self._rid,
+                   {"reason": "password_change", "count": revoked})
+            self._send(200, json.dumps({"ok": True, "token": fresh}).encode("utf-8"),
+                       "application/json; charset=utf-8")
             return
 
         # Account overview: uid, creation date, data usage and today's AI quota (auth)
@@ -2683,6 +2849,8 @@ class H(BaseHTTPRequestHandler):
                     self._send_json(401, {"error": "Wrong password."}); return
                 u = store.get_user(uid)
                 _audit("account_delete", u.get("name", uid) if u else uid, _real_ip(self), self._rid)
+                _audit("session_revoked", uid, _real_ip(self), self._rid,
+                       {"reason": "account_delete"})
                 delete_user(uid)
                 self._send_json(200, {"ok": True})
                 return
@@ -2764,8 +2932,7 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, body, "application/json; charset=utf-8")
             elif self.command == "PUT":
                 if self._clen() > PROGRESS_MAX_BYTES:
-                    self._drain()
-                    self._send_json(413, {"error": "progress too large"}); return
+                    self._reject(413, {"error": "progress too large"}); return
                 if self._rate_limited("progress:" + user_id, 60, 60):
                     return
                 try:
@@ -2857,6 +3024,8 @@ class H(BaseHTTPRequestHandler):
                                       "reason": mint_err})
                 return
             store.speaking_add(uid, _spk_today(), 0, 1)
+            _audit("token_minted", uid, _real_ip(self), self._rid,
+                   {"part": part, "role": role})
             # `instruction` is the examiner's own system prompt (not a secret):
             # the browser has to send it in the setup message itself.
             instruction = (speaking_prompts.PARTNER_SYSTEM if role == "partner"
@@ -3070,10 +3239,6 @@ class H(BaseHTTPRequestHandler):
                 self._drain()
                 self._send_json(503, {"error": "speech_not_configured"})
                 return
-            if self._clen() > SPK_PA_MAX_BODY:
-                self._drain()
-                self._send_json(413, {"error": "audio too large"})
-                return
             if self._rate_limited("spk_pa:" + uid, SPK_PA_RATE_PER_MIN, 60):
                 return
             raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
@@ -3088,23 +3253,33 @@ class H(BaseHTTPRequestHandler):
             fmt = req.get("format")
             fmt = fmt.strip().lower() if isinstance(fmt, str) else ""
             if fmt not in ("wav", "ogg"):
+                _audit("pa_rejected", uid, _real_ip(self), self._rid,
+                       {"reason": "format"})
                 self._send_json(422, {"error": "unsupported format"})
                 return
             audio_b64 = req.get("audio_b64")
             if not isinstance(audio_b64, str) or not audio_b64:
+                _audit("pa_rejected", uid, _real_ip(self), self._rid,
+                       {"reason": "missing_audio"})
                 self._send_json(422, {"error": "audio_b64 required"})
                 return
             if len(audio_b64) > SPK_PA_MAX_B64:
+                _audit("pa_rejected", uid, _real_ip(self), self._rid,
+                       {"reason": "too_large"})
                 self._send_json(413, {"error": "audio too large"})
                 return
             try:
                 audio = base64.b64decode(audio_b64, validate=True)
             except (ValueError, binascii.Error):
+                _audit("pa_rejected", uid, _real_ip(self), self._rid,
+                       {"reason": "invalid_base64"})
                 self._send_json(422, {"error": "invalid base64"})
                 return
             ok, reason = speech.validate_audio(audio, fmt)
             if not ok:
                 del audio
+                _audit("pa_rejected", uid, _real_ip(self), self._rid,
+                       {"reason": "invalid_audio"})
                 self._send_json(422, {"error": "invalid audio", "reason": reason})
                 return
             ref_text = req.get("ref_text")
