@@ -37,6 +37,7 @@ import ipaddress
 import traceback
 from collections import deque
 from datetime import date, timedelta
+from email.utils import formatdate, parsedate_to_datetime
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
@@ -80,8 +81,20 @@ B2_HOST = os.environ.get("B2_HOST", "127.0.0.1")
 # Optional comma-separated allowlist of Host headers. Empty = no check.
 B2_ALLOWED_HOSTS = os.environ.get("B2_ALLOWED_HOSTS", "")
 
-CONNECTION_LIMIT = 200                                  # simultaneous sockets (hard cap)
+def _env_int(name, default):
+    """Read an integer env var, falling back to `default` when absent or invalid."""
+    try:
+        return int((os.environ.get(name) or "").strip() or default)
+    except (TypeError, ValueError):
+        return default
+
+
+CONNECTION_LIMIT = _env_int("B2_CONNECTION_LIMIT", 512)  # simultaneous sockets (hard cap)
 _CONN_SEM = threading.BoundedSemaphore(CONNECTION_LIMIT)
+REQUEST_QUEUE_SIZE = _env_int("B2_REQUEST_QUEUE_SIZE", 256)  # listen() backlog
+# Disables the static payload cache (compressed bodies + ETag/304). Only for
+# measuring the uncached baseline; production always runs with the cache on.
+B2_NO_CACHE = (os.environ.get("B2_NO_CACHE") or "").strip() in ("1", "true", "True")
 SOCKET_TIMEOUT = 15                                     # seconds (slowloris cut-off)
 MAX_URI_LEN = 2048                                      # request-target characters
 MAX_HEADERS = 60                                        # request header count
@@ -179,13 +192,37 @@ SPK_REPORT_CACHE_TTL = 3600          # seconds a replay stays valid
 _RATE_LOCK = threading.Lock()
 _RATE = {}  # {key: (deque of timestamps, window_s)}
 _AI_RATE = _RATE  # tests reset rate state through S._AI_RATE.clear()
+_RATE_STATS = {"user": 0, "ip": 0}  # cumulative 429s, exposed by /api/metrics
+
+# Per-user buckets for authenticated API traffic (a shared school/CGNAT IP must
+# never rate-limit 50 students as if they were one abuser). Anonymous traffic
+# and the credential endpoints stay IP-bucketed.
+RATE_USER_API = _env_int("B2_RATE_USER_API", 600)   # requests/min per user
+RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 30)      # login+register+password per IP/min
+RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
+AUTH_RATE_PATHS = ("/api/login", "/api/register", "/api/password")
+
+
+def _rate_stat(kind):
+    """Count one rejected request in the given bucket ("user" or "ip")."""
+    with _RATE_LOCK:
+        _RATE_STATS[kind] = _RATE_STATS.get(kind, 0) + 1
+
+
+def rate_stats():
+    """Cumulative 429 counts by bucket since process start."""
+    with _RATE_LOCK:
+        return dict(_RATE_STATS)
 
 
 def _rate(key, limit, window_s):
     """Sliding-window rate limit: True = allowed, False = over the limit.
 
+    A limit <= 0 disables the bucket (used to measure raw capacity).
     Old entries are pruned on every check, so the store only holds live hits.
     """
+    if limit <= 0:
+        return True
     now = time.time()
     with _RATE_LOCK:
         for k, (dq, win) in list(_RATE.items()):
@@ -474,6 +511,9 @@ def build_metrics():
     minutes, tokens = _spk_metrics_today()
     out["speaking_minutes_today"] = minutes
     out["speaking_tokens_minted"] = tokens
+    stats = rate_stats()
+    out["rate_limited_by_user"] = stats.get("user", 0)
+    out["rate_limited_by_ip"] = stats.get("ip", 0)
     return out
 
 
@@ -1963,6 +2003,82 @@ def _bad_path_code(raw_target):
 
 _LOG_LOCK = threading.Lock()  # keeps one access-log line atomic under concurrency
 
+# ---------------------------------------------------------------------------
+# Static payload cache (fase 23): compress once, validate by (path, mtime, size)
+# ---------------------------------------------------------------------------
+# Serving 434 KB of index.html re-gzipped on every request burned ~15-20 ms of
+# CPU per visit on the Pi. The cache stores the raw and gzipped bodies plus the
+# ETag/Last-Modified validators. A touch of the file changes mtime_ns, so the
+# next request rebuilds the entry: no restart, no TTL.
+_STATIC_LOCK = threading.Lock()
+_STATIC_CACHE = {}  # {full_path: {key, raw, gz, etag, last_modified, mtime}}
+
+
+def _compressible(ctype):
+    """True for text-shaped payloads worth gzipping (skip already-compressed ones)."""
+    return not ctype.startswith(("image/", "audio/", "video/",
+                                 "application/zip", "application/pdf"))
+
+
+def _http_date(ts):
+    return formatdate(ts, usegmt=True)
+
+
+def _etag_matches(header, etag):
+    """True when If-None-Match lists `etag` (weak tags and * included)."""
+    if not header:
+        return False
+    for tag in header.split(","):
+        tag = tag.strip()
+        if tag == "*":
+            return True
+        if tag.startswith("W/"):
+            tag = tag[2:].strip()
+        if tag == etag:
+            return True
+    return False
+
+
+def _if_modified_since_hit(header, mtime):
+    """True when If-Modified-Since is not older than the file mtime."""
+    if not header:
+        return False
+    try:
+        dt = parsedate_to_datetime(header)
+        return dt is not None and dt.timestamp() >= int(mtime)
+    except (TypeError, ValueError, OverflowError, OSError):
+        return False
+
+
+def _static_entry(full, ctype):
+    """Return the cached (raw, gzip, validators) entry, rebuilding it on change."""
+    st = os.stat(full)
+    key = (st.st_mtime_ns, st.st_size, st.st_ino)
+    with _STATIC_LOCK:
+        entry = _STATIC_CACHE.get(full)
+        if entry and entry["key"] == key:
+            return entry
+    with open(full, "rb") as f:
+        raw = f.read()
+    gz = gzip.compress(raw, 6) if len(raw) >= 1024 and _compressible(ctype) else None
+    # The hash covers the served bytes *and* the file identity: a same-mtime
+    # redeploy gets a new ETag, and a bare `touch` invalidates client caches.
+    h = hashlib.sha256()
+    h.update(gz if gz is not None else raw)
+    h.update(b"\0")
+    h.update(f"{st.st_mtime_ns}:{st.st_size}".encode("ascii"))
+    entry = {
+        "key": key,
+        "raw": raw,
+        "gz": gz,
+        "etag": '"' + h.hexdigest()[:16] + '"',
+        "last_modified": _http_date(st.st_mtime),
+        "mtime": st.st_mtime,
+    }
+    with _STATIC_LOCK:
+        _STATIC_CACHE[full] = entry
+    return entry
+
 
 class H(BaseHTTPRequestHandler):
     # No version banner: the default handler appends the Python version, which tells an
@@ -1988,13 +2104,17 @@ class H(BaseHTTPRequestHandler):
         raise AttributeError(name)
 
     def handle(self):
-        """Cap simultaneous connections; answer 503 when the semaphore is exhausted."""
+        """Cap simultaneous connections; answer 503 when the semaphore is exhausted.
+
+        Non-blocking acquire: an overloaded server fails fast with Retry-After
+        instead of parking the request thread until a slot frees up.
+        """
         if not _CONN_SEM.acquire(blocking=False):
             self._begin()
             self.close_connection = True
             try:
-                self._send_json(503, {"error": "busy", "retry_after": 5},
-                                {"Retry-After": "5"})
+                self._send_json(503, {"error": "busy", "retry_after": 1},
+                                {"Retry-After": "1"})
             except OSError:
                 pass
             finally:
@@ -2015,6 +2135,7 @@ class H(BaseHTTPRequestHandler):
         self._rid = secrets.token_hex(4)
         self._status = 0
         self._t0 = time.time()
+        self._auth_result = None   # refreshed per request, never reused
         if getattr(self, "path", None) is None:
             self.path = ""
         if not getattr(self, "command", None):
@@ -2077,49 +2198,109 @@ class H(BaseHTTPRequestHandler):
         except OSError:
             pass
 
-    def _send(self, code, body, ctype, extra=None):
-        """Helper: response with security headers + Content-Length.
-
-        Compresses compressible payloads when the client advertises gzip: index.html is
-        342 KB raw and ~83 KB gzipped, so this is the single biggest win for slow phones.
-        """
+    def _send_raw(self, code, body, ctype, extra=None):
+        """Write a response as-is (callers that pre-encode pass Content-Encoding)."""
         self._status = code
+        extra = dict(extra or {})
         if code == 405:
             # Every 405 advertises the supported methods, wherever it comes from.
-            extra = dict(extra or {})
             extra.setdefault("Allow", ALLOW_HEADER)
-        enc = None
-        if (len(body) >= 1024 and code not in (204, 304)
-                and not ctype.startswith(("image/", "audio/", "video/", "application/zip"))
-                and "gzip" in (self.headers.get("Accept-Encoding") or "").lower()):
-            body = gzip.compress(body, 6)
-            enc = "gzip"
         self.send_response(code)
         for k, v in SECURITY_HEADERS.items():
             self.send_header(k, v)
         self.send_header("X-Request-Id", self._rid)
-        if self.path.startswith("/api/"):
+        if self.path.startswith("/api/") and "Cache-Control" not in extra:
             self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Type", ctype)
-        if enc:
-            self.send_header("Content-Encoding", "gzip")
-            self.send_header("Vary", "Accept-Encoding")
         self.send_header("Content-Length", str(len(body)))
-        if extra:
-            for k, v in extra.items():
-                self.send_header(k, v)
+        for k, v in extra.items():
+            self.send_header(k, v)
         self.end_headers()
-        self.wfile.write(body)
+        if body:
+            self.wfile.write(body)
+
+    def _send(self, code, body, ctype, extra=None):
+        """Helper: response with security headers + Content-Length.
+
+        Compresses compressible payloads when the client advertises gzip. Dynamic
+        bodies stay on this path; static files go through _serve_cached_static so
+        the compressed bytes and validators are computed once.
+        """
+        extra = dict(extra or {})
+        if (len(body) >= 1024 and code not in (204, 304)
+                and _compressible(ctype)
+                and "gzip" in (self.headers.get("Accept-Encoding") or "").lower()):
+            body = gzip.compress(body, 6)
+            extra.setdefault("Content-Encoding", "gzip")
+            extra.setdefault("Vary", "Accept-Encoding")
+        self._send_raw(code, body, ctype, extra)
+
+    def _send_not_modified(self, etag, last_modified):
+        """304 with validators and no body (no Content-Length, so nothing is sent)."""
+        self._status = 304
+        self.send_response(304)
+        for k, v in SECURITY_HEADERS.items():
+            self.send_header(k, v)
+        self.send_header("X-Request-Id", self._rid)
+        self.send_header("ETag", etag)
+        self.send_header("Last-Modified", last_modified)
+        self.send_header("Vary", "Accept-Encoding")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+
+    def _serve_cached_static(self, full, ctype, extra=None):
+        """Serve a static file from the in-memory cache with ETag/Last-Modified.
+
+        Revalidated by (mtime_ns, size, inode), so `touch` invalidates on the next
+        request. If-None-Match / If-Modified-Since answer 304 without a body and
+        without recompressing. B2_NO_CACHE=1 bypasses the cache for baseline runs.
+        """
+        extra = dict(extra or {})
+        extra.setdefault("Cache-Control", "no-cache")
+        if B2_NO_CACHE:
+            try:
+                with open(full, "rb") as f:
+                    body = f.read()
+            except OSError:
+                self._send(404, b"not found", "text/plain")
+                return
+            self._send(200, body, ctype, extra)
+            return
+        try:
+            entry = _static_entry(full, ctype)
+        except OSError:
+            self._send(404, b"not found", "text/plain")
+            return
+        inm = self.headers.get("If-None-Match")
+        if _etag_matches(inm, entry["etag"]) or (
+                not inm and _if_modified_since_hit(
+                    self.headers.get("If-Modified-Since"), entry["mtime"])):
+            self._send_not_modified(entry["etag"], entry["last_modified"])
+            return
+        extra["ETag"] = entry["etag"]
+        extra["Last-Modified"] = entry["last_modified"]
+        extra["Vary"] = "Accept-Encoding"
+        if (entry["gz"] is not None
+                and "gzip" in (self.headers.get("Accept-Encoding") or "").lower()):
+            extra["Content-Encoding"] = "gzip"
+            self._send_raw(200, entry["gz"], ctype, extra)
+        else:
+            self._send_raw(200, entry["raw"], ctype, extra)
 
     def _send_json(self, code, obj, extra=None):
         """Helper: JSON response."""
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
         self._send(code, body, "application/json; charset=utf-8", extra)
 
-    def _rate_limited(self, key, limit, window_s):
-        """Apply _rate() and answer 429 + Retry-After when the limit is exceeded."""
+    def _rate_limited(self, key, limit, window_s, kind="ip"):
+        """Apply _rate() and answer 429 + Retry-After when the limit is exceeded.
+
+        `kind` feeds the cumulative counters exposed by /api/metrics, so the
+        operator can tell a shared-IP burst from a single abusive account.
+        """
         if _rate(key, limit, window_s):
             return False
+        _rate_stat(kind)
         self._drain()
         retry = _retry_after(key, window_s)
         self._send_json(429, {"error": "too many requests", "retry_after": retry},
@@ -2146,9 +2327,18 @@ class H(BaseHTTPRequestHandler):
         return (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
 
     def _auth(self):
-        """Return (user_id, error) from the Authorization header."""
-        return auth_from_token(self._bearer(), self.headers.get("User-Agent", ""),
-                               _real_ip(self), self._rid)
+        """Return (user_id, error) from the Authorization header (once per request).
+
+        The router authenticates early to pick the rate-limit bucket, so handlers
+        later in the same request reuse the result instead of re-reading tokens.
+        """
+        cached = getattr(self, "_auth_result", None)
+        if cached is not None:
+            return cached
+        result = auth_from_token(self._bearer(), self.headers.get("User-Agent", ""),
+                                 _real_ip(self), self._rid)
+        self._auth_result = result
+        return result
 
     def _handle(self):
         """Single router (used by GET and HEAD)."""
@@ -2173,24 +2363,32 @@ class H(BaseHTTPRequestHandler):
 
         path = unquote(self.path.split("?")[0])
 
-        # Global per-IP limit for the whole API (health is excluded on purpose).
+        # Rate limits: authenticated traffic is bucketed by user_id, everything
+        # else by IP. A shared CGNAT/school IP therefore cannot 429 a logged-in
+        # student because a classmate is hammering the API. Credential endpoints
+        # stay IP-bucketed (anti-abuse) with a tighter ceiling.
         if path.startswith("/api/") and path != "/api/health":
-            if self._rate_limited("api:" + _real_ip(self), 300, 60):
-                return
+            ip = _real_ip(self)
+            if path in AUTH_RATE_PATHS:
+                if self._rate_limited("ip-auth:" + ip, RATE_IP_AUTH, 60, "ip"):
+                    return
+            else:
+                uid, _auth_err = self._auth()
+                if uid:
+                    if self._rate_limited("user-api:" + uid, RATE_USER_API, 60, "user"):
+                        return
+                elif self._rate_limited("ip-anon:" + ip, RATE_IP_ANON, 60, "ip"):
+                    return
 
         # CORS is closed: answer preflights without any permissive header.
         if self.command == "OPTIONS":
             self._send(204, b"", "text/plain")
             return
 
-        # Tracker (index.html) — revalidate so a redeploy is picked up immediately.
+        # Tracker (index.html) — cached, revalidated by ETag so a redeploy is
+        # picked up on the next request and an unchanged file costs a 304.
         if path in ("/", "/index.html"):
-            try:
-                body = open(TRACKER, "rb").read()
-                self._send(200, body, "text/html; charset=utf-8",
-                           {"Cache-Control": "no-cache"})
-            except OSError:
-                self._send(404, b"tracker not found", "text/plain")
+            self._serve_cached_static(TRACKER, "text/html; charset=utf-8")
             return
 
         # Privacy policy (public HTML page, same look as the app)
@@ -2245,9 +2443,7 @@ class H(BaseHTTPRequestHandler):
                 self._send(404, b"not found", "text/plain")
                 return
             ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
-            with open(full, "rb") as f:
-                data = f.read()
-            self._send(200, data, ctype)
+            self._serve_cached_static(full, ctype)
             return
 
         # Catalog JSON (consumed by the LIBROS tab of the tracker)
@@ -3218,8 +3414,19 @@ class H(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------------------
 # Startup
 # ---------------------------------------------------------------------------
+class B2HTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer tuned for hundreds of students on one Pi 5.
+
+    daemon_threads=True so a restart never waits on idle keep-alive threads;
+    a 256-deep accept backlog absorbs bursts above the 512 live-connection cap.
+    """
+    daemon_threads = True
+    request_queue_size = REQUEST_QUEUE_SIZE
+
+
 if __name__ == "__main__":
     if not _is_demo():
         migrate_legacy()
-    print(f"B2First portal at http://{B2_HOST}:{PORT} (root={ROOT})")
-    ThreadingHTTPServer((B2_HOST, PORT), H).serve_forever()
+    srv = B2HTTPServer((B2_HOST, PORT), H)
+    print(f"B2First portal at http://{B2_HOST}:{srv.server_address[1]} (root={ROOT})")
+    srv.serve_forever()

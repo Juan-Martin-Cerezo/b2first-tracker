@@ -15,7 +15,8 @@
   `Juan-Martin-Cerezo/b2first-tracker`
 - **HEAD at handoff:** `f65c1c8` (docs: problem/audience rewrite + speaking plan)
 - **Live URL:** `https://vps-server.tail40095b.ts.net` (Tailscale Funnel → `127.0.0.1:8088`)
-- **Host:** Raspberry Pi, 4 GB, ARM, at home. Runs under systemd. No cloud, no database.
+- **Host:** Raspberry Pi 5, **8 GB** (`free -m`: 8062 MB total; `nproc`: 4), ARM, at home. Runs
+  under systemd. No cloud, no database.
 - **Context:** built for the Devpost hackathon "Build Your First AI App 2026". The submission
   video is **not recorded yet** and the Devpost form is **not submitted yet** — see §12.
 
@@ -136,7 +137,7 @@ names — a custom domain requires Cloudflare Tunnel instead (§12.1).
 
 ---
 
-## 5. Testing — 24 suites
+## 5. Testing — 30 suites
 
 Every file is a standalone script; there is no pytest. `tests/helpers.py` registers a throwaway
 `test-runner` account (override with `B2_TEST_USER` / `B2_TEST_PASS`) and logs in through the API,
@@ -146,16 +147,17 @@ owner's password, and rotating it turned the suite red.
 ```bash
 cd tests
 uv run --with playwright python test_final.py     # main UI suite (needs the live service)
+uv run --with httpx python test_capacity.py       # capacity numbers, real server, no browser
 python3 test_hardening.py                          # needs the live service
 ```
 
 | Needs the live service on :8088 | Spins up its own server + temp `data/` (safe anywhere) |
 | --- | --- |
-| `test_final` `test_mobile` `test_tracker` `test_personalization` `test_plan` `test_streak` `test_schedule_advance` `test_rot` `test_exam` | `test_sync` `test_graf` `test_demo` `test_register` `test_multiuser` `test_ai` `test_ai_guard` `test_onboard` `test_diag` `test_hardening` `test_legacy_guard` `test_security2` `test_server_hardening` `test_telemetry` `test_speaking_report` |
+| `test_final` `test_mobile` `test_tracker` `test_personalization` `test_plan` `test_streak` `test_schedule_advance` `test_rot` `test_exam` | `test_sync` `test_graf` `test_demo` `test_register` `test_multiuser` `test_ai` `test_ai_guard` `test_onboard` `test_diag` `test_hardening` `test_legacy_guard` `test_security2` `test_server_hardening` `test_telemetry` `test_speaking_report` `test_capacity` |
 
 Counts at handoff: `test_hardening` 16 · `test_security2` 14 · `test_server_hardening` 16 ·
 `test_ai_guard` 15 · `test_telemetry` 14 · `test_multiuser` 18 · `test_onboard` 15 ·
-`test_plan` 8 · `test_legacy_guard` 9 · `test_speaking_report` 14.
+`test_capacity` 23 · `test_plan` 8 · `test_legacy_guard` 9 · `test_speaking_report` 14.
 The speaking suites (`test_speaking_pa`, `test_speaking_director`, `test_speaking_live`,
 `test_speaking_duo`, `test_speaking_report`) all stub their provider locally: no key, no network.
 
@@ -230,8 +232,29 @@ tokenless path whenever `X-Forwarded-For` / `X-Real-IP` is present, with `test_l
 
 ### Limits currently enforced (server-side)
 
-Register 5/h/IP · login 10/10min/IP + 20/h/username, 5 failures → 15 min lock · progress 2 MB and
-60 writes/min · AI 10/min + 60/h/IP, 8/day/user, 80/day/instance · telemetry 60 batches/h/IP.
+Register 5/h/IP · login 10/10min/IP + 20/h/username, 5 failures → 15 min lock · **authenticated
+API 600/min per user_id** (never per IP) · **anonymous API 300/min/IP** · **login/register/password
+30/min/IP** · progress 2 MB and 60 writes/min · AI 10/min + 60/h/IP, 8/day/user, 80/day/instance ·
+telemetry 60 batches/h/IP. A user with a valid token cannot be 429'd because a classmate behind the
+same school/CGNAT IP is abusing the API; `GET /api/metrics` exposes `rate_limited_by_user` and
+`rate_limited_by_ip` to see which bucket is firing.
+
+### Capacity (phase 23, measured 2026-10-30)
+
+Run by `tests/test_capacity.py` (`uv run --with httpx python test_capacity.py`) against the real
+server, on this Pi 5 (8062 MB, 4 cores), 100 concurrent clients, 10 s per pass, IP buckets off:
+
+| Pass | Requests / 10 s | Throughput | p95 | 503/429 |
+| --- | --- | --- | --- | --- |
+| `GET /` with the static cache | 4,742 | 474 req/s | 270 ms | 0 |
+| `GET /` with `B2_NO_CACHE=1` (old path) | 1,608 | 161 req/s | 790 ms | 0 |
+| `GET /` cache, 300 concurrent | 4,175 | 418 req/s | 843 ms | 0 |
+
+At 300 concurrent the process peaked at **45.2 MB RSS / 301 threads**, so the 512-connection cap
+stays (the rule is: above 200 MB, lower it). `index.html` is 434,678 bytes raw → 109,307 bytes
+gzipped, compressed once and revalidated by `ETag`/`Last-Modified`; a `touch` rebuilds the entry on
+the next request without a restart. The old per-request `gzip.compress` was the CPU bottleneck, not
+the socket limit.
 
 ---
 
@@ -462,7 +485,7 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 ├── store.py             storage seam: users, tokens (hashed), passwords, progress, migrations
 ├── prompts.py           the examiner system prompt + the fenced message builder
 ├── index.html           the whole frontend (tokens, 10 views, intake wizard, charts)
-├── tests/               23 suites (see §5) + helpers.py
+├── tests/               30 suites (see §5) + helpers.py
 ├── tools/
 │   ├── audit.sh         14 external security checks against the public URL
 │   └── reset_password.py
