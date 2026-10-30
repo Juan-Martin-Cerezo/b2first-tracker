@@ -10,7 +10,7 @@ what you wrote, answered or typed.
 ## 1. What we store
 
 - **Account** — your chosen username and a salted, hashed password
-  (PBKDF2-HMAC-SHA256, 200,000 iterations). The password itself is never stored.
+  (PBKDF2-HMAC-SHA256, 600,000 iterations). The password itself is never stored.
 - **Study progress** — your practice log, error log, plan and settings, as JSON
   files on this server (one folder per account).
 - **Session tokens, hashed** — sessions are stored as `sha256(token)`; the raw

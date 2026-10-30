@@ -59,20 +59,26 @@ The synced progress document carries `schema_version` (currently `2`, `store.py`
 
 ## Accounts and auth (multi-user)
 
-- `data/users.json` — one record per account: `{id, name, color, created, salt, hash, algo}`;
-  passwords are PBKDF2-HMAC-SHA256 (200,000 iterations; pre-multiuser SHA-256 hashes are
-  re-hashed on next login).
+- `data/users.json` — one record per account: `{id, name, color, created, salt, hash, algo, iters}`;
+  passwords are PBKDF2-HMAC-SHA256 (600,000 iterations; SHA-256 and 200k PBKDF2 hashes are
+  re-hashed transparently on the next successful login). Policy: 10+ characters, the 200 common
+  passwords embedded in `store.py`, not equal to the username.
 - `data/tokens.json` — keys are `sha256(token)`, never the token; values carry
-  `{user_id, exp, issued, last_seen, ua_hash}`. TTL 30 days, sliding on every request.
+  `{user_id, exp, issued, absolute_exp, last_seen, ua_hash}`. 30-day sliding TTL capped by a
+  90-day `absolute_exp` that is never extended.
 - The frontend keeps its session in `localStorage.b2first_user = {id, name, color, token}`
-  and sends `Authorization: Bearer <token>`; a password change revokes every other session.
+  and sends `Authorization: Bearer <token>`; a password change revokes **every** session
+  (including the current one) and returns a fresh token that the UI stores.
 - Per-account storage: `data/users/<id>/progress.json` + `backups/` (20 kept), directories
   `0700`, files `0600`. A token can only touch its own account (`403` otherwise).
-- Limits (server-side, `server.py`): register 5/h/IP, login 10/10min/IP + 20/h/username, 5
-  failed logins lock the username 15 min, progress writes 2 MB + 60/min, AI corrections
-  10/min + 60/h per IP and 8/day/account + 80/day/instance (`B2_AI_DAILY_*`).
-- `data/audit.log` (0600, rotates at 5 MB) records auth events; `/api/audit` returns only the
-  caller's own events. `GET /api/health` is the liveness probe.
+- Limits (server-side, `server.py`): register 5/h/IP, login 10/10min/IP + 20/h/username,
+  exponential backoff 5/15/60 s after the 3rd/4th/5th failure, lockout 15 min after 5 failures,
+  progress writes 2 MB + 60/min, AI corrections 10/min + 60/h per IP and 8/day/account +
+  80/day/instance (`B2_AI_DAILY_*`).
+- `data/audit.log` (0600, rotates at 5 MB) records auth/security events in a SHA-256 hash chain
+  (`prev` per line); `tools/verify_audit.py` exits non-zero if a line was edited or deleted;
+  `/api/audit` returns only the caller's own events. `GET /api/health` is the liveness probe.
+  `/.well-known/security.txt` is the RFC 9116 disclosure file.
 - Registration is open by default; `B2_REGISTER=closed` freezes new accounts.
 - Password recovery is local only: `tools/reset_password.py`. There is no email flow.
 
@@ -128,7 +134,7 @@ Two groups:
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
   `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
   `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,
-  `test_server_hardening`, `test_telemetry`.
+  `test_security3`, `test_server_hardening`, `test_telemetry`.
 
 The delegation runner gates each phase with `RUN_TESTS` (default `test_sync.py
 test_personalization.py`) — see [delegacion/README.md](delegacion/README.md).

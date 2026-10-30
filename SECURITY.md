@@ -27,18 +27,27 @@ how to get the data back after a disaster.
 - **The provider sees the text submitted for correction.** Only the essay text leaves the
   machine, together with the key being used; nothing else is sent anywhere.
 
-**How to verify:** `bash tools/audit.sh` re-runs the external audit against the public instance
-(TLS, security headers, auth gates, CORS, banner hygiene) and exits non-zero on any regression;
-`tests/` cover the same guarantees from the inside (auth, isolation, quotas, payload schemas).
+**How to verify:**
+
+- `bash tools/audit.sh` — 39 external checks against the public instance (TLS, HSTS/preload, CSP
+  directives, COOP/CORP, `security.txt`, sensitive paths, method/traversal/body-limit probes,
+  auth gates, CORS, banner hygiene). Every check prints PASS/FAIL and one line of evidence; the
+  script exits non-zero on any regression.
+- `python3 tools/verify_audit.py` — validates the SHA-256 hash chain of `data/audit.log` and
+  exits non-zero if a line was edited, deleted or reordered.
+- [docs/SECURITY-CHECKLIST.md](docs/SECURITY-CHECKLIST.md) — the ASVS 4.0.3 Level 2 table with
+  PASS/FAIL/N-A per control, where it lives and how it is tested.
+- `tests/test_security3.py` and the rest of `tests/` cover the same guarantees from the inside
+  (re-hashing, absolute TTL, backoff, audit chain, payload limits, revocation, headers).
 
 ## 2. Threat model
 
 | Asset | Threat | Control | Where in the code |
 | --- | --- | --- | --- |
 | Study progress | Files stolen or tampered with at rest | JSON files under `data/users/<id>/`; directories `0700`, files `0600`; atomic writes (tmp + `os.replace`); per-user write lock with 5 s timeout | `store.py`: `_write_json`, `_ensure_private_dir`, `_prog_lock` |
-| Passwords | Offline cracking of `users.json` | PBKDF2-HMAC-SHA256, 200,000 iterations, 16-char per-user salt; constant-time compare; legacy SHA-256 hashes re-hashed on next login | `server.py`: `hash_password`, `verify_password`, `login_user` |
-| Session tokens | Theft from disk or replay after logout | Only `sha256(token)` is stored; 30-day sliding TTL; logout revokes; a password change invalidates every other session of that user | `server.py`: `_token_key`, `new_token`, `auth_from_token`, `revoke_token`, `/api/password` |
-| Accounts | Brute force / credential stuffing | 5 failed logins lock the username for 15 minutes **across IPs**; progressive delay up to 1 s from the 3rd failure; 10 logins / 10 min / IP and 20 / h / username | `server.py`: `_login_locked`, `_login_failed`, `_login_delay`, `/api/login` |
+| Passwords | Offline cracking of `users.json` | PBKDF2-HMAC-SHA256, **600,000 iterations**, 16-char per-user salt; constant-time compare; SHA-256 legacy hashes and 200k PBKDF2 hashes are re-hashed to 600k on the next successful login (transparent: nobody is locked out) | `server.py`: `hash_password`, `_record_iterations`, `verify_password`, `_needs_rehash`, `login_user` |
+| Session tokens | Theft from disk or replay after logout | Only `sha256(token)` is stored; 30-day **sliding** TTL capped by a 90-day **absolute** `absolute_exp` that is never extended; logout revokes; a password change revokes **every** session including the current one and returns a fresh token | `server.py`: `_token_key`, `new_token`, `auth_from_token`, `revoke_token`, `revoke_user_sessions`, `/api/password` |
+| Accounts | Brute force / credential stuffing | 5 failed logins lock the username for 15 minutes **across IPs**; **exponential backoff** of 5 s / 15 s / 60 s after the 3rd/4th/5th failure; 10 logins / 10 min / IP and 20 / h / username | `server.py`: `_login_locked`, `_login_failed`, `LOGIN_BACKOFF`, `_login_delay`, `/api/login` |
 | Username privacy | User enumeration via errors or timing | Identical "Wrong username or password." for unknown user and wrong password; the unknown-user path burns a full dummy PBKDF2; `hmac.compare_digest` everywhere | `server.py`: `login_user`, `verify_password`, `_dummy_digest` |
 | Per-user data | IDOR: read/write another account's data by guessing its id | The session token must belong to the requested user (otherwise `403`); proxied requests without a token always get `401`; audit events are filtered to the caller | `server.py`: `/api/progress`, `/api/audit` |
 | Server filesystem | Path traversal via `?user=` or `/files/` | User ids validated against `[A-Za-z0-9._-]{1,64}` with explicit `..` rejection (`400`); file routes `realpath` and require the result to stay inside their root | `store.py`: `_safe_uid`; `server.py`: `/files/`, `/assets/` |
@@ -48,16 +57,22 @@ how to get the data back after a disaster.
 | Network surface | Slowloris, connection floods, oversized requests sent by hand | 15 s socket timeout per connection; global `BoundedSemaphore(200)` answers `503 {"error":"busy","retry_after":5}` + `Retry-After: 5` and closes; URI > 2048 → `414`, > 60 headers → `431`, `Content-Length` > 3 MB → `413` before reading the body; bind defaults to `127.0.0.1` (`B2_HOST`), optional `Host` allowlist (`B2_ALLOWED_HOSTS`) → `421` | `server.py`: `H.timeout`, `_CONN_SEM`, `_handle`, `_bad_path_code`, `_host_allowed`, `B2_HOST` |
 | Request smuggling / traversal surface | Path traversal, encoded slash tricks, hidden-file probing, unknown verbs | Path rejected (`400`) for NUL, backslash, `..` in any encoding (single/double percent-encoded) and empty `//` segments; hidden dot-files → `403` with no content; method allowlist → `405` + `Allow` for everything else (including `TRACE`); 404 never lists candidates | `server.py`: `_bad_path_code`, `H.__getattr__`, `_method_not_allowed` |
 | Browser sessions | XSS / CSRF | CSP (`default-src 'self'`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`; rendered names go through `html.escape`; auth is a `Bearer` header (no cookies) and CORS is closed, so there is no ambient credential for a cross-site request | `server.py`: `SECURITY_HEADERS`, `esc`, `OPTIONS` branch |
-| Audit trail | Secrets leaking into logs; users reading each other's events | Access log: method, path without query, status, request id — never tokens or bodies; `data/audit.log` holds events with user + ip only (`0600`, rotates at 5 MB); `/api/audit` returns only the caller's own events | `server.py`: `_log_line`, `_audit`, `read_audit_events`, `/api/audit` |
+| Audit trail | Secrets leaking into logs; users reading each other's events; silent log tampering | Access log: method, path without query, status, request id — never tokens or bodies; `data/audit.log` holds events with user + ip only (`0600`, rotates at 5 MB) and **every line carries `prev` = SHA-256 of the previous raw line** (first line `0`×64), so edits/deletions break the chain; `/api/audit` returns only the caller's own events; `tools/verify_audit.py` checks the chain | `server.py`: `_log_line`, `_audit`, `_audit_prev`, `read_audit_events`, `/api/audit`; `tools/verify_audit.py` |
+| Security events | Blind spots during abuse or provider misuse | Append-only events `ai_blocked`, `rate_limited_by_user`, `pa_rejected`, `token_minted`, `session_revoked` — each with `rid`, scalar metadata only, no content and no secrets | `server.py`: `_audit` call sites in `/api/ai/writing`, `_rate_limited`, `/api/speaking/pa`, `/api/speaking/token`, `/api/logout`, `/api/password`, `/api/account` |
+| Disclosure metadata | No documented way to report a vulnerability | `/.well-known/security.txt` (RFC 9116): `Contact` (GitHub advisory form + documented `TODO_OWNER_EMAIL` placeholder), `Expires`, `Canonical`, `Policy` | `server.py`: `security_txt()`, route `/.well-known/security.txt` |
 | Owner data (legacy path) | Tokenless reads from a request that bypasses the proxy | The no-token owner path is accepted only when the request carries no `X-Forwarded-For`/`X-Real-IP`; on the public instance every request arrives through the TLS proxy (which sets `X-Forwarded-For`), so the answer is `401`. Self-hosted installs must not publish the app port directly | `server.py`: `/api/progress` (tokenless owner branch) |
 
 ## 3. Controls implemented
 
 | Control | Status | Notes |
 | --- | --- | --- |
-| Input validation | Implemented | `_validate_progress` (shape, list/string caps, depth, finite numbers), `_safe_uid` for ids, AI request and model-output schemas, password policy, diagnostic JSON validation |
+| Input validation | Implemented | `_validate_progress` (shape, list/string caps, depth, finite numbers), `_safe_uid` for ids, AI request and model-output schemas, password policy (10 characters, 200 common passwords, username check), diagnostic JSON validation |
 | SQL injection | N/A (no database) | Storage is JSON read with `json.load`; there is no query language and no string-built SQL anywhere |
-| Password hashing | Implemented | PBKDF2-HMAC-SHA256, 200,000 iterations, per-user salt, constant-time compare; legacy hashes upgraded on next login |
+| Password hashing | Implemented | PBKDF2-HMAC-SHA256, **600,000 iterations**, per-user salt, constant-time compare; SHA-256 and 200k PBKDF2 hashes upgraded transparently on the next login; TTL/rehash policy covered by `tests/test_security3.py` |
+| Session lifetime | Implemented | 30-day sliding `exp` capped by a 90-day `absolute_exp` per token; `auth_from_token` refuses and deletes tokens past either clock |
+| Audit log integrity | Implemented | SHA-256 hash chain (`prev`) on every line; `tools/verify_audit.py` exits non-zero on a broken link; pre-chain history is reported as an unverifiable prefix (see residual risks) |
+| Security headers | Implemented | HSTS `max-age=63072000; includeSubDomains; preload`; CSP `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'self'`, no `'unsafe-eval'`; COOP/CORP `same-origin`; `Referrer-Policy: no-referrer`; `Permissions-Policy` scoped (`microphone=(self)` only on the tracker) |
+| Body limits by route | Implemented | Global 3 MB ceiling checked from `Content-Length` before the body is read; `/api/speaking/pa` and `PUT /api/progress` reject > 2 MB the same way (`413`, connection closed, nothing drained) |
 | Secrets outside the repo | Implemented | The AI key comes from the environment (systemd `EnvironmentFile`, chmod 600, outside the repo); the repo ships no credentials; `settings.aiKey` is stripped before persisting; keys are never logged |
 | Server-side auth | Implemented | Every data route (`/api/me`, `/api/progress`, `/api/password`, `/api/account`, `/api/export`, `/api/audit`) validates the Bearer token on every request |
 | Rate limit login / reset | Implemented | Login 10/10 min/IP + 20/h/username + 5-failure lockout; registration 5/h/IP; password change 5/h/IP. There is no remote password reset flow (no email to send to); recovery is the local CLI `tools/reset_password.py` |
@@ -77,9 +92,11 @@ how to get the data back after a disaster.
 | CORS closed | Implemented | No `Access-Control-Allow-Origin` on any response; `OPTIONS` preflights answer `204` with no `access-control-allow-*` headers |
 | A user cannot read another user's data by id | Implemented | Token↔user binding answers `403` across accounts, `/api/audit` filters to the caller's events, and `/api/users` exposes only the login directory fields (id, name, color, created) — no progress, no credentials |
 
-**External audit status.** `bash tools/audit.sh` passes **14/14** checks against the public
-instance as of 2026-10-30. The former open finding (the `Server` banner disclosing the runtime)
-is fixed: the banner is now `Server: B2First` with no version.
+**External audit status.** `bash tools/audit.sh` passes **39/39** checks against the public
+instance as of 2026-10-30 (TLS and HTTP/2 included; against a plain `http://` target those two
+report N/A and 37/37 pass). The former open finding (the `Server` banner disclosing the runtime)
+is fixed: the banner is now `Server: B2First` with no version. The one control that is *not*
+claimed as PASS is the strict CSP without `'unsafe-inline'`; see section 5.
 
 ## 4. Backups and restore
 
@@ -143,11 +160,81 @@ $ curl -s http://127.0.0.1:8199/api/health
 {"ok": true, "users": 2, "data_dir": "data", "version": "1.0.0", "uptime_s": 1}
 ```
 
-## 5. Reporting a vulnerability
+## 5. Residual risks (honest status)
+
+These are known, accepted risks. They are listed so an auditor does not have to discover them,
+and so the migration work is explicit.
+
+### 5.1 CSP still needs `'unsafe-inline'` — **FAIL, not PASS**
+
+The single-file UI (`index.html`, ~8,400 lines) has **197 inline event-handler attributes**:
+`onclick` ×179, `onchange` ×13, `oninput` ×4, `onkeydown` ×4, `onload` ×1, `onerror` ×2. It
+also uses inline `style` attributes, so `style-src` keeps `'unsafe-inline'` as well. Removing
+those means rewriting the UI from inline handlers to `addEventListener` wiring; that is a
+multi-day refactor, not something to fake with a header.
+
+- **Impact:** if an attacker ever gets markup injected into the page, `'unsafe-inline'` lets
+  injected script run in the app origin, where the session token lives in `localStorage`.
+- **Mitigations already in place:** all dynamic names go through `html.escape`; student text
+  and AI output are rendered with `textContent`, never `innerHTML`; there are no third-party
+  scripts; `connect-src` is restricted (`'self'` + Gemini Live); `frame-ancestors 'none'`,
+  `base-uri 'none'`, `object-src 'none'`.
+- **What *is* enforced:** no `'unsafe-eval'`, no `object-src`, no `<base>` injection, no
+  framing, forms only post to `'self'`.
+- **Migration plan:** (1) extract the inline `<script>` to an external file; (2) replace each
+  `on*=` with a delegated `addEventListener` using `data-action`; (3) move inline styles to
+  classes; (4) switch to `script-src 'self'` and `style-src 'self'`; (5) add a CSP regression
+  check to `tools/audit.sh` that fails if `'unsafe-inline'` reappears. Until then, the checklist
+  row **CSP-1 (no unsafe-inline) is FAIL**.
+
+### 5.2 Audit history written before the hash chain
+
+`data/audit.log` lines created before phase 24 have no `prev` field. They are an **unverifiable
+prefix**: `tools/verify_audit.py` reports them as such, verifies the transition into the first
+chained line, and verifies every link from there on. An attacker who edited a line *before* the
+upgrade cannot be detected retroactively. Rotation at 5 MB removes that prefix over time.
+
+### 5.3 Host and operator are trusted
+
+Anyone with shell access to the server can read `data/` and could rewrite the whole audit log
+(a fresh, internally consistent chain is possible with write access). The hash chain detects
+accidental or partial tampering and tampering by a process that lacks write access to the file;
+it is not a defence against a compromised host.
+
+### 5.4 No verified disclosure mailbox
+
+There is no verified email address for this project. `/.well-known/security.txt` publishes the
+GitHub advisory URL as the working `Contact` plus the documented `TODO_OWNER_EMAIL` placeholder.
+Replace the placeholder with a real mailbox before claiming a mail contact.
+
+### 5.5 Account recovery is local only
+
+There is no email flow, so a forgotten password requires shell access to run
+`tools/reset_password.py`. This is a deliberate consequence of not collecting personal data.
+
+### 5.6 Password policy is below the ASVS L2 baseline
+
+ASVS 4.0.3 asks for at least 12 characters (2.1.1) and a check against the top 3,000 breached
+passwords (2.1.7). This product enforces **10 characters** and a **200-entry embedded blocklist**
+(a deliberate constraint of phase 24: no downloaded wordlists, no dependencies). Both checklist
+rows are marked **FAIL**, not PASS. Raising `PASSWORD_MIN_LEN` to 12 and loading a larger list is
+a small, isolated change; it was not made here because the product requirement fixed 10/200.
+
+### 5.7 Rotated audit history keeps only one file
+
+`data/audit.log.1` is the single rotated file; when a second rotation happens the oldest segment
+is deleted, so its hash-chain head becomes unverifiable. The current segment and the transition
+remain verifiable. Longer retention would need a different sink (append-only object storage).
+
+## 6. Reporting a vulnerability
 
 Report security issues privately through GitHub's vulnerability reporting for this repository:
 
 **https://github.com/Juan-Martin-Cerezo/b2first-tracker/security/advisories/new**
+
+Machine-readable disclosure metadata: **https://vps-server.tail40095b.ts.net/.well-known/security.txt**
+(RFC 9116). The `mailto:` line in that file is the documented `TODO_OWNER_EMAIL` placeholder
+until a verified mailbox exists.
 
 (If you cannot use advisories, open an issue with no details asking for a contact channel.)
 
