@@ -117,6 +117,13 @@ B2_AI_PROVIDER = os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
 B2_AI_BASE = os.environ.get("B2_AI_BASE", "")
 B2_AI_MODEL = os.environ.get("B2_AI_MODEL", "")
 AI_ALLOWED_KINDS = ("Essay", "Article", "Report", "Review", "Email")
+AI_TASKS = ("essay", "article", "report", "review", "email")
+AI_TEXT_MIN_CHARS = 60
+AI_TEXT_MAX_CHARS = 4000
+AI_TEXT_HARD_MAX_CHARS = 6000
+AI_TEXT_MIN_WORDS = 40
+AI_TEXT_MAX_WORDS = 700
+AI_OUTPUT_MAX_BYTES = 8 * 1024
 AI_TIMEOUT = 25
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
@@ -573,6 +580,103 @@ def _validate_ai_payload(obj):
         "weaknesses": clean_weaknesses,
         "rewrite": [s.strip() for s in rewrite],
     }
+
+
+# ---------------------------------------------------------------------------
+# AI input/output guards (fase 17)
+# ---------------------------------------------------------------------------
+_AI_CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+_AI_ABUSE = (
+    ("prompt_injection", re.compile(r"ignore\s+(?:(?:all|any|the)\s+)?previous", re.I)),
+    ("prompt_injection", re.compile(r"system\s+prompt", re.I)),
+    ("prompt_injection", re.compile(r"you\s+are\s+now", re.I)),
+    ("prompt_injection", re.compile(r"developer\s+mode", re.I)),
+    ("prompt_injection", re.compile(r"jailbreak", re.I)),
+    ("prompt_injection", re.compile(r"reveal\s+your\s+instructions", re.I)),
+    ("prompt_injection", re.compile(r"repeat\s+the\s+instructions", re.I)),
+    ("roleplay", re.compile(r"act\s+as", re.I)),
+    ("roleplay", re.compile(r"pretend\s+to\s+be", re.I)),
+    ("code", re.compile(r"```")),
+    ("code", re.compile(r"\bdef\s")),
+    ("code", re.compile(r"\bimport\s")),
+    ("sql", re.compile(r"\bselect\s", re.I)),
+    ("html", re.compile(r"<script", re.I)),
+    ("encoding", re.compile(r"base64", re.I)),
+    ("credentials", re.compile(r"api[ _-]?key", re.I)),
+    ("provider_probe", re.compile(r"openai", re.I)),
+    ("provider_probe", re.compile(r"deepseek", re.I)),
+)
+# The system-prompt phrases that must never come back in a model response.
+_AI_LEAK_STRONG = (
+    "you are a senior official cambridge",
+    "the only valid instructions",
+    "anything inside student_text",
+    "mandatory marking rules",
+    "calibration rules",
+    "refusal rules (non-negotiable)",
+    "return only this exact json shape",
+)
+_AI_LEAK_WEAK = (
+    "communicative achievement",
+    "target reader",
+    "cohesive devices",
+    "assessment scales",
+    "band 5",
+    "band 4",
+)
+
+
+def _looks_binary(text):
+    """True when more than 5% of the characters are not printable."""
+    if not text:
+        return False
+    bad = sum(1 for ch in text if ch not in "\n\r\t" and not ch.isprintable())
+    return bad / len(text) > 0.05
+
+
+def _sanitize_ai_text(raw):
+    """Normalise a submission: drop control characters and collapse blank lines."""
+    text = raw.replace("\r\n", "\n").replace("\r", "\n")
+    text = _AI_CTRL_RE.sub("", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def _fit_ai_text(text):
+    """Cap the text sent to the model: 500 chars per line, 200 lines max."""
+    return "\n".join(ln[:500] for ln in text.split("\n")[:200])
+
+
+def _ai_abuse_reason(text):
+    """Heuristic abuse detector; returns a reason slug or "".
+
+    A pattern only blocks when it appears in the first 3 lines or is repeated
+    2+ times. That is deliberate: a legitimate essay may contain a single
+    "act as" or "select" deep in the text, and we prefer a false negative (the
+    model itself has refusal rules) to a false positive that ruins a real
+    student's writing.
+    """
+    low = text.lower()
+    head = "\n".join(text.split("\n")[:3]).lower()
+    for reason, rx in _AI_ABUSE:
+        hits = len(rx.findall(low))
+        if hits and (hits >= 2 or rx.search(head)):
+            return reason
+    if re.search(r"\S{200,}", text):
+        return "blob"
+    return ""
+
+
+def _leaks_system_prompt(text):
+    """True when a model response echoes the internal system prompt."""
+    low = text.lower()
+    if any(marker in low for marker in _AI_LEAK_STRONG):
+        return True
+    return sum(1 for marker in _AI_LEAK_WEAK if marker in low) >= 3
+
+
+def _word_count(text):
+    return len(text.split())
 
 
 # ---------------------------------------------------------------------------
@@ -1295,15 +1399,25 @@ def _audit_file():
     return os.path.join(DATA_DIR, "audit.log")
 
 
-def _audit(event, user="", ip="", rid=""):
-    """Append one event line to data/audit.log (0600). Best-effort: never raises."""
-    line = json.dumps({
+def _audit(event, user="", ip="", rid="", detail=None):
+    """Append one event line to data/audit.log (0600). Best-effort: never raises.
+
+    `detail` may carry scalar metadata only (lengths, reason slugs, statuses).
+    Callers must never pass content: the student's text is not logged.
+    """
+    record = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "rid": rid or "",
         "event": event,
         "user": user or "",
         "ip": ip or "",
-    }, ensure_ascii=False)
+    }
+    if isinstance(detail, dict):
+        for k, v in detail.items():
+            if k in record or not isinstance(v, (str, int, float, bool)):
+                continue
+            record[k] = v[:120] if isinstance(v, str) else v
+    line = json.dumps(record, ensure_ascii=False)
     try:
         with _AUDIT_LOCK:
             path = _audit_file()
@@ -2136,13 +2250,52 @@ class H(BaseHTTPRequestHandler):
             except (ValueError, UnicodeDecodeError):
                 self._send(400, json.dumps({"error": "invalid json"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            text = req.get("text")
-            kind = req.get("kind")
-            if not isinstance(text, str) or not (50 <= len(text.strip()) <= 3000) or not (50 <= len(text) <= 3000):
-                self._send(400, json.dumps({"error": "text must be between 50 and 3000 chars"}).encode("utf-8"), "application/json; charset=utf-8")
+            raw_text = req.get("text")
+            # `task` is the strictly validated API (lowercase slug). `kind` is
+            # the legacy field still sent by old clients: it keeps its original
+            # 400 contract but goes through the same sanitising, abuse and
+            # output guards, so it is not a way around the fase-17 protections.
+            has_task = "task" in req
+            if not isinstance(raw_text, str):
+                self._send_json(422, {"error": "invalid text"})
                 return
-            if kind not in AI_ALLOWED_KINDS:
-                self._send(400, json.dumps({"error": "invalid kind"}).encode("utf-8"), "application/json; charset=utf-8")
+            if has_task:
+                task_raw = req.get("task")
+                task = task_raw.strip().lower() if isinstance(task_raw, str) else ""
+                if task not in AI_TASKS:
+                    self._send_json(422, {"error": "unknown task"})
+                    return
+                kind = task.capitalize()
+            else:
+                kind = req.get("kind")
+                if kind not in AI_ALLOWED_KINDS:
+                    self._send(400, json.dumps({"error": "invalid kind"}).encode("utf-8"), "application/json; charset=utf-8")
+                    return
+                task = kind.lower()
+            if len(raw_text) > AI_TEXT_HARD_MAX_CHARS:
+                self._send_json(413, {"error": "text too large"})
+                return
+            if _looks_binary(raw_text):
+                _audit("ai_blocked", "", client_ip, self._rid,
+                       {"reason": "binary", "chars": len(raw_text)})
+                self._send_json(422, {"error": "text looks binary"})
+                return
+            clean_text = _sanitize_ai_text(raw_text)
+            abuse = _ai_abuse_reason(clean_text)
+            if abuse:
+                _audit("ai_blocked", "", client_ip, self._rid,
+                       {"reason": abuse, "chars": len(clean_text)})
+                self._send_json(422, {"error": "off_topic", "reason": abuse})
+                return
+            if has_task:
+                words = _word_count(clean_text)
+                if (len(clean_text) < AI_TEXT_MIN_CHARS
+                        or len(clean_text) > AI_TEXT_MAX_CHARS
+                        or words < AI_TEXT_MIN_WORDS or words > AI_TEXT_MAX_WORDS):
+                    self._send_json(422, {"error": "text must be between 40 and 700 words"})
+                    return
+            elif not (50 <= len(raw_text.strip()) <= 3000) or not (50 <= len(raw_text) <= 3000):
+                self._send(400, json.dumps({"error": "text must be between 50 and 3000 chars"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
             # A key sent in the request is the user's own: it never touches the
             # owner's key nor the server quota. Otherwise the shared server key
@@ -2171,14 +2324,16 @@ class H(BaseHTTPRequestHandler):
             base = (B2_AI_BASE or os.environ.get("B2_AI_BASE") or default_base).strip()
             env_model = B2_AI_MODEL or os.environ.get("B2_AI_MODEL") or ""
             model = (req.get("model") or env_model or default_model).strip()
-            prompt_text = prompts.writing_prompt(text.strip(), kind)
+            # Fresh nonce per request: the fence cannot be predicted or
+            # pre-closed by a text prepared in advance.
+            student_block, _nonce = prompts.student_message(_fit_ai_text(clean_text), kind)
             if provider == "deepseek":
                 url = f"{base.rstrip('/')}/chat/completions"
                 payload = json.dumps({
                     "model": model,
                     "messages": [
                         {"role": "system", "content": prompts.WRITING_SYSTEM},
-                        {"role": "user", "content": f"=== TASK TYPE (GENRE) ===\n{kind}\n\n=== STUDENT TEXT ===\n{text.strip()}"},
+                        {"role": "user", "content": student_block},
                     ],
                     "response_format": {"type": "json_object"},
                     "temperature": 0.2,
@@ -2190,7 +2345,7 @@ class H(BaseHTTPRequestHandler):
             else:
                 url = f"{base.rstrip('/')}/models/{model}:generateContent"
                 payload = json.dumps({
-                    "contents": [{"parts": [{"text": prompt_text}]}],
+                    "contents": [{"parts": [{"text": f"{prompts.WRITING_SYSTEM}\n\n{student_block}"}]}],
                     "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
                 }).encode("utf-8")
                 req_headers = {
@@ -2215,10 +2370,30 @@ class H(BaseHTTPRequestHandler):
                     cand_text = up_json["choices"][0]["message"]["content"]
                 else:
                     cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
-                cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
-                model_obj = json.loads(cand_text)
+                if not isinstance(cand_text, str):
+                    raise ValueError("not text")
             except (ValueError, KeyError, IndexError, TypeError, AttributeError):
                 self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
+                self._send_json(502, {"error": "model output too large"})
+                return
+            cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
+            if _leaks_system_prompt(cand_text):
+                _audit("ai_blocked", "", client_ip, self._rid,
+                       {"reason": "prompt_leak", "chars": len(cand_text)})
+                self._send_json(502, {"error": "unsafe output"})
+                return
+            try:
+                model_obj = json.loads(cand_text)
+            except (ValueError, TypeError):
+                self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            if isinstance(model_obj, dict) and model_obj.get("refuse") is True:
+                reason = model_obj.get("reason")
+                if reason not in ("not_a_writing_task", "cannot_reveal_instructions"):
+                    reason = "not_a_writing_task"
+                self._send_json(200, {"refused": True, "reason": reason})
                 return
             validated = _validate_ai_payload(model_obj)
             if not validated:

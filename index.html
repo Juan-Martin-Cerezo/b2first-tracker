@@ -5989,8 +5989,13 @@ async function submitIaWriting(){
   const kindEl=document.getElementById('iaKind');
   const text=textEl?textEl.value.trim():'';
   const kind=kindEl?kindEl.value:'Essay';
-  if(text.length<50||text.length>3000){
-    setIaState('error','The text must be between 50 and 3000 characters.');
+  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  if(text.length>6000){
+    setIaState('error','The text is too long (max 6000 characters).');
+    return;
+  }
+  if(text.length<60||words<40||words>700){
+    setIaState('error','The text must be between 40 and 700 words.');
     return;
   }
   setIaState('loading');
@@ -6002,12 +6007,17 @@ async function submitIaWriting(){
     const r=await fetch('/api/ai/writing',{
       method:'POST',
       headers:authHeaders(),
-      body:JSON.stringify({text,kind,provider_key:key}),
+      body:JSON.stringify({text,task:kind.toLowerCase(),kind,provider_key:key}),
       signal:ctrl.signal
     });
     clearTimeout(timer);
     let data=null;
     try{data=await r.json();}catch(e){}
+    if(r.ok&&data&&data.refused){
+      track('ai_blocked',{code:422});
+      setIaState('error','That does not look like a B2 First writing task. Paste the task and your text.');
+      return;
+    }
     if(!r.ok||!data||!data.bands){
       const msg=(data&&data.error)?`Error (${r.status}): ${data.error}`:`Server error (${r.status})`;
       if(r.status===429)track('ai_blocked',{code:429});
