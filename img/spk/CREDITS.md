@@ -2,7 +2,7 @@
 
 All files are from Wikimedia Commons. Licence and author as listed; keep this file with the images.
 
-- `p2-1-a.jpg` — CC BY 2.0 — Jerry Huddleston from Hampton, Minnesota, US — https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f8/Big_Lake_%284111129124%29.jpg/960px-Big_Lake_%284111129124%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
+- `p2-1-a.jpg` — CC BY-SA 2.0 — Tim Evanson — https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/01-CrowdedMetro.jpg/960px-01-CrowdedMetro.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
 - `p2-1-b.jpg` — CC BY 4.0 — Jim.henderson — https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Brompton_commuter_on_Broadway_jeh.jpg/960px-Brompton_commuter_on_Broadway_jeh.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
 - `p2-2-a.jpg` — CC BY-SA 3.0 — Pfancher — https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3a/ENGL_103%E2%80%9433_syllabus_and_schedule_Fancher.pdf/page1-960px-ENGL_103%E2%80%9433_syllabus_and_schedule_Fancher.pdf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail
 - `p2-2-b.jpg` — CC BY-SA 3.0 — Dr. Marcus Gossler — https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Graz_University-Library_reading-room.jpg/960px-Graz_University-Library_reading-room.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail

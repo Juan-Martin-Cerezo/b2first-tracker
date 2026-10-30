@@ -38,6 +38,15 @@ Rules for the content:
 - Part 4: 6 discussion questions that clearly follow the Part 3 topic.
 - English only in the data; the UI translates the chrome, not the exam.
 
+## Assets already in the repo
+`img/spk/` has six CC photos, three pairs, with `CREDITS.md` listing licence and
+author — **keep that file and link it from the Part 2 brief** ("Photos: Wikimedia
+Commons, CC BY / CC BY-SA — see credits"). Do not add images from Cambridge or any
+textbook. If you need more pairs, add them by dropping files and extending
+`material/speaking.json`; there is no image generator available in this environment.
+Verified pairs: `p2-1-a/b` crowded metro vs cycling to work · `p2-2-a/b` café vs
+library · `p2-3-a/b` street market vs shopping from home.
+
 ## The flow the user sees (this is the whole point)
 Five screens, each with **one** instruction sentence and a progress dot:
 
