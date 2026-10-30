@@ -117,3 +117,11 @@ cd tests && uv run --with playwright python tools/../tests/../tools/scan_texts.p
 ```
 Finish with `VERDICT: ok` only if the three suites pass, and state in the verdict
 what a real Cambridge examiner would still find missing (honesty over polish).
+
+## Regression guard (learned the hard way, 2026-10-30)
+The live transport used to send `setup.responseModalities` at the root; the API
+answers `1007 Unknown name "responseModalities" at 'setup'` and closes the socket,
+and the HUD only said "Examiner offline". It now lives inside
+`setup.generationConfig.responseModalities` and the examiner reports `live`.
+Do not move it back, and keep the close reason visible in the HUD: a silent close
+is how this bug survived a whole session.
