@@ -3,6 +3,7 @@
 Boots its own server with a temporary DATA_DIR (B2_DEMO=0, B2_REGISTER=open)
 plus a mock AI provider, so nothing touches the real data/ nor the real key.
 """
+import hashlib
 import json
 import os
 import re
@@ -138,7 +139,7 @@ def req(method, path, body=None, token=None, headers=None, raw_body=None):
 
 
 # 1. POST /api/register (user A) -> 200 with a token
-st, body, _ = req("POST", "/api/register", {"name": "alice", "password": "password123"})
+st, body, _ = req("POST", "/api/register", {"name": "alice", "password": "correct-horse-9"})
 reg_a = json.loads(body)
 assert st in (200, 201) and reg_a.get("token"), f"register A failed: {st} {body}"
 uid_a, tok_a = reg_a["id"], reg_a["token"]
@@ -150,7 +151,7 @@ assert st == 409 and json.loads(body).get("error") == "That username is taken.",
 out["2_register_duplicate_409"] = st
 
 # 3. POST /api/login (A) -> 200 with a token
-st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "password123"})
+st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "correct-horse-9"})
 login_a = json.loads(body)
 assert st == 200 and login_a.get("token"), f"login A failed: {st} {body}"
 tok_a = login_a["token"]
@@ -167,7 +168,7 @@ assert st == 200 and json.loads(body)["log"][0]["type"] == "ue", f"progress GET 
 out["5_progress_get_matches"] = st
 
 # 6. register B -> GET /api/progress (B) sees nothing of A (isolation)
-st, body, _ = req("POST", "/api/register", {"name": "bob", "password": "password123"})
+st, body, _ = req("POST", "/api/register", {"name": "bob", "password": "correct-horse-9"})
 reg_b = json.loads(body)
 assert st in (200, 201) and reg_b.get("token"), f"register B failed: {st} {body}"
 uid_b, tok_b = reg_b["id"], reg_b["token"]
@@ -181,12 +182,12 @@ assert st == 401, f"invalid token not rejected: {st} {body}"
 out["7_invalid_token_401"] = st
 
 # 8. expired token (exp forced into the past) -> 401 "session expired"
-st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "password123"})
+st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "correct-horse-9"})
 expired_tok = json.loads(body)["token"]
 tok_path = os.path.join(_tmp, "tokens.json")
 with open(tok_path, "r", encoding="utf-8") as f:
     tokens = json.load(f)
-tokens[expired_tok]["exp"] = time.time() - 60
+tokens[hashlib.sha256(expired_tok.encode()).hexdigest()]["exp"] = time.time() - 60
 with open(tok_path, "w", encoding="utf-8") as f:
     json.dump(tokens, f)
 st, body, _ = req("GET", f"/api/progress?download=1&user={uid_a}", token=expired_tok)
@@ -223,15 +224,15 @@ assert st == 200 and json.loads(body).get("bands"), f"own key rejected: {st} {bo
 os.environ["B2_AI_DAILY_PER_USER"] = "8"
 out["12_ai_own_key_200"] = st
 
-# 13. 11 failed logins to the same username -> 429 on the 11th
+# 13. 5 failed logins to the same username -> locked: 429 with retry_after (cross-IP)
 statuses = []
 for _ in range(11):
-    st, _body, _hdrs = req("POST", "/api/login", {"name": "alice", "password": "wrong-password"},
+    st, _body, _hdrs = req("POST", "/api/login", {"name": "brute-target", "password": "wrong-password"},
                            headers={"X-Forwarded-For": "203.0.113.77"})
     statuses.append(st)
-assert statuses[:10] == [401] * 10, f"first 10 failed logins should be 401: {statuses}"
-assert statuses[10] == 429, f"11th login should be 429: {statuses}"
-out["13_login_rate_11th_429"] = statuses
+assert statuses[:5] == [401] * 5, f"first 5 failed logins should be 401: {statuses}"
+assert statuses[5] == 429, f"6th login should be 429 (username locked): {statuses}"
+out["13_login_lockout_6th_429"] = statuses
 
 # 14. DELETE /api/account with the wrong password -> 401
 st, body, _ = req("DELETE", "/api/account", {"password": "wrong-password"}, token=tok_b)
@@ -239,7 +240,7 @@ assert st == 401, f"delete with wrong password: {st} {body}"
 out["14_delete_wrong_password_401"] = st
 
 # 15. DELETE /api/account with the right password -> 200 and data/users/<uid>/ is gone
-st, body, _ = req("DELETE", "/api/account", {"password": "password123"}, token=tok_b)
+st, body, _ = req("DELETE", "/api/account", {"password": "correct-horse-9"}, token=tok_b)
 assert st == 200 and json.loads(body).get("ok") is True, f"delete account failed: {st} {body}"
 assert not os.path.exists(os.path.join(_tmp, "users", uid_b)), "data/users/<uid> still exists after delete"
 st_tok, _b, _h = req("GET", f"/api/progress?download=1&user={uid_b}", token=tok_b)
@@ -265,7 +266,7 @@ assert file_mode == 0o600, f"progress.json mode is {oct(file_mode)}, expected 0o
 out["17_permissions"] = {"user_dir": oct(dir_mode), "progress_json": oct(file_mode)}
 
 # 18. the UI with a logged-in session renders without JS errors
-st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "password123"})
+st, body, _ = req("POST", "/api/login", {"name": "alice", "password": "correct-horse-9"})
 session = json.loads(body)
 with sync_playwright() as p:
     b = p.chromium.launch()

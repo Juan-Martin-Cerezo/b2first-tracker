@@ -25,7 +25,7 @@ automatically backs up the previous version in <repo>/data/backups/
 Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
-import os, re, html, mimetypes, json, shutil, time, hashlib, secrets, threading
+import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading
 import urllib.request, urllib.error
 import ipaddress
 import traceback
@@ -159,6 +159,62 @@ def _real_ip(handler):
             if cand:
                 return cand
     return peer or "local"
+
+
+# --- Login brute-force guard: per username, survives IP changes (fase 12) ---
+_LOGIN_FAIL_LOCK = threading.Lock()
+_LOGIN_FAIL = {}  # {username-lower: {"count": int, "until": ts}}
+LOGIN_FAIL_MAX = 5                      # failed attempts before the username is locked
+LOGIN_LOCK_S = 15 * 60                  # lockout window (15 minutes)
+LOGIN_DELAY = (0.0, 0.0, 0.2, 0.5, 1.0)  # progressive delay from the 3rd failure (max 1s)
+DUMMY_SALT = "0" * 16                   # timing equalizer for unknown usernames
+_DUMMY_DIGEST = None
+
+
+def _dummy_digest():
+    """Fixed PBKDF2 digest: the unknown-user path burns the same work as a real check."""
+    global _DUMMY_DIGEST
+    if _DUMMY_DIGEST is None:
+        _DUMMY_DIGEST = hash_password(DUMMY_SALT, "b2first-timing-dummy")
+    return _DUMMY_DIGEST
+
+
+def _login_fail_key(name):
+    """Normalized username used as the lockout key."""
+    return name.strip().lower() if isinstance(name, str) else ""
+
+
+def _login_locked(key):
+    """(locked, retry_after) when `key` is under brute-force lockout."""
+    now = time.time()
+    with _LOGIN_FAIL_LOCK:
+        rec = _LOGIN_FAIL.get(key)
+        if rec and rec.get("until", 0) > now:
+            return True, max(1, int(rec["until"] - now) + 1)
+    return False, 0
+
+
+def _login_failed(key):
+    """Count one failed attempt for `key`; returns (count, just_locked)."""
+    now = time.time()
+    with _LOGIN_FAIL_LOCK:
+        rec = _LOGIN_FAIL.setdefault(key, {"count": 0, "until": 0})
+        rec["count"] += 1
+        if rec["count"] >= LOGIN_FAIL_MAX:
+            rec["until"] = now + LOGIN_LOCK_S
+            return rec["count"], True
+        return rec["count"], False
+
+
+def _login_succeeded(key):
+    """A successful login resets the failure counter."""
+    with _LOGIN_FAIL_LOCK:
+        _LOGIN_FAIL.pop(key, None)
+
+
+def _login_delay(count):
+    """Progressive delay: 0/0/0.2/0.5/1s from the 3rd consecutive failure."""
+    return LOGIN_DELAY[min(max(count, 1) - 1, len(LOGIN_DELAY) - 1)]
 
 
 # --- Daily AI quota (protects the owner's key: in-memory, resets on date change) ---
@@ -360,12 +416,22 @@ _TOKENS_LOCK = threading.Lock()  # serializes read-modify-write of tokens.json
 
 
 def load_tokens():
-    """Return {token: {user_id, exp}}."""
+    """Return {sha256(token): {user_id, exp, issued, last_seen, ua_hash}}."""
     return _read_json(TOKENS_FILE, {})
 
 
 def save_tokens(tokens):
     _write_json(TOKENS_FILE, tokens)
+
+
+def _token_key(token):
+    """sha256 of the session token: the raw token is never written to disk."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _ua_hash(ua):
+    """sha256 of the User-Agent (stored instead of the header itself)."""
+    return hashlib.sha256((ua or "").encode("utf-8")).hexdigest()
 
 
 def hash_password(salt, password):
@@ -382,44 +448,63 @@ def verify_password(user_id, password):
     """True if `password` matches the stored hash (pbkdf2 or legacy)."""
     u = store.get_user(user_id)
     if not u or not isinstance(password, str):
+        # Same PBKDF2 work as a real check: missing users must not answer faster.
+        pw = password if isinstance(password, str) else ""
+        hmac.compare_digest(_dummy_digest(), hash_password(DUMMY_SALT, pw))
         return False
     algo = u.get("algo")
     if algo == "pbkdf2":
-        return secrets.compare_digest(u["hash"], hash_password(u["salt"], password))
+        return hmac.compare_digest(u["hash"], hash_password(u["salt"], password))
     if not algo:
-        return secrets.compare_digest(u["hash"], _legacy_hash_password(u["salt"], password))
+        return hmac.compare_digest(u["hash"], _legacy_hash_password(u["salt"], password))
     return False
 
 
-def new_token(user_id):
-    """Create a session token valid for TOKEN_TTL and persist it."""
+def new_token(user_id, ua=""):
+    """Create a session token valid for TOKEN_TTL and persist only its hash."""
     with _TOKENS_LOCK:
         tokens = load_tokens()
         # Prune expired tokens
         now = time.time()
         tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
         tok = secrets.token_hex(24)
-        tokens[tok] = {"user_id": user_id, "exp": now + TOKEN_TTL}
+        tokens[_token_key(tok)] = {
+            "user_id": user_id, "exp": now + TOKEN_TTL, "issued": now,
+            "last_seen": now, "ua_hash": _ua_hash(ua),
+        }
         save_tokens(tokens)
     return tok
 
 
-def auth_from_token(token):
+def auth_from_token(token, ua="", ip="", rid=""):
     """Return (user_id, error) for a session token and extend its expiry (sliding).
+
+    Tokens are stored hashed; a legacy plaintext record is migrated to its hash
+    on first use. A User-Agent change is logged as `ua_changed` (never blocked).
 
     error is None, "session expired" or "invalid session".
     """
     if not token:
         return None, "invalid session"
+    key = _token_key(token)
     with _TOKENS_LOCK:
         tokens = load_tokens()
-        v = tokens.get(token)
+        v = tokens.get(key)
+        if v is None and token in tokens:  # legacy plaintext record → hash it
+            v = tokens.pop(token)
+            tokens[key] = v
         if not v:
             return None, "invalid session"
         if v.get("exp", 0) < time.time():
             return None, "session expired"
-        # Sliding expiration: every authenticated request keeps the session alive.
-        v["exp"] = time.time() + TOKEN_TTL
+        now = time.time()
+        v["exp"] = now + TOKEN_TTL  # sliding expiration
+        v["last_seen"] = now
+        ua_h = _ua_hash(ua)
+        if v.get("ua_hash") and v["ua_hash"] != ua_h:
+            _audit("ua_changed", v.get("user_id", ""), ip, rid)
+        if ua_h:
+            v["ua_hash"] = ua_h
         save_tokens(tokens)
         return v.get("user_id"), None
 
@@ -427,8 +512,10 @@ def auth_from_token(token):
 def revoke_token(token):
     with _TOKENS_LOCK:
         tokens = load_tokens()
-        if token in tokens:
-            del tokens[token]
+        key = _token_key(token)
+        if key in tokens or token in tokens:
+            tokens.pop(key, None)
+            tokens.pop(token, None)
             save_tokens(tokens)
 
 
@@ -446,6 +533,61 @@ def user_prog_file(user_id):
 def user_bk_dir(user_id):
     """Path to a user's backup directory."""
     return store._bk_dir(user_id)
+
+
+# --- Password policy (fase 12): embedded list, no dependencies, no downloads ---
+COMMON_PASSWORDS = frozenset("""
+1234 12345 123456 1234567 12345678 123456789 1234567890 12345678910 111111 11111111
+000000 00000000 121212 123123 123321 112233 12121212 12344321 159753 654321 87654321
+666666 66666666 7777777 888888 88888888 999999 987654321 102030 101010 12341234
+password password1 password12 password123 password1234 password12345 password123456
+passwordpassword passw0rd p@ssw0rd p@ssword p@ssw0rd123 passw0rd123 passwd password1!
+password! password2 password123! motdepasse senha senha123 contrasena qwerty qwerty123
+qwerty1234 qwerty12345 qwertyui qwertyuiop qwerty12 qwe123 qweasd qweasdzxc asd123
+asdfgh asdfghjkl asdfghjkl; zxcvbnm zxcvbn 1q2w3e 1q2w3e4r 1q2w3e4r5t qazwsx qazwsxedc
+zaq12wsx 1qaz2wsx 1qazxsw2 abc123 abcd1234 abcdefg abcdefgh abc12345 a1b2c3 a123456
+iloveyou iloveyou1 ilovemyself love love123 lovely lovely123 amor tequiero angel
+angel123 baby baby123 babygirl babyboy boy boy123 girl girl123 princess princess1
+princess123 prince sunshine sunshine1 sunflower flower flower123 butterfly rainbow
+letmein letmein1 letmein123 welcome welcome1 welcome123 welcome1234 welkom benvenuto
+monkey monkey123 dragon dragon123 tiger tiger123 lion lion123 shadow shadow123
+master master1 master123 admin admin123 admin1234 administrator root root123 toor
+guest guest123 user user123 usuario test test123 testtest test1 demo demo123 demo1
+changeme changeme123 change default default123 login login123 access123 secret secret123
+trustno1 trustno123 freedom freedom123 whatever hello hello123 hello1 hola hola123
+football football1 football123 baseball basketball soccer soccer123 hockey hockey123
+jordan michael michael1 jennifer joshua ashley nicole daniel thomas matrix matrix123
+starwars starwars1 pokemon pokemon1 batman batman123 superman superman123 spiderman
+harley harley123 ranger hunter hunter123 buster killer george sexy sex sex123
+computer computer123 internet internet123 server server123 system system123 oracle
+mysql database windows linux apple android samsung google facebook twitter instagram
+whatsapp snapchat linkedin youtube amazon netflix spotify minecraft fortnite roblox
+cambridge cambridge1 english english123 ingles b2first b2first123 firstcertificate
+january february march april may june july august september october november december
+monday tuesday wednesday thursday friday saturday sunday summer winter spring autumn
+cookie cookies chocolate peanut banana orange apple123 cherry mango strawberry
+red123 blue123 green123 black123 white123 yellow silver golden diamond gold123
+money money123 rich rich123 forever forever123 nothing nothing123 nopassword
+asdf1234 123abc abc1234 abcd123 aaa111 q1w2e3r4 z1x2c3v4 555555 55555555 444444
+""".split())
+
+
+_PASSWORD_ERRORS = {
+    "password too short (min 8)": "Password must be at least 8 characters.",
+    "password too common": "Password is too common. Choose something harder to guess.",
+    "password equals username": "Password must not be your username.",
+}
+
+
+def password_problem(name, password):
+    """Return the error key when the password is too weak, else None."""
+    if not isinstance(password, str) or len(password) < 8:
+        return "password too short (min 8)"
+    if isinstance(name, str) and password.strip().lower() == name.strip().lower():
+        return "password equals username"
+    if password.strip().lower() in COMMON_PASSWORDS:
+        return "password too common"
+    return None
 
 
 def register_user(name, password, color=None):
@@ -481,17 +623,24 @@ def login_user(name, password):
     """Validate credentials and migrate legacy hashes to pbkdf2. Return (user_id, error)."""
     users = store.list_users()
     name = name.strip() if isinstance(name, str) else ""
+    match = None
     for u in users.values():
         if u.get("name", "").lower() == name.lower():
-            if verify_password(u["id"], password):
-                if not u.get("algo"):
-                    migrated = dict(u)
-                    migrated["hash"] = hash_password(u["salt"], password)
-                    migrated["algo"] = "pbkdf2"
-                    store.create_user(u["id"], migrated)
-                return u["id"], None
-            return None, "wrong password"
-    return None, "user not found"
+            match = u
+            break
+    if not match:
+        # Burn the same PBKDF2 work as a real check (no user enumeration by timing).
+        pw = password if isinstance(password, str) else ""
+        hmac.compare_digest(_dummy_digest(), hash_password(DUMMY_SALT, pw))
+        return None, "user not found"
+    if verify_password(match["id"], password):
+        if not match.get("algo"):
+            migrated = dict(match)
+            migrated["hash"] = hash_password(match["salt"], password)
+            migrated["algo"] = "pbkdf2"
+            store.create_user(match["id"], migrated)
+        return match["id"], None
+    return None, "wrong password"
 
 
 def change_password(user_id, current, new_password):
@@ -499,8 +648,9 @@ def change_password(user_id, current, new_password):
     u = store.get_user(user_id)
     if not u:
         return "invalid session", 401
-    if not isinstance(new_password, str) or len(new_password) < 8:
-        return "Password must be at least 8 characters.", 400
+    problem = password_problem(u.get("name", ""), new_password)
+    if problem:
+        return _PASSWORD_ERRORS.get(problem, problem), 400
     if not verify_password(user_id, current):
         return "Wrong password.", 401
     salt = secrets.token_hex(8)  # 16 chars
@@ -720,6 +870,142 @@ document.getElementById('filtro').addEventListener('input',function(){{
 
 
 # ---------------------------------------------------------------------------
+# Audit log (fase 12): append-only JSON lines with the auth events.
+# NEVER stores tokens, passwords or hashes. Rotates at 5 MB → audit.log.1.
+# ---------------------------------------------------------------------------
+_AUDIT_LOCK = threading.Lock()
+AUDIT_MAX_BYTES = 5 * 1024 * 1024
+
+
+def _audit_file():
+    return os.path.join(DATA_DIR, "audit.log")
+
+
+def _audit(event, user="", ip="", rid=""):
+    """Append one event line to data/audit.log (0600). Best-effort: never raises."""
+    line = json.dumps({
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "rid": rid or "",
+        "event": event,
+        "user": user or "",
+        "ip": ip or "",
+    }, ensure_ascii=False)
+    try:
+        with _AUDIT_LOCK:
+            path = _audit_file()
+            try:
+                if os.path.exists(path) and os.path.getsize(path) > AUDIT_MAX_BYTES:
+                    os.replace(path, path + ".1")
+            except OSError:
+                pass
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+            try:
+                os.write(fd, (line + "\n").encode("utf-8"))
+            finally:
+                os.close(fd)
+            try:
+                os.chmod(path, 0o600)
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
+def read_audit_events():
+    """All audit events in chronological order (the rotated file is included)."""
+    events = []
+    for path in (_audit_file() + ".1", _audit_file()):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for ln in f:
+                    ln = ln.strip()
+                    if not ln:
+                        continue
+                    try:
+                        ev = json.loads(ln)
+                    except ValueError:
+                        continue
+                    if isinstance(ev, dict):
+                        events.append(ev)
+        except OSError:
+            continue
+    return events
+
+
+# ---------------------------------------------------------------------------
+# Progress payload schema (fase 12): PUT /api/progress validation
+# ---------------------------------------------------------------------------
+PROGRESS_LIST_MAX = 5000         # max items in log / errs
+PROGRESS_STR_MAX = 500           # max chars for ordinary strings
+PROGRESS_STR_MAX_LONG = 4000     # max chars for note / text fields
+PROGRESS_DEPTH_MAX = 6           # max nesting depth of any top-level value
+
+
+def _depth(v):
+    """Nesting depth of a JSON value (scalars = 1, empty containers = 1)."""
+    if isinstance(v, dict):
+        return 1 + max([_depth(x) for x in v.values()] or [0])
+    if isinstance(v, list):
+        return 1 + max([_depth(x) for x in v] or [0])
+    return 1
+
+
+def _scan_progress(v, path, key):
+    """Return the offending field path for bad strings/numbers, else None."""
+    if isinstance(v, str):
+        limit = PROGRESS_STR_MAX_LONG if key in ("note", "text") else PROGRESS_STR_MAX
+        return path if len(v) > limit else None
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return None if math.isfinite(v) else path
+    if isinstance(v, dict):
+        for k, val in v.items():
+            err = _scan_progress(val, f"{path}.{k}" if path else str(k), str(k))
+            if err:
+                return err
+        return None
+    if isinstance(v, list):
+        for i, val in enumerate(v):
+            err = _scan_progress(val, f"{path}[{i}]", key)
+            if err:
+                return err
+        return None
+    return path
+
+
+def _validate_progress(data):
+    """Validate a progress payload. Return None when valid, else the offending field.
+
+    Unknown keys are kept (forward compatible) but their values still obey the
+    string/number rules. The error never echoes the payload back.
+    """
+    if not isinstance(data, dict):
+        return "<root>"
+    for name in ("log", "errs"):
+        v = data.get(name)
+        if v is None and name not in data:
+            continue                      # absent → coerced to [] by the caller
+        if not isinstance(v, list) or len(v) > PROGRESS_LIST_MAX:
+            return name
+        for i, item in enumerate(v):
+            if not isinstance(item, dict):
+                return f"{name}[{i}]"
+    for name in ("settings", "profile"):
+        v = data.get(name)
+        if v is not None and not isinstance(v, dict):
+            return name
+    for k, v in data.items():
+        if _depth(v) > PROGRESS_DEPTH_MAX:
+            return str(k)
+    for k, v in data.items():
+        err = _scan_progress(v, str(k), str(k))
+        if err:
+            return err
+    return None
+
+
+# ---------------------------------------------------------------------------
 # HTTP handler
 # ---------------------------------------------------------------------------
 SECURITY_HEADERS = {
@@ -831,11 +1117,17 @@ class H(BaseHTTPRequestHandler):
 
     def _auth(self):
         """Return (user_id, error) from the Authorization header."""
-        return auth_from_token(self._bearer())
+        return auth_from_token(self._bearer(), self.headers.get("User-Agent", ""),
+                               _real_ip(self), self._rid)
 
     def _handle(self):
         """Single router (used by GET and HEAD)."""
         path = unquote(self.path.split("?")[0])
+
+        # Global per-IP limit for the whole API (health is excluded on purpose).
+        if path.startswith("/api/") and path != "/api/health":
+            if self._rate_limited("api:" + _real_ip(self), 300, 60):
+                return
 
         # CORS is closed: answer preflights without any permissive header.
         if self.command == "OPTIONS":
@@ -959,7 +1251,7 @@ class H(BaseHTTPRequestHandler):
         # In demo mode accounts and sync are blocked (nobody reads or writes data/)
         if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me",
                                    "/api/users", "/api/progress", "/api/password",
-                                   "/api/account", "/api/export"):
+                                   "/api/account", "/api/export", "/api/audit"):
             clen = int(self.headers.get("Content-Length", 0) or 0)
             if clen > 0:
                 self.rfile.read(clen)
@@ -993,6 +1285,10 @@ class H(BaseHTTPRequestHandler):
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
                 self._send_json(400, {"error": "invalid JSON"}); return
+            problem = password_problem(req.get("name", ""), req.get("password", ""))
+            if problem:
+                self._send_json(400, {"error": _PASSWORD_ERRORS.get(problem, problem)})
+                return
             uid, err = register_user(req.get("name", ""), req.get("password", ""), req.get("color"))
             if err:
                 code, msg = {
@@ -1002,7 +1298,8 @@ class H(BaseHTTPRequestHandler):
                 }.get(err, (400, err))
                 self._send_json(code, {"error": msg})
                 return
-            tok = new_token(uid)
+            _audit("register", req.get("name", ""), _real_ip(self), self._rid)
+            tok = new_token(uid, self.headers.get("User-Agent", ""))
             u = store.get_user(uid)
             body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
                               ensure_ascii=False).encode("utf-8")
@@ -1022,13 +1319,25 @@ class H(BaseHTTPRequestHandler):
             except ValueError:
                 self._send_json(400, {"error": "invalid JSON"}); return
             name = req.get("name", "")
-            if self._rate_limited("login-user:" + (name.strip().lower() if isinstance(name, str) else ""), 20, 3600):
+            fkey = _login_fail_key(name)
+            if self._rate_limited("login-user:" + fkey, 20, 3600):
+                return
+            locked, retry = _login_locked(fkey)
+            if locked:
+                # Locked usernames are rejected before any password work (cross-IP).
+                self._send_json(429, {"error": "too many failed attempts", "retry_after": retry},
+                                {"Retry-After": str(retry)})
                 return
             uid, err = login_user(name, req.get("password", ""))
             if err:
+                count, _just_locked = _login_failed(fkey)
+                _audit("login_fail", name if isinstance(name, str) else "", ip, self._rid)
+                time.sleep(_login_delay(count))
                 self._send_json(401, {"error": "Wrong username or password."}); return
-            tok = new_token(uid)
+            _login_succeeded(fkey)
             u = store.get_user(uid)
+            _audit("login_ok", u.get("name", uid), ip, self._rid)
+            tok = new_token(uid, self.headers.get("User-Agent", ""))
             body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
                               ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
@@ -1079,10 +1388,14 @@ class H(BaseHTTPRequestHandler):
                 self._send(code, json.dumps({"error": err}).encode("utf-8"), "application/json; charset=utf-8")
                 return
             # Keep only the current session: a leaked password must not keep old sessions alive.
+            keep_key = _token_key(tok)
             with _TOKENS_LOCK:
                 tokens = load_tokens()
-                tokens = {t: v for t, v in tokens.items() if t == tok or v.get("user_id") != uid}
+                tokens = {t: v for t, v in tokens.items()
+                          if t in (keep_key, tok) or v.get("user_id") != uid}
                 save_tokens(tokens)
+            u = store.get_user(uid)
+            _audit("password_change", u.get("name", uid) if u else uid, _real_ip(self), self._rid)
             self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json; charset=utf-8")
             return
 
@@ -1115,10 +1428,37 @@ class H(BaseHTTPRequestHandler):
                     self._send_json(400, {"error": "invalid JSON"}); return
                 if not verify_password(uid, req.get("password", "")):
                     self._send_json(401, {"error": "Wrong password."}); return
+                u = store.get_user(uid)
+                _audit("account_delete", u.get("name", uid) if u else uid, _real_ip(self), self._rid)
                 delete_user(uid)
                 self._send_json(200, {"ok": True})
                 return
             self._send(405, b"method not allowed", "text/plain"); return
+
+        # Audit trail (auth): each user sees their own events, never anyone else's.
+        if path == "/api/audit":
+            if self.command != "GET":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            u = store.get_user(uid)
+            name = u.get("name", "") if u else ""
+            m = re.search(r"(?:^|&)limit=(\d+)", self.path.split("?", 1)[-1])
+            limit = min(200, max(1, int(m.group(1)))) if m else 50
+            mine = {str(uid).lower(), str(name).lower()}
+            all_events = read_audit_events()
+            events = [e for e in all_events
+                      if str(e.get("user", "")).lower() in mine]
+            out = {"events": events[-limit:][::-1]}
+            if uid == "owner":
+                agg = {}
+                for e in all_events:
+                    key = str(e.get("event", ""))
+                    agg[key] = agg.get(key, 0) + 1
+                out["aggregate"] = agg
+            self._send_json(200, out)
+            return
 
         # Full data export: the complete progress as a JSON download (auth)
         if path == "/api/export":
@@ -1178,22 +1518,24 @@ class H(BaseHTTPRequestHandler):
                 try:
                     raw = self.rfile.read(self._clen())
                     data = json.loads(raw.decode("utf-8"))
-                    if not isinstance(data, dict):
-                        self._send(400, b"invalid format: must be a JSON object", "text/plain")
-                        return
-                    if "log" not in data or not isinstance(data["log"], list):
-                        data["log"] = []
-                    if "errs" not in data or not isinstance(data["errs"], list):
-                        data["errs"] = []
-                    if isinstance(data.get("settings"), dict):
-                        data["settings"].pop("aiKey", None)
-                    if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
-                        self._send_json(413, {"error": "progress too large"}); return
-                    save_user_progress(user_id, data)
-                    body = b"ok"
-                    self._send(200, body, "text/plain")
-                except (ValueError, OSError):
+                except (ValueError, UnicodeDecodeError):
                     self._send(400, b"invalid JSON", "text/plain")
+                    return
+                field = _validate_progress(data)
+                if field is not None:
+                    self._send_json(422, {"error": "invalid progress", "field": field})
+                    return
+                if "log" not in data:
+                    data["log"] = []
+                if "errs" not in data:
+                    data["errs"] = []
+                if isinstance(data.get("settings"), dict):
+                    data["settings"].pop("aiKey", None)
+                if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
+                    self._send_json(413, {"error": "progress too large"}); return
+                save_user_progress(user_id, data)
+                body = b"ok"
+                self._send(200, body, "text/plain")
             else:
                 self._send(405, b"method not allowed", "text/plain")
             return
@@ -1240,6 +1582,7 @@ class H(BaseHTTPRequestHandler):
                 quota_uid, _auth_err = self._auth() if self._bearer() else (None, None)
                 quota_key = "user:" + quota_uid if quota_uid else "ip:" + client_ip
                 if _ai_quota_left(quota_key) <= 0:
+                    _audit("quota_hit", quota_uid or "", client_ip, self._rid)
                     reset = (date.today() + timedelta(days=1)).isoformat()
                     self._send(429, json.dumps({"error": "daily AI quota reached", "reset": reset}).encode("utf-8"), "application/json; charset=utf-8")
                     return
