@@ -3504,6 +3504,40 @@ class H(BaseHTTPRequestHandler):
             self._send_json(200, result)
             return
 
+        # Phase 30: "Test connection" for a user-supplied provider key. Sends
+        # one token of work and answers only {ok, model} or {ok:false, code}:
+        # never the key and never the provider's body.
+        if path == "/api/ai/provider/test":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            self._drain()
+            byo, byo_err = _byo_from_headers(self.headers)
+            if byo_err:
+                self._send_json(400, {"ok": False, "code": byo_err})
+                return
+            if not byo:
+                self._send_json(400, {"ok": False, "code": "provider_key_required"})
+                return
+            auth_uid = None
+            if self._bearer():
+                auth_uid, _auth_err = self._auth()
+            account = ("user:" + auth_uid) if auth_uid else ("ip:" + _real_ip(self))
+            if self._rate_limited("ai:byo:test:" + account, BYO_TEST_RATE_PER_MIN, 60,
+                                  "user" if auth_uid else "ip"):
+                return
+            payload = {
+                "model": byo["model"],
+                "messages": [{"role": "user", "content": "ping"}],
+                "max_tokens": 1,
+            }
+            body, up_err = _provider_complete(byo["base"], byo["key"], byo["model"], payload)
+            if up_err or "choices" not in body:
+                self._send_json(502, {"ok": False, "code": up_err or "upstream_failed"})
+                return
+            self._send_json(200, {"ok": True, "model": byo["model"]})
+            return
+
         if path == "/api/ai/writing":
             if self.command != "POST":
                 self._send(405, json.dumps({"error": "method not allowed"}).encode("utf-8"), "application/json; charset=utf-8")
