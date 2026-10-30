@@ -27,6 +27,9 @@ Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, secrets, threading
 import urllib.request, urllib.error
+import ipaddress
+from collections import deque
+from datetime import date, timedelta
 from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
@@ -50,10 +53,12 @@ BK_KEEP   = 20                                          # backups to keep per us
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 TOKENS_FILE = os.path.join(DATA_DIR, "tokens.json")
 USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progress.json
-TOKEN_TTL  = 7 * 24 * 3600                              # session valid for 7 days
+TOKEN_TTL  = 30 * 24 * 3600                             # session valid for 30 days (sliding)
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # owner password used when migrating
 B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
+PROGRESS_MAX_BYTES = 2 * 1024 * 1024                    # max size of a progress payload (2 MB)
+AI_MAX_BYTES = 32 * 1024                                # max size of an AI request body (32 KB)
 
 
 def _is_demo():
@@ -83,22 +88,106 @@ B2_AI_BASE = os.environ.get("B2_AI_BASE", "")
 B2_AI_MODEL = os.environ.get("B2_AI_MODEL", "")
 AI_ALLOWED_KINDS = ("Essay", "Article", "Report", "Review", "Email")
 AI_TIMEOUT = 25
-_AI_LOCK = threading.Lock()
-_AI_RATE = {}  # {ip: [timestamps]}
+
+# --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
+_RATE_LOCK = threading.Lock()
+_RATE = {}  # {key: (deque of timestamps, window_s)}
+_AI_RATE = _RATE  # tests reset rate state through S._AI_RATE.clear()
+
+
+def _rate(key, limit, window_s):
+    """Sliding-window rate limit: True = allowed, False = over the limit.
+
+    Old entries are pruned on every check, so the store only holds live hits.
+    """
+    now = time.time()
+    with _RATE_LOCK:
+        for k, (dq, win) in list(_RATE.items()):
+            while dq and now - dq[0] >= win:
+                dq.popleft()
+            if not dq:
+                del _RATE[k]
+        dq, _win = _RATE.setdefault(key, (deque(), window_s))
+        if len(dq) >= limit:
+            return False
+        dq.append(now)
+        return True
+
+
+def _retry_after(key, window_s):
+    """Seconds until the oldest hit of `key` leaves the window (min 1)."""
+    with _RATE_LOCK:
+        entry = _RATE.get(key)
+        if not entry or not entry[0]:
+            return 1
+        return max(1, int(window_s - (time.time() - entry[0][0])) + 1)
 
 
 def _check_ai_rate(ip):
-    """In-memory rate limit: max 10/min and 60/hour per IP."""
-    now = time.time()
-    with _AI_LOCK:
-        hist = [t for t in _AI_RATE.get(ip, []) if now - t < 3600.0]
-        last_min = sum(1 for t in hist if now - t < 60.0)
-        if last_min >= 10 or len(hist) >= 60:
-            _AI_RATE[ip] = hist
-            return False
-        hist.append(now)
-        _AI_RATE[ip] = hist
-        return True
+    """AI per-IP rate limit: max 10/min and 60/hour (daily quota is separate)."""
+    ok_min = _rate(f"ai:min:{ip}", 10, 60)
+    ok_hour = _rate(f"ai:hour:{ip}", 60, 3600)
+    return ok_min and ok_hour
+
+
+def _is_trusted_proxy(peer):
+    """True for loopback/private peers (the Coolify proxy in front of the app)."""
+    try:
+        ip = ipaddress.ip_address(peer)
+        return ip.is_loopback or ip.is_private
+    except ValueError:
+        return False
+
+
+def _real_ip(handler):
+    """Client IP: X-Forwarded-For only when the request comes from loopback/internal."""
+    peer = handler.client_address[0] if handler.client_address else ""
+    if _is_trusted_proxy(peer):
+        xff = handler.headers.get("X-Forwarded-For")
+        if xff:
+            cand = xff.split(",")[0].strip()
+            if cand:
+                return cand
+    return peer or "local"
+
+
+# --- Daily AI quota (protects the owner's key: in-memory, resets on date change) ---
+_AI_QUOTA_LOCK = threading.Lock()
+_AI_QUOTA = {}  # {date iso: {"total": int, "users": {quota_key: int}}}
+
+
+def _ai_quota_limits():
+    """(per_user, total) daily limits from env, default 8 / 80."""
+    def _int(name, default):
+        try:
+            return max(0, int(os.environ.get(name, str(default))))
+        except ValueError:
+            return default
+    return _int("B2_AI_DAILY_PER_USER", 8), _int("B2_AI_DAILY_TOTAL", 80)
+
+
+def _ai_quota_today():
+    """Today's counter (auto-reset: previous days are dropped on access)."""
+    today = date.today().isoformat()
+    for k in list(_AI_QUOTA):
+        if k != today:
+            del _AI_QUOTA[k]
+    return _AI_QUOTA.setdefault(today, {"total": 0, "users": {}})
+
+
+def _ai_quota_left(quota_key):
+    """Server-key AI calls left today for this user (also capped by the total)."""
+    per_user, total = _ai_quota_limits()
+    with _AI_QUOTA_LOCK:
+        day = _ai_quota_today()
+        return min(per_user - day["users"].get(quota_key, 0), total - day["total"])
+
+
+def _ai_quota_consume(quota_key):
+    with _AI_QUOTA_LOCK:
+        day = _ai_quota_today()
+        day["users"][quota_key] = day["users"].get(quota_key, 0) + 1
+        day["total"] += 1
 
 
 def _validate_ai_payload(obj):
@@ -235,14 +324,16 @@ def _read_json(path, default):
 
 
 def _write_json(path, data):
-    """Write a JSON file atomically (tmp + rename)."""
+    """Write a JSON file atomically (tmp + rename), readable only by the owner (0600)."""
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
+    os.chmod(tmp, 0o600)
     os.replace(tmp, path)
+    os.chmod(path, 0o600)
 
 
 def load_users():
@@ -274,6 +365,19 @@ def _legacy_hash_password(salt, password):
     return hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
 
 
+def verify_password(user_id, password):
+    """True if `password` matches the stored hash (pbkdf2 or legacy)."""
+    u = store.get_user(user_id)
+    if not u or not isinstance(password, str):
+        return False
+    algo = u.get("algo")
+    if algo == "pbkdf2":
+        return secrets.compare_digest(u["hash"], hash_password(u["salt"], password))
+    if not algo:
+        return secrets.compare_digest(u["hash"], _legacy_hash_password(u["salt"], password))
+    return False
+
+
 def new_token(user_id):
     """Create a session token valid for TOKEN_TTL and persist it."""
     tokens = load_tokens()
@@ -286,15 +390,23 @@ def new_token(user_id):
     return tok
 
 
-def user_from_token(token):
-    """Return the token's user_id if it is valid, or None."""
+def auth_from_token(token):
+    """Return (user_id, error) for a session token and extend its expiry (sliding).
+
+    error is None, "session expired" or "invalid session".
+    """
     if not token:
-        return None
+        return None, "invalid session"
     tokens = load_tokens()
     v = tokens.get(token)
-    if not v or v.get("exp", 0) < time.time():
-        return None
-    return v.get("user_id")
+    if not v:
+        return None, "invalid session"
+    if v.get("exp", 0) < time.time():
+        return None, "session expired"
+    # Sliding expiration: every authenticated request keeps the session alive.
+    v["exp"] = time.time() + TOKEN_TTL
+    save_tokens(tokens)
+    return v.get("user_id"), None
 
 
 def revoke_token(token):
@@ -323,11 +435,14 @@ def user_bk_dir(user_id):
 def register_user(name, password, color=None):
     """Create a user. Return (user_id, error)."""
     users = store.list_users()
-    name = name.strip()
+    name = name.strip() if isinstance(name, str) else ""
     if not name:
         return None, "name is empty"
-    if len(password) < 8:
+    if not isinstance(password, str) or len(password) < 8:
         return None, "password too short (min 8)"
+    for u in users.values():
+        if u.get("name", "").lower() == name.lower():
+            return None, "username taken"
     # Normalize the name for a unique id (slug + suffix if repeated)
     base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or "user"
     uid = base
@@ -349,20 +464,16 @@ def register_user(name, password, color=None):
 def login_user(name, password):
     """Validate credentials and migrate legacy hashes to pbkdf2. Return (user_id, error)."""
     users = store.list_users()
-    name = name.strip()
+    name = name.strip() if isinstance(name, str) else ""
     for u in users.values():
-        if u["name"].lower() == name.lower():
-            algo = u.get("algo")
-            if algo == "pbkdf2":
-                if u["hash"] == hash_password(u["salt"], password):
-                    return u["id"], None
-            elif not algo:
-                if u["hash"] == _legacy_hash_password(u["salt"], password):
+        if u.get("name", "").lower() == name.lower():
+            if verify_password(u["id"], password):
+                if not u.get("algo"):
                     migrated = dict(u)
                     migrated["hash"] = hash_password(u["salt"], password)
                     migrated["algo"] = "pbkdf2"
                     store.create_user(u["id"], migrated)
-                    return u["id"], None
+                return u["id"], None
             return None, "wrong password"
     return None, "user not found"
 
@@ -371,18 +482,11 @@ def change_password(user_id, current, new_password):
     """Verify `current` and set `new_password` (pbkdf2). Return (error, http_code)."""
     u = store.get_user(user_id)
     if not u:
-        return "user not found", 401
-    algo = u.get("algo")
-    if algo == "pbkdf2":
-        ok = u["hash"] == hash_password(u["salt"], current)
-    elif not algo:
-        ok = u["hash"] == _legacy_hash_password(u["salt"], current)
-    else:
-        ok = False
+        return "invalid session", 401
     if not isinstance(new_password, str) or len(new_password) < 8:
-        return "password too short (min 8)", 400
-    if not ok:
-        return "wrong password", 401
+        return "Password must be at least 8 characters.", 400
+    if not verify_password(user_id, current):
+        return "Wrong password.", 401
     salt = secrets.token_hex(8)  # 16 chars
     rec = dict(u)
     rec["salt"] = salt
@@ -390,6 +494,14 @@ def change_password(user_id, current, new_password):
     rec["algo"] = "pbkdf2"
     store.create_user(user_id, rec)
     return None, 200
+
+
+def delete_user(user_id):
+    """Remove the account: data dir, users.json record and every session token."""
+    store.remove_user(user_id)
+    tokens = load_tokens()
+    tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
+    save_tokens(tokens)
 
 
 def migrate_legacy():
@@ -567,6 +679,44 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_json(self, code, obj, extra=None):
+        """Helper: JSON response."""
+        body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        self._send(code, body, "application/json; charset=utf-8", extra)
+
+    def _rate_limited(self, key, limit, window_s):
+        """Apply _rate() and answer 429 + Retry-After when the limit is exceeded."""
+        if _rate(key, limit, window_s):
+            return False
+        self._drain()
+        retry = _retry_after(key, window_s)
+        self._send_json(429, {"error": "too many requests", "retry_after": retry},
+                        {"Retry-After": str(retry)})
+        return True
+
+    def _clen(self):
+        """Content-Length of the request body (0 if absent or malformed)."""
+        try:
+            return max(0, int(self.headers.get("Content-Length", 0) or 0))
+        except ValueError:
+            return 0
+
+    def _drain(self):
+        """Read and discard the request body (bounded) so the client can finish."""
+        remaining = min(self._clen(), 16 * 1024 * 1024)
+        while remaining > 0:
+            chunk = self.rfile.read(min(remaining, 65536))
+            if not chunk:
+                break
+            remaining -= len(chunk)
+
+    def _bearer(self):
+        return (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
+
+    def _auth(self):
+        """Return (user_id, error) from the Authorization header."""
+        return auth_from_token(self._bearer())
+
     def _handle(self):
         """Single router (used by GET and HEAD)."""
         path = unquote(self.path.split("?")[0])
@@ -680,7 +830,9 @@ class H(BaseHTTPRequestHandler):
             return
 
         # In demo mode accounts and sync are blocked (nobody reads or writes data/)
-        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me", "/api/users", "/api/progress", "/api/password"):
+        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me",
+                                   "/api/users", "/api/progress", "/api/password",
+                                   "/api/account", "/api/export"):
             clen = int(self.headers.get("Content-Length", 0) or 0)
             if clen > 0:
                 self.rfile.read(clen)
@@ -700,6 +852,8 @@ class H(BaseHTTPRequestHandler):
             migrate_legacy()
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
+            if self._rate_limited("register:" + _real_ip(self), 5, 3600):
+                return
             if _register_mode() == "closed":
                 clen = int(self.headers.get("Content-Length", 0) or 0)
                 if clen > 0:
@@ -707,14 +861,20 @@ class H(BaseHTTPRequestHandler):
                 body = json.dumps({"error": "registration is closed"}, ensure_ascii=False).encode("utf-8")
                 self._send(403, body, "application/json; charset=utf-8")
                 return
-            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            raw = self.rfile.read(self._clen())
             try:
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
-                self._send(400, b"invalid JSON", "text/plain"); return
+                self._send_json(400, {"error": "invalid JSON"}); return
             uid, err = register_user(req.get("name", ""), req.get("password", ""), req.get("color"))
             if err:
-                self._send(400, err.encode("utf-8"), "text/plain"); return
+                code, msg = {
+                    "username taken": (409, "That username is taken."),
+                    "password too short (min 8)": (400, "Password must be at least 8 characters."),
+                    "name is empty": (400, "Username is required."),
+                }.get(err, (400, err))
+                self._send_json(code, {"error": msg})
+                return
             tok = new_token(uid)
             u = store.get_user(uid)
             body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
@@ -726,14 +886,20 @@ class H(BaseHTTPRequestHandler):
             migrate_legacy()
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
-            raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+            ip = _real_ip(self)
+            if self._rate_limited("login-ip:" + ip, 10, 600):
+                return
+            raw = self.rfile.read(self._clen())
             try:
                 req = json.loads(raw.decode("utf-8"))
             except ValueError:
-                self._send(400, b"invalid JSON", "text/plain"); return
-            uid, err = login_user(req.get("name", ""), req.get("password", ""))
+                self._send_json(400, {"error": "invalid JSON"}); return
+            name = req.get("name", "")
+            if self._rate_limited("login-user:" + (name.strip().lower() if isinstance(name, str) else ""), 20, 3600):
+                return
+            uid, err = login_user(name, req.get("password", ""))
             if err:
-                self._send(401, err.encode("utf-8"), "text/plain"); return
+                self._send_json(401, {"error": "Wrong username or password."}); return
             tok = new_token(uid)
             u = store.get_user(uid)
             body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
@@ -754,10 +920,9 @@ class H(BaseHTTPRequestHandler):
             return
 
         if path == "/api/me":
-            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
-            uid = user_from_token(tok)
+            uid, auth_err = self._auth()
             if not uid:
-                self._send(401, b"invalid session", "text/plain"); return
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
             u = store.get_user(uid)
             if not u:
                 self._send(404, b"user does not exist", "text/plain"); return
@@ -769,10 +934,12 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/password":
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
-            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
-            uid = user_from_token(tok)
+            if self._rate_limited("password:" + _real_ip(self), 5, 3600):
+                return
+            tok = self._bearer()
+            uid, auth_err = self._auth()
             if not uid:
-                self._send(401, json.dumps({"error": "invalid session"}).encode("utf-8"), "application/json; charset=utf-8")
+                self._send_json(401, {"error": auth_err or "invalid session"})
                 return
             raw = self.rfile.read(int(self.headers.get("Content-Length", 0) or 0))
             try:
@@ -791,20 +958,70 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json; charset=utf-8")
             return
 
+        # Account overview: uid, creation date, data usage and today's AI quota (auth)
+        # DELETE /api/account {password} closes the account and erases all its data.
+        if path == "/api/account":
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            if self.command == "GET":
+                u = store.get_user(uid)
+                if not u:
+                    self._send_json(404, {"error": "user does not exist"}); return
+                try:
+                    progress_bytes = os.path.getsize(user_prog_file(uid))
+                except OSError:
+                    progress_bytes = 0
+                self._send_json(200, {
+                    "uid": uid,
+                    "created": u.get("created", ""),
+                    "progress_bytes": progress_bytes,
+                    "ai_left_today": max(0, _ai_quota_left("user:" + uid)),
+                })
+                return
+            if self.command == "DELETE":
+                raw = self.rfile.read(self._clen())
+                try:
+                    req = json.loads(raw.decode("utf-8"))
+                except ValueError:
+                    self._send_json(400, {"error": "invalid JSON"}); return
+                if not verify_password(uid, req.get("password", "")):
+                    self._send_json(401, {"error": "Wrong password."}); return
+                delete_user(uid)
+                self._send_json(200, {"ok": True})
+                return
+            self._send(405, b"method not allowed", "text/plain"); return
+
+        # Full data export: the complete progress as a JSON download (auth)
+        if path == "/api/export":
+            if self.command != "GET":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            data = read_user_progress(uid)
+            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+            fname = f"b2first-export-{uid}-{time.strftime('%Y%m%d')}.json"
+            self._send(200, body, "application/json; charset=utf-8",
+                       {"Content-Disposition": f'attachment; filename="{fname}"'})
+            return
+
         # Progress: GET (download or list backups) + PUT (save) — per user
         if path == "/api/progress":
             migrate_legacy()
             qs = self.path.split("?", 1)[-1]
             user_id = re.search(r"(?:^|&)user=([^&]+)", qs)
             user_id = unquote(user_id.group(1)) if user_id else "owner"
-            # Validate the session: if there is a token it must belong to the user; if
-            # there is no token, only the owner is allowed (backwards compat with old tests).
-            tok = (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
-            uid = user_from_token(tok)
-            if uid is None and user_id != "owner":
-                self._send(401, b"session required", "text/plain"); return
+            # Validate the session: a present token must be valid and belong to the
+            # user; with no token only the owner is allowed (backwards compat).
+            tok = self._bearer()
+            uid, auth_err = self._auth() if tok else (None, None)
+            if tok and not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            if not tok and user_id != "owner":
+                self._send_json(401, {"error": "invalid session"}); return
             if uid is not None and uid != user_id:
-                self._send(403, b"not authorized for this user", "text/plain"); return
+                self._send_json(403, {"error": "not authorized for this user"}); return
             if self.command == "GET":
                 if "download=1" in qs.split("&"):
                     data = read_user_progress(user_id)
@@ -815,8 +1032,13 @@ class H(BaseHTTPRequestHandler):
                     body = json.dumps(data, ensure_ascii=False).encode("utf-8")
                     self._send(200, body, "application/json; charset=utf-8")
             elif self.command == "PUT":
+                if self._clen() > PROGRESS_MAX_BYTES:
+                    self._drain()
+                    self._send_json(413, {"error": "progress too large"}); return
+                if self._rate_limited("progress:" + user_id, 60, 60):
+                    return
                 try:
-                    raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                    raw = self.rfile.read(self._clen())
                     data = json.loads(raw.decode("utf-8"))
                     if not isinstance(data, dict):
                         self._send(400, b"invalid format: must be a JSON object", "text/plain")
@@ -827,6 +1049,8 @@ class H(BaseHTTPRequestHandler):
                         data["errs"] = []
                     if isinstance(data.get("settings"), dict):
                         data["settings"].pop("aiKey", None)
+                    if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
+                        self._send_json(413, {"error": "progress too large"}); return
                     save_user_progress(user_id, data)
                     body = b"ok"
                     self._send(200, body, "text/plain")
@@ -844,13 +1068,17 @@ class H(BaseHTTPRequestHandler):
             if self.command != "POST":
                 self._send(405, json.dumps({"error": "method not allowed"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            xff = self.headers.get("X-Forwarded-For")
-            client_ip = xff.split(",")[0].strip() if xff else (self.client_address[0] if self.client_address else "local")
+            if self._clen() > AI_MAX_BYTES:
+                self._drain()
+                self._send(413, json.dumps({"error": "ai payload too large"}).encode("utf-8"), "application/json; charset=utf-8")
+                return
+            client_ip = _real_ip(self)
             if not _check_ai_rate(client_ip):
+                self._drain()
                 self._send(429, json.dumps({"error": "rate limit"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
             try:
-                length = int(self.headers.get("Content-Length", 0))
+                length = self._clen()
                 raw = self.rfile.read(length) if length > 0 else b"{}"
                 req = json.loads(raw.decode("utf-8"))
                 if not isinstance(req, dict):
@@ -866,10 +1094,22 @@ class H(BaseHTTPRequestHandler):
             if kind not in AI_ALLOWED_KINDS:
                 self._send(400, json.dumps({"error": "invalid kind"}).encode("utf-8"), "application/json; charset=utf-8")
                 return
-            api_key = (req.get("provider_key") or req.get("key") or os.environ.get("B2_AI_KEY") or "").strip()
+            # A key sent in the request is the user's own: it never touches the
+            # owner's key nor the server quota. Otherwise the shared server key
+            # is used and the daily quota (per user + total) applies.
+            api_key = (req.get("provider_key") or req.get("key") or "").strip()
             if not api_key:
-                self._send(502, json.dumps({"error": "missing provider key"}).encode("utf-8"), "application/json; charset=utf-8")
-                return
+                quota_uid, _auth_err = self._auth() if self._bearer() else (None, None)
+                quota_key = "user:" + quota_uid if quota_uid else "ip:" + client_ip
+                if _ai_quota_left(quota_key) <= 0:
+                    reset = (date.today() + timedelta(days=1)).isoformat()
+                    self._send(429, json.dumps({"error": "daily AI quota reached", "reset": reset}).encode("utf-8"), "application/json; charset=utf-8")
+                    return
+                api_key = (os.environ.get("B2_AI_KEY") or "").strip()
+                if not api_key:
+                    self._send(502, json.dumps({"error": "missing provider key"}).encode("utf-8"), "application/json; charset=utf-8")
+                    return
+                _ai_quota_consume(quota_key)
             env_prov = B2_AI_PROVIDER if B2_AI_PROVIDER != DEFAULT_AI_PROVIDER else os.environ.get("B2_AI_PROVIDER", DEFAULT_AI_PROVIDER)
             provider = (req.get("provider") or env_prov or DEFAULT_AI_PROVIDER).strip().lower()
             if provider not in ("deepseek", "gemini"):
@@ -946,6 +1186,9 @@ class H(BaseHTTPRequestHandler):
         self._handle()
 
     def do_POST(self):
+        self._handle()
+
+    def do_DELETE(self):
         self._handle()
 
     def do_HEAD(self):

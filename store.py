@@ -15,6 +15,7 @@ __all__ = [
     "get_user",
     "create_user",
     "list_users",
+    "remove_user",
     "get_progress",
     "put_progress",
     "backup",
@@ -39,12 +40,32 @@ def _users_file() -> str:
     return os.path.join(_data_dir(), "users.json")
 
 
+def _user_dir(uid: str) -> str:
+    return os.path.join(_data_dir(), "users", uid)
+
+
 def _prog_file(uid: str) -> str:
-    return os.path.join(_data_dir(), "users", uid, "progress.json")
+    return os.path.join(_user_dir(uid), "progress.json")
 
 
 def _bk_dir(uid: str) -> str:
-    return os.path.join(_data_dir(), "users", uid, "backups")
+    return os.path.join(_user_dir(uid), "backups")
+
+
+def _ensure_private_dir(path: str) -> None:
+    """Create a directory (if needed) and force 0700 permissions on it.
+
+    os.makedirs applies mode only when creating and it is masked by the umask,
+    so the explicit chmod keeps the directory private even if it pre-exists.
+    """
+    os.makedirs(path, mode=0o700, exist_ok=True)
+    os.chmod(path, 0o700)
+
+
+def _ensure_user_dirs(uid: str) -> None:
+    """Create data/users/<uid>/ (0700) and its backups/ folder (0700)."""
+    _ensure_private_dir(_user_dir(uid))
+    _ensure_private_dir(_bk_dir(uid))
 
 
 def _read_json(path: str, default):
@@ -57,14 +78,16 @@ def _read_json(path: str, default):
 
 
 def _write_json(path: str, data) -> None:
-    """Write a JSON file atomically (tmp + rename)."""
+    """Write a JSON file atomically (tmp + rename), readable only by the owner (0600)."""
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
+    os.chmod(tmp, 0o600)
     os.replace(tmp, path)
+    os.chmod(path, 0o600)
 
 
 def list_users() -> dict:
@@ -83,7 +106,15 @@ def create_user(uid: str, record: dict) -> None:
     users = list_users()
     users[uid] = record
     _write_json(_users_file(), users)
-    os.makedirs(_bk_dir(uid), exist_ok=True)
+    _ensure_user_dirs(uid)
+
+
+def remove_user(uid: str) -> None:
+    """Delete the record of user uid and its whole data directory."""
+    users = list_users()
+    users.pop(uid, None)
+    _write_json(_users_file(), users)
+    shutil.rmtree(_user_dir(uid), ignore_errors=True)
 
 
 def get_progress(uid: str) -> dict | None:
@@ -97,8 +128,8 @@ def backup(uid: str, label: str | None = None) -> str:
     pf = _prog_file(uid)
     if not os.path.exists(pf):
         return ""
+    _ensure_user_dirs(uid)
     bk_dir = _bk_dir(uid)
-    os.makedirs(bk_dir, exist_ok=True)
     stamp = time.strftime("%Y%m%d-%H%M%S")
     suffix = f"-{label}" if label else ""
     dst = os.path.join(bk_dir, f"progress-{stamp}{suffix}.json")
@@ -108,8 +139,8 @@ def backup(uid: str, label: str | None = None) -> str:
 
 def put_progress(uid: str, data: dict) -> None:
     """Persist the user's progress atomically and rotate backups (BK_KEEP=20)."""
+    _ensure_user_dirs(uid)
     bk_dir = _bk_dir(uid)
-    os.makedirs(bk_dir, exist_ok=True)
     pf = _prog_file(uid)
     if os.path.exists(pf):
         try:
