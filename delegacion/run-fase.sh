@@ -93,6 +93,21 @@ VERDICT="ok"
 [ "$QUOTA" -gt 0 ] && VERDICT="cuota_agotada"
 [ "$EXIT" -ne 0 ] && [ "$VERDICT" = "ok" ] && VERDICT="exit_$EXIT"
 
+# ---------- deploy: el test tiene que correr contra el codigo commiteado ----------
+# Fase 23 commiteo la optimizacion y el servicio siguio 2 h con el codigo viejo;
+# los tests levantaban su propio server y no lo detectaban. Si cambio algo que se
+# sirve, se reinicia y se espera health antes de medir.
+if git diff --name-only "$BASE"..HEAD | grep -qE '^(server\.py|index\.html|prompts\.py|store\.py|speech\.py|speaking_report\.py)$'; then
+  sudo -n systemctl restart b2first >>"$LOG" 2>&1 || echo "== deploy: restart FALLO" | tee -a "$LOG"
+  for _i in $(seq 1 20); do
+    curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8088/api/health && break
+    sleep 1
+  done
+  echo "== deploy: reiniciado y health ok (uptime $(curl -s http://127.0.0.1:8088/api/health))" | tee -a "$LOG"
+else
+  echo "== deploy: sin cambios en archivos servidos, no reinicio" | tee -a "$LOG"
+fi
+
 # ---------- tests del proyecto (verificación dura) ----------
 TESTS="${RUN_TESTS:-test_sync.py test_personalization.py}"
 TFAIL=""
