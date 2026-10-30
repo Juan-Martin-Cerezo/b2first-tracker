@@ -74,7 +74,10 @@ else
     'iifname "lo" accept' \
     'iifname "tailscale0" accept' \
     'udp dport 41641 accept' \
-    'ct state new tcp dport 22 limit rate 6/minute burst 3 packets accept' \
+    'iifname "tailscale0" ct state new tcp dport 22 accept' \
+    'ip saddr 192.168.1.0/24 ct state new tcp dport 22 limit rate 6/minute burst 3 packets accept' \
+    'ip saddr 10.0.1.0/24 ct state new tcp dport 22 accept' \
+    'ct state new tcp dport 22 drop' \
     'ip saddr 192.168.1.0/24 tcp dport { 2283, 8089, 9100 } accept'; do
     if nft_has "$spec"; then
       row "nft rule: $spec" "PASS" "present"
@@ -82,6 +85,14 @@ else
       row "nft rule: $spec" "FAIL" "missing"
     fi
   done
+
+  if printf '%s\n' "$NFT" | grep -Eq '^[[:space:]]*ct state new tcp dport 22 .*accept$'; then
+    row "SSH has no unqualified accept (WAN closed)" "FAIL" \
+      "unqualified 'ct state new tcp dport 22 ... accept' present"
+  else
+    row "SSH has no unqualified accept (WAN closed)" "PASS" \
+      "every dport 22 accept is source-qualified"
+  fi
 
   if printf '%s\n' "$NFT" | grep -Eq 'ip saddr 192\.168\.1\.0/24 accept[[:space:]]*$'; then
     row "LAN is not a blanket trust" "FAIL" "found 'ip saddr 192.168.1.0/24 accept'"

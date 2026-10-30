@@ -142,7 +142,7 @@ its own security layer; full detail and the before/after exposure matrix are in
 `docs/HOST-HARDENING.md`.
 
 ```bash
-sudo bash tools/audit-host.sh     # 55 local checks: nft, DOCKER-USER, binds, sshd, Funnel, egress
+sudo bash tools/audit-host.sh     # 59 local checks: nft, DOCKER-USER, binds, sshd, Funnel, egress
 sudo nft list table inet hardened # input filter: default drop, LAN gets explicit ports only
 sudo iptables -S DOCKER-USER      # Docker published ports are filtered in FORWARD
 sudo sshd -T | grep -E 'maxauthtries|logingracetime|allowusers|clientaliveinterval'
@@ -155,8 +155,10 @@ sudo sshd -T | grep -E 'maxauthtries|logingracetime|allowusers|clientaliveinterv
   (`2283`) and the app (`8089`); the Coolify panel (`8000`) and `6001-6002` are tailnet-only.
 - SSH is key-only, `MaxAuthTries 3`, `LoginGraceTime 20`, `AllowUsers juan root@10.0.1.*`,
   `X11Forwarding no`, `ClientAliveInterval 120`, in
-  `/etc/ssh/sshd_config.d/99-hardening.conf`. The scoped root exception is Coolify's own SSH from
-  its container (`10.0.1.6`); removing it breaks Coolify deploys.
+  `/etc/ssh/sshd_config.d/99-hardening.conf`. The input chain accepts new SSH only from the LAN
+  (rate-limited 6/min, burst 3), the tailnet, and the Coolify bridge `10.0.1.0/24`; the WAN is
+  dropped. The scoped root exception is Coolify's own SSH from its container (`10.0.1.6`); the
+  `10.0.1.0/24` input rule is its matching half — removing either breaks Coolify deploys.
 - `fail2ban` watches the `sshd` journal (`maxretry 4`, `bantime 1h`). The LAN is in `ignoreip` as a
   recovery path; the tailnet is not.
 - **Patching is manual on purpose** — `unattended-upgrades` is not enabled. Runbook:
@@ -231,8 +233,8 @@ The speaking suites (`test_speaking_pa`, `test_speaking_director`, `test_speakin
 Two audits, both exit non-zero on failure:
 
 - `bash tools/audit.sh` — 39 checks against the public URL. At handoff: **39/39 PASS**.
-- `sudo bash tools/audit-host.sh` — 55 local host checks (nft, `DOCKER-USER`, listening binds,
-  `sshd -T`, fail2ban, Funnel, egress). At phase 25: **55/55 PASS**. Details:
+- `sudo bash tools/audit-host.sh` — 59 local host checks (nft, `DOCKER-USER`, listening binds,
+  `sshd -T`, fail2ban, Funnel, egress). At phase 25: **59/59 PASS**. Details:
   `docs/HOST-HARDENING.md`.
 
 | Control | Where |
@@ -255,7 +257,7 @@ Two audits, both exit non-zero on failure:
 | `TRACE` → 405 · `..` in any encoding → 400 · `.env`/`.git`/`.es_salt` → 403 | phase 16 |
 | No version banner (`Server: B2First`, `sys_version=""`) | found by `tools/audit.sh` |
 | AI: instruction hierarchy, per-request nonce fence, injection/off-topic heuristics, output leak guard | phase 17 |
-| Host input filter: default drop, LAN no longer blanket-trusted, explicit ports `22/2283/8089/9100`, SSH new-connection limit 6/min burst 3 | phase 25 (`nft-hardened.service`) |
+| Host input filter: default drop, LAN no longer blanket-trusted, explicit ports `2283/8089/9100`, SSH new connections only from LAN (6/min burst 3), tailnet and Coolify bridge `10.0.1.0/24`; WAN SSH dropped | phase 25 (`nft-hardened.service`) |
 | Docker published ports filtered in `FORWARD/DOCKER-USER`: LAN only `2283`/`8089`, panel and `6001-6002` tailnet-only, container egress preserved | phase 25 (`docker-user-hardening.service`) |
 | sshd: `MaxAuthTries 3`, `LoginGraceTime 20`, `AllowUsers juan root@10.0.1.*`, `X11Forwarding no`, `ClientAliveInterval 120` | phase 25 drop-in |
 | fail2ban `sshd` jail: `maxretry 4`, `bantime 1h`, systemd backend, LAN ignored as recovery path | phase 25 |
@@ -531,7 +533,7 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 ├── tests/               30 suites (see §5) + helpers.py
 ├── tools/
 │   ├── audit.sh         39 external security checks against the public URL
-│   ├── audit-host.sh    55 local host checks (nft, DOCKER-USER, binds, sshd, Funnel)
+│   ├── audit-host.sh    59 local host checks (nft, DOCKER-USER, binds, sshd, Funnel)
 │   └── reset_password.py
 ├── delegacion/
 │   ├── run-fase.sh      the phase runner (tests as gate)
@@ -564,7 +566,7 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 1. `curl -s http://127.0.0.1:8088/api/health` → must be `{"ok":true,...}`.
 2. `cd ~/b2first-tracker && git status` → must be clean on `feat/ia-hackathon`.
 3. `bash tools/audit.sh` → must print `39/39 checks passed`; `sudo bash tools/audit-host.sh` →
-   `VERDICT: PASS` (55/55).
+   `VERDICT: PASS` (59/59).
 4. `python3 tests/test_legacy_guard.py` → must be `9/9 OK` (this is the guard that once leaked
    every user's data).
 5. Then read §12 and pick up the highest-priority item that is not blocked on Juan.

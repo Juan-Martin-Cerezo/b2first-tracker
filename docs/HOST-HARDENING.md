@@ -65,7 +65,7 @@ every LAN device was trusted for every port the host listened on.
 
 | Port | Service | LAN | Tailnet | Internet (host filter) |
 | --- | --- | --- | --- | --- |
-| 22/tcp | sshd | **accept, 6/min burst 3** | accept | **drop** (measured) |
+| 22/tcp | sshd | **accept, 6/min burst 3** | accept | **drop** (measured; Coolify bridge `10.0.1.0/24` also accepts) |
 | 2283/tcp | Immich | **accept** | accept | **drop** |
 | 8089/tcp | existing app | **accept** | accept | **drop** |
 | 8000/tcp | Coolify panel | **drop** (measured `000`) | accept | **drop** |
@@ -86,13 +86,23 @@ Notes:
   ```
   iifname "tailscale0" ct state new tcp dport 22 accept
   ip saddr 192.168.1.0/24 ct state new tcp dport 22 limit rate 6/minute burst 3 accept
+  ip saddr 10.0.1.0/24 ct state new tcp dport 22 accept
   ct state new tcp dport 22 drop
   ```
 
+  The `10.0.1.0/24` line is the **Coolify bridge exception**. Coolify opens new
+  SSH connections to `10.0.0.1:22` from its own container (`10.0.1.6`). With the
+  LAN+tailnet rules alone, the two established sessions survive on conntrack but
+  every **new** deploy/terminal connection times out (measured:
+  `ssh root@10.0.0.1` inside the `coolify` container -> `Operation timed out`).
+  With the line, the same command reaches the host and fails on the key
+  (`Permission denied (publickey)`), which is the correct result.
+
   Re-measured after the change: LAN `22 -> ABIERTO`, internet `22 -> bloqueado`,
-  Funnel `/api/health` still `200`. **Consequence: SSH from outside the house
-  requires Tailscale.** That is the intended posture; the LAN rule keeps local
-  access working if the tailnet ever breaks.
+  Coolify new TCP `22 -> permitido` (key still required), Funnel `/api/health`
+  still `200`. **Consequence: SSH from outside the house requires Tailscale.**
+  That is the intended posture; the LAN rule keeps local access working if the
+  tailnet ever breaks.
   Rollback for this change: `/root/hardened.nft.bak-*` (the automated snapshot
   recipe is §3.1).
 - **Tailnet** still reaches every service: `iifname "tailscale0" accept` in
@@ -101,10 +111,13 @@ Notes:
 - **`pi-thermal-monitor`** still binds `0.0.0.0:9100` and has no auth. It is now
   reachable **only** from LAN and tailnet because the input chain drops every
   other source. Changing the bind is unnecessary; the filter is the control.
-- **Coolify's root SSH from `10.0.1.6`** is preserved. Coolify manages this host
-  over SSH from its own container; `AllowUsers juan root@10.0.1.*` allows
-  `root` only from the Coolify bridge and denies interactive root from LAN and
-  tailnet. Without the scoped exception, Coolify deploys would break.
+- **Coolify's root SSH from `10.0.1.6`** is preserved by two independent
+  controls: `AllowUsers juan root@10.0.1.*` in the sshd drop-in, and
+  `ip saddr 10.0.1.0/24 ct state new tcp dport 22 accept` in the input chain.
+  Both are required. `AllowUsers` alone is not enough once SSH is qualified to
+  LAN+tailnet: the input chain would drop `10.0.1.0/24` before sshd ever saw it.
+  Without the pair, Coolify deploys and its terminal break on the next new
+  connection.
 - **Port 3200** (target of the tailnet-only `8443` Funnel) had no listener on
   the day of this phase. That is a pre-existing state, not caused by phase 25;
   the Funnel mapping is unchanged and tailnet-only.
@@ -136,7 +149,7 @@ container reaching `api.deepseek.com` (HTTP 401 = reachable, unauthenticated).
 ## 2. Verification (reproducible)
 
 ```bash
-# 1. Local host audit: 55 checks, exits non-zero on any FAIL.
+# 1. Local host audit: 59 checks, exits non-zero on any FAIL.
 sudo bash tools/audit-host.sh
 
 # 2. Idempotency: apply twice, same stateless sha.
