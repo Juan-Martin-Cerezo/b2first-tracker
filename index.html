@@ -1268,74 +1268,74 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:28px">⚡</span>
         <div>
-          <h3 style="font-size:16px;font-weight:600;color:var(--on-surface)">Log Single Part Practice</h3>
-          <div style="font-size:12px;color:var(--on-surface-variant)">Extra practice done outside scheduled sessions</div>
+          <h3 style="font-size:16px;font-weight:600;color:var(--on-surface)" data-i18n="solo_title">Log Single Part Practice</h3>
+          <div style="font-size:12px;color:var(--on-surface-variant)" data-i18n="solo_sub">Extra practice done outside scheduled sessions</div>
         </div>
       </div>
       <button class="del" onclick="closeSoloModal()" style="font-size:20px;padding:4px 8px">✕</button>
     </div>
 
     <div>
-      <label>Skill / Component</label>
+      <label data-i18n="solo_skill">Skill / Component</label>
       <select id="soloSkill" onchange="onSoloSkillChange()">
-        <option value="ue">📖 Reading &amp; Use of English (Parts 1–7)</option>
-        <option value="lp">🎧 Listening (Parts 1–4)</option>
-        <option value="w">✍️ Writing (Individual Text / Genre)</option>
-        <option value="sp">🗣️ Speaking (Parts 1–4)</option>
+        <option value="ue" data-i18n="solo_ue">📖 Reading &amp; Use of English (Parts 1–7)</option>
+        <option value="lp" data-i18n="solo_listening">🎧 Listening (Parts 1–4)</option>
+        <option value="w" data-i18n="solo_writing">✍️ Writing (Individual Text / Genre)</option>
+        <option value="sp" data-i18n="solo_speaking">🗣️ Speaking (Parts 1–4)</option>
       </select>
     </div>
 
     <div style="margin-top:10px" id="soloPartRow">
-      <label>Part / Exercise</label>
+      <label data-i18n="solo_part">Part / Exercise</label>
       <select id="soloPart" onchange="onSoloPartChange()"></select>
     </div>
 
     <div class="row" style="margin-top:10px" id="soloScoreRow">
-      <div><label id="soloOkLbl">Correct</label><input type="number" id="soloOk" min="0" value="0"></div>
-      <div><label id="soloTotLbl">Total Questions</label><input type="number" id="soloTot" min="1" value="8"></div>
-      <div><label>Minutes Spent</label><input type="number" id="soloMin" min="0" value="8"></div>
+      <div><label id="soloOkLbl" data-i18n="solo_correct">Correct</label><input type="number" id="soloOk" min="0" value="0"></div>
+      <div><label id="soloTotLbl" data-i18n="solo_total">Total Questions</label><input type="number" id="soloTot" min="1" value="8"></div>
+      <div><label data-i18n="solo_minutes">Minutes Spent</label><input type="number" id="soloMin" min="0" value="8"></div>
     </div>
 
     <div class="row" style="margin-top:10px">
-      <div><label>Source / Book</label>
+      <div><label data-i18n="solo_source">Source / Book</label>
         <select id="soloBook">
-          <option value="sample">Official Sample Paper</option>
-          <option value="ptplus">Practice Tests Plus</option>
-          <option value="fce6">FCE 6</option>
-          <option value="gv">Grammar &amp; Vocabulary</option>
-          <option value="flojoe">Flo-Joe (online)</option>
-          <option value="examenglish">ExamEnglish (online)</option>
-          <option value="testenglish">Test-English (online)</option>
-          <option value="other">Other practice</option>
+          <option value="sample" data-i18n="solo_source_sample">Official Sample Paper</option>
+          <option value="ptplus" data-i18n="solo_source_ptplus">Practice Tests Plus</option>
+          <option value="fce6" data-i18n="solo_source_fce6">FCE 6</option>
+          <option value="gv" data-i18n="solo_source_gv">Grammar &amp; Vocabulary</option>
+          <option value="flojoe" data-i18n="solo_source_flojoe">Flo-Joe (online)</option>
+          <option value="examenglish" data-i18n="solo_source_examenglish">ExamEnglish (online)</option>
+          <option value="testenglish" data-i18n="solo_source_testenglish">Test-English (online)</option>
+          <option value="other" data-i18n="solo_source_other">Other practice</option>
         </select>
       </div>
-      <div><label>Reference / Notes</label><input type="text" id="soloRef" placeholder="e.g. Unit 3 / Test 2"></div>
+      <div><label data-i18n="solo_ref">Reference / Notes</label><input type="text" id="soloRef" placeholder="e.g. Unit 3 / Test 2" data-i18n-placeholder="solo_ref_ph"></div>
     </div>
 
     <div style="margin-top:10px">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;text-transform:none">
         <input type="checkbox" id="soloHasErr" style="width:auto" onchange="document.getElementById('soloErrBox').style.display=this.checked?'block':'none'">
-        <span>Log an error for root-cause analysis</span>
+        <span data-i18n="solo_log_error">Log an error for root-cause analysis</span>
       </label>
     </div>
 
     <div id="soloErrBox" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:10px;margin-top:8px">
       <div class="row">
-        <div><label>Error Code</label>
+        <div><label data-i18n="solo_err_code">Error Code</label>
           <select id="soloErrCode">
-            <option value="L-GAP">L-GAP (Lexical gap)</option>
-            <option value="G-ERR">G-ERR (Misapplied rule)</option>
-            <option value="T-MIS">T-MIS (Textual distractor)</option>
-            <option value="T-LIM">T-LIM (Time pressure)</option>
+            <option value="L-GAP" data-i18n="err_code_lgap">L-GAP (Lexical gap)</option>
+            <option value="G-ERR" data-i18n="err_code_gerr">G-ERR (Misapplied rule)</option>
+            <option value="T-MIS" data-i18n="err_code_tmis">T-MIS (Textual distractor)</option>
+            <option value="T-LIM" data-i18n="err_code_tlim">T-LIM (Time pressure)</option>
           </select>
         </div>
-        <div><label>Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
+        <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
       </div>
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="btn ok" style="flex:1" onclick="saveSoloPractice()">✔ Save Solo Practice</button>
-      <button class="btn gray" onclick="closeSoloModal()">Cancel</button>
+      <button class="btn ok" style="flex:1" onclick="saveSoloPractice()" data-i18n="solo_save">✔ Save Solo Practice</button>
+      <button class="btn gray" onclick="closeSoloModal()" data-i18n="common_cancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -1356,51 +1356,51 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-        <span style="color:var(--on-surface-variant)">Account ID:</span>
+        <span style="color:var(--on-surface-variant)" data-i18n="user_account_id">Account ID:</span>
         <b id="modalUserSlug" style="color:var(--on-surface);font-family:var(--mono)">—</b>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-        <span style="color:var(--on-surface-variant)">Class Schedule:</span>
+        <span style="color:var(--on-surface-variant)" data-i18n="user_schedule">Class Schedule:</span>
         <b id="modalUserSchedule" style="color:var(--primary)">—</b>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12px">
-        <span style="color:var(--on-surface-variant)">Storage Status:</span>
-        <span style="color:var(--ok-text);font-weight:600">✔ Dedicated Multi-User Storage</span>
+        <span style="color:var(--on-surface-variant)" data-i18n="user_storage">Storage Status:</span>
+        <span style="color:var(--ok-text);font-weight:600" data-i18n="user_storage_ok">✔ Dedicated Multi-User Storage</span>
       </div>
     </div>
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px">Account</div>
-      <button class="btn gray" style="width:100%" onclick="doExportAccount()">💾 Export my data</button>
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Change password</div>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px" data-i18n="user_account">Account</div>
+      <button class="btn gray" style="width:100%" onclick="doExportAccount()" data-i18n="user_export">💾 Export my data</button>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_change_pw">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <input type="password" id="pwCurrent" placeholder="Current password" autocomplete="current-password">
-        <input type="password" id="pwNew" placeholder="New password (10+ characters)" autocomplete="new-password">
-        <input type="password" id="pwRepeat" placeholder="Repeat new password" autocomplete="new-password">
+        <input type="password" id="pwCurrent" placeholder="Current password" data-i18n-placeholder="user_current_pw" autocomplete="current-password">
+        <input type="password" id="pwNew" placeholder="New password (10+ characters)" data-i18n-placeholder="user_new_pw" autocomplete="new-password">
+        <input type="password" id="pwRepeat" placeholder="Repeat new password" data-i18n-placeholder="user_repeat_pw" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()">Update password</button>
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Recent activity</div>
+      <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()" data-i18n="user_update_pw">Update password</button>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_recent">Recent activity</div>
       <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
       <div id="diagMetricsBox" style="display:none">
-        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Diagnostics (owner · last 24 h)</div>
+        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_diag">Diagnostics (owner · last 24 h)</div>
         <div id="diagMetricsBody" style="font-size:11.5px;color:var(--on-surface-variant)"></div>
       </div>
-      <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px">Delete my account</div>
-      <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()">Delete my account</button>
+      <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
+      <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
         <div style="display:flex;flex-direction:column;gap:8px">
-          <input type="password" id="delPass" placeholder="Your password" autocomplete="current-password">
-          <input type="text" id="delText" placeholder="Type DELETE to confirm" autocomplete="off" oninput="checkDeleteConfirm()">
+          <input type="password" id="delPass" placeholder="Your password" data-i18n-placeholder="user_delete_pass" autocomplete="current-password">
+          <input type="text" id="delText" placeholder="Type DELETE to confirm" data-i18n-placeholder="user_delete_confirm" autocomplete="off" oninput="checkDeleteConfirm()">
         </div>
         <div id="delStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-        <button class="btn" id="delBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" disabled onclick="doDeleteAccount()">Permanently delete my account</button>
+        <button class="btn" id="delBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" disabled onclick="doDeleteAccount()" data-i18n="user_delete_permanent">Permanently delete my account</button>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;flex-direction:column">
-      <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')">⚙️ Edit My Study Plan &amp; Schedule</button>
-      <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()">⇄ Switch User / Log Out</button>
+      <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')" data-i18n="user_edit_plan">⚙️ Edit My Study Plan &amp; Schedule</button>
+      <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()" data-i18n="user_logout">⇄ Switch User / Log Out</button>
     </div>
   </div>
 </div>
@@ -1414,37 +1414,37 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   <h3 id="tourTitle"></h3>
   <p id="tourBody"></p>
   <div class="tour-actions">
-    <button type="button" class="btn sm gray" onclick="endTour()">Skip</button>
-    <button type="button" class="btn sm ok" id="tourNext" onclick="tourNext()">Next</button>
+    <button type="button" class="btn sm gray" onclick="endTour()" data-i18n="tour_skip">Skip</button>
+    <button type="button" class="btn sm ok" id="tourNext" onclick="tourNext()" data-i18n="tour_next">Next</button>
   </div>
 </div>
-<div id="qlToast" class="ql-toast" role="status" aria-live="polite">Session logged</div>
+<div id="qlToast" class="ql-toast" role="status" aria-live="polite" data-i18n="ql_logged">Session logged</div>
 
 <div id="qlModal" class="overlay" style="display:none" onclick="if(event.target===this)closeQuickLog()">
   <div class="auth-card" style="max-width:440px;padding:18px">
     <div class="modal-head">
       <div>
-        <h3 class="t-md" style="margin:0">Session quick-log</h3>
-        <div class="t-xs muted">Log your practice in 3 taps</div>
+        <h3 class="t-md" style="margin:0" data-i18n="ql_title">Session quick-log</h3>
+        <div class="t-xs muted" data-i18n="ql_sub">Log your practice in 3 taps</div>
       </div>
-      <button class="del" type="button" onclick="closeQuickLog()" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      <button class="del" type="button" onclick="closeQuickLog()" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
     </div>
 
     <!-- Step 1: type -->
     <div id="qlStep1" class="ql-step active">
-      <div class="ql-step-head"><span>Step 1 · Session type</span><span id="qlTypeLabel">Use of English</span></div>
+      <div class="ql-step-head"><span data-i18n="ql_step1">Step 1 · Session type</span><span id="qlTypeLabel">Use of English</span></div>
       <div class="ql-chips" id="qlTypeChips">
-        <button type="button" class="chip on" data-ql-type="ue" onclick="qlSetType('ue')">Use of English</button>
-        <button type="button" class="chip" data-ql-type="lp" onclick="qlSetType('lp')">Listening</button>
-        <button type="button" class="chip" data-ql-type="w" onclick="qlSetType('w')">Writing</button>
-        <button type="button" class="chip" data-ql-type="sp" onclick="qlSetType('sp')">Speaking</button>
-        <button type="button" class="chip" data-ql-type="rue" onclick="qlSetType('rue')">Full exam</button>
+        <button type="button" class="chip on" data-ql-type="ue" onclick="qlSetType('ue')" data-i18n="ql_type_ue">Use of English</button>
+        <button type="button" class="chip" data-ql-type="lp" onclick="qlSetType('lp')" data-i18n="ql_type_listening">Listening</button>
+        <button type="button" class="chip" data-ql-type="w" onclick="qlSetType('w')" data-i18n="ql_type_writing">Writing</button>
+        <button type="button" class="chip" data-ql-type="sp" onclick="qlSetType('sp')" data-i18n="ql_type_speaking">Speaking</button>
+        <button type="button" class="chip" data-ql-type="rue" onclick="qlSetType('rue')" data-i18n="ql_type_full">Full exam</button>
       </div>
     </div>
 
     <!-- Step 2: result / numpad -->
     <div id="qlStep2" class="ql-step">
-      <div class="ql-step-head"><span>Step 2 · Result</span><span id="qlStep2Hint">correct / total</span></div>
+      <div class="ql-step-head"><span data-i18n="ql_step2">Step 2 · Result</span><span id="qlStep2Hint">correct / total</span></div>
       <div id="qlKindRow" style="display:none;margin-bottom:8px">
         <div class="ql-chips" id="qlKindChips">
           <button type="button" class="chip on" data-ql-kind="Essay" onclick="qlSetKind('Essay')">Essay</button>
@@ -1484,22 +1484,22 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <!-- Step 3: minutes + note -->
     <div id="qlStep3" class="ql-step">
-      <div class="ql-step-head"><span>Step 3 · Time and note</span><span id="qlPartBadge">P3</span></div>
+      <div class="ql-step-head"><span data-i18n="ql_step3">Step 3 · Time and note</span><span id="qlPartBadge">P3</span></div>
       <div style="display:grid;grid-template-columns:100px 1fr;gap:8px">
         <div>
-          <label style="margin-top:0">Minutes</label>
+          <label style="margin-top:0" data-i18n="ql_minutes">Minutes</label>
           <input type="number" inputmode="numeric" id="qlMin" min="0" value="50">
         </div>
         <div>
-          <label style="margin-top:0">Note (optional)</label>
-          <input type="text" id="qlNote" placeholder="e.g. Sample 1 / Test 2">
+          <label style="margin-top:0" data-i18n="ql_note">Note (optional)</label>
+          <input type="text" id="qlNote" placeholder="e.g. Sample 1 / Test 2" data-i18n-placeholder="ql_note_ph">
         </div>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button type="button" class="btn gray" id="qlNextBtn" onclick="qlNext()">Next →</button>
-      <button type="button" class="btn ok" id="qlSaveBtn" style="flex:1" onclick="qlSave()">Save session</button>
+      <button type="button" class="btn gray" id="qlNextBtn" onclick="qlNext()" data-i18n="ql_next">Next →</button>
+      <button type="button" class="btn ok" id="qlSaveBtn" style="flex:1" onclick="qlSave()" data-i18n="ql_save">Save session</button>
     </div>
   </div>
 </div>
@@ -2387,8 +2387,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ EXAM_SIMULATION ]</span>
-            <h1 class="page-title">Exam Simulation</h1>
-            <p class="page-sub">Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.</p>
+            <h1 class="page-title" data-i18n="exam_title">Exam Simulation</h1>
+            <p class="page-sub" data-i18n="exam_sub">Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.</p>
           </div>
         </div>
 
@@ -2400,7 +2400,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <span class="exam-card-min">75 Min</span>
             </div>
             <h3 class="exam-card-title">Reading &amp; Use of English</h3>
-            <p class="exam-card-desc">7 parts. Tests your reading comprehension and grammar proficiency.</p>
+            <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
           </button>
           <button class="exam-card" data-paper="w" onclick="startExamFromCard('w')">
             <div class="exam-card-top">
@@ -2408,7 +2408,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <span class="exam-card-min">80 Min</span>
             </div>
             <h3 class="exam-card-title">Writing</h3>
-            <p class="exam-card-desc">2 parts. Essay and a choice of article, email, letter, report or review.</p>
+            <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
           </button>
           <button class="exam-card" data-paper="l" onclick="startExamFromCard('l')">
             <div class="exam-card-top">
@@ -2416,26 +2416,26 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <span class="exam-card-min">40 Min</span>
             </div>
             <h3 class="exam-card-title">Listening</h3>
-            <p class="exam-card-desc">4 parts. Tests ability to follow and understand spoken English.</p>
+            <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
           </button>
           <button class="exam-card exam-card-full" data-paper="full" onclick="startExamFromCard('full')">
             <div class="exam-card-top">
               <span class="exam-card-kicker">Comprehensive</span>
               <span class="exam-card-min">195 Min</span>
             </div>
-            <h3 class="exam-card-title">Full B2 First Exam</h3>
-            <p class="exam-card-desc">Complete sequential run of all three written papers without breaks.</p>
+            <h3 class="exam-card-title" data-i18n="exam_full_title">Full B2 First Exam</h3>
+            <p class="exam-card-desc" data-i18n="exam_desc_full">Complete sequential run of all three written papers without breaks.</p>
           </button>
         </div>
 
         <!-- Advanced selector (test contract) -->
         <div style="margin:16px 0 0;max-width:480px">
-          <label>Or pick the paper manually</label>
+          <label data-i18n="exam_manual">Or pick the paper manually</label>
           <select id="exPaper" onchange="renderEx()">
-            <option value="rue">Reading &amp; Use of English — 75 min (52 questions)</option>
-            <option value="w">Writing — 80 min (2 texts)</option>
-            <option value="l">Listening — 40 min (30 questions)</option>
-            <option value="full">FULL EXAM — 195 min (all components)</option>
+            <option value="rue" data-i18n="exam_opt_rue">Reading &amp; Use of English — 75 min (52 questions)</option>
+            <option value="w" data-i18n="exam_opt_w">Writing — 80 min (2 texts)</option>
+            <option value="l" data-i18n="exam_opt_l">Listening — 40 min (30 questions)</option>
+            <option value="full" data-i18n="exam_opt_full">FULL EXAM — 195 min (all components)</option>
           </select>
         </div>
 
@@ -2443,7 +2443,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="exActive">
           <div class="card" style="text-align:center">
             <h2 id="exActiveTitle" style="justify-content:center">Reading &amp; Use of English</h2>
-            <p style="font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)">In Progress</p>
+            <p style="font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)" data-i18n="exam_in_progress">In Progress</p>
             <div class="exam-dial-wrap">
               <div class="exam-dial-bg">
                 <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.5">
@@ -2454,15 +2454,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="exam-timer" id="exTimer">01:15:00</div>
             </div>
             <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-              <button class="btn" onclick="exStart()">▶ Start</button>
-              <button class="btn gray" onclick="exPause()">⏸ Pause</button>
-              <button class="btn gray" onclick="exReset()">↺ Reset</button>
+              <button class="btn" onclick="exStart()" data-i18n="common_start">▶ Start</button>
+              <button class="btn gray" onclick="exPause()">⏸ <span data-i18n="exam_pause">Pause</span></button>
+              <button class="btn gray" onclick="exReset()">↺ <span data-i18n="exam_reset">Reset</span></button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px;text-align:left">
-              <h3 style="font-size:14px;margin-bottom:6px">📝 Log your result</h3>
+              <h3 style="font-size:14px;margin-bottom:6px" data-i18n="exam_log_result">📝 Log your result</h3>
               <div id="exRegFields" class="row"></div>
-              <div style="margin-top:10px"><button class="btn ok" onclick="exSave()">✔ Save result</button></div>
+              <div style="margin-top:10px"><button class="btn ok" onclick="exSave()" data-i18n="exam_save_result">✔ Save result</button></div>
             </div>
           </div>
         </div>
@@ -2473,11 +2473,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ SYLLABUS_INDEX ]</span>
-            <h1 class="page-title">Practice by Part</h1>
-            <p class="page-sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
+            <h1 class="page-title" data-i18n="parts_title">Practice by Part</h1>
+            <p class="page-sub" data-i18n="parts_sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
           </div>
           <div class="page-stat">
-            <span class="stat-label">Total Parts</span>
+            <span class="stat-label" data-i18n="parts_total">Total Parts</span>
             <span class="stat-val">15</span>
           </div>
         </div>
@@ -2489,61 +2489,61 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ METRICS_OVERVIEW ]</span>
-            <h1 class="page-title">Progress</h1>
-            <p class="page-sub">Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.</p>
+            <h1 class="page-title" data-i18n="prog_title">Progress</h1>
+            <p class="page-sub" data-i18n="prog_sub">Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.</p>
           </div>
         </div>
 
         <div class="stat-grid">
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">monitoring</span>
-            <span class="stat-card-label">Global Average</span>
+            <span class="stat-card-label" data-i18n="prog_global_avg">Global Average</span>
             <span class="stat-card-val" id="pGlobal">—</span>
             <div class="stat-bar"><div class="stat-bar-fill" id="pGlobalBar" style="width:0%"></div></div>
           </div>
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">military_tech</span>
-            <span class="stat-card-label">Best Part Score</span>
+            <span class="stat-card-label" data-i18n="prog_best_part">Best Part Score</span>
             <span class="stat-card-val" id="pBest">—</span>
             <span class="stat-card-sub" id="pBestName">—</span>
           </div>
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">hourglass_top</span>
-            <span class="stat-card-label">Total Study Time</span>
+            <span class="stat-card-label" data-i18n="prog_total_time">Total Study Time</span>
             <span class="stat-card-val" id="pTime">0</span>
-            <span class="stat-card-sub">logged minutes</span>
+            <span class="stat-card-sub" data-i18n="prog_logged_min">logged minutes</span>
           </div>
         </div>
 
         <div class="card">
-          <h2>🧗 Progression Matrix</h2>
-          <div class="sub">Complete all criteria within a stage to advance.</div>
+          <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
+          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance.</div>
           <div id="gates"></div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()">⬆ Advance to the next stage</button>
-            <button class="btn gray" onclick="stageDown()">⬇ Go back a stage</button>
+            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
+            <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
           </div>
           <div style="margin-top:16px;border-top:1px solid var(--outline-variant);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="exportData()">💾 Export data</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 Import data</button>
+            <button class="btn gray" onclick="exportData()" data-i18n="prog_export">💾 Export data</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="prog_import">📥 Import data</button>
             <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
           </div>
-          <p style="font-size:12px;color:var(--on-surface-variant);margin-top:10px">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
+          <p style="font-size:12px;color:var(--on-surface-variant);margin-top:10px" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
         </div>
 
         <div class="grid-12">
           <div class="col-6">
             <div class="card">
-              <h2>History</h2>
-              <div class="sub">Everything logged, newest to oldest.</div>
-              <div class="table-wrap"><table id="logTable"><thead><tr><th>Date</th><th>Module</th><th>Score</th><th>%</th><th>Min</th><th></th></tr></thead><tbody></tbody></table></div>
+              <h2 data-i18n="prog_history">History</h2>
+              <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
+              <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>📈 Stats by exercise</h2>
-              <div class="sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
-              <div class="table-wrap"><table id="statsTable"><thead><tr><th>Exercise</th><th>Times</th><th>Average</th><th>Best</th><th>Last</th></tr></thead><tbody></tbody></table></div>
+              <h2 data-i18n="prog_stats">📈 Stats by exercise</h2>
+              <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
+              <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
         </div>
@@ -2554,57 +2554,57 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ PERFORMANCE_ANALYTICS ]</span>
-            <h1 class="page-title">Performance Analytics</h1>
-            <p class="page-sub">Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.</p>
+            <h1 class="page-title" data-i18n="charts_title">Performance Analytics</h1>
+            <p class="page-sub" data-i18n="charts_sub">Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.</p>
           </div>
         </div>
 
         <div class="stat-grid">
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">analytics</span>
-            <span class="stat-card-label">Overall Readiness</span>
+            <span class="stat-card-label" data-i18n="charts_readiness">Overall Readiness</span>
             <span class="stat-card-val" id="gReadiness">—</span>
             <div class="stat-bar"><div class="stat-bar-fill" id="gReadinessBar" style="width:0%"></div></div>
           </div>
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">assignment_turned_in</span>
-            <span class="stat-card-label">Mock Exams Taken</span>
+            <span class="stat-card-label" data-i18n="charts_mocks">Mock Exams Taken</span>
             <span class="stat-card-val" id="gMocks">0</span>
-            <span class="stat-card-sub">mocks logged</span>
+            <span class="stat-card-sub" data-i18n="charts_mocks_sub">mocks logged</span>
           </div>
           <div class="stat-card">
             <span class="stat-ico material-symbols-outlined">local_fire_department</span>
-            <span class="stat-card-label">Study Streak</span>
+            <span class="stat-card-label" data-i18n="charts_streak">Study Streak</span>
             <span class="stat-card-val" id="gRacha">0</span>
-            <span class="stat-card-sub">consecutive days</span>
+            <span class="stat-card-sub" data-i18n="charts_streak_sub">consecutive days</span>
           </div>
         </div>
 
         <div class="grid-12">
           <div class="col-6">
             <div class="card">
-              <h2>📈 Temporal Evolution</h2>
-              <div class="sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
+              <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
+              <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
               <div id="gEvol"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>📊 By Part &amp; Exercise</h2>
-              <div class="sub">Average % of each exam part — red bars are your weakest.</div>
+              <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
+              <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
               <div id="gPart"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>🧩 Errors by type</h2>
-              <div class="sub">Accumulated root-cause taxonomy.</div>
+              <h2 data-i18n="charts_errors">🧩 Errors by type</h2>
+              <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy.</div>
               <div id="gErr"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2>🔥 Weekly Consistency</h2>
+              <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
               <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
               <div id="gCons"></div>
             </div>
@@ -2617,40 +2617,40 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ ERROR_TAXONOMY ]</span>
-            <h1 class="page-title">Error Taxonomy</h1>
-            <p class="page-sub">Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.</p>
+            <h1 class="page-title" data-i18n="err_title">Error Taxonomy</h1>
+            <p class="page-sub" data-i18n="err_sub">Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.</p>
           </div>
         </div>
         <div class="grid-12">
           <div class="col-8">
             <div class="card">
-              <h2>🔖 Root-Cause Log</h2>
-              <div class="sub">Every logged mistake gets you closer to Grade A.</div>
+              <h2 data-i18n="err_root_log">🔖 Root-Cause Log</h2>
+              <div class="sub" data-i18n="err_root_sub">Every logged mistake gets you closer to Grade A.</div>
               <div id="errList"></div>
             </div>
           </div>
           <div class="col-4">
             <div class="card">
-              <h2>🧩 Failure Patterns</h2>
-              <div class="sub">Accumulated distribution of your taxonomy.</div>
+              <h2 data-i18n="err_patterns">🧩 Failure Patterns</h2>
+              <div class="sub" data-i18n="err_patterns_sub">Accumulated distribution of your taxonomy.</div>
               <div id="errPills"></div>
             </div>
             <div class="card">
-              <h2>➕ Log Error</h2>
-              <div class="sub">Root-cause classification.</div>
+              <h2 data-i18n="err_log">➕ Log Error</h2>
+              <div class="sub" data-i18n="err_log_sub">Root-cause classification.</div>
               <div class="row">
-                <div><label>Code</label>
+                <div><label data-i18n="err_code">Code</label>
                   <select id="errCode2">
-                    <option value="L-GAP">L-GAP (Lexical gap)</option>
-                    <option value="G-ERR">G-ERR (Misapplied rule)</option>
-                    <option value="T-MIS">T-MIS (Textual distractor)</option>
-                    <option value="T-LIM">T-LIM (Rush / attention)</option>
+                    <option value="L-GAP" data-i18n="err_code_lgap">L-GAP (Lexical gap)</option>
+                    <option value="G-ERR" data-i18n="err_code_gerr">G-ERR (Misapplied rule)</option>
+                    <option value="T-MIS" data-i18n="err_code_tmis">T-MIS (Textual distractor)</option>
+                    <option value="T-LIM" data-i18n="err_code_tlim">T-LIM (Rush / attention)</option>
                   </select>
                 </div>
               </div>
-              <div><label>Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'"></div>
-              <div><label>Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule"></div>
-              <div style="margin-top:12px"><button class="btn" onclick="saveErr2()">💾 Save error</button></div>
+              <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
+              <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
+              <div style="margin-top:12px"><button class="btn" onclick="saveErr2()" data-i18n="err_save">💾 Save error</button></div>
             </div>
           </div>
         </div>
@@ -2865,31 +2865,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ RESOURCE_LIBRARY ]</span>
-            <h1 class="page-title">Resource Library</h1>
-            <p class="page-sub">PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
+            <h1 class="page-title" data-i18n="books_title">Resource Library</h1>
+            <p class="page-sub" data-i18n="books_sub">PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
           </div>
         </div>
         <div class="card">
-          <h2>🌐 Online Practice (1-Click — Free)</h2>
-          <div class="sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
+          <h2 data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h2>
+          <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
           <div id="onlineList"></div>
         </div>
         <div class="card">
-          <h2>📥 Downloaded Material (PDFs &amp; Audio)</h2>
-          <div class="sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
-          <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" style="margin-bottom:12px">
+          <h2 data-i18n="books_material">📥 Downloaded Material (PDFs &amp; Audio)</h2>
+          <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
+          <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
           <div id="matList"></div>
         </div>
         <div class="card">
-          <h2>🛒 All Recommended Books (Verified Options)</h2>
-          <div class="sub">Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.</div>
+          <h2 data-i18n="books_all">🛒 All Recommended Books (Verified Options)</h2>
+          <div class="sub" data-i18n-html="books_all_sub">Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.</div>
           <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
           <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" style="flex:1">
+            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" data-i18n-placeholder="books_search_ph" style="flex:1">
             <select id="bookSort" style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px">
-              <option value="cat">Sort: Category</option>
-              <option value="asc">Price: Low to High ↑</option>
-              <option value="desc">Price: High to Low ↓</option>
+              <option value="cat" data-i18n="books_sort_cat">Sort: Category</option>
+              <option value="asc" data-i18n="books_sort_asc">Price: Low to High ↑</option>
+              <option value="desc" data-i18n="books_sort_desc">Price: High to Low ↓</option>
             </select>
           </div>
           <div id="bookList"></div>
@@ -2902,22 +2902,22 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="page-head">
             <div>
               <span class="page-kicker">[ CAMBRIDGE_AI_EXAMINER ]</span>
-              <h1 class="page-title">Writing corrector</h1>
-              <p class="page-sub">Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).</p>
+              <h1 class="page-title" data-i18n="ai_title">Writing corrector</h1>
+              <p class="page-sub" data-i18n="ai_sub">Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).</p>
             </div>
           </div>
 
           <div class="card" id="iaCard" data-state="idle">
-            <h2>Writing corrector</h2>
-            <div class="sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
+            <h2 data-i18n="ai_title">Writing corrector</h2>
+            <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
             <div id="iaNoKeyWarn" class="note" style="display:none">
-              Set your API key in the <a href="#" onclick="showView('plan');return false">PLAN</a> tab to use the corrector. Get one for free at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
+              <span data-i18n="ai_no_key">Set your API key in the</span> <a href="#" onclick="showView('plan');return false">PLAN</a> <span data-i18n="ai_no_key_tail">tab to use the corrector. Get one for free at</span> <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">https://aistudio.google.com/apikey</a>.
             </div>
 
             <div class="row" style="margin-bottom:10px">
               <div>
-                <label for="iaKind">Text type (kind)</label>
+                <label for="iaKind" data-i18n="ai_kind">Text type (kind)</label>
                 <select id="iaKind">
                   <option value="Essay">Essay</option>
                   <option value="Article">Article</option>
@@ -2929,43 +2929,43 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
 
             <div>
-              <label for="iaText">Your text in English</label>
-              <textarea id="iaText" class="writing-live-pad" rows="8" oninput="onIaTextChange()" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..."></textarea>
+              <label for="iaText" data-i18n="ai_text">Your text in English</label>
+              <textarea id="iaText" class="writing-live-pad" rows="8" oninput="onIaTextChange()" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
               <div class="live-word-meter">
-                <span class="tnum">Words: <b id="iaWordCount">0</b> <span class="muted">(target 140–190)</span></span>
+                <span class="tnum"><span data-i18n="ai_words">Words:</span> <b id="iaWordCount">0</b> <span class="muted" data-i18n="ai_target_short">(target 140–190)</span></span>
                 <span id="iaWordStatus" class="tnum" style="font-weight:600">Target: 140–190 words</span>
               </div>
             </div>
 
             <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-              <button type="button" class="btn" id="iaSubmitBtn" onclick="submitIaWriting()">Correct it</button>
+              <button type="button" class="btn" id="iaSubmitBtn" onclick="submitIaWriting()" data-i18n="ai_submit">Correct it</button>
               <span id="iaStateLabel" class="t-xs muted tnum">idle</span>
             </div>
 
             <div id="iaLoading" class="panel" style="display:none;margin-top:16px;align-items:center;gap:12px">
               <span class="ia-spinner" aria-hidden="true"></span>
-              <span class="t-sm" style="font-weight:600">correcting…</span>
+              <span class="t-sm" style="font-weight:600" data-i18n="ai_correcting">correcting…</span>
             </div>
 
             <div id="iaError" class="note" style="display:none;margin-top:16px;background:var(--bad-soft);border-left-color:var(--bad);color:var(--bad-text)">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-                <span id="iaErrorMsg">Failed to correct the text.</span>
-                <button type="button" class="btn sm" id="iaRetryBtn" onclick="submitIaWriting()">Retry</button>
+                <span id="iaErrorMsg" data-i18n="ai_failed">Failed to correct the text.</span>
+                <button type="button" class="btn sm" id="iaRetryBtn" onclick="submitIaWriting()" data-i18n="common_retry">Retry</button>
               </div>
             </div>
 
             <div id="iaResult" style="display:none;margin-top:20px">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-                <h3>Cambridge B2 First result</h3>
+                <h3 data-i18n="ai_result">Cambridge B2 First result</h3>
                 <span class="badge ok" id="iaTotalBadge" style="font-size:14px;padding:5px 12px">0/20</span>
               </div>
               <div class="ia-bands-grid" id="iaBandsGrid"></div>
               <details id="iaQuotesDetails" class="panel" style="margin-top:14px">
-                <summary>Student quotes</summary>
+                <summary data-i18n="ai_quotes">Student quotes</summary>
                 <div id="iaQuotesList" style="margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:14px"></div>
               </details>
               <div class="panel" style="margin-top:16px">
-                <h4 style="margin-bottom:8px">3 improved sentences (rewrite)</h4>
+                <h4 style="margin-bottom:8px" data-i18n="ai_rewrite">3 improved sentences (rewrite)</h4>
                 <ul id="iaRewriteList" style="padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px"></ul>
               </div>
             </div>
@@ -2978,11 +2978,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <span class="page-kicker">[ COLD_START_PLACEMENT ]</span>
-            <h1 class="page-title">Initial diagnostic</h1>
-            <p class="page-sub">10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.</p>
+            <h1 class="page-title" data-i18n="diag_title">Initial diagnostic</h1>
+            <p class="page-sub" data-i18n="diag_sub">10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.</p>
           </div>
           <div class="page-stat">
-            <span class="stat-label">Total time</span>
+            <span class="stat-label" data-i18n="diag_total_time">Total time</span>
             <span class="timer" id="diagTimer" style="padding:6px 14px">10:00</span>
           </div>
         </div>
@@ -3000,6 +3000,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <script>
 
 'use strict';
+/* TODO(i18n) — surfaces intentionally left in English (too entangled to
+   migrate safely in Phase 29; they stay English in both languages):
+   - Session studio internals (phase steppers, guides, rubric, timer labels).
+   - buildWeeklyPlan() slot reasons and the "Why this?" source breakdown.
+   - Generated catalogues: online practice, material, books metadata, parts,
+     gates, diagnostic questions and the speaking report.
+   - Onboarding wizard and feature-tour copy.
+   - Exam guide text and registration field labels built by renderEx().
+   - MOD[] module labels in history/stats, and account status messages. */
 /* =====================================================================
    B2 FIRST TRACKER — high-performance study system (Grade A / C1)
    ---------------------------------------------------------------------
@@ -3221,7 +3230,13 @@ const I18N={
     exam_desc_full:'Complete sequential run of all three written papers without breaks.',
     exam_full_title:'Full B2 First Exam',
     exam_in_progress:'In Progress',
+    exam_pause:'Pause',
+    exam_reset:'Reset',
     exam_manual:'Or pick the paper manually',
+    exam_opt_rue:'Reading & Use of English — 75 min (52 questions)',
+    exam_opt_w:'Writing — 80 min (2 texts)',
+    exam_opt_l:'Listening — 40 min (30 questions)',
+    exam_opt_full:'FULL EXAM — 195 min (all components)',
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_title:'Practice by Part',
@@ -3361,7 +3376,7 @@ const I18N={
     books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
     books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
     books_all:'🛒 All Recommended Books (Verified Options)',
-    books_all_sub:'Filter by category + real-time search + sort by price. With answers = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.',
+    books_all_sub:'Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.',
     books_search_ph:'🔍 Search books... (e.g. practice, grammar, fce)',
     books_sort_cat:'Sort: Category',
     books_sort_asc:'Price: Low to High ↑',
@@ -3369,7 +3384,8 @@ const I18N={
     ai_title:'Writing corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
-    ai_no_key:'Set your API key in the PLAN tab to use the corrector. Get one for free at',
+    ai_no_key:'Set your API key in the',
+    ai_no_key_tail:'tab to use the corrector. Get one for free at',
     ai_kind:'Text type (kind)',
     ai_text:'Your text in English',
     ai_text_ph:'Write or paste your Essay, Article, Report, Review or Email here (140–190 words)...',
@@ -3383,6 +3399,17 @@ const I18N={
     ai_quotes:'Student quotes',
     ai_rewrite:'3 improved sentences (rewrite)',
     ai_idle:'idle',
+    ai_state_idle:'idle',
+    ai_state_loading:'correcting…',
+    ai_state_ok:'done',
+    ai_state_error:'error',
+    ai_in_range:'✔ In range ({words}/140–190 words)',
+    ai_short:'{n} words short (target 140–190)',
+    ai_over:'{n} words over (max 190)',
+    ai_err_long:'The text is too long (max 6000 characters).',
+    ai_err_words:'The text must be between 40 and 700 words.',
+    ai_err_not_task:'That does not look like a B2 First writing task. Paste the task and your text.',
+    ai_err_network:'Could not reach the corrector. Check your connection and try again.',
     diag_title:'Initial diagnostic',
     diag_sub:'10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.',
     diag_total_time:'Total time',
@@ -3440,6 +3467,13 @@ const I18N={
     ql_step3:'Step 3 · Time and note',
     ql_correct_total:'correct / total',
     ql_correct:'Correct',
+    ql_score20:'Score /20',
+    ql_score05:'Score (0-5)',
+    ql_kind_score:'kind + score /20',
+    ql_score_05:'score 0-5',
+    ql_focus:'Focus P{focus}',
+    ql_speaking:'Speaking',
+    ql_logged:'Session logged',
     ql_total:'Total',
     ql_minutes:'Minutes',
     ql_note:'Note (optional)',
@@ -3612,7 +3646,13 @@ const I18N={
     exam_desc_full:'Recorrido completo y secuencial de las tres pruebas escritas sin pausas.',
     exam_full_title:'Examen B2 First completo',
     exam_in_progress:'En curso',
+    exam_pause:'Pausar',
+    exam_reset:'Reiniciar',
     exam_manual:'O elegí la prueba manualmente',
+    exam_opt_rue:'Reading & Use of English — 75 min (52 preguntas)',
+    exam_opt_w:'Writing — 80 min (2 textos)',
+    exam_opt_l:'Listening — 40 min (30 preguntas)',
+    exam_opt_full:'EXAMEN COMPLETO — 195 min (todos los componentes)',
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_title:'Practicar por parte',
@@ -3752,7 +3792,7 @@ const I18N={
     books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
     books_filter_ph:'🔍 Filtrar material... (ej. listening, parte 3, writing)',
     books_all:'🛒 Todos los libros recomendados (opciones verificadas)',
-    books_all_sub:'Filtrá por categoría + búsqueda en tiempo real + orden por precio. Con respuestas = autocorregible (clave para prepararte solo). Todas las opciones verificadas. 🆕 = ediciones 2020-2025.',
+    books_all_sub:'Filtrá por categoría + búsqueda en tiempo real + orden por precio. <span style="color:var(--green-text)">Con respuestas</span> = autocorregible (clave para prepararte solo). Todas las opciones verificadas. 🆕 = ediciones 2020-2025.',
     books_search_ph:'🔍 Buscar libros... (ej. práctica, gramática, fce)',
     books_sort_cat:'Ordenar: categoría',
     books_sort_asc:'Precio: menor a mayor ↑',
@@ -3760,7 +3800,8 @@ const I18N={
     ai_title:'Corrector de writing',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
-    ai_no_key:'Configurá tu clave de API en la pestaña PLAN para usar el corrector. Conseguí una gratis en',
+    ai_no_key:'Configurá tu clave de API en la',
+    ai_no_key_tail:'para usar el corrector. Conseguí una gratis en',
     ai_kind:'Tipo de texto',
     ai_text:'Tu texto en inglés',
     ai_text_ph:'Escribí o pegá tu Essay, Article, Report, Review o Email acá (140–190 palabras)...',
@@ -3774,6 +3815,17 @@ const I18N={
     ai_quotes:'Citas del texto',
     ai_rewrite:'3 frases mejoradas (reescritura)',
     ai_idle:'inactivo',
+    ai_state_idle:'inactivo',
+    ai_state_loading:'corrigiendo…',
+    ai_state_ok:'listo',
+    ai_state_error:'error',
+    ai_in_range:'✔ En rango ({words}/140–190 palabras)',
+    ai_short:'Faltan {n} palabras (objetivo 140–190)',
+    ai_over:'Sobran {n} palabras (máx. 190)',
+    ai_err_long:'El texto es demasiado largo (máx. 6000 caracteres).',
+    ai_err_words:'El texto debe tener entre 40 y 700 palabras.',
+    ai_err_not_task:'Eso no parece una consigna de writing del B2 First. Pegá la consigna y tu texto.',
+    ai_err_network:'No se pudo contactar al corrector. Revisá tu conexión e intentá de nuevo.',
     diag_title:'Diagnóstico inicial',
     diag_sub:'10 min · 12 preguntas de nivel B2 (partes 1 a 7). No se muestra retroalimentación durante la prueba.',
     diag_total_time:'Tiempo total',
@@ -3831,6 +3883,13 @@ const I18N={
     ql_step3:'Paso 3 · Tiempo y nota',
     ql_correct_total:'correctas / total',
     ql_correct:'Correctas',
+    ql_score20:'Nota /20',
+    ql_score05:'Nota (0-5)',
+    ql_kind_score:'género + nota /20',
+    ql_score_05:'nota 0-5',
+    ql_focus:'Foco P{focus}',
+    ql_speaking:'Speaking',
+    ql_logged:'Sesión registrada',
     ql_total:'Total',
     ql_minutes:'Minutos',
     ql_note:'Nota (opcional)',
@@ -3912,6 +3971,7 @@ function setLang(code){
   refreshAll();
   if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
 }
+function syncLangFromD(){LANG=normalizeLang(D&&D.settings&&D.settings.lang)}
 const SETTINGS_DEFAULT={
   lang:'en',
   sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
@@ -4521,6 +4581,7 @@ window.addEventListener('scroll',tourPosition,true);
 /* ---------- SESSION INIT ---------- */
 async function afterAuth(){
   D=load();
+  syncLangFromD();
   saveUserSession(USER);
   renderUserChip();
   const srv=await syncPull();
@@ -4559,17 +4620,17 @@ function openUserModal(){
   const ov=document.getElementById('userModal');
   if(!ov||!USER)return;
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
-  const stageNames=['Stage 0 — Foundations (Trap Recognition)','Stage 1 — Precision (Fluency & Time)','Stage 2 — Mastery (Grade A Execution)'];
+  const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
   const s=D.settings||SETTINGS_DEFAULT;
   const sched=getSchedule();
-  const schedSummary=sched.map(slot=>`${DAYS[slot.day]} (${slot.time})`).join(' & ');
+  const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
   
   const av=document.getElementById('modalAvatar');
   if(av){av.textContent=initial;av.style.background=USER.color||'var(--primary)';}
   const un=document.getElementById('modalUserName');
   if(un)un.textContent=USER.name||'Student';
   const us=document.getElementById('modalUserStage');
-  if(us)us.textContent=stageNames[D.stage]||('Stage '+(D.stage||0));
+  if(us)us.textContent=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
   const uc=document.getElementById('modalUserSchedule');
@@ -4642,7 +4703,7 @@ async function loadDiagnostics(){
 /* ---------- LOAD / SAVE (per user) ---------- */
 var D=load();
 window.D=D;
-LANG=normalizeLang(D.settings&&D.settings.lang);
+syncLangFromD();
 function load(){
   const key=userKey();
   try{
@@ -4742,6 +4803,7 @@ function syncPull(){
             sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
             updated_at: d.updated_at || Date.now()
           };
+          syncLangFromD();
           localStorage.setItem(userKey(),JSON.stringify(D));
           applyTimers();
           refreshAll();
@@ -6665,7 +6727,7 @@ function saveSoloPractice(){
 
   closeSoloModal();
   refreshAll();
-  alert('Solo practice logged ✓');
+  alert(t('alert_solo_logged'));
 }
 
 /* ---------- SAVE HANDLERS ---------- */
@@ -6693,7 +6755,7 @@ function saveUE(){
 }
 function saveW(){
   const score=+document.getElementById('wScore').value;
-  if(!score){alert('Set the score (0-20)');return}
+  if(!score){alert(t('alert_set_score'));return}
   log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length,lex:{pv:+document.getElementById('wPv').value||0,col:+document.getElementById('wCol').value||0}});
   document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
   document.getElementById('wPv').value=0;document.getElementById('wCol').value=0;
@@ -6701,7 +6763,7 @@ function saveW(){
 }
 function saveL(){
   const correct=+document.getElementById('lOk').value;
-  if(!correct&&correct!==0){alert('Set correct answers');return}
+  if(!correct&&correct!==0){alert(t('alert_set_correct'));return}
   log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min:+document.getElementById('lMin').value});
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
@@ -6740,13 +6802,13 @@ function saveSP(report){
 }
 function saveRUE(){
   const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
-  if(!total){alert('Set the total');return}
+  if(!total){alert(t('alert_set_total'));return}
   log({type:'rue',book:document.getElementById('rueFuente').value,ref:document.getElementById('rueRef').value,correct,total,min:+document.getElementById('rueMin').value});
   document.getElementById('rueOk').value=0;document.getElementById('rueRef').value='';
 }
 function saveFW(){
   const a=+document.getElementById('fw1').value,b=+document.getElementById('fw2').value;
-  if(!a&&!b){alert('Set at least one score');return}
+  if(!a&&!b){alert(t('alert_set_one_score'));return}
   log({type:'fw',s1:a,s2:b,min:+document.getElementById('fwMin').value});
   document.getElementById('fw1').value='';document.getElementById('fw2').value='';
 }
@@ -6766,7 +6828,7 @@ function saveMockListening(){
 }
 function saveErr(){
   const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
-  if(!desc){alert('Describe the error');return}
+  if(!desc){alert(t('alert_describe_error'));return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix').value});
   save();refreshAll();
   document.getElementById('errDesc').value='';document.getElementById('errFix').value='';
@@ -6775,7 +6837,7 @@ function delLog(i){D.log.splice(i,1);save();refreshAll()}
 function delErr(i){D.errs.splice(i,1);save();refreshAll()}
 function saveErr2(){
   const code=document.getElementById('errCode2').value,desc=document.getElementById('errDesc2').value;
-  if(!desc){alert('Describe the error');return}
+  if(!desc){alert(t('alert_describe_error'));return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix2').value});
   save();refreshAll();
   document.getElementById('errDesc2').value='';document.getElementById('errFix2').value='';
@@ -6941,7 +7003,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;save();refreshAll();alert('Data imported ✓');}catch(e){alert('Invalid file');}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;syncLangFromD();save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
   r.readAsText(f);ev.target.value='';
 }
 function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
@@ -6999,10 +7061,10 @@ function savePlan(){
   if(document.getElementById('pAiKey'))s.aiKey=g('pAiKey').trim();
   save();applyTimers();refreshAll();
   track('plan_generate',{count:(getSchedule()||[]).length});
-  alert('Plan saved ✓');
+  alert(t('alert_plan_saved'));
 }
 function resetPlan(){
-  if(!confirm('Restore the original plan? Your changes will be lost.'))return;
+  if(!confirm(t('alert_restore_plan')))return;
   D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
   D.sessionOffset=0;
   save();renderPlan();applyTimers();refreshAll();
@@ -7233,8 +7295,8 @@ function startExamFromCard(p){
   exPaper=p;
   const sel=document.getElementById('exPaper');
   if(sel)sel.value=p;
-  const t=document.getElementById('exActiveTitle');
-  if(t)t.textContent=p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':'Full B2 First Exam';
+  const titleEl=document.getElementById('exActiveTitle');
+  if(titleEl)titleEl.textContent=p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':t('exam_full_title');
   exReset();
   document.getElementById('exActive').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -7266,8 +7328,8 @@ function exTick(){
   el.textContent=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
   el.classList.toggle('running',!!exIv);
   el.style.color=(exIv&&exLeft<600)?'var(--bad-text)':(exIv&&exLeft<1200)?'var(--warn-text)':'';
-  if(exIv&&exLeft===600)alert('⏰ 10 minutes remaining');
-  if(exIv&&exLeft===300)alert('⏰ 5 minutes remaining');
+  if(exIv&&exLeft===600)alert(t('alert_10min'));
+  if(exIv&&exLeft===300)alert(t('alert_5min'));
 }
 function exSave(){
   const v=id=>{const e=document.getElementById(id);return e?+e.value||0:0};
@@ -7276,7 +7338,7 @@ function exSave(){
   else if(exPaper==='w')log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});
   else if(exPaper==='l')log({type:'l',book:'exam',ref:'exam mode',correct:v('exOk'),total:30,p2:v('exP2'),min});
   else{log({type:'rue',book:'exam',ref:'full exam',correct:v('exOk'),total:52,min});log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});log({type:'l',book:'exam',ref:'full exam',correct:v('exLOk'),total:30,p2:0,min});}
-  document.getElementById('exRegister').style.display='none';exReset();alert('Result saved ✓');
+  document.getElementById('exRegister').style.display='none';exReset();alert(t('alert_result_saved'));
 }
 const PARTS=[
  {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
@@ -7350,7 +7412,7 @@ function savePart(i){
   const p=PARTS[i];
   if(p.type==='sp'){log({type:'sp',part:p.n,note:p.t});return}
   const ok=+document.getElementById('ptOk'+i).value,tot=+document.getElementById('ptTot'+i).value,min=+document.getElementById('ptMin'+i).value;
-  if(!tot){alert('Set the total');return}
+  if(!tot){alert(t('alert_set_total'));return}
   log({type:p.type,part:p.n,correct:ok,total:tot,min,note:p.t});
 }
 
@@ -7389,7 +7451,7 @@ function renderLog(){
 function editLog(i){
   const e=D.log[i],tr=document.querySelectorAll('#logTable tbody tr')[i];
   if(!tr)return;
-  if(e.type==='sf'||(e.type==='sp'&&typeof e.score!=='number')){alert(e.type==='sf'?'Speaking final has no numeric fields to edit — delete it and log it again.':'This Speaking entry has no band to edit — delete it and log it again.');return}
+  if(e.type==='sf'||(e.type==='sp'&&typeof e.score!=='number')){alert(t(e.type==='sf'?'alert_speaking_final':'alert_speaking_no_band'));return}
   let fields='';
   if(e.type==='w')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.score}"> <label style="font-size:12px">score/20</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   else if(e.type==='sp')fields=`<input type="number" id="ed1" min="0" max="5" step="0.5" value="${e.score}"> <label style="font-size:12px">band/5</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
@@ -8494,15 +8556,15 @@ function closeQuickLog(){
   const m=document.getElementById('qlModal');
   if(m)m.style.display='none';
 }
-function qlSetType(t){
-  QL_STATE.type=t;
+function qlSetType(type){
+  QL_STATE.type=type;
   const s=D.settings||SETTINGS_DEFAULT;
   const isEven=(isoWeek(new Date())%2===0);
   const focusPart=isEven?(s.even||3):(s.odd||4);
-  const names={ue:'Use of English',lp:'Listening',w:'Writing',sp:'Speaking',rue:'Full exam'};
+  const names={ue:t('ql_type_ue'),lp:t('ql_type_listening'),w:t('ql_type_writing'),sp:t('ql_type_speaking'),rue:t('ql_type_full')};
   const lbl=document.getElementById('qlTypeLabel');
-  if(lbl)lbl.textContent=names[t]||t;
-  document.querySelectorAll('#qlTypeChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.qlType===t));
+  if(lbl)lbl.textContent=names[type]||type;
+  document.querySelectorAll('#qlTypeChips .chip').forEach(b=>b.classList.toggle('on',b.dataset.qlType===type));
 
   const kindRow=document.getElementById('qlKindRow');
   const rangeRow=document.getElementById('qlRangeChips');
@@ -8515,53 +8577,53 @@ function qlSetType(t){
   const pBadge=document.getElementById('qlPartBadge');
   const hint=document.getElementById('qlStep2Hint');
 
-  if(kindRow)kindRow.style.display=(t==='w'?'block':'none');
-  if(spRow)spRow.style.display=(t==='sp'?'flex':'none');
-  if(rangeRow)rangeRow.style.display=(t==='sp'?'none':'flex');
-  if(tWrap)tWrap.style.display=(t==='sp'?'none':'block');
+  if(kindRow)kindRow.style.display=(type==='w'?'block':'none');
+  if(spRow)spRow.style.display=(type==='sp'?'flex':'none');
+  if(rangeRow)rangeRow.style.display=(type==='sp'?'none':'flex');
+  if(tWrap)tWrap.style.display=(type==='sp'?'none':'block');
 
-  if(t==='ue'){
+  if(type==='ue'){
     QL_STATE.part=focusPart;
-    if(cLbl)cLbl.textContent='Correct';
+    if(cLbl)cLbl.textContent=t('ql_correct');
     if(cIn){cIn.max=52;cIn.value=16;}
     if(tIn)tIn.value=20;
     if(mIn)mIn.value=s.ueMin||50;
     if(pBadge)pBadge.textContent='P'+QL_STATE.part;
-    if(hint)hint.textContent='correct / total';
-  }else if(t==='lp'){
+    if(hint)hint.textContent=t('ql_correct_total');
+  }else if(type==='lp'){
     QL_STATE.part=1;
-    if(cLbl)cLbl.textContent='Correct';
+    if(cLbl)cLbl.textContent=t('ql_correct');
     if(cIn){cIn.max=30;cIn.value=8;}
     if(tIn)tIn.value=10;
     if(mIn)mIn.value=s.listenMin||40;
     if(pBadge)pBadge.textContent='P1';
-    if(hint)hint.textContent='correct / total';
-  }else if(t==='w'){
+    if(hint)hint.textContent=t('ql_correct_total');
+  }else if(type==='w'){
     QL_STATE.part=1;
     QL_STATE.kind=(s.wCycle&&s.wCycle[0])||'Essay';
     qlSetKind(QL_STATE.kind);
-    if(cLbl)cLbl.textContent='Score /20';
+    if(cLbl)cLbl.textContent=t('ql_score20');
     if(cIn){cIn.max=20;cIn.value=16;}
     if(tIn)tIn.value=20;
     if(mIn)mIn.value=s.writeMin||35;
     if(pBadge)pBadge.textContent=QL_STATE.kind;
-    if(hint)hint.textContent='kind + score /20';
-  }else if(t==='sp'){
+    if(hint)hint.textContent=t('ql_kind_score');
+  }else if(type==='sp'){
     QL_STATE.part=1;
-    if(cLbl)cLbl.textContent='Score (0-5)';
+    if(cLbl)cLbl.textContent=t('ql_score05');
     if(cIn){cIn.max=5;cIn.value=5;}
     if(tIn)tIn.value=5;
     if(mIn)mIn.value=Math.max(1,Math.round(((s.sp1Sec||60)+(s.sp2Sec||180))/60));
-    if(pBadge)pBadge.textContent='Speaking';
-    if(hint)hint.textContent='score 0-5';
-  }else if(t==='rue'){
+    if(pBadge)pBadge.textContent=t('ql_speaking');
+    if(hint)hint.textContent=t('ql_score_05');
+  }else if(type==='rue'){
     QL_STATE.part=focusPart;
-    if(cLbl)cLbl.textContent='Correct';
+    if(cLbl)cLbl.textContent=t('ql_correct');
     if(cIn){cIn.max=52;cIn.value=26;}
     if(tIn)tIn.value=30;
     if(mIn)mIn.value=s.ueMin||50;
-    if(pBadge)pBadge.textContent='Focus P'+focusPart;
-    if(hint)hint.textContent='correct / total';
+    if(pBadge)pBadge.textContent=t('ql_focus',{focus:focusPart});
+    if(hint)hint.textContent=t('ql_correct_total');
   }
   QL_STATE.step=2;
   _qlRenderStep();
@@ -8696,7 +8758,7 @@ function setIaState(st,errMsg){
   const card=document.getElementById('iaCard');
   if(card)card.setAttribute('data-state',st);
   const lbl=document.getElementById('iaStateLabel');
-  if(lbl)lbl.textContent=st;
+  if(lbl)lbl.textContent=t('ai_state_'+st);
   const loadEl=document.getElementById('iaLoading');
   if(loadEl)loadEl.style.display=st==='loading'?'flex':'none';
   const errEl=document.getElementById('iaError');
@@ -8711,6 +8773,11 @@ function renderIa(){
   if(warn)warn.style.display=hasKey?'none':'block';
   const btn=document.getElementById('iaSubmitBtn');
   if(btn)btn.disabled=!hasKey||IA_STATE==='loading';
+  const wc=document.getElementById('iaWordCount');
+  const ws=document.getElementById('iaWordStatus');
+  if(ws&&wc&&(!wc.textContent||wc.textContent==='0'))ws.textContent=t('ai_target_words');
+  const lbl=document.getElementById('iaStateLabel');
+  if(lbl&&IA_STATE==='idle')lbl.textContent=t('ai_state_idle');
 }
 function onIaTextChange(){
   const el=document.getElementById('iaText');
@@ -8723,13 +8790,13 @@ function onIaTextChange(){
   if(st){
     if(words>=140&&words<=190){
       st.style.color='var(--ok-text)';
-      st.textContent='✔ In range ('+words+'/140–190 words)';
+      st.textContent=t('ai_in_range',{words:words});
     }else if(words<140){
       st.style.color='var(--warn-text)';
-      st.textContent=(140-words)+' words short (target 140–190)';
+      st.textContent=t('ai_short',{n:140-words});
     }else{
       st.style.color='var(--bad-text)';
-      st.textContent=(words-190)+' words over (max 190)';
+      st.textContent=t('ai_over',{n:words-190});
     }
   }
 }
@@ -8742,11 +8809,11 @@ async function submitIaWriting(){
   const kind=kindEl?kindEl.value:'Essay';
   const words=text?text.split(/\s+/).filter(Boolean).length:0;
   if(text.length>6000){
-    setIaState('error','The text is too long (max 6000 characters).');
+    setIaState('error',t('ai_err_long'));
     return;
   }
   if(text.length<60||words<40||words>700){
-    setIaState('error','The text must be between 40 and 700 words.');
+    setIaState('error',t('ai_err_words'));
     return;
   }
   setIaState('loading');
@@ -8766,7 +8833,7 @@ async function submitIaWriting(){
     try{data=await r.json();}catch(e){}
     if(r.ok&&data&&data.refused){
       track('ai_blocked',{code:422});
-      setIaState('error','That does not look like a B2 First writing task. Paste the task and your text.');
+      setIaState('error',t('ai_err_not_task'));
       return;
     }
     if(!r.ok||!data||!data.bands){
@@ -8801,7 +8868,7 @@ async function submitIaWriting(){
   }catch(err){
     clearTimeout(timer);
     track('ai_error',{code:0});
-    setIaState('error','Could not reach the corrector. Check your connection and try again.');
+    setIaState('error',t('ai_err_network'));
   }
 }
 function renderIaResult(data){
@@ -9259,6 +9326,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(sideFoot)sideFoot.style.display='none';
     D=load();
     window.D=D;
+    syncLangFromD();
     renderUserChip();
     applyTimers();
     refreshAll();
@@ -9269,6 +9337,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(USER&&USER.token){
     D=load();
     window.D=D;
+    syncLangFromD();
     renderUserChip();
     syncPull();
     applyTimers();
