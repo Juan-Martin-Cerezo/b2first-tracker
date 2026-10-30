@@ -640,6 +640,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spx-brief{display:grid;gap:8px;margin:10px 0;padding:0;list-style:none}
 .spx-brief li{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;font-size:var(--fs-sm);color:var(--txt);line-height:1.45}
 .spx-rule{font-size:var(--fs-sm);font-weight:600;color:var(--warn-text);background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--r-ctl);padding:10px 12px;margin:12px 0}
+.spx-note{font-size:var(--fs-xs);color:var(--txt-2);background:var(--surface-2);border-radius:var(--r-ctl);padding:8px 10px;margin:8px 0}
 .spx-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .spx-actions .btn{min-height:44px}
 .spx-exam-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:12px;flex-wrap:wrap}
@@ -2236,10 +2237,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         </div>
                       </div>
                       <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
+                      <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
                       <div class="spx-tx" id="spxTx" aria-label="Transcript" data-exam-task data-i18n-aria-label="spx_transcript"></div>
                       <div class="spx-actions">
+                        <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry">Retry the voice</button>
                         <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early">End this part</button>
                       </div>
                     </section>
@@ -4022,6 +4025,12 @@ const I18N={
     spx_closing:'Closing',
     spx_pr_model_note:'Measured from the audio, never by the text model.',
     spx_voice_offline:'{who} is offline — {reason}. The rest of the exam continues.',
+    spx_listening:'Listening…',
+    spx_thinking:'Thinking…',
+    spx_turn_note:'Turn-based voice: your audio is sent only when you stop speaking. You cannot interrupt the examiner mid-sentence.',
+    spx_turn_badge:'Turn-based voice',
+    spx_voice_retry:'Retry the voice',
+    spx_turn_failed:'The examiner could not answer — {reason}. Nothing was invented; you can retry.',
     spx_end_early:'End this part',
     spx_feedback_sentence:'How you did in Part {n}.',
     spx_feedback_next:'One thing to work on next time',
@@ -4604,6 +4613,12 @@ const I18N={
     spx_closing:'Cierre',
     spx_pr_model_note:'Se mide desde el audio, nunca con el modelo de texto.',
     spx_voice_offline:'{who} está desconectado — {reason}. El resto del examen sigue.',
+    spx_listening:'Escuchando…',
+    spx_thinking:'Pensando…',
+    spx_turn_note:'Voz por turnos: tu audio se envía recién cuando dejás de hablar. No podés interrumpir al examinador a mitad de una frase.',
+    spx_turn_badge:'Voz por turnos',
+    spx_voice_retry:'Reintentar la voz',
+    spx_turn_failed:'El examinador no pudo responder — {reason}. No se inventó nada; podés reintentar.',
     spx_end_early:'Terminar esta parte',
     spx_feedback_sentence:'Cómo te fue en la Parte {n}.',
     spx_feedback_next:'Una cosa para trabajar la próxima vez',
@@ -6472,9 +6487,218 @@ function makeLiveTransport(cfg){
   };
 }
 
-function makeTransport(cfg){
-  return (cfg&&cfg.mode==='sim')?makeSimTransport(cfg):makeLiveTransport(cfg);
+/* Phase 36: turn-based voice. Same interface as the other two transports, so
+   the SP_EXAM screens do not change. The candidate's audio is buffered only
+   while the VAD says they are talking; 800 ms of silence (or the 15 s cap)
+   closes the turn, uploads that buffer once and drops it. Nothing is sent
+   before the turn closes. The reply arrives as a WAV and goes through the same
+   per-voice gain chain as any other voice, so muting and overlap still work.
+
+   This is turn-based, not full duplex: while the examiner's audio is playing
+   the microphone is not recorded, because the candidate cannot interrupt. */
+const SPK_TURN_SILENCE_MS=800;
+const SPK_TURN_MAX_MS=15000;
+const SPK_TURN_MIN_MS=300;
+
+function spkTurnSessionId(){
+  if(!SPK.turnSessionId){
+    SPK.turnSessionId='spk-'+Date.now().toString(36)+'-'+
+      Math.random().toString(36).slice(2,10);
+  }
+  return SPK.turnSessionId;
 }
+function spkTurnHistory(){
+  return (SPK.lines||[]).filter(function(l){
+    return l&&typeof l.text==='string'&&l.text.trim()&&
+      (l.who==='candidate'||l.who==='examiner'||l.who==='partner');
+  }).slice(-6).map(function(l){
+    return {who:l.who,text:l.text.slice(0,500)};
+  });
+}
+function spkTurnTask(){
+  if(window.SP_EXAM&&SP_EXAM.task)return SP_EXAM.task;
+  return undefined;
+}
+function spkTurnTaskId(){
+  const task=spkTurnTask();
+  return (task&&task.id)?String(task.id):undefined;
+}
+
+/* A decoded WAV buffer plays exactly like a PCM chunk: same gain node, same
+   queue, so spkVoiceBusy/mute/sources keep working untouched. */
+function spkOnBuffer(buf,who){
+  who=who||'examiner';
+  if(!SPK.running||!buf)return false;
+  if(who==='examiner'&&SPK.muted)return false;
+  const v=spkVoice(who);
+  if(v.offline||!v.transport)return false;
+  if(!spkEnsureCtx())return false;
+  const ctx=SPK.ctx;
+  const src=ctx.createBufferSource();
+  src.buffer=buf;
+  src.connect(v.gain||ctx.destination);
+  const when=Math.max(ctx.currentTime,v.nextTime);
+  src.start(when);
+  v.nextTime=when+buf.duration;
+  v.sources.push(src);
+  src.onended=function(){
+    const i=v.sources.indexOf(src);
+    if(i>=0)v.sources.splice(i,1);
+  };
+  return true;
+}
+async function spkPlayWav(b64,who){
+  if(typeof b64!=='string'||!b64)return false;
+  if(!spkEnsureCtx())return false;
+  const bin=atob(b64);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  const buf=await new Promise(function(resolve,reject){
+    try{SPK.ctx.decodeAudioData(bytes.buffer,resolve,reject)}catch(e){reject(e)}
+  });
+  return spkOnBuffer(buf,who);
+}
+
+function makeTurnTransport(cfg){
+  const on=(cfg&&cfg.on)||{};
+  const role=(cfg&&cfg.role)||'examiner';
+  const part=(cfg&&cfg.part)||1;
+  /* Only the examiner listens. The partner is a text/TTS voice here: the
+     candidate's audio is one conversation, not two. */
+  const listens=(role==='examiner');
+  const sessionId=(cfg&&cfg.session_id)||spkTurnSessionId();
+  let closed=false,muted=false,busy=false;
+  let frames=[],frameBytes=0,spokenMs=0,silentMs=0,lastPayload=null;
+  function state(next){
+    SPK.turnState=next;
+    if(on.state)on.state(next);
+  }
+  function resetTurn(){
+    frames=[];frameBytes=0;spokenMs=0;silentMs=0;
+  }
+  function collect(){
+    const out=new Int16Array(frameBytes);   /* frameBytes counts samples */
+    let at=0;
+    frames.forEach(function(f){out.set(f,at);at+=f.length});
+    return out;
+  }
+  function send(payload,keep){
+    if(closed)return Promise.resolve(false);
+    if(busy)return Promise.resolve(false);
+    busy=true;
+    state('thinking');
+    const t0=performance.now();
+    return fetch(apiUrl('/api/speaking/turn'),{method:'POST',
+      headers:authHeaders(),body:JSON.stringify(payload)})
+      .then(function(r){
+        if(r.status===401){sessionExpired();throw new Error('session expired')}
+        return r.json().catch(function(){return null}).then(function(j){
+          if(!r.ok||!j||typeof j.reply!=='string'){
+            if(isPlanLimit(j)){showPlanLimit();throw new Error(t('license_limit_short'))}
+            throw new Error((j&&j.error)||('turn failed ('+r.status+')'));
+          }
+          return j;
+        });
+      })
+      .then(function(j){
+        if(j.transcript&&on.inText)on.inText(j.transcript);
+        if(j.reply&&on.outText)on.outText(j.reply);
+        return spkPlayWav(j.audio_b64,role).catch(function(){return false})
+          .then(function(){
+            SPK.lastTurnMs=j.ms||null;
+            /* stop-talking → first-audio is measured here, on the client,
+               because that is the number the candidate actually feels. */
+            SPK.turnLatencyMs=Math.round(performance.now()-t0);
+            state('');
+            if(on.turnDone)on.turnDone(j);
+            return true;
+          });
+      })
+      .catch(function(err){
+        if(keep&&payload.audio_b64)lastPayload=payload;
+        state('error');
+        if(on.turnError)on.turnError(err);
+        else if(on.error)on.error(err);
+        return false;
+      })
+      .then(function(ok){busy=false;return ok});
+  }
+  function flush(){
+    if(closed||busy||!listens||frameBytes<2)return;
+    if(spokenMs<SPK_TURN_MIN_MS){resetTurn();return}
+    const payload={audio_b64:spkB64FromPcm(collect()),
+      mime:'audio/pcm;rate=16000',part:part,role:role,
+      history:spkTurnHistory(),session_id:sessionId,
+      task_id:spkTurnTaskId(),task:spkTurnTask()};
+    resetTurn();
+    send(payload,true);
+  }
+  return {
+    on:on,role:role,session_id:sessionId,
+    start:function(){},
+    /* Frames arrive every 20 ms from the same VAD the rest of the app uses. */
+    sendAudio:function(pcm,speaking){
+      if(closed||!listens||busy||muted)return;
+      if(!pcm||!pcm.length)return;
+      /* Echo cancellation is off on purpose, so the examiner's own playback
+         would otherwise become a candidate turn. Turn-based cannot barge in:
+         that limitation is stated in the UI, not hidden. */
+      if(SPK.speaking||(SPK.lastExaminerAt&&
+          performance.now()-SPK.lastExaminerAt<400)){
+        resetTurn();return;
+      }
+      frames.push(pcm);
+      frameBytes+=pcm.length;
+      if(speaking){
+        spokenMs+=20;silentMs=0;
+        if(SPK.turnState!=='listening')state('listening');
+      }else if(spokenMs){
+        silentMs+=20;
+        if(silentMs>=SPK_TURN_SILENCE_MS)flush();
+      }
+      if(spokenMs>=SPK_TURN_MAX_MS)flush();
+    },
+    /* A controller line ("say exactly this"): TTS only, no model, no audio up.
+       Without it the examiner could not open the exam or hand over a turn. */
+    say:function(text){
+      if(closed||muted||typeof text!=='string'||!text.trim())return;
+      if(on.outText)on.outText(text);
+      send({say:text,role:role,part:part,session_id:sessionId},false);
+    },
+    /* The free-conversation bridge is text-only for the partner; the exam's
+       partner lines arrive through say() like the examiner's. */
+    sendText:function(){},
+    mute:function(b){muted=!!b},
+    retry:function(){
+      if(lastPayload&&!busy)return send(lastPayload,true);
+      return Promise.resolve(false);
+    },
+    close:function(){closed=true;resetTurn();lastPayload=null}
+  };
+}
+
+function makeTransport(cfg){
+  if(cfg&&cfg.mode==='sim')return makeSimTransport(cfg);
+  if(cfg&&cfg.mode==='turn')return makeTurnTransport(cfg);
+  return makeLiveTransport(cfg);
+}
+
+/* Which transport may this deployment run? `live` is only advertised when the
+   server verified a bidiGenerateContent model; turn-based voice works with a
+   plain API key and is the default here. */
+let SPK_CAPS=null;
+async function spkCapabilities(force){
+  if(SPK_CAPS&&!force)return SPK_CAPS;
+  try{
+    const r=await fetch(apiUrl('/api/speaking/capabilities'),{headers:authHeaders()});
+    if(!r.ok){SPK_CAPS={live:false,turn:false};return SPK_CAPS}
+    const j=await r.json();
+    SPK_CAPS={live:!!(j&&j.live),turn:!j||j.turn!==false};
+  }catch(e){SPK_CAPS={live:false,turn:false}}
+  SPK.caps=SPK_CAPS;
+  return SPK_CAPS;
+}
+window.spkCapabilities=spkCapabilities;
 
 const SPK={
   running:false,starting:false,stopping:false,mode:'sim',part:1,
@@ -6497,7 +6721,11 @@ const SPK={
   reportSaved:false,reportDuration:0,
   /* Phase 35 exam mode: the SP_EXAM screen owns the floor, the transport is
      driven by the task, and `interactive` asks the report for the IC scale. */
-  examMode:false,examDriven:false,interactive:false,lastReportError:''
+  examMode:false,examDriven:false,interactive:false,lastReportError:'',
+  /* Phase 36 turn-based voice: one uploaded turn at a time, and the two
+     numbers the honesty requirement asks for (server ms + client latency). */
+  caps:null,turnSessionId:'',turnState:'',turnError:'',
+  lastTurnMs:null,turnLatencyMs:null
 };
 window.SPK=SPK;
 window.spkDirectorTick=spkDirectorTick;
@@ -6678,6 +6906,9 @@ function spkReset(){
   SPK.silences=[];SPK.silStartedAt=0;SPK.speechMs=0;SPK.lastFrameAt=0;
   SPK.reportId='';SPK.reportPayload=null;SPK.reportData=null;
   SPK.reportSaved=false;SPK.reportDuration=0;
+  SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
+  SPK.lastTurnMs=null;SPK.turnLatencyMs=null;
+  spxShowVoiceRetry(false);
   SPK.voices={};
   const repBtn=document.getElementById('spkReportBtn');
   if(repBtn)repBtn.disabled=true;
@@ -6897,9 +7128,11 @@ async function spkStartMic(){
     if(!SPK.running)return;
     const m=ev.data||{};
     if(m.pcm){
+      /* The VAD verdict travels with the frame: the turn transport buffers only
+         what the same VAD calls speech, and closes on its silence. */
       ['examiner','partner'].forEach(function(w){
         const v=SPK.voices[w];
-        if(v&&v.transport&&!v.offline)v.transport.sendAudio(m.pcm);
+        if(v&&v.transport&&!v.offline)v.transport.sendAudio(m.pcm,!!m.speaking);
       });
     }
     const speaking=!!m.speaking;
@@ -6949,9 +7182,35 @@ function spkHandlers(who){
     },
     error:function(err){spkVoiceError(who,err)},
     interrupted:function(){if(who==='examiner')spkBargeIn()},
-    turnComplete:function(){}
+    turnComplete:function(){},
+    /* A failed turn must never look like an answer: say it plainly, keep the
+       request for one retry, and leave the transcript untouched. */
+    turnError:function(err){
+      const msg=(err&&err.message)||'turn failed';
+      SPK.turnError=msg;
+      spkSetStatus(t('spx_turn_failed',{reason:msg}));
+      spkSetBadge(t('spx_turn_failed',{reason:msg}));
+      if(SPK.examMode)spxSetError(t('spx_turn_failed',{reason:msg}));
+      spxShowVoiceRetry(true);
+    },
+    turnDone:function(){
+      SPK.turnError='';
+      if(SPK.examMode)spxSetError('');
+      spxShowVoiceRetry(false);
+    }
   };
 }
+
+function spxShowVoiceRetry(show){
+  const btn=document.getElementById('spxVoiceRetry');
+  if(btn)btn.style.display=(show&&SPK.mode==='turn')?'inline-block':'none';
+}
+SPK.retryTurn=function(){
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices[w];
+    if(v&&v.transport&&v.transport.retry)v.transport.retry();
+  });
+};
 
 function spkPartHint(p){
   if(p===1)return 'Part 1 opens the examiner only (cost control).';
@@ -6987,36 +7246,46 @@ async function spkStart(){
        nothing. Parts 2-4 open the second session. */
     const roles=part===1?['examiner']:['examiner','partner'];
     const sim=spkSimMode();
+    /* Ask the server what it can actually run: real-time Live needs a key with
+       bidiGenerateContent. Without it the examiner speaks turn by turn. */
+    const caps=sim?null:await spkCapabilities();
+    if(caps)SPK.caps=caps;
     const cfgs={};
     let fellBack=false;
     for(const role of roles){
       let mode='sim',liveCfg=null;
       if(!sim){
-        try{
-          const r=await fetch('/api/speaking/token',{method:'POST',
-            headers:authHeaders(),body:JSON.stringify({role:role,part:part})});
-          if(r.ok){
-            const j=await r.json();
-            if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
-          }else if(r.status===429){
-            // No mock left in this window: explain the options, then run the
-            // free simulation (no cost) instead of silently doing nothing.
-            let j=null;try{j=await r.json()}catch(e){}
-            if(isPlanLimit(j)){
-              showPlanLimit();
-              spkSetStatus(t('license_limit_short'));
-              spkSetBadge(t('license_limit_short'));
+        if(caps&&caps.live){
+          try{
+            const r=await fetch('/api/speaking/token',{method:'POST',
+              headers:authHeaders(),body:JSON.stringify({role:role,part:part})});
+            if(r.ok){
+              const j=await r.json();
+              if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
+            }else if(r.status===429){
+              // No mock left in this window: explain the options, then run the
+              // free simulation (no cost) instead of silently doing nothing.
+              let j=null;try{j=await r.json()}catch(e){}
+              if(isPlanLimit(j)){
+                showPlanLimit();
+                spkSetStatus(t('license_limit_short'));
+                spkSetBadge(t('license_limit_short'));
+              }
             }
-          }
-        }catch(e){}
-        if(mode!=='live')fellBack=true;
+          }catch(e){}
+        }
+        if(mode!=='live'&&caps&&caps.turn)mode='turn';
+        if(mode==='sim')fellBack=true;
       }
       cfgs[role]={mode:mode,liveCfg:liveCfg};
     }
     const anyLive=roles.some(function(r){return cfgs[r].mode==='live'});
-    SPK.mode=anyLive?'live':'sim';
+    const anyTurn=!anyLive&&roles.some(function(r){return cfgs[r].mode==='turn'});
+    SPK.mode=anyLive?'live':(anyTurn?'turn':'sim');
+    spxRenderVoiceMode();
     if(sim)spkSetBadge('Simulated voices (?spk=sim)');
-    else if(fellBack)spkSetBadge('Live voice unavailable — simulated fallback');
+    else if(anyTurn)spkSetBadge(t('spx_turn_badge'));
+    else if(fellBack&&!anyLive)spkSetBadge('Voice unavailable — simulated fallback');
     spkEnsureCtx();
     roles.forEach(function(role){
       const c=cfgs[role];
@@ -7030,10 +7299,10 @@ async function spkStart(){
     SPK.startedAt=performance.now();
     SPK.lastReport=SPK.startedAt;
     SPK.running=true;
-    if(anyLive){
+    if(anyLive||anyTurn){
       try{await spkStartMic()}
       catch(err){
-        // No microphone is a hard stop for the real path: fall back honestly.
+        // No microphone is a hard stop for a real voice: fall back honestly.
         roles.forEach(function(role){
           const v=SPK.voices[role];
           try{if(v&&v.transport)v.transport.close()}catch(e){}
@@ -7052,8 +7321,9 @@ async function spkStart(){
       const v=SPK.voices[role];
       if(v&&v.transport)v.transport.start();
     });
-    spkSetStatus((SPK.mode==='live'?'Listening — ':'Listening — simulated ')+
+    spkSetStatus((SPK.mode==='sim'?'Listening — simulated ':'Listening — ')+
       (roles.length>1?'examiner + partner (Part '+part+')':'examiner (Part 1)'));
+    spxRenderVoiceMode();
     if(stopBtn)stopBtn.disabled=false;
     SPK.raf=requestAnimationFrame(spkLoop);
   }catch(err){
@@ -7079,6 +7349,8 @@ async function spkStop(limitHit){
      (same request_id), which is what makes the endpoint idempotent. */
   SPK.reportDuration=Math.max(1,Math.round(SPK.elapsed));
   SPK.reportPayload=null;
+  SPK.turnState='';SPK.turnError='';
+  spxShowVoiceRetry(false);
   if(SPK.raf){cancelAnimationFrame(SPK.raf);SPK.raf=null}
   SPK.simSpeechUntil=0;
   ['examiner','partner'].forEach(function(w){
@@ -7638,9 +7910,18 @@ function spxPhases(){
 }
 
 function spxQueueQuiet(){
+  /* A turn in flight (transcript + TTS) has not produced audio yet: the floor
+     stays with the examiner instead of moving on during the wait. */
+  if(SPK.mode==='turn'&&SPK.turnState==='thinking')return false;
   const ex=SPK.voices&&SPK.voices.examiner;
   const pa=SPK.voices&&SPK.voices.partner;
   return !(ex&&ex.speaking)&&!(pa&&pa.speaking);
+}
+/* The turn note only makes sense when audio is uploaded: it states the privacy
+   model ("sent when you stop speaking"), so it is shown for turn mode only. */
+function spxRenderVoiceMode(){
+  const note=document.getElementById('spxTurnNote');
+  if(note)note.style.display=(SPK.mode==='turn')?'block':'none';
 }
 function spxVoiceBusy(who){
   const v=SPK.voices&&SPK.voices[who];
@@ -7658,7 +7939,9 @@ function spxSay(who,text,ms){
   const v=SPK.voices&&SPK.voices[who];
   if(!v||!v.transport||v.offline||typeof text!=='string'||!text)return;
   const duration=ms||spxSpeechMs(text);
-  if(SPK.mode==='sim'&&v.transport.say){v.transport.say(text,duration);return}
+  /* Sim and turn-based both have say(): the line is spoken as written (turn
+     mode asks the server for TTS only, no model call). */
+  if(v.transport.say){v.transport.say(text,duration);return}
   /* Live: the model owns the words, the controller owns the stage. */
   if(v.transport.sendText){
     v.transport.sendText('EXAM CONTROLLER: say exactly this and nothing else: "'+text+'"');
@@ -7749,6 +8032,8 @@ function spxRenderWho(){
   let who='candidate',key='spx_your_turn';
   if(spxVoiceBusy('examiner')){who='examiner';key='spx_examiner'}
   else if(spxVoiceBusy('partner')){who='partner';key='spx_partner'}
+  else if(SPK.mode==='turn'&&SPK.turnState==='thinking'){who='examiner';key='spx_thinking'}
+  else if(SPK.mode==='turn'&&SPK.turnState==='listening'){who='candidate';key='spx_listening'}
   else if(ph&&ph.who==='examiner'){who='examiner';key='spx_examiner'}
   else if(ph&&ph.who==='partner'){who='partner';key='spx_partner'}
   el.setAttribute('data-who',who);
