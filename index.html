@@ -524,6 +524,14 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spk-line .ts{flex:none;font-size:var(--fs-xs);color:var(--txt-2);font-variant-numeric:tabular-nums;padding-top:2px}
 .spk-line .txt{overflow-wrap:anywhere}
 .spk-badge{min-height:20px;margin-top:8px;font-size:var(--fs-xs);font-weight:600;color:var(--warn-text)}
+.spk-parts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:var(--fs-sm)}
+.spk-parts label{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.spk-parts select{font:inherit;padding:5px 8px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface-2);color:var(--txt)}
+.spk-parts .t{font-size:var(--fs-xs);color:var(--txt-2)}
+.live-stat .val[data-state="speaking"]{color:var(--ok-text)}
+.live-stat .val[data-state="muted"]{color:var(--txt-2)}
+.live-stat .val[data-state="offline"]{color:var(--bad-text)}
+.spk-line.spk-partner .txt{color:var(--txt-2)}
 
 /* ---------- GATES ---------- */
 .gate{
@@ -2010,7 +2018,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div class="live-panel" id="spkPanel" style="display:none" aria-label="Live examiner">
                     <div class="live-head">
                       <div>
-                        <div class="live-title">🗣 Live examiner <span class="t">Part 1 interview · Part 2 long turn</span></div>
+                        <div class="live-title">🗣 Live exam <span class="t">Parts 1–4 · examiner + partner, one director</span></div>
                         <div class="live-sub" id="spkStatus" role="status">Examiner off</div>
                       </div>
                       <div class="live-actions">
@@ -2018,8 +2026,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm gray" id="spkCloseBtn" onclick="spkDiscard()">✕ Close</button>
                       </div>
                     </div>
+                    <div class="spk-parts">
+                      <label for="spkPart">Part</label>
+                      <select id="spkPart" onchange="spkSetPart(this.value)">
+                        <option value="1">1 · Interview</option>
+                        <option value="2">2 · Long turn</option>
+                        <option value="3">3 · Collaborative</option>
+                        <option value="4">4 · Discussion</option>
+                      </select>
+                      <span class="t" id="spkPartHint">Part 1 opens the examiner only (cost control).</span>
+                    </div>
                     <div class="live-grid">
-                      <div class="live-stat"><span class="lbl">Examiner</span><span class="val" id="spkSpeaking">idle</span></div>
+                      <div class="live-stat"><span class="lbl">Examiner</span><span class="val" id="spkSpeaking">offline</span></div>
+                      <div class="live-stat"><span class="lbl">Partner</span><span class="val" id="spkPartnerVoice">offline</span></div>
+                      <div class="live-stat"><span class="lbl">Overlap</span><span class="val" id="spkOverlap">0.0s</span></div>
                       <div class="live-stat"><span class="lbl">Session</span><span class="val" id="spkElapsed">00:00</span></div>
                       <div class="live-stat"><span class="lbl">Minutes left</span><span class="val" id="spkRemaining">—</span></div>
                       <div class="live-stat"><span class="lbl">Interruptions</span><span class="val" id="spkInterrupts">0</span></div>
@@ -2031,7 +2051,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="spk-lines" id="spkInText"></div>
                       </div>
                       <div class="spk-col">
-                        <div class="spk-col-h">Examiner</div>
+                        <div class="spk-col-h">Examiner &amp; Partner <span class="t">two voices, one director</span></div>
                         <div class="spk-lines" id="spkOutText"></div>
                       </div>
                     </div>
@@ -4189,6 +4209,224 @@ function liveDiscard(){
      - realtimeInput.audio { data (base64 PCM16), mimeType:'audio/pcm;rate=16000' }
      - serverContent.modelTurn.parts[].inlineData.data  (base64 PCM16 24 kHz)
      - serverContent.inputTranscription / outputTranscription / interrupted  */
+/* ---------- S4 DIRECTOR: pure turn state machine (no DOM, no network) ----------
+   Two Live sessions hear the same microphone and cannot hear each other, so
+   somebody has to decide whose turn it is and who is muted. That somebody is
+   this function. It is deliberately pure: the same (state, input) always gives
+   the same {state, out}, which is what makes it testable without audio.
+   `t` is milliseconds on any monotonic clock; the director never reads one.
+
+   DIRECTOR:START */
+function spkDirectorInit(part){
+  var p=part||1;
+  return {
+    part:p,
+    phase:p===1?'interview':(p===2?'ask':(p===3?'intro':'ask')),
+    lastT:null,
+    examSpoke:false,examDone:false,examStopT:null,
+    candSpeechMs:0,
+    repeatUsed:false,
+    bothSilentSince:null,
+    overlapMs:0,turnOverlapMs:0,turnOverlaps:[],
+    overlapOn:false,
+    phaseT:null,
+    phaseSpoke:false,
+    addressed:null,
+    examinerName:null,
+    lastText:''
+  };
+}
+
+function spkDirectorAddressesExaminer(text,name){
+  if(typeof text!=='string'||!text)return false;
+  var lower=text.toLowerCase();
+  if(name&&lower.indexOf(String(name).toLowerCase())>=0)return true;
+  return /\b(examiner|sir|madam)\b/.test(lower);
+}
+
+function spkDirectorDirection(text){
+  var lower=typeof text==='string'?text.toLowerCase():'';
+  if(lower.indexOf('your partner')>=0)return 'partner';
+  if(/\byou\b/.test(lower))return 'candidate';
+  return 'partner';
+}
+
+function spkDirectorTick(state,input){
+  input=input||{};
+  var part=input.part||(state&&state.part)||1;
+  var t=typeof input.t==='number'?input.t:0;
+  var s;
+  if(!state||state.part!==part){
+    s=spkDirectorInit(part);
+    s.lastT=t;s.phaseT=t;
+  }else{
+    s={
+      part:part,
+      phase:state.phase,
+      lastT:state.lastT,
+      examSpoke:!!state.examSpoke,
+      examDone:!!state.examDone,
+      examStopT:(state.examStopT===undefined?null:state.examStopT),
+      candSpeechMs:state.candSpeechMs||0,
+      repeatUsed:!!state.repeatUsed,
+      bothSilentSince:(state.bothSilentSince===undefined?null:state.bothSilentSince),
+      overlapMs:state.overlapMs||0,
+      turnOverlapMs:state.turnOverlapMs||0,
+      turnOverlaps:(state.turnOverlaps||[]).slice(),
+      overlapOn:!!state.overlapOn,
+      phaseT:(state.phaseT===undefined?t:state.phaseT),
+      phaseSpoke:!!state.phaseSpoke,
+      addressed:state.addressed||null,
+      examinerName:state.examinerName||null,
+      lastText:state.lastText||''
+    };
+  }
+  if(input.examinerName)s.examinerName=input.examinerName;
+
+  var dt=(s.lastT===null||t<=s.lastT)?0:(t-s.lastT);
+  var ex=input.examiner||{},pa=input.partner||{},ca=input.candidate||{};
+  var exSp=!!ex.speaking,paSp=!!pa.speaking,caSp=!!ca.speaking;
+  var text=typeof input.transcriptTail==='string'?input.transcriptTail:'';
+  var events=[];
+  function emit(type,who,txt){events.push({t:t,type:type,who:who||null,text:txt||''})}
+  function setPhase(np){
+    if(s.phase===np)return;
+    s.turnOverlaps.push(s.turnOverlapMs);
+    s.turnOverlapMs=0;
+    s.phase=np;
+    s.phaseT=t;
+    s.phaseSpoke=false;
+  }
+
+  /* Who spoke, and did the examiner just finish a turn? */
+  if(exSp){
+    s.examSpoke=true;s.examDone=false;
+  }else if(s.examSpoke&&!s.examDone){
+    s.examDone=true;
+    s.examStopT=(typeof ex.since==='number')?ex.since:t;
+  }
+  if(paSp&&s.phase==='partner')s.phaseSpoke=true;
+  if(caSp&&s.phase==='candidate')s.phaseSpoke=true;
+  if(caSp&&dt>0)s.candSpeechMs+=dt;
+
+  /* --- Part-specific transitions ---------------------------------------- */
+  if(part===1){
+    s.phase='interview';
+  }else if(part===2){
+    if(s.phase==='ask'){
+      if(s.examDone){
+        if(s.candSpeechMs>=500){
+          setPhase('candidate');
+          emit('phase','candidate','');
+        }else{
+          var stopAt=(s.examStopT===null||s.examStopT===undefined)?t:s.examStopT;
+          if(!s.repeatUsed&&(t-stopAt)>=3000){
+            s.repeatUsed=true;
+            emit('repeat','examiner',text);
+          }
+        }
+      }
+    }else if(s.phase==='candidate'){
+      if(dt>0&&(t-s.phaseT)>=60000){setPhase('partner');emit('phase','partner','')}
+    }else if(s.phase==='partner'){
+      if(dt>0&&(t-s.phaseT)>=30000){setPhase('closing');emit('phase','closing','')}
+    }
+  }else if(part===3){
+    if(s.phase==='intro'){
+      if(s.examDone){
+        setPhase('partner');
+        s.bothSilentSince=t;
+        emit('handoff','partner','');
+      }
+    }else if(s.phase==='partner'){
+      if(exSp||paSp||caSp){
+        s.bothSilentSince=null;
+      }else if(s.bothSilentSince===null||s.bothSilentSince===undefined){
+        s.bothSilentSince=t;
+      }
+      var deadAir=(s.bothSilentSince!==null&&s.bothSilentSince!==undefined&&dt>0
+                   &&(t-s.bothSilentSince)>=2000);
+      var called=(text&&text!==s.lastText
+                  &&spkDirectorAddressesExaminer(text,s.examinerName));
+      if(deadAir||called){
+        setPhase('examiner');
+        s.examSpoke=false;s.examDone=false;s.examStopT=null;
+        s.bothSilentSince=null;
+        emit(called?'called':'examiner_return','examiner',text);
+      }
+    }else if(s.phase==='examiner'){
+      if(s.examDone){
+        setPhase('partner');
+        s.bothSilentSince=t;
+        emit('handoff','partner','');
+      }
+    }
+  }else{
+    if(s.phase!=='ask'&&s.phase!=='partner'&&s.phase!=='candidate'){
+      s.phase='ask';s.phaseT=t;s.phaseSpoke=false;
+    }
+    if(s.phase==='ask'){
+      if(s.examDone){
+        var who=spkDirectorDirection(text);
+        setPhase(who);
+        s.examSpoke=false;s.examDone=false;s.examStopT=null;
+        emit('direction',who,text);
+      }
+    }else if(s.phase==='partner'){
+      if(dt>0&&s.phaseSpoke&&!paSp&&typeof pa.since==='number'&&(t-pa.since)>=600){
+        setPhase('ask');s.examSpoke=false;s.examDone=false;
+        emit('handoff','examiner','');
+      }
+    }else if(s.phase==='candidate'){
+      if(dt>0&&s.phaseSpoke&&!caSp&&(ca.silenceMs||0)>=600){
+        setPhase('ask');
+        emit('handoff','examiner','');
+      }
+    }
+  }
+
+  /* --- Who is live and who is muted, from the phase we ended up in ------ */
+  var exLive=true,exMuted=false,paLive=true,paMuted=true,addressed=null;
+  if(part===1){
+    exLive=true;exMuted=false;paLive=false;paMuted=true;addressed='examiner';
+  }else if(part===2){
+    if(s.phase==='candidate'){exMuted=true;paMuted=true;addressed='candidate'}
+    else if(s.phase==='partner'){exMuted=true;paMuted=false;addressed='partner'}
+    else{exMuted=false;paMuted=true;addressed='examiner'}
+  }else if(part===3){
+    if(s.phase==='examiner'){exMuted=false;paMuted=false;addressed='examiner'}
+    else if(s.phase==='partner'){exMuted=true;paMuted=false;addressed='partner'}
+    else{exMuted=false;paMuted=true;addressed='examiner'}
+  }else{
+    if(s.phase==='candidate'){exMuted=true;paMuted=true;addressed='candidate'}
+    else if(s.phase==='partner'){exMuted=true;paMuted=false;addressed='partner'}
+    else{exMuted=false;paMuted=true;addressed='examiner'}
+  }
+  s.addressed=addressed;
+
+  /* Overlap is only legal — and only measured — in Part 3. */
+  if(part===3&&exSp&&paSp&&!exMuted&&!paMuted){
+    if(dt>0){s.overlapMs+=dt;s.turnOverlapMs+=dt}
+    if(!s.overlapOn){s.overlapOn=true;emit('overlap','both','')}
+  }else if(!(exSp&&paSp)||exMuted||paMuted){
+    s.overlapOn=false;
+  }
+
+  s.lastText=text;
+  if(s.lastT===null||t>s.lastT)s.lastT=t;
+
+  return {state:s,out:{
+    examiner:{live:exLive,muted:exMuted},
+    partner:{live:paLive,muted:paMuted},
+    addressed:addressed,
+    phase:s.phase,
+    overlap_ms:Math.round(s.overlapMs),
+    turn_overlap_ms:Math.round(s.turnOverlapMs),
+    events:events
+  }};
+}
+/* DIRECTOR:END */
+
 const SPK_DEFAULT_MODEL='gemini-3.8-live';
 const SPK_SIM_SCRIPT=[
   {q:'Good morning. Can you tell me your name, please?',
@@ -4198,6 +4436,36 @@ const SPK_SIM_SCRIPT=[
   {q:'What do you enjoy doing in your free time?',
    a:'I enjoy playing football and reading at the weekend.'}
 ];
+/* S4 sim scripts. The examiner introduces and stops; the partner drives Part 3
+   with the written prompt and never finishes the task alone. */
+const SPK_SIM_PART3_EXAMINER=[
+  {q:'Now I would like you to talk together for about two minutes about the '+
+      'way people use the internet, and how it affects their free time.'}
+];
+const SPK_SIM_PART4_EXAMINER=[
+  {q:'Do you think the internet brings people closer together? What do you think?'},
+  {q:'And what about you? Do you agree with your partner?'}
+];
+const SPK_SIM_PARTNER_SCRIPT=[
+  {q:'Shall I start? I think people spend a lot of time online, maybe too much. '+
+      'What do you think?'},
+  {q:'Yes, I agree. And what about free time? Do you think we still meet our '+
+      'friends in person?'},
+  {q:'Mmm, that is a good point. Should we talk about how we use the internet '+
+      'for studying?'},
+  {q:'Okay. So, shall we go with the idea that it depends on the person?'}
+];
+const SPK_SIM_PARTNER_PART2=[
+  {q:'Thanks. I liked the photos of the people in the park. What about you?'}
+];
+function spkSimScript(role,part){
+  if(role==='partner'){
+    return part===2?SPK_SIM_PARTNER_PART2:SPK_SIM_PARTNER_SCRIPT;
+  }
+  if(part===3)return SPK_SIM_PART3_EXAMINER;
+  if(part===4)return SPK_SIM_PART4_EXAMINER;
+  return SPK_SIM_SCRIPT;
+}
 
 const SPK_TX_SRC=`
 class SpkTx extends AudioWorkletProcessor {
@@ -4300,27 +4568,34 @@ function spkTone(ms,freq,rate){
 
 function makeSimTransport(cfg){
   const on=(cfg&&cfg.on)||{};
+  const role=(cfg&&cfg.role)||'examiner';
+  const part=(cfg&&cfg.part)||1;
+  const script=spkSimScript(role,part);
+  const sent=[];
   let closed=false,muted=false;
   const timers=[];
   function later(fn,ms){timers.push(setTimeout(fn,ms))}
   function emitTone(){
     if(closed||muted||!on.audio)return;
-    on.audio(spkTone(200,440,24000));
+    on.audio(spkTone(200,role==='partner'?330:440,24000));
   }
   return {
-    on:on,
+    on:on,role:role,sent:sent,
     start:function(){
-      SPK_SIM_SCRIPT.forEach(function(pair,i){
+      const gap=role==='partner'?2800:2400;
+      /* 80 ms of head start so the director has applied the first mutes before
+         any scripted line: a muted voice must not speak into the mix. */
+      script.forEach(function(pair,i){
         later(function(){
-          if(closed)return;
+          if(closed||muted)return;
           if(on.outText)on.outText(pair.q);
           for(let k=0;k<6;k++)later(emitTone,k*210);
-          later(function(){if(!closed&&on.inText)on.inText(pair.a)},1400);
-        },i*2400);
+          if(pair.a)later(function(){if(!closed&&!muted&&on.inText)on.inText(pair.a)},1400);
+        },80+i*gap);
       });
     },
     sendAudio:function(){},
-    sendText:function(){},
+    sendText:function(s){if(typeof s==='string'&&s)sent.push(s)},
     mute:function(b){muted=!!b},
     close:function(){
       closed=true;
@@ -4355,7 +4630,7 @@ function makeLiveTransport(cfg){
     if(sc.turnComplete===true&&on.turnComplete)on.turnComplete();
   }
   return {
-    on:on,
+    on:on,role:(cfg&&cfg.role)||'examiner',
     start:function(){
       if(!cfg||!cfg.ws_url||!cfg.token){
         throw new Error('unverified protocol field: token/ws_url');
@@ -4400,7 +4675,9 @@ function makeLiveTransport(cfg){
       send({realtimeInput:{text:s}});
     },
     mute:function(b){
-      muted=!!b;
+      const next=!!b;
+      if(next===muted)return;
+      muted=next;
       if(muted)send({realtimeInput:{audioStreamEnd:true}});
     },
     close:function(){
@@ -4415,25 +4692,34 @@ function makeTransport(cfg){
 }
 
 const SPK={
-  running:false,starting:false,stopping:false,mode:'sim',
-  ctx:null,lastCtx:null,transport:null,
-  sources:[],nextTime:0,speaking:false,muted:false,barged:false,
+  running:false,starting:false,stopping:false,mode:'sim',part:1,
+  ctx:null,lastCtx:null,ctxOpens:0,
+  voices:{},
+  dir:null,overlapMs:0,addressed:null,
+  activeVoices:0,billedSeconds:0,
+  speaking:false,muted:false,barged:false,
   turns:[],lines:[],inCount:0,outCount:0,interrupted:0,
   elapsed:0,startedAt:0,lastReport:0,capMin:20,remaining:null,
   raf:null,micCtx:null,micStream:null,micNode:null,micSource:null,micSink:null,
-  speechSince:0,silSince:0,simSpeechUntil:0
+  speechSince:0,silSince:0,simSpeechUntil:0,
+  micSpeaking:false,lastSpeechEnd:0,candSilenceMs:9999,lastExaminerText:'',
+  lastExaminerAt:0,lastOut:null
 };
 window.SPK=SPK;
+window.spkDirectorTick=spkDirectorTick;
+
+function spkVoice(who){
+  if(!SPK.voices[who]){
+    SPK.voices[who]={who:who,transport:null,gain:null,gainLevel:null,
+      sources:[],nextTime:0,speaking:false,since:null,muted:null,offline:false};
+  }
+  return SPK.voices[who];
+}
 
 function spkSetStatus(text){const el=document.getElementById('spkStatus');if(el)el.textContent=text}
 function spkSetBadge(text){const el=document.getElementById('spkBadge');if(el)el.textContent=text||''}
 function spkSetSpeaking(v){
-  if(SPK.speaking===v)return;
-  SPK.speaking=v;
-  const el=document.getElementById('spkSpeaking');
-  if(!el)return;
-  el.textContent=v?'examiner speaking':'idle';
-  if(v)el.setAttribute('data-on','1');else el.removeAttribute('data-on');
+  SPK.speaking=!!v;
 }
 
 function spkEnsureCtx(){
@@ -4442,14 +4728,26 @@ function spkEnsureCtx(){
   if(!AC)return false;
   try{SPK.ctx=new AC({sampleRate:24000,latencyHint:'interactive'})}
   catch(e){SPK.ctx=new AC()}
+  SPK.ctxOpens++;
   SPK.lastCtx=SPK.ctx;
   if(SPK.ctx.state==='suspended'&&SPK.ctx.resume)SPK.ctx.resume().catch(function(){});
-  SPK.sources=[];SPK.nextTime=0;
+  /* One context, two independent chains: voice.source -> gain -> destination. */
+  ['examiner','partner'].forEach(function(w){
+    const g=SPK.ctx.createGain();
+    g.gain.value=0;
+    g.connect(SPK.ctx.destination);
+    const v=spkVoice(w);
+    v.gain=g;v.gainLevel=0;v.sources=[];v.nextTime=0;v.muted=null;
+  });
   return true;
 }
 
-function spkOnAudio(pcm){
-  if(!SPK.running||!pcm||!pcm.length||SPK.muted)return;
+function spkOnAudio(pcm,who){
+  who=who||'examiner';
+  if(!SPK.running||!pcm||!pcm.length)return;
+  if(who==='examiner'&&SPK.muted)return;
+  const v=spkVoice(who);
+  if(v.offline||!v.transport)return;
   if(!spkEnsureCtx())return;
   const ctx=SPK.ctx;
   const buf=ctx.createBuffer(1,pcm.length,24000);
@@ -4457,22 +4755,29 @@ function spkOnAudio(pcm){
   for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
   const src=ctx.createBufferSource();
   src.buffer=buf;
-  src.connect(ctx.destination);
-  const when=Math.max(ctx.currentTime,SPK.nextTime);
+  src.connect(v.gain||ctx.destination);
+  const when=Math.max(ctx.currentTime,v.nextTime);
   src.start(when);
-  SPK.nextTime=when+buf.duration;
-  SPK.sources.push(src);
+  v.nextTime=when+buf.duration;
+  v.sources.push(src);
   src.onended=function(){
-    const i=SPK.sources.indexOf(src);
-    if(i>=0)SPK.sources.splice(i,1);
+    const i=v.sources.indexOf(src);
+    if(i>=0)v.sources.splice(i,1);
   };
 }
 
-function spkClearQueue(){
-  if(!SPK.ctx)return;
-  SPK.sources.forEach(function(src){try{src.stop()}catch(e){}});
-  SPK.sources=[];
-  SPK.nextTime=SPK.ctx.currentTime;
+function spkClearQueue(who){
+  const v=who?SPK.voices[who]:null;
+  if(!v||!SPK.ctx)return;
+  v.sources.forEach(function(src){try{src.stop()}catch(e){}});
+  v.sources=[];
+  v.nextTime=SPK.ctx.currentTime;
+}
+
+function spkVoiceBusy(who){
+  const v=SPK.voices[who];
+  if(!v||!SPK.ctx)return false;
+  return v.sources.length>0&&v.nextTime>SPK.ctx.currentTime;
 }
 
 function spkBargeIn(){
@@ -4481,63 +4786,73 @@ function spkBargeIn(){
   SPK.interrupted++;
   const turn=SPK.turns[SPK.turns.length-1];
   if(turn)turn.interrupted=true;
-  if(SPK.transport)SPK.transport.mute(true);
+  const v=SPK.voices.examiner;
+  if(v&&v.transport)v.transport.mute(true);
   SPK.muted=true;
-  spkClearQueue();
+  spkClearQueue('examiner');
   spkSetSpeaking(false);
   const el=document.getElementById('spkInterrupts');
   if(el)el.textContent=String(SPK.interrupted);
 }
 
 /* Local VAD drives barge-in: >300 ms of student speech while the examiner is
-   talking mutes the output and empties the queue; 300 ms of silence after that
-   unmutes so the examiner can reply to the interruption. */
+   talking mutes the examiner only (the partner keeps its own channel), and
+   300 ms of silence releases the hold so the examiner can reply. */
 function spkVad(speaking){
   const now=performance.now();
   if(speaking){
     SPK.silSince=0;
-    if(!SPK.speaking){SPK.speechSince=0;return}
     if(!SPK.speechSince)SPK.speechSince=now;
-    if(now-SPK.speechSince>=300)spkBargeIn();
+    /* A playback queue has tiny gaps (a 200 ms tone every 210 ms). Treat the
+       examiner as still talking for 800 ms after its last busy frame, so the
+       300 ms of candidate speech accumulates instead of restarting on a gap. */
+    const examinerNear=SPK.speaking||(SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800);
+    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=300)spkBargeIn();
   }else{
     SPK.speechSince=0;
     if(SPK.muted){
       if(!SPK.silSince)SPK.silSince=now;
       if(now-SPK.silSince>=300){
         SPK.muted=false;SPK.barged=false;SPK.silSince=0;
-        if(SPK.transport)SPK.transport.mute(false);
+        const v=SPK.voices.examiner;
+        if(v&&v.transport)v.transport.mute(false);
       }
     }
   }
 }
 
-function spkAddLine(side,text){
+function spkAddLine(side,text,who){
   if(typeof text!=='string')return;
   text=text.trim();
   if(!text)return;
+  who=who||(side==='in'?'candidate':'examiner');
   const ts=Math.max(0,(performance.now()-SPK.startedAt)/1000);
   const box=document.getElementById(side==='in'?'spkInText':'spkOutText');
   if(box){
     const row=document.createElement('div');
-    row.className='spk-line';
+    row.className='spk-line spk-'+(who==='candidate'?'you':who);
     const t=document.createElement('span');
     t.className='ts';
     t.textContent=spkClock(ts);
     const s=document.createElement('span');
     s.className='txt';
-    s.textContent=text;
+    s.textContent=(who==='partner'?'Partner: ':text);
     row.appendChild(t);
     row.appendChild(s);
     box.appendChild(row);
     box.scrollTop=box.scrollHeight;
   }
-  SPK.lines.push({side:side,t:Math.round(ts*1000)/1000,text:text});
+  SPK.lines.push({side:side,who:who,t:Math.round(ts*1000)/1000,text:text});
   if(side==='in'){
     SPK.inCount++;
   }else{
     SPK.outCount++;
-    SPK.turns.push({n:SPK.outCount,text:text,at:Math.round(ts*100)/100,interrupted:false});
-    SPK.barged=false;
+    SPK.turns.push({n:SPK.outCount,who:who,text:text,
+      at:Math.round(ts*100)/100,interrupted:false});
+    if(who==='examiner'){
+      SPK.barged=false;
+      SPK.lastExaminerText=text;
+    }
   }
 }
 
@@ -4545,14 +4860,123 @@ function spkReset(){
   SPK.turns=[];SPK.lines=[];SPK.inCount=0;SPK.outCount=0;SPK.interrupted=0;
   SPK.elapsed=0;SPK.speaking=false;SPK.muted=false;SPK.barged=false;
   SPK.speechSince=0;SPK.silSince=0;SPK.simSpeechUntil=0;SPK.remaining=null;
+  SPK.dir=null;SPK.overlapMs=0;SPK.addressed=null;
+  SPK.activeVoices=0;SPK.billedSeconds=0;
+  SPK.micSpeaking=false;SPK.lastSpeechEnd=0;SPK.candSilenceMs=9999;
+  SPK.lastExaminerText='';SPK.lastExaminerAt=0;SPK.lastOut=null;
+  SPK.voices={};
   ['spkInText','spkOutText'].forEach(function(id){
     const el=document.getElementById(id);if(el)el.replaceChildren();
   });
   const e=document.getElementById('spkElapsed');if(e)e.textContent='00:00';
-  const s=document.getElementById('spkSpeaking');if(s){s.textContent='idle';s.removeAttribute('data-on')}
+  ['spkSpeaking','spkPartnerVoice'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el){el.textContent='offline';el.removeAttribute('data-on');el.setAttribute('data-state','offline')}
+  });
+  const o=document.getElementById('spkOverlap');if(o)o.textContent='0.0s';
   const i=document.getElementById('spkInterrupts');if(i)i.textContent='0';
   const r=document.getElementById('spkRemaining');if(r)r.textContent='—';
   spkSetBadge('');
+}
+
+function spkSetVoiceGain(who,level,constant){
+  const v=SPK.voices[who];
+  if(!v||!v.gain||!SPK.ctx)return;
+  if(v.gainLevel===level)return;
+  v.gainLevel=level;
+  const tc=constant||0.01;
+  try{v.gain.gain.setTargetAtTime(level,SPK.ctx.currentTime,tc)}
+  catch(e){v.gain.gain.value=level}
+}
+
+function spkSetVoiceMute(who,muted){
+  const v=SPK.voices[who];
+  if(!v)return;
+  if(v.muted===muted)return;
+  v.muted=!!muted;
+  if(v.transport&&v.transport.mute)v.transport.mute(!!muted);
+}
+
+function spkVoiceState(who,out){
+  const v=SPK.voices[who];
+  if(!v||!v.transport||v.offline)return 'offline';
+  const muted=out&&out[who]?out[who].muted:true;
+  if(muted)return 'muted';
+  return v.speaking?'speaking':'live';
+}
+
+function spkRenderVoices(out){
+  const ex=document.getElementById('spkSpeaking');
+  if(ex){
+    const st=spkVoiceState('examiner',out);
+    ex.textContent=st;ex.setAttribute('data-state',st);
+    if(st==='speaking')ex.setAttribute('data-on','1');else ex.removeAttribute('data-on');
+  }
+  const pa=document.getElementById('spkPartnerVoice');
+  if(pa){
+    const st=spkVoiceState('partner',out);
+    pa.textContent=st;pa.setAttribute('data-state',st);
+    if(st==='speaking')pa.setAttribute('data-on','1');else pa.removeAttribute('data-on');
+  }
+}
+
+/* Ducking: when both voices talk at once, the one that was not addressed
+   drops 5 dB (a soft setTargetAtTime, 50 ms). No compression, no effects. */
+const SPK_DUCK_GAIN=Math.pow(10,-5/20);
+function spkApplyDirector(out){
+  if(!out)return;
+  SPK.lastOut=out;
+  SPK.overlapMs=out.overlap_ms||0;
+  SPK.addressed=out.addressed||null;
+  const exV=SPK.voices.examiner,paV=SPK.voices.partner;
+  const both=!!(exV&&paV&&exV.speaking&&paV.speaking);
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices[w];
+    if(!v)return;
+    const live=out[w]?out[w].live:false;
+    let muted=out[w]?out[w].muted:true;
+    if(w==='examiner'&&SPK.barged)muted=true;
+    if(!live||v.offline)muted=true;
+    let level=muted?0:1;
+    if(!muted&&both&&out.addressed&&out.addressed!==w)level=SPK_DUCK_GAIN;
+    spkSetVoiceGain(w,level,muted?0.01:0.05);
+    spkSetVoiceMute(w,muted);
+  });
+  spkRenderVoices(out);
+  const o=document.getElementById('spkOverlap');
+  if(o)o.textContent=(SPK.overlapMs/1000).toFixed(1)+'s';
+}
+
+function spkVoiceError(who,err){
+  const v=SPK.voices[who];
+  if(!v)return;
+  v.offline=true;v.speaking=false;
+  try{if(v.transport)v.transport.close()}catch(e){}
+  v.transport=null;
+  const label=who==='partner'?'Partner':'Examiner';
+  spkSetStatus(label+' offline — the other voice continues');
+  spkSetBadge(label+' offline — session continues');
+  spkRenderVoices(SPK.lastOut||null);
+}
+
+function spkDirectorInput(now){
+  const exV=SPK.voices.examiner,paV=SPK.voices.partner;
+  const micSpeaking=SPK.micSpeaking;
+  if(micSpeaking){
+    SPK.candSilenceMs=0;
+  }else{
+    SPK.candSilenceMs=SPK.lastSpeechEnd?Math.min(9999,now-SPK.lastSpeechEnd):9999;
+  }
+  return {
+    part:SPK.part,
+    t:now,
+    examiner:{speaking:!!(exV&&exV.speaking),
+      since:exV&&exV.since!==null?exV.since:now},
+    partner:{speaking:!!(paV&&paV.speaking),
+      since:paV&&paV.since!==null?paV.since:now},
+    candidate:{speaking:micSpeaking,silenceMs:SPK.candSilenceMs},
+    transcriptTail:SPK.lastExaminerText
+  };
 }
 
 function spkLoop(){
@@ -4561,15 +4985,35 @@ function spkLoop(){
   SPK.elapsed=(now-SPK.startedAt)/1000;
   const e=document.getElementById('spkElapsed');
   if(e)e.textContent=spkClock(SPK.elapsed);
-  if(SPK.ctx){
-    const busy=SPK.sources.length>0&&SPK.nextTime>SPK.ctx.currentTime;
-    spkSetSpeaking(busy);
+
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices[w];
+    if(!v)return;
+    const busy=spkVoiceBusy(w);
+    if(busy!==v.speaking){v.speaking=busy;v.since=now}
+  });
+  const exBusy=!!(SPK.voices.examiner&&SPK.voices.examiner.speaking);
+  spkSetSpeaking(exBusy);
+  if(exBusy)SPK.lastExaminerAt=now;
+
+  const simSpeaking=SPK.mode==='sim'&&SPK.simSpeechUntil>now;
+  if(SPK.mode==='sim'){
+    if(simSpeaking!==SPK.micSpeaking){
+      SPK.micSpeaking=simSpeaking;
+      if(!simSpeaking)SPK.lastSpeechEnd=now;
+    }
+    spkVad(simSpeaking);
   }
-  if(SPK.mode==='sim')spkVad(SPK.simSpeechUntil>now);
+  const r=spkDirectorTick(SPK.dir,spkDirectorInput(now));
+  SPK.dir=r.state;
+  spkApplyDirector(r.out);
+
   if(now-SPK.lastReport>=30000){
     const period=(now-SPK.lastReport)/1000;
     SPK.lastReport=now;
-    spkSendMinutes(Math.min(300,period)).then(function(j){
+    const bill=Math.min(300,period*(SPK.activeVoices||1));
+    SPK.billedSeconds+=bill;
+    spkSendMinutes(bill).then(function(j){
       if(j&&j.remaining_s<=0&&SPK.running){
         spkSetStatus('daily speaking limit reached ('+SPK.capMin+' min)');
         spkSetBadge('daily speaking limit reached ('+SPK.capMin+' min)');
@@ -4606,8 +5050,18 @@ async function spkStartMic(){
   node.port.onmessage=function(ev){
     if(!SPK.running)return;
     const m=ev.data||{};
-    if(m.pcm&&SPK.transport)SPK.transport.sendAudio(m.pcm);
-    spkVad(!!m.speaking);
+    if(m.pcm){
+      ['examiner','partner'].forEach(function(w){
+        const v=SPK.voices[w];
+        if(v&&v.transport&&!v.offline)v.transport.sendAudio(m.pcm);
+      });
+    }
+    const speaking=!!m.speaking;
+    if(speaking!==SPK.micSpeaking){
+      SPK.micSpeaking=speaking;
+      if(!speaking)SPK.lastSpeechEnd=performance.now();
+    }
+    spkVad(speaking);
   };
   const src=ctx.createMediaStreamSource(stream);
   const sink=ctx.createGain();
@@ -4631,16 +5085,36 @@ async function spkSendMinutes(seconds){
   }catch(e){return null}
 }
 
-function spkHandlers(){
+function spkHandlers(who){
+  who=who||'examiner';
   return {
-    audio:function(pcm){spkOnAudio(pcm)},
-    inText:function(t){spkAddLine('in',t)},
-    outText:function(t){spkAddLine('out',t)},
-    error:function(err){spkSetStatus('Examiner connection problem — '+((err&&err.message)||'unknown error'))},
-    interrupted:function(){spkBargeIn()},
+    audio:function(pcm){spkOnAudio(pcm,who)},
+    inText:function(t){spkAddLine('in',t,'candidate')},
+    outText:function(t){
+      spkAddLine('out',t,who);
+      /* The partner cannot hear the examiner, so the director hands it the
+         examiner's words as text. This is the only bridge between voices. */
+      if(who==='examiner'&&SPK.part>=2){
+        const pv=SPK.voices.partner;
+        if(pv&&pv.transport&&!pv.offline&&pv.transport.sendText){
+          pv.transport.sendText('The examiner said: '+t);
+        }
+      }
+    },
+    error:function(err){spkVoiceError(who,err)},
+    interrupted:function(){if(who==='examiner')spkBargeIn()},
     turnComplete:function(){}
   };
 }
+
+function spkPartHint(p){
+  if(p===1)return 'Part 1 opens the examiner only (cost control).';
+  if(p===2)return 'Part 2 alternates: examiner → candidate 60 s → partner 30 s.';
+  if(p===3)return 'Part 3 both voices live; overlap is allowed and measured.';
+  return 'Part 4 turns by who the examiner addresses.';
+}
+
+function spkSetPart(value){SPK.setPart(value)}
 
 async function spkStart(){
   if(SPK.running||SPK.starting)return;
@@ -4660,50 +5134,68 @@ async function spkStart(){
       spkSetStatus(msg);spkSetBadge(msg);
       return;
     }
-    let mode='sim';
-    let liveCfg=null;
-    if(!spkSimMode()){
-      try{
-        const r=await fetch('/api/speaking/token',{method:'POST',headers:authHeaders(),body:'{}'});
-        if(r.status===503){
-          spkSetBadge('Examiner unavailable (no speech key) — simulated voice');
-        }else if(!r.ok){
-          spkSetBadge('Examiner unavailable — simulated voice');
-        }else{
-          const j=await r.json();
-          if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
-          else spkSetBadge('Examiner unavailable — simulated voice');
-        }
-      }catch(e){
-        spkSetBadge('Examiner unavailable — simulated voice');
+    const part=SPK.part||1;
+    /* Part 1 is examiner-only on purpose: a partner token there is money for
+       nothing. Parts 2-4 open the second session. */
+    const roles=part===1?['examiner']:['examiner','partner'];
+    const sim=spkSimMode();
+    const cfgs={};
+    let fellBack=false;
+    for(const role of roles){
+      let mode='sim',liveCfg=null;
+      if(!sim){
+        try{
+          const r=await fetch('/api/speaking/token',{method:'POST',
+            headers:authHeaders(),body:JSON.stringify({role:role,part:part})});
+          if(r.ok){
+            const j=await r.json();
+            if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
+          }
+        }catch(e){}
+        if(mode!=='live')fellBack=true;
       }
-    }else{
-      spkSetBadge('Simulated voice (?spk=sim)');
+      cfgs[role]={mode:mode,liveCfg:liveCfg};
     }
-    SPK.mode=mode;
+    const anyLive=roles.some(function(r){return cfgs[r].mode==='live'});
+    SPK.mode=anyLive?'live':'sim';
+    if(sim)spkSetBadge('Simulated voices (?spk=sim)');
+    else if(fellBack)spkSetBadge('Live voice unavailable — simulated fallback');
     spkEnsureCtx();
-    const cfg=Object.assign({mode:mode,on:spkHandlers()},liveCfg||{});
-    SPK.transport=makeTransport(cfg);
+    roles.forEach(function(role){
+      const c=cfgs[role];
+      const v=spkVoice(role);
+      v.transport=makeTransport(Object.assign(
+        {mode:c.mode,role:role,part:part,on:spkHandlers(role)},c.liveCfg||{}));
+      v.offline=false;v.muted=null;v.gainLevel=null;
+    });
+    SPK.activeVoices=roles.length;
     SPK.startedAt=performance.now();
     SPK.lastReport=SPK.startedAt;
     SPK.running=true;
-    if(mode==='live'){
+    if(anyLive){
       try{await spkStartMic()}
       catch(err){
         // No microphone is a hard stop for the real path: fall back honestly.
-        SPK.running=false;
-        try{SPK.transport.close()}catch(e){}
-        SPK.transport=null;
+        roles.forEach(function(role){
+          const v=SPK.voices[role];
+          try{if(v&&v.transport)v.transport.close()}catch(e){}
+          if(v){v.transport=null;v.muted=null;v.gainLevel=null;v.offline=false}
+        });
         SPK.mode='sim';
-        spkSetBadge('Microphone unavailable — simulated voice');
-        SPK.transport=makeTransport({mode:'sim',on:spkHandlers()});
-        SPK.startedAt=performance.now();
-        SPK.lastReport=SPK.startedAt;
-        SPK.running=true;
+        roles.forEach(function(role){
+          const v=spkVoice(role);
+          v.transport=makeTransport({mode:'sim',role:role,part:part,
+            on:spkHandlers(role)});
+        });
+        spkSetBadge('Microphone unavailable — simulated voices');
       }
     }
-    SPK.transport.start();
-    spkSetStatus(mode==='live'?'Listening — examiner is live':'Listening — simulated examiner');
+    roles.forEach(function(role){
+      const v=SPK.voices[role];
+      if(v&&v.transport)v.transport.start();
+    });
+    spkSetStatus((SPK.mode==='live'?'Listening — ':'Listening — simulated ')+
+      (roles.length>1?'examiner + partner (Part '+part+')':'examiner (Part 1)'));
     if(stopBtn)stopBtn.disabled=false;
     SPK.raf=requestAnimationFrame(spkLoop);
   }catch(err){
@@ -4720,12 +5212,18 @@ async function spkStop(limitHit){
   SPK.stopping=true;
   const wasRunning=SPK.running;
   const elapsed=(performance.now()-SPK.lastReport)/1000;
+  // Both live sessions are billed: the ledger sums the two voices.
+  const billable=elapsed*(SPK.activeVoices||1);
+  SPK.billedSeconds+=billable;
   SPK.running=false;
   if(SPK.raf){cancelAnimationFrame(SPK.raf);SPK.raf=null}
   SPK.simSpeechUntil=0;
-  if(SPK.transport){try{SPK.transport.close()}catch(e){}}
-  SPK.transport=null;
-  spkClearQueue();
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices[w];
+    if(v&&v.transport){try{v.transport.close()}catch(e){}}
+    if(v){v.transport=null;v.speaking=false}
+  });
+  spkClearQueue('examiner');spkClearQueue('partner');
   spkTeardownMic();
   if(SPK.ctx){
     SPK.lastCtx=SPK.ctx;
@@ -4733,7 +5231,12 @@ async function spkStop(limitHit){
     SPK.ctx=null;
   }
   spkSetSpeaking(false);
-  if(wasRunning&&!limitHit)await spkSendMinutes(elapsed);
+  if(wasRunning&&!limitHit)await spkSendMinutes(billable);
+  ['spkSpeaking','spkPartnerVoice'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el){el.textContent='offline';el.setAttribute('data-state','offline');
+      el.removeAttribute('data-on')}
+  });
   spkSetStatus(limitHit?('daily speaking limit reached ('+SPK.capMin+' min)'):'Examiner stopped');
   const stopBtn=document.getElementById('spkStopBtn');
   if(stopBtn)stopBtn.disabled=true;
@@ -4748,9 +5251,50 @@ async function spkDiscard(){
   spkSetStatus('Examiner off');
 }
 
+SPK.setPart=function(part){
+  const p=Math.max(1,Math.min(4,parseInt(part,10)||1));
+  const changed=SPK.part!==p;
+  SPK.part=p;
+  const sel=document.getElementById('spkPart');if(sel)sel.value=String(p);
+  const hint=document.getElementById('spkPartHint');if(hint)hint.textContent=spkPartHint(p);
+  if(changed&&SPK.running)spkRestartPart();
+};
+async function spkRestartPart(){
+  if(!SPK.running)return;
+  await spkStop();
+  await spkStart();
+}
+SPK.killVoice=function(who){spkVoiceError(who||'partner',new Error('killed'))};
 SPK.simulateUserSpeech=function(ms){SPK.simSpeechUntil=performance.now()+(ms||600)};
+/* Deterministic overlap stimulus: both voices emit at once through the real
+   mixer and the real director, so the tests can assert overlap_ms without
+   waiting for model timing. */
+SPK.simOverlap=function(ms){
+  ms=Math.max(200,ms||700);
+  if(SPK.part===3&&SPK.dir){
+    /* Open the examiner's floor and clear the finished-turn flag, otherwise
+       the director would hand straight back to the partner. */
+    SPK.dir.phase='examiner';
+    SPK.dir.examDone=false;
+    SPK.dir.examSpoke=false;
+    SPK.dir.phaseT=performance.now();
+  }
+  const n=Math.ceil(ms/200);
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices[w];
+    if(!v||!v.transport||v.offline)return;
+    for(let k=0;k<n;k++){
+      setTimeout(function(){
+        if(!SPK.running)return;
+        spkOnAudio(spkTone(200,w==='partner'?330:440,24000),w);
+      },k*200);
+    }
+  });
+};
 SPK.queueEmpty=function(){
-  return !SPK.ctx||(SPK.sources.length===0&&SPK.nextTime<=SPK.ctx.currentTime+0.02);
+  const v=SPK.voices.examiner;
+  if(!v||!SPK.ctx)return true;
+  return v.sources.length===0&&v.nextTime<=SPK.ctx.currentTime+0.02;
 };
 
 function onWritingDraftChange(){
