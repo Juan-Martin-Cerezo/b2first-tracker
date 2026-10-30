@@ -75,10 +75,9 @@ how to get the data back after a disaster.
 | CORS closed | Implemented | No `Access-Control-Allow-Origin` on any response; `OPTIONS` preflights answer `204` with no `access-control-allow-*` headers |
 | A user cannot read another user's data by id | Implemented | Token↔user binding answers `403` across accounts, `/api/audit` filters to the caller's events, and `/api/users` exposes only the login directory fields (id, name, color, created) — no progress, no credentials |
 
-**Known open finding.** `tools/audit.sh` currently reports one failure: the `Server` response
-banner discloses the runtime (`Server: B2FirstPortal/1.0 Python/3.13.5`). The fix is to stop
-the version from being appended to the banner in `server.py`; it is tracked for the next code
-phase because this one is documentation-only. Everything else in the audit passes (13/14).
+**External audit status.** `bash tools/audit.sh` passes **14/14** checks against the public
+instance as of 2026-10-30. The former open finding (the `Server` banner disclosing the runtime)
+is fixed: the banner is now `Server: B2First` with no version.
 
 ## 4. Backups and restore
 
