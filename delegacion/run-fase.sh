@@ -2,7 +2,7 @@
 # Runner de fases delegadas de b2first-tracker.
 # Uso: delegacion/run-fase.sh <fase> [agy|cc]
 #   fase 0 => delegacion/prompt-fase0.md
-# Cadena de harness: agy gemini-4-argon-medium -> (cuota) -> command-code mimo-v2.6-pro
+# Cadena de harness: agy gemini-4-argon-medium -> (cuota) -> command-code deepseek-v4.1-flash
 # Estado en ~/.cache/b2f/deleg.json  (lo lee el watchdog de 10m)
 set -uo pipefail
 
@@ -15,7 +15,7 @@ STATE="$CACHE/deleg.json"
 LOG="$CACHE/fase${FASE}-${HARNESS}-$(date +%Y%m%d-%H%M%S).log"
 
 AGY_MODEL="${AGY_MODEL:-gemini-4-argon-medium}"
-CC_MODEL="${CC_MODEL:-xiaomi/mimo-v2.6-pro}"
+CC_MODEL="${CC_MODEL:-deepseek/deepseek-v4.1-flash}"
 PROMPT="$REPO/delegacion/prompt-fase${FASE}.md"
 
 cd "$REPO" || exit 90

@@ -26,6 +26,7 @@ Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading
+import calendar
 import urllib.request, urllib.error
 import ipaddress
 import traceback
@@ -159,6 +160,240 @@ def _real_ip(handler):
             if cand:
                 return cand
     return peer or "local"
+
+
+# ---------------------------------------------------------------------------
+# Product telemetry (fase 15): privacy-first usage events, NEVER content.
+# RULE: whitelisted event names + whitelisted scalar props only. No free
+# text, no emails, no names, no tokens, no answers/writings ever land here.
+# Events are append-only JSONL in data/events/YYYY-MM-DD.jsonl (0600) with a
+# 7-day retention; the client IP is only stored as sha256(ip+salt)[:16].
+# ---------------------------------------------------------------------------
+EVENT_NAMES = frozenset("""
+app_open view_change onboarding_step onboarding_done onboarding_skip
+quicklog_open quicklog_save session_save diag_start diag_finish
+plan_generate ai_request ai_success ai_error ai_blocked theme_toggle
+export_data delete_account login register js_error fetch_error slow_view
+""".split())
+EVENT_PROPS = frozenset("""
+view part kind ms count ok code step theme ver
+message_trunc stack_hash status endpoint
+""".split())
+EVENT_PROP_STR_MAX = 64          # max chars for ordinary string props
+EVENT_MSG_MAX = 120              # max chars for js_error message_trunc
+EVENTS_MAX_BATCH = 50            # max events per batch (more -> 413)
+EVENTS_MAX_BYTES = 32 * 1024     # max request body (more -> 413)
+EVENTS_RETENTION_DAYS = 7        # event files older than this are deleted
+EVENTS_BATCH_LIMIT = 60          # batches per hour per IP (more -> 429)
+_EVENTS_LOCK = threading.Lock()
+_EVENTS_SALT_CACHE = None
+
+
+def _events_dir():
+    return os.path.join(DATA_DIR, "events")
+
+
+def _events_salt():
+    """Random salt for IP hashing, persisted in data/.events_salt (0600)."""
+    global _EVENTS_SALT_CACHE
+    if _EVENTS_SALT_CACHE:
+        return _EVENTS_SALT_CACHE
+    path = os.path.join(DATA_DIR, ".events_salt")
+    salt = ""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            salt = f.read().strip()
+    except OSError:
+        pass
+    if not salt:
+        salt = secrets.token_hex(16)
+        try:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            try:
+                os.write(fd, salt.encode("utf-8"))
+            finally:
+                os.close(fd)
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+    _EVENTS_SALT_CACHE = salt
+    return salt
+
+
+def _ip_hash(ip):
+    """sha256(ip + salt) truncated to 16 hex chars: the IP is never stored."""
+    return hashlib.sha256((str(ip) + _events_salt()).encode("utf-8")).hexdigest()[:16]
+
+
+def _sanitize_event(ev):
+    """Return (n, p) for a valid whitelisted event, else None.
+
+    Unknown names and unknown props are dropped; values must be scalars and
+    strings are truncated (64 chars, 120 for message_trunc). Never raises.
+    """
+    if not isinstance(ev, dict):
+        return None
+    n = ev.get("n")
+    if not isinstance(n, str) or n not in EVENT_NAMES:
+        return None
+    p = {}
+    p_in = ev.get("p")
+    if isinstance(p_in, dict):
+        for k, v in p_in.items():
+            if not isinstance(k, str) or k not in EVENT_PROPS:
+                continue
+            if isinstance(v, bool):
+                p[k] = v
+            elif isinstance(v, int):
+                p[k] = v
+            elif isinstance(v, float):
+                if math.isfinite(v):
+                    p[k] = v
+            elif isinstance(v, str):
+                limit = EVENT_MSG_MAX if k == "message_trunc" else EVENT_PROP_STR_MAX
+                p[k] = v[:limit]
+    return n, p
+
+
+def _prune_events(events_dir):
+    """Delete event files older than the retention window (best-effort)."""
+    cutoff = (date.today() - timedelta(days=EVENTS_RETENTION_DAYS)).isoformat()
+    try:
+        names = os.listdir(events_dir)
+    except OSError:
+        return
+    for fn in names:
+        if not fn.endswith(".jsonl"):
+            continue
+        try:
+            if fn[:-6] < cutoff:
+                os.remove(os.path.join(events_dir, fn))
+        except (OSError, ValueError):
+            continue
+
+
+def _append_events(clean, sid, uid, ip_hash):
+    """Append sanitized events to data/events/YYYY-MM-DD.jsonl (0600)."""
+    ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    day = time.strftime("%Y-%m-%d")
+    lines = "".join(
+        json.dumps({"ts": ts, "sid": sid, "uid": uid, "n": n, "p": p,
+                    "ip_hash": ip_hash}, ensure_ascii=False) + "\n"
+        for n, p in clean
+    )
+    try:
+        with _EVENTS_LOCK:
+            d = _events_dir()
+            os.makedirs(d, mode=0o700, exist_ok=True)
+            _prune_events(d)
+            path = os.path.join(d, day + ".jsonl")
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+            try:
+                os.write(fd, lines.encode("utf-8"))
+            finally:
+                os.close(fd)
+            try:
+                os.chmod(path, 0o600)
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
+def _metrics_window(since_epoch):
+    """Aggregate the stored events newer than since_epoch (no personal data)."""
+    agg = {"events": {}, "views": {}, "errors": {}, "ai": {
+        "requests": 0, "success": 0, "errors": 0, "blocked": 0},
+        "sids": set(), "view_ms": []}
+    try:
+        names = sorted(os.listdir(_events_dir()))
+    except OSError:
+        names = []
+    for fn in names:
+        if not fn.endswith(".jsonl"):
+            continue
+        try:
+            f = open(os.path.join(_events_dir(), fn), "r", encoding="utf-8")
+        except OSError:
+            continue
+        with f:
+            for ln in f:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    ev = json.loads(ln)
+                except ValueError:
+                    continue
+                if not isinstance(ev, dict):
+                    continue
+                try:
+                    t = calendar.timegm(time.strptime(str(ev.get("ts", "")), "%Y-%m-%dT%H:%M:%SZ"))
+                except (ValueError, TypeError):
+                    continue
+                if t < since_epoch:
+                    continue
+                n = ev.get("n")
+                if not isinstance(n, str):
+                    continue
+                p = ev.get("p") if isinstance(ev.get("p"), dict) else {}
+                sid = str(ev.get("sid") or "")
+                if sid:
+                    agg["sids"].add(sid)
+                agg["events"][n] = agg["events"].get(n, 0) + 1
+                if n == "view_change":
+                    v = p.get("view")
+                    if isinstance(v, str) and v:
+                        agg["views"][v] = agg["views"].get(v, 0) + 1
+                if n in ("js_error", "fetch_error"):
+                    rec = agg["errors"].setdefault(
+                        n, {"n": n, "count": 0, "last_message_trunc": ""})
+                    rec["count"] += 1
+                    msg = p.get("message_trunc")
+                    if not isinstance(msg, str):
+                        msg = "HTTP %s %s" % (p.get("status", "?"), p.get("endpoint", ""))
+                    rec["last_message_trunc"] = str(msg)[:EVENT_MSG_MAX]
+                if n == "ai_request":
+                    agg["ai"]["requests"] += 1
+                elif n == "ai_success":
+                    agg["ai"]["success"] += 1
+                elif n == "ai_error":
+                    agg["ai"]["errors"] += 1
+                elif n == "ai_blocked":
+                    agg["ai"]["blocked"] += 1
+                if n in ("view_change", "slow_view"):
+                    ms = p.get("ms")
+                    if isinstance(ms, (int, float)) and not isinstance(ms, bool) and math.isfinite(ms):
+                        agg["view_ms"].append(float(ms))
+    return agg
+
+
+def _p50(values):
+    """Median of a list of numbers (0 when empty)."""
+    if not values:
+        return 0
+    s = sorted(values)
+    mid = len(s) // 2
+    if len(s) % 2:
+        return int(round(s[mid]))
+    return int(round((s[mid - 1] + s[mid]) / 2))
+
+
+def build_metrics():
+    """Aggregate product metrics for the last 24 h and the last 7 days."""
+    def pack(agg):
+        return {
+            "events": agg["events"],
+            "errors": sorted(agg["errors"].values(), key=lambda r: -r["count"]),
+            "views": agg["views"],
+            "ai": agg["ai"],
+            "users_active": len(agg["sids"]),
+            "p50_view_ms": _p50(agg["view_ms"]),
+        }
+    now = time.time()
+    out = pack(_metrics_window(now - 24 * 3600))
+    out["last_7d"] = pack(_metrics_window(now - 7 * 24 * 3600))
+    return out
 
 
 # --- Login brute-force guard: per username, survives IP changes (fase 12) ---
@@ -870,6 +1105,165 @@ document.getElementById('filtro').addEventListener('input',function(){{
 
 
 # ---------------------------------------------------------------------------
+# /privacy — the privacy policy (plain server-rendered HTML, same look as the
+# app: design tokens + light/dark themes). The same text lives in
+# docs/PRIVACY.md. The contact address is the explicit TODO_OWNER_EMAIL
+# placeholder: replace it with the real owner email before going public.
+# ---------------------------------------------------------------------------
+PRIVACY_TODO_EMAIL = "TODO_OWNER_EMAIL"
+
+
+def privacy_page():
+    """Return the privacy policy page (English, dark-mode aware)."""
+    return f'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — B2 First Tracker</title>
+<meta name="theme-color" id="metaTheme" content="#fbfcfd">
+<script>
+(function(){{
+  try{{
+    var t=localStorage.getItem('b2first_theme');
+    if(t==='dark'){{
+      document.documentElement.setAttribute('data-theme','dark');
+      var mt=document.getElementById('metaTheme');
+      if(mt)mt.setAttribute('content','#121416');
+    }}
+  }}catch(e){{}}
+}})();
+</script>
+<style>
+:root, :root[data-theme="light"]{{
+  color-scheme:light;
+  --bg: oklch(0.99 0.002 250); --surface: oklch(0.975 0.003 250);
+  --line: oklch(0.90 0.006 250); --txt: oklch(0.22 0.01 250);
+  --txt-2: oklch(0.46 0.01 250); --acc-text: oklch(0.52 0.16 255);
+}}
+:root[data-theme="dark"]{{
+  color-scheme:dark;
+  --bg: oklch(0.19 0.006 255); --surface: oklch(0.23 0.008 255);
+  --line: oklch(0.33 0.01 255); --txt: oklch(0.94 0.004 255);
+  --txt-2: oklch(0.72 0.008 255); --acc-text: oklch(0.72 0.13 255);
+}}
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:var(--bg);color:var(--txt);font:15px/1.6 system-ui,-apple-system,sans-serif;padding:24px 16px 56px}}
+.wrap{{max-width:760px;margin:0 auto}}
+a{{color:var(--acc-text)}}
+h1{{font-size:24px;font-weight:800;letter-spacing:-.2px;margin-bottom:4px}}
+.sub{{color:var(--txt-2);font-size:13px;margin-bottom:20px}}
+h2{{font-size:16px;font-weight:700;margin:26px 0 8px}}
+p,li{{font-size:14px;color:var(--txt);margin:6px 0}}
+ul{{padding-left:20px}}
+.card{{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px}}
+.back{{display:inline-block;margin-bottom:16px;color:var(--acc-text);text-decoration:none;font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:10px;padding:7px 14px}}
+code{{font:13px/1.4 ui-monospace,monospace;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 6px}}
+footer{{margin-top:28px;color:var(--txt-2);font-size:12px}}
+@media (prefers-color-scheme: dark){{
+  :root:not([data-theme="light"]){{--bg: oklch(0.19 0.006 255); --surface: oklch(0.23 0.008 255);
+    --line: oklch(0.33 0.01 255); --txt: oklch(0.94 0.004 255);
+    --txt-2: oklch(0.72 0.008 255); --acc-text: oklch(0.72 0.13 255);}}
+}}
+</style></head><body><div class="wrap">
+<a class="back" href="/">← Back to the Tracker</a>
+<h1>Privacy Policy</h1>
+<div class="sub">B2 First Tracker · Last updated {time.strftime("%Y-%m-%d")}</div>
+
+<div class="card">
+<p>This tracker is a self-hosted study app. It stores the minimum needed to
+work and to find bugs. <b>Events are logged, never content:</b> the telemetry
+records what you do in the app (a view opened, a session saved, an error
+raised), never what you wrote, answered or typed.</p>
+</div>
+
+<h2>1. What we store</h2>
+<ul>
+<li><b>Account</b> — your chosen username and a salted, hashed password
+(PBKDF2-HMAC-SHA256, 200,000 iterations). The password itself is never stored.</li>
+<li><b>Study progress</b> — your practice log, error log, plan and settings,
+as JSON files on this server (one folder per account).</li>
+<li><b>Session tokens, hashed</b> — sessions are stored as
+<code>sha256(token)</code>; the raw token is never written to disk.</li>
+<li><b>Usage events</b> — anonymous product events (feature used, view
+opened, time in ms, error message truncated to 120 chars). They carry a random
+per-tab session id and, when you are logged in, your account id. The client IP
+is stored only as a salted hash (<code>sha256(ip+salt)</code>, 16 hex chars),
+never in clear text.</li>
+<li><b>Access audit log</b> — sign-ins, failed sign-ins and account changes
+(timestamp, event type, username, hashed-at-source IP) to detect abuse.</li>
+</ul>
+
+<h2>2. What we do not store</h2>
+<ul>
+<li>No email addresses (accounts are username + password only).</li>
+<li>No real names, phone numbers or addresses.</li>
+<li>No payment data: the app is free, nothing is sold.</li>
+<li>No third-party analytics, no advertising, no tracking cookies. There is
+exactly one first-party preference cookie-equivalent (localStorage) holding
+your theme and your local data — it never leaves your browser except when you
+sync or export.</li>
+<li>No content telemetry: never your writings, answers, notes or passwords.</li>
+</ul>
+
+<h2>3. Why</h2>
+<ul>
+<li><b>To make the app work</b> — your progress has to live somewhere so the
+plan, streaks and charts are yours across devices.</li>
+<li><b>To detect errors</b> — truncated error messages and usage counts show
+what breaks and what people actually use, so it can be fixed.</li>
+</ul>
+
+<h2>4. Retention</h2>
+<ul>
+<li><b>Usage events</b>: 7 days. Files older than that are deleted
+automatically on every write.</li>
+<li><b>Access audit log</b>: kept until it reaches 5 MB, then rotated once
+(older copy deleted on the next rotation).</li>
+<li><b>Study progress</b>: until you delete your account.</li>
+<li><b>Local backups</b>: kept for 14 days (local rotation + weekly backup).</li>
+</ul>
+
+<h2>5. Your rights</h2>
+<ul>
+<li><b>Export</b> — <code>GET /api/export</code> (or "Export my data" in
+Account) downloads everything stored about you as JSON.</li>
+<li><b>Delete</b> — <code>DELETE /api/account</code> (or "Delete my account"
+in Account) erases your account <i>and its files on the server</i>: progress,
+backups and session tokens.</li>
+<li>Because there is no email on file, account recovery is impossible after
+deletion: export first if you want a copy.</li>
+</ul>
+
+<h2>6. AI correction</h2>
+<p>The AI corrector sends <b>only the text you explicitly choose to
+correct</b>, together with the task type (Essay, Article, Report, Review or
+Email), to the configured provider — DeepSeek (default) or Google Gemini.
+Nothing else is sent: no account data, no progress, no identifiers. The text
+is forwarded for the single request and is <b>not stored on this server</b>
+beyond that request; the provider's own retention policy applies to what they
+receive. The resulting bands and feedback are saved only inside your own
+progress when you accept the correction.</p>
+
+<h2>7. Do Not Track</h2>
+<p>If your browser sends <code>Do Not Track: 1</code> (or the global privacy
+control signal), the app sends <b>no telemetry at all</b> — no usage events,
+no error reports. Every feature keeps working exactly the same.</p>
+
+<h2>8. Contact</h2>
+<p>Questions or requests about your data: <b>{PRIVACY_TODO_EMAIL}</b>
+(this placeholder is replaced with the real owner address before public
+deployment).</p>
+
+<h2>9. Applicable law</h2>
+<p>This policy is written with Argentina's Personal Data Protection Law
+(<b>Ley 25.326</b>) in mind, including access, correction and deletion
+rights. This document describes how the app actually handles data; it does
+not claim certified compliance with any regulation.</p>
+
+<footer>B2 First Tracker · privacy-first · events, never content ·
+<a href="/privacy">/privacy</a></footer>
+</div></body></html>'''
+
+
+# ---------------------------------------------------------------------------
 # Audit log (fase 12): append-only JSON lines with the auth events.
 # NEVER stores tokens, passwords or hashes. Rotates at 5 MB → audit.log.1.
 # ---------------------------------------------------------------------------
@@ -1144,6 +1538,11 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, body, "text/html; charset=utf-8")
             except OSError:
                 self._send(404, b"tracker not found", "text/plain")
+            return
+
+        # Privacy policy (public HTML page, same look as the app)
+        if path == "/privacy":
+            self._send(200, privacy_page().encode("utf-8"), "text/html; charset=utf-8")
             return
 
         # Material page
@@ -1659,6 +2058,70 @@ class H(BaseHTTPRequestHandler):
                 return
             validated["model"] = model
             self._send(200, json.dumps(validated, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+            return
+
+        # Product telemetry: {sid, events:[{n, t, p}]} -> append-only JSONL.
+        # No auth required (visitor events matter); a valid token associates
+        # uid, an invalid one is ignored (uid:null, never 401 here).
+        if path == "/api/events":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain")
+                return
+            clen = self._clen()
+            if clen > EVENTS_MAX_BYTES:
+                self._drain()
+                self._send_json(413, {"error": "events payload too large"})
+                return
+            if self._rate_limited("events:" + _real_ip(self), EVENTS_BATCH_LIMIT, 3600):
+                return
+            raw = self.rfile.read(clen)
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid json"})
+                return
+            events = req.get("events")
+            if not isinstance(events, list):
+                self._send_json(400, {"error": "invalid events"})
+                return
+            if len(events) > EVENTS_MAX_BATCH:
+                self._send_json(413, {"error": "too many events"})
+                return
+            sid = req.get("sid")
+            sid = str(sid)[:64] if isinstance(sid, (str, int, float)) and not isinstance(sid, bool) else ""
+            uid = None
+            if self._bearer():
+                try:
+                    got, _auth_err = self._auth()
+                    uid = got or None
+                except Exception:
+                    uid = None
+            clean = []
+            for ev in events:
+                parsed = _sanitize_event(ev)
+                if parsed:
+                    clean.append(parsed)
+            # Demo mode writes nothing to data/: events are accepted and dropped.
+            if clean and not _is_demo():
+                _append_events(clean, sid, uid, _ip_hash(_real_ip(self)))
+            self._send_json(200, {"ok": True, "accepted": len(clean)})
+            return
+
+        # Owner-only product metrics (aggregates only, never stacks or content)
+        if path == "/api/metrics":
+            if self.command != "GET":
+                self._send(405, b"method not allowed", "text/plain")
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if uid != "owner":
+                self._send_json(403, {"error": "owner only"})
+                return
+            self._send_json(200, build_metrics())
             return
 
         self._send(404, b"not found", "text/plain")
