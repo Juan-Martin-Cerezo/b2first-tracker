@@ -365,6 +365,9 @@ pronunciation via Azure PA, silences via client VAD, two simultaneous voices via
 sessions plus a client-side turn director.
 
 **S1 (voice -> VAD -> HUD) shipped in phase 18, see docs/SPEAKING-REALTIME-PLAN.md.**
+**S4 (examiner + partner simultaneous) shipped in phase 21**: two Live sessions, the pure client
+director (`spkDirectorTick`), one AudioContext with two gain chains + 5 dB ducking, Part 3 overlap
+measured; `tests/test_speaking_director.py` (pure) and `tests/test_speaking_duo.py` (Playwright).
 That first slice is fully client-side (no keys, no network); the rest is still plan only, blocked
 on two new keys (Gemini + Azure) and the minute caps. Summary: 3 of the 4 Cambridge speaking scales are
 automatable (Grammar & Vocabulary and Discourse Management from the transcript; Pronunciation only

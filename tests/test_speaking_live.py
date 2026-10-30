@@ -151,6 +151,17 @@ def main():
     assert "expireTime" in sent and "newSessionExpireTime" in sent, sent
     out["2_mint_contract"] = True
 
+    # 2b. S4: the same endpoint mints the partner's own instruction.
+    reset_limits()
+    st, body, _ = http("/api/speaking/token", {"role": "partner", "part": 3},
+                       token=token)
+    j = json.loads(body)
+    assert st == 200 and j["role"] == "partner" and j["part"] == 3, (st, body)
+    assert "Candidate B" in j["instruction"], "the partner instruction is missing"
+    assert "interlocutor in a Cambridge" not in j["instruction"], \
+        "the partner received the examiner prompt"
+    out["2b_partner_mint"] = True
+
     # 3. No Authorization -> 401; an invalid one -> 401 too.
     reset_limits()
     st, _, _ = http("/api/speaking/token", {})

@@ -1588,15 +1588,16 @@ the speech service is not configured on this instance, the endpoint answers
 "speech not configured" and pronunciation is reported as <b>not measured</b> —
 the app never invents that score.</p>
 
-<h2>8. Live examiner — what Google receives</h2>
-<p>The live examiner (Speaking Parts 1 and 2) runs on <b>Google Gemini Live</b>,
-a realtime voice service. Your browser connects <b>directly to Google</b> with a
-short-lived, single-use token that this server mints for you; the token opens
-exactly one session and lives about 30 minutes.</p>
-<p>What Google receives: your <b>microphone audio</b> (16 kHz PCM, streamed
-while the exam runs) and the examiner's own instructions (the exam script). It
-returns the examiner's voice (24 kHz PCM) and two transcripts: what you said and
-what the examiner said.</p>
+<h2>8. Live examiner and partner — what Google receives</h2>
+<p>The live examiner and partner (Speaking Parts 1-4) run on <b>Google Gemini
+Live</b>, a realtime voice service. Your browser connects <b>directly to
+Google</b> with short-lived, single-use tokens that this server mints for you.
+Each token opens exactly one session and lives about 30 minutes. Part 1 uses one
+session (the examiner); Parts 2-4 use two (examiner and partner).</p>
+<p>What Google receives: your <b>microphone audio</b> (16 kHz PCM, streamed to
+each session while the exam runs) and each role's own instructions (the exam
+script). It returns the voices (24 kHz PCM) and the transcripts: what you said,
+what the examiner said and what the partner said.</p>
 <p>What we receive: only the token request, the number of minutes you spent (for
 the daily limit) and, if you later choose to save the session, the transcript.
 Your audio <b>never passes through our server</b> and is <b>never stored here</b>,
@@ -2501,8 +2502,31 @@ class H(BaseHTTPRequestHandler):
                 return
             if self._rate_limited("spk_tok:" + uid, SPK_TOKEN_RATE_PER_MIN, 60):
                 return
+            # S4: one token per voice. `role` picks the system instruction
+            # (examiner or partner); `part` is echoed for the client's director.
+            role, part = "examiner", 0
             if self._clen() > 0:
-                self._drain()
+                left = self._clen()
+                raw = self.rfile.read(min(left, 4096))
+                left -= len(raw)
+                while left > 0:              # keep the connection in sync
+                    chunk = self.rfile.read(min(left, 4096))
+                    if not chunk:
+                        break
+                    left -= len(chunk)
+                try:
+                    req = json.loads(raw.decode("utf-8") or "{}")
+                except (ValueError, UnicodeDecodeError):
+                    req = {}
+                if isinstance(req, dict):
+                    if req.get("role") == "partner":
+                        role = "partner"
+                    try:
+                        part = int(req.get("part") or 0)
+                    except (TypeError, ValueError):
+                        part = 0
+                    if part not in (1, 2, 3, 4):
+                        part = 0
             api_key = _spk_google_key()
             if not api_key:
                 # One line, no secret: only the missing knob is named.
@@ -2526,12 +2550,16 @@ class H(BaseHTTPRequestHandler):
             store.speaking_add(uid, _spk_today(), 0, 1)
             # `instruction` is the examiner's own system prompt (not a secret):
             # the browser has to send it in the setup message itself.
+            instruction = (speaking_prompts.PARTNER_SYSTEM if role == "partner"
+                           else speaking_prompts.EXAMINER_SYSTEM)
             self._send_json(200, {
                 "token": token,
                 "expires_in": SPK_TOKEN_TTL_S,
                 "model": _spk_model(),
                 "ws_url": _spk_ws_url(),
-                "instruction": speaking_prompts.EXAMINER_SYSTEM,
+                "role": role,
+                "part": part,
+                "instruction": instruction,
             })
             return
 
