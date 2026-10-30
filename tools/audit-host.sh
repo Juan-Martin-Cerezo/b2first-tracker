@@ -107,6 +107,12 @@ else
     row "LAN cannot reach panel ports 8000/6001-6002" "PASS" "LAN rule is { 2283, 8089, 9100 } only"
   fi
 
+  if printf '%s\n' "$LAN_RULE" | grep -Eq '\b8088\b'; then
+    row "LAN cannot reach app port 8088" "FAIL" "LAN rule includes 8088 (app is loopback/tailnet only)"
+  else
+    row "LAN cannot reach app port 8088" "PASS" "8088 is loopback/tailnet only"
+  fi
+
   if nft_has "counter drop"; then
     row "Default drop has a counter" "PASS" "counter drop"
   else
@@ -186,8 +192,6 @@ for p in 8000 6001 6002; do
     row "Panel port ${p} is published but FORWARD-filtered" "NA" "not published right now"
   fi
 done
-
-row "Port 8088 is not exposed on a wildcard address" "PASS" "$(port_binds 8088 | paste -sd' ' -)"
 
 # ---------------------------------------------------------------------------
 # sshd effective configuration
