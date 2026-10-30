@@ -489,6 +489,29 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .guide b{color:var(--txt)}
 .guide a{color:var(--acc-text);font-weight:600}
 
+/* ---------- LIVE STUDIO (S1: mic -> VAD -> HUD) ---------- */
+.live-panel{margin-top:12px;padding:16px;border-radius:var(--r-panel);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
+.live-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.live-title{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
+.live-title .t{font-size:var(--fs-xs);color:var(--txt-2);font-weight:400;margin-left:6px}
+.live-sub{font-size:var(--fs-xs);color:var(--txt-2);margin-top:3px}
+.live-actions{display:flex;gap:8px;flex-wrap:wrap}
+.live-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px}
+.live-stat{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px}
+.live-stat .lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2)}
+.live-stat .val{display:block;font-size:var(--fs-lg);font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums;margin-top:2px}
+.live-timeline{display:flex;height:18px;gap:1px;margin-top:14px;background:var(--line);border-radius:4px;overflow:hidden}
+.live-timeline .live-seg{height:100%;min-width:1px}
+.live-timeline .live-seg.speech{background:var(--ok-strong)}
+.live-timeline .live-seg.silence{background:var(--bad)}
+.live-alert{min-height:22px;margin-top:10px;font-size:var(--fs-sm);font-weight:600;color:var(--txt-2)}
+.live-alert[data-kind="long"]{color:var(--warn-text)}
+.live-alert[data-kind="frozen"]{color:var(--bad-text)}
+.live-list{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.live-list .live-pause{font-size:var(--fs-xs);padding:3px 8px;border-radius:999px;background:var(--surface-2);color:var(--txt-2);font-variant-numeric:tabular-nums}
+.live-list .live-pause.long{background:var(--warn-soft);color:var(--warn-text)}
+.live-list .live-pause.frozen{background:var(--bad-soft);color:var(--bad-text)}
+
 /* ---------- GATES ---------- */
 .gate{
   padding:14px 16px;margin-bottom:12px;
@@ -1938,7 +1961,32 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
                       <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
+                      <button class="btn" id="liveOpenBtn" onclick="liveOpen()">🎧 Live studio</button>
                     </div>
+                  </div>
+
+                  <!-- Live studio (S1): client-side VAD + HUD. No audio leaves the tab. -->
+                  <div class="live-panel" id="livePanel" style="display:none" aria-label="Live studio">
+                    <div class="live-head">
+                      <div>
+                        <div class="live-title">🎧 Live studio <span class="t">client-side VAD · nothing is recorded or sent</span></div>
+                        <div class="live-sub" id="liveStatus" role="status">Microphone off</div>
+                      </div>
+                      <div class="live-actions">
+                        <button class="btn sm gray" id="liveStopBtn" onclick="liveStop()" disabled>■ Stop</button>
+                        <button class="btn sm gray" id="liveDiscardBtn" onclick="liveDiscard()">✕ Discard</button>
+                      </div>
+                    </div>
+                    <div class="live-grid">
+                      <div class="live-stat"><span class="lbl">Elapsed</span><span class="val" id="liveElapsed">00:00</span></div>
+                      <div class="live-stat"><span class="lbl">Speech ratio</span><span class="val" id="liveRatio">—</span></div>
+                      <div class="live-stat"><span class="lbl">Silences</span><span class="val" id="liveSilences">0</span></div>
+                      <div class="live-stat"><span class="lbl">Longest silence</span><span class="val" id="liveLongest">—</span></div>
+                    </div>
+                    <div class="live-timeline" id="liveTimeline" role="img" aria-label="Session timeline: speech and silence"></div>
+                    <div class="live-sub">Timeline: speech in green, silence in red · chips list every pause of 0.3 s or more.</div>
+                    <div class="live-alert" id="liveAlert" aria-live="polite"></div>
+                    <div class="live-list" id="liveList"></div>
                   </div>
                 </div>
 
@@ -3772,6 +3820,311 @@ function switchSpPhase(p){
   const p1=document.getElementById('spPhase1'),p2=document.getElementById('spPhase2');
   if(p1)p1.style.display=(p==='mock'?'block':'none');
   if(p2)p2.style.display=(p==='upgrade'?'block':'none');
+}
+
+/* ---------- LIVE STUDIO (S1): microphone -> AudioWorklet VAD -> HUD ----------
+   Everything happens in this tab: no audio is uploaded, stored or evaluated
+   yet. The worklet emits one 20 ms frame of {rms, peak, zcr, speaking} and the
+   HUD is painted from requestAnimationFrame, never from the audio thread.
+   The mic is opened with echoCancellation/noiseSuppression/autoGainControl
+   all false ON PURPOSE: browser DSP smooths pauses and rewrites consonants,
+   and both the VAD (honest pause durations) and the future pronunciation
+   scoring need the raw signal.
+   16 kHz is the Live/PA wire format. This phase only analyses, so if the
+   browser ignores the requested rate the VAD still works at the device rate;
+   outbound chunks must be resampled with an OfflineAudioContext in S3. */
+const LIVE_FRAME_S=0.02;          // worklet frame = 20 ms
+const LIVE_SIL_MIN_S=0.3;         // only pauses >= 300 ms are recorded
+const LIVE_LONG_PAUSE_S=2.0;      // "long pause" alert
+const LIVE_FROZEN_S=4.0;          // "frozen?" alert (S1 fixture's longest pause is 4.4 s)
+
+const SPK_VAD_SRC=`
+class SpkVad extends AudioWorkletProcessor {
+  constructor(){
+    super();
+    this.frameLen=Math.max(1,Math.round(sampleRate*0.02));
+    this.buf=new Float32Array(this.frameLen);
+    this.fill=0;
+    this.prev=0;
+    this.cal=[];
+    this.ready=false;
+    this.on=0.004;
+    this.off=0.0024;
+    this.above=0;
+    this.below=0;
+    this.speaking=false;
+  }
+  process(inputs){
+    const ch=inputs[0]&&inputs[0][0];
+    if(!ch)return true;
+    for(let i=0;i<ch.length;i++){
+      this.buf[this.fill++]=ch[i];
+      if(this.fill===this.frameLen){this.fill=0;this.emit()}
+    }
+    return true;
+  }
+  emit(){
+    let sum=0,peak=0,crossings=0;
+    const n=this.frameLen;
+    for(let i=0;i<n;i++){
+      const v=this.buf[i];
+      sum+=v*v;
+      const a=v<0?-v:v;
+      if(a>peak)peak=a;
+      if((v>=0)!==(this.prev>=0))crossings++;
+      this.prev=v;
+    }
+    const rms=Math.sqrt(sum/n);
+    if(!this.ready){
+      this.cal.push(rms);
+      if(this.cal.length>=25){
+        const s=this.cal.slice().sort((a,b)=>a-b);
+        const floor=s[s.length>>1];
+        this.on=floor*3.0+0.004;
+        this.off=this.on*0.6;
+        this.ready=true;
+      }
+    }
+    if(this.ready){
+      if(rms>this.on){this.above++;this.below=0}
+      else if(rms<this.off){this.below++;this.above=0}
+      else{this.above=0;this.below=0}
+      if(!this.speaking&&this.above>=3)this.speaking=true;
+      else if(this.speaking&&this.below>=8)this.speaking=false;
+    }
+    this.port.postMessage({rms:rms,peak:peak,zcr:crossings/n,speaking:this.speaking,ready:this.ready});
+  }
+}
+registerProcessor('spkVad',SpkVad);
+`;
+
+const LIVE={
+  running:false,starting:false,frozen:false,sampleRate:0,
+  ctx:null,stream:null,node:null,source:null,mute:null,
+  frames:0,speechFrames:0,speaking:false,silStart:null,
+  silences:[],segments:[],alerts:[],
+  elapsed:0,ratio:0,longest:0,currentAlert:'',
+  raf:null,lastTimeline:-1,listDirty:false,timelineDirty:false,
+  renderHud:function(){renderLiveHud()}
+};
+window.LIVE=LIVE;
+
+function liveSetStatus(text){const el=document.getElementById('liveStatus');if(el)el.textContent=text}
+function liveRound(v){return Math.round(v*100)/100}
+function liveClock(sec){return pad(Math.floor(sec/60))+':'+pad(Math.floor(sec%60))}
+
+function liveReset(){
+  LIVE.frozen=false;LIVE.sampleRate=0;
+  LIVE.frames=0;LIVE.speechFrames=0;LIVE.speaking=false;LIVE.silStart=null;
+  LIVE.silences=[];LIVE.segments=[];LIVE.alerts=[];
+  LIVE.elapsed=0;LIVE.ratio=0;LIVE.longest=0;LIVE.currentAlert='';
+  LIVE.lastTimeline=-1;LIVE.listDirty=true;LIVE.timelineDirty=true;
+  ['liveElapsed','liveRatio','liveSilences','liveLongest'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.textContent='—';
+  });
+  const el=document.getElementById('liveElapsed');if(el)el.textContent='00:00';
+  const a=document.getElementById('liveAlert');if(a){a.textContent='';a.removeAttribute('data-kind')}
+  const l=document.getElementById('liveList');if(l)l.replaceChildren();
+  const tl=document.getElementById('liveTimeline');if(tl)tl.replaceChildren();
+}
+
+/* Frame callback: mutates state only. All painting happens in rAF. */
+function liveOnFrame(m){
+  if(!LIVE.running||LIVE.frozen)return;
+  const t=(++LIVE.frames)*LIVE_FRAME_S;
+  LIVE.elapsed=t;
+  const last=LIVE.segments[LIVE.segments.length-1];
+  const kind=m.speaking?'speech':'silence';
+  if(last&&last.kind===kind)last.to=t;
+  else LIVE.segments.push({kind:kind,from:Math.max(0,t-LIVE_FRAME_S),to:t});
+  LIVE.timelineDirty=true;
+  if(m.speaking){
+    LIVE.speechFrames++;
+    if(!LIVE.speaking){
+      LIVE.speaking=true;
+      LIVE.currentAlert='';
+      if(LIVE.silStart!==null){
+        const dur=t-LIVE.silStart;
+        if(dur>=LIVE_SIL_MIN_S){
+          LIVE.silences.push({start:liveRound(LIVE.silStart),dur:liveRound(dur),long:dur>=LIVE_LONG_PAUSE_S,frozen:dur>=LIVE_FROZEN_S});
+          LIVE.longest=Math.max(LIVE.longest,dur);
+          LIVE.listDirty=true;
+        }
+        LIVE.silStart=null;
+      }
+    }
+  }else if(LIVE.speaking){
+    LIVE.speaking=false;
+    LIVE.silStart=t;
+    LIVE.currentAlert='';
+  }else if(LIVE.silStart!==null){
+    const d=t-LIVE.silStart;
+    if(d>=LIVE_FROZEN_S&&LIVE.currentAlert!=='frozen'){
+      LIVE.currentAlert='frozen';
+      LIVE.alerts.push({kind:'frozen',at:liveRound(t),silence:liveRound(d)});
+    }else if(d>=LIVE_LONG_PAUSE_S&&LIVE.currentAlert===''){
+      LIVE.currentAlert='long';
+      LIVE.alerts.push({kind:'long',at:liveRound(t),silence:liveRound(d)});
+    }
+  }
+}
+
+function renderLiveHud(){
+  const total=LIVE.elapsed;
+  LIVE.ratio=LIVE.frames?Math.round(LIVE.speechFrames/LIVE.frames*100):0;
+  const currentSil=(!LIVE.speaking&&LIVE.silStart!==null)?total-LIVE.silStart:0;
+  const longestShown=Math.max(LIVE.longest,currentSil);
+
+  const e=document.getElementById('liveElapsed');if(e)e.textContent=liveClock(total);
+  const r=document.getElementById('liveRatio');if(r)r.textContent=LIVE.frames?LIVE.ratio+'%':'—';
+  const s=document.getElementById('liveSilences');if(s)s.textContent=String(LIVE.silences.length);
+  const l=document.getElementById('liveLongest');if(l)l.textContent=longestShown>0?longestShown.toFixed(2)+'s':'—';
+
+  let kind='';
+  let text='';
+  if(LIVE.running&&currentSil>=LIVE_FROZEN_S){kind='frozen';text='Frozen? '+currentSil.toFixed(1)+'s without speech'}
+  else if(LIVE.running&&currentSil>=LIVE_LONG_PAUSE_S){kind='long';text='Long pause: '+currentSil.toFixed(1)+'s'}
+  else if(!LIVE.running&&LIVE.alerts.length){
+    const a=LIVE.alerts[LIVE.alerts.length-1];
+    kind=a.kind;
+    text=a.kind==='frozen'?'Frozen? '+a.silence.toFixed(1)+'s without speech':'Long pause: '+a.silence.toFixed(1)+'s';
+  }
+  const alert=document.getElementById('liveAlert');
+  if(alert){
+    alert.textContent=text;
+    if(kind)alert.setAttribute('data-kind',kind);else alert.removeAttribute('data-kind');
+  }
+}
+
+function renderLiveTimeline(){
+  const el=document.getElementById('liveTimeline');
+  if(!el)return;
+  const total=Math.max(LIVE.elapsed,LIVE_FRAME_S);
+  const frag=document.createDocumentFragment();
+  LIVE.segments.forEach(seg=>{
+    const d=document.createElement('div');
+    d.className='live-seg '+seg.kind;
+    d.style.width=((seg.to-seg.from)/total*100)+'%';
+    d.title=(seg.kind==='speech'?'speech ':'silence ')+seg.from.toFixed(1)+'s–'+seg.to.toFixed(1)+'s';
+    frag.appendChild(d);
+  });
+  el.replaceChildren(frag);
+}
+
+function renderLiveList(){
+  const el=document.getElementById('liveList');
+  if(!el)return;
+  const frag=document.createDocumentFragment();
+  LIVE.silences.forEach((sil,i)=>{
+    const c=document.createElement('span');
+    c.className='live-pause'+(sil.frozen?' frozen':sil.long?' long':'');
+    c.textContent='#'+(i+1)+' '+sil.dur.toFixed(2)+'s @ '+liveClock(sil.start);
+    frag.appendChild(c);
+  });
+  el.replaceChildren(frag);
+}
+
+function liveLoop(){
+  if(!LIVE.running)return;
+  renderLiveHud();
+  if(LIVE.listDirty){renderLiveList();LIVE.listDirty=false}
+  if(LIVE.timelineDirty&&LIVE.elapsed-LIVE.lastTimeline>=0.25){
+    renderLiveTimeline();
+    LIVE.timelineDirty=false;
+    LIVE.lastTimeline=LIVE.elapsed;
+  }
+  LIVE.raf=requestAnimationFrame(liveLoop);
+}
+
+function liveTeardown(){
+  try{if(LIVE.node&&LIVE.node.port)LIVE.node.port.close()}catch(e){}
+  try{if(LIVE.source)LIVE.source.disconnect()}catch(e){}
+  try{if(LIVE.mute)LIVE.mute.disconnect()}catch(e){}
+  try{if(LIVE.stream)LIVE.stream.getTracks().forEach(t=>t.stop())}catch(e){}
+  try{if(LIVE.ctx&&LIVE.ctx.state!=='closed')LIVE.ctx.close().catch(()=>{})}catch(e){}
+  LIVE.stream=null;LIVE.ctx=null;LIVE.node=null;LIVE.source=null;LIVE.mute=null;
+}
+
+async function liveStart(){
+  if(LIVE.running||LIVE.starting)return;
+  LIVE.starting=true;
+  const panel=document.getElementById('livePanel');
+  if(panel)panel.style.display='block';
+  liveReset();
+  liveSetStatus('Requesting microphone…');
+  const stopBtn=document.getElementById('liveStopBtn');
+  if(stopBtn)stopBtn.disabled=true;
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('no microphone API in this browser');
+    const stream=await navigator.mediaDevices.getUserMedia({audio:{
+      echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1
+    }});
+    LIVE.stream=stream;
+    const AC=window.AudioContext||window.webkitAudioContext;
+    let ctx;
+    try{ctx=new AC({sampleRate:16000,latencyHint:'interactive'})}
+    catch(e){ctx=new AC()}
+    LIVE.ctx=ctx;LIVE.sampleRate=ctx.sampleRate;
+    if(ctx.state==='suspended'&&ctx.resume)await ctx.resume();
+    const url=URL.createObjectURL(new Blob([SPK_VAD_SRC],{type:'application/javascript'}));
+    try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+    const node=new AudioWorkletNode(ctx,'spkVad',{numberOfInputs:1,numberOfOutputs:1,channelCount:1});
+    node.port.onmessage=e=>liveOnFrame(e.data);
+    const src=ctx.createMediaStreamSource(stream);
+    const mute=ctx.createGain();
+    mute.gain.value=0;
+    src.connect(node);node.connect(mute);mute.connect(ctx.destination);
+    LIVE.node=node;LIVE.source=src;LIVE.mute=mute;
+    LIVE.running=true;
+    if(stopBtn)stopBtn.disabled=false;
+    liveSetStatus('Listening — '+(ctx.sampleRate/1000).toFixed(1)+' kHz · nothing is recorded or sent');
+    LIVE.raf=requestAnimationFrame(liveLoop);
+  }catch(err){
+    LIVE.running=false;
+    liveSetStatus('Microphone unavailable: '+(err&&err.name==='NotAllowedError'?'permission denied':(err&&err.message)||'unknown error'));
+    liveTeardown();
+  }finally{
+    LIVE.starting=false;
+  }
+}
+
+function liveOpen(){
+  liveStart();
+}
+
+function liveStop(){
+  if(!LIVE.running)return;
+  LIVE.running=false;
+  LIVE.frozen=true;
+  if(LIVE.raf){cancelAnimationFrame(LIVE.raf);LIVE.raf=null}
+  if(LIVE.silStart!==null){
+    const dur=LIVE.elapsed-LIVE.silStart;
+    if(dur>=LIVE_SIL_MIN_S){
+      LIVE.silences.push({start:liveRound(LIVE.silStart),dur:liveRound(dur),long:dur>=LIVE_LONG_PAUSE_S,frozen:dur>=LIVE_FROZEN_S});
+      LIVE.longest=Math.max(LIVE.longest,dur);
+    }
+    LIVE.silStart=null;
+  }
+  liveTeardown();
+  const stopBtn=document.getElementById('liveStopBtn');
+  if(stopBtn)stopBtn.disabled=true;
+  liveSetStatus('Stopped — summary ready. Nothing saved (S1).');
+  renderLiveHud();
+  LIVE.listDirty=false;LIVE.timelineDirty=false;
+  renderLiveList();
+  renderLiveTimeline();
+}
+
+function liveDiscard(){
+  if(LIVE.running)liveStop();
+  liveTeardown();
+  LIVE.running=false;
+  liveReset();
+  const panel=document.getElementById('livePanel');
+  if(panel)panel.style.display='none';
+  liveSetStatus('Microphone off');
+  const stopBtn=document.getElementById('liveStopBtn');
+  if(stopBtn)stopBtn.disabled=true;
 }
 
 function onWritingDraftChange(){
