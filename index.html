@@ -512,6 +512,19 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .live-list .live-pause.long{background:var(--warn-soft);color:var(--warn-text)}
 .live-list .live-pause.frozen{background:var(--bad-soft);color:var(--bad-text)}
 
+/* ---------- LIVE EXAMINER (S3: Gemini Live + sim transport) ---------- */
+.live-stat .val[data-on="1"]{color:var(--ok-text)}
+.spk-transcript{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media (max-width:640px){.spk-transcript{grid-template-columns:1fr}}
+.spk-col{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;min-width:0}
+.spk-col-h{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
+.spk-col-h .t{letter-spacing:0;text-transform:none;font-weight:400;margin-left:6px}
+.spk-lines{margin-top:8px;max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.spk-line{font-size:var(--fs-sm);color:var(--txt);line-height:1.4;display:flex;gap:8px}
+.spk-line .ts{flex:none;font-size:var(--fs-xs);color:var(--txt-2);font-variant-numeric:tabular-nums;padding-top:2px}
+.spk-line .txt{overflow-wrap:anywhere}
+.spk-badge{min-height:20px;margin-top:8px;font-size:var(--fs-xs);font-weight:600;color:var(--warn-text)}
+
 /* ---------- GATES ---------- */
 .gate{
   padding:14px 16px;margin-bottom:12px;
@@ -1962,6 +1975,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
                       <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
                       <button class="btn" id="liveOpenBtn" onclick="liveOpen()">🎧 Live studio</button>
+                      <button class="btn" id="spkOpenBtn" onclick="spkStart()">🗣 Live examiner</button>
                     </div>
                   </div>
 
@@ -1987,6 +2001,40 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="live-sub">Timeline: speech in green, silence in red · chips list every pause of 0.3 s or more.</div>
                     <div class="live-alert" id="liveAlert" aria-live="polite"></div>
                     <div class="live-list" id="liveList"></div>
+                  </div>
+
+                  <!-- Live examiner (S3): Part 1 + Part 2 against Gemini Live.
+                       With ?spk=sim (or localStorage.b2f_spk_sim='1') a fixed,
+                       offline script replaces the socket; the UI and playback
+                       path are identical, so the tests can assert on them. -->
+                  <div class="live-panel" id="spkPanel" style="display:none" aria-label="Live examiner">
+                    <div class="live-head">
+                      <div>
+                        <div class="live-title">🗣 Live examiner <span class="t">Part 1 interview · Part 2 long turn</span></div>
+                        <div class="live-sub" id="spkStatus" role="status">Examiner off</div>
+                      </div>
+                      <div class="live-actions">
+                        <button class="btn sm gray" id="spkStopBtn" onclick="spkStop()" disabled>■ Stop</button>
+                        <button class="btn sm gray" id="spkCloseBtn" onclick="spkDiscard()">✕ Close</button>
+                      </div>
+                    </div>
+                    <div class="live-grid">
+                      <div class="live-stat"><span class="lbl">Examiner</span><span class="val" id="spkSpeaking">idle</span></div>
+                      <div class="live-stat"><span class="lbl">Session</span><span class="val" id="spkElapsed">00:00</span></div>
+                      <div class="live-stat"><span class="lbl">Minutes left</span><span class="val" id="spkRemaining">—</span></div>
+                      <div class="live-stat"><span class="lbl">Interruptions</span><span class="val" id="spkInterrupts">0</span></div>
+                    </div>
+                    <div class="spk-badge" id="spkBadge" aria-live="polite"></div>
+                    <div class="spk-transcript">
+                      <div class="spk-col">
+                        <div class="spk-col-h">You <span class="t">exactly what you say</span></div>
+                        <div class="spk-lines" id="spkInText"></div>
+                      </div>
+                      <div class="spk-col">
+                        <div class="spk-col-h">Examiner</div>
+                        <div class="spk-lines" id="spkOutText"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -4126,6 +4174,584 @@ function liveDiscard(){
   const stopBtn=document.getElementById('liveStopBtn');
   if(stopBtn)stopBtn.disabled=true;
 }
+
+/* ---------- LIVE EXAMINER (S3): Gemini Live + deterministic sim ----------
+   One transport interface, two implementations:
+     spkTransport: { start(cfg), sendAudio(int16), sendText(s), mute(bool),
+                     close(), on:{audio,inText,outText,error} }
+   `sim` is chosen by ?spk=sim or localStorage.b2f_spk_sim='1' and never touches
+   the network: the fixed script and a 440 Hz tone go through the same playback
+   queue as the real voice, which is what the tests assert on.
+   Protocol facts below are the verified ones from ai.google.dev:
+     - WSS .../v1beta/...BidiGenerateContentConstrained?access_token=...
+     - setup { model, responseModalities:['AUDIO'], systemInstruction,
+               inputAudioTranscription:{}, outputAudioTranscription:{} }
+     - realtimeInput.audio { data (base64 PCM16), mimeType:'audio/pcm;rate=16000' }
+     - serverContent.modelTurn.parts[].inlineData.data  (base64 PCM16 24 kHz)
+     - serverContent.inputTranscription / outputTranscription / interrupted  */
+const SPK_DEFAULT_MODEL='gemini-3.8-live';
+const SPK_SIM_SCRIPT=[
+  {q:'Good morning. Can you tell me your name, please?',
+   a:'My name is Juan.'},
+  {q:'Where do you live, and what do you like about your town?',
+   a:'I live in Buenos Aires. I like the parks and the cafes.'},
+  {q:'What do you enjoy doing in your free time?',
+   a:'I enjoy playing football and reading at the weekend.'}
+];
+
+const SPK_TX_SRC=`
+class SpkTx extends AudioWorkletProcessor {
+  constructor(){
+    super();
+    this.frameLen=Math.max(1,Math.round(sampleRate*0.1));
+    this.buf=new Int16Array(this.frameLen);
+    this.fill=0;
+    this.cal=[];
+    this.ready=false;
+    this.on=0.004;
+    this.off=0.0024;
+    this.above=0;
+    this.below=0;
+    this.speaking=false;
+  }
+  process(inputs){
+    const ch=inputs[0]&&inputs[0][0];
+    if(!ch)return true;
+    for(let i=0;i<ch.length;i++){
+      let v=ch[i];
+      if(v>1)v=1;else if(v<-1)v=-1;
+      this.buf[this.fill++]=Math.round(v*32767);
+      if(this.fill===this.frameLen){this.fill=0;this.emit()}
+    }
+    return true;
+  }
+  emit(){
+    const n=this.frameLen;
+    const pcm=this.buf.slice(0);
+    let sum=0;
+    for(let i=0;i<n;i++){
+      const v=pcm[i]/32768;
+      sum+=v*v;
+    }
+    const rms=Math.sqrt(sum/n);
+    if(!this.ready){
+      this.cal.push(rms);
+      if(this.cal.length>=10){
+        const s=this.cal.slice().sort((a,b)=>a-b);
+        const floor=s[s.length>>1];
+        this.on=floor*3.0+0.004;
+        this.off=this.on*0.6;
+        this.ready=true;
+      }
+    }
+    if(this.ready){
+      if(rms>this.on){this.above++;this.below=0}
+      else if(rms<this.off){this.below++;this.above=0}
+      else{this.above=0;this.below=0}
+      if(!this.speaking&&this.above>=2)this.speaking=true;
+      else if(this.speaking&&this.below>=3)this.speaking=false;
+    }
+    this.port.postMessage({pcm:pcm,speaking:this.speaking,ready:this.ready,rms:rms},[pcm.buffer]);
+    this.buf=new Int16Array(n);
+  }
+}
+registerProcessor('spkTx',SpkTx);
+`;
+
+function spkSimMode(){
+  try{
+    const q=new URLSearchParams(location.search).get('spk');
+    if(q==='sim')return true;
+    return localStorage.getItem('b2f_spk_sim')==='1';
+  }catch(e){return false}
+}
+
+function spkClock(sec){return liveClock(Math.max(0,sec||0))}
+
+function spkPcmFromB64(b64){
+  const bin=atob(b64);
+  const n=bin.length>>1;
+  const out=new Int16Array(n);
+  for(let i=0;i<n;i++){
+    const v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);
+    out[i]=v>32767?v-65536:v;
+  }
+  return out;
+}
+function spkB64FromPcm(pcm){
+  const bytes=new Uint8Array(pcm.length*2);
+  for(let i=0;i<pcm.length;i++){
+    const v=pcm[i];
+    bytes[2*i]=v&255;
+    bytes[2*i+1]=(v>>8)&255;
+  }
+  let s='';
+  for(let i=0;i<bytes.length;i+=32768){
+    s+=String.fromCharCode.apply(null,bytes.subarray(i,i+32768));
+  }
+  return btoa(s);
+}
+function spkTone(ms,freq,rate){
+  const n=Math.round(rate*ms/1000);
+  const out=new Int16Array(n);
+  for(let i=0;i<n;i++)out[i]=Math.round(Math.sin(2*Math.PI*freq*i/rate)*0.18*32767);
+  return out;
+}
+
+function makeSimTransport(cfg){
+  const on=(cfg&&cfg.on)||{};
+  let closed=false,muted=false;
+  const timers=[];
+  function later(fn,ms){timers.push(setTimeout(fn,ms))}
+  function emitTone(){
+    if(closed||muted||!on.audio)return;
+    on.audio(spkTone(200,440,24000));
+  }
+  return {
+    on:on,
+    start:function(){
+      SPK_SIM_SCRIPT.forEach(function(pair,i){
+        later(function(){
+          if(closed)return;
+          if(on.outText)on.outText(pair.q);
+          for(let k=0;k<6;k++)later(emitTone,k*210);
+          later(function(){if(!closed&&on.inText)on.inText(pair.a)},1400);
+        },i*2400);
+      });
+    },
+    sendAudio:function(){},
+    sendText:function(){},
+    mute:function(b){muted=!!b},
+    close:function(){
+      closed=true;
+      while(timers.length)clearTimeout(timers.pop());
+    }
+  };
+}
+
+function makeLiveTransport(cfg){
+  const on=(cfg&&cfg.on)||{};
+  let ws=null,closed=false,muted=false;
+  function send(obj){
+    if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj));
+  }
+  function handle(sc){
+    if(!sc||typeof sc!=='object')return;
+    if(sc.inputTranscription&&typeof sc.inputTranscription.text==='string'&&sc.inputTranscription.text&&on.inText){
+      on.inText(sc.inputTranscription.text);
+    }
+    if(sc.outputTranscription&&typeof sc.outputTranscription.text==='string'&&sc.outputTranscription.text&&on.outText){
+      on.outText(sc.outputTranscription.text);
+    }
+    if(sc.modelTurn&&Array.isArray(sc.modelTurn.parts)){
+      sc.modelTurn.parts.forEach(function(part){
+        if(!part||!part.inlineData||typeof part.inlineData.data!=='string')return;
+        if(muted)return;
+        const pcm=spkPcmFromB64(part.inlineData.data);
+        if(pcm.length&&on.audio)on.audio(pcm);
+      });
+    }
+    if(sc.interrupted===true&&on.interrupted)on.interrupted();
+    if(sc.turnComplete===true&&on.turnComplete)on.turnComplete();
+  }
+  return {
+    on:on,
+    start:function(){
+      if(!cfg||!cfg.ws_url||!cfg.token){
+        throw new Error('unverified protocol field: token/ws_url');
+      }
+      if(!cfg.instruction){
+        throw new Error('unverified protocol field: instruction');
+      }
+      const sep=cfg.ws_url.indexOf('?')<0?'?':'&';
+      ws=new WebSocket(cfg.ws_url+sep+'access_token='+encodeURIComponent(cfg.token));
+      ws.onopen=function(){
+        send({setup:{
+          model:'models/'+(cfg.model||SPK_DEFAULT_MODEL),
+          responseModalities:['AUDIO'],
+          systemInstruction:{parts:[{text:cfg.instruction}]},
+          inputAudioTranscription:{},
+          outputAudioTranscription:{}
+        }});
+      };
+      ws.onmessage=async function(ev){
+        let text=null;
+        if(typeof ev.data==='string')text=ev.data;
+        else if(ev.data&&typeof ev.data.text==='function')text=await ev.data.text();
+        if(!text)return;
+        let msg=null;
+        try{msg=JSON.parse(text)}catch(e){return}
+        if(msg&&msg.serverContent)handle(msg.serverContent);
+      };
+      ws.onerror=function(){
+        if(!closed&&on.error)on.error(new Error('live connection error'));
+      };
+      ws.onclose=function(){
+        if(!closed&&on.error)on.error(new Error('live connection closed'));
+      };
+    },
+    sendAudio:function(pcm){
+      if(!pcm||!pcm.length)return;
+      send({realtimeInput:{audio:{data:spkB64FromPcm(pcm),
+        mimeType:'audio/pcm;rate=16000'}}});
+    },
+    sendText:function(s){
+      if(typeof s!=='string'||!s)return;
+      send({realtimeInput:{text:s}});
+    },
+    mute:function(b){
+      muted=!!b;
+      if(muted)send({realtimeInput:{audioStreamEnd:true}});
+    },
+    close:function(){
+      closed=true;
+      try{if(ws)ws.close()}catch(e){}
+    }
+  };
+}
+
+function makeTransport(cfg){
+  return (cfg&&cfg.mode==='sim')?makeSimTransport(cfg):makeLiveTransport(cfg);
+}
+
+const SPK={
+  running:false,starting:false,stopping:false,mode:'sim',
+  ctx:null,lastCtx:null,transport:null,
+  sources:[],nextTime:0,speaking:false,muted:false,barged:false,
+  turns:[],lines:[],inCount:0,outCount:0,interrupted:0,
+  elapsed:0,startedAt:0,lastReport:0,capMin:20,remaining:null,
+  raf:null,micCtx:null,micStream:null,micNode:null,micSource:null,micSink:null,
+  speechSince:0,silSince:0,simSpeechUntil:0
+};
+window.SPK=SPK;
+
+function spkSetStatus(text){const el=document.getElementById('spkStatus');if(el)el.textContent=text}
+function spkSetBadge(text){const el=document.getElementById('spkBadge');if(el)el.textContent=text||''}
+function spkSetSpeaking(v){
+  if(SPK.speaking===v)return;
+  SPK.speaking=v;
+  const el=document.getElementById('spkSpeaking');
+  if(!el)return;
+  el.textContent=v?'examiner speaking':'idle';
+  if(v)el.setAttribute('data-on','1');else el.removeAttribute('data-on');
+}
+
+function spkEnsureCtx(){
+  if(SPK.ctx&&SPK.ctx.state!=='closed')return true;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return false;
+  try{SPK.ctx=new AC({sampleRate:24000,latencyHint:'interactive'})}
+  catch(e){SPK.ctx=new AC()}
+  SPK.lastCtx=SPK.ctx;
+  if(SPK.ctx.state==='suspended'&&SPK.ctx.resume)SPK.ctx.resume().catch(function(){});
+  SPK.sources=[];SPK.nextTime=0;
+  return true;
+}
+
+function spkOnAudio(pcm){
+  if(!SPK.running||!pcm||!pcm.length||SPK.muted)return;
+  if(!spkEnsureCtx())return;
+  const ctx=SPK.ctx;
+  const buf=ctx.createBuffer(1,pcm.length,24000);
+  const ch=buf.getChannelData(0);
+  for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
+  const src=ctx.createBufferSource();
+  src.buffer=buf;
+  src.connect(ctx.destination);
+  const when=Math.max(ctx.currentTime,SPK.nextTime);
+  src.start(when);
+  SPK.nextTime=when+buf.duration;
+  SPK.sources.push(src);
+  src.onended=function(){
+    const i=SPK.sources.indexOf(src);
+    if(i>=0)SPK.sources.splice(i,1);
+  };
+}
+
+function spkClearQueue(){
+  if(!SPK.ctx)return;
+  SPK.sources.forEach(function(src){try{src.stop()}catch(e){}});
+  SPK.sources=[];
+  SPK.nextTime=SPK.ctx.currentTime;
+}
+
+function spkBargeIn(){
+  if(SPK.barged)return;
+  SPK.barged=true;
+  SPK.interrupted++;
+  const turn=SPK.turns[SPK.turns.length-1];
+  if(turn)turn.interrupted=true;
+  if(SPK.transport)SPK.transport.mute(true);
+  SPK.muted=true;
+  spkClearQueue();
+  spkSetSpeaking(false);
+  const el=document.getElementById('spkInterrupts');
+  if(el)el.textContent=String(SPK.interrupted);
+}
+
+/* Local VAD drives barge-in: >300 ms of student speech while the examiner is
+   talking mutes the output and empties the queue; 300 ms of silence after that
+   unmutes so the examiner can reply to the interruption. */
+function spkVad(speaking){
+  const now=performance.now();
+  if(speaking){
+    SPK.silSince=0;
+    if(!SPK.speaking){SPK.speechSince=0;return}
+    if(!SPK.speechSince)SPK.speechSince=now;
+    if(now-SPK.speechSince>=300)spkBargeIn();
+  }else{
+    SPK.speechSince=0;
+    if(SPK.muted){
+      if(!SPK.silSince)SPK.silSince=now;
+      if(now-SPK.silSince>=300){
+        SPK.muted=false;SPK.barged=false;SPK.silSince=0;
+        if(SPK.transport)SPK.transport.mute(false);
+      }
+    }
+  }
+}
+
+function spkAddLine(side,text){
+  if(typeof text!=='string')return;
+  text=text.trim();
+  if(!text)return;
+  const ts=Math.max(0,(performance.now()-SPK.startedAt)/1000);
+  const box=document.getElementById(side==='in'?'spkInText':'spkOutText');
+  if(box){
+    const row=document.createElement('div');
+    row.className='spk-line';
+    const t=document.createElement('span');
+    t.className='ts';
+    t.textContent=spkClock(ts);
+    const s=document.createElement('span');
+    s.className='txt';
+    s.textContent=text;
+    row.appendChild(t);
+    row.appendChild(s);
+    box.appendChild(row);
+    box.scrollTop=box.scrollHeight;
+  }
+  SPK.lines.push({side:side,t:Math.round(ts*1000)/1000,text:text});
+  if(side==='in'){
+    SPK.inCount++;
+  }else{
+    SPK.outCount++;
+    SPK.turns.push({n:SPK.outCount,text:text,at:Math.round(ts*100)/100,interrupted:false});
+    SPK.barged=false;
+  }
+}
+
+function spkReset(){
+  SPK.turns=[];SPK.lines=[];SPK.inCount=0;SPK.outCount=0;SPK.interrupted=0;
+  SPK.elapsed=0;SPK.speaking=false;SPK.muted=false;SPK.barged=false;
+  SPK.speechSince=0;SPK.silSince=0;SPK.simSpeechUntil=0;SPK.remaining=null;
+  ['spkInText','spkOutText'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.replaceChildren();
+  });
+  const e=document.getElementById('spkElapsed');if(e)e.textContent='00:00';
+  const s=document.getElementById('spkSpeaking');if(s){s.textContent='idle';s.removeAttribute('data-on')}
+  const i=document.getElementById('spkInterrupts');if(i)i.textContent='0';
+  const r=document.getElementById('spkRemaining');if(r)r.textContent='—';
+  spkSetBadge('');
+}
+
+function spkLoop(){
+  if(!SPK.running)return;
+  const now=performance.now();
+  SPK.elapsed=(now-SPK.startedAt)/1000;
+  const e=document.getElementById('spkElapsed');
+  if(e)e.textContent=spkClock(SPK.elapsed);
+  if(SPK.ctx){
+    const busy=SPK.sources.length>0&&SPK.nextTime>SPK.ctx.currentTime;
+    spkSetSpeaking(busy);
+  }
+  if(SPK.mode==='sim')spkVad(SPK.simSpeechUntil>now);
+  if(now-SPK.lastReport>=30000){
+    const period=(now-SPK.lastReport)/1000;
+    SPK.lastReport=now;
+    spkSendMinutes(Math.min(300,period)).then(function(j){
+      if(j&&j.remaining_s<=0&&SPK.running){
+        spkSetStatus('daily speaking limit reached ('+SPK.capMin+' min)');
+        spkSetBadge('daily speaking limit reached ('+SPK.capMin+' min)');
+        spkStop(true);
+      }
+    });
+  }
+  SPK.raf=requestAnimationFrame(spkLoop);
+}
+
+function spkTeardownMic(){
+  try{if(SPK.micNode&&SPK.micNode.port)SPK.micNode.port.close()}catch(e){}
+  try{if(SPK.micSource)SPK.micSource.disconnect()}catch(e){}
+  try{if(SPK.micSink)SPK.micSink.disconnect()}catch(e){}
+  try{if(SPK.micStream)SPK.micStream.getTracks().forEach(function(t){t.stop()})}catch(e){}
+  try{if(SPK.micCtx&&SPK.micCtx.state!=='closed')SPK.micCtx.close().catch(function(){})}catch(e){}
+  SPK.micNode=null;SPK.micSource=null;SPK.micSink=null;SPK.micStream=null;SPK.micCtx=null;
+}
+
+async function spkStartMic(){
+  const stream=await navigator.mediaDevices.getUserMedia({audio:{
+    echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1
+  }});
+  SPK.micStream=stream;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  let ctx;
+  try{ctx=new AC({sampleRate:16000,latencyHint:'interactive'})}
+  catch(e){ctx=new AC()}
+  SPK.micCtx=ctx;
+  if(ctx.state==='suspended'&&ctx.resume)await ctx.resume();
+  const url=URL.createObjectURL(new Blob([SPK_TX_SRC],{type:'application/javascript'}));
+  try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+  const node=new AudioWorkletNode(ctx,'spkTx',{numberOfInputs:1,numberOfOutputs:1,channelCount:1});
+  node.port.onmessage=function(ev){
+    if(!SPK.running)return;
+    const m=ev.data||{};
+    if(m.pcm&&SPK.transport)SPK.transport.sendAudio(m.pcm);
+    spkVad(!!m.speaking);
+  };
+  const src=ctx.createMediaStreamSource(stream);
+  const sink=ctx.createGain();
+  sink.gain.value=0;
+  src.connect(node);node.connect(sink);sink.connect(ctx.destination);
+  SPK.micNode=node;SPK.micSource=src;SPK.micSink=sink;
+}
+
+async function spkSendMinutes(seconds){
+  if(!USER||!USER.token)return null;
+  try{
+    const r=await fetch('/api/speaking/minute',{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({seconds:Math.max(0,Math.min(300,seconds||0))})});
+    if(!r.ok)return null;
+    const j=await r.json();
+    SPK.remaining=j.remaining_s;
+    if(typeof j.cap_s==='number'&&j.cap_s>0)SPK.capMin=Math.round(j.cap_s/60);
+    const el=document.getElementById('spkRemaining');
+    if(el)el.textContent=Math.ceil(j.remaining_s/60)+' min';
+    return j;
+  }catch(e){return null}
+}
+
+function spkHandlers(){
+  return {
+    audio:function(pcm){spkOnAudio(pcm)},
+    inText:function(t){spkAddLine('in',t)},
+    outText:function(t){spkAddLine('out',t)},
+    error:function(err){spkSetStatus('Examiner connection problem — '+((err&&err.message)||'unknown error'))},
+    interrupted:function(){spkBargeIn()},
+    turnComplete:function(){}
+  };
+}
+
+async function spkStart(){
+  if(SPK.running||SPK.starting)return;
+  SPK.starting=true;
+  const panel=document.getElementById('spkPanel');
+  if(panel)panel.style.display='block';
+  spkReset();
+  spkSetStatus('Checking daily limit…');
+  const stopBtn=document.getElementById('spkStopBtn');
+  if(stopBtn)stopBtn.disabled=true;
+  try{
+    // 0-second report doubles as the quota probe: it never consumes minutes.
+    let probe=null;
+    if(USER&&USER.token)probe=await spkSendMinutes(0);
+    if(probe&&probe.remaining_s<=0){
+      const msg='daily speaking limit reached ('+SPK.capMin+' min)';
+      spkSetStatus(msg);spkSetBadge(msg);
+      return;
+    }
+    let mode='sim';
+    let liveCfg=null;
+    if(!spkSimMode()){
+      try{
+        const r=await fetch('/api/speaking/token',{method:'POST',headers:authHeaders(),body:'{}'});
+        if(r.status===503){
+          spkSetBadge('Examiner unavailable (no speech key) — simulated voice');
+        }else if(!r.ok){
+          spkSetBadge('Examiner unavailable — simulated voice');
+        }else{
+          const j=await r.json();
+          if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
+          else spkSetBadge('Examiner unavailable — simulated voice');
+        }
+      }catch(e){
+        spkSetBadge('Examiner unavailable — simulated voice');
+      }
+    }else{
+      spkSetBadge('Simulated voice (?spk=sim)');
+    }
+    SPK.mode=mode;
+    spkEnsureCtx();
+    const cfg=Object.assign({mode:mode,on:spkHandlers()},liveCfg||{});
+    SPK.transport=makeTransport(cfg);
+    SPK.startedAt=performance.now();
+    SPK.lastReport=SPK.startedAt;
+    SPK.running=true;
+    if(mode==='live'){
+      try{await spkStartMic()}
+      catch(err){
+        // No microphone is a hard stop for the real path: fall back honestly.
+        SPK.running=false;
+        try{SPK.transport.close()}catch(e){}
+        SPK.transport=null;
+        SPK.mode='sim';
+        spkSetBadge('Microphone unavailable — simulated voice');
+        SPK.transport=makeTransport({mode:'sim',on:spkHandlers()});
+        SPK.startedAt=performance.now();
+        SPK.lastReport=SPK.startedAt;
+        SPK.running=true;
+      }
+    }
+    SPK.transport.start();
+    spkSetStatus(mode==='live'?'Listening — examiner is live':'Listening — simulated examiner');
+    if(stopBtn)stopBtn.disabled=false;
+    SPK.raf=requestAnimationFrame(spkLoop);
+  }catch(err){
+    SPK.running=false;
+    spkSetStatus('Examiner unavailable — '+((err&&err.message)||'unknown error'));
+  }finally{
+    SPK.starting=false;
+  }
+}
+
+async function spkStop(limitHit){
+  if(!SPK.running&&!limitHit)return;
+  if(SPK.stopping)return;
+  SPK.stopping=true;
+  const wasRunning=SPK.running;
+  const elapsed=(performance.now()-SPK.lastReport)/1000;
+  SPK.running=false;
+  if(SPK.raf){cancelAnimationFrame(SPK.raf);SPK.raf=null}
+  SPK.simSpeechUntil=0;
+  if(SPK.transport){try{SPK.transport.close()}catch(e){}}
+  SPK.transport=null;
+  spkClearQueue();
+  spkTeardownMic();
+  if(SPK.ctx){
+    SPK.lastCtx=SPK.ctx;
+    try{SPK.ctx.close()}catch(e){}
+    SPK.ctx=null;
+  }
+  spkSetSpeaking(false);
+  if(wasRunning&&!limitHit)await spkSendMinutes(elapsed);
+  spkSetStatus(limitHit?('daily speaking limit reached ('+SPK.capMin+' min)'):'Examiner stopped');
+  const stopBtn=document.getElementById('spkStopBtn');
+  if(stopBtn)stopBtn.disabled=true;
+  SPK.stopping=false;
+}
+
+async function spkDiscard(){
+  await spkStop();
+  const panel=document.getElementById('spkPanel');
+  if(panel)panel.style.display='none';
+  spkReset();
+  spkSetStatus('Examiner off');
+}
+
+SPK.simulateUserSpeech=function(ms){SPK.simSpeechUntil=performance.now()+(ms||600)};
+SPK.queueEmpty=function(){
+  return !SPK.ctx||(SPK.sources.length===0&&SPK.nextTime<=SPK.ctx.currentTime+0.02);
+};
 
 function onWritingDraftChange(){
   const el=document.getElementById('wTextDraft');
