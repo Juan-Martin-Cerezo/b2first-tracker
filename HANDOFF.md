@@ -135,6 +135,34 @@ Tailscale Funnel: `tailscale funnel status` on the Pi. It maps
 `https://vps-server.tail40095b.ts.net` → `http://127.0.0.1:8088`. Funnel only serves `*.ts.net`
 names — a custom domain requires Cloudflare Tunnel instead (§12.1).
 
+### Host hardening, SSH and patching (phase 25)
+
+The host is a **Raspberry Pi 5, 8 GB (8062 MB), 4 cores**. The app runs on it, but the host has
+its own security layer; full detail and the before/after exposure matrix are in
+`docs/HOST-HARDENING.md`.
+
+```bash
+sudo bash tools/audit-host.sh     # 55 local checks: nft, DOCKER-USER, binds, sshd, Funnel, egress
+sudo nft list table inet hardened # input filter: default drop, LAN gets explicit ports only
+sudo iptables -S DOCKER-USER      # Docker published ports are filtered in FORWARD
+sudo sshd -T | grep -E 'maxauthtries|logingracetime|allowusers|clientaliveinterval'
+```
+
+- `nft-hardened.service` applies `/home/juan/.config/nft/hardened.nft` (idempotent: `add` + `delete`
+  + redefine; compare with `nft -s list table inet hardened | sha256sum`).
+- `docker-user-hardening.service` applies `DOCKER-USER`. Docker DNATs published ports in
+  `PREROUTING` and accepts them in `FORWARD`, so the input chain never sees them. LAN keeps Immich
+  (`2283`) and the app (`8089`); the Coolify panel (`8000`) and `6001-6002` are tailnet-only.
+- SSH is key-only, `MaxAuthTries 3`, `LoginGraceTime 20`, `AllowUsers juan root@10.0.1.*`,
+  `X11Forwarding no`, `ClientAliveInterval 120`, in
+  `/etc/ssh/sshd_config.d/99-hardening.conf`. The scoped root exception is Coolify's own SSH from
+  its container (`10.0.1.6`); removing it breaks Coolify deploys.
+- `fail2ban` watches the `sshd` journal (`maxretry 4`, `bantime 1h`). The LAN is in `ignoreip` as a
+  recovery path; the tailnet is not.
+- **Patching is manual on purpose** — `unattended-upgrades` is not enabled. Runbook:
+  `docs/HOST-HARDENING.md` §6 (update, full-upgrade, autoremove, reboot if needed, then
+  `audit-host.sh` and health checks). At phase 25 there were 190 packages pending.
+
 ---
 
 ## 5. Testing — 30 suites
@@ -198,10 +226,14 @@ The speaking suites (`test_speaking_pa`, `test_speaking_director`, `test_speakin
 
 ---
 
-## 7. Security model (phases 11, 12, 16, 17)
+## 7. Security model (phases 11, 12, 16, 17, 25)
 
-Run `bash tools/audit.sh` — 14 checks against the public URL, exits non-zero on failure. At
-handoff: **14/14 PASS**.
+Two audits, both exit non-zero on failure:
+
+- `bash tools/audit.sh` — 39 checks against the public URL. At handoff: **39/39 PASS**.
+- `sudo bash tools/audit-host.sh` — 55 local host checks (nft, `DOCKER-USER`, listening binds,
+  `sshd -T`, fail2ban, Funnel, egress). At phase 25: **55/55 PASS**. Details:
+  `docs/HOST-HARDENING.md`.
 
 | Control | Where |
 | --- | --- |
@@ -223,6 +255,11 @@ handoff: **14/14 PASS**.
 | `TRACE` → 405 · `..` in any encoding → 400 · `.env`/`.git`/`.es_salt` → 403 | phase 16 |
 | No version banner (`Server: B2First`, `sys_version=""`) | found by `tools/audit.sh` |
 | AI: instruction hierarchy, per-request nonce fence, injection/off-topic heuristics, output leak guard | phase 17 |
+| Host input filter: default drop, LAN no longer blanket-trusted, explicit ports `22/2283/8089/9100`, SSH new-connection limit 6/min burst 3 | phase 25 (`nft-hardened.service`) |
+| Docker published ports filtered in `FORWARD/DOCKER-USER`: LAN only `2283`/`8089`, panel and `6001-6002` tailnet-only, container egress preserved | phase 25 (`docker-user-hardening.service`) |
+| sshd: `MaxAuthTries 3`, `LoginGraceTime 20`, `AllowUsers juan root@10.0.1.*`, `X11Forwarding no`, `ClientAliveInterval 120` | phase 25 drop-in |
+| fail2ban `sshd` jail: `maxretry 4`, `bantime 1h`, systemd backend, LAN ignored as recovery path | phase 25 |
+| Funnel public surface audited: only `443` → `127.0.0.1:8088`; `8443` tailnet-only | phase 25 |
 
 **The one that mattered:** before phase 11, `PUT /api/progress` accepted requests with **no token**
 for `user_id="owner"` (a LAN convenience). Through the Funnel, that meant anyone on the internet
@@ -458,7 +495,8 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 8. **`data/tokens.json` keys are hashes now.** Do not "helpfully" re-add plaintext for debugging.
 9. **Playwright suites need `uv run --with playwright`**, plain `python3` will fail on import.
 10. **`systemctl restart b2first` is safe; `systemctl restart nft-hardened` is not** — it can lock
-    you out of SSH. Ask first.
+    you out of SSH. Apply firewall changes with the snapshot + `systemd-run` rollback window in
+    `docs/HOST-HARDENING.md` §3.1, never blind.
 
 ---
 
@@ -473,6 +511,11 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 | Disk full | `du -sh ~/b2first-backups`, prune old `.tgz`, check `data/events/` retention |
 | Tunnel down | `tailscale funnel status`; re-run `tailscale funnel --https=443 http://127.0.0.1:8088` |
 | Suspected compromise | `grep -i fail data/audit.log`, rotate every token (delete `tokens.json`), reset passwords |
+| Host firewall mistake / locked out of LAN | wait 150 s for `/root/nft-rollback.sh`, or run it; verify `nft -s list table inet hardened \| sha256sum`; stop `nft-auto-rollback.timer` |
+| Undo Docker FORWARD filtering | `systemctl disable --now docker-user-hardening`, then `iptables -F DOCKER-USER` |
+| A legitimate IP got banned | `sudo fail2ban-client set sshd unbanip <IP>` (LAN is in `ignoreip`) |
+| Monthly patching | `docs/HOST-HARDENING.md` §6 (manual by design; `unattended-upgrades` stays off) |
+| Host-level health check | `sudo bash tools/audit-host.sh` → `VERDICT: PASS` |
 | Need the pre-phase-11 state | `git log --oneline` around `6efb512` (the proxy guard fix); the owner's data was restored from `data/users/owner/backups/progress-20261029-224957.json` |
 
 ---
@@ -487,7 +530,8 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 ├── index.html           the whole frontend (tokens, 10 views, intake wizard, charts)
 ├── tests/               30 suites (see §5) + helpers.py
 ├── tools/
-│   ├── audit.sh         14 external security checks against the public URL
+│   ├── audit.sh         39 external security checks against the public URL
+│   ├── audit-host.sh    55 local host checks (nft, DOCKER-USER, binds, sshd, Funnel)
 │   └── reset_password.py
 ├── delegacion/
 │   ├── run-fase.sh      the phase runner (tests as gate)
@@ -496,6 +540,7 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 │   └── README.md        how the loop works
 ├── docs/
 │   ├── PRIVACY.md · SECURITY.md · SPEAKING-EVALUATOR.md
+│   ├── HOST-HARDENING.md  host exposure matrix, rollback and patching runbook (phase 25)
 │   ├── VIDEO-SCRIPT.md · DEVPOST-FIELDS.md
 │   └── screenshots/
 ├── README.md            problem, audience, features, calibration, stack, security
@@ -518,7 +563,8 @@ gradeable** without a second human — it is reported as proxies, never as a ban
 
 1. `curl -s http://127.0.0.1:8088/api/health` → must be `{"ok":true,...}`.
 2. `cd ~/b2first-tracker && git status` → must be clean on `feat/ia-hackathon`.
-3. `bash tools/audit.sh` → must print `14/14 checks passed`.
+3. `bash tools/audit.sh` → must print `39/39 checks passed`; `sudo bash tools/audit-host.sh` →
+   `VERDICT: PASS` (55/55).
 4. `python3 tests/test_legacy_guard.py` → must be `9/9 OK` (this is the guard that once leaked
    every user's data).
 5. Then read §12 and pick up the highest-priority item that is not blocked on Juan.
