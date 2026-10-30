@@ -268,9 +268,19 @@ Reproducible external audit of the live instance: `bash tools/audit.sh` — 14/1
 
 ## Data and privacy
 
+- **Privacy policy**: the app serves it at [`GET /privacy`](docs/PRIVACY.md) (linked from the
+  footer and from the registration form). It documents exactly what is stored, retention
+  windows, your export/delete rights, the AI data flow and Do Not Track support.
+- The contact address ships as the explicit `TODO_OWNER_EMAIL` placeholder in `server.py`
+  (`privacy_page()`) and `docs/PRIVACY.md`: replace that literal string with the real owner
+  email in both files before deploying publicly. No email is invented anywhere.
 - Progress lives in `localStorage` and in `data/users/<id>/progress.json` on your machine, with
   the previous version kept as a rotated backup.
 - `data/` is gitignored: no personal progress is ever committed.
+- **Product telemetry is privacy-first**: `POST /api/events` stores whitelisted usage events
+  (never content, never free text) as JSONL in `data/events/` for 7 days, with the client IP
+  stored only as a salted hash. Owner-only aggregates live at `GET /api/metrics`. Browsers
+  sending `Do Not Track: 1` emit nothing at all.
 - The only outbound call is the text you paste into the corrector, sent with your own key.
 - Demo mode cannot write to `data/`; those routes answer `403`.
 
