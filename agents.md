@@ -31,6 +31,8 @@ and messages — is written in English.
   tested with Playwright without a compilation chain.
 - **Backend**: `server.py`, Python **stdlib only** (http.server). No need for
   pip install. Do not add dependencies without discussing it first.
+  `store.py` owns every file under `data/` (atomic writes, `0600`); `plans.py` owns the
+  free/byo/pro plans, the usage meter and the signed activation codes.
 - **Data**: everything in the browser's `localStorage` (key `b2first_tracker_v1_<userId>`,
   the pre-multiuser key `b2first_tracker_v1` is still read as a fallback) and
   **synced with the server**: `data/users/<id>/progress.json` + rotated backups in
@@ -73,8 +75,10 @@ The synced progress document carries `schema_version` (currently `2`, `store.py`
   `0700`, files `0600`. A token can only touch its own account (`403` otherwise).
 - Limits (server-side, `server.py`): register 5/h/IP, login 10/10min/IP + 20/h/username,
   exponential backoff 5/15/60 s after the 3rd/4th/5th failure, lockout 15 min after 5 failures,
-  progress writes 2 MB + 60/min, AI corrections 10/min + 60/h per IP and 8/day/account +
-  80/day/instance (`B2_AI_DAILY_*`).
+  progress writes 2 MB + 60/min, AI corrections per **plan** (`plans.py`: free 3/day, pro
+  60/month, `byo` unlimited to us) plus an 80/day instance ceiling (`B2_AI_DAILY_TOTAL`).
+  Speaking mocks: free 1/week (5 min), pro 6/month. `B2_AI_DAILY_PER_USER` is a legacy
+  override: leave it unset.
 - `data/audit.log` (0600, rotates at 5 MB) records auth/security events in a SHA-256 hash chain
   (`prev` per line); `tools/verify_audit.py` exits non-zero if a line was edited or deleted;
   `/api/audit` returns only the caller's own events. `GET /api/health` is the liveness probe.
@@ -134,7 +138,7 @@ Two groups:
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
   `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
   `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,
-  `test_security3`, `test_server_hardening`, `test_telemetry`.
+  `test_security3`, `test_server_hardening`, `test_telemetry`, `test_byokey`, `test_plans`.
 
 The delegation runner gates each phase with `RUN_TESTS` (default `test_sync.py
 test_personalization.py`) — see [delegacion/README.md](delegacion/README.md).

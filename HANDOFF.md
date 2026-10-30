@@ -113,19 +113,31 @@ Configuration lives in a systemd drop-in, not in the repo:
   EnvironmentFile=/home/juan/.config/b2first/ai.env
   Environment=B2_DEMO=0
   Environment=B2_REGISTER=open
-  Environment=B2_AI_DAILY_PER_USER=8
   Environment=B2_AI_DAILY_TOTAL=80
   Environment=B2_HOST=127.0.0.1
 ```
 
-`~/.config/b2first/ai.env` holds `B2_AI_KEY`, `B2_AI_PROVIDER`, `B2_AI_MODEL`. **Never print the
-key, never commit the file.** It is a DeepSeek key on the same account as Hermes' old fallback —
-see §11 for the billing split.
+Do **not** set `B2_AI_DAILY_PER_USER` here: it is a legacy hard cap that overrides the
+plan limits (free 3/day, pro 60/month). Remove the line if an old drop-in still has it.
+
+`~/.config/b2first/ai.env` holds `B2_AI_KEY`, `B2_AI_PROVIDER`, `B2_AI_MODEL` and
+`B2_LICENSE_SECRET` (32+ bytes, signs pro activation codes; without it code redemption
+answers 503). **Never print these values, never commit the file.** It is a DeepSeek key on
+the same account as Hermes' old fallback — see §11 for the billing split.
+
+Issuing a pro code is a local CLI, not an HTTP endpoint:
+
+```bash
+export B2_LICENSE_SECRET="$(sudo grep '^B2_LICENSE_SECRET=' ~/.config/b2first/ai.env | cut -d= -f2-)"
+python3 tools/issue_license.py pro 30    # FT-PRO-1M-XXXX-XXXX-XXXX (single use)
+python3 tools/issue_license.py --list    # hashes + who redeemed them
+```
 
 ### Environment variables the code reads
 
-`B2_AI_KEY` · `B2_AI_MODEL` · `B2_AI_PROVIDER` · `B2_AI_BASE` · `B2_AI_DAILY_PER_USER` ·
-`B2_AI_DAILY_TOTAL` · `B2_DEMO` · `B2_REGISTER` · `B2_HOST` · `B2_PUBLIC_HEALTH` ·
+`B2_AI_KEY` · `B2_AI_MODEL` · `B2_AI_PROVIDER` · `B2_AI_BASE` · `B2_AI_DAILY_TOTAL` ·
+`B2_LICENSE_SECRET` (legacy: `B2_AI_DAILY_PER_USER`) ·
+`B2_DEMO` · `B2_REGISTER` · `B2_HOST` · `B2_PUBLIC_HEALTH` ·
 `B2_SPK_AZURE_KEY` · `B2_SPK_AZURE_REGION` · `B2_SPK_AZURE_ENDPOINT` ·
 `B2_SPK_PA_DAILY_PER_USER` ·
 `B2_OWNER_PASSWORD` (first-boot bootstrap only) · `B2_TEST_USER` / `B2_TEST_PASS` (tests only).

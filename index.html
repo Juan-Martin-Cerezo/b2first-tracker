@@ -420,6 +420,24 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 }
 .chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
+/* ---------- SUBSCRIPTION PLAN (phase 31) ---------- */
+.plan-usage{display:flex;flex-direction:column;gap:7px;margin:12px 0 4px}
+.plan-usage-row{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.plan-usage-label{font-size:var(--fs-xs);font-weight:600;color:var(--txt-2);text-transform:uppercase;letter-spacing:.04em}
+.plan-usage-count{font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
+.usage-bar{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.usage-bar>i{display:block;height:100%;width:0;background:var(--ok);transition:width 200ms ease}
+.usage-bar>i.warn{background:var(--warn-text)}
+.usage-bar>i.full{background:var(--bad-text)}
+.plan-usage-reset{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.plan-code-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:12px}
+.plan-code-row>div{flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px}
+.plan-code-row input{font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.plan-limit-options{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.plan-limit-option{display:flex;flex-direction:column;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px 12px}
+.plan-limit-option b{font-size:var(--fs-sm);color:var(--txt)}
+.plan-limit-option span{font-size:var(--fs-xs);color:var(--txt-2)}
+
 /* ---------- PRACTICE SOURCES ---------- */
 .practice-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
 .practice-toolbar .chips{margin:0}
@@ -1484,6 +1502,38 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div style="display:flex;gap:8px;flex-direction:column">
       <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')" data-i18n="user_edit_plan">⚙️ Edit My Study Plan &amp; Schedule</button>
       <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()" data-i18n="user_logout">⇄ Switch User / Log Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PLAN LIMIT MODAL (phase 31) ============
+     Shown when a request answers 429 + error:"plan_limit". It always offers the
+     three ways forward, so a limit never ends in a dead-end toast. -->
+<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" onclick="if(event.target===this)closePlanLimit()">
+  <div class="auth-card" style="max-width:440px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="license_limit_title">You reached your plan limit</h3>
+      <button class="del" type="button" onclick="closePlanLimit()" style="font-size:20px;padding:4px 8px" aria-label="Close">✕</button>
+    </div>
+    <p class="sub" id="planLimitBody" style="margin-top:8px" data-i18n="license_limit_body">Your free plan is there to try the loop. Keep going in one of these ways:</p>
+    <div class="plan-limit-options">
+      <div class="plan-limit-option">
+        <b data-i18n="license_option_free">Free (you are here)</b>
+        <span data-i18n="license_option_free_desc">3 AI corrections a day and 1 mock a week.</span>
+      </div>
+      <div class="plan-limit-option">
+        <b data-i18n="license_option_byo">Your own key</b>
+        <span data-i18n="license_option_byo_desc">Unlimited for this app: you pay your provider directly.</span>
+      </div>
+      <div class="plan-limit-option">
+        <b data-i18n="license_option_pro">Pro</b>
+        <span data-i18n="license_option_pro_desc">60 corrections a month and 6 speaking mocks. Redeem an activation code.</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-direction:column;margin-top:14px">
+      <button class="btn" type="button" onclick="planLimitUseKey()" data-i18n="license_use_key">🔑 Use my own key</button>
+      <button class="btn ok" type="button" onclick="planLimitHaveCode()" data-i18n="license_have_code">🎟️ I have a code</button>
+      <button class="btn gray" type="button" onclick="closePlanLimit()" data-i18n="license_close">Not now</button>
     </div>
   </div>
 </div>
@@ -2784,6 +2834,43 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
+        <!-- Subscription plan (phase 31): free / byo / pro, shown up front -->
+        <div class="card" id="planStatusCard" style="margin-bottom:16px">
+          <div class="plan-card-head">
+            <h2 data-i18n="license_title">Subscription</h2>
+            <span class="chip-plan" id="planNameChip"><span class="dot"></span><span id="planNameText" data-i18n="license_chip_free">Free</span></span>
+          </div>
+          <div class="sub" data-i18n="license_sub">Your plan decides how much AI you get. Free is here to try the loop; a code or your own key lifts it.</div>
+          <div class="plan-usage">
+            <div class="plan-usage-row">
+              <span class="plan-usage-label" data-i18n="license_write">AI corrections &amp; reports</span>
+              <span class="plan-usage-count tnum" id="planWriteText">—</span>
+            </div>
+            <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
+            <div class="plan-usage-row">
+              <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
+              <span class="plan-usage-count tnum" id="planSpeakText">—</span>
+            </div>
+            <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
+            <div class="plan-usage-reset" id="planResetText"></div>
+          </div>
+          <div class="plan-code-row">
+            <div>
+              <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
+              <input type="text" id="planCode" autocomplete="off" spellcheck="false"
+                     placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
+                     data-i18n-placeholder="license_code_placeholder"
+                     aria-label="Activation code">
+            </div>
+            <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
+          </div>
+          <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
+          <div class="t-xs muted" style="margin-top:2px">
+            <span data-i18n="license_own_key">Using your own API key? This app is unlimited for you.</span>
+            <button type="button" class="btn sm gray" style="margin-left:6px" onclick="focusByoCard()" data-i18n="license_own_key_link">Set it up</button>
+          </div>
+        </div>
+
         <div class="grid-12">
           <!-- Exam Timers (white, like Stitch) -->
           <div class="col-7">
@@ -3542,6 +3629,41 @@ const I18N={
     byo_testing:'Testing…',
     byo_test_ok:'Connected · {model}',
     byo_test_fail:'Failed · {code}',
+    license_title:'Subscription',
+    license_chip_free:'Free',
+    license_chip_byo:'Your key',
+    license_chip_pro:'Pro',
+    license_sub:'Your plan decides how much AI you get. Free is here to try the loop; a code or your own key lifts it.',
+    license_write:'AI corrections & reports',
+    license_speak:'Speaking mocks',
+    license_usage:'{n} of {limit} · {window}',
+    license_window_day:'today',
+    license_window_week:'this week',
+    license_window_month:'this month',
+    license_unlimited:'Unlimited',
+    license_reset:'Resets {date}',
+    license_code_label:'Have a code?',
+    license_code_placeholder:'FT-PRO-3M-XXXX-XXXX-XXXX',
+    license_redeem:'Redeem',
+    license_redeem_ok:'Activated · pro until {date}.',
+    license_redeem_bad:'That code is not valid.',
+    license_redeem_rate:'Too many attempts. Try again in {mins} min.',
+    license_code_needed:'Type your code first.',
+    license_own_key:'Using your own API key? This app is unlimited for you.',
+    license_own_key_link:'Set it up',
+    license_limit_title:'You reached your plan limit',
+    license_limit_body:'Your free plan is there to try the loop. Keep going in one of these ways:',
+    license_limit_short:'Plan limit reached — open Plan to keep going.',
+    license_option_free:'Free (you are here)',
+    license_option_free_desc:'3 AI corrections a day and 1 mock a week.',
+    license_option_byo:'Your own key',
+    license_option_byo_desc:'Unlimited for this app: you pay your provider directly.',
+    license_option_pro:'Pro',
+    license_option_pro_desc:'60 corrections a month and 6 speaking mocks. Redeem an activation code.',
+    license_use_key:'🔑 Use my own key',
+    license_have_code:'🎟️ I have a code',
+    license_close:'Not now',
+    license_ia_free:'{n} of {limit} free left · see Plan',
     plan_save:'💾 Save plan',
     plan_restore:'↩ Restore original plan',
     books_title:'Resource Library',
@@ -4002,6 +4124,41 @@ const I18N={
     byo_testing:'Probando…',
     byo_test_ok:'Conectado · {model}',
     byo_test_fail:'Falló · {code}',
+    license_title:'Suscripción',
+    license_chip_free:'Gratis',
+    license_chip_byo:'Tu clave',
+    license_chip_pro:'Pro',
+    license_sub:'Tu plan define cuánta IA tenés. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
+    license_write:'Correcciones y reportes de IA',
+    license_speak:'Simulacros de speaking',
+    license_usage:'{n} de {limit} · {window}',
+    license_window_day:'hoy',
+    license_window_week:'esta semana',
+    license_window_month:'este mes',
+    license_unlimited:'Sin límite',
+    license_reset:'Se renueva {date}',
+    license_code_label:'¿Tenés un código?',
+    license_code_placeholder:'FT-PRO-3M-XXXX-XXXX-XXXX',
+    license_redeem:'Canjear',
+    license_redeem_ok:'Activado · pro hasta {date}.',
+    license_redeem_bad:'Ese código no es válido.',
+    license_redeem_rate:'Demasiados intentos. Probá de nuevo en {mins} min.',
+    license_code_needed:'Escribí tu código primero.',
+    license_own_key:'¿Usás tu propia clave de API? Para vos esta app no tiene límite.',
+    license_own_key_link:'Configurarla',
+    license_limit_title:'Llegaste al límite de tu plan',
+    license_limit_body:'El plan gratis sirve para probar el circuito. Podés seguir de alguna de estas formas:',
+    license_limit_short:'Límite del plan alcanzado — abrí Plan para seguir.',
+    license_option_free:'Gratis (estás acá)',
+    license_option_free_desc:'3 correcciones de IA por día y 1 simulacro por semana.',
+    license_option_byo:'Tu propia clave',
+    license_option_byo_desc:'Sin límite en esta app: le pagás directo a tu proveedor.',
+    license_option_pro:'Pro',
+    license_option_pro_desc:'60 correcciones por mes y 6 simulacros. Canjeá un código de activación.',
+    license_use_key:'🔑 Usar mi propia clave',
+    license_have_code:'🎟️ Tengo un código',
+    license_close:'Ahora no',
+    license_ia_free:'{n} de {limit} gratis · ver Plan',
     plan_save:'💾 Guardar plan',
     plan_restore:'↩ Restaurar plan original',
     books_title:'Biblioteca de recursos',
@@ -6440,6 +6597,15 @@ async function spkStart(){
           if(r.ok){
             const j=await r.json();
             if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
+          }else if(r.status===429){
+            // No mock left in this window: explain the options, then run the
+            // free simulation (no cost) instead of silently doing nothing.
+            let j=null;try{j=await r.json()}catch(e){}
+            if(isPlanLimit(j)){
+              showPlanLimit();
+              spkSetStatus(t('license_limit_short'));
+              spkSetBadge(t('license_limit_short'));
+            }
           }
         }catch(e){}
         if(mode!=='live')fellBack=true;
@@ -6702,6 +6868,10 @@ async function spkReport(){
     let j=null;
     try{j=await r.json()}catch(e){}
     if(!r.ok||!j||!j.bands){
+      if(isPlanLimit(j)){
+        showPlanLimit();
+        throw new Error(t('license_limit_short'));
+      }
       throw new Error((j&&j.error)||('report failed ('+r.status+')'));
     }
     SPK.reportSaved=false;
@@ -7268,6 +7438,7 @@ function renderPlan(){
   document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
   document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
   renderByoSettings();
+  renderPlanCard();
 }
 /* ---------- BRING YOUR OWN KEY (phase 30) ----------
    The key lives in localStorage under `b2first_byo_<userId>`, never in D:
@@ -7380,6 +7551,146 @@ async function testByoConnection(){
   }catch(e){
     if(st)st.textContent=t('byo_test_fail',{code:'network'});
   }
+}
+/* ---------- SUBSCRIPTION PLAN (phase 31) ----------
+   The server owns the plan: GET /api/plan returns the active plan, its limits
+   and the usage in the current window. PLAN_STATE is only a UI cache; it is
+   refreshed on boot, after a redemption and every time a 429 says plan_limit.
+   The limits are rendered up front (the bars), never after failing. */
+var PLAN_STATE=null;
+function planWindowLabel(w){
+  if(w==='month')return t('license_window_month');
+  if(w==='week')return t('license_window_week');
+  return t('license_window_day');
+}
+function planPct(used,limit){
+  if(!(limit>0))return 0;
+  return Math.max(0,Math.min(100,Math.round(used*100/limit)));
+}
+function planDate(value){
+  const d=new Date(value);
+  if(isNaN(d.getTime()))return String(value||'').slice(0,10);
+  try{return d.toLocaleDateString(undefined,{day:'numeric',month:'short'});}
+  catch(e){return String(value||'').slice(0,10)}
+}
+function setPlanBar(id,pct){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.width=pct+'%';
+  el.className=pct>=100?'full':(pct>=75?'warn':'');
+}
+async function loadPlan(){
+  if(!USER||!USER.token)return null;
+  try{
+    const r=await fetch('/api/plan',{headers:authHeaders()});
+    if(r.status===401)return null;
+    if(!r.ok)throw 0;
+    PLAN_STATE=await r.json();
+  }catch(e){return null}
+  renderPlanCard();
+  return PLAN_STATE;
+}
+function renderPlanCard(){
+  const card=document.getElementById('planStatusCard');
+  if(!card)return;
+  const p=PLAN_STATE;
+  const byoKey=!!loadByo().key;
+  const nameEl=document.getElementById('planNameText');
+  if(nameEl){
+    const key=(p&&(p.plan==='pro'||p.plan==='byo'))?('license_chip_'+p.plan)
+      :(byoKey?'license_chip_byo':'license_chip_free');
+    nameEl.setAttribute('data-i18n',key);
+    nameEl.textContent=t(key);
+  }
+  const wEl=document.getElementById('planWriteText');
+  const sEl=document.getElementById('planSpeakText');
+  const resetEl=document.getElementById('planResetText');
+  if(!p){
+    if(wEl)wEl.textContent='—';
+    if(sEl)sEl.textContent='—';
+    if(resetEl)resetEl.textContent='';
+    setPlanBar('planWriteBar',0);setPlanBar('planSpeakBar',0);
+    return;
+  }
+  const wLim=p.limits&&p.limits.writing;
+  const sLim=p.limits&&p.limits.speaking;
+  const usage=p.usage||{};
+  const wUsed=Number(usage.writing)||0;
+  const sUsed=Number(usage.speaking_mocks)||0;
+  if(wEl){
+    wEl.textContent=(byoKey||!wLim)?t('license_unlimited')
+      :t('license_usage',{n:wUsed,limit:wLim.limit,window:planWindowLabel(wLim.window)});
+  }
+  if(sEl){
+    sEl.textContent=(byoKey||!sLim)?t('license_unlimited')
+      :t('license_usage',{n:sUsed,limit:sLim.mocks,window:planWindowLabel(sLim.window)});
+  }
+  setPlanBar('planWriteBar',(byoKey||!wLim)?0:planPct(wUsed,wLim.limit));
+  setPlanBar('planSpeakBar',(byoKey||!sLim)?0:planPct(sUsed,sLim.mocks));
+  if(resetEl){
+    const when=usage.reset_at||p.reset_at;
+    resetEl.textContent=when?t('license_reset',{date:planDate(when)}):'';
+  }
+}
+async function redeemPlanCode(){
+  const input=document.getElementById('planCode');
+  const st=document.getElementById('planRedeemStatus');
+  const btn=document.getElementById('planRedeemBtn');
+  const code=input?input.value.trim():'';
+  if(!code){if(st)st.textContent=t('license_code_needed');return;}
+  if(btn)btn.disabled=true;
+  if(st)st.textContent='…';
+  try{
+    const r=await fetch('/api/plan/redeem',{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({code:code})});
+    let j=null;try{j=await r.json()}catch(e){}
+    if(r.status===401){sessionExpired();return;}
+    if(r.ok&&j&&j.plan){
+      if(input)input.value='';
+      if(st)st.textContent=t('license_redeem_ok',{date:planDate(j.until)});
+      await loadPlan();
+      refreshAll();
+      return;
+    }
+    if(st){
+      if(r.status===429&&j&&j.retry_after){
+        st.textContent=t('license_redeem_rate',{mins:Math.max(1,Math.ceil(j.retry_after/60))});
+      }else{
+        st.textContent=t('license_redeem_bad');
+      }
+    }
+  }catch(e){
+    if(st)st.textContent=t('license_redeem_bad');
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+function isPlanLimit(obj){return !!(obj&&obj.error==='plan_limit')}
+function showPlanLimit(){
+  const ov=document.getElementById('planLimitModal');
+  if(ov)ov.style.display='flex';
+  loadPlan();
+}
+function closePlanLimit(){
+  const ov=document.getElementById('planLimitModal');
+  if(ov)ov.style.display='none';
+}
+function focusByoCard(){
+  closePlanLimit();
+  showView('plan');
+  const card=document.getElementById('byoCard');
+  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
+  const key=document.getElementById('byoKey');
+  if(key)key.focus();
+}
+function planLimitUseKey(){focusByoCard()}
+function planLimitHaveCode(){
+  closePlanLimit();
+  showView('plan');
+  const card=document.getElementById('planStatusCard');
+  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
+  const input=document.getElementById('planCode');
+  if(input)input.focus();
 }
 function savePlan(){
   updateScheduleFromUI();
@@ -9246,7 +9557,13 @@ async function refreshIaQuota(){
     const r=await fetch('/api/account',{headers:authHeaders()});
     if(!r.ok)throw 0;
     const j=await r.json();
-    el.textContent=t('ai_quota_left',{n:Math.max(0,Number(j.ai_left_today)||0)});
+    const lim=PLAN_STATE&&PLAN_STATE.limits&&PLAN_STATE.limits.writing;
+    if(PLAN_STATE&&PLAN_STATE.plan==='free'&&lim){
+      el.textContent=t('license_ia_free',{n:Math.max(0,Number(j.ai_left_today)||0),
+        limit:lim.limit});
+    }else{
+      el.textContent=t('ai_quota_left',{n:Math.max(0,Number(j.ai_left_today)||0)});
+    }
     el.style.display='';
   }catch(e){el.style.display='none'}
 }
@@ -9306,6 +9623,13 @@ async function submitIaWriting(){
       return;
     }
     if(!r.ok||!data||!data.bands){
+      // A plan limit is not a dead end: show the three ways forward.
+      if(isPlanLimit(data)){
+        track('ai_blocked',{code:429});
+        showPlanLimit();
+        setIaState('error',t('license_limit_short'));
+        return;
+      }
       const msg=(data&&data.error)?`Error (${r.status}): ${data.error}`:`Server error (${r.status})`;
       if(r.status===429)track('ai_blocked',{code:429});
       else track('ai_error',{code:r.status||0});
@@ -9801,6 +10125,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     renderUserChip();
     applyTimers();
     refreshAll();
+    loadPlan();
     return;
   }
   USER=loadUser();
@@ -9813,6 +10138,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     syncPull();
     applyTimers();
     refreshAll();
+    loadPlan();
     if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id))showOnboarding();
   }else{
     clearUserSession();
