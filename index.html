@@ -201,6 +201,7 @@ html{
   -webkit-text-size-adjust:100%;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
+  scroll-padding-top:140px;
 }
 body{
   background:var(--bg);
@@ -264,10 +265,10 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 }
 .topbar .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .topbar .brand img{height:28px;width:auto;object-fit:contain}
-.topbar .brand span{font-size:var(--fs-md);font-weight:600;letter-spacing:-.01em;color:var(--txt)}
+.topbar .brand span{font-size:var(--fs-md);font-weight:600;letter-spacing:-.01em;color:var(--txt);white-space:nowrap}
 .topbar .sync-status{
   display:flex;align-items:center;gap:7px;font-size:var(--fs-xs);color:var(--txt-2);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;
 }
 .sync-badge{display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:50%;flex:none;background:var(--on-surface-variant)}
 .sync-badge.state-ok{background:var(--ok)}
@@ -332,6 +333,12 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 
 /* ---------- GRID ---------- */
 .grid-12{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.grid-12>[class^="col-"]{display:flex;flex-direction:column;gap:18px;min-width:0}
+.grid-12>[class^="col-"]>.card,
+.grid-12>[class^="col-"]>.next-session,
+.grid-12>[class^="col-"]>.session-nav{margin-bottom:0}
+#sesA,#sesB,#sesFull{display:flex;flex-direction:column;gap:18px}
+#sesA>.card,#sesB>.card,#sesFull>.card{margin-bottom:0}
 .col-8{grid-column:span 8;min-width:0}
 .col-7{grid-column:span 7;min-width:0}
 .col-6{grid-column:span 6;min-width:0}
@@ -388,7 +395,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 }
 .btn:disabled:hover{transform:none;box-shadow:none}
 .btn.sm{
-  padding:6px 12px;font-size:var(--fs-xs);min-height:32px;
+  padding:6px 12px;font-size:var(--fs-xs);min-height:40px;min-width:40px;
 }
 .btn.sm::after{content:"";position:absolute;inset:-4px;min-width:40px;min-height:40px}
 .btn.sm{position:relative}
@@ -405,6 +412,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .chip:hover{border-color:var(--acc);color:var(--acc-text);background:var(--surface-2)}
 .chip:active{transform:scale(0.96)}
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-primary)}
+.chip-ctl{min-width:40px;justify-content:center;padding:8px 10px}
 .chips{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
 .chip-plan{
   display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);font-weight:600;
@@ -420,6 +428,7 @@ label{
 select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
   width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
   color:var(--txt);padding:10px 12px;font-size:var(--fs-sm);font-family:var(--font);
+  min-height:40px;
   transition:border-color 150ms ease, box-shadow 150ms ease;
 }
 input[type=number],.tnum{font-variant-numeric:tabular-nums}
@@ -626,7 +635,9 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   overflow-x:auto;border-radius:var(--r-panel);background:var(--surface);
   box-shadow:var(--shadow-1);-webkit-overflow-scrolling:touch;
 }
-table{width:100%;border-collapse:collapse;font-size:var(--fs-sm);min-width:480px;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:var(--fs-sm);font-variant-numeric:tabular-nums}
+#logTable,#statsTable{min-width:440px}
+.diag-bar-cell{width:40%;min-width:90px}
 th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);height:44px}
 th{
   color:var(--txt-2);font-weight:600;font-size:var(--fs-xs);text-transform:uppercase;
@@ -638,6 +649,9 @@ tbody tr:hover{background:var(--surface-2)}
 
 /* ---------- BOOKS / MATERIAL ---------- */
 .book{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-bottom:1px solid var(--line)}
+.book>div{min-width:0}
+.book-main{flex:1;min-width:0}
+.book b,.book .meta{overflow-wrap:anywhere}
 .book:last-child{border:none}
 .book .ico{
   width:36px;height:36px;flex:none;border-radius:var(--r-ctl);background:var(--surface-2);
@@ -648,6 +662,9 @@ tbody tr:hover{background:var(--surface-2)}
 .book .meta{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px;line-height:1.45}
 .book .price{color:var(--ok-text);font-weight:600;font-size:var(--fs-sm);white-space:nowrap}
 .book a{color:var(--acc-text);font-size:var(--fs-xs);font-weight:600}
+.book a.btn{color:var(--on-primary)}
+.book a.btn.gray{color:var(--txt)}
+.mat-cell{display:flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px;flex:none}
 .book audio{width:100%;margin-top:8px;height:36px;border-radius:var(--r-ctl)}
 .folder{
   color:var(--acc-text);font-size:var(--fs-md);font-weight:600;margin:16px 0 8px;
@@ -691,6 +708,10 @@ tbody tr:hover{background:var(--surface-2)}
 .next-session .big{font-size:var(--fs-md);font-weight:600;letter-spacing:-.01em;color:var(--txt)}
 .next-session .when{font-size:var(--fs-xs);color:var(--txt-2);margin-top:3px}
 .next-session .badge{background:var(--acc-soft);color:var(--acc-text)}
+.next-session .next-copy{flex:1;min-width:0}
+.next-session .next-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none}
+.card.diag-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.card.diag-banner>div:first-child{flex:1;min-width:180px}
 .rot-card-v2{
   background:var(--surface);border-radius:var(--r-card);padding:20px;color:var(--txt);
   box-shadow:var(--shadow-1);position:relative;overflow:hidden;
@@ -747,7 +768,7 @@ tbody tr:hover{background:var(--surface-2)}
 .rot-queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:4px}
 .rot-queue-label{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2)}
 .rot-queue-sub{font-size:var(--fs-xs);color:var(--acc-text);font-weight:600}
-.rot-queue-track{display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+.rot-queue-track{display:flex;flex-wrap:wrap;gap:5px;overflow-x:visible;padding-bottom:4px}
 .rot-queue-track::-webkit-scrollbar{height:4px}
 .rot-q-item{
   display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;
@@ -775,7 +796,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 
 /* ---------- SESSION NAV / PHASE STEPPER ---------- */
-.session-nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
+.session-nav{display:flex;flex-wrap:wrap;gap:8px;overflow-x:visible;padding-bottom:6px;margin-bottom:18px}
 .session-nav-btn{
   position:relative;
   display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-ctl);
@@ -820,8 +841,9 @@ tbody tr:hover{background:var(--surface-2)}
   padding:8px 12px;font-size:var(--fs-xs);color:var(--warn-text);margin-top:8px;line-height:1.45;
 }
 .metrics-card .metrics-title{font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--txt-2);margin-bottom:8px;font-weight:600}
-.metrics-card .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-sm);color:var(--txt);padding:8px 0}
-.metrics-card .metric-val{font-weight:600;color:var(--acc-text);font-size:var(--fs-sm)}
+.metric-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:var(--fs-sm);color:var(--txt);padding:8px 0}
+.metric-row>span:first-child{min-width:0;overflow-wrap:anywhere}
+.metric-val{font-weight:600;color:var(--acc-text);font-size:var(--fs-sm);font-variant-numeric:tabular-nums;text-align:right;flex:none}
 .metrics-card .metric-divider{height:1px;background:var(--line)}
 
 /* ---------- PLAN CARDS ---------- */
@@ -839,13 +861,12 @@ tbody tr:hover{background:var(--surface-2)}
 .cycle-box{flex:1;background:var(--surface-2);border-radius:var(--r-panel);padding:12px;display:flex;flex-direction:column}
 .cycle-lbl{font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);margin-bottom:3px}
 .cycle-val{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
-.cycle-swap{display:flex;align-items:center;justify-content:center;color:var(--txt-2)}
-.cycle-swap svg{width:20px;height:20px}
+.cycle-swap{display:flex;align-items:center;justify-content:center;color:var(--txt-2);width:20px;height:20px;flex:none}
 .plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
 
 /* language switcher (PLAN) */
 .lang-switch{display:inline-flex;gap:6px;margin-top:12px;padding:4px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface-2)}
-.lang-btn{border:0;background:transparent;color:var(--txt-2);font:inherit;font-size:var(--fs-sm);font-weight:600;padding:7px 16px;border-radius:calc(var(--r-panel) - 3px);cursor:pointer}
+.lang-btn{border:0;background:transparent;color:var(--txt-2);font:inherit;font-size:var(--fs-sm);font-weight:600;min-height:40px;min-width:44px;padding:7px 16px;border-radius:calc(var(--r-panel) - 3px);cursor:pointer}
 .lang-btn:hover{color:var(--txt)}
 .lang-btn.active{background:var(--primary);color:#fff}
 .lang-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
@@ -860,6 +881,8 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 
 /* ---------- ERROR TAXONOMY ---------- */
+.err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.err-head .del{margin-left:auto}
 .err-item{display:flex;flex-direction:column;gap:5px;padding:16px;border-bottom:1px solid var(--line)}
 .err-item:last-child{border-bottom:none}
 .err-item:hover{background:var(--surface-2)}
@@ -875,11 +898,12 @@ footer{
 .stage-badge{
   font-size:var(--fs-xs);font-weight:600;padding:5px 12px;border-radius:999px;
   background:var(--surface-2);color:var(--txt);letter-spacing:.02em;
-  white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;max-width:none;overflow:hidden;text-overflow:ellipsis;
 }
 
 /* ---------- EXAM SELECTION ---------- */
-.exam-select-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:8px}
+.exam-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:8px}
+@media (max-width:560px){.exam-select-grid{grid-template-columns:1fr}}
 .exam-card{
   display:flex;flex-direction:column;gap:8px;text-align:left;
   background:var(--surface);border-radius:var(--r-card);padding:22px;cursor:pointer;
@@ -903,7 +927,7 @@ footer{
 .exam-card-full .exam-card-desc{color:var(--on-primary);opacity:.85}
 
 /* ---------- GATES TABS ---------- */
-.gates-tabs{display:flex;border-bottom:1px solid var(--line);gap:4px;flex-wrap:wrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.gates-tabs{display:flex;border-bottom:1px solid var(--line);gap:4px;flex-wrap:wrap;overflow-x:visible}
 .gates-tab{
   padding:10px 16px;border:none;background:transparent;cursor:pointer;min-height:40px;
   font-family:var(--font);font-size:var(--fs-xs);font-weight:600;letter-spacing:.04em;
@@ -974,16 +998,16 @@ footer{
 .ob-radio-card{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px 12px;cursor:pointer;font-size:var(--fs-sm);color:var(--txt);margin:0;text-transform:none}
 .ob-radio-card input{width:auto;margin:0}
 .ob-radio-card:has(input:checked){border-color:var(--acc);background:var(--acc-soft)}
-.ob-rate-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.ob-rate-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:8px 0}
 .ob-rate-label{font-size:var(--fs-sm);color:var(--txt)}
-.ob-rate{display:flex;gap:6px}
-.ob-rate-btn{width:36px;height:36px;min-height:36px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);font-weight:600;padding:0}
+.ob-rate{display:flex;gap:6px;flex-wrap:wrap}
+.ob-rate-btn{width:40px;height:40px;min-height:40px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);font-weight:600;padding:0}
 .ob-rate-btn[aria-pressed=true]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
 .ob-rate-legend{font-size:var(--fs-xs);color:var(--txt-2);margin:6px 0 10px}
 .ob-chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip-btn{border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:40px;background:var(--surface-2);color:var(--txt);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);font-weight:600}
 .chip-btn[aria-pressed=true]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
-.ob-link{background:none;border:none;color:var(--acc-text);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);padding:4px 0;text-decoration:underline}
+.ob-link{display:inline-flex;align-items:center;justify-content:center;min-height:40px;background:none;border:none;color:var(--acc-text);cursor:pointer;font-family:var(--font);font-size:var(--fs-sm);padding:4px 0;text-decoration:underline}
 .ob-hint{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px}
 .ob-actions{display:flex;justify-content:space-between;gap:8px;margin-top:16px}
 .ob-skip{margin-top:8px}
@@ -1125,6 +1149,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .grid-12{gap:16px}
 }
 @media (max-width:768px){
+  html{scroll-padding-top:76px}
   body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))}
   .content main{padding:16px clamp(16px,4vw,32px) 40px}
 
@@ -1132,7 +1157,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .topbar{padding:10px clamp(16px,4vw,32px);gap:8px;flex-wrap:nowrap}
   .topbar .sync-status{font-size:var(--fs-xs);max-width:130px}
   .topbar .top-actions{gap:6px}
-  .stage-badge{max-width:110px}
+  .stage-badge{max-width:180px}
   .theme-toggle{width:40px;height:40px}
   .topbar .user-chip .avatar{width:28px;height:28px}
 
@@ -1186,17 +1211,50 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .task .task-meta{margin-left:0;width:100%;justify-content:space-between;margin-top:6px}
 
   /* exam */
-  .exam-select-grid{grid-template-columns:1fr;gap:12px}
+  .exam-select-grid{gap:12px}
   .exam-card{padding:18px 16px}
 
   /* stats */
-  .stat-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-grid{gap:10px}
   .stat-card{padding:14px}
 
   .rot-cycles{flex-direction:column;gap:8px}
-  #bookCats{overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch}
-  #bookCats::-webkit-scrollbar{display:none}
+  #bookCats{flex-wrap:wrap;white-space:normal;overflow-x:visible}
   footer{text-align:center;padding:12px clamp(16px,4vw,32px)}
+
+  /* no sideways scrolling inside cards: let these rows wrap instead */
+  .session-nav{flex-wrap:wrap;overflow-x:visible}
+  .rot-queue-track{flex-wrap:wrap;overflow-x:visible}
+  .gates-tabs{flex-wrap:wrap;overflow-x:visible}
+
+  /* session header: duration no longer floats to the left when it wraps */
+  .sesion-card .sesion-head{flex-direction:column;align-items:stretch;gap:10px}
+  .sesion-dur{display:flex;align-items:baseline;gap:8px;text-align:left}
+  .sesion-dur .dur-label,.sesion-dur .dur-val{display:inline;margin:0}
+
+  /* tables keep their own scroller only when the columns cannot shrink */
+  th,td{padding:8px 10px}
+}
+@media (max-width:520px){
+  /* three-step grids would leave one orphan card: stack them deliberately */
+  .phase-stepper{grid-template-columns:1fr}
+  .card.diag-banner{flex-direction:column;align-items:stretch}
+  .card.diag-banner .btn{width:100%}
+  #diagPartsTable th,#diagPartsTable td{padding:8px 6px}
+  .diag-bar-cell{min-width:70px;width:34%}
+  .book.book-material{flex-wrap:wrap}
+  .book-material .book-main{flex:1 1 calc(100% - 48px)}
+  .book-material .mat-cell{flex:1 1 100%;flex-direction:row;align-items:center;justify-content:flex-end;margin-left:0;gap:10px}
+  /* let the wide tables shrink to the card width; only the log's action
+     column needs a few pixels of the wrapper's own scroll */
+  #logTable,#statsTable{min-width:0;font-size:12px}
+  #logTable th,#logTable td,#statsTable th,#statsTable td{padding:4px;font-size:12px}
+  #logTable th,#statsTable th{letter-spacing:0}
+  #statsTable td:first-child,#logTable td:nth-child(2){overflow-wrap:anywhere}
+}
+@media (max-width:480px){
+  /* the stage badge competes with the brand and the theme toggle */
+  .topbar .stage-badge{display:none}
 }
 @media (max-width:400px){
   .stat-grid{grid-template-columns:1fr}
@@ -2496,19 +2554,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="stat-grid">
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">monitoring</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-prog"/></svg>
             <span class="stat-card-label" data-i18n="prog_global_avg">Global Average</span>
             <span class="stat-card-val" id="pGlobal">—</span>
             <div class="stat-bar"><div class="stat-bar-fill" id="pGlobalBar" style="width:0%"></div></div>
           </div>
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">military_tech</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"/></svg>
             <span class="stat-card-label" data-i18n="prog_best_part">Best Part Score</span>
             <span class="stat-card-val" id="pBest">—</span>
             <span class="stat-card-sub" id="pBestName">—</span>
           </div>
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">hourglass_top</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-exam"/></svg>
             <span class="stat-card-label" data-i18n="prog_total_time">Total Study Time</span>
             <span class="stat-card-val" id="pTime">0</span>
             <span class="stat-card-sub" data-i18n="prog_logged_min">logged minutes</span>
@@ -2561,19 +2619,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="stat-grid">
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">analytics</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-charts"/></svg>
             <span class="stat-card-label" data-i18n="charts_readiness">Overall Readiness</span>
             <span class="stat-card-val" id="gReadiness">—</span>
             <div class="stat-bar"><div class="stat-bar-fill" id="gReadinessBar" style="width:0%"></div></div>
           </div>
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">assignment_turned_in</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"/></svg>
             <span class="stat-card-label" data-i18n="charts_mocks">Mock Exams Taken</span>
             <span class="stat-card-val" id="gMocks">0</span>
             <span class="stat-card-sub" data-i18n="charts_mocks_sub">mocks logged</span>
           </div>
           <div class="stat-card">
-            <span class="stat-ico material-symbols-outlined">local_fire_department</span>
+            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-today"/></svg>
             <span class="stat-card-label" data-i18n="charts_streak">Study Streak</span>
             <span class="stat-card-val" id="gRacha">0</span>
             <span class="stat-card-sub" data-i18n="charts_streak_sub">consecutive days</span>
@@ -2814,7 +2872,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
                 </div>
-                <span class="cycle-swap material-symbols-outlined">swap_horiz</span>
+                <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
                 <div class="cycle-box">
                   <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
                   <span class="cycle-val" id="rotWkBSummary">Full W + Full Sp</span>
@@ -2884,8 +2942,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <h2 data-i18n="books_all">🛒 All Recommended Books (Verified Options)</h2>
           <div class="sub" data-i18n-html="books_all_sub">Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.</div>
           <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" data-i18n-placeholder="books_search_ph" style="flex:1">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" data-i18n-placeholder="books_search_ph" style="flex:1;min-width:160px">
             <select id="bookSort" style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px">
               <option value="cat" data-i18n="books_sort_cat">Sort: Category</option>
               <option value="asc" data-i18n="books_sort_asc">Price: Low to High ↑</option>
@@ -7525,10 +7583,12 @@ function renderErrs(){
     const tax=e.code||e.tax||'G-ERR';
     const desc=diagRunning&&e.src==='diag'?`Diagnostic item Part ${e.part||''}`:(e.desc||e.note||'');
     return `<div class="card" style="padding:13px 14px">
-    <span class="pill ${tax}">${tax}</span> <span class="t-xs muted">${fmtDate(e.date)}</span>
+    <div class="err-head">
+      <span class="pill ${tax}">${tax}</span> <span class="t-xs muted">${fmtDate(e.date)}</span>
+      <button class="del" onclick="delErr(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+    </div>
     <div style="margin-top:7px;font-size:14px">${esc(desc)}</div>
     ${e.fix?`<div class="t-xs" style="color:var(--ok-text);margin-top:5px">→ ${esc(e.fix)}</div>`:''}
-    <button class="del" style="float:right" onclick="delErr(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
   </div>`;
   }).join('');
 }
@@ -7720,10 +7780,10 @@ let BOOK_CAT=''; // active category filter ('' = all)
 function matCell(m){
   const st=D.mat&&D.mat[m.rel];
   const badge=st?`<div class="meta" style="text-align:center;color:var(--acc-text);font-weight:600">✓ ${st.n}×<br><span class="t-xs muted">${fmtDate(st.last)}</span></div>`:`<div class="meta" style="text-align:center;color:var(--dim)">0×</div>`;
-  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px">
+  return `<div class="mat-cell">
     <div style="display:flex;gap:4px">
-      <button class="chip" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
-      <button class="chip" onclick="matUndo(this)" data-rel="${esc(m.rel)}" title="Undo (-1)">↺</button>
+      <button class="chip chip-ctl" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
+      <button class="chip chip-ctl" onclick="matUndo(this)" data-rel="${esc(m.rel)}" title="Undo (-1)">↺</button>
     </div>${badge}</div>`;
 }
 function matDone(el){const r=el.dataset.rel;D.mat=D.mat||{};D.mat[r]=D.mat[r]||{n:0,last:''};D.mat[r].n++;D.mat[r].last=today();save();renderMaterial()}
@@ -7739,8 +7799,8 @@ function renderMaterial(){
     :'')
   + Object.keys(groups).map(f=>{
     const items=groups[f].map(m=>m.ext==='AUDIO'
-      ?`<div class="book"><div class="ico">🎧</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div>${matCell(m)}</div>`
-      :`<div class="book"><div class="ico">📄</div><div style="flex:1"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Open PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Download</a></div>${matCell(m)}</div>`).join('');
+      ?`<div class="book book-material"><div class="ico">🎧</div><div class="book-main"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><audio controls preload="none" src="${m.href}"></audio></div>${matCell(m)}</div>`
+      :`<div class="book book-material"><div class="ico">📄</div><div class="book-main"><b>${esc(m.name)}</b><div class="meta">${fmtSize(m.size)}</div><a href="${m.href}" target="_blank" class="btn sm" style="text-decoration:none;margin-top:6px">Open PDF</a> <a class="dl" href="${m.href}" download style="margin-left:10px">Download</a></div>${matCell(m)}</div>`).join('');
     return `<h3 class="folder">${esc(f)} <span class="t">${groups[f].length}</span></h3>${items}`;
   }).join('');
 }
@@ -8296,13 +8356,13 @@ function renderToday(){
   if(todaySlotIdx!==-1){
     const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
     defaultStudio=slotInfo.session.studio;
-    nb.innerHTML=`<div class="big">${t('rot_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('rot_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('rot_studio_open')}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('rot_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_fast_forward')}">${t('rot_fast_forward')}</button></div>`;
+    nb.innerHTML=`<div class="next-copy"><div class="big">${t('rot_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('rot_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('rot_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('rot_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_fast_forward')}">${t('rot_fast_forward')}</button></div>`;
   }else{
     const nextSlot=getNextScheduledSession(d);
     if(nextSlot){
       defaultStudio=nextSlot.session.studio;
       const nextTitle=nextSlot.sessionIdx===0?t('rot_ses_a_rue'):nextSlot.sessionIdx===1?t('rot_ses_b_l'):nextSlot.sessionIdx===2?t('rot_ses_a_w',{genre:nextSlot.activeWritingGenre}):t('rot_ses_b_sp');
-      nb.innerHTML=`<div class="big">${t('rot_no_session_today')}</div><div class="when">${t('rot_next')} <b>${dayFull(nextSlot.day)} (${t('rot_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('rot_cycle')} <b>${weekLabel}</b> · ${t('rot_active_writing')} <b>${wT}</b>. ${t('rot_switch_sessions')}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="doNextSessionNow()">${t('rot_do_next')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_shift')}">${t('rot_shift')}</button></div>`;
+      nb.innerHTML=`<div class="next-copy"><div class="big">${t('rot_no_session_today')}</div><div class="when">${t('rot_next')} <b>${dayFull(nextSlot.day)} (${t('rot_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('rot_cycle')} <b>${weekLabel}</b> · ${t('rot_active_writing')} <b>${wT}</b>. ${t('rot_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="doNextSessionNow()">${t('rot_do_next')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_shift')}">${t('rot_shift')}</button></div>`;
     }else{
       nb.innerHTML=`<div class="big">${t('rot_no_session')}</div><div class="when">${t('rot_configure_days')}</div>`;
     }
@@ -8728,7 +8788,14 @@ function renderMetrics(){
     curEl.textContent=(isWkA?t('rot_val_a',{week:t('week_a')}):t('rot_val_b',{week:t('week_b'),genre:wT}));
   }
   // --- Progress (stat cards) ---
-  const pctOf=e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.type==='fw'?(e.s1+e.s2)/40*100:e.type==='sp'?null:e.correct/e.total*100;
+  const pctOf=e=>{
+    let v;
+    if(e.type==='w')v=(e.score!==undefined?e.score:e.total)/20*100;
+    else if(e.type==='fw')v=(e.s1+e.s2)/40*100;
+    else if(e.type==='sp')v=null;
+    else v=e.correct/e.total*100;
+    return (typeof v==='number'&&isFinite(v))?v:null;
+  };
   const vals=log.map(pctOf).filter(v=>v!==null);
   const gAvg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
   set('pGlobal',gAvg!==null?gAvg+'%':'—');
@@ -9132,7 +9199,7 @@ function renderDiag(){
       return `<tr>
         <td><b>Part ${p}</b> — ${esc(partName(p))}</td>
         <td class="tnum" style="font-weight:600">${bp.ok}/${bp.n}</td>
-        <td style="min-width:140px">
+        <td class="diag-bar-cell">
           <div class="diag-progress"><div class="diag-progress-fill" style="width:${ratioPct}%;background:${barCol}"></div></div>
         </td>
       </tr>`;
