@@ -141,6 +141,18 @@
     {
       "id": "26",
       "status": "done"
+    },
+    {
+      "id": "30",
+      "status": "pending"
+    },
+    {
+      "id": "31",
+      "status": "pending"
+    },
+    {
+      "id": "32",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
