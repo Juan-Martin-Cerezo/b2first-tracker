@@ -35,7 +35,7 @@ VIEWPORTS = [
 # the two, so every page view is measured twice.
 PAGE_VIEWS = [
     "today", "plan", "log", "stats", "errors", "books",
-    "material", "speaking", "exam", "diagnostic",
+    "material", "speaking", "exam", "diagnostic", "practice",
 ]
 OVERLAY_VIEWS = ["onboarding", "auth"]
 
@@ -258,6 +258,8 @@ def show(pg, view, lang):
         goto_view(pg, "exam")
     elif view == "diagnostic":
         goto_view(pg, "diag")
+    elif view == "practice":
+        goto_view(pg, "practice")
     elif view == "onboarding":
         pg.evaluate("showOnboarding()")
         pg.wait_for_timeout(200)
