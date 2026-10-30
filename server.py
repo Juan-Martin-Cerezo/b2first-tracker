@@ -1013,13 +1013,18 @@ class H(BaseHTTPRequestHandler):
             user_id = re.search(r"(?:^|&)user=([^&]+)", qs)
             user_id = unquote(user_id.group(1)) if user_id else "owner"
             # Validate the session: a present token must be valid and belong to the
-            # user; with no token only the owner is allowed (backwards compat).
+            # user; with no token only a DIRECT local request may touch the owner's data
+            # (backwards compat for the owner's own machine). Any proxied request — the
+            # public Funnel always sets X-Forwarded-For — must authenticate, otherwise a
+            # stranger could read or overwrite the owner's progress with no credentials.
             tok = self._bearer()
             uid, auth_err = self._auth() if tok else (None, None)
             if tok and not uid:
                 self._send_json(401, {"error": auth_err or "invalid session"}); return
-            if not tok and user_id != "owner":
-                self._send_json(401, {"error": "invalid session"}); return
+            if not tok:
+                proxied = bool(self.headers.get("X-Forwarded-For") or self.headers.get("X-Real-IP"))
+                if user_id != "owner" or proxied:
+                    self._send_json(401, {"error": "session required"}); return
             if uid is not None and uid != user_id:
                 self._send_json(403, {"error": "not authorized for this user"}); return
             if self.command == "GET":
