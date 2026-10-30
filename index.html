@@ -1574,8 +1574,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <p class="page-sub" id="userSub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="openSoloModal()">Log single part</button>
-            <button class="btn" onclick="document.getElementById('sessionNav').scrollIntoView({behavior:'smooth'})">Start session</button>
+            <button class="btn gray" onclick="openSoloModal()" data-i18n="today_log_single">Log single part</button>
+            <button class="btn" onclick="document.getElementById('sessionNav').scrollIntoView({behavior:'smooth'})" data-i18n="today_start_session">Start session</button>
           </div>
         </div>
 
@@ -1584,17 +1584,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-8">
             <div class="card diag-banner" id="diagBanner" style="display:none">
               <div>
-                <div class="t-md" style="font-weight:600">Initial diagnostic · 10 min · 12 questions</div>
-                <div class="t-xs diag-banner-sub">Find your weak spots across the 7 Reading &amp; Use of English parts to personalise your study.</div>
+                <div class="t-md" style="font-weight:600" data-i18n="today_diag_title">Initial diagnostic · 10 min · 12 questions</div>
+                <div class="t-xs diag-banner-sub" data-i18n="today_diag_sub">Find your weak spots across the 7 Reading &amp; Use of English parts to personalise your study.</div>
               </div>
-              <button type="button" class="btn ok" id="diagBannerBtn" onclick="openDiagAndStart()">Start</button>
+              <button type="button" class="btn ok" id="diagBannerBtn" onclick="openDiagAndStart()" data-i18n="common_start">Start</button>
             </div>
             <div class="next-session" id="nextBox"></div>
             <div class="card streak-card" id="streakCard"></div>
             <div class="card" id="examCountdown"></div>
             <div class="card">
-              <h2>Recent sessions</h2>
-              <div class="sub">Your last logged entries, newest first.</div>
+              <h2 data-i18n="today_recent">Recent sessions</h2>
+              <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
               <div id="recentList"></div>
             </div>
 
@@ -2155,12 +2155,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon">Full Simulation</span>
-                    <div class="sesion-title">🧪 Full Mock Exam (All 4 Papers)</div>
-                    <div class="sesion-sub">Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).</div>
+                    <span class="badge mon" data-i18n="full_simulation">Full Simulation</span>
+                    <div class="sesion-title" data-i18n="full_mock_title">🧪 Full Mock Exam (All 4 Papers)</div>
+                    <div class="sesion-sub" data-i18n="full_mock_sub">Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Total Time</span>
+                    <span class="dur-label" data-i18n="total_time">Total Time</span>
                     <span class="dur-val">209 MIN</span>
                   </div>
                 </div>
@@ -2288,11 +2288,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card rot-card-v2">
               <div class="rot-v2-header">
                 <div class="rot-v2-badge-row">
-                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> AUTOMATED CYCLE</span>
+                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> <span data-i18n="rot_automated">AUTOMATED CYCLE</span></span>
                   <span class="rot-week-pill" id="rotDay">WEEK A</span>
                 </div>
-                <h3 class="rot-v2-title">Fortnightly Rotation Matrix</h3>
-                <p class="rot-v2-desc">Systematic alternating schedule ensuring comprehensive coverage of all exam components.</p>
+                <h3 class="rot-v2-title" data-i18n="rot_title">Fortnightly Rotation Matrix</h3>
+                <p class="rot-v2-desc" data-i18n="rot_desc">Systematic alternating schedule ensuring comprehensive coverage of all exam components.</p>
               </div>
 
               <!-- Active 2-Week Plan Overview -->
@@ -2345,12 +2345,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <!-- Writing Auto-Queue Visual Track -->
               <div class="rot-queue-section">
                 <div class="rot-queue-head">
-                  <span class="rot-queue-label">AUTOMATIC WRITING QUEUE (WEEK B)</span>
+                  <span class="rot-queue-label" data-i18n="rot_writing_queue">AUTOMATIC WRITING QUEUE (WEEK B)</span>
                   <span class="rot-queue-sub" id="rotQueueSub">Active genre: Article</span>
                 </div>
                 <div class="rot-queue-track" id="rotTimeline"></div>
                 <div style="margin-top:9px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:7px">
-                  <label for="ovW" style="font-family:var(--mono);font-size:12px;color:var(--on-hero-sub2);text-transform:uppercase;margin:0">Override writing genre:</label>
+                  <label for="ovW" style="font-family:var(--mono);font-size:12px;color:var(--on-hero-sub2);text-transform:uppercase;margin:0" data-i18n="rot_override_genre">Override writing genre:</label>
                   <select id="ovW" onchange="setOv('w',this.value)" style="background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.20);color:var(--on-hero);font-size:12px;padding:3px 8px;border-radius:4px"></select>
                 </div>
               </div>
@@ -2358,25 +2358,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <!-- Schedule countdown info -->
               <div class="rot-meta-bar">
                 <div>
-                  <span class="rot-meta-lbl">CYCLE FOCUS</span>
+                  <span class="rot-meta-lbl" data-i18n="rot_cycle_focus">CYCLE FOCUS</span>
                   <span class="rot-meta-val" id="rotVal">Week A: Full R&amp;UoE + Full Listening</span>
                 </div>
                 <div style="text-align:right">
-                  <span class="rot-meta-lbl">NEXT SWITCH</span>
+                  <span class="rot-meta-lbl" data-i18n="rot_next_switch">NEXT SWITCH</span>
                   <span class="rot-meta-val" id="rotDayNext">Monday</span>
                 </div>
               </div>
             </div>
 
             <div class="card metrics-card">
-              <h4 class="metrics-title">Weekly Metrics</h4>
-              <div class="metric-row"><span>Total hours</span><span class="metric-val" id="mHoras">—</span></div>
+              <h4 class="metrics-title" data-i18n="metric_title">Weekly Metrics</h4>
+              <div class="metric-row"><span data-i18n="metric_hours">Total hours</span><span class="metric-val" id="mHoras">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
+              <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
+              <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span>Logs</span><span class="metric-val" id="mRegs">—</span></div>
+              <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
             </div>
           </div>
         </div>
@@ -3127,7 +3127,341 @@ const I18N={
     plan_language_chip:'Interface',
     lang_en:'English',
     lang_es:'Español',
-    footer_privacy:'Privacy'
+    footer_privacy:'Privacy',
+    today_log_single:'Log single part',
+    today_start_session:'Start session',
+    today_diag_title:'Initial diagnostic · 10 min · 12 questions',
+    today_diag_sub:'Find your weak spots across the 7 Reading & Use of English parts to personalise your study.',
+    today_recent:'Recent sessions',
+    today_recent_sub:'Your last logged entries, newest first.',
+    rot_title:'Fortnightly Rotation Matrix',
+    rot_desc:'Systematic alternating schedule ensuring comprehensive coverage of all exam components.',
+    rot_automated:'AUTOMATED CYCLE',
+    rot_week_a:'WEEK A',
+    rot_week_b:'WEEK B',
+    rot_active_now:'ACTIVE NOW',
+    rot_active:'ACTIVE',
+    rot_upcoming:'UPCOMING',
+    rot_today:'TODAY',
+    rot_writing_queue:'AUTOMATIC WRITING QUEUE (WEEK B)',
+    rot_override_genre:'Override writing genre:',
+    rot_cycle_focus:'CYCLE FOCUS',
+    rot_next_switch:'NEXT SWITCH',
+    rot_active_genre:'Active genre: {genre}',
+    rot_no_session_today:'No session scheduled today',
+    rot_no_session:'No session scheduled',
+    rot_configure_days:'Please configure your study days in PLAN.',
+    rot_open_studio:'Open studio',
+    rot_fast_forward:'Fast-forward (+1)',
+    rot_shift:'Shift (+1)',
+    rot_do_next:'Do next session now',
+    rot_active_today:'Active today',
+    rot_monday_in:'Monday (in {days} days)',
+    rot_monday_in_one:'Monday (in 1 day)',
+    rot_schedule:'Schedule:',
+    rot_studio_open:'Studio is open below.',
+    rot_next:'Next:',
+    rot_in_days:'in {days}d',
+    rot_cycle:'Cycle:',
+    rot_active_writing:'Active Writing genre:',
+    rot_switch_sessions:'You can switch sessions above.',
+    rot_ses_a_rue:"Session A (Full Reading & UoE 50')",
+    rot_ses_b_l:"Session B (Full Listening 40')",
+    rot_ses_a_w:'Session A (Full Writing — {genre})',
+    rot_ses_b_sp:"Session B (Full Speaking 60')",
+    rot_val_a:'{week}: Full R&UoE + Full Listening',
+    rot_val_b:'{week}: Full Writing ({genre}) + Full Speaking',
+    metric_title:'Weekly Metrics',
+    metric_hours:'Total hours',
+    metric_uoe:'UoE accuracy',
+    metric_streak:'Daily streak',
+    metric_logs:'Logs',
+    recent_empty:'Nothing logged yet. Your first session takes 15 seconds.',
+    recent_quick:'Quick log',
+    exam_countdown:'Exam countdown',
+    exam_countdown_sub:'Your next official exam date.',
+    exam_days_to_go:'{days} {unit} to go · {date}',
+    exam_day:'day',
+    exam_days:'days',
+    exam_remove:'Remove date',
+    exam_no_date:'No exam date set. Add one to get a countdown (exam days never break your streak).',
+    exam_set_date:'Set your exam date',
+    exam_date_label:'Exam date',
+    exam_save_date:'Save date',
+    session_mock:'Mock Exam',
+    full_mock_title:'Full Mock Exam (All 4 Papers)',
+    full_mock_sub:'Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).',
+    full_simulation:'Full Simulation',
+    total_time:'Total Time',
+    today_title_fmt:'Today · {name}',
+    today_sub_fmt:'Personalized study plan for {name} · {stage} · Schedule: {sched}.',
+    today_kicker_fmt:'[ STUDENT_PORTAL · {name} ]',
+    stage_0:'Stage 0 — Foundations',
+    stage_1:'Stage 1 — Precision',
+    stage_2:'Stage 2 — Mastery',
+    stage_n:'Stage {n}',
+    week_a:'Week A',
+    week_b:'Week B',
+    day_sunday:'Sunday',
+    day_monday:'Monday',
+    day_tuesday:'Tuesday',
+    day_wednesday:'Wednesday',
+    day_thursday:'Thursday',
+    day_friday:'Friday',
+    day_saturday:'Saturday',
+    today_nav_rue:'Full R&UoE',
+    today_nav_listening:'Full Listening',
+    today_nav_writing:'Full Writing',
+    today_nav_speaking:'Full Speaking',
+    exam_title:'Exam Simulation',
+    exam_sub:'Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.',
+    exam_desc_rue:'7 parts. Tests your reading comprehension and grammar proficiency.',
+    exam_desc_w:'2 parts. Essay and a choice of article, email, letter, report or review.',
+    exam_desc_l:'4 parts. Tests ability to follow and understand spoken English.',
+    exam_desc_full:'Complete sequential run of all three written papers without breaks.',
+    exam_full_title:'Full B2 First Exam',
+    exam_in_progress:'In Progress',
+    exam_manual:'Or pick the paper manually',
+    exam_log_result:'📝 Log your result',
+    exam_save_result:'✔ Save result',
+    parts_title:'Practice by Part',
+    parts_sub:'The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.',
+    parts_total:'Total Parts',
+    prog_title:'Progress',
+    prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
+    prog_global_avg:'Global Average',
+    prog_best_part:'Best Part Score',
+    prog_total_time:'Total Study Time',
+    prog_logged_min:'logged minutes',
+    prog_matrix:'🧗 Progression Matrix',
+    prog_matrix_sub:'Complete all criteria within a stage to advance.',
+    prog_advance:'⬆ Advance to the next stage',
+    prog_stage_down:'⬇ Go back a stage',
+    prog_export:'💾 Export data',
+    prog_import:'📥 Import data',
+    prog_export_help:'Export the JSON to back up or transfer your data from PC to phone (and vice versa).',
+    prog_history:'History',
+    prog_history_sub:'Everything logged, newest to oldest.',
+    th_date:'Date',
+    th_module:'Module',
+    th_score:'Score',
+    th_min:'Min',
+    prog_stats:'📈 Stats by exercise',
+    prog_stats_sub:'How many times you practiced each part and how you did. Only logged exercises appear.',
+    th_exercise:'Exercise',
+    th_times:'Times',
+    th_average:'Average',
+    th_best:'Best',
+    th_last:'Last',
+    charts_title:'Performance Analytics',
+    charts_sub:'Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.',
+    charts_readiness:'Overall Readiness',
+    charts_mocks:'Mock Exams Taken',
+    charts_mocks_sub:'mocks logged',
+    charts_streak:'Study Streak',
+    charts_streak_sub:'consecutive days',
+    charts_evolution:'📈 Temporal Evolution',
+    charts_evolution_sub:'Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.',
+    charts_by_part:'📊 By Part & Exercise',
+    charts_by_part_sub:'Average % of each exam part — red bars are your weakest.',
+    charts_errors:'🧩 Errors by type',
+    charts_errors_sub:'Accumulated root-cause taxonomy.',
+    charts_consistency:'🔥 Weekly Consistency',
+    err_title:'Error Taxonomy',
+    err_sub:'Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.',
+    err_root_log:'🔖 Root-Cause Log',
+    err_root_sub:'Every logged mistake gets you closer to Grade A.',
+    err_patterns:'🧩 Failure Patterns',
+    err_patterns_sub:'Accumulated distribution of your taxonomy.',
+    err_log:'➕ Log Error',
+    err_log_sub:'Root-cause classification.',
+    err_code:'Code',
+    err_description:'Description',
+    err_desc_ph:"e.g. I didn't apply inversion with 'Seldom'",
+    err_fix:'Correction / Notes',
+    err_fix_ph:'e.g. review inversion rule',
+    err_save:'💾 Save error',
+    err_code_lgap:'L-GAP (Lexical gap)',
+    err_code_gerr:'G-ERR (Misapplied rule)',
+    err_code_tmis:'T-MIS (Textual distractor)',
+    err_code_tlim:'T-LIM (Rush / attention)',
+    plan_title:'Plan Configuration',
+    plan_sub:'Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.',
+    plan_edit_intake:'✏️ Edit my intake',
+    plan_walkthrough:'🎬 Show the walkthrough again',
+    plan_export_json:'💾 Export JSON',
+    plan_import_backup:'📥 Import Backup',
+    plan_week_plan:'Week plan',
+    plan_regenerate:'Regenerate',
+    plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no AI).',
+    plan_why:'Why this?',
+    plan_exam_timers:'🧪 Exam Timers',
+    plan_fce_format:'FCE Format',
+    plan_official_durations:'Official durations for each paper.',
+    plan_uoe_focus:'UoE Focus (min)',
+    plan_listening_min:'Listening (min)',
+    plan_plan_writing:'Plan writing (min)',
+    plan_write_min:'Write (min)',
+    plan_review_min:'Review (min)',
+    plan_speaking_p2:'Speaking Part 2 (sec)',
+    plan_speaking_p34:'Speaking Parts 3-4 (sec)',
+    plan_wmin:'Writing — min words',
+    plan_wmax:'Writing — max words',
+    plan_streak_freeze:'Streak freeze / week (🛡)',
+    plan_week_goal:'Weekly goal (days/week)',
+    plan_thresholds:'🎯 Thresholds (Gates)',
+    plan_thresholds_sub:'Numerical criteria per stage.',
+    plan_stage0:'Stage 0',
+    plan_stage1:'Stage 1',
+    plan_stage2:'Stage 2',
+    plan_g_e0w:'Essays score ≥',
+    plan_g_e0u:'UoE P4 % ≥',
+    plan_g_e0l:'L P2 err ≤',
+    plan_g_e1w:'Texts score ≥',
+    plan_g_e1u:'UoE overall % ≥',
+    plan_g_e1l:'L score ≥',
+    plan_g_e2r:'R&UoE % ≥',
+    plan_g_e2w:'Full W score ≥',
+    plan_g_e2l:'L ≥ (N tests)',
+    plan_sessions:'🗓 Session Schedules & Frequency',
+    plan_add_day:'+ Add Session Day',
+    plan_sessions_sub:'Configure as many session days and times as you want. The 4-step core cycle (R&UoE → Listening → Writing → Speaking) adapts automatically.',
+    plan_shift:'Session Shift / Fast-Forward',
+    plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
+    plan_advance1:'⚡ +1 Advance',
+    plan_reset0:'↩ Reset (0)',
+    plan_rotation:'🔁 Continuous Rotation & Upcoming Slots',
+    plan_rotation_chip:'4-Session Loop',
+    plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
+    plan_week_a_odd:'Week A (Odd)',
+    plan_week_b_even:'Week B (Even)',
+    plan_uoe_alt:'UoE Alternative',
+    plan_rotation_order:'The order you rotate exercises component by component:',
+    plan_rue_cycle:'R&UoE (parts 1-7, in order)',
+    plan_w_cycle:'Writing (types, in order)',
+    plan_l_cycle:'Listening (parts 1-4)',
+    plan_sp_cycle:'Speaking (parts 1-4)',
+    plan_ai:'✨ AI writing corrector (Gemini)',
+    plan_ai_chip:'Local Device Key',
+    plan_ai_sub:'Your key is stored only on this device and travels to the local server.',
+    plan_gemini_key:'Gemini API Key (D.settings.aiKey)',
+    plan_save:'💾 Save plan',
+    plan_restore:'↩ Restore original plan',
+    books_title:'Resource Library',
+    books_sub:'PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.',
+    books_online:'🌐 Online Practice (1-Click — Free)',
+    books_online_sub:'Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).',
+    books_material:'📥 Downloaded Material (PDFs & Audio)',
+    books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
+    books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
+    books_all:'🛒 All Recommended Books (Verified Options)',
+    books_all_sub:'Filter by category + real-time search + sort by price. With answers = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.',
+    books_search_ph:'🔍 Search books... (e.g. practice, grammar, fce)',
+    books_sort_cat:'Sort: Category',
+    books_sort_asc:'Price: Low to High ↑',
+    books_sort_desc:'Price: High to Low ↓',
+    ai_title:'Writing corrector',
+    ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
+    ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
+    ai_no_key:'Set your API key in the PLAN tab to use the corrector. Get one for free at',
+    ai_kind:'Text type (kind)',
+    ai_text:'Your text in English',
+    ai_text_ph:'Write or paste your Essay, Article, Report, Review or Email here (140–190 words)...',
+    ai_words:'Words:',
+    ai_target_words:'Target: 140–190 words',
+    ai_target_short:'(target 140–190)',
+    ai_submit:'Correct it',
+    ai_correcting:'correcting…',
+    ai_failed:'Failed to correct the text.',
+    ai_result:'Cambridge B2 First result',
+    ai_quotes:'Student quotes',
+    ai_rewrite:'3 improved sentences (rewrite)',
+    ai_idle:'idle',
+    diag_title:'Initial diagnostic',
+    diag_sub:'10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.',
+    diag_total_time:'Total time',
+    solo_title:'Log Single Part Practice',
+    solo_sub:'Extra practice done outside scheduled sessions',
+    solo_skill:'Skill / Component',
+    solo_ue:'📖 Reading & Use of English (Parts 1–7)',
+    solo_listening:'🎧 Listening (Parts 1–4)',
+    solo_writing:'✍️ Writing (Individual Text / Genre)',
+    solo_speaking:'🗣️ Speaking (Parts 1–4)',
+    solo_part:'Part / Exercise',
+    solo_correct:'Correct',
+    solo_total:'Total Questions',
+    solo_minutes:'Minutes Spent',
+    solo_source:'Source / Book',
+    solo_ref:'Reference / Notes',
+    solo_ref_ph:'e.g. Unit 3 / Test 2',
+    solo_log_error:'Log an error for root-cause analysis',
+    solo_err_code:'Error Code',
+    solo_err_desc:'Mistake Description',
+    solo_save:'✔ Save Solo Practice',
+    solo_source_sample:'Official Sample Paper',
+    solo_source_ptplus:'Practice Tests Plus',
+    solo_source_fce6:'FCE 6',
+    solo_source_gv:'Grammar & Vocabulary',
+    solo_source_flojoe:'Flo-Joe (online)',
+    solo_source_examenglish:'ExamEnglish (online)',
+    solo_source_testenglish:'Test-English (online)',
+    solo_source_other:'Other practice',
+    user_profile:'User Profile',
+    user_account_id:'Account ID:',
+    user_schedule:'Class Schedule:',
+    user_storage:'Storage Status:',
+    user_storage_ok:'✔ Dedicated Multi-User Storage',
+    user_account:'Account',
+    user_export:'💾 Export my data',
+    user_change_pw:'Change password',
+    user_current_pw:'Current password',
+    user_new_pw:'New password (10+ characters)',
+    user_repeat_pw:'Repeat new password',
+    user_update_pw:'Update password',
+    user_recent:'Recent activity',
+    user_diag:'Diagnostics (owner · last 24 h)',
+    user_delete:'Delete my account',
+    user_delete_btn:'Delete my account',
+    user_delete_pass:'Your password',
+    user_delete_confirm:'Type DELETE to confirm',
+    user_delete_permanent:'Permanently delete my account',
+    user_edit_plan:'⚙️ Edit My Study Plan & Schedule',
+    user_logout:'⇄ Switch User / Log Out',
+    ql_title:'Session quick-log',
+    ql_sub:'Log your practice in 3 taps',
+    ql_step1:'Step 1 · Session type',
+    ql_step2:'Step 2 · Result',
+    ql_step3:'Step 3 · Time and note',
+    ql_correct_total:'correct / total',
+    ql_correct:'Correct',
+    ql_total:'Total',
+    ql_minutes:'Minutes',
+    ql_note:'Note (optional)',
+    ql_note_ph:'e.g. Sample 1 / Test 2',
+    ql_next:'Next →',
+    ql_save:'Save session',
+    ql_type_ue:'Use of English',
+    ql_type_listening:'Listening',
+    ql_type_writing:'Writing',
+    ql_type_speaking:'Speaking',
+    ql_type_full:'Full exam',
+    tour_skip:'Skip',
+    tour_next:'Next',
+    alert_solo_logged:'Solo practice logged ✓',
+    alert_set_score:'Set the score (0-20)',
+    alert_set_correct:'Set correct answers',
+    alert_set_total:'Set the total',
+    alert_set_one_score:'Set at least one score',
+    alert_describe_error:'Describe the error',
+    alert_data_imported:'Data imported ✓',
+    alert_invalid_file:'Invalid file',
+    alert_plan_saved:'Plan saved ✓',
+    alert_restore_plan:'Restore the original plan? Your changes will be lost.',
+    alert_10min:'⏰ 10 minutes remaining',
+    alert_5min:'⏰ 5 minutes remaining',
+    alert_result_saved:'Result saved ✓',
+    alert_speaking_final:'Speaking final has no numeric fields to edit — delete it and log it again.',
+    alert_speaking_no_band:'This Speaking entry has no band to edit — delete it and log it again.'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -3178,12 +3512,352 @@ const I18N={
     plan_language_chip:'Interfaz',
     lang_en:'English',
     lang_es:'Español',
-    footer_privacy:'Privacidad'
+    footer_privacy:'Privacidad',
+    today_log_single:'Registrar una parte',
+    today_start_session:'Empezar sesión',
+    today_diag_title:'Diagnóstico inicial · 10 min · 12 preguntas',
+    today_diag_sub:'Detectá tus puntos débiles en las 7 partes de Reading & Use of English para personalizar tu estudio.',
+    today_recent:'Sesiones recientes',
+    today_recent_sub:'Tus últimos registros, los más nuevos primero.',
+    rot_title:'Matriz de rotación quincenal',
+    rot_desc:'Calendario alternado sistemático que cubre todos los componentes del examen.',
+    rot_automated:'CICLO AUTOMÁTICO',
+    rot_week_a:'SEMANA A',
+    rot_week_b:'SEMANA B',
+    rot_active_now:'ACTIVA AHORA',
+    rot_active:'ACTIVA',
+    rot_upcoming:'PRÓXIMA',
+    rot_today:'HOY',
+    rot_writing_queue:'COLA AUTOMÁTICA DE WRITING (SEMANA B)',
+    rot_override_genre:'Cambiar género de writing:',
+    rot_cycle_focus:'FOCO DEL CICLO',
+    rot_next_switch:'PRÓXIMO CAMBIO',
+    rot_active_genre:'Género activo: {genre}',
+    rot_no_session_today:'Hoy no hay sesión programada',
+    rot_no_session:'No hay sesión programada',
+    rot_configure_days:'Configurá tus días de estudio en PLAN.',
+    rot_open_studio:'Abrir estudio',
+    rot_fast_forward:'Adelantar (+1)',
+    rot_shift:'Desplazar (+1)',
+    rot_do_next:'Hacer la próxima sesión ahora',
+    rot_active_today:'Activa hoy',
+    rot_monday_in:'Lunes (en {days} días)',
+    rot_monday_in_one:'Lunes (en 1 día)',
+    rot_schedule:'Horario:',
+    rot_studio_open:'El estudio está abierto abajo.',
+    rot_next:'Próximo:',
+    rot_in_days:'en {days}d',
+    rot_cycle:'Ciclo:',
+    rot_active_writing:'Género de writing activo:',
+    rot_switch_sessions:'Podés cambiar de sesión arriba.',
+    rot_ses_a_rue:"Sesión A (Reading & UoE completo 50')",
+    rot_ses_b_l:"Sesión B (Listening completo 40')",
+    rot_ses_a_w:'Sesión A (Writing completo — {genre})',
+    rot_ses_b_sp:"Sesión B (Speaking completo 60')",
+    rot_val_a:'{week}: R&UoE completo + Listening completo',
+    rot_val_b:'{week}: Writing completo ({genre}) + Speaking completo',
+    metric_title:'Métricas semanales',
+    metric_hours:'Horas totales',
+    metric_uoe:'Precisión UoE',
+    metric_streak:'Racha diaria',
+    metric_logs:'Registros',
+    recent_empty:'Todavía no registraste nada. Tu primera sesión dura 15 segundos.',
+    recent_quick:'Registro rápido',
+    exam_countdown:'Cuenta regresiva al examen',
+    exam_countdown_sub:'Tu próxima fecha oficial de examen.',
+    exam_days_to_go:'{days} {unit} para el examen · {date}',
+    exam_day:'día',
+    exam_days:'días',
+    exam_remove:'Quitar fecha',
+    exam_no_date:'No hay fecha de examen. Agregá una para ver la cuenta regresiva (los días de examen no cortan tu racha).',
+    exam_set_date:'Definir fecha del examen',
+    exam_date_label:'Fecha del examen',
+    exam_save_date:'Guardar fecha',
+    session_mock:'Simulacro',
+    full_mock_title:'Simulacro completo (las 4 pruebas)',
+    full_mock_sub:'Examen completo en condiciones reales de Cambridge y con los tiempos oficiales (195 min escritos + 14 min de speaking).',
+    full_simulation:'Simulación completa',
+    total_time:'Tiempo total',
+    today_title_fmt:'Hoy · {name}',
+    today_sub_fmt:'Plan de estudio personalizado para {name} · {stage} · Horario: {sched}.',
+    today_kicker_fmt:'[ PORTAL_ESTUDIANTE · {name} ]',
+    stage_0:'Etapa 0 — Cimientos',
+    stage_1:'Etapa 1 — Precisión',
+    stage_2:'Etapa 2 — Maestría',
+    stage_n:'Etapa {n}',
+    week_a:'Semana A',
+    week_b:'Semana B',
+    day_sunday:'Domingo',
+    day_monday:'Lunes',
+    day_tuesday:'Martes',
+    day_wednesday:'Miércoles',
+    day_thursday:'Jueves',
+    day_friday:'Viernes',
+    day_saturday:'Sábado',
+    today_nav_rue:'R&UoE completo',
+    today_nav_listening:'Listening completo',
+    today_nav_writing:'Writing completo',
+    today_nav_speaking:'Speaking completo',
+    exam_title:'Simulación de examen',
+    exam_sub:'Elegí un módulo para empezar una simulación cronometrada en condiciones estrictas de examen. Asegurate de tener un ambiente tranquilo antes de empezar.',
+    exam_desc_rue:'7 partes. Evalúa tu comprensión lectora y tu gramática.',
+    exam_desc_w:'2 partes. Essay y una elección entre article, email, letter, report o review.',
+    exam_desc_l:'4 partes. Evalúa tu capacidad de seguir y entender inglés hablado.',
+    exam_desc_full:'Recorrido completo y secuencial de las tres pruebas escritas sin pausas.',
+    exam_full_title:'Examen B2 First completo',
+    exam_in_progress:'En curso',
+    exam_manual:'O elegí la prueba manualmente',
+    exam_log_result:'📝 Registrar resultado',
+    exam_save_result:'✔ Guardar resultado',
+    parts_title:'Practicar por parte',
+    parts_sub:'Los 15 ejercicios de las 4 pruebas. Cada uno con su tiempo objetivo, dónde encontrarlo y registro de resultados. Los que ya están en la Sesión A/B aparecen marcados.',
+    parts_total:'Partes totales',
+    prog_title:'Progreso',
+    prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
+    prog_global_avg:'Promedio global',
+    prog_best_part:'Mejor puntaje por parte',
+    prog_total_time:'Tiempo total de estudio',
+    prog_logged_min:'minutos registrados',
+    prog_matrix:'🧗 Matriz de progresión',
+    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar.',
+    prog_advance:'⬆ Avanzar a la siguiente etapa',
+    prog_stage_down:'⬇ Volver una etapa',
+    prog_export:'💾 Exportar datos',
+    prog_import:'📥 Importar datos',
+    prog_export_help:'Exportá el JSON para respaldar o pasar tus datos de la PC al celular (y viceversa).',
+    prog_history:'Historial',
+    prog_history_sub:'Todo lo registrado, de lo más nuevo a lo más viejo.',
+    th_date:'Fecha',
+    th_module:'Módulo',
+    th_score:'Puntaje',
+    th_min:'Min',
+    prog_stats:'📈 Estadísticas por ejercicio',
+    prog_stats_sub:'Cuántas veces practicaste cada parte y cómo te fue. Solo aparecen los ejercicios registrados.',
+    th_exercise:'Ejercicio',
+    th_times:'Veces',
+    th_average:'Promedio',
+    th_best:'Mejor',
+    th_last:'Último',
+    charts_title:'Analítica de rendimiento',
+    charts_sub:'Desglose detallado de tus métricas de preparación. Seguí tu evolución, detectá áreas débiles y controlá la constancia.',
+    charts_readiness:'Preparación general',
+    charts_mocks:'Simulacros realizados',
+    charts_mocks_sub:'simulacros registrados',
+    charts_streak:'Racha de estudio',
+    charts_streak_sub:'días consecutivos',
+    charts_evolution:'📈 Evolución temporal',
+    charts_evolution_sub:'Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.',
+    charts_by_part:'📊 Por parte y ejercicio',
+    charts_by_part_sub:'Porcentaje promedio de cada parte — las barras rojas son tus puntos más débiles.',
+    charts_errors:'🧩 Errores por tipo',
+    charts_errors_sub:'Taxonomía de causa raíz acumulada.',
+    charts_consistency:'🔥 Constancia semanal',
+    err_title:'Taxonomía de errores',
+    err_sub:'Registro de causa raíz: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo). Identificá patrones sistemáticos para optimizar el tiempo de estudio restante.',
+    err_root_log:'🔖 Registro de causa raíz',
+    err_root_sub:'Cada error registrado te acerca a la Nota A.',
+    err_patterns:'🧩 Patrones de fallo',
+    err_patterns_sub:'Distribución acumulada de tu taxonomía.',
+    err_log:'➕ Registrar error',
+    err_log_sub:'Clasificación por causa raíz.',
+    err_code:'Código',
+    err_description:'Descripción',
+    err_desc_ph:"ej. No apliqué inversión con 'Seldom'",
+    err_fix:'Corrección / Notas',
+    err_fix_ph:'ej. repasar la regla de inversión',
+    err_save:'💾 Guardar error',
+    err_code_lgap:'L-GAP (laguna léxica)',
+    err_code_gerr:'G-ERR (regla mal aplicada)',
+    err_code_tmis:'T-MIS (distractor textual)',
+    err_code_tlim:'T-LIM (apuro / atención)',
+    plan_title:'Configuración del plan',
+    plan_sub:'Ajustá los parámetros del sistema, los tiempos de simulación y los umbrales de rendimiento para personalizar tu ciclo de estudio. Todo se aplica al tracker al instante.',
+    plan_edit_intake:'✏️ Editar mi perfil inicial',
+    plan_walkthrough:'🎬 Ver el tutorial de nuevo',
+    plan_export_json:'💾 Exportar JSON',
+    plan_import_backup:'📥 Importar copia',
+    plan_week_plan:'Plan semanal',
+    plan_regenerate:'Regenerar',
+    plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin IA).',
+    plan_why:'¿Por qué esto?',
+    plan_exam_timers:'🧪 Cronómetros del examen',
+    plan_fce_format:'Formato FCE',
+    plan_official_durations:'Duraciones oficiales de cada prueba.',
+    plan_uoe_focus:'Foco UoE (min)',
+    plan_listening_min:'Listening (min)',
+    plan_plan_writing:'Planificar writing (min)',
+    plan_write_min:'Escribir (min)',
+    plan_review_min:'Revisar (min)',
+    plan_speaking_p2:'Speaking parte 2 (s)',
+    plan_speaking_p34:'Speaking partes 3-4 (s)',
+    plan_wmin:'Writing — mínimo de palabras',
+    plan_wmax:'Writing — máximo de palabras',
+    plan_streak_freeze:'Congelar racha / semana (🛡)',
+    plan_week_goal:'Meta semanal (días/semana)',
+    plan_thresholds:'🎯 Umbrales (gates)',
+    plan_thresholds_sub:'Criterios numéricos por etapa.',
+    plan_stage0:'Etapa 0',
+    plan_stage1:'Etapa 1',
+    plan_stage2:'Etapa 2',
+    plan_g_e0w:'Nota de essays ≥',
+    plan_g_e0u:'UoE P4 % ≥',
+    plan_g_e0l:'Errores L P2 ≤',
+    plan_g_e1w:'Nota de textos ≥',
+    plan_g_e1u:'UoE total % ≥',
+    plan_g_e1l:'Nota L ≥',
+    plan_g_e2r:'R&UoE % ≥',
+    plan_g_e2w:'Nota W completa ≥',
+    plan_g_e2l:'L ≥ (N pruebas)',
+    plan_sessions:'🗓 Horarios y frecuencia de sesiones',
+    plan_add_day:'+ Agregar día de sesión',
+    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. El ciclo base de 4 pasos (R&UoE → Listening → Writing → Speaking) se adapta solo.',
+    plan_shift:'Desplazamiento de sesiones / adelantar',
+    plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
+    plan_advance1:'⚡ +1 Adelantar',
+    plan_reset0:'↩ Reiniciar (0)',
+    plan_rotation:'🔁 Rotación continua y próximos turnos',
+    plan_rotation_chip:'Ciclo de 4 sesiones',
+    plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
+    plan_week_a_odd:'Semana A (impar)',
+    plan_week_b_even:'Semana B (par)',
+    plan_uoe_alt:'UoE alternativo',
+    plan_rotation_order:'El orden en que rotás los ejercicios componente por componente:',
+    plan_rue_cycle:'R&UoE (partes 1-7, en orden)',
+    plan_w_cycle:'Writing (tipos, en orden)',
+    plan_l_cycle:'Listening (partes 1-4)',
+    plan_sp_cycle:'Speaking (partes 1-4)',
+    plan_ai:'✨ Corrector de writing con IA (Gemini)',
+    plan_ai_chip:'Clave local del dispositivo',
+    plan_ai_sub:'Tu clave se guarda solo en este dispositivo y viaja al servidor local.',
+    plan_gemini_key:'Clave de API de Gemini (D.settings.aiKey)',
+    plan_save:'💾 Guardar plan',
+    plan_restore:'↩ Restaurar plan original',
+    books_title:'Biblioteca de recursos',
+    books_sub:'PDF, audio y todos los libros disponibles para tu preparación. Dinámico: lo que agregues a la carpeta aparece automáticamente.',
+    books_online:'🌐 Práctica online (1 clic — gratis)',
+    books_online_sub:'Ejercicios interactivos ilimitados por habilidad. Materiales oficiales de Cambridge + plataformas gratuitas (sin descargas).',
+    books_material:'📥 Material descargado (PDF y audio)',
+    books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
+    books_filter_ph:'🔍 Filtrar material... (ej. listening, parte 3, writing)',
+    books_all:'🛒 Todos los libros recomendados (opciones verificadas)',
+    books_all_sub:'Filtrá por categoría + búsqueda en tiempo real + orden por precio. Con respuestas = autocorregible (clave para prepararte solo). Todas las opciones verificadas. 🆕 = ediciones 2020-2025.',
+    books_search_ph:'🔍 Buscar libros... (ej. práctica, gramática, fce)',
+    books_sort_cat:'Ordenar: categoría',
+    books_sort_asc:'Precio: menor a mayor ↑',
+    books_sort_desc:'Precio: mayor a menor ↓',
+    ai_title:'Corrector de writing',
+    ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
+    ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
+    ai_no_key:'Configurá tu clave de API en la pestaña PLAN para usar el corrector. Conseguí una gratis en',
+    ai_kind:'Tipo de texto',
+    ai_text:'Tu texto en inglés',
+    ai_text_ph:'Escribí o pegá tu Essay, Article, Report, Review o Email acá (140–190 palabras)...',
+    ai_words:'Palabras:',
+    ai_target_words:'Objetivo: 140–190 palabras',
+    ai_target_short:'(objetivo 140–190)',
+    ai_submit:'Corregirlo',
+    ai_correcting:'corrigiendo…',
+    ai_failed:'No se pudo corregir el texto.',
+    ai_result:'Resultado Cambridge B2 First',
+    ai_quotes:'Citas del texto',
+    ai_rewrite:'3 frases mejoradas (reescritura)',
+    ai_idle:'inactivo',
+    diag_title:'Diagnóstico inicial',
+    diag_sub:'10 min · 12 preguntas de nivel B2 (partes 1 a 7). No se muestra retroalimentación durante la prueba.',
+    diag_total_time:'Tiempo total',
+    solo_title:'Registrar práctica de una parte',
+    solo_sub:'Práctica extra fuera de las sesiones programadas',
+    solo_skill:'Habilidad / Componente',
+    solo_ue:'📖 Reading & Use of English (partes 1–7)',
+    solo_listening:'🎧 Listening (partes 1–4)',
+    solo_writing:'✍️ Writing (texto / género individual)',
+    solo_speaking:'🗣️ Speaking (partes 1–4)',
+    solo_part:'Parte / Ejercicio',
+    solo_correct:'Correctas',
+    solo_total:'Total de preguntas',
+    solo_minutes:'Minutos dedicados',
+    solo_source:'Fuente / Libro',
+    solo_ref:'Referencia / Notas',
+    solo_ref_ph:'ej. Unidad 3 / Test 2',
+    solo_log_error:'Registrar un error para análisis de causa raíz',
+    solo_err_code:'Código de error',
+    solo_err_desc:'Descripción del error',
+    solo_save:'✔ Guardar práctica',
+    solo_source_sample:'Examen de muestra oficial',
+    solo_source_ptplus:'Practice Tests Plus',
+    solo_source_fce6:'FCE 6',
+    solo_source_gv:'Grammar & Vocabulary',
+    solo_source_flojoe:'Flo-Joe (online)',
+    solo_source_examenglish:'ExamEnglish (online)',
+    solo_source_testenglish:'Test-English (online)',
+    solo_source_other:'Otra práctica',
+    user_profile:'Perfil de usuario',
+    user_account_id:'ID de cuenta:',
+    user_schedule:'Horario de clases:',
+    user_storage:'Estado del almacenamiento:',
+    user_storage_ok:'✔ Almacenamiento dedicado multiusuario',
+    user_account:'Cuenta',
+    user_export:'💾 Exportar mis datos',
+    user_change_pw:'Cambiar contraseña',
+    user_current_pw:'Contraseña actual',
+    user_new_pw:'Nueva contraseña (10+ caracteres)',
+    user_repeat_pw:'Repetir la nueva contraseña',
+    user_update_pw:'Actualizar contraseña',
+    user_recent:'Actividad reciente',
+    user_diag:'Diagnósticos (owner · últimas 24 h)',
+    user_delete:'Eliminar mi cuenta',
+    user_delete_btn:'Eliminar mi cuenta',
+    user_delete_pass:'Tu contraseña',
+    user_delete_confirm:'Escribí DELETE para confirmar',
+    user_delete_permanent:'Eliminar mi cuenta definitivamente',
+    user_edit_plan:'⚙️ Editar mi plan y horario',
+    user_logout:'⇄ Cambiar de usuario / Salir',
+    ql_title:'Registro rápido de sesión',
+    ql_sub:'Registrá tu práctica en 3 toques',
+    ql_step1:'Paso 1 · Tipo de sesión',
+    ql_step2:'Paso 2 · Resultado',
+    ql_step3:'Paso 3 · Tiempo y nota',
+    ql_correct_total:'correctas / total',
+    ql_correct:'Correctas',
+    ql_total:'Total',
+    ql_minutes:'Minutos',
+    ql_note:'Nota (opcional)',
+    ql_note_ph:'ej. Muestra 1 / Test 2',
+    ql_next:'Siguiente →',
+    ql_save:'Guardar sesión',
+    ql_type_ue:'Use of English',
+    ql_type_listening:'Listening',
+    ql_type_writing:'Writing',
+    ql_type_speaking:'Speaking',
+    ql_type_full:'Examen completo',
+    tour_skip:'Omitir',
+    tour_next:'Siguiente',
+    alert_solo_logged:'Práctica registrada ✓',
+    alert_set_score:'Indicá la nota (0-20)',
+    alert_set_correct:'Indicá las respuestas correctas',
+    alert_set_total:'Indicá el total',
+    alert_set_one_score:'Indicá al menos una nota',
+    alert_describe_error:'Describí el error',
+    alert_data_imported:'Datos importados ✓',
+    alert_invalid_file:'Archivo inválido',
+    alert_plan_saved:'Plan guardado ✓',
+    alert_restore_plan:'¿Restaurar el plan original? Se perderán tus cambios.',
+    alert_10min:'⏰ Quedan 10 minutos',
+    alert_5min:'⏰ Quedan 5 minutos',
+    alert_result_saved:'Resultado guardado ✓',
+    alert_speaking_final:'El speaking final no tiene campos numéricos para editar — borralo y registralo de nuevo.',
+    alert_speaking_no_band:'Esta entrada de Speaking no tiene banda para editar — borrala y registrala de nuevo.'
   }
 };
 let LANG='en';
 function normalizeLang(code){return code==='es'?'es':'en'}
 function currentLocale(){return LANG==='es'?'es-AR':'en-GB'}
+const DAY_KEYS=['day_sunday','day_monday','day_tuesday','day_wednesday','day_thursday','day_friday','day_saturday'];
+function dayFull(i){return t(DAY_KEYS[((Number(i)%7)+7)%7])}
+function dayShort(i){return dayFull(i).slice(0,3)}
+const DAY_EN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function localizeDayName(name){const i=DAY_EN.indexOf(name);return i>=0?dayFull(i):name}
+function localizeWeekLabel(w){return w==='Week A'?t('week_a'):w==='Week B'?t('week_b'):w}
 function t(key,vars){
   if(key==null)return '';
   const table=I18N[LANG]||I18N.en;
@@ -7372,17 +8046,17 @@ function updatePersonalizedUI(){
   const s=D.settings||SETTINGS_DEFAULT;
   const sched=getSchedule();
   const userName=(USER&&USER.name)?USER.name:'Student';
-  const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
-  const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
-  const schedSummary=sched.map(slot=>`${DAYS[slot.day]} (${slot.time})`).join(' & ');
+  const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
+  const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
+  const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
 
   // Dynamic Header
   const kickerEl=document.getElementById('userKicker');
-  if(kickerEl)kickerEl.textContent=`[ STUDENT_PORTAL · ${userName.toUpperCase()} ]`;
+  if(kickerEl)kickerEl.textContent=t('today_kicker_fmt',{name:userName.toUpperCase()});
   const titleEl=document.getElementById('userTitle');
-  if(titleEl)titleEl.textContent=`Today · ${userName}`;
+  if(titleEl)titleEl.textContent=t('today_title_fmt',{name:userName});
   const subEl=document.getElementById('userSub');
-  if(subEl)subEl.textContent=`Personalized study plan for ${userName} · ${curStageTxt} · Schedule: ${schedSummary}.`;
+  if(subEl)subEl.textContent=t('today_sub_fmt',{name:userName,stage:curStageTxt,sched:schedSummary});
 
   const now=new Date();
   const rueOccur=getSkillNextOccurrence('rue',now);
@@ -7392,39 +8066,39 @@ function updatePersonalizedUI(){
 
   const aSlot=sched[0]||{day:1,time:'15:30'};
   const bSlot=sched[1]||sched[0]||{day:5,time:'13:00'};
-  const aDayName=DAYS[aSlot.day]||'Monday';
-  const bDayName=DAYS[bSlot.day]||'Friday';
-  const aShort=aDayName.slice(0,3);
-  const bShort=bDayName.slice(0,3);
+  const aDayName=dayFull(aSlot.day)||t('day_monday');
+  const bDayName=dayFull(bSlot.day)||t('day_friday');
+  const aShort=dayShort(aSlot.day);
+  const bShort=dayShort(bSlot.day);
 
   // Dynamic Navigation Studio Tabs
   const nA=document.getElementById('navLblMonA');
-  if(nA)nA.textContent=sched.length===2?`${aShort} A: Full R&UoE`:`${rueOccur.dayShort}: Full R&UoE`;
+  if(nA)nA.textContent=sched.length===2?`${aShort} A: ${t('today_nav_rue')}`:`${rueOccur.dayShort}: ${t('today_nav_rue')}`;
   const nFA=document.getElementById('navLblFriA');
-  if(nFA)nFA.textContent=sched.length===2?`${bShort} A: Full Listening`:`${lOccur.dayShort}: Full Listening`;
+  if(nFA)nFA.textContent=sched.length===2?`${bShort} A: ${t('today_nav_listening')}`:`${lOccur.dayShort}: ${t('today_nav_listening')}`;
   const nB=document.getElementById('navLblMonB');
-  if(nB)nB.textContent=sched.length===2?`${aShort} B: Full Writing`:`${wOccur.dayShort}: Full Writing`;
+  if(nB)nB.textContent=sched.length===2?`${aShort} B: ${t('today_nav_writing')}`:`${wOccur.dayShort}: ${t('today_nav_writing')}`;
   const nFB=document.getElementById('navLblFriB');
-  if(nFB)nFB.textContent=sched.length===2?`${bShort} B: Full Speaking`:`${spOccur.dayShort}: Full Speaking`;
+  if(nFB)nFB.textContent=sched.length===2?`${bShort} B: ${t('today_nav_speaking')}`:`${spOccur.dayShort}: ${t('today_nav_speaking')}`;
 
   // Dynamic Studio Card Badges
   const st1W=document.getElementById('st1WkBadge');
-  if(st1W)st1W.textContent=sched.length===2?`Week A · ${aDayName}`:`${rueOccur.weekLabel} · ${rueOccur.dayName}`;
+  if(st1W)st1W.textContent=sched.length===2?`${t('week_a')} · ${aDayName}`:`${localizeWeekLabel(rueOccur.weekLabel)} · ${localizeDayName(rueOccur.dayName)}`;
   const st1T=document.getElementById('st1TimeBadge');
   if(st1T)st1T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${rueOccur.dayShort.toUpperCase()} ${rueOccur.time}`;
 
   const st2W=document.getElementById('st2WkBadge');
-  if(st2W)st2W.textContent=sched.length===2?`Week B · ${aDayName}`:`${wOccur.weekLabel} · ${wOccur.dayName}`;
+  if(st2W)st2W.textContent=sched.length===2?`${t('week_b')} · ${aDayName}`:`${localizeWeekLabel(wOccur.weekLabel)} · ${localizeDayName(wOccur.dayName)}`;
   const st2T=document.getElementById('st2TimeBadge');
   if(st2T)st2T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${wOccur.dayShort.toUpperCase()} ${wOccur.time}`;
 
   const st3W=document.getElementById('st3WkBadge');
-  if(st3W)st3W.textContent=sched.length===2?`Week A · ${bDayName}`:`${lOccur.weekLabel} · ${lOccur.dayName}`;
+  if(st3W)st3W.textContent=sched.length===2?`${t('week_a')} · ${bDayName}`:`${localizeWeekLabel(lOccur.weekLabel)} · ${localizeDayName(lOccur.dayName)}`;
   const st3T=document.getElementById('st3TimeBadge');
   if(st3T)st3T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${lOccur.dayShort.toUpperCase()} ${lOccur.time}`;
 
   const st4W=document.getElementById('st4WkBadge');
-  if(st4W)st4W.textContent=sched.length===2?`Week B · ${bDayName}`:`${spOccur.weekLabel} · ${spOccur.dayName}`;
+  if(st4W)st4W.textContent=sched.length===2?`${t('week_b')} · ${bDayName}`:`${localizeWeekLabel(spOccur.weekLabel)} · ${localizeDayName(spOccur.dayName)}`;
   const st4T=document.getElementById('st4TimeBadge');
   if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
@@ -7446,7 +8120,7 @@ function renderToday(){
   const wov=D.weekOverrides||{};
   const wT=wov.w||autoW;
   const ovW=document.getElementById('ovW');
-  if(ovW)ovW.innerHTML=s.wCycle.map(t=>`<option ${t==wT?'selected':''}>${t}</option>`).join('');
+  if(ovW)ovW.innerHTML=s.wCycle.map(g=>`<option ${g==wT?'selected':''}>${g}</option>`).join('');
   if(document.getElementById('wTipo'))document.getElementById('wTipo').value=wT;
   if(document.getElementById('navWTag'))document.getElementById('navWTag').textContent=wT;
   if(document.getElementById('wWords')){
@@ -7461,7 +8135,7 @@ function renderToday(){
       const isCur=(g===wT);
       return `<div class="rot-q-item ${isCur?'active':''}">
         <span>${i+1}. ${g}</span>
-        ${isCur?'<span class="q-badge">ACTIVE</span>':''}
+        ${isCur?`<span class="q-badge">${t('rot_active')}</span>`:''}
       </div>`;
     }).join('');
   }
@@ -7473,7 +8147,7 @@ function renderToday(){
   if(rotCardWkA){
     const rowsA=sched.map((slot,idx)=>{
       const slotInfo=getSlotSession(week,idx,sched.length);
-      const dayName=DAYS[slot.day];
+      const dayName=dayFull(slot.day);
       const isToday=(slot.day===wd);
       const idAttr=(idx===0)?'id="rotWkASesADay"':(idx===1)?'id="rotWkASesBDay"':'';
       const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
@@ -7481,7 +8155,7 @@ function renderToday(){
         <div class="rot-session-row${isToday?' is-today':''}">
           <div class="rot-ses-dot ${dotColor}"></div>
           <div class="rot-ses-info">
-            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time} ${isToday?'<span class="badge ok">TODAY</span>':''}</span>
+            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time} ${isToday?`<span class="badge ok">${t('rot_today')}</span>`:''}</span>
             <span class="rot-ses-name">${slotInfo.title}</span>
           </div>
         </div>
@@ -7489,8 +8163,8 @@ function renderToday(){
     }).join('');
     rotCardWkA.innerHTML=`
       <div class="rot-wk-head">
-        <span class="rot-wk-name">WEEK A</span>
-        <span class="rot-wk-status" id="rotWkAStatus">${isWeekA?'ACTIVE NOW':'UPCOMING'}</span>
+        <span class="rot-wk-name">${t('rot_week_a')}</span>
+        <span class="rot-wk-status" id="rotWkAStatus">${isWeekA?t('rot_active_now'):t('rot_upcoming')}</span>
       </div>
       ${rowsA}
     `;
@@ -7501,7 +8175,7 @@ function renderToday(){
     const nextWeek=week+1;
     const rowsB=sched.map((slot,idx)=>{
       const slotInfo=getSlotSession(nextWeek,idx,sched.length);
-      const dayName=DAYS[slot.day];
+      const dayName=dayFull(slot.day);
       const idAttr=(idx===0)?'id="rotWkBSesADay"':(idx===1)?'id="rotWkBSesBDay"':'';
       const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
       return `
@@ -7516,8 +8190,8 @@ function renderToday(){
     }).join('');
     rotCardWkB.innerHTML=`
       <div class="rot-wk-head">
-        <span class="rot-wk-name">WEEK B</span>
-        <span class="rot-wk-status" id="rotWkBStatus">${!isWeekA?'ACTIVE NOW':'UPCOMING'}</span>
+        <span class="rot-wk-name">${t('rot_week_b')}</span>
+        <span class="rot-wk-status" id="rotWkBStatus">${!isWeekA?t('rot_active_now'):t('rot_upcoming')}</span>
       </div>
       ${rowsB}
     `;
@@ -7527,11 +8201,10 @@ function renderToday(){
   const rotWkBWName=document.getElementById('rotWkBWName');
   const rotQueueSub=document.getElementById('rotQueueSub');
   if(rotWkBWName)rotWkBWName.textContent=wT;
-  if(rotQueueSub)rotQueueSub.textContent='Active genre: '+wT;
+  if(rotQueueSub)rotQueueSub.textContent=t('rot_active_genre',{genre:wT});
 
   const nb=document.getElementById('nextBox');
-  const DIA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const weekLabel=isWeekA?'Week A':'Week B';
+  const weekLabel=isWeekA?t('week_a'):t('week_b');
   let defaultStudio='mon-a';
 
   const todaySlotIdx=sched.findIndex(slot=>slot.day===wd);
@@ -7539,15 +8212,15 @@ function renderToday(){
   if(todaySlotIdx!==-1){
     const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
     defaultStudio=slotInfo.session.studio;
-    nb.innerHTML=`<div class="big">Today (${DIA[wd]}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">Schedule: <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · Studio is open below.</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">Open studio</button><button class="btn sm gray" onclick="advanceSession(1)" title="Advance the sequence (+1)">Fast-forward (+1)</button></div>`;
+    nb.innerHTML=`<div class="big">${t('rot_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('rot_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('rot_studio_open')}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('rot_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_fast_forward')}">${t('rot_fast_forward')}</button></div>`;
   }else{
     const nextSlot=getNextScheduledSession(d);
     if(nextSlot){
       defaultStudio=nextSlot.session.studio;
-      const nextTitle=nextSlot.sessionIdx===0?'Session A (Full Reading & UoE 50\')':nextSlot.sessionIdx===1?'Session B (Full Listening 40\')':nextSlot.sessionIdx===2?`Session A (Full Writing — ${nextSlot.activeWritingGenre})`:'Session B (Full Speaking 60\')';
-      nb.innerHTML=`<div class="big">No session scheduled today</div><div class="when">Next: <b>${DIA[nextSlot.day]} (in ${nextSlot.daysAhead}d) — ${nextTitle}</b>. Cycle: <b>${weekLabel}</b> · Active Writing genre: <b>${wT}</b>. You can switch sessions above.</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="doNextSessionNow()">Do next session now</button><button class="btn sm gray" onclick="advanceSession(1)" title="Shift the sequence by 1">Shift (+1)</button></div>`;
+      const nextTitle=nextSlot.sessionIdx===0?t('rot_ses_a_rue'):nextSlot.sessionIdx===1?t('rot_ses_b_l'):nextSlot.sessionIdx===2?t('rot_ses_a_w',{genre:nextSlot.activeWritingGenre}):t('rot_ses_b_sp');
+      nb.innerHTML=`<div class="big">${t('rot_no_session_today')}</div><div class="when">${t('rot_next')} <b>${dayFull(nextSlot.day)} (${t('rot_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('rot_cycle')} <b>${weekLabel}</b> · ${t('rot_active_writing')} <b>${wT}</b>. ${t('rot_switch_sessions')}</div><div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn ok sm" onclick="doNextSessionNow()">${t('rot_do_next')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_shift')}">${t('rot_shift')}</button></div>`;
     }else{
-      nb.innerHTML=`<div class="big">No session scheduled</div><div class="when">Please configure your study days in PLAN.</div>`;
+      nb.innerHTML=`<div class="big">${t('rot_no_session')}</div><div class="when">${t('rot_configure_days')}</div>`;
     }
   }
   
@@ -7559,17 +8232,17 @@ function renderToday(){
   const rd=document.getElementById('rotDay'),rdn=document.getElementById('rotDayNext');
   if(rd){
     const daysToMon=(8-wd)%7||7;
-    rd.textContent=isWeekA?'WEEK A':'WEEK B';
+    rd.textContent=isWeekA?t('rot_week_a'):t('rot_week_b');
     if(rdn){
       rdn.textContent=wd===1
-        ?'Active today'
-        :'Monday (in '+daysToMon+' day'+(daysToMon===1?'':'s')+')';
+        ?t('rot_active_today')
+        :(daysToMon===1?t('rot_monday_in_one'):t('rot_monday_in',{days:daysToMon}));
     }
   }
   const curEl=document.getElementById('rotVal');
   if(curEl){
     const currentWeekSlots=sched.map((slot,idx)=>getSlotSession(week,idx,sched.length).title).join(' + ');
-    curEl.textContent=`Week ${isWeekA?'A':'B'}: ${currentWeekSlots}`;
+    curEl.textContent=`${isWeekA?t('week_a'):t('week_b')}: ${currentWeekSlots}`;
   }
 
   renderExamCountdown();
@@ -7587,20 +8260,20 @@ function renderExamCountdown(){
   const next=((profDate&&profDate>=todayStr)?profDate:null)||dates.find(x=>x>=todayStr);
   if(next){
     const days=Math.round((_parseLocalDay(next)-_parseLocalDay(todayStr))/86400000);
-    el.innerHTML=`<h2>Exam countdown</h2>
-      <div class="sub">Your next official exam date.</div>
+    el.innerHTML=`<h2>${t('exam_countdown')}</h2>
+      <div class="sub">${t('exam_countdown_sub')}</div>
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
         <span class="exam-days tnum">${days}</span>
-        <span class="muted">${days===1?'day':'days'} to go · ${fmtDate(next)}</span>
-        <button type="button" class="btn sm gray" onclick="clearExamDate()">Remove date</button>
+        <span class="muted">${t('exam_days_to_go',{days:days,unit:t(days===1?'exam_day':'exam_days'),date:fmtDate(next)})}</span>
+        <button type="button" class="btn sm gray" onclick="clearExamDate()">${t('exam_remove')}</button>
       </div>`;
   }else{
-    el.innerHTML=`<h2>Exam countdown</h2>
-      <div class="sub">No exam date set. Add one to get a countdown (exam days never break your streak).</div>
+    el.innerHTML=`<h2>${t('exam_countdown')}</h2>
+      <div class="sub">${t('exam_no_date')}</div>
       <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
-        <button type="button" class="btn ok sm" onclick="openIntake()">Set your exam date</button>
-        <div style="flex:1;min-width:160px"><label for="examDateInput">Exam date</label><input type="date" id="examDateInput"></div>
-        <button type="button" class="btn ok" onclick="setExamDate()">Save date</button>
+        <button type="button" class="btn ok sm" onclick="openIntake()">${t('exam_set_date')}</button>
+        <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
+        <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
       </div>`;
   }
 }
@@ -7624,7 +8297,7 @@ function renderRecent(){
   const el=document.getElementById('recentList');
   if(!el)return;
   const rows=(D.log||[]).slice(0,5);
-  if(!rows.length){el.innerHTML='<div class="empty">Nothing logged yet. Your first session takes 15 seconds.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  if(!rows.length){el.innerHTML=`<div class="empty">${t('recent_empty')}<button class="btn sm ok" onclick="openQuickLog()">${t('recent_quick')}</button></div>`;return}
   el.innerHTML=rows.map(e=>{
     const sc=e.type==='w'?((e.score!==undefined?e.score:e.total)+'/20'):e.type==='fw'?((e.s1||'-')+'/'+(e.s2||'-')):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total);
     return `<div class="metric-row"><span>${MOD[e.type]?MOD[e.type](e):e.type} <span class="muted">· ${fmtDate(e.date)}</span></span><span class="metric-val tnum">${sc}</span></div>`;
@@ -7968,7 +8641,7 @@ function renderMetrics(){
     const isWkA=(weekN%2!==0);
     const wIdx=Math.floor(weekN/2)%s.wCycle.length;
     const wT=s.wCycle[wIdx];
-    curEl.textContent=(isWkA?`Week A: Full R&UoE + Full Listening`:`Week B: Full Writing (${wT}) + Full Speaking`);
+    curEl.textContent=(isWkA?t('rot_val_a',{week:t('week_a')}):t('rot_val_b',{week:t('week_b'),genre:wT}));
   }
   // --- Progress (stat cards) ---
   const pctOf=e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.type==='fw'?(e.s1+e.s2)/40*100:e.type==='sp'?null:e.correct/e.total*100;
