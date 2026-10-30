@@ -1343,7 +1343,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div><label data-i18n="auth_avatar_color">Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()" data-i18n="auth_create_enter">Create account &amp; enter</button>
-      <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
+      <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
   </div>
 </div>
@@ -1696,7 +1696,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   <!-- ============ CONTENT ============ -->
   <div class="content">
-    <div id="demoBanner" class="demo-banner" style="display:none">Demo mode · your progress is saved only in this browser and is erased if you clear site data</div>
+    <div id="demoBanner" class="demo-banner" style="display:none" data-i18n="demo_banner">Demo mode · your progress is saved only in this browser and is erased if you clear site data</div>
 
     <main>
       <!-- ============ TODAY ============ -->
@@ -3214,7 +3214,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" tabindex="0" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
+    <footer>🎯 <span data-i18n="footer_brand">B2 First Mastery · Grade A</span> · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" tabindex="0" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8" data-i18n="footer_privacy">Privacy</a> · <a href="/terms" style="color:inherit;opacity:.8" data-i18n="footer_terms">Terms</a> · <a href="/security" style="color:inherit;opacity:.8" data-i18n="footer_security">Security</a></footer>
   </div>
 </div>
 
@@ -3370,7 +3370,7 @@ const I18N={
     auth_pw_hint:'10+ characters. Avoid common passwords.',
     auth_avatar_color:'Avatar color',
     auth_create_enter:'Create account & enter',
-    auth_privacy_html:'By creating an account you agree to the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
+    auth_privacy_html:'By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
     auth_ph_owner:'e.g. Owner',
     auth_ph_maria:'e.g. maria',
     common_cancel:'Cancel',
@@ -3387,6 +3387,9 @@ const I18N={
     lang_en:'English',
     lang_es:'Español',
     footer_privacy:'Privacy',
+    footer_terms:'Terms',
+    footer_security:'Security',
+    footer_brand:'B2 First Mastery · Grade A',
     today_log_single:'Log single part',
     today_start_session:'Start session',
     today_diag_title:'Initial diagnostic · 10 min · 12 questions',
@@ -3459,6 +3462,20 @@ const I18N={
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
     stage_n:'Stage {n}',
+    stage_name_0:'Stage 0 — Foundations (Structural Acquisition)',
+    stage_name_1:'Stage 1 — Precision & Cohesion (Pattern Mastery)',
+    stage_name_2:'Stage 2 — Mastery (Target Grade A / C1) · Release Candidate',
+    stage_focus_0:'Trap recognition and basic architecture.',
+    stage_focus_1:'Optimal solving times and interactive fluency.',
+    stage_focus_2:'Execution under fatigue. If you pass this, you take the official exam.',
+    advance_stage:'⬆ Advance to {stage}',
+    advance_done:'🎓 YOU COMPLETED EVERYTHING',
+    advance_wait:'⬆ Complete all gates to advance',
+    completed:'🎓 COMPLETED',
+    demo_banner:'Demo mode · your progress is saved only in this browser and is erased if you clear site data',
+    ob1_title:'Build your B2 First in two habits',
+    ob1_body:'It tells you which exam parts are weak, and it makes every practice session cost 15 seconds to log.',
+    ob1_demo:'This is the demo: nothing is stored on the server.',
     week_a:'Week A',
     week_b:'Week B',
     day_sunday:'Sunday',
@@ -3865,7 +3882,7 @@ const I18N={
     auth_pw_hint:'10+ caracteres. Evitá contraseñas comunes.',
     auth_avatar_color:'Color del avatar',
     auth_create_enter:'Crear cuenta y entrar',
-    auth_privacy_html:'Al crear una cuenta aceptás la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
+    auth_privacy_html:'Al crear una cuenta aceptás los <a href="/terms" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
     auth_ph_owner:'ej. Owner',
     auth_ph_maria:'ej. maria',
     common_cancel:'Cancelar',
@@ -3882,6 +3899,9 @@ const I18N={
     lang_en:'English',
     lang_es:'Español',
     footer_privacy:'Privacidad',
+    footer_terms:'Términos',
+    footer_security:'Seguridad',
+    footer_brand:'B2 First Mastery · Grado A',
     today_log_single:'Registrar una parte',
     today_start_session:'Empezar sesión',
     today_diag_title:'Diagnóstico inicial · 10 min · 12 preguntas',
@@ -3954,6 +3974,20 @@ const I18N={
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
     stage_n:'Etapa {n}',
+    stage_name_0:'Etapa 0 — Cimientos (Adquisición estructural)',
+    stage_name_1:'Etapa 1 — Precisión y cohesión (Dominio de patrones)',
+    stage_name_2:'Etapa 2 — Maestría (Meta: Grado A / C1) · Candidato a examen',
+    stage_focus_0:'Reconocimiento de trampas y arquitectura básica.',
+    stage_focus_1:'Tiempos de resolución óptimos y fluidez interactiva.',
+    stage_focus_2:'Ejecución bajo fatiga. Si superás esto, vas al examen oficial.',
+    advance_stage:'⬆ Avanzar a {stage}',
+    advance_done:'🎓 COMPLETASTE TODO',
+    advance_wait:'⬆ Completá todas las puertas para avanzar',
+    completed:'🎓 COMPLETADO',
+    demo_banner:'Modo demo · tu progreso se guarda solo en este navegador y se borra si limpiás los datos del sitio',
+    ob1_title:'Construí tu B2 First en dos hábitos',
+    ob1_body:'Te dice qué partes del examen son débiles y hace que cada sesión de práctica cueste 15 segundos registrar.',
+    ob1_demo:'Esto es la demo: no se guarda nada en el servidor.',
     week_a:'Semana A',
     week_b:'Semana B',
     day_sunday:'Domingo',
@@ -4738,9 +4772,9 @@ function openIntake(){showOnboarding(true)}
 function obStepHtml(){
   const d=OB.draft;
   if(OB.step===1){
-    return `<h2 class="ob-title" id="obTitle">Build your B2 First in two habits</h2>
-      <p class="ob-body">It tells you which exam parts are weak, and it makes every practice session cost 15 seconds to log.</p>
-      ${(window.DEMO&&DEMO.demo===true)?'<p class="ob-demo">This is the demo: nothing is stored on the server.</p>':''}`;
+    return `<h2 class="ob-title" id="obTitle">${t('ob1_title')}</h2>
+      <p class="ob-body">${t('ob1_body')}</p>
+      ${(window.DEMO&&DEMO.demo===true)?'<p class="ob-demo">'+t('ob1_demo')+'</p>':''}`;
   }
   if(OB.step===2){
     return `<h2 class="ob-title" id="obTitle">Exam date &amp; target grade</h2>
@@ -4979,8 +5013,8 @@ function renderUserChip(){
   const el=document.getElementById('userChip');
   if(!el)return;
   if(DEMO&&DEMO.demo){
-    const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
-    const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+    const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
+    const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
     el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>`;
     el.style.cursor='default';
     renderGates();
@@ -4988,8 +5022,8 @@ function renderUserChip(){
   }
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
-    const stageNames=['Stage 0 — Foundations','Stage 1 — Precision','Stage 2 — Mastery'];
-    const curStageTxt=stageNames[D.stage]||('Stage '+(D.stage||0));
+    const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
+    const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
     el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>
       <span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
       <button class="btn sm gray" onclick="event.stopPropagation();doLogout()" title="Change user">⇄</button>`;
@@ -6943,11 +6977,21 @@ SPK.queueEmpty=function(){
   return v.sources.length===0&&v.nextTime<=SPK.ctx.currentTime+0.02;
 };
 
+/* One definition of "word" for the whole app: a whitespace-separated token
+   that carries at least one letter or digit. An em dash or a lone "&" is not a
+   word, and the live counter must agree with the server's _word_count(). */
+function countWords(text){
+  if(!text) return 0;
+  const t=String(text).trim();
+  if(!t) return 0;
+  return t.split(/\s+/).filter(w=>/[\p{L}\p{N}]/u.test(w)).length;
+}
+
 function onWritingDraftChange(){
   const el=document.getElementById('wTextDraft');
   if(!el)return;
   const text=el.value.trim();
-  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  const words=countWords(text);
   const wcEl=document.getElementById('wLiveWordCount');
   if(wcEl)wcEl.textContent=words+' words';
   const wInput=document.getElementById('wWords');
@@ -7356,8 +7400,8 @@ function calcGates(){
   ];
   return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5],gates[6],gates[7],gates[8]],[gates[9],gates[10],gates[11],gates[12]]]};
 }
-const STAGE_NAMES=['Stage 0 — Foundations (Structural Acquisition)','Stage 1 — Precision & Cohesion (Pattern Mastery)','Stage 2 — Mastery (Target Grade A / C1) · Release Candidate'];
-const STAGE_FOCUS=['Trap recognition and basic architecture.','Optimal solving times and interactive fluency.','Execution under fatigue. If you pass this, you take the official exam.'];
+const STAGE_NAMES=['stage_name_0','stage_name_1','stage_name_2'];
+const STAGE_FOCUS=['stage_focus_0','stage_focus_1','stage_focus_2'];
 
 function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
@@ -7370,8 +7414,8 @@ function renderGates(){
       ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Stage '+i}</button>`).join('')}
     </div>
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
-      <b style="color:var(--primary);font-size:14px">${STAGE_NAMES[viewSt]}</b>
-      <div style="font-size:12px;color:var(--on-surface-variant);margin-top:2px">${STAGE_FOCUS[viewSt]}</div>
+      <b style="color:var(--primary);font-size:14px">${t(STAGE_NAMES[viewSt])}</b>
+      <div style="font-size:12px;color:var(--on-surface-variant);margin-top:2px">${t(STAGE_FOCUS[viewSt])}</div>
     </div>`+
     viewGates.map((x,i)=>{
       const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
@@ -7383,8 +7427,8 @@ function renderGates(){
   const ovs=D.overrides||{};
   const allOk=gates.every(x=>ovs[st+'-'+gates.indexOf(x)]||x.ok);
   document.getElementById('advanceBtn').disabled=!allOk;
-  document.getElementById('advanceBtn').textContent=allOk?(st<2?'⬆ Advance to '+(STAGE_NAMES[st+1]||'🎓 COMPLETED'):'🎓 YOU COMPLETED EVERYTHING'):'⬆ Complete all gates to advance';
-  document.getElementById('stageBadge').textContent=STAGE_NAMES[st]+(allOk?' ✓':'');
+  document.getElementById('advanceBtn').textContent=allOk?(st<2?t('advance_stage',{stage:t(STAGE_NAMES[st+1])}):t('advance_done')):t('advance_wait');
+  document.getElementById('stageBadge').textContent=t(STAGE_NAMES[st])+(allOk?' ✓':'');
 }
 function showGatesTab(i){window.__gatesTab=i;renderGates()}
 function toggleOverride(key,on){if(on)D.overrides[key]=true;else delete D.overrides[key];save();renderGates()}
@@ -9571,7 +9615,7 @@ function onIaTextChange(){
   const el=document.getElementById('iaText');
   if(!el)return;
   const text=el.value.trim();
-  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  const words=countWords(text);
   const wc=document.getElementById('iaWordCount');
   if(wc)wc.textContent=String(words);
   const st=document.getElementById('iaWordStatus');
@@ -9593,7 +9637,7 @@ async function submitIaWriting(){
   const kindEl=document.getElementById('iaKind');
   const text=textEl?textEl.value.trim():'';
   const kind=kindEl?kindEl.value:'Essay';
-  const words=text?text.split(/\s+/).filter(Boolean).length:0;
+  const words=countWords(text);
   if(text.length>6000){
     setIaState('error',t('ai_err_long'));
     return;

@@ -47,6 +47,7 @@ import plans
 import speech
 import speaking_prompts
 import speaking_report
+import legal
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -297,6 +298,11 @@ def _real_ip(handler):
             if cand:
                 return cand
     return peer or "local"
+
+
+def _client_id(ip):
+    """Truncated sha256 of a client address — the only form that may be logged."""
+    return hashlib.sha256(str(ip or "").encode("utf-8")).hexdigest()[:12]
 
 
 # ---------------------------------------------------------------------------
@@ -1056,7 +1062,13 @@ def _leaks_system_prompt(text, strong_only=False):
 
 
 def _word_count(text):
-    return len(text.split())
+    """Words as a human counts them: whitespace tokens carrying a letter or digit.
+
+    A lone em dash or "&" is punctuation, not a word. The client mirror is
+    countWords() in index.html; the two must agree or a text can be rejected
+    after the UI said it was inside the range.
+    """
+    return sum(1 for tok in text.split() if any(ch.isalnum() for ch in tok))
 
 
 # ---------------------------------------------------------------------------
@@ -1875,197 +1887,21 @@ document.getElementById('filtro').addEventListener('input',function(){{
 # docs/PRIVACY.md. The contact address is the explicit TODO_OWNER_EMAIL
 # placeholder: replace it with the real owner email before going public.
 # ---------------------------------------------------------------------------
-PRIVACY_TODO_EMAIL = "TODO_OWNER_EMAIL"
-
-
+# /privacy, /terms, /security — rendered from docs/*.md by legal.py. The
+# documents are trusted, but the renderer escapes every source character.
 def privacy_page():
     """Return the privacy policy page (English, dark-mode aware)."""
-    return f'''<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy — B2 First Tracker</title>
-<meta name="theme-color" id="metaTheme" content="#fbfcfd">
-<script>
-(function(){{
-  try{{
-    var t=localStorage.getItem('b2first_theme');
-    if(t==='dark'){{
-      document.documentElement.setAttribute('data-theme','dark');
-      var mt=document.getElementById('metaTheme');
-      if(mt)mt.setAttribute('content','#121416');
-    }}
-  }}catch(e){{}}
-}})();
-</script>
-<style>
-:root, :root[data-theme="light"]{{
-  color-scheme:light;
-  --bg: oklch(0.99 0.002 250); --surface: oklch(0.975 0.003 250);
-  --line: oklch(0.90 0.006 250); --txt: oklch(0.22 0.01 250);
-  --txt-2: oklch(0.46 0.01 250); --acc-text: oklch(0.52 0.16 255);
-}}
-:root[data-theme="dark"]{{
-  color-scheme:dark;
-  --bg: oklch(0.19 0.006 255); --surface: oklch(0.23 0.008 255);
-  --line: oklch(0.33 0.01 255); --txt: oklch(0.94 0.004 255);
-  --txt-2: oklch(0.72 0.008 255); --acc-text: oklch(0.72 0.13 255);
-}}
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:var(--bg);color:var(--txt);font:15px/1.6 system-ui,-apple-system,sans-serif;padding:24px 16px 56px}}
-.wrap{{max-width:760px;margin:0 auto}}
-a{{color:var(--acc-text)}}
-h1{{font-size:24px;font-weight:800;letter-spacing:-.2px;margin-bottom:4px}}
-.sub{{color:var(--txt-2);font-size:13px;margin-bottom:20px}}
-h2{{font-size:16px;font-weight:700;margin:26px 0 8px}}
-p,li{{font-size:14px;color:var(--txt);margin:6px 0}}
-ul{{padding-left:20px}}
-.card{{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px}}
-.back{{display:inline-block;margin-bottom:16px;color:var(--acc-text);text-decoration:none;font-size:13px;font-weight:600;border:1px solid var(--line);border-radius:10px;padding:7px 14px}}
-code{{font:13px/1.4 ui-monospace,monospace;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 6px}}
-footer{{margin-top:28px;color:var(--txt-2);font-size:12px}}
-@media (prefers-color-scheme: dark){{
-  :root:not([data-theme="light"]){{--bg: oklch(0.19 0.006 255); --surface: oklch(0.23 0.008 255);
-    --line: oklch(0.33 0.01 255); --txt: oklch(0.94 0.004 255);
-    --txt-2: oklch(0.72 0.008 255); --acc-text: oklch(0.72 0.13 255);}}
-}}
-</style></head><body><div class="wrap">
-<a class="back" href="/">← Back to the Tracker</a>
-<h1>Privacy Policy</h1>
-<div class="sub">B2 First Tracker · Last updated {time.strftime("%Y-%m-%d")}</div>
+    return legal.legal_page("PRIVACY", "Privacy Policy")
 
-<div class="card">
-<p>This tracker is a self-hosted study app. It stores the minimum needed to
-work and to find bugs. <b>Events are logged, never content:</b> the telemetry
-records what you do in the app (a view opened, a session saved, an error
-raised), never what you wrote, answered or typed.</p>
-</div>
 
-<h2>1. What we store</h2>
-<ul>
-<li><b>Account</b> — your chosen username and a salted, hashed password
-(PBKDF2-HMAC-SHA256, 600,000 iterations). The password itself is never stored.</li>
-<li><b>Study progress</b> — your practice log, error log, plan and settings,
-as JSON files on this server (one folder per account).</li>
-<li><b>Session tokens, hashed</b> — sessions are stored as
-<code>sha256(token)</code>; the raw token is never written to disk.</li>
-<li><b>Usage events</b> — anonymous product events (feature used, view
-opened, time in ms, error message truncated to 120 chars). They carry a random
-per-tab session id and, when you are logged in, your account id. The client IP
-is stored only as a salted hash (<code>sha256(ip+salt)</code>, 16 hex chars),
-never in clear text.</li>
-<li><b>Access audit log</b> — sign-ins, failed sign-ins and account changes
-(timestamp, event type, username, hashed-at-source IP) to detect abuse.</li>
-</ul>
+def terms_page():
+    """Return the terms of use page."""
+    return legal.legal_page("TERMS", "Terms of Use")
 
-<h2>2. What we do not store</h2>
-<ul>
-<li>No email addresses (accounts are username + password only).</li>
-<li>No real names, phone numbers or addresses.</li>
-<li>No payment data: the app is free, nothing is sold.</li>
-<li>No third-party analytics, no advertising, no tracking cookies. There is
-exactly one first-party preference cookie-equivalent (localStorage) holding
-your theme and your local data — it never leaves your browser except when you
-sync or export.</li>
-<li>No content telemetry: never your writings, answers, notes or passwords.</li>
-</ul>
 
-<h2>3. Why</h2>
-<ul>
-<li><b>To make the app work</b> — your progress has to live somewhere so the
-plan, streaks and charts are yours across devices.</li>
-<li><b>To detect errors</b> — truncated error messages and usage counts show
-what breaks and what people actually use, so it can be fixed.</li>
-</ul>
-
-<h2>4. Retention</h2>
-<ul>
-<li><b>Usage events</b>: 7 days. Files older than that are deleted
-automatically on every write.</li>
-<li><b>Access audit log</b>: kept until it reaches 5 MB, then rotated once
-(older copy deleted on the next rotation).</li>
-<li><b>Study progress</b>: until you delete your account.</li>
-<li><b>Local backups</b>: kept for 14 days (local rotation + weekly backup).</li>
-</ul>
-
-<h2>5. Your rights</h2>
-<ul>
-<li><b>Export</b> — <code>GET /api/export</code> (or "Export my data" in
-Account) downloads everything stored about you as JSON.</li>
-<li><b>Delete</b> — <code>DELETE /api/account</code> (or "Delete my account"
-in Account) erases your account <i>and its files on the server</i>: progress,
-backups and session tokens.</li>
-<li>Because there is no email on file, account recovery is impossible after
-deletion: export first if you want a copy.</li>
-</ul>
-
-<h2>6. AI correction</h2>
-<p>The AI corrector sends <b>only the text you explicitly choose to
-correct</b>, together with the task type (Essay, Article, Report, Review or
-Email), to the configured provider — DeepSeek (default) or Google Gemini.
-Nothing else is sent: no account data, no progress, no identifiers. The text
-is forwarded for the single request and is <b>not stored on this server</b>
-beyond that request; the provider's own retention policy applies to what they
-receive. The resulting bands and feedback are saved only inside your own
-progress when you accept the correction.</p>
-
-<h2>7. Speaking practice — pronunciation</h2>
-<p>The speaking studio can score pronunciation. That is the one thing a
-transcript cannot measure, so a short clip of your voice is sent to
-<b>Azure AI Speech (Pronunciation Assessment)</b> — a Microsoft service — to get
-phoneme-level scores. What is sent: at most <b>10 seconds of audio per
-turn</b> (not the whole session) and, optionally, the reference text of the
-sentence you were asked to read. Nothing else: no account data, no identifiers,
-no transcript.</p>
-<p>Your audio is <b>not stored</b>, not even temporarily on this server: it is
-forwarded for the single request and discarded in the same handler. It is never
-written to disk, never put in the audit log, never kept for "quality" or
-"debugging". Only the numeric result (accuracy, fluency, completeness, prosody
-and per-word scores) is kept, and only if you choose to save the session. The
-Azure subscription key lives in this server's environment and never reaches
-your browser.</p>
-<p>Azure/Microsoft processes the audio <b>outside Argentina</b> (their regional
-speech endpoints), under Microsoft's own retention policy for the request. If
-the speech service is not configured on this instance, the endpoint answers
-"speech not configured" and pronunciation is reported as <b>not measured</b> —
-the app never invents that score.</p>
-
-<h2>8. Live examiner and partner — what Google receives</h2>
-<p>The live examiner and partner (Speaking Parts 1-4) run on <b>Google Gemini
-Live</b>, a realtime voice service. Your browser connects <b>directly to
-Google</b> with short-lived, single-use tokens that this server mints for you.
-Each token opens exactly one session and lives about 30 minutes. Part 1 uses one
-session (the examiner); Parts 2-4 use two (examiner and partner).</p>
-<p>What Google receives: your <b>microphone audio</b> (16 kHz PCM, streamed to
-each session while the exam runs) and each role's own instructions (the exam
-script). It returns the voices (24 kHz PCM) and the transcripts: what you said,
-what the examiner said and what the partner said.</p>
-<p>What we receive: only the token request, the number of minutes you spent (for
-the daily limit) and, if you later choose to save the session, the transcript.
-Your audio <b>never passes through our server</b> and is <b>never stored here</b>,
-not even temporarily. Google processes the audio outside Argentina under
-Google's own retention policy for the Live API. The Google key lives in this
-server's environment and never reaches your browser. If this instance has no
-speech key, the examiner falls back to a clearly-labelled simulated voice and no
-audio leaves your browser.</p>
-
-<h2>9. Do Not Track</h2>
-<p>If your browser sends <code>Do Not Track: 1</code> (or the global privacy
-control signal), the app sends <b>no telemetry at all</b> — no usage events,
-no error reports. Every feature keeps working exactly the same.</p>
-
-<h2>10. Contact</h2>
-<p>Questions or requests about your data: <b>{PRIVACY_TODO_EMAIL}</b>
-(this placeholder is replaced with the real owner address before public
-deployment).</p>
-
-<h2>11. Applicable law</h2>
-<p>This policy is written with Argentina's Personal Data Protection Law
-(<b>Ley 25.326</b>) in mind, including access, correction and deletion
-rights. This document describes how the app actually handles data; it does
-not claim certified compliance with any regulation.</p>
-
-<footer>B2 First Tracker · privacy-first · events, never content ·
-<a href="/privacy">/privacy</a></footer>
-</div></body></html>'''
+def security_page():
+    """Return the security policy / disclosure page."""
+    return legal.legal_page("SECURITY", "Security Policy")
 
 
 # ---------------------------------------------------------------------------
@@ -2122,7 +1958,7 @@ def _audit(event, user="", ip="", rid="", detail=None):
         "rid": rid or "",
         "event": event,
         "user": user or "",
-        "ip": ip or "",
+        "ip": _client_id(ip) if ip else "",
     }
     if isinstance(detail, dict):
         for k, v in detail.items():
@@ -2171,6 +2007,61 @@ def read_audit_events():
         except OSError:
             continue
     return events
+
+
+def _scrub_audit_user(keys):
+    """Erase the username from retained audit lines for a deleted account.
+
+    The chain is rebuilt (prev recomputed) because editing a line invalidates
+    it. Deletion is the one legitimate rewrite: the events stay (counted,
+    timestamped, request-id'd), but the identity is gone. Returns the number of
+    lines scrubbed.
+    """
+    wanted = {str(k).lower() for k in keys if k}
+    if not wanted:
+        return 0
+    with _AUDIT_LOCK:
+        objects = []
+        for path in (_audit_file() + ".1", _audit_file()):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    for ln in f:
+                        ln = ln.strip()
+                        if not ln:
+                            continue
+                        try:
+                            obj = json.loads(ln)
+                        except ValueError:
+                            continue
+                        if isinstance(obj, dict):
+                            objects.append(obj)
+            except OSError:
+                continue
+        scrubbed = 0
+        prev = AUDIT_GENESIS
+        out = []
+        for obj in objects:
+            if str(obj.get("user", "")).lower() in wanted:
+                obj["user"] = ""
+                obj["scrubbed"] = True
+                scrubbed += 1
+            obj["prev"] = prev
+            line = json.dumps(obj, ensure_ascii=False)
+            out.append(line)
+            prev = hashlib.sha256(line.encode("utf-8")).hexdigest()
+        if scrubbed:
+            path = _audit_file()
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write("\n".join(out) + ("\n" if out else ""))
+            os.chmod(tmp, 0o600)
+            os.replace(tmp, path)
+            os.chmod(path, 0o600)
+            try:
+                os.remove(path + ".1")
+            except OSError:
+                pass
+        return scrubbed
 
 
 # ---------------------------------------------------------------------------
@@ -2250,26 +2141,24 @@ def _validate_progress(data):
 # /.well-known/security.txt (RFC 9116)
 # ---------------------------------------------------------------------------
 PUBLIC_BASE = os.environ.get("B2_PUBLIC_URL", "https://vps-server.tail40095b.ts.net").rstrip("/")
-SECURITY_CONTACT_PLACEHOLDER = "TODO_OWNER_EMAIL"
 
 
 def security_txt():
     """RFC 9116 security.txt body.
 
-    There is no verified mailbox on this project, so the Contact lines are the
-    GitHub advisory form (a real, working channel) plus the documented
-    TODO_OWNER_EMAIL placeholder that the owner must replace before claiming
-    a mail contact. Expires is always in the future (180 days).
+    There is no published owner mailbox, so the only Contact is the GitHub
+    advisory form (a real, working private channel). Expires is always in the
+    future (180 days).
     """
     expires = time.strftime("%Y-%m-%dT%H:%M:%S.000Z",
                             time.gmtime(time.time() + 180 * 24 * 3600))
     return (
         "Contact: https://github.com/Juan-Martin-Cerezo/b2first-tracker/security/advisories/new\n"
-        f"Contact: mailto:{SECURITY_CONTACT_PLACEHOLDER}\n"
         f"Expires: {expires}\n"
         "Preferred-Languages: en, es\n"
         f"Canonical: {PUBLIC_BASE}/.well-known/security.txt\n"
-        f"Policy: {PUBLIC_BASE}/privacy\n"
+        f"Policy: {PUBLIC_BASE}/security\n"
+        f"Acknowledgments: {PUBLIC_BASE}/security\n"
     )
 
 
@@ -2539,7 +2428,7 @@ class H(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         ms = int((time.time() - self._t0) * 1000)
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        line = f"{ts} rid={self._rid} {self.command} {path} {self._status} {ms}ms ip={_real_ip(self)}\n"
+        line = f"{ts} rid={self._rid} {self.command} {path} {self._status} {ms}ms ip={_client_id(_real_ip(self))}\n"
         with _LOG_LOCK:
             print(line, end="", flush=True)   # one write: no interleaved log lines
 
@@ -2866,9 +2755,12 @@ class H(BaseHTTPRequestHandler):
             self._serve_cached_static(TRACKER, "text/html; charset=utf-8")
             return
 
-        # Privacy policy (public HTML page, same look as the app)
-        if path == "/privacy":
-            self._send(200, privacy_page().encode("utf-8"), "text/html; charset=utf-8")
+        # Legal pages (public HTML, rendered from docs/*.md, cacheable for 5 min)
+        if path in ("/privacy", "/terms", "/security"):
+            page = {"/privacy": privacy_page, "/terms": terms_page,
+                    "/security": security_page}[path]()
+            self._send(200, page.encode("utf-8"), "text/html; charset=utf-8",
+                       {"Cache-Control": "public, max-age=300"})
             return
 
         # Material page
@@ -3247,11 +3139,13 @@ class H(BaseHTTPRequestHandler):
                     self._send_json(400, {"error": "invalid JSON"}); return
                 if not verify_password(uid, req.get("password", "")):
                     self._send_json(401, {"error": "Wrong password."}); return
-                u = store.get_user(uid)
-                _audit("account_delete", u.get("name", uid) if u else uid, _real_ip(self), self._rid)
-                _audit("session_revoked", uid, _real_ip(self), self._rid,
-                       {"reason": "account_delete"})
+                u = store.get_user(uid) or {}
+                name = u.get("name", "")
                 delete_user(uid)
+                _scrub_audit_user({uid, name})
+                # One final line, after the data is gone: the account id is the
+                # only identifier left, never the username.
+                _audit("account_delete", uid, _real_ip(self), self._rid)
                 self._send_json(200, {"ok": True})
                 return
             self._send(405, b"method not allowed", "text/plain"); return
@@ -3281,14 +3175,27 @@ class H(BaseHTTPRequestHandler):
             self._send_json(200, out)
             return
 
-        # Full data export: the complete progress as a JSON download (auth)
+        # Full data export (auth): progress + plan + usage + own audit events,
+        # in one JSON file (GDPR-style portability).
         if path == "/api/export":
             if self.command != "GET":
                 self._send(405, b"method not allowed", "text/plain"); return
             uid, auth_err = self._auth()
             if not uid:
                 self._send_json(401, {"error": auth_err or "invalid session"}); return
+            u = store.get_user(uid) or {}
+            name = u.get("name", "")
+            mine = {str(uid).lower(), str(name).lower()}
+            events = [e for e in read_audit_events()
+                      if str(e.get("user", "")).lower() in mine]
             data = read_user_progress(uid)
+            if not isinstance(data, dict):
+                data = {}
+            data["account"] = public_user(u) if u else {"id": uid}
+            data["usage"] = plans.usage_row(uid)
+            data["audit"] = events
+            data["exported_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            data["export_version"] = 1
             body = json.dumps(data, ensure_ascii=False).encode("utf-8")
             fname = f"b2first-export-{uid}-{time.strftime('%Y%m%d')}.json"
             self._send(200, body, "application/json; charset=utf-8",
