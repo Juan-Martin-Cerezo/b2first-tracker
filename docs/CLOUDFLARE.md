@@ -68,3 +68,13 @@ sudo cloudflared tunnel token financemacro-tunnel   # prints a token to run it
 `setup.sh` now resolves the credentials file by tunnel **id** (cloudflared names
 it after the UUID, not the name) and is expected to be run with
 `TUNNEL_ORIGIN_CERT=$HOME/.cloudflared/cert.pem`, because `sudo` resets `$HOME`.
+
+## Ops notes (2026-10-30)
+
+- The service reads its Gemini key from `/etc/systemd/system/b2first.service.d/zz-speech.conf`
+  (`EnvironmentFile=/home/juan/.config/b2first/speech.env`). Before that drop-in existed the
+  unit only loaded `ai.env`, so a perfectly valid key never reached the process and the examiner
+  stayed silent. Verify with `sudo tr '\0' '\n' < /proc/$(systemctl show b2first -p MainPID --value)/environ | grep B2_SPK`.
+- Cloudflare auto-injects its Web Analytics beacon (`static.cloudflareinsights.com`) at the edge.
+  Our CSP blocks it, so it never runs, but it prints a console error and contradicts the privacy
+  policy ("no analytics"). Turn it off in the dashboard: Web Analytics → disable.

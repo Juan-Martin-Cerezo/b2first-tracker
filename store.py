@@ -27,6 +27,9 @@ __all__ = [
     "speaking_file",
     "speaking_transcript_dir",
     "write_speaking_transcript",
+    "data_dir",
+    "read_json_private",
+    "write_json_private",
     "StoreBusy",
     "PROGRESS_SCHEMA",
     "PBKDF2_ITERATIONS",
@@ -205,6 +208,21 @@ def _write_json(path: str, data) -> None:
     os.chmod(tmp, 0o600)
     os.replace(tmp, path)
     os.chmod(path, 0o600)
+
+
+def data_dir() -> str:
+    """Public alias of _data_dir() for modules outside this one (plans.py)."""
+    return _data_dir()
+
+
+def read_json_private(path: str, default):
+    """Read a private JSON file, returning default when it is missing or corrupt."""
+    return _read_json(path, default)
+
+
+def write_json_private(path: str, data) -> None:
+    """Write a private JSON file atomically (tmp + rename, then 0600)."""
+    _write_json(path, data)
 
 
 def list_users() -> dict:
