@@ -43,6 +43,7 @@ from urllib.parse import quote, unquote, urlsplit
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
+import plans
 import speech
 import speaking_prompts
 import speaking_report
@@ -598,19 +599,54 @@ def _login_delay(count):
     return LOGIN_BACKOFF[min(max(count, 1) - 1, len(LOGIN_BACKOFF) - 1)]
 
 
-# --- Daily AI quota (protects the owner's key: in-memory, resets on date change) ---
+# --- Daily AI quota + plans (phase 31) -------------------------------------
+# Two meters guard the owner's key:
+#   * the per-account allowance comes from the plan (plans.py: free 3/day,
+#     pro 60/month, byo unlimited to us); it is persisted in data/usage.json so
+#     a restart cannot hand out a fresh quota;
+#   * B2_AI_DAILY_TOTAL is the instance-wide daily ceiling, still in memory, so
+#     50 pro accounts cannot burn the Pi.
+# B2_AI_DAILY_PER_USER survives only as an explicit operator override.
+LICENSE_SECRET_MIN = 32
+LICENSE_ATTEMPTS_PER_HOUR = 5
 _AI_QUOTA_LOCK = threading.Lock()
-_AI_QUOTA = {}  # {date iso: {"total": int, "users": {quota_key: int}}}
+_AI_QUOTA = {}  # {date iso: {"total": int, "users": {ip key: int}}}
+
+
+def _license_secret():
+    """B2_LICENSE_SECRET when usable, else "". Read per call (tests inject it)."""
+    value = (os.environ.get("B2_LICENSE_SECRET") or "").strip()
+    return value if len(value) >= LICENSE_SECRET_MIN else ""
+
+
+def _plan_for(uid, byo=False):
+    """The one place that answers 'what may this account do right now'."""
+    return plans.effective_plan(uid, byo=byo)
+
+
+def _legacy_per_user_cap():
+    """B2_AI_DAILY_PER_USER when the operator set it explicitly, else None.
+
+    New deployments leave it unset and rely on the plans. It is kept because
+    older units (and a few test suites) use it as an emergency hard cap.
+    """
+    raw = os.environ.get("B2_AI_DAILY_PER_USER")
+    if raw is None:
+        return None
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        return None
 
 
 def _ai_quota_limits():
-    """(per_user, total) daily limits from env, default 8 / 80."""
+    """(legacy per-account cap or None, instance-wide daily total)."""
     def _int(name, default):
         try:
             return max(0, int(os.environ.get(name, str(default))))
         except ValueError:
             return default
-    return _int("B2_AI_DAILY_PER_USER", 8), _int("B2_AI_DAILY_TOTAL", 80)
+    return _legacy_per_user_cap(), _int("B2_AI_DAILY_TOTAL", 80)
 
 
 def _ai_quota_today():
@@ -622,12 +658,25 @@ def _ai_quota_today():
     return _AI_QUOTA.setdefault(today, {"total": 0, "users": {}})
 
 
+def _ai_total_left():
+    """Calls left today for the whole instance."""
+    _legacy, total = _ai_quota_limits()
+    with _AI_QUOTA_LOCK:
+        return total - _ai_quota_today()["total"]
+
+
+def _ai_total_consume():
+    with _AI_QUOTA_LOCK:
+        _ai_quota_today()["total"] += 1
+
+
 def _ai_quota_left(quota_key):
-    """Server-key AI calls left today for this user (also capped by the total)."""
-    per_user, total = _ai_quota_limits()
+    """Anonymous (per-IP) calls left today; the free allowance unless overridden."""
+    legacy, _total = _ai_quota_limits()
+    cap = legacy if legacy is not None else plans.LIMITS["free"]["writing"]["limit"]
     with _AI_QUOTA_LOCK:
         day = _ai_quota_today()
-        return min(per_user - day["users"].get(quota_key, 0), total - day["total"])
+        return max(0, cap - day["users"].get(quota_key, 0))
 
 
 def _ai_quota_consume(quota_key):
@@ -635,6 +684,17 @@ def _ai_quota_consume(quota_key):
         day = _ai_quota_today()
         day["users"][quota_key] = day["users"].get(quota_key, 0) + 1
         day["total"] += 1
+
+
+def _ai_left_for(uid):
+    """LLM calls left for an account in its current window (GET /api/account)."""
+    legacy = _legacy_per_user_cap()
+    if legacy is not None:
+        return max(0, legacy - plans.writing_used(uid, "day"))
+    limits = _plan_for(uid)["limits"]["writing"]
+    if limits is None:
+        return 1000000  # byo: the user's key pays, we do not meter it
+    return max(0, limits["limit"] - plans.writing_used(uid, limits["window"]))
 
 
 # --- Daily PA quota (same shape as the AI quota; protects the Azure key) ---
@@ -1593,6 +1653,9 @@ def change_password(user_id, current, new_password):
 def delete_user(user_id):
     """Remove the account: data dir, users.json record and every session token."""
     store.remove_user(user_id)
+    # Phase 31: a closed account leaves no plan, no usage and no license link
+    # behind (the code stays burnt: only the hash row survives, detached).
+    plans.forget_user(user_id)
     with _TOKENS_LOCK:
         tokens = load_tokens()
         tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
@@ -1635,9 +1698,18 @@ def migrate_legacy():
 
 
 def read_user_progress(user_id):
-    """Return a user's progress, or {} if it does not exist."""
+    """Return a user's progress, or {} if it does not exist.
+
+    The `plan` mirror is derived here on every read: data/plans.json is the
+    source of truth, the document only carries a copy for the UI to render.
+    """
     data = store.get_progress(user_id)
-    return data if data is not None else {}
+    data = data if data is not None else {}
+    if isinstance(data, dict):
+        plan = _plan_for(user_id)
+        data["plan"] = {"plan": plan["plan"], "since": plan["since"],
+                        "until": plan["until"], "source": plan["source"]}
+    return data
 
 
 def save_user_progress(user_id, data):
@@ -2611,6 +2683,85 @@ class H(BaseHTTPRequestHandler):
                         {"Retry-After": str(retry)})
         return True
 
+    def _plan_limit_429(self, limit, plan, value, window, reset, uid):
+        """429 that names the plan, the limit and what unlocks more.
+
+        Never a dead end: `unlock` tells the client that `pro` (or a BYO key)
+        lifts the limit, which is what the limit modal offers.
+        """
+        _audit("plan_limit_hit", uid or "", _real_ip(self), self._rid,
+               {"limit": limit, "plan": plan})
+        self._send_json(429, {
+            "error": "plan_limit",
+            "limit": limit,
+            "plan": plan,
+            "limit_value": value,
+            "window": window,
+            "reset": reset,
+            "unlock": "pro",
+        })
+
+    def _legacy_quota_429(self):
+        """The pre-phase-31 body, kept when B2_AI_DAILY_PER_USER is the blocker."""
+        reset = (date.today() + timedelta(days=1)).isoformat()
+        self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
+
+    def _writing_gate(self, uid, ip):
+        """May this request spend one LLM call? Replies and returns False if not.
+
+        Checks only; the caller consumes right before the upstream call so a
+        failed validation never burns quota.
+        """
+        legacy = _legacy_per_user_cap()
+        if uid:
+            plan = _plan_for(uid)
+            limits = plan["limits"]["writing"]
+            if limits is None:
+                return True  # byo: their key pays, the hourly cap still applies
+            if legacy is not None:
+                if plans.writing_used(uid, "day") >= legacy:
+                    self._legacy_quota_429()
+                    return False
+            elif plans.writing_used(uid, limits["window"]) >= limits["limit"]:
+                self._plan_limit_429("writing", plan["plan"], limits["limit"],
+                                     limits["window"],
+                                     plans.reset_at(limits["window"]), uid)
+                return False
+        elif _ai_quota_left("ip:" + ip) <= 0:
+            if legacy is None:
+                free = plans.LIMITS["free"]["writing"]
+                self._plan_limit_429("writing", "free", free["limit"],
+                                     free["window"], plans.reset_at(free["window"]), "")
+            else:
+                self._legacy_quota_429()
+            return False
+        if _ai_total_left() <= 0:
+            self._legacy_quota_429()
+            return False
+        return True
+
+    def _writing_consume(self, uid, ip):
+        """Count one LLM call for an account (persisted) or an IP (in memory)."""
+        if uid:
+            plans.writing_consume(uid)
+            _ai_total_consume()
+        else:
+            _ai_quota_consume("ip:" + ip)
+
+    def _speaking_gate(self, uid):
+        """May this account mint one more mock? Replies and returns False if not."""
+        plan = _plan_for(uid)
+        limits = plan["limits"]["speaking"]
+        if limits is None:
+            return True
+        used = plans.speaking_used(uid, limits["window"])
+        if used["mocks"] >= limits["mocks"] or used["seconds"] >= limits["minutes"] * 60:
+            self._plan_limit_429("speaking", plan["plan"], limits["mocks"],
+                                 limits["window"],
+                                 plans.reset_at(limits["window"]), uid)
+            return False
+        return True
+
     def _clen(self):
         """Content-Length of the request body (0 if absent or malformed)."""
         try:
@@ -2833,6 +2984,77 @@ class H(BaseHTTPRequestHandler):
             self._send(200, body, "application/json; charset=utf-8")
             return
 
+        # Phase 31: the plan behind the current account (auth, read-only).
+        if path == "/api/plan":
+            if self.command != "GET":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            plan = _plan_for(uid)
+            usage = plans.usage_snapshot(uid, plan["limits"])
+            self._send_json(200, {
+                "plan": plan["plan"],
+                "since": plan["since"],
+                "until": plan["until"],
+                "source": plan["source"],
+                "limits": plan["limits"],
+                "usage": usage,
+                "reset_at": usage["reset_at"],
+            })
+            return
+
+        # Phase 31: redeem an activation code (auth, 5 attempts/hour/account).
+        # Every failure answers the same bytes: a caller cannot learn whether a
+        # code is wrong, expired, unknown or already used.
+        if path == "/api/plan/redeem":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._rate_limited("plan:redeem:user:" + uid,
+                                  LICENSE_ATTEMPTS_PER_HOUR, 3600, "user"):
+                return
+            length = self._clen()
+            if length > 4096:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            raw = self.rfile.read(length) if length > 0 else b""
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                code = req.get("code") if isinstance(req, dict) else ""
+            except (ValueError, UnicodeDecodeError):
+                code = ""
+            secret = _license_secret()
+            if not secret:
+                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
+                        f"rid={self._rid} plan/redeem disabled: B2_LICENSE_SECRET "
+                        f"missing or shorter than {LICENSE_SECRET_MIN} bytes\n")
+                with _LOG_LOCK:
+                    print(line, end="", flush=True)
+                self._send_json(503, {"error": "licenses_not_configured"})
+                return
+            found = plans.verify_code(code, secret)
+            row = plans.license_row(code) if found else None
+            if not found or (isinstance(row, dict) and row.get("redeemed_at")):
+                self._send_json(400, {"error": "invalid_code"})
+                return
+            rec = plans.set_plan(uid, found["plan"], found["days"], "code",
+                                 plans.code_hash(code))
+            plans.mark_redeemed(code, uid, rec["until"])
+            _audit("plan_redeemed", uid, _real_ip(self), self._rid,
+                   {"plan": found["plan"], "days": found["days"]})
+            self._send_json(200, {"ok": True, "plan": rec["plan"],
+                                  "until": rec["until"], "source": rec["source"]})
+            return
+
         # Storage health check (no auth): 200 sane / 503 broken
         if path == "/api/health":
             code, obj = _health_check()
@@ -3014,7 +3236,7 @@ class H(BaseHTTPRequestHandler):
                     "uid": uid,
                     "created": u.get("created", ""),
                     "progress_bytes": progress_bytes,
-                    "ai_left_today": max(0, _ai_quota_left("user:" + uid)),
+                    "ai_left_today": _ai_left_for(uid),
                 })
                 return
             if self.command == "DELETE":
@@ -3132,6 +3354,9 @@ class H(BaseHTTPRequestHandler):
                     # aiKey and any stray BYO block are dropped server-side too.
                     data["settings"].pop("aiKey", None)
                     data["settings"].pop("byo", None)
+                # The plan mirror is read-only: plans.json is the source of truth,
+                # so a client can never grant itself pro by PUTting the document.
+                data.pop("plan", None)
                 if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
                     self._send_json(413, {"error": "progress too large"}); return
                 save_user_progress(user_id, data)
@@ -3194,6 +3419,8 @@ class H(BaseHTTPRequestHandler):
                     print(line, end="", flush=True)
                 self._send_json(503, {"error": "speech_not_configured"})
                 return
+            if not self._speaking_gate(uid):
+                return
             if _spk_remaining_s(uid) <= 0:
                 reset = (date.today() + timedelta(days=1)).isoformat()
                 self._send_json(429, {"error": "daily speaking limit reached",
@@ -3204,6 +3431,9 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(502, {"error": "token_mint_failed",
                                       "reason": mint_err})
                 return
+            # A failed mint never burns a mock: the plan meter is bumped only
+            # once Google handed us a token.
+            plans.speaking_add_mock(uid)
             store.speaking_add(uid, _spk_today(), 0, 1)
             _audit("token_minted", uid, _real_ip(self), self._rid,
                    {"part": part, "role": role})
@@ -3253,11 +3483,16 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(422, {"error": "invalid seconds"})
                 return
             rec = store.speaking_add(uid, _spk_today(), float(seconds))
+            plans.speaking_add_seconds(uid, seconds)
             per_user_min, _total_min = _spk_min_limits()
+            plan_limits = _plan_for(uid)["limits"]["speaking"]
+            plan_used = plans.speaking_used(uid, plan_limits["window"])
             self._send_json(200, {
                 "remaining_s": _spk_remaining_s(uid),
                 "used_s": int(round(rec["seconds"])),
                 "cap_s": per_user_min * 60,
+                "plan_remaining_s": max(0, int(plan_limits["minutes"] * 60
+                                           - plan_used["seconds"])),
             })
             return
 
@@ -3318,11 +3553,9 @@ class H(BaseHTTPRequestHandler):
                     # No shared text-model key: fail before spending a quota unit.
                     self._send_json(503, {"error": "ai_not_configured"})
                     return
-                quota_key = "user:" + uid
-                if _ai_quota_left(quota_key) <= 0:
-                    _audit("quota_hit", uid, _real_ip(self), self._rid)
-                    reset = (date.today() + timedelta(days=1)).isoformat()
-                    self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
+                # The report is an LLM call, so it shares the writing allowance
+                # (free: 3/day, pro: 60/month). No separate counter to drift.
+                if not self._writing_gate(uid, _real_ip(self)):
                     return
             # Only the candidate's own turns are graded. Examiner and partner
             # turns are context for the proxies, never text for the model.
@@ -3336,7 +3569,7 @@ class H(BaseHTTPRequestHandler):
                        {"reason": abuse, "chars": len(candidate)})
             user_block, _nonce = speaking_report.report_message(_fit_ai_text(candidate))
             if not byo:
-                _ai_quota_consume(quota_key)
+                self._writing_consume(uid, _real_ip(self))
             content, ai_err = _ai_text_complete(speaking_report.REPORT_SYSTEM, user_block,
                                                 byo=byo)
             if ai_err:
@@ -3668,17 +3901,15 @@ class H(BaseHTTPRequestHandler):
                 if requested not in ("deepseek", "gemini"):
                     self._send_json(400, {"error": "invalid provider"})
                     return
-                quota_key = "user:" + auth_uid if auth_uid else "ip:" + client_ip
-                if _ai_quota_left(quota_key) <= 0:
-                    _audit("quota_hit", auth_uid or "", client_ip, self._rid)
-                    reset = (date.today() + timedelta(days=1)).isoformat()
-                    self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
-                    return
                 api_key = (os.environ.get("B2_AI_KEY") or "").strip()
                 if not api_key:
                     self._send_json(502, {"error": "missing provider key"})
                     return
-                _ai_quota_consume(quota_key)
+                # Phase 31: the plan decides the allowance (free 3/day, pro
+                # 60/month); B2_AI_DAILY_TOTAL still caps the whole instance.
+                if not self._writing_gate(auth_uid, client_ip):
+                    return
+                self._writing_consume(auth_uid, client_ip)
                 wire = requested
                 default_base = DEFAULT_DEEPSEEK_BASE if wire == "deepseek" else DEFAULT_GEMINI_BASE
                 default_model = DEFAULT_DEEPSEEK_MODEL if wire == "deepseek" else DEFAULT_GEMINI_MODEL

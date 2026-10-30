@@ -68,6 +68,24 @@ Requirements for the text:
   limits with notice, the service is provided as is.
 - **Version and date** at the top of each document, and a changelog line.
 
+
+## Part D — The text scan (measured 2026-10-30, fix all of it)
+Scan found **297** `data-i18n` nodes, **458** keys in EN and 458 in ES (parity OK),
+but **14 visible strings with no i18n at all**, including:
+- `Al crear una cuenta aceptás la` + `Política de privacidad` — hardcoded in **Spanish**
+  on the signup screen (the app defaults to English). Write them in both languages.
+- `Build your B2 First in two habits` · `It tells you which exam parts are weak…`
+- `Stage 0 — Foundations (Structural Acquisition)` and the generated
+  `Plan de estudio personalizado para <name> · Etapa 0 — Cimientos · …` template
+  (Spanish, built by string concatenation — route it through I18N with placeholders).
+- `Demo mode · your progress is saved only in this browser…`
+
+Requirement: after this phase a repeat of the scan reports **0** untranslated
+visible strings. Add that scan as `tools/scan_texts.py` (Playwright, prints the
+offenders) and run it in the acceptance; also scan for ES text left in EN mode and
+EN text left in ES mode (proper nouns, book titles and Part 1–7 excluded by an
+explicit allow-list).
+
 ## Part C — Serving them
 3. Render the three markdown files with a tiny stdlib renderer (headings,
    paragraphs, lists, links, tables, code) — no dependency, no template engine.

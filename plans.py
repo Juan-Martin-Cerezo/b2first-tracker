@@ -232,7 +232,7 @@ def effective_plan(uid, byo=False, now=None):
     return {
         "plan": "free",
         "since": rec.get("since") if rec else None,
-        "until": rec.get("until"),
+        "until": rec.get("until") if rec else None,
         "source": "default",
         "limits": LIMITS["free"],
     }
@@ -252,7 +252,9 @@ def set_plan(uid, plan, days, source="code", code_hash="", now=None):
     base = ts
     until = current.get("until")
     if isinstance(until, str) and until > iso(ts):
-        base = time.mktime(time.strptime(until, "%Y-%m-%dT%H:%M:%SZ"))
+        parsed = _parse_iso(until)
+        if parsed is not None:
+            base = parsed
     since = current.get("since") if current.get("plan") == plan else iso(ts)
     rec = {
         "plan": plan,
@@ -318,9 +320,8 @@ def _prune(accounts, ts):
         if not isinstance(seen, str):
             accounts.pop(uid, None)
             continue
-        try:
-            stamp = time.mktime(time.strptime(seen, "%Y-%m-%dT%H:%M:%SZ"))
-        except ValueError:
+        stamp = _parse_iso(seen)
+        if stamp is None:
             accounts.pop(uid, None)
             continue
         if stamp < cutoff:
@@ -555,6 +556,11 @@ def verify_code(code, secret):
         return None
     raw = _b32_decode(body)
     if not raw or len(raw) != 7:
+        return None
+    # The last base32 character carries padding bits that b32decode ignores, so
+    # re-encoding must reproduce the body exactly: otherwise a one-character
+    # change would be accepted (same bytes, different text).
+    if _b32(raw) != body:
         return None
     nonce, mac = raw[:3], raw[3:]
     if not hmac.compare_digest(mac, _mac(secret, plan, days, nonce)):
