@@ -7,9 +7,12 @@ It knows nothing about tokens and does not depend on http.server.
 """
 import json
 import os
+import re
 import shutil
 import sys
+import threading
 import time
+from contextlib import contextmanager
 
 __all__ = [
     "get_user",
@@ -19,11 +22,60 @@ __all__ = [
     "get_progress",
     "put_progress",
     "backup",
+    "StoreBusy",
+    "PROGRESS_SCHEMA",
 ]
 
 _DEFAULT_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 DATA_DIR = _DEFAULT_DATA_DIR
 BK_KEEP = 20
+PROGRESS_SCHEMA = 2
+_LOCK_TIMEOUT = 5.0
+
+_SAFE_UID_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")
+
+
+class StoreBusy(Exception):
+    """A write lock could not be acquired within _LOCK_TIMEOUT seconds."""
+
+
+def _safe_uid(raw):
+    """Validate a user id before it is ever used to build a path.
+
+    Accepts only [A-Za-z0-9._-]{1,64}; rejects '..', '/' , '\\' and leading
+    dots. Returns the id unchanged or raises ValueError (never touches disk).
+    """
+    if not isinstance(raw, str) or not _SAFE_UID_RE.fullmatch(raw):
+        raise ValueError("invalid user id")
+    if raw.startswith(".") or ".." in raw:
+        raise ValueError("invalid user id")
+    return raw
+
+
+_STORE_LOCK = threading.Lock()
+_PROG_LOCKS = {}
+_PROG_LOCKS_GUARD = threading.Lock()
+
+
+def _prog_lock(uid: str) -> threading.Lock:
+    """Per-user Lock for progress read-modify-write (guarded dict of locks)."""
+    with _PROG_LOCKS_GUARD:
+        lock = _PROG_LOCKS.get(uid)
+        if lock is None:
+            lock = threading.Lock()
+            _PROG_LOCKS[uid] = lock
+        return lock
+
+
+@contextmanager
+def _locked(lock):
+    """Take `lock` or raise StoreBusy after _LOCK_TIMEOUT seconds."""
+    if not lock.acquire(timeout=_LOCK_TIMEOUT):
+        raise StoreBusy("busy")
+    try:
+        yield
+    finally:
+        lock.release()
 
 
 def _data_dir() -> str:
@@ -41,7 +93,7 @@ def _users_file() -> str:
 
 
 def _user_dir(uid: str) -> str:
-    return os.path.join(_data_dir(), "users", uid)
+    return os.path.join(_data_dir(), "users", _safe_uid(uid))
 
 
 def _prog_file(uid: str) -> str:
@@ -103,24 +155,71 @@ def get_user(uid: str) -> dict | None:
 
 def create_user(uid: str, record: dict) -> None:
     """Persist or update the record of user uid and ensure its backups folder."""
-    users = list_users()
-    users[uid] = record
-    _write_json(_users_file(), users)
-    _ensure_user_dirs(uid)
+    _safe_uid(uid)
+    with _locked(_STORE_LOCK):
+        users = list_users()
+        users[uid] = record
+        _write_json(_users_file(), users)
+        _ensure_user_dirs(uid)
 
 
 def remove_user(uid: str) -> None:
     """Delete the record of user uid and its whole data directory."""
-    users = list_users()
-    users.pop(uid, None)
-    _write_json(_users_file(), users)
-    shutil.rmtree(_user_dir(uid), ignore_errors=True)
+    _safe_uid(uid)
+    with _locked(_STORE_LOCK):
+        users = list_users()
+        users.pop(uid, None)
+        _write_json(_users_file(), users)
+        shutil.rmtree(_user_dir(uid), ignore_errors=True)
+
+
+def _needs_migration(data: dict) -> bool:
+    """True for pre-schema progress (v1: no schema_version). Future versions are left alone."""
+    sv = data.get("schema_version")
+    if sv == PROGRESS_SCHEMA:
+        return False
+    if isinstance(sv, int) and sv > PROGRESS_SCHEMA:
+        return False
+    return True
+
+
+def _migrate_progress(data: dict) -> dict:
+    """Upgrade progress in place to PROGRESS_SCHEMA (1 -> 2), never dropping unknown fields."""
+    data.setdefault("profile", None)
+    data.setdefault("onboarded", False)
+    settings = data.get("settings")
+    if not isinstance(settings, dict):
+        settings = {}
+        data["settings"] = settings
+    settings["__v"] = PROGRESS_SCHEMA
+    data["schema_version"] = PROGRESS_SCHEMA
+    return data
 
 
 def get_progress(uid: str) -> dict | None:
-    """Return the saved progress of the user, or None if it does not exist yet."""
-    data = _read_json(_prog_file(uid), None)
-    return data if isinstance(data, dict) else None
+    """Return the saved progress of the user, or None if it does not exist yet.
+
+    Versioned migration: a progress without schema_version is upgraded to
+    PROGRESS_SCHEMA and rewritten, keeping the original in
+    backups/pre-migration-<ts>.json (idempotent: a second read is a no-op).
+    """
+    _safe_uid(uid)
+    pf = _prog_file(uid)
+    data = _read_json(pf, None)
+    if not isinstance(data, dict) or not _needs_migration(data):
+        return data if isinstance(data, dict) else None
+    with _locked(_prog_lock(uid)):
+        data = _read_json(pf, None)  # re-read under the lock
+        if not isinstance(data, dict) or not _needs_migration(data):
+            return data if isinstance(data, dict) else None
+        _ensure_user_dirs(uid)
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        try:
+            shutil.copy2(pf, os.path.join(_bk_dir(uid), f"pre-migration-{stamp}.json"))
+        except OSError:
+            pass
+        _write_json(pf, _migrate_progress(data))
+        return data
 
 
 def backup(uid: str, label: str | None = None) -> str:
@@ -138,19 +237,25 @@ def backup(uid: str, label: str | None = None) -> str:
 
 
 def put_progress(uid: str, data: dict) -> None:
-    """Persist the user's progress atomically and rotate backups (BK_KEEP=20)."""
-    _ensure_user_dirs(uid)
-    bk_dir = _bk_dir(uid)
-    pf = _prog_file(uid)
-    if os.path.exists(pf):
+    """Persist the user's progress atomically and rotate backups (BK_KEEP=20).
+
+    The per-user lock covers backup + write so two concurrent PUTs cannot
+    clobber each other's backup or tmp file.
+    """
+    _safe_uid(uid)
+    with _locked(_prog_lock(uid)):
+        _ensure_user_dirs(uid)
+        bk_dir = _bk_dir(uid)
+        pf = _prog_file(uid)
+        if os.path.exists(pf):
+            try:
+                backup(uid)
+            except OSError:
+                pass
+        _write_json(pf, data)
         try:
-            backup(uid)
+            bks = sorted(os.listdir(bk_dir))
+            for old in bks[:-BK_KEEP]:
+                os.remove(os.path.join(bk_dir, old))
         except OSError:
             pass
-    _write_json(pf, data)
-    try:
-        bks = sorted(os.listdir(bk_dir))
-        for old in bks[:-BK_KEEP]:
-            os.remove(os.path.join(bk_dir, old))
-    except OSError:
-        pass

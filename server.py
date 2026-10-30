@@ -28,6 +28,7 @@ Deploy: systemd unit b2first.service (Restart=always) in this dir.
 import os, re, html, mimetypes, json, shutil, time, hashlib, secrets, threading
 import urllib.request, urllib.error
 import ipaddress
+import traceback
 from collections import deque
 from datetime import date, timedelta
 from urllib.parse import quote, unquote
@@ -59,6 +60,8 @@ B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
 PROGRESS_MAX_BYTES = 2 * 1024 * 1024                    # max size of a progress payload (2 MB)
 AI_MAX_BYTES = 32 * 1024                                # max size of an AI request body (32 KB)
+B2_PUBLIC_HEALTH = os.environ.get("B2_PUBLIC_HEALTH", "0").strip() == "1"
+_START_TS = time.time()                                 # for /api/health uptime_s
 
 
 def _is_demo():
@@ -66,6 +69,13 @@ def _is_demo():
     if isinstance(B2_DEMO, str):
         return B2_DEMO.strip() in ("1", "true", "True")
     return bool(B2_DEMO)
+
+
+def _public_health():
+    """True when /api/health may expose absolute paths (B2_PUBLIC_HEALTH=1)."""
+    if isinstance(B2_PUBLIC_HEALTH, str):
+        return B2_PUBLIC_HEALTH.strip() in ("1", "true", "True")
+    return bool(B2_PUBLIC_HEALTH)
 
 
 def _register_mode():
@@ -346,6 +356,9 @@ def save_users(users):
         store.create_user(uid, rec)
 
 
+_TOKENS_LOCK = threading.Lock()  # serializes read-modify-write of tokens.json
+
+
 def load_tokens():
     """Return {token: {user_id, exp}}."""
     return _read_json(TOKENS_FILE, {})
@@ -380,13 +393,14 @@ def verify_password(user_id, password):
 
 def new_token(user_id):
     """Create a session token valid for TOKEN_TTL and persist it."""
-    tokens = load_tokens()
-    # Prune expired tokens
-    now = time.time()
-    tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
-    tok = secrets.token_hex(24)
-    tokens[tok] = {"user_id": user_id, "exp": now + TOKEN_TTL}
-    save_tokens(tokens)
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        # Prune expired tokens
+        now = time.time()
+        tokens = {t: v for t, v in tokens.items() if v.get("exp", 0) > now}
+        tok = secrets.token_hex(24)
+        tokens[tok] = {"user_id": user_id, "exp": now + TOKEN_TTL}
+        save_tokens(tokens)
     return tok
 
 
@@ -397,23 +411,25 @@ def auth_from_token(token):
     """
     if not token:
         return None, "invalid session"
-    tokens = load_tokens()
-    v = tokens.get(token)
-    if not v:
-        return None, "invalid session"
-    if v.get("exp", 0) < time.time():
-        return None, "session expired"
-    # Sliding expiration: every authenticated request keeps the session alive.
-    v["exp"] = time.time() + TOKEN_TTL
-    save_tokens(tokens)
-    return v.get("user_id"), None
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        v = tokens.get(token)
+        if not v:
+            return None, "invalid session"
+        if v.get("exp", 0) < time.time():
+            return None, "session expired"
+        # Sliding expiration: every authenticated request keeps the session alive.
+        v["exp"] = time.time() + TOKEN_TTL
+        save_tokens(tokens)
+        return v.get("user_id"), None
 
 
 def revoke_token(token):
-    tokens = load_tokens()
-    if token in tokens:
-        del tokens[token]
-        save_tokens(tokens)
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        if token in tokens:
+            del tokens[token]
+            save_tokens(tokens)
 
 
 def public_user(u):
@@ -499,9 +515,10 @@ def change_password(user_id, current, new_password):
 def delete_user(user_id):
     """Remove the account: data dir, users.json record and every session token."""
     store.remove_user(user_id)
-    tokens = load_tokens()
-    tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
-    save_tokens(tokens)
+    with _TOKENS_LOCK:
+        tokens = load_tokens()
+        tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
+        save_tokens(tokens)
 
 
 def migrate_legacy():
@@ -567,6 +584,50 @@ def list_user_backups(user_id):
         out.append({"file": fn, "size": st.st_size,
                     "date": time.strftime("%Y-%m-%d %H:%M", time.localtime(st.st_mtime))})
     return out
+
+
+# ---------------------------------------------------------------------------
+# /api/health (storage check, no auth)
+# ---------------------------------------------------------------------------
+def _health_check():
+    """Return (status, body): 200 only when the storage is sane, else 503.
+
+    Checks: DATA_DIR is writable (8-byte probe), users.json parses and every
+    uid has its folder. Absolute paths are only exposed with B2_PUBLIC_HEALTH=1.
+    """
+    probe = os.path.join(DATA_DIR, ".health-probe")
+    try:
+        with open(probe, "wb") as f:
+            f.write(b"\0" * 8)
+        os.remove(probe)
+    except OSError:
+        return 503, {"ok": False, "error": "data dir is not writable", "check": "data_dir"}
+    try:
+        with open(store._users_file(), "r", encoding="utf-8") as f:
+            users = json.load(f)
+        if not isinstance(users, dict):
+            raise ValueError("users.json is not an object")
+    except FileNotFoundError:
+        users = {}
+    except (OSError, ValueError):
+        return 503, {"ok": False, "error": "users.json is corrupt", "check": "users_json"}
+    missing = []
+    for uid in users:
+        try:
+            if not os.path.isdir(store._user_dir(uid)):
+                missing.append(uid)
+        except ValueError:
+            missing.append(uid)
+    if missing:
+        return 503, {"ok": False, "error": "missing user directories",
+                     "check": "dirs", "missing_dirs": missing}
+    return 200, {
+        "ok": True,
+        "users": len(users),
+        "data_dir": DATA_DIR if _public_health() else os.path.basename(DATA_DIR),
+        "version": "1.0.0",
+        "uptime_s": int(time.time() - _START_TS),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -661,16 +722,71 @@ document.getElementById('filtro').addEventListener('input',function(){{
 # ---------------------------------------------------------------------------
 # HTTP handler
 # ---------------------------------------------------------------------------
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()",
+    "Content-Security-Policy": (
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; "
+        "base-uri 'none'; form-action 'self'"
+    ),
+}
+_LOG_LOCK = threading.Lock()  # keeps one access-log line atomic under concurrency
+
+
 class H(BaseHTTPRequestHandler):
     server_version = "B2FirstPortal/1.0"
 
     def log_message(self, fmt, *a):
-        """Silence per-request logging (noise in journald)."""
+        """Silence per-request logging (replaced by _log_line: one line, no secrets)."""
         pass
 
+    def _log_line(self):
+        """One stdout access line per request. Never logs tokens, query or body."""
+        path = self.path.split("?")[0]
+        ms = int((time.time() - self._t0) * 1000)
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        with _LOG_LOCK:
+            print(f"{ts} rid={self._rid} {self.command} {path} {self._status} {ms}ms ip={_real_ip(self)}",
+                  flush=True)
+
+    def _run(self):
+        """Route one request: request id, access log and error containment."""
+        self._rid = secrets.token_hex(4)
+        self._status = 0
+        self._t0 = time.time()
+        try:
+            self._handle()
+        except store.StoreBusy:
+            self._safe_json(429, {"error": "busy", "retry_after": 2}, {"Retry-After": "2"})
+        except (ConnectionResetError, BrokenPipeError):
+            pass  # client went away: just close, never write
+        except TimeoutError:
+            self._safe_json(504, {"error": "timeout", "rid": self._rid})
+        except Exception:
+            traceback.print_exc()
+            self._safe_json(500, {"error": "internal", "rid": self._rid})
+        finally:
+            self._log_line()
+
+    def _safe_json(self, code, obj, extra=None):
+        """Best-effort JSON response (the client may already be gone)."""
+        try:
+            self._send_json(code, obj, extra)
+        except OSError:
+            pass
+
     def _send(self, code, body, ctype, extra=None):
-        """Helper: response with minimal headers + Content-Length."""
+        """Helper: response with security headers + Content-Length."""
+        self._status = code
         self.send_response(code)
+        for k, v in SECURITY_HEADERS.items():
+            self.send_header(k, v)
+        self.send_header("X-Request-Id", self._rid)
+        if self.path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         if extra:
@@ -720,6 +836,11 @@ class H(BaseHTTPRequestHandler):
     def _handle(self):
         """Single router (used by GET and HEAD)."""
         path = unquote(self.path.split("?")[0])
+
+        # CORS is closed: answer preflights without any permissive header.
+        if self.command == "OPTIONS":
+            self._send(204, b"", "text/plain")
+            return
 
         # Tracker (index.html)
         if path in ("/", "/index.html"):
@@ -827,6 +948,12 @@ class H(BaseHTTPRequestHandler):
             body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True,
                                "register": _register_mode()}, ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # Storage health check (no auth): 200 sane / 503 broken
+        if path == "/api/health":
+            code, obj = _health_check()
+            self._send_json(code, obj)
             return
 
         # In demo mode accounts and sync are blocked (nobody reads or writes data/)
@@ -952,9 +1079,10 @@ class H(BaseHTTPRequestHandler):
                 self._send(code, json.dumps({"error": err}).encode("utf-8"), "application/json; charset=utf-8")
                 return
             # Keep only the current session: a leaked password must not keep old sessions alive.
-            tokens = load_tokens()
-            tokens = {t: v for t, v in tokens.items() if t == tok or v.get("user_id") != uid}
-            save_tokens(tokens)
+            with _TOKENS_LOCK:
+                tokens = load_tokens()
+                tokens = {t: v for t, v in tokens.items() if t == tok or v.get("user_id") != uid}
+                save_tokens(tokens)
             self._send(200, json.dumps({"ok": True}).encode("utf-8"), "application/json; charset=utf-8")
             return
 
@@ -1010,8 +1138,13 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/progress":
             migrate_legacy()
             qs = self.path.split("?", 1)[-1]
-            user_id = re.search(r"(?:^|&)user=([^&]+)", qs)
-            user_id = unquote(user_id.group(1)) if user_id else "owner"
+            m = re.search(r"(?:^|&)user=([^&]*)", qs)
+            try:
+                user_id = store._safe_uid(unquote(m.group(1)) if m else "owner")
+            except ValueError:
+                self._drain()
+                self._send_json(400, {"error": "invalid user id"})
+                return
             # Validate the session: a present token must be valid and belong to the
             # user; with no token only a DIRECT local request may touch the owner's data
             # (backwards compat for the owner's own machine). Any proxied request — the
@@ -1185,19 +1318,22 @@ class H(BaseHTTPRequestHandler):
         self._send(404, b"not found", "text/plain")
 
     def do_GET(self):
-        self._handle()
+        self._run()
 
     def do_PUT(self):
-        self._handle()
+        self._run()
 
     def do_POST(self):
-        self._handle()
+        self._run()
 
     def do_DELETE(self):
-        self._handle()
+        self._run()
 
     def do_HEAD(self):
-        self._handle()
+        self._run()
+
+    def do_OPTIONS(self):
+        self._run()
 
 
 # ---------------------------------------------------------------------------
