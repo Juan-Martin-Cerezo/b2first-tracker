@@ -420,6 +420,31 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 }
 .chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
+/* ---------- PRACTICE SOURCES ---------- */
+.practice-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.practice-toolbar .chips{margin:0}
+.practice-free-toggle{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-xs);font-weight:600;color:var(--txt-2);text-transform:uppercase;letter-spacing:.04em;margin:0;cursor:pointer}
+.practice-free-toggle input{width:auto;min-height:0;accent-color:var(--acc)}
+.practice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.practice-card{display:flex;flex-direction:column;gap:8px;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:16px}
+.practice-card h3{font-size:var(--fs-md);font-weight:600;color:var(--txt);overflow-wrap:anywhere}
+.practice-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.practice-what{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;flex:1;margin:0}
+.practice-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:2px}
+.practice-mins{font-size:var(--fs-xs);color:var(--txt-2);font-weight:600}
+.badge.freemium{background:var(--acc-soft);color:var(--acc-text)}
+.badge.paid{background:var(--warn-soft);color:var(--warn-text)}
+.practice-empty{padding:18px;border:1px dashed var(--line);border-radius:var(--r-panel);color:var(--txt-2);font-size:var(--fs-sm);text-align:center}
+.practice-now-row{display:flex;flex-wrap:wrap;gap:10px}
+.practice-now-link{display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:12px 14px;text-decoration:none;color:var(--txt);transition:border-color 150ms ease,background-color 150ms ease}
+.practice-now-link:hover{border-color:var(--acc);background:var(--surface)}
+.practice-now-link b{font-size:var(--fs-sm);overflow-wrap:anywhere}
+.practice-now-link span{font-size:var(--fs-xs);color:var(--txt-2)}
+@media (max-width:560px){
+  .practice-grid{grid-template-columns:1fr}
+  .practice-toolbar{flex-direction:column;align-items:flex-start}
+}
+
 /* ---------- FORMS ---------- */
 label{
   display:block;font-size:var(--fs-xs);font-weight:600;color:var(--txt-2);
@@ -1610,6 +1635,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="partes"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_parts">Parts</span></button>
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
+    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
     <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="libros" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label" data-i18n="nav_books">Books</span></button>
@@ -1648,6 +1674,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button type="button" class="btn ok" id="diagBannerBtn" onclick="openDiagAndStart()" data-i18n="common_start">Start</button>
             </div>
             <div class="next-session" id="nextBox"></div>
+            <div class="card practice-now" id="practiceNow"></div>
             <div class="card streak-card" id="streakCard"></div>
             <div class="card" id="examCountdown"></div>
             <div class="card">
@@ -2918,6 +2945,34 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
+      <!-- ============ PRACTICE SOURCES ============ -->
+      <section id="v-practice" class="view">
+        <div class="page-head">
+          <div>
+            <span class="page-kicker">[ PRACTICE_SOURCES ]</span>
+            <h1 class="page-title" data-i18n="practice_title">Practice sources</h1>
+            <p class="page-sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="practice-toolbar">
+            <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
+              <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
+              <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+              <button type="button" class="chip" data-skill="w" onclick="setPracticeFilter('w')" data-i18n="practice_filter_w">Writing</button>
+              <button type="button" class="chip" data-skill="l" onclick="setPracticeFilter('l')" data-i18n="practice_filter_l">Listening</button>
+              <button type="button" class="chip" data-skill="sp" onclick="setPracticeFilter('sp')" data-i18n="practice_filter_sp">Speaking</button>
+            </div>
+            <label class="practice-free-toggle" for="practiceFreeOnly">
+              <input type="checkbox" id="practiceFreeOnly" onchange="togglePracticeFree(this.checked)">
+              <span data-i18n="practice_free_only">Free only</span>
+            </label>
+          </div>
+          <div class="practice-grid" id="practiceGrid"></div>
+          <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
+        </div>
+      </section>
+
       <!-- ============ BOOKS ============ -->
       <section id="v-libros" class="view">
         <div class="page-head">
@@ -3048,7 +3103,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
+    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" tabindex="0" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
   </div>
 </div>
 
@@ -3153,6 +3208,7 @@ const I18N={
     nav_parts:'Parts',
     nav_progress:'Progress',
     nav_plan:'Plan',
+    nav_practice:'Practice',
     nav_charts:'Charts',
     nav_errors:'Errors',
     nav_books:'Books',
@@ -3160,6 +3216,31 @@ const I18N={
     nav_diag:'Diag',
     nav_more:'More',
     nav_more_aria:'More sections',
+    practice_title:'Practice sources',
+    practice_sub:'Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.',
+    practice_filter_aria:'Filter practice sources by skill',
+    practice_filter_all:'All',
+    practice_filter_rue:'Reading & UoE',
+    practice_filter_w:'Writing',
+    practice_filter_l:'Listening',
+    practice_filter_sp:'Speaking',
+    practice_free_only:'Free only',
+    practice_empty:'No sources match this filter. Try “All” or turn off “Free only”.',
+    practice_open:'Open',
+    practice_mins:'{mins} min',
+    practice_kind_free:'Free',
+    practice_kind_freemium:'Freemium',
+    practice_kind_paid:'Paid',
+    practice_skill_rue:'Reading & UoE',
+    practice_skill_w:'Writing',
+    practice_skill_l:'Listening',
+    practice_skill_sp:'Speaking',
+    practice_now_title:'Practise this now',
+    practice_now_diag:'Three quick sources for your weakest part: Part {part}.',
+    practice_now_rot:'Three quick sources for today’s {skill} focus.',
+    practice_now_part:'Part {part}',
+    practice_now_all:'All parts',
+    practice_now_parts:'Parts {parts}',
     theme_toggle:'Toggle dark mode',
     sync_status:'Save status on the server',
     user_chip:'View profile & switch user',
@@ -3574,6 +3655,7 @@ const I18N={
     nav_parts:'Partes',
     nav_progress:'Progreso',
     nav_plan:'Plan',
+    nav_practice:'Práctica',
     nav_charts:'Gráficos',
     nav_errors:'Errores',
     nav_books:'Libros',
@@ -3581,6 +3663,31 @@ const I18N={
     nav_diag:'Diagn.',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
+    practice_title:'Fuentes de práctica',
+    practice_sub:'Lugares legales y verificados para practicar cada examen. Primero los recursos gratuitos; las herramientas pagas o freemium están marcadas.',
+    practice_filter_aria:'Filtrar fuentes de práctica por destreza',
+    practice_filter_all:'Todas',
+    practice_filter_rue:'Reading y UoE',
+    practice_filter_w:'Writing',
+    practice_filter_l:'Listening',
+    practice_filter_sp:'Speaking',
+    practice_free_only:'Solo gratis',
+    practice_empty:'No hay fuentes para este filtro. Probá «Todas» o desactivá «Solo gratis».',
+    practice_open:'Abrir',
+    practice_mins:'{mins} min',
+    practice_kind_free:'Gratis',
+    practice_kind_freemium:'Freemium',
+    practice_kind_paid:'Pago',
+    practice_skill_rue:'Reading y UoE',
+    practice_skill_w:'Writing',
+    practice_skill_l:'Listening',
+    practice_skill_sp:'Speaking',
+    practice_now_title:'Practicá esto ahora',
+    practice_now_diag:'Tres fuentes rápidas para tu parte más débil: Parte {part}.',
+    practice_now_rot:'Tres fuentes rápidas para tu foco de {skill} de hoy.',
+    practice_now_part:'Parte {part}',
+    practice_now_all:'Todas las partes',
+    practice_now_parts:'Partes {parts}',
     theme_toggle:'Cambiar modo oscuro',
     sync_status:'Estado de guardado en el servidor',
     user_chip:'Ver perfil y cambiar de usuario',
@@ -7688,6 +7795,109 @@ function renderOnline(){
   if(!el)return;
   el.innerHTML=ONLINE.map(g=>`<h3 class="folder">${g.g}</h3>`+g.l.map(x=>`<div class="book"><div class="ico"><svg viewBox="0 0 24 24" stroke-width="1.5" aria-hidden="true"><use href="#ic-link"/></svg></div><div style="flex:1"><b>${esc(x.n)}</b><div class="meta">Free · Interactive Online · No Download</div><a href="${x.u}" target="_blank" rel="noopener" class="btn sm gray" style="text-decoration:none;margin-top:6px">Open →</a></div></div>`).join('')).join('');
 }
+/* ---------- PRACTICE SOURCES ----------
+   Curated, legal places to practise. No runtime fetch: everything lives in
+   this array. Every URL was checked (HTTP 200/30x) when it was added; the
+   separate tools/check_sources.py re-checks them without gating the suite.
+   part:[] means the source trains the whole paper. */
+const PRACTICE_SOURCES=[
+ {n:"Cambridge English — B2 learning activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=b2",skill:"rue",kind:"free",part:[],what:"Official Cambridge interactive activities for every B2 skill, no sign-up needed.",mins:20},
+ {n:"Cambridge English — B2 First preparation",url:"https://www.cambridgeenglish.org/exams-and-tests/first/preparation/",skill:"rue",kind:"free",part:[],what:"Free official sample papers, answer keys and exam-day guidance from Cambridge.",mins:30},
+ {n:"Flo-Joe — FCE Use of English",url:"https://www.flo-joe.co.uk/fce/students/tests/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Word formation, open cloze and key word transformation drills with instant answers.",mins:15},
+ {n:"Exam English — FCE Use of English",url:"https://www.examenglish.com/FCE/fce_use_of_english.html",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Timed Use of English sections with automatic marking and answer explanations.",mins:20},
+ {n:"Test-English — B2 Use of English",url:"https://test-english.com/use-of-english/b2/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Part-by-part B2 grammar and vocabulary exercises with answers after each set.",mins:15},
+ {n:"Exam English — FCE Reading",url:"https://www.examenglish.com/FCE/fce_reading.html",skill:"rue",kind:"free",part:["5","6","7"],what:"Full FCE reading sections: multiple choice, gapped text and multiple matching.",mins:25},
+ {n:"Cambridge English — B2 reading activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=b2",skill:"rue",kind:"free",part:["5","6","7"],what:"Short official reading tasks that train skimming, detail and text structure.",mins:20},
+
+ {n:"Write & Improve",url:"https://writeandimprove.com/",skill:"w",kind:"freemium",part:[],what:"Cambridge's writing tool grades a draft and shows what to fix; free tier available.",mins:20},
+ {n:"Cambridge English — B2 writing activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=b2",skill:"w",kind:"free",part:[],what:"Official B2 writing tasks with model answers and language focus notes.",mins:25},
+ {n:"British Council — B2 writing",url:"https://learnenglish.britishcouncil.org/free-resources/writing/b2",skill:"w",kind:"free",part:[],what:"Essays, reports, reviews and emails with preparation tasks and model texts.",mins:20},
+ {n:"Exam English — FCE Writing",url:"https://www.examenglish.com/FCE/fce_writing.html",skill:"w",kind:"free",part:[],what:"FCE writing guide, sample answers and examiner-style comments for each task type.",mins:20},
+ {n:"LangCorrect",url:"https://langcorrect.com/",skill:"w",kind:"free",part:[],what:"Write short texts and get corrections from native speakers in a moderated community.",mins:15},
+
+ {n:"BBC Learning English",url:"https://www.bbc.co.uk/learningenglish/",skill:"l",kind:"free",part:[],what:"News, drama and 6 Minute English audio with transcripts and vocabulary support.",mins:15},
+ {n:"British Council — B2 listening",url:"https://learnenglish.britishcouncil.org/free-resources/listening/b2",skill:"l",kind:"free",part:[],what:"B2 listening lessons with preparation tasks, audio and comprehension questions.",mins:20},
+ {n:"Exam English — FCE Listening",url:"https://www.examenglish.com/FCE/fce_listening.html",skill:"l",kind:"free",part:["1","2","3","4"],what:"Four full FCE listening tests with automatic scoring and audio transcripts.",mins:30},
+ {n:"Test-English — B2 Listening",url:"https://test-english.com/listening/b2/",skill:"l",kind:"free",part:["1","2","3","4"],what:"B2 listening exercises with answers and transcripts for self-checking.",mins:15},
+ {n:"Cambridge English — B2 listening activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=b2",skill:"l",kind:"free",part:["1","2","3","4"],what:"Official short listening tasks that train detail, attitude and gist.",mins:20},
+ {n:"Youglish",url:"https://youglish.com/",skill:"l",kind:"free",part:[],what:"Hear any word or phrase in real YouTube clips with subtitles and slow playback.",mins:10},
+ {n:"LyricsTraining",url:"https://lyricstraining.com/",skill:"l",kind:"freemium",part:[],what:"Gap-fill listening practice with licensed song lyrics and adjustable difficulty.",mins:10},
+
+ {n:"Cambridge English — B2 speaking activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=b2",skill:"sp",kind:"free",part:[],what:"Official B2 speaking tasks with useful phrases and model interactions.",mins:20},
+ {n:"Exam English — FCE Speaking",url:"https://www.examenglish.com/FCE/fce_speaking.html",skill:"sp",kind:"free",part:["1","2","3","4"],what:"FCE speaking format, sample questions and tips for all four parts.",mins:20},
+ {n:"British Council — B2 speaking",url:"https://learnenglish.britishcouncil.org/free-resources/speaking/b2",skill:"sp",kind:"free",part:[],what:"Video lessons with functional phrases, pronunciation practice and speaking tasks.",mins:20},
+ {n:"Conversation Exchange",url:"https://www.conversationexchange.com/",skill:"sp",kind:"free",part:[],what:"Find a free tandem partner for face-to-face or online conversation practice.",mins:20},
+ {n:"Tandem",url:"https://tandem.net/",skill:"sp",kind:"freemium",part:[],what:"Language-exchange app that pairs you with native speakers for real conversation.",mins:15},
+ {n:"HelloTalk",url:"https://www.hellotalk.com/",skill:"sp",kind:"freemium",part:[],what:"Chat and call with native English speakers; core exchange features are free.",mins:15}
+];
+let PRACTICE_FILTER='all';
+let PRACTICE_FREE_ONLY=false;
+function setPracticeFilter(skill){
+  PRACTICE_FILTER=skill;
+  renderPractice();
+}
+function togglePracticeFree(on){
+  PRACTICE_FREE_ONLY=!!on;
+  renderPractice();
+}
+function renderPractice(){
+  const grid=document.getElementById('practiceGrid');
+  if(!grid)return;
+  document.querySelectorAll('#practiceFilter [data-skill]').forEach(b=>{
+    const on=b.getAttribute('data-skill')===PRACTICE_FILTER;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+  const list=PRACTICE_SOURCES.filter(s=>(PRACTICE_FILTER==='all'||s.skill===PRACTICE_FILTER)&&(!PRACTICE_FREE_ONLY||s.kind==='free'));
+  grid.innerHTML=list.map(s=>{
+    const partTxt=s.part&&s.part.length?t('practice_now_parts',{parts:s.part.join(', ')}):t('practice_now_all');
+    return `<article class="practice-card" data-skill="${s.skill}" data-kind="${s.kind}">
+      <div class="practice-meta"><span class="badge ${s.skill==='rue'||s.skill==='sp'?'mon':'fri'}">${esc(t('practice_skill_'+s.skill))}</span><span class="badge ${s.kind==='free'?'ok':s.kind}">${esc(t('practice_kind_'+s.kind))}</span></div>
+      <h3>${esc(s.n)}</h3>
+      <p class="practice-what">${esc(s.what)}</p>
+      <div class="practice-foot">
+        <span class="practice-mins">⏱ ${esc(t('practice_mins',{mins:s.mins}))} · ${esc(partTxt)}</span>
+        <a class="btn sm gray" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(t('practice_open'))} ↗</a>
+      </div>
+    </article>`;
+  }).join('');
+  const empty=document.getElementById('practiceEmpty');
+  if(empty)empty.style.display=list.length?'none':'block';
+}
+function practiceRotationSkill(){
+  const sched=getSchedule();
+  const wd=new Date().getDay();
+  const idx=sched.findIndex(slot=>slot.day===wd);
+  if(idx!==-1)return getSlotSession(isoWeek(new Date()),idx,sched.length).session.id;
+  const next=getNextScheduledSession();
+  return next?next.session.id:'rue';
+}
+function renderPracticeNow(){
+  const box=document.getElementById('practiceNow');
+  if(!box)return;
+  const diag=D&&D.diag;
+  const weak=diag&&Array.isArray(diag.weakest)?Number(diag.weakest[0]):0;
+  let list=[],sub='',skill='';
+  if(weak>=1&&weak<=7){
+    const p=String(weak);
+    const pool=PRACTICE_SOURCES.filter(s=>s.skill==='rue');
+    const exact=pool.filter(s=>Array.isArray(s.part)&&s.part.includes(p));
+    const generic=pool.filter(s=>!s.part||s.part.length===0);
+    list=[...exact,...generic.filter(s=>!exact.includes(s))].slice(0,3);
+    sub=t('practice_now_diag',{part:weak});
+    skill='rue';
+  }
+  if(!list.length){
+    skill=practiceRotationSkill();
+    list=PRACTICE_SOURCES.filter(s=>s.skill===skill).slice(0,3);
+    sub=t('practice_now_rot',{skill:t('practice_skill_'+skill)});
+  }
+  if(!list.length){box.style.display='none';return;}
+  box.style.display='';
+  box.innerHTML=`<h2>${esc(t('practice_now_title'))} <span class="badge fri">${esc(t('practice_skill_'+skill))}</span></h2>
+    <div class="sub">${esc(sub)}</div>
+    <div class="practice-now-row">${list.map(s=>`<a class="practice-now-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(s.n)}</b><span>${esc(t('practice_mins',{mins:s.mins}))} · ${esc(t('practice_kind_'+s.kind))}</span></a>`).join('')}</div>`;
+}
 /* ---------- MAT: material index by name ----------
    Built when /libros.json arrives. Each key points to the href of the
    file matching its regex over rel (folder+name). If a resource does
@@ -9292,6 +9502,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   const sec=document.getElementById('v-'+b.dataset.view)||document.getElementById('view-'+b.dataset.view);
   if(sec)sec.classList.add('active');
   if(b.dataset.view==='diag')renderDiag();
+  if(b.dataset.view==='practice')renderPractice();
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
   TEV_VIEW=b.dataset.view;
@@ -9303,7 +9514,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
