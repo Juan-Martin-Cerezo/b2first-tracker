@@ -91,12 +91,16 @@ assert st_chg == 200 and json.loads(body_chg).get("ok") is True, f"password chan
 st_old, _ = req(URL, "POST", "/api/login", {"name": "alice", "password": "password123"})
 st_new, body_new = req(URL, "POST", "/api/login", {"name": "alice", "password": "newpassword123"})
 assert st_old == 401 and st_new == 200, f"old={st_old} new={st_new}"
+fresh = json.loads(body_chg).get("token", "")
 st_me_other, _ = req(URL, "GET", "/api/me", token=tok1)
 st_me_current, _ = req(URL, "GET", "/api/me", token=tok2)
+st_me_fresh, _ = req(URL, "GET", "/api/me", token=fresh)
 assert st_me_other == 401, f"other token still valid: {st_me_other}"
-assert st_me_current == 200, f"current token was revoked: {st_me_current}"
+assert st_me_current == 401, f"current token survived the change: {st_me_current}"
+assert st_me_fresh == 200, f"fresh token invalid: {st_me_fresh}"
 out["8_password_change"] = {"change": st_chg, "old_login": st_old, "new_login": st_new,
-                            "other_token": st_me_other, "current_token": st_me_current}
+                            "other_token": st_me_other, "current_token": st_me_current,
+                            "fresh_token": st_me_fresh}
 
 srv.shutdown()
 

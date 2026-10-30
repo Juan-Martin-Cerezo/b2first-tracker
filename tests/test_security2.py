@@ -32,6 +32,10 @@ os.environ["B2_REGISTER"] = "open"
 S.B2_DEMO = False
 S.B2_REGISTER = "open"
 
+# The production backoff sleeps 5/15/60 s; keep the brute-force test fast while
+# still exercising the counters (the backoff values are asserted in test_security3).
+S.LOGIN_BACKOFF = (0.0, 0.0, 0.0, 0.0, 0.0)
+
 srv = S.ThreadingHTTPServer(("127.0.0.1", 0), S.H)
 S.PORT = srv.server_address[1]
 threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -253,16 +257,19 @@ tokB2 = json.loads(body13l).get("token", "")
 st13, body13, _ = req("POST", "/api/password",
                       {"current": "correct-horse-9", "next": "new-horse-10"},
                       token=uB["token"])
+fresh = json.loads(body13).get("token", "") if st13 == 200 else ""
 st13m, _b13m, _h13m = req("GET", "/api/me", token=tokB2)
-st13n, body13n, _ = req("GET", "/api/audit?limit=50", token=uB["token"])
+st13c, _b13c, _h13c = req("GET", "/api/me", token=uB["token"])
+st13n, body13n, _ = req("GET", "/api/audit?limit=50", token=fresh)
 evB2 = json.loads(body13n).get("events", []) if st13n == 200 else []
 check("13_password_change_audited",
       st13 == 200 and any(e.get("event") == "password_change" for e in evB2)
       and any(e.get("event") == "password_change" and e.get("user") == "audit-bob"
               for e in audit_events()),
       f"{st13} {body13[:80]} {evB2}")
-check("13b_password_change_revokes_others",
-      st13m == 401 and st13n == 200, f"other={st13m} current={st13n}")
+check("13b_password_change_revokes_all",
+      st13m == 401 and st13c == 401 and st13n == 200,
+      f"other={st13m} current={st13c} fresh={st13n}")
 
 # ---------------------------------------------------------------------------
 # F. Password strength: register + password change
@@ -277,7 +284,7 @@ st14c, _b14c, _h14c = req("POST", "/api/register", {"name": "same-name-user", "p
 check("14b_password_not_username", st14c == 400, f"{st14c}")
 st14d, body14d, _ = req("POST", "/api/password",
                         {"current": "new-horse-10", "next": "password123"},
-                        token=uB["token"])
+                        token=fresh)
 check("14c_password_change_rejects_common",
       st14d == 400 and "common" in json.loads(body14d).get("error", "").lower(),
       f"{st14d} {body14d[:80]}")

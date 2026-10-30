@@ -6,7 +6,7 @@ Usage:
     python3 tools/reset_password.py <username> --password <new-password>
 
 Prints the new password to stdout (never the hash), hashes it exactly like
-server.py (PBKDF2-HMAC-SHA256, 200k iterations, fresh salt) and invalidates
+server.py (PBKDF2-HMAC-SHA256, 600k iterations, fresh salt) and invalidates
 every session token of that user. Respects the DATA_DIR environment variable.
 """
 import argparse
@@ -50,8 +50,8 @@ def main():
         if new_password != getpass.getpass("Repeat password: "):
             print("passwords do not match", file=sys.stderr)
             return 1
-    if not isinstance(new_password, str) or len(new_password) < 8:
-        print("password too short (min 8)", file=sys.stderr)
+    if not isinstance(new_password, str) or len(new_password) < S.PASSWORD_MIN_LEN:
+        print(f"password too short (min {S.PASSWORD_MIN_LEN})", file=sys.stderr)
         return 1
 
     salt = secrets.token_hex(8)
@@ -59,15 +59,13 @@ def main():
     updated["salt"] = salt
     updated["hash"] = S.hash_password(salt, new_password)
     updated["algo"] = "pbkdf2"
+    updated["iters"] = S.PBKDF2_ITERATIONS
     store.create_user(uid, updated)
 
-    with S._TOKENS_LOCK:
-        tokens = S.load_tokens()
-        kept = {t: v for t, v in tokens.items() if v.get("user_id") != uid}
-        S.save_tokens(kept)
+    revoked = S.revoke_user_sessions(uid)
 
     print(f"password updated for {rec.get('name')} (uid={uid}); "
-          f"{len(tokens) - len(kept)} session(s) invalidated", file=sys.stderr)
+          f"{revoked} session(s) invalidated", file=sys.stderr)
     print(new_password)
     return 0
 
