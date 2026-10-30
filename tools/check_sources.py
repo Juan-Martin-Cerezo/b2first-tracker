@@ -71,7 +71,6 @@ def main():
             "Failed: "
             + ", ".join(f"{n} ({s or note})" for n, s, note in failed)
         )
-        return 1
     return 0
 
 

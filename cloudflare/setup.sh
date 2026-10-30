@@ -15,10 +15,18 @@ NAME="${NAME:-b2first}"
 ORIGIN="${ORIGIN:-http://127.0.0.1:8088}"
 
 command -v cloudflared >/dev/null || { echo "cloudflared missing"; exit 1; }
-cloudflared tunnel list 2>/dev/null | grep -q " $NAME " || cloudflared tunnel create "$NAME"
 
-CREDS=$(ls ~/.cloudflared/*"$NAME"*.json 2>/dev/null | head -1)
-[ -n "$CREDS" ] || { echo "no credentials json: run 'cloudflared tunnel login' first"; exit 1; }
+# cloudflared names the credentials file after the tunnel UUID, not the tunnel
+# name, so resolve the id from the API instead of globbing for the name.
+TID=$(cloudflared tunnel list -o json 2>/dev/null \
+      | python3 -c "import sys,json;print(next((t['id'] for t in json.load(sys.stdin) if t['name']=='$NAME'),''))")
+[ -n "$TID" ] || { cloudflared tunnel create "$NAME"; \
+  TID=$(cloudflared tunnel list -o json 2>/dev/null \
+        | python3 -c "import sys,json;print(next((t['id'] for t in json.load(sys.stdin) if t['name']=='$NAME'),''))"); }
+
+CREDS=~/.cloudflared/"$TID".json
+[ -f "$CREDS" ] || { echo "no credentials json for $TID: run 'cloudflared tunnel login' first"; exit 1; }
+echo "tunnel $NAME = $TID"
 
 sudo install -d -m 700 /etc/cloudflared
 sudo install -m 600 "$CREDS" /etc/cloudflared/creds.json
