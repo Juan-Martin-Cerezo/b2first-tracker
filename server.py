@@ -20,6 +20,8 @@ Endpoints:
   PUT /api/progress → saves the progress (JSON body) and backs up the previous one
   POST /api/speaking/report → four-scale speaking report (pronunciation from Azure PA,
                      interactive communication as proxies only)
+  GET /api/speaking/capabilities → {live, turn}: which transport this key can run
+  POST /api/speaking/turn → one spoken turn: transcript + examiner reply + its audio
   GET /favicon.ico → 204 (does not exist, don't log a 404)
 
 Persistence: progress lives in <repo>/data/progress.json. Each PUT
@@ -31,6 +33,7 @@ Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading, gzip
 import base64, binascii
+import struct
 import calendar
 import socket
 import urllib.request, urllib.error
@@ -212,6 +215,31 @@ SPK_REPORT_RATE_PER_MIN = 6          # reports per minute per user
 SPK_REPORT_MAX_BODY = 512 * 1024     # request body cap (transcript + PA words)
 SPK_REPORT_CACHE_MAX = 200           # idempotent replays kept in memory
 SPK_REPORT_CACHE_TTL = 3600          # seconds a replay stays valid
+
+# --- Phase 36: turn-based voice examiner -----------------------------------
+# One round trip per spoken turn: the candidate's audio goes up, the examiner's
+# transcript, reply and voice come back. Chosen because the owner's key exposes
+# zero models with bidiGenerateContent, so the Live socket stays silent.
+# Nothing is stored and no audio or transcript text is ever logged: only
+# timings and outcomes reach the audit chain.
+SPK_TURN_MAX_S = 25                  # longest accepted candidate turn (seconds)
+SPK_TURN_MAX_BYTES = 800 * 1024      # decoded audio cap for one turn
+SPK_TURN_MAX_B64 = (SPK_TURN_MAX_BYTES * 4) // 3 + 16
+SPK_TURN_MAX_BODY = 1200 * 1024      # body cap, decided before parsing
+SPK_TURN_MAX_SAY = 400               # chars a controller line may ask to speak
+SPK_TURN_HISTORY_TURNS = 6           # rolling window; never persisted
+SPK_TURN_HISTORY_CHARS = 500
+SPK_TURN_RATE_PER_MIN = 20           # turns per minute per account
+SPK_TURN_TIMEOUT = 20                # seconds per upstream call
+SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
+SPK_TURN_SESSIONS_MAX = 500          # accounts remembered for that window
+SPK_TURN_PCM_RATE = 16000            # client wire format: 16 kHz mono 16-bit
+SPK_PCM_BYTES_PER_S = SPK_TURN_PCM_RATE * 2
+SPK_TTS_RATE = 24000                 # Gemini TTS output: 24 kHz mono 16-bit
+DEFAULT_SPK_TURN_MODEL = "gemini-2.5-flash"
+DEFAULT_SPK_TTS_MODEL = "gemini-2.5-flash-preview-tts"
+SPK_TTS_VOICES = {"examiner": "Puck", "partner": "Kore"}
+SPK_TURN_MIMES = ("audio/pcm", "audio/wav", "audio/x-wav", "audio/wave", "audio/l16")
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -860,6 +888,276 @@ def _spk_metrics_today():
         seconds += rec["seconds"]
         tokens += rec["tokens_minted"]
     return round(seconds / 60.0, 1), tokens
+
+
+# --- Phase 36: turn-based voice — helpers ----------------------------------
+def _spk_turn_base():
+    """Gemini API base for the turn path (B2_SPK_TURN_BASE overrides it)."""
+    value = os.environ.get("B2_SPK_TURN_BASE", DEFAULT_GEMINI_BASE)
+    value = value.strip().rstrip("/") if isinstance(value, str) else ""
+    return value or DEFAULT_GEMINI_BASE
+
+
+def _spk_turn_model():
+    value = os.environ.get("B2_SPK_TURN_MODEL", DEFAULT_SPK_TURN_MODEL)
+    value = value.strip() if isinstance(value, str) else ""
+    return value or DEFAULT_SPK_TURN_MODEL
+
+
+def _spk_tts_model():
+    value = os.environ.get("B2_SPK_TTS_MODEL", DEFAULT_SPK_TTS_MODEL)
+    value = value.strip() if isinstance(value, str) else ""
+    return value or DEFAULT_SPK_TTS_MODEL
+
+
+def _spk_live_enabled():
+    """The operator says this key can run Live (B2_SPK_LIVE=1)."""
+    raw = os.environ.get("B2_SPK_LIVE", "")
+    return str(raw).strip().lower() in ("1", "true", "yes", "on")
+
+
+_SPK_LIVE_LOCK = threading.Lock()
+_SPK_LIVE_CACHE = {"at": 0.0, "model": "", "ok": False}
+SPK_LIVE_PROBE_TTL = 600
+
+
+def _spk_model_has_live(api_key, model):
+    """True only when `model` lists bidiGenerateContent. Cached, fails closed."""
+    now = time.time()
+    with _SPK_LIVE_LOCK:
+        if (_SPK_LIVE_CACHE["at"] and _SPK_LIVE_CACHE["model"] == model
+                and now - _SPK_LIVE_CACHE["at"] < SPK_LIVE_PROBE_TTL):
+            return _SPK_LIVE_CACHE["ok"]
+    ok = False
+    try:
+        req = urllib.request.Request(
+            _spk_turn_base() + "/models",
+            headers={"x-goog-api-key": api_key},
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read(256 * 1024)
+        body = json.loads(raw.decode("utf-8"))
+        for item in (body.get("models") if isinstance(body, dict) else []) or []:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name") or "").split("/")[-1]
+            methods = item.get("supportedGenerationMethods") or []
+            if name == model and "bidiGenerateContent" in methods:
+                ok = True
+                break
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
+            OSError, ValueError, UnicodeDecodeError):
+        ok = False
+    with _SPK_LIVE_LOCK:
+        _SPK_LIVE_CACHE.update({"at": now, "model": model, "ok": ok})
+    return ok
+
+
+def _spk_live_available():
+    """`live:true` needs the operator's flag AND a model that really offers it."""
+    if not _spk_live_enabled():
+        return False
+    api_key = _spk_google_key()
+    if not api_key:
+        return False
+    return _spk_model_has_live(api_key, _spk_model())
+
+
+_SPK_TURN_LOCK = threading.Lock()
+_SPK_TURN_SESSIONS = {}   # {uid: {session_id: first_seen}}
+
+
+def _spk_turn_session_known(uid, session_id):
+    """Has this account already opened (and paid for) this exam session?"""
+    if not session_id:
+        return False
+    now = time.time()
+    with _SPK_TURN_LOCK:
+        seen = _SPK_TURN_SESSIONS.setdefault(uid, {})
+        for sid, stamp in list(seen.items()):
+            if now - stamp > SPK_TURN_SESSION_TTL_S:
+                seen.pop(sid, None)
+        return session_id in seen
+
+
+def _spk_turn_session_mark(uid, session_id):
+    """Remember a session after its first successful turn (mock already paid)."""
+    if not session_id:
+        return
+    with _SPK_TURN_LOCK:
+        _SPK_TURN_SESSIONS.setdefault(uid, {})[session_id] = time.time()
+        while len(_SPK_TURN_SESSIONS) > SPK_TURN_SESSIONS_MAX:
+            _SPK_TURN_SESSIONS.pop(next(iter(_SPK_TURN_SESSIONS)))
+
+
+def _spk_turn_sessions_clear():
+    """Test hook: forget every metered session."""
+    with _SPK_TURN_LOCK:
+        _SPK_TURN_SESSIONS.clear()
+
+
+def _spk_wav_bytes(pcm, rate=SPK_TTS_RATE):
+    """Wrap mono 16-bit PCM in a RIFF/WAVE container `decodeAudioData` accepts."""
+    return struct.pack(
+        "<4sI4s4sIHHIIHH4sI",
+        b"RIFF", 36 + len(pcm), b"WAVE", b"fmt ", 16, 1, 1,
+        rate, rate * 2, 2, 16, b"data", len(pcm),
+    ) + pcm
+
+
+def _spk_gemini_text(body):
+    """Join the text parts of a Gemini response, or None when there are none."""
+    try:
+        parts = body["candidates"][0]["content"]["parts"]
+    except (KeyError, IndexError, TypeError):
+        return None
+    chunks = [p.get("text") for p in parts
+              if isinstance(p, dict) and isinstance(p.get("text"), str)]
+    text = "".join(chunks)
+    return text or None
+
+
+_SPK_TURN_RULE = """
+VOICE LINE, TURN BY TURN
+- The candidate's audio is ONE turn. Transcribe it verbatim in `transcript`
+  (English, no timestamps, no speaker labels). If it is unintelligible, use "".
+- Then write your own next turn in `reply`: exactly the words you say out loud,
+  in English, one or two short sentences. The exam rules above still apply.
+- Never describe the audio, never mention transcription, never add JSON prose.
+Return only the JSON object.
+"""
+
+_SPK_TURN_SCHEMA = {
+    "type": "object",
+    "properties": {"transcript": {"type": "string"}, "reply": {"type": "string"}},
+    "required": ["transcript", "reply"],
+}
+
+
+def _spk_turn_instruction(role, part, task):
+    """The same role prompt the Live socket would have used, plus the JSON rule."""
+    base = (speaking_prompts.partner_instruction(part or 1, task)
+            if role == "partner"
+            else speaking_prompts.examiner_instruction(part or 1, task))
+    return base + _SPK_TURN_RULE
+
+
+def _spk_turn_history(raw):
+    """Sanitise the rolling history: last 6 turns, known speakers, capped text."""
+    out = []
+    if not isinstance(raw, list):
+        return out
+    for item in raw[-SPK_TURN_HISTORY_TURNS:]:
+        if not isinstance(item, dict):
+            continue
+        who, text = item.get("who"), item.get("text")
+        if who not in ("candidate", "examiner", "partner"):
+            continue
+        if not isinstance(text, str) or not text.strip():
+            continue
+        out.append({"who": who, "text": text.strip()[:SPK_TURN_HISTORY_CHARS]})
+    return out
+
+
+def _spk_turn_contents(history):
+    """History as Gemini `contents` (consecutive same-role turns are merged)."""
+    contents = []
+    for turn in history:
+        role = "model" if turn["who"] == "examiner" else "user"
+        text = turn["text"] if turn["who"] != "partner" else "Candidate B: " + turn["text"]
+        if contents and contents[-1]["role"] == role:
+            contents[-1]["parts"].append({"text": text})
+        else:
+            contents.append({"role": role, "parts": [{"text": text}]})
+    return contents
+
+
+def _spk_turn_understand(api_key, system, history, audio_b64, mime):
+    """One Gemini call: transcribe the candidate's audio AND write the reply.
+
+    Returns ``(transcript, reply, ms, error)``. One call instead of two is what
+    keeps the stop-talking → first-audio latency inside the target; `ms` is the
+    whole call, so the response reports stt as 0 and the cost under llm.
+    """
+    contents = _spk_turn_contents(history)
+    spoken = [
+        {"inlineData": {"mimeType": mime, "data": audio_b64}},
+        {"text": "That was the candidate's spoken turn. Return the JSON object."},
+    ]
+    if contents and contents[-1]["role"] == "user":
+        contents[-1]["parts"].extend(spoken)   # one user turn, not two in a row
+    else:
+        contents.append({"role": "user", "parts": spoken})
+    payload = {
+        "systemInstruction": {"parts": [{"text": system}]},
+        "contents": contents,
+        "generationConfig": {
+            "temperature": 0.4,
+            "responseMimeType": "application/json",
+            "responseSchema": _SPK_TURN_SCHEMA,
+        },
+    }
+    started = time.time()
+    body, error = _provider_complete(_spk_turn_base(), api_key, _spk_turn_model(),
+                                     payload, wire="gemini",
+                                     timeout=SPK_TURN_TIMEOUT)
+    ms = int((time.time() - started) * 1000)
+    if error:
+        return None, None, ms, error
+    text = _spk_gemini_text(body)
+    if text is None:
+        return None, None, ms, "upstream_failed"
+    try:
+        obj = json.loads(text)
+    except ValueError:
+        return None, None, ms, "upstream_failed"
+    if not isinstance(obj, dict):
+        return None, None, ms, "upstream_failed"
+    transcript, reply = obj.get("transcript"), obj.get("reply")
+    if not isinstance(transcript, str) or not isinstance(reply, str) or not reply.strip():
+        return None, None, ms, "upstream_failed"
+    return transcript.strip()[:2000], reply.strip()[:900], ms, None
+
+
+def _spk_tts(api_key, text, voice):
+    """One TTS call. Returns ``(wav_bytes, ms, error)``; PCM is wrapped as WAV."""
+    payload = {
+        "contents": [{"parts": [{"text": text}]}],
+        "generationConfig": {
+            "responseModalities": ["AUDIO"],
+            "speechConfig": {"voiceConfig": {
+                "prebuiltVoiceConfig": {"voiceName": voice}}},
+        },
+    }
+    started = time.time()
+    body, error = _provider_complete(_spk_turn_base(), api_key, _spk_tts_model(),
+                                     payload, wire="gemini",
+                                     timeout=SPK_TURN_TIMEOUT,
+                                     max_bytes=4 * 1024 * 1024)
+    ms = int((time.time() - started) * 1000)
+    if error:
+        return None, ms, error
+    data = None
+    try:
+        parts = body["candidates"][0]["content"]["parts"]
+    except (KeyError, IndexError, TypeError):
+        parts = []
+    for part in parts if isinstance(parts, list) else []:
+        if not isinstance(part, dict):
+            continue
+        blob = part.get("inlineData")
+        if isinstance(blob, dict) and isinstance(blob.get("data"), str):
+            data = blob["data"]
+            break
+    if not data:
+        return None, ms, "upstream_failed"
+    try:
+        pcm = base64.b64decode(data, validate=False)
+    except (ValueError, binascii.Error):
+        return None, ms, "upstream_failed"
+    if not pcm:
+        return None, ms, "upstream_failed"
+    return _spk_wav_bytes(pcm), ms, None
 
 
 # --- S5 report idempotency: a retry must not buy a second LLM call ----------
@@ -3304,6 +3602,21 @@ class H(BaseHTTPRequestHandler):
             self._send(204, b"", "image/x-icon")
             return
 
+        # --- Phase 36: which transport may this deployment advertise? --------
+        # `live` is only true when the operator asserts Live AND the configured
+        # model really lists bidiGenerateContent; `turn` is always available
+        # because it is the transport that works with a plain API key.
+        if path == "/api/speaking/capabilities":
+            if self.command != "GET":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            self._send_json(200, {"live": _spk_live_available(), "turn": True})
+            return
+
         # --- S3: Gemini Live examiner — ephemeral token + minute ledger -------
         # The browser connects straight to Google with a single-use token, so no
         # audio ever reaches this process. The key only signs the mint request.
@@ -3391,6 +3704,139 @@ class H(BaseHTTPRequestHandler):
                 "role": role,
                 "part": part,
                 "instruction": instruction,
+            })
+            return
+
+        # --- Phase 36: one spoken turn, one round trip ------------------------
+        # POST {audio_b64, mime, part, role, history, task, session_id}
+        #   → {transcript, reply, audio_b64, mime:"audio/wav", ms}
+        # The audio of ONE turn travels up and is dropped; nothing is written to
+        # disk, nothing text-shaped is logged. `say` (no audio) is the TTS-only
+        # form used for the controller's scripted lines, so the exam can open
+        # and hand over without a candidate turn in between.
+        if path == "/api/speaking/turn":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._rate_limited("spk_turn:" + uid, SPK_TURN_RATE_PER_MIN, 60, "user"):
+                return
+            if self._clen() > SPK_TURN_MAX_BODY:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid_json"})
+                return
+            del raw
+            api_key = _spk_google_key()
+            if not api_key:
+                self._send_json(503, {"error": "speech_not_configured"})
+                return
+            role = "partner" if req.get("role") == "partner" else "examiner"
+            try:
+                part = int(req.get("part") or 0)
+            except (TypeError, ValueError):
+                part = 0
+            if part not in (1, 2, 3, 4):
+                part = 0
+            task = speaking_prompts.clean_task(req.get("task"))
+            voice = SPK_TTS_VOICES.get(role, SPK_TTS_VOICES["examiner"])
+
+            # One mock per session, not per turn: the gate runs the first time a
+            # session id is seen, and a known session keeps working afterwards.
+            session_id = req.get("session_id")
+            session_id = session_id.strip()[:64] if isinstance(session_id, str) else ""
+            known = _spk_turn_session_known(uid, session_id)
+            if not known and not self._speaking_gate(uid):
+                return
+            if _spk_remaining_s(uid) <= 0:
+                reset = (date.today() + timedelta(days=1)).isoformat()
+                self._send_json(429, {"error": "daily speaking limit reached",
+                                      "reset": reset})
+                return
+
+            started = time.time()
+            say = req.get("say")
+            if "audio_b64" not in req and isinstance(say, str) and say.strip():
+                text = say.strip()[:SPK_TURN_MAX_SAY]
+                wav, tts_ms, tts_err = _spk_tts(api_key, text, voice)
+                if tts_err:
+                    self._send_json(502, {"error": "tts_failed", "reason": tts_err})
+                    return
+                if session_id and not known:
+                    _spk_turn_session_mark(uid, session_id)
+                    plans.speaking_add_mock(uid)
+                _audit("speaking_turn", uid, _real_ip(self), self._rid,
+                       {"part": part, "role": role, "ms": tts_ms, "say": True})
+                self._send_json(200, {
+                    "transcript": "", "reply": text,
+                    "audio_b64": base64.b64encode(wav).decode("ascii"),
+                    "mime": "audio/wav",
+                    "ms": {"stt": 0, "llm": 0, "tts": tts_ms, "total": tts_ms},
+                })
+                return
+
+            audio_b64 = req.get("audio_b64")
+            if not isinstance(audio_b64, str) or not audio_b64:
+                self._send_json(422, {"error": "invalid_audio"})
+                return
+            # Size and duration are decided from the base64 length: a 30 s clip
+            # is refused before one byte is decoded.
+            if len(audio_b64) > SPK_TURN_MAX_B64:
+                self._send_json(413, {"error": "audio too large"})
+                return
+            mime = req.get("mime")
+            mime = mime.strip().lower() if isinstance(mime, str) else ""
+            if not mime.startswith(SPK_TURN_MIMES):
+                mime = "audio/pcm;rate=16000"
+            is_wav = "wav" in mime or mime.startswith("audio/l16")
+            try:
+                decoded = base64.b64decode(audio_b64, validate=False)
+            except (ValueError, binascii.Error):
+                self._send_json(422, {"error": "invalid_audio"})
+                return
+            audio_bytes = max(0, len(decoded) - (44 if is_wav else 0))
+            if (audio_bytes > SPK_TURN_MAX_BYTES
+                    or audio_bytes / float(SPK_PCM_BYTES_PER_S) > SPK_TURN_MAX_S):
+                self._send_json(413, {"error": "audio too large"})
+                return
+            del decoded
+
+            history = _spk_turn_history(req.get("history"))
+            system = _spk_turn_instruction(role, part, task)
+            transcript, reply, llm_ms, llm_err = _spk_turn_understand(
+                api_key, system, history, audio_b64, mime)
+            if llm_err:
+                self._send_json(502, {"error": "turn_failed", "reason": llm_err})
+                return
+            wav, tts_ms, tts_err = _spk_tts(api_key, reply, voice)
+            if tts_err:
+                # The examiner did not speak: say so instead of returning text
+                # as if the turn had happened.
+                self._send_json(502, {"error": "turn_failed", "reason": tts_err})
+                return
+            total = int((time.time() - started) * 1000)
+            if session_id and not known:
+                _spk_turn_session_mark(uid, session_id)
+                plans.speaking_add_mock(uid)
+            _audit("speaking_turn", uid, _real_ip(self), self._rid,
+                   {"part": part, "role": role, "ms": total})
+            self._send_json(200, {
+                "transcript": transcript,
+                "reply": reply,
+                "audio_b64": base64.b64encode(wav).decode("ascii"),
+                "mime": "audio/wav",
+                "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms, "total": total},
             })
             return
 

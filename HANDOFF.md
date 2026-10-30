@@ -140,6 +140,8 @@ python3 tools/issue_license.py --list    # hashes + who redeemed them
 `B2_DEMO` · `B2_REGISTER` · `B2_HOST` · `B2_PUBLIC_HEALTH` ·
 `B2_SPK_AZURE_KEY` · `B2_SPK_AZURE_REGION` · `B2_SPK_AZURE_ENDPOINT` ·
 `B2_SPK_PA_DAILY_PER_USER` ·
+`B2_SPK_GOOGLE_KEY` · `B2_SPK_GOOGLE_MODEL` · `B2_SPK_LIVE` (opt-in: assert the key really has
+Live) · `B2_SPK_TURN_MODEL` · `B2_SPK_TTS_MODEL` · `B2_SPK_TURN_BASE` (tests only) ·
 `B2_OWNER_PASSWORD` (first-boot bootstrap only) · `B2_TEST_USER` / `B2_TEST_PASS` (tests only).
 
 ### Public ingress
@@ -471,10 +473,28 @@ opt-in `interactive: true` that adds the Interactive Communication band from the
 without that flag the old behaviour is unchanged. `tests/test_speaking_exam.py` runs a full Part 2
 in `?spk=sim` (~146 s) and writes one screenshot per screen to `tests/out/`.
 
-What is still needed to leave simulation mode: a real **Google/Gemini API key** (Live session) and
-a real **Azure Speech key + region** (PA). Without them the app degrades honestly — sim voices and
-`not measured` — which is the correct behaviour, not a bug. The minute caps (`B2_SPK_MIN_DAILY_*`)
-and the AI daily quota already protect the budget.
+**S7 (turn-based voice)**, phase 36 — `GET /api/speaking/capabilities` and
+`POST /api/speaking/turn`. The owner's key lists 50 models and **zero with
+`bidiGenerateContent`**, so the Live socket answered `setupComplete` and then stayed silent.
+The client keeps the same VAD (800 ms of silence closes a turn, 15 s hard cap) and buffers only
+the current turn; nothing is uploaded until it closes. The server answers in **one** Gemini call
+(audio → `{transcript, reply}`) plus **one** TTS call (`gemini-2.5-flash-preview-tts`, `Puck` for
+the examiner, `Kore` for the partner) and returns the reply as a WAV that plays through the same
+per-voice gain chain. Caps: 800 KB / 25 s per turn (413 before decoding), one mock per session
+(minutes stay on `/api/speaking/minute`), `history` bounded to the last 6 turns, and nothing
+audio- or transcript-shaped is stored or logged. `live:true` needs `B2_SPK_LIVE=1` **and** a model
+that really lists `bidiGenerateContent`; otherwise the UI hides every "real-time" claim.
+
+Measured against a local stub (not Google): server `ms.total` 29–45 ms and client
+stop-talking → first audio **94 ms**. Those numbers say the pipeline adds no visible latency; they
+do **not** measure the upstream model. This is turn-based voice, **not full duplex**: the mic is
+not recorded while the examiner's audio plays, so the candidate cannot interrupt it mid-sentence
+the way they can in the real exam.
+
+What is still needed: nothing extra for the examiner voice — any Gemini key that can run
+`gemini-2.5-flash` and the TTS model is enough, and Live stays an opt-in for keys that expose it.
+A real **Azure Speech key + region** is still needed for the pronunciation band. Without them the
+app degrades honestly — sim voices and `not measured` — which is the correct behaviour, not a bug.
 
 Summary of the four scales: Grammar & Vocabulary and Discourse Management come from the
 transcript, Pronunciation only from a phoneme-level API, and **Interactive Communication is only
