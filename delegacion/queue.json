@@ -70,7 +70,7 @@
       "id": "16",
       "tests": "test_server_hardening.py test_hardening.py test_security2.py",
       "title": "Endurecer servidor: timeouts, limites, traversal, archivos ocultos",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "17",
