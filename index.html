@@ -2214,7 +2214,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <ul class="spx-brief">
                         <li data-i18n="spx_brief_b1">The examiner asks the questions and you answer in English.</li>
                         <li data-i18n="spx_brief_b2">The task and a countdown stay on screen the whole time.</li>
-                        <li data-i18n="spx_brief_b3">A partner joins you in Parts 2, 3 and 4.</li>
+                        <li id="spxBriefPartner"></li>
                       </ul>
                       <p class="live-sub" id="spxBriefTime"></p>
                       <p class="spx-rule" data-i18n="spx_rule">Speak in English. If you go quiet for 5 seconds I will ask you a question.</p>
@@ -3999,7 +3999,10 @@ const I18N={
     spx_brief_sentence:'Here is what will happen in Part {n}.',
     spx_brief_b1:'The examiner asks the questions and you answer in English.',
     spx_brief_b2:'The task and a countdown stay on screen the whole time.',
-    spx_brief_b3:'A partner joins you in Parts 2, 3 and 4.',
+    spx_brief_part1:'Just you and the examiner. No partner.',
+    spx_brief_part2:'You speak for a minute, then your partner answers a question about the photos.',
+    spx_brief_part3:'You and your partner discuss a task card, then decide together.',
+    spx_brief_part4:'A discussion with the examiner and your partner about the topic.',
     spx_brief_time:'Part {n} · {min} min · {turns} turns · the clock changes colour in the last 15 seconds.',
     spx_rule:'Speak in English. If you go quiet for 5 seconds I will ask you a question.',
     spx_ready:'I\'m ready',
@@ -4587,7 +4590,10 @@ const I18N={
     spx_brief_sentence:'Esto es lo que va a pasar en la Parte {n}.',
     spx_brief_b1:'El examinador hace las preguntas y vos respondés en inglés.',
     spx_brief_b2:'La consigna y la cuenta regresiva quedan en pantalla todo el tiempo.',
-    spx_brief_b3:'Un compañero se suma en las Partes 2, 3 y 4.',
+    spx_brief_part1:'Solo vos y el examinador. Sin compañero.',
+    spx_brief_part2:'Hablás un minuto y después tu compañero responde una pregunta sobre las fotos.',
+    spx_brief_part3:'Vos y tu compañero comentan una tarjeta y después deciden juntos.',
+    spx_brief_part4:'Una conversación con el examinador y tu compañero sobre el tema.',
     spx_brief_time:'Parte {n} · {min} min · {turns} turnos · el reloj cambia de color en los últimos 15 segundos.',
     spx_rule:'Hablá en inglés. Si te quedás en silencio 5 segundos, te voy a hacer una pregunta.',
     spx_ready:'Estoy listo',
@@ -6588,31 +6594,99 @@ function makeTurnTransport(cfg){
     busy=true;
     state('thinking');
     const t0=performance.now();
+    /* A candidate turn is streamed: the reply text arrives first, the WAV
+       follows. `say` (text only) keeps the plain JSON response. */
+    const body=Object.assign({},payload);
+    if(body.audio_b64)body.stream=true;
+    function applyText(j){
+      if(j.transcript&&on.inText)on.inText(j.transcript);
+      if(j.reply&&on.outText)on.outText(j.reply);
+    }
+    function finish(j,audioP){
+      return Promise.resolve(audioP).then(function(){
+        SPK.lastTurnMs=j.ms||null;
+        /* stop-talking → first-audio is measured here, on the client,
+           because that is the number the candidate actually feels. */
+        SPK.turnLatencyMs=Math.round(performance.now()-t0);
+        state('');
+        if(on.turnDone)on.turnDone(j);
+        return true;
+      });
+    }
+    function consume(j){
+      applyText(j);
+      return finish(j,spkPlayWav(j.audio_b64,role).catch(function(){return false}));
+    }
+    function readStream(r){
+      const out={transcript:'',reply:'',audio_b64:'',mime:'audio/wav',ms:null};
+      let audioP=null;
+      function line(raw){
+        if(!raw||!raw.trim())return;
+        let ev=null;
+        try{ev=JSON.parse(raw)}catch(e){return}
+        if(ev.type==='text'){
+          out.transcript=ev.transcript||'';
+          out.reply=ev.reply||'';
+          out.ms=ev.ms||out.ms;
+          SPK.turnTextMs=Math.round(performance.now()-t0);
+          applyText(out);
+        }else if(ev.type==='audio'){
+          out.audio_b64=ev.audio_b64||'';
+          out.mime=ev.mime||'audio/wav';
+          out.ms=ev.ms||out.ms;
+          if(out.audio_b64)audioP=spkPlayWav(out.audio_b64,role)
+            .catch(function(){return false});
+        }else if(ev.type==='error'){
+          throw new Error(ev.error||('turn failed ('+ev.reason+')'));
+        }
+      }
+      function readAll(){
+        if(r.body&&typeof r.body.getReader==='function'){
+          const reader=r.body.getReader();
+          const dec=new TextDecoder();
+          let buf='';
+          function drain(){
+            let i;
+            while((i=buf.indexOf('\n'))>=0){
+              const raw=buf.slice(0,i);buf=buf.slice(i+1);line(raw);
+            }
+          }
+          function pump(){
+            return reader.read().then(function(step){
+              if(step.done){
+                buf+=dec.decode();
+                if(buf.trim())line(buf);
+                return null;
+              }
+              buf+=dec.decode(step.value,{stream:true});
+              drain();
+              return pump();
+            });
+          }
+          return pump();
+        }
+        return r.text().then(function(text){
+          String(text||'').split('\n').forEach(line);
+        });
+      }
+      return readAll().then(function(){return finish(out,audioP)});
+    }
     return fetch(apiUrl('/api/speaking/turn'),{method:'POST',
-      headers:authHeaders(),body:JSON.stringify(payload)})
+      headers:authHeaders(),body:JSON.stringify(body)})
       .then(function(r){
         if(r.status===401){sessionExpired();throw new Error('session expired')}
-        return r.json().catch(function(){return null}).then(function(j){
-          if(!r.ok||!j||typeof j.reply!=='string'){
+        const ctype=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
+        if(!r.ok){
+          return r.json().catch(function(){return null}).then(function(j){
             if(isPlanLimit(j)){showPlanLimit();throw new Error(t('license_limit_short'))}
             throw new Error((j&&j.error)||('turn failed ('+r.status+')'));
-          }
-          return j;
-        });
-      })
-      .then(function(j){
-        if(j.transcript&&on.inText)on.inText(j.transcript);
-        if(j.reply&&on.outText)on.outText(j.reply);
-        return spkPlayWav(j.audio_b64,role).catch(function(){return false})
-          .then(function(){
-            SPK.lastTurnMs=j.ms||null;
-            /* stop-talking → first-audio is measured here, on the client,
-               because that is the number the candidate actually feels. */
-            SPK.turnLatencyMs=Math.round(performance.now()-t0);
-            state('');
-            if(on.turnDone)on.turnDone(j);
-            return true;
           });
+        }
+        if(ctype.indexOf('x-ndjson')>=0)return readStream(r);
+        return r.json().catch(function(){return null}).then(function(j){
+          if(!j||typeof j.reply!=='string')throw new Error('turn failed');
+          return consume(j);
+        });
       })
       .catch(function(err){
         if(keep&&payload.audio_b64)lastPayload=payload;
@@ -6725,7 +6799,7 @@ const SPK={
   /* Phase 36 turn-based voice: one uploaded turn at a time, and the two
      numbers the honesty requirement asks for (server ms + client latency). */
   caps:null,turnSessionId:'',turnState:'',turnError:'',
-  lastTurnMs:null,turnLatencyMs:null
+  lastTurnMs:null,turnLatencyMs:null,turnTextMs:null
 };
 window.SPK=SPK;
 window.spkDirectorTick=spkDirectorTick;
@@ -6907,7 +6981,7 @@ function spkReset(){
   SPK.reportId='';SPK.reportPayload=null;SPK.reportData=null;
   SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
-  SPK.lastTurnMs=null;SPK.turnLatencyMs=null;
+  SPK.lastTurnMs=null;SPK.turnLatencyMs=null;SPK.turnTextMs=null;
   spxShowVoiceRetry(false);
   SPK.voices={};
   const repBtn=document.getElementById('spkReportBtn');
@@ -7825,6 +7899,7 @@ function spxRenderChoose(){
 function spxRenderBrief(){
   const meta=SPX_PART_META[SP_EXAM.part];
   spx$('spxBriefSentence').textContent=t('spx_brief_sentence',{n:SP_EXAM.part});
+  spx$('spxBriefPartner').textContent=t('spx_brief_part'+SP_EXAM.part);
   spx$('spxBriefTime').textContent=t('spx_brief_time',{
     n:SP_EXAM.part,min:meta.minutes,turns:spxPhases().length});
 }
@@ -7907,6 +7982,29 @@ function spxPhases(){
     {key:'spx_discuss',who:'candidate',sec:226,events:events},
     close(15)
   ];
+}
+
+/* The examiner's stage lines for this part, exactly as the director will say
+   them. Sent once when the brief opens so the server can cache their TTS and
+   the opening question plays immediately. */
+function spxWarmLines(){
+  const lines=[];
+  try{
+    spxPhases().forEach(function(ph){
+      if(ph.who==='examiner'&&ph.line)lines.push(ph.line);
+      (ph.events||[]).forEach(function(ev){
+        if(ev.who==='examiner'&&ev.text)lines.push(ev.text);
+      });
+    });
+  }catch(e){}
+  return lines;
+}
+function spkWarmPart(){
+  if(spkSimMode())return;
+  fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
+    body:JSON.stringify({warm:true,part:SP_EXAM.part,role:'examiner',
+      task:SP_EXAM.task||{},lines:spxWarmLines(),session_id:spkTurnSessionId()})})
+    .catch(function(){});
 }
 
 function spxQueueQuiet(){
@@ -8073,7 +8171,18 @@ function spxSilence(now){
   if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed){
     SP_EXAM.promptUsed=true;
     SP_EXAM.silencePrompts++;
-    spxSay('examiner',SPX_LINES.silence);
+    const ph=SP_EXAM.phases[SP_EXAM.phase];
+    const next=SPK.mode==='turn'&&((ph&&ph.events)||[]).find(function(ev){
+      return ev.who==='examiner'&&!ev.done&&ev.text;
+    });
+    if(next){
+      /* Turn mode fallback: a real silence gets the next scripted question,
+         not a generic line. */
+      next.done=true;
+      spxFireEvent(next);
+    }else{
+      spxSay('examiner',SPX_LINES.silence);
+    }
   }
 }
 
@@ -8084,7 +8193,12 @@ function spxTickLoop(){
   const now=performance.now();
   const elapsed=(now-SP_EXAM.phaseStart)/1000;
   (ph.events||[]).forEach(function(ev){
-    if(!ev.done&&elapsed>=ev.at){ev.done=true;spxFireEvent(ev)}
+    if(ev.done||elapsed<ev.at)return;
+    /* Turn mode: the model hears the answer and asks the next question. The
+       scripted examiner questions stay untouched as the silence fallback
+       (spxSilence), never as the normal path. */
+    if(SPK.mode==='turn'&&ev.who==='examiner')return;
+    ev.done=true;spxFireEvent(ev);
   });
   spxTickRender(ph.sec-elapsed);
   spxRenderTx();
@@ -8218,6 +8332,9 @@ SP_EXAM.start=async function(){
   }
   spxRenderBrief();
   spxSetScreen('brief');
+  /* Warm the scripted TTS while the candidate reads the brief: by the time
+     they press "I'm ready", the first question is already a cache hit. */
+  spkWarmPart();
   const btn=spx$('spxReadyBtn');
   if(btn)btn.focus();
 };

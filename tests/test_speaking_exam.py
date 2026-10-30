@@ -77,6 +77,54 @@ MODEL_OK = {
 TURN_TRANSCRIPT = "It is healthier because it has less sugar."
 TURN_REPLY = "What makes it healthier?"
 
+# Phase 37: two different answers must produce two different, answer-aware
+# replies. The stub cannot hear, so each fixture carries a marker in its PCM
+# bytes; the server-side prompt is what a real model would use.
+ANSWER_BIKE = "In my opinion, travelling by bike is healthier than the metro."
+REPLY_BIKE = "Bike — what makes it healthier for you?"
+ANSWER_METRO = "I take the metro because it is faster than driving."
+REPLY_METRO = "Metro — is it faster than the bus?"
+
+
+def audio_with_marker(marker=b"BIKE", seconds=1.0):
+    """1 s of PCM whose first bytes identify the stubbed candidate answer."""
+    return base64.b64encode(marker + b"\x00\x00" * int(16000 * seconds)).decode("ascii")
+
+
+def silent_audio(seconds=1.0):
+    return base64.b64encode(b"\x00\x00" * int(16000 * seconds)).decode("ascii")
+
+
+_STOPWORDS = set("""
+a an the and or but if is are was were be been being am i you he she it we they
+my your his her its our their me him them us this that these those what which who
+whom whose do does did have has had can could would should will shall may might
+must not no yes of in on at to for with by from as than then so very just
+""".split())
+
+
+def content_words(text):
+    """Words a comprehension check can use: no grammar glue, 3+ letters."""
+    return {w for w in re.findall(r"[a-z]+", str(text or "").lower())
+            if len(w) > 2 and w not in _STOPWORDS}
+
+
+def _pcm_from_request(raw):
+    """Pull the candidate PCM out of a recorded Gemini generateContent body."""
+    try:
+        body = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return b""
+    for content in body.get("contents") or []:
+        for part in content.get("parts") or []:
+            blob = part.get("inlineData") if isinstance(part, dict) else None
+            if isinstance(blob, dict) and isinstance(blob.get("data"), str):
+                try:
+                    return base64.b64decode(blob["data"], validate=False)
+                except Exception:
+                    return b""
+    return b""
+
 
 def pcm_bytes(seconds=0.4, rate=24000):
     """Raw 16-bit mono PCM, i.e. exactly what Gemini TTS returns."""
@@ -95,6 +143,7 @@ class TextModelStub(BaseHTTPRequestHandler):
     """
 
     calls = []          # [(path, had_audio)] so a test can assert what was sent
+    bodies = []         # [(path, raw_body)] for Phase 37 prompt assertions
     lock = threading.Lock()
 
     def log_message(self, fmt, *a):
@@ -115,14 +164,24 @@ class TextModelStub(BaseHTTPRequestHandler):
         if ":generateContent" in path:
             with self.lock:
                 self.calls.append((path, b'"inlineData"' in raw))
+                self.bodies.append((path, raw))
             if "flash-preview-tts" in path:
                 self._json({"candidates": [{"content": {"parts": [{
                     "inlineData": {
                         "mimeType": "audio/L16;codec=pcm;rate=24000",
                         "data": base64.b64encode(pcm_bytes()).decode("ascii")}}]}}]})
                 return
+            pcm = _pcm_from_request(raw)
+            if pcm and not any(pcm):
+                pair = {"transcript": "", "reply": "Sorry, what did you say?"}
+            elif b"BIKE" in pcm:
+                pair = {"transcript": ANSWER_BIKE, "reply": REPLY_BIKE}
+            elif b"METRO" in pcm:
+                pair = {"transcript": ANSWER_METRO, "reply": REPLY_METRO}
+            else:
+                pair = {"transcript": TURN_TRANSCRIPT, "reply": TURN_REPLY}
             self._json({"candidates": [{"content": {"parts": [{"text": json.dumps(
-                {"transcript": TURN_TRANSCRIPT, "reply": TURN_REPLY})}]}}]})
+                pair)}]}}]})
             return
         self._json({"choices": [{"message": {"role": "assistant",
                                              "content": json.dumps(MODEL_OK)}}]})
@@ -377,6 +436,161 @@ def main():
         status, body = api("/api/speaking/turn", turn_body(session), owner_token)
         assert status == 200, "owner was limited on %s: %r %r" % (session, status, body)
     out["12_quota"] = {"second_free": 429, "owner_sessions": 3}
+
+    # --- 37A. It listens: two answers -> two answer-aware replies -----------
+    # Eight turns in: only the last six may reach the model (rolling window).
+    shared_history = [
+        {"who": "candidate", "text": "OLD-1"},
+        {"who": "examiner", "text": "OLD-2"},
+        {"who": "candidate", "text": "HIST-3"},
+        {"who": "examiner", "text": "HIST-4"},
+        {"who": "candidate", "text": "HIST-5"},
+        {"who": "examiner", "text": "HIST-6"},
+        {"who": "candidate", "text": "PINEAPPLE TAXI"},
+        {"who": "examiner", "text": "QUESTION MARKER"},
+    ]
+    shared_task = {
+        "id": "p2-1",
+        "title": "Two ways of travelling to work",
+        "prompts": ["Compare the photographs and say why the people might have "
+                    "chosen these ways of travelling."],
+    }
+    before_bodies = len(TextModelStub.bodies)
+    status, bike = api("/api/speaking/turn", turn_body(
+        "cmp-bike", audio_b64=audio_with_marker(b"BIKE"),
+        history=shared_history, task=shared_task), owner_token)
+    assert status == 200, (status, bike)
+    status, metro = api("/api/speaking/turn", turn_body(
+        "cmp-metro", audio_b64=audio_with_marker(b"METRO"),
+        history=shared_history, task=shared_task), owner_token)
+    assert status == 200, (status, metro)
+    assert bike.get("transcript") == ANSWER_BIKE, bike.get("transcript")
+    assert metro.get("transcript") == ANSWER_METRO, metro.get("transcript")
+    assert bike.get("reply") != metro.get("reply"), "the examiner gave the same reply"
+    for result, answer in ((bike, ANSWER_BIKE), (metro, ANSWER_METRO)):
+        overlap = content_words(result.get("reply")) & content_words(answer)
+        assert overlap, "reply %r ignores its own transcript %r" % (
+            result.get("reply"), answer)
+    out["37a_listens"] = {"bike": bike.get("reply"), "metro": metro.get("reply")}
+
+    # The prompt sent upstream carries the previous turns (with who said what)
+    # and the task, not just the new audio. Assert on the recorded request body.
+    turn_bodies = [raw for path, raw in TextModelStub.bodies[before_bodies:]
+                   if "flash-preview-tts" not in path]
+    assert len(turn_bodies) == 2, len(turn_bodies)
+    for raw in turn_bodies:
+        assert b"PINEAPPLE TAXI" in raw, "the previous candidate turn was not sent"
+        assert b"QUESTION MARKER" in raw, "the previous examiner turn was not sent"
+        assert b"OLD-1" not in raw and b"OLD-2" not in raw, "more than 6 turns were sent"
+        assert shared_task["prompts"][0].encode("utf-8") in raw, "the task was not sent"
+        body = json.loads(raw.decode("utf-8"))
+        system = body["systemInstruction"]["parts"][0]["text"]
+        assert "REACT FIRST" in system, system[:200]
+        assert "14 words" in system, system[:200]
+        assert "FALLBACK" in system, system[:200]
+        assert "fewer than 4 words" in system, system[:200]
+        assert "follow-up" in system, system[:200]
+        assert "Candidate: PINEAPPLE TAXI" in json.dumps(body["contents"])
+        assert "Examiner: QUESTION MARKER" in json.dumps(body["contents"])
+        generation = body["generationConfig"]
+        assert generation["thinkingConfig"] == {"thinkingBudget": 0}, generation
+        assert generation["maxOutputTokens"] == 80, generation
+        assert generation["responseSchema"] == S._SPK_TURN_SCHEMA, generation
+    out["37a_prompt"] = {"bodies": len(turn_bodies), "history": True, "task": True}
+
+    # --- 37B. Silent audio: never invent a transcript -----------------------
+    status, silent = api("/api/speaking/turn", turn_body(
+        "cmp-silent", audio_b64=silent_audio(),
+        history=[{"who": "candidate", "text": "PINEAPPLE TAXI"}],
+        task=shared_task), owner_token)
+    assert status == 200, (status, silent)
+    assert silent.get("transcript") == "", "a silent turn invented a transcript"
+    assert re.search(r"repeat|again|catch|hear|sorry",
+                     silent.get("reply") or "", re.I), silent.get("reply")
+    assert "PINEAPPLE" not in (silent.get("reply") or ""), silent.get("reply")
+    assert base64.b64decode(silent.get("audio_b64") or "")[:4] == b"RIFF"
+    out["37b_silence"] = {"transcript": silent.get("transcript"),
+                          "reply": silent.get("reply")}
+
+    # --- 37C. TTS cache: cold once, then a cache hit ------------------------
+    say_text = "What do you usually do at the weekend?"
+    before_calls = len(TextModelStub.calls)
+    status, cold = api("/api/speaking/turn",
+                       {"say": say_text, "part": 1, "role": "examiner",
+                        "session_id": "cache-1"}, owner_token)
+    assert status == 200, (status, cold)
+    assert cold["ms"].get("cached") is False, cold["ms"]
+    cold_ms = cold["ms"]["total"]
+    assert len(TextModelStub.calls) == before_calls + 1, "the cold line skipped TTS"
+    tts_dir = os.path.join(_tmp, "tts")
+    cached_files = [os.path.join(tts_dir, name)
+                    for name in os.listdir(tts_dir) if name.endswith(".wav")]
+    assert cached_files, "the TTS cache is empty"
+    for path in cached_files:
+        assert os.stat(path).st_mode & 0o777 == 0o600, oct(os.stat(path).st_mode)
+
+    before_calls = len(TextModelStub.calls)
+    status, warm = api("/api/speaking/turn",
+                       {"say": say_text, "part": 1, "role": "examiner",
+                        "session_id": "cache-1"}, owner_token)
+    assert status == 200, (status, warm)
+    assert warm["ms"].get("cached") is True, warm["ms"]
+    assert len(TextModelStub.calls) == before_calls, "a cached line called TTS again"
+    warm_ms = warm["ms"]["total"]
+    assert warm_ms < 4000, warm_ms
+    out["37c_cache"] = {"cold_ms": cold_ms, "warm_ms": warm_ms,
+                        "files": len(cached_files)}
+
+    # Pre-generation for a whole part: queued in the background, then hit.
+    warm_lines = ["Do you work, or are you a student?",
+                  "Do you enjoy travelling? What kind of holidays do you like?"]
+    before_calls = len(TextModelStub.calls)
+    status, queued = api("/api/speaking/turn",
+                        {"warm": True, "part": 1, "role": "examiner",
+                         "lines": warm_lines, "session_id": "warm-1"}, owner_token)
+    assert status == 200, (status, queued)
+    assert queued.get("warmed", 0) >= len(warm_lines), queued
+    deadline = time.time() + 10
+    while time.time() < deadline and len(TextModelStub.calls) < before_calls + len(warm_lines):
+        time.sleep(0.05)
+    assert len(TextModelStub.calls) >= before_calls + len(warm_lines), \
+        "warm did not generate the scripted lines"
+    before_calls = len(TextModelStub.calls)
+    status, hit = api("/api/speaking/turn",
+                      {"say": warm_lines[0], "part": 1, "role": "examiner",
+                       "session_id": "warm-1"}, owner_token)
+    assert status == 200, (status, hit)
+    assert hit["ms"].get("cached") is True, hit["ms"]
+    assert len(TextModelStub.calls) == before_calls, "a warmed line called TTS again"
+    out["37c_warm"] = {"queued": queued.get("warmed"), "lines": len(warm_lines)}
+
+    # --- 37D. The reply text is streamed before the audio --------------------
+    stream_body = turn_body("stream-1", audio_b64=audio_with_marker(b"STREAM"),
+                            history=shared_history, task=shared_task)
+    stream_body["stream"] = True
+    stream_req = urllib.request.Request(
+        URL + "/api/speaking/turn", data=json.dumps(stream_body).encode("utf-8"),
+        headers={"Content-Type": "application/json",
+                 "Authorization": "Bearer " + owner_token}, method="POST")
+    with urllib.request.urlopen(stream_req, timeout=25) as resp:
+        assert "x-ndjson" in resp.headers.get("Content-Type", ""), resp.headers
+        events = [json.loads(line) for line in resp.read().decode("utf-8").splitlines()
+                  if line.strip()]
+    assert [ev.get("type") for ev in events] == ["text", "audio"], events
+    assert events[0].get("reply") == TURN_REPLY, events[0]
+    assert "audio_b64" not in events[0], "the text line waited for the audio"
+    assert base64.b64decode(events[1].get("audio_b64") or "")[:4] == b"RIFF"
+    assert events[1]["ms"]["total"] >= 0 and events[1]["ms"]["tts"] >= 0
+    out["37d_stream"] = {"events": [ev.get("type") for ev in events],
+                         "text_ms": events[0]["ms"], "audio_ms": events[1]["ms"]}
+
+    # Cold vs warm, printed honestly. Upstream is a local stub, so these are
+    # the software overheads, not Google's network time.
+    print("phase 37 latency (stubbed upstream):")
+    print("  cold: %r" % cold["ms"])
+    print("  warm: %r" % warm["ms"])
+    assert warm_ms < 4000, warm_ms
+    out["37_latency"] = {"cold": cold["ms"], "warm": warm["ms"]}
 
     try:
         from playwright.sync_api import sync_playwright
@@ -729,7 +943,9 @@ def main():
                     blob += b"\n" + f.read()
             except OSError:
                 pass
-    for needle in (TURN_TRANSCRIPT, TURN_REPLY, "I think the first one."):
+    for needle in (TURN_TRANSCRIPT, TURN_REPLY, "I think the first one.",
+                   ANSWER_BIKE, ANSWER_METRO, REPLY_BIKE, REPLY_METRO,
+                   "PINEAPPLE TAXI", "QUESTION MARKER"):
         assert needle.encode("utf-8") not in blob, "the server stored %r" % needle
     assert b"FAKE-TURN-KEY" not in blob, "the provider key reached disk"
     out["11_no_storage"] = {"bytes_scanned": len(blob)}
@@ -738,7 +954,8 @@ def main():
     srv.server_close()
     stub_srv.shutdown()
     print(json.dumps(out, ensure_ascii=False, indent=1))
-    print("OK: phase 36 speaking exam acceptance passed (turn-based voice)")
+    print("OK: phase 37 speaking exam acceptance passed "
+          "(turn-based, listens to the answer, TTS cached)")
 
 
 if __name__ == "__main__":
