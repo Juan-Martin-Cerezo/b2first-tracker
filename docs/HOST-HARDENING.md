@@ -71,7 +71,7 @@ every LAN device was trusted for every port the host listened on.
 | 8000/tcp | Coolify panel | **drop** (measured `000`) | accept | **drop** |
 | 6001-6002/tcp | Coolify | **drop** (measured `000`) | accept | **drop** |
 | 9100/tcp | `pi-thermal-monitor` | **accept** (read-only) | accept | **drop** |
-| 8088/tcp | B2 First app | closed (127.0.0.1) | closed (127.0.0.1) | via Funnel only |
+| 8088/tcp | B2 First app | **accept** (LAN fast path, 16 ms) | accept | **drop** (measured) |
 | 3306/tcp | MariaDB | closed (127.0.0.1) | closed | closed |
 | 8799/tcp | internal python | closed (127.0.0.1) | closed | closed |
 
@@ -105,6 +105,14 @@ Notes:
   tailnet ever breaks.
   Rollback for this change: `/root/hardened.nft.bak-*` (the automated snapshot
   recipe is §3.1).
+- **8088 on the LAN is deliberate** (added after phase 25, 2026-10-30). The app
+  binds `0.0.0.0` through `/etc/systemd/system/b2first.service.d/zz-lan.conf`, and
+  the input chain only lets `192.168.1.0/24` and the tailnet reach it; a netns probe
+  from `203.0.113.5` still measures `8088 -> bloqueado`. Reason: the Funnel costs
+  1.2 s of TTFB per request while the LAN answers in 16 ms, and phase 25 had left
+  the owner paying the round trip from his own house. `zz-lan.conf` exists
+  *separately* from `override.conf` because the delegation deploy rewrites the
+  latter and kept resetting `B2_HOST` to `127.0.0.1`.
 - **Tailnet** still reaches every service: `iifname "tailscale0" accept` in
   `input` and `-i tailscale0 -j RETURN` in `DOCKER-USER`. This is deliberate —
   Coolify (panel + 6001-6002) is tailnet-only.
