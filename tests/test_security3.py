@@ -440,7 +440,7 @@ check("J1_password_change_revokes_all",
 # ---------------------------------------------------------------------------
 # K. Password policy
 # ---------------------------------------------------------------------------
-check("K1_common_list_size", len(store.COMMON_PASSWORDS) == 200,
+check("K1_common_list_size", len(store.COMMON_PASSWORDS) >= 1000,
       f"{len(store.COMMON_PASSWORDS)}")
 S._RATE.clear()
 st_k2, body_k2, _ = req("POST", "/api/register",

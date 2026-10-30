@@ -367,12 +367,17 @@ Reproducible external audit of the live instance: `bash tools/audit.sh` — 14/1
 
 ## Data and privacy
 
-- **Privacy policy**: the app serves it at [`GET /privacy`](docs/PRIVACY.md) (linked from the
-  footer and from the registration form). It documents exactly what is stored, retention
-  windows, your export/delete rights, the AI data flow and Do Not Track support.
-- The contact address ships as the explicit `TODO_OWNER_EMAIL` placeholder in `server.py`
-  (`privacy_page()`) and `docs/PRIVACY.md`: replace that literal string with the real owner
-  email in both files before deploying publicly. No email is invented anywhere.
+- **Legal pages**: the app serves the privacy policy at [`GET /privacy`](docs/PRIVACY.md), the
+  terms at [`GET /terms`](docs/TERMS.md) and the security policy at
+  [`GET /security`](docs/SECURITY.md), rendered from Markdown by `legal.py` (stdlib only,
+  sanitised). They are linked from the footer and from the registration form.
+- The documents name the third parties that actually receive data (Cloudflare, Google,
+  DeepSeek, Azure), the retention windows, export/delete rights and the 16+ age policy. There
+  is no published owner mailbox: contact goes through the GitHub advisory form in
+  `/.well-known/security.txt`.
+- The full data map (paths, contents, permissions) is [`docs/DATA-MAP.md`](docs/DATA-MAP.md).
+  `tools/retention.py` enforces 90-day audit retention, 13-month usage counters and 20 backups;
+  `tools/scan_texts.py` checks that no visible string is left untranslated.
 - Progress lives in `localStorage` and in `data/users/<id>/progress.json` on your machine, with
   the previous version kept as a rotated backup.
 - `data/` is gitignored: no personal progress is ever committed.
@@ -380,7 +385,9 @@ Reproducible external audit of the live instance: `bash tools/audit.sh` — 14/1
   (never content, never free text) as JSONL in `data/events/` for 7 days, with the client IP
   stored only as a salted hash. Owner-only aggregates live at `GET /api/metrics`. Browsers
   sending `Do Not Track: 1` emit nothing at all.
-- The only outbound call is the text you paste into the corrector, sent with your own key.
+- Outbound calls: the text you submit goes to DeepSeek (or the configured provider), live
+  speaking audio goes from the browser directly to Google Gemini, and pronunciation clips go to
+  Azure only when the owner configures it. Audio is never written to disk.
 - Demo mode cannot write to `data/`; those routes answer `403`.
 
 ## Project layout

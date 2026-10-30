@@ -96,6 +96,9 @@ S.TOKENS_FILE = os.path.join(_tmp, "tokens.json")
 S.USERS_DIR = os.path.join(_tmp, "users")
 S.B2_DEMO = False
 S.B2_REGISTER = "open"
+# The lockout test makes 11 attempts in a row; the production backoff (5/15/60 s)
+# would blow the 30 s client timeout. The backoff itself is asserted in test_security3.
+S.LOGIN_BACKOFF = (0.0, 0.0, 0.0, 0.0, 0.0)
 S.B2_AI_BASE = f"http://127.0.0.1:{MOCK_PORT}/v1beta"
 S.B2_AI_MODEL = "mock-model"
 

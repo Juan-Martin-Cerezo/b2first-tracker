@@ -14,6 +14,8 @@ import threading
 import time
 from contextlib import contextmanager
 
+import wordlist
+
 __all__ = [
     "get_user",
     "create_user",
@@ -44,31 +46,10 @@ _LOCK_TIMEOUT = 5.0
 
 PBKDF2_ITERATIONS = 600_000
 
-# The 200 most common passwords (OWASP-style blocklist, embedded so the server
-# keeps zero dependencies and never downloads a wordlist at runtime). Anything
-# outside this list is covered by the 10-character minimum.
-COMMON_PASSWORDS = frozenset("""
-1234 12345 123456 1234567 12345678 123456789 1234567890 111111 000000 121212
-123123 123321 112233 159753 654321 666666 7777777 888888 999999 987654321
-102030 101010 12341234 12344321 87654321 66666666 88888888 555555 444444 222222
-password password1 password12 password123 password1234 password12345 password123456 passwordpassword passw0rd p@ssw0rd
-p@ssword p@ssw0rd123 passw0rd123 passwd motdepasse senha senha123 contrasena qwerty qwerty123
-qwerty1234 qwerty12345 qwertyui qwertyuiop qwerty12 qwe123 qweasd qweasdzxc asd123 asdfgh
-asdfghjkl zxcvbnm zxcvbn 1q2w3e 1q2w3e4r 1q2w3e4r5t qazwsx qazwsxedc zaq12wsx 1qaz2wsx
-1qazxsw2 abc123 abcd1234 abcdefg abcdefgh abc12345 a1b2c3 a123456 q1w2e3r4 z1x2c3v4
-iloveyou iloveyou1 love love123 lovely amor tequiero angel angel123 baby
-baby123 babygirl babyboy princess princess1 sunshine sunflower flower butterfly rainbow
-letmein letmein1 letmein123 welcome welcome1 welcome123 welcome1234 monkey monkey123 dragon
-dragon123 tiger tiger123 lion lion123 shadow shadow123 master master1 master123
-admin admin123 admin1234 administrator root root123 toor guest guest123 user
-user123 usuario test test123 testtest test1 demo demo123 demo1 changeme
-changeme123 change default default123 login login123 secret secret123 trustno1 trustno123
-freedom freedom123 whatever hello hello123 hola hola123 football football1 football123
-baseball basketball soccer soccer123 hockey hockey123 jordan michael michael1 jennifer
-joshua ashley nicole daniel thomas matrix matrix123 starwars starwars1 pokemon
-pokemon1 batman batman123 superman superman123 spiderman harley harley123 ranger hunter
-hunter123 buster killer george computer computer123 internet internet123 cambridge b2first
-""".split())
+# The 1,000 most common passwords, embedded in wordlist.py so the server keeps
+# zero dependencies and never downloads a wordlist at runtime. Anything outside
+# this list is covered by the 10-character minimum.
+COMMON_PASSWORDS = wordlist.COMMON_PASSWORDS
 
 _SAFE_UID_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")
 

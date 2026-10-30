@@ -231,7 +231,7 @@ st, body, hdrs = req("GET", "/privacy")
 ctype = hdrs.get("Content-Type", "")
 check("T11_privacy_page",
       st == 200 and "text/html" in ctype and "Privacy Policy" in body and "Ley 25.326" in body
-      and "TODO_OWNER_EMAIL" in body,
+      and "security/advisories/new" in body and "TODO_OWNER_EMAIL" not in body,
       f"st={st} ctype={ctype}")
 
 # ---------------------------------------------------------------------------
@@ -272,8 +272,9 @@ with sync_playwright() as p:
     reg_note = pg.evaluate(
         """() => {
         const box = document.getElementById('authRegister');
-        return box ? box.textContent.includes('By creating an account you agree to the') &&
-                     !!box.querySelector('a[href="/privacy"]') : false;
+        return box ? box.textContent.includes('By creating an account you accept the') &&
+                     !!box.querySelector('a[href="/privacy"]') &&
+                     !!box.querySelector('a[href="/terms"]') : false;
     }"""
     )
     check("T13_footer_privacy_link",

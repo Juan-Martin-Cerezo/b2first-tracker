@@ -63,8 +63,8 @@ The synced progress document carries `schema_version` (currently `2`, `store.py`
 
 - `data/users.json` — one record per account: `{id, name, color, created, salt, hash, algo, iters}`;
   passwords are PBKDF2-HMAC-SHA256 (600,000 iterations; SHA-256 and 200k PBKDF2 hashes are
-  re-hashed transparently on the next successful login). Policy: 10+ characters, the 200 common
-  passwords embedded in `store.py`, not equal to the username.
+  re-hashed transparently on the next successful login). Policy: 10+ characters, the 1,000
+  most common passwords embedded in `wordlist.py`, not equal to the username.
 - `data/tokens.json` — keys are `sha256(token)`, never the token; values carry
   `{user_id, exp, issued, absolute_exp, last_seen, ua_hash}`. 30-day sliding TTL capped by a
   90-day `absolute_exp` that is never extended.
@@ -79,9 +79,11 @@ The synced progress document carries `schema_version` (currently `2`, `store.py`
   60/month, `byo` unlimited to us) plus an 80/day instance ceiling (`B2_AI_DAILY_TOTAL`).
   Speaking mocks: free 1/week (5 min), pro 6/month. `B2_AI_DAILY_PER_USER` is a legacy
   override: leave it unset.
-- `data/audit.log` (0600, rotates at 5 MB) records auth/security events in a SHA-256 hash chain
-  (`prev` per line); `tools/verify_audit.py` exits non-zero if a line was edited or deleted;
-  `/api/audit` returns only the caller's own events. `GET /api/health` is the liveness probe.
+- `data/audit.log` (0600, rotates at 5 MB, 90-day retention) records auth/security events in a
+  SHA-256 hash chain (`prev` per line); `tools/verify_audit.py` exits non-zero if a line was
+  edited or deleted; `tools/retention.py` enforces the 90-day window, the 13-month usage window
+  and the 20-backup rotation, and hashes any legacy raw IP. `/api/audit` returns only the
+  caller's own events. `GET /api/health` is the liveness probe.
   `/.well-known/security.txt` is the RFC 9116 disclosure file.
 - Registration is open by default; `B2_REGISTER=closed` freezes new accounts.
 - Password recovery is local only: `tools/reset_password.py`. There is no email flow.
