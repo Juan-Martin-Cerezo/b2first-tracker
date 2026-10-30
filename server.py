@@ -28,6 +28,7 @@ Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
 Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading, gzip
+import base64, binascii
 import calendar
 import urllib.request, urllib.error
 import ipaddress
@@ -38,6 +39,7 @@ from urllib.parse import quote, unquote
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
+import speech
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -125,6 +127,21 @@ AI_TEXT_MIN_WORDS = 40
 AI_TEXT_MAX_WORDS = 700
 AI_OUTPUT_MAX_BYTES = 8 * 1024
 AI_TIMEOUT = 25
+
+# --- Azure Pronunciation Assessment (S2) -----------------------------------
+# The key lives only in the systemd environment, is never sent to the browser,
+# never logged and never written to data/. Without it the endpoint degrades to
+# 503 speech_not_configured and the Pronunciation band stays "not measured".
+SPK_AZURE_KEY = os.environ.get("B2_SPK_AZURE_KEY", "")
+SPK_AZURE_REGION = os.environ.get("B2_SPK_AZURE_REGION", "")
+SPK_AZURE_ENDPOINT = os.environ.get("B2_SPK_AZURE_ENDPOINT", "")
+SPK_PA_PATH = ("/speech/recognition/conversation/cognitiveservices/v1"
+               "?language=en-US&format=detailed")
+SPK_PA_TIMEOUT = speech.PA_TIMEOUT
+SPK_PA_MAX_B64 = 2 * 1024 * 1024     # base64 characters of audio (2 MB)
+SPK_PA_MAX_BODY = SPK_PA_MAX_B64 + 4096
+SPK_PA_RATE_PER_MIN = 30             # calls per minute per user
+SPK_PA_DAILY_DEFAULT = 60            # calls per day per user
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -516,6 +533,59 @@ def _ai_quota_consume(quota_key):
         day = _ai_quota_today()
         day["users"][quota_key] = day["users"].get(quota_key, 0) + 1
         day["total"] += 1
+
+
+# --- Daily PA quota (same shape as the AI quota; protects the Azure key) ---
+_SPK_QUOTA_LOCK = threading.Lock()
+_SPK_QUOTA = {}  # {date iso: {quota_key: int}}
+
+
+def _spk_pa_daily_limit():
+    """Daily PA calls per user (B2_SPK_PA_DAILY_PER_USER, default 60)."""
+    try:
+        return max(0, int(os.environ.get("B2_SPK_PA_DAILY_PER_USER",
+                                         str(SPK_PA_DAILY_DEFAULT))))
+    except ValueError:
+        return SPK_PA_DAILY_DEFAULT
+
+
+def _spk_pa_quota_today():
+    """Today's counter (auto-reset: previous days are dropped on access)."""
+    today = date.today().isoformat()
+    for k in list(_SPK_QUOTA):
+        if k != today:
+            del _SPK_QUOTA[k]
+    return _SPK_QUOTA.setdefault(today, {})
+
+
+def _spk_pa_quota_left(quota_key):
+    with _SPK_QUOTA_LOCK:
+        return _spk_pa_daily_limit() - _spk_pa_quota_today().get(quota_key, 0)
+
+
+def _spk_pa_quota_consume(quota_key):
+    with _SPK_QUOTA_LOCK:
+        day = _spk_pa_quota_today()
+        day[quota_key] = day.get(quota_key, 0) + 1
+
+
+def _spk_azure_key():
+    """Azure subscription key from env (module constant first, then os.environ)."""
+    value = SPK_AZURE_KEY or os.environ.get("B2_SPK_AZURE_KEY", "")
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _spk_pa_url():
+    """Recognition URL: B2_SPK_AZURE_ENDPOINT override, else the regional host."""
+    endpoint = SPK_AZURE_ENDPOINT or os.environ.get("B2_SPK_AZURE_ENDPOINT", "")
+    endpoint = endpoint.strip().rstrip("/") if isinstance(endpoint, str) else ""
+    if endpoint:
+        return endpoint if "speech/recognition" in endpoint else endpoint + SPK_PA_PATH
+    region = SPK_AZURE_REGION or os.environ.get("B2_SPK_AZURE_REGION", "")
+    region = region.strip() if isinstance(region, str) else ""
+    if not region:
+        return ""
+    return f"https://{region}.stt.speech.microsoft.com{SPK_PA_PATH}"
 
 
 def _validate_ai_payload(obj):
@@ -1366,17 +1436,38 @@ beyond that request; the provider's own retention policy applies to what they
 receive. The resulting bands and feedback are saved only inside your own
 progress when you accept the correction.</p>
 
-<h2>7. Do Not Track</h2>
+<h2>7. Speaking practice — pronunciation</h2>
+<p>The speaking studio can score pronunciation. That is the one thing a
+transcript cannot measure, so a short clip of your voice is sent to
+<b>Azure AI Speech (Pronunciation Assessment)</b> — a Microsoft service — to get
+phoneme-level scores. What is sent: at most <b>10 seconds of audio per
+turn</b> (not the whole session) and, optionally, the reference text of the
+sentence you were asked to read. Nothing else: no account data, no identifiers,
+no transcript.</p>
+<p>Your audio is <b>not stored</b>, not even temporarily on this server: it is
+forwarded for the single request and discarded in the same handler. It is never
+written to disk, never put in the audit log, never kept for "quality" or
+"debugging". Only the numeric result (accuracy, fluency, completeness, prosody
+and per-word scores) is kept, and only if you choose to save the session. The
+Azure subscription key lives in this server's environment and never reaches
+your browser.</p>
+<p>Azure/Microsoft processes the audio <b>outside Argentina</b> (their regional
+speech endpoints), under Microsoft's own retention policy for the request. If
+the speech service is not configured on this instance, the endpoint answers
+"speech not configured" and pronunciation is reported as <b>not measured</b> —
+the app never invents that score.</p>
+
+<h2>8. Do Not Track</h2>
 <p>If your browser sends <code>Do Not Track: 1</code> (or the global privacy
 control signal), the app sends <b>no telemetry at all</b> — no usage events,
 no error reports. Every feature keeps working exactly the same.</p>
 
-<h2>8. Contact</h2>
+<h2>9. Contact</h2>
 <p>Questions or requests about your data: <b>{PRIVACY_TODO_EMAIL}</b>
 (this placeholder is replaced with the real owner address before public
 deployment).</p>
 
-<h2>9. Applicable law</h2>
+<h2>10. Applicable law</h2>
 <p>This policy is written with Argentina's Personal Data Protection Law
 (<b>Ley 25.326</b>) in mind, including access, correction and deletion
 rights. This document describes how the app actually handles data; it does
@@ -2241,6 +2332,114 @@ class H(BaseHTTPRequestHandler):
 
         if path == "/favicon.ico":
             self._send(204, b"", "image/x-icon")
+            return
+
+        # --- S2: Azure Pronunciation Assessment --------------------------------
+        # One short candidate turn in, phoneme scores out. The audio is forwarded
+        # and discarded inside this handler: never written to data/, never logged,
+        # never kept in memory past the response. The Azure key never reaches the
+        # browser. Without a key the endpoint says so (503) and the Pronunciation
+        # band stays "not measured" instead of being guessed.
+        if path == "/api/speaking/pa":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            api_key = _spk_azure_key()
+            url = _spk_pa_url()
+            if not api_key or not url:
+                # One line, no secret: just which knob is missing.
+                missing = "B2_SPK_AZURE_KEY" if not api_key else "B2_SPK_AZURE_REGION"
+                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
+                        f"rid={self._rid} speaking/pa disabled: {missing} missing\n")
+                with _LOG_LOCK:
+                    print(line, end="", flush=True)
+                self._drain()
+                self._send_json(503, {"error": "speech_not_configured"})
+                return
+            if self._clen() > SPK_PA_MAX_BODY:
+                self._drain()
+                self._send_json(413, {"error": "audio too large"})
+                return
+            if self._rate_limited("spk_pa:" + uid, SPK_PA_RATE_PER_MIN, 60):
+                return
+            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid json"})
+                return
+            del raw
+            fmt = req.get("format")
+            fmt = fmt.strip().lower() if isinstance(fmt, str) else ""
+            if fmt not in ("wav", "ogg"):
+                self._send_json(422, {"error": "unsupported format"})
+                return
+            audio_b64 = req.get("audio_b64")
+            if not isinstance(audio_b64, str) or not audio_b64:
+                self._send_json(422, {"error": "audio_b64 required"})
+                return
+            if len(audio_b64) > SPK_PA_MAX_B64:
+                self._send_json(413, {"error": "audio too large"})
+                return
+            try:
+                audio = base64.b64decode(audio_b64, validate=True)
+            except (ValueError, binascii.Error):
+                self._send_json(422, {"error": "invalid base64"})
+                return
+            ok, reason = speech.validate_audio(audio, fmt)
+            if not ok:
+                del audio
+                self._send_json(422, {"error": "invalid audio", "reason": reason})
+                return
+            ref_text = req.get("ref_text")
+            ref_text = ref_text.strip()[:500] if isinstance(ref_text, str) else ""
+            quota_key = "user:" + uid
+            if _spk_pa_quota_left(quota_key) <= 0:
+                del audio
+                reset = (date.today() + timedelta(days=1)).isoformat()
+                self._send_json(429, {"error": "daily pronunciation quota reached",
+                                      "reset": reset})
+                return
+            _spk_pa_quota_consume(quota_key)
+            ctype = ("audio/wav; codecs=audio/pcm; samplerate=16000"
+                     if fmt == "wav" else "audio/ogg; codecs=opus")
+            up_req = urllib.request.Request(
+                url,
+                data=audio,
+                headers={
+                    "Ocp-Apim-Subscription-Key": api_key,
+                    "Pronunciation-Assessment": speech.pa_config_header(ref_text),
+                    "Content-Type": ctype,
+                },
+                method="POST",
+            )
+            try:
+                # No retry on purpose: a second attempt is a second bill.
+                with urllib.request.urlopen(up_req, timeout=SPK_PA_TIMEOUT) as resp:
+                    up_raw = resp.read(1024 * 1024)
+            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+                del audio
+                self._send_json(502, {"error": "upstream provider failed"})
+                return
+            del audio
+            try:
+                up_json = json.loads(up_raw.decode("utf-8"))
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(502, {"error": "invalid provider response"})
+                return
+            del up_raw
+            result = speech.parse_pa_response(up_json)
+            if not result.get("ok"):
+                self._send_json(422, {"error": result.get("error", "recognition_failed")})
+                return
+            self._send_json(200, result)
             return
 
         if path == "/api/ai/writing":

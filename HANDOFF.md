@@ -124,6 +124,8 @@ see §11 for the billing split.
 
 `B2_AI_KEY` · `B2_AI_MODEL` · `B2_AI_PROVIDER` · `B2_AI_BASE` · `B2_AI_DAILY_PER_USER` ·
 `B2_AI_DAILY_TOTAL` · `B2_DEMO` · `B2_REGISTER` · `B2_HOST` · `B2_PUBLIC_HEALTH` ·
+`B2_SPK_AZURE_KEY` · `B2_SPK_AZURE_REGION` · `B2_SPK_AZURE_ENDPOINT` ·
+`B2_SPK_PA_DAILY_PER_USER` ·
 `B2_OWNER_PASSWORD` (first-boot bootstrap only) · `B2_TEST_USER` / `B2_TEST_PASS` (tests only).
 
 ### Public ingress
