@@ -1023,7 +1023,10 @@ _LOG_LOCK = threading.Lock()  # keeps one access-log line atomic under concurren
 
 
 class H(BaseHTTPRequestHandler):
-    server_version = "B2FirstPortal/1.0"
+    # No version banner: the default handler appends the Python version, which tells an
+    # attacker which interpreter CVEs to try. Send a bare, unversioned product name.
+    server_version = "B2First"
+    sys_version = ""
 
     def log_message(self, fmt, *a):
         """Silence per-request logging (replaced by _log_line: one line, no secrets)."""
