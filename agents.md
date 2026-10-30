@@ -88,6 +88,8 @@ ONBOARDING + TOUR       → 6-step intake wizard (writes D.profile) + 3 coach ma
 SESSION INIT            → LOAD / SAVE (per user, userKey()) + sanitize on load
 SERVER SYNC             → syncPush/syncPull + footer badge (save() triggers the push)
 TIMER + SESSION STUDIO  → makeTimer, interactive steppers, solo/single-part modal
+LIVE STUDIO (S1)        → mic + AudioWorklet VAD (from a Blob) + rAF HUD
+                          (liveOpen / liveStop / liveDiscard; window.LIVE state)
 SAVE HANDLERS           → saveUE / saveWR / saveL / saveSP / saveFull
 GATES / PLAN / WEEKLY   → calcGates, renderPlan, buildWeeklyPlan(D) (pure, no AI)
 EXAM + PARTS            → exam mode (EX_DUR, real timings) + PARTS[] (15 exercises)
@@ -122,7 +124,7 @@ Two groups:
 
 - **Live service** (must be running on `http://127.0.0.1:8088`): `test_final`, `test_mobile`,
   `test_tracker`, `test_personalization`, `test_plan`, `test_streak`, `test_schedule_advance`,
-  `test_rot`, `test_exam`.
+  `test_rot`, `test_exam`, `test_speaking_metrics` (fake mic, 90 s real-time run).
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
   `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
   `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,

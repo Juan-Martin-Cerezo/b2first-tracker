@@ -1,6 +1,7 @@
 # Speaking: real-time examiner + partner, live pronunciation and silence
 
-> **Status: plan only. Nothing implemented. No audio code exists in the repo yet.**
+> **Status: plan only, except S1 (§8): mic -> AudioWorklet VAD -> live HUD shipped in phase 18.
+> It is client-only; no audio leaves the tab. Everything from S2 onwards is unimplemented.**
 > Supersedes the staging in `docs/SPEAKING-EVALUATOR.md` §4 (that document stays as the
 > research record; §2's capability table is still correct and is not repeated here).
 > Written 2026-10-30. Facts marked *(verified)* were read from the vendor's own docs on this

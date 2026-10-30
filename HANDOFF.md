@@ -360,14 +360,16 @@ autocomplete across `es-AR`, `es-ES`, `pt-BR`, `tr`, `en-GB` — "b2 first band"
 Full plan in `docs/SPEAKING-EVALUATOR.md`. **Its staging (§4) is superseded by
 `docs/SPEAKING-REALTIME-PLAN.md`** (2026-10-30): live examiner + live partner, phoneme-level
 pronunciation via Azure PA, silences via client VAD, two simultaneous voices via two Live
-sessions plus a client-side turn director. That document is **plan only — no audio code exists
-in the repo**, and it is blocked on two new keys (Gemini + Azure) and the minute caps. Summary: 3 of the 4 Cambridge speaking scales are
+sessions plus a client-side turn director.
+
+**S1 (voice -> VAD -> HUD) shipped in phase 18, see docs/SPEAKING-REALTIME-PLAN.md.**
+That first slice is fully client-side (no keys, no network); the rest is still plan only, blocked
+on two new keys (Gemini + Azure) and the minute caps. Summary: 3 of the 4 Cambridge speaking scales are
 automatable (Grammar & Vocabulary and Discourse Management from the transcript; Pronunciation only
 with a phoneme-level API — Azure Speech Pronunciation Assessment supports `en-US` with prosody
 scores). **Interactive Communication is not** — Part 3 is a collaborative task and needs a second
 human. Recommended staging: S1 record-and-grade (fits the stdlib stack), S2 live metrics (wpm,
-fillers, silence), S3 turn-based partner, full duplex last and behind a flag. Nothing implemented;
-no audio code exists in the repo yet.
+fillers, silence), S3 turn-based partner, full duplex last and behind a flag.
 
 ### 12.3 Decisions waiting on Juan
 
