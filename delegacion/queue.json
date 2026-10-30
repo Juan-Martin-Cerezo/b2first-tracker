@@ -59,6 +59,24 @@
       "tests": "docs only",
       "title": "Sincronizar toda la documentacion (README, SUBMISSION, SECURITY, agents, docs/)",
       "status": "done"
+    },
+    {
+      "id": "15",
+      "tests": "test_telemetry.py test_hardening.py test_final.py",
+      "title": "Telemetria de producto (privacidad primero) + pagina /privacy",
+      "status": "pending"
+    },
+    {
+      "id": "16",
+      "tests": "test_server_hardening.py test_hardening.py test_security2.py",
+      "title": "Endurecer servidor: timeouts, limites, traversal, archivos ocultos",
+      "status": "pending"
+    },
+    {
+      "id": "17",
+      "tests": "test_ai_guard.py test_ai.py test_hardening.py",
+      "title": "Blindar IA: jerarquia de instrucciones, fence, anti prompt-injection, off-topic",
+      "status": "pending"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
