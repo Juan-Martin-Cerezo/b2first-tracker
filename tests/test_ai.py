@@ -16,6 +16,7 @@ MOCK_PORT = 8123
 APP_PORT = 8097
 os.environ["B2_AI_BASE"] = f"http://127.0.0.1:{MOCK_PORT}/v1beta"
 os.environ["B2_AI_MODEL"] = "gemini-2.0-flash"
+os.environ["B2_BYO_TRUSTED_BASES"] = f"http://127.0.0.1:{MOCK_PORT}"
 os.environ.pop("B2_AI_KEY", None)
 
 MOCK_STATE = {"mode": "ok"}
@@ -290,7 +291,7 @@ with sync_playwright() as p:
         USER = u;
         D = load();
         D.onboarded = true;
-        D.settings.aiKey = '';
+        localStorage.removeItem('b2first_byo_test_ai_user');
         hideAuthOverlay();
         hideOnboarding();
         refreshAll();
@@ -298,17 +299,25 @@ with sync_playwright() as p:
     )
     pg.click("nav button[data-view='ia']")
     pg.wait_for_timeout(150)
-    # No key: warning visible and button disabled
+    # No key: no BYO badge, but the owner path is still available.
     btn_disabled = pg.evaluate("document.getElementById('iaSubmitBtn').disabled")
-    warn_visible = pg.evaluate("getComputedStyle(document.getElementById('iaNoKeyWarn')).display !== 'none'")
-    assert btn_disabled is True and warn_visible is True
+    badge_visible = pg.evaluate("getComputedStyle(document.getElementById('iaByoBadge')).display !== 'none'")
+    assert btn_disabled is False and badge_visible is False
 
-    # Load key in PLAN -> D.settings.aiKey
-    pg.click("nav button[data-view='plan']")
-    pg.fill("#pAiKey", FAKE_KEY)
+    # Load the user's key in the BYO store (never in D, which is synced).
+    pg.evaluate(
+        """() => {
+        localStorage.setItem('b2first_byo_test_ai_user', JSON.stringify({
+            provider: 'custom', key: %s,
+            base: %s, model: 'deepseek-chat'
+        }));
+        renderIa();
+    }""" % (json.dumps(FAKE_KEY), json.dumps(f"http://127.0.0.1:{MOCK_PORT}"))
+    )
     pg.click("nav button[data-view='ia']")
     pg.wait_for_timeout(100)
     assert pg.evaluate("document.getElementById('iaSubmitBtn').disabled") is False
+    assert pg.evaluate("getComputedStyle(document.getElementById('iaByoBadge')).display !== 'none'") is True
 
     # Fill in the text and correct it
     pg.select_option("#iaKind", "Article")
