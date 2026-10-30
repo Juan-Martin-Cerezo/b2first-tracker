@@ -1,9 +1,9 @@
 # B2 First Tracker
 
 <p align="center">
-  A study tracker that closes the feedback gap of preparing for the Cambridge B2 First alone.<br>
-  It logs sessions in three taps, diagnoses which exam parts are weak, plans the week from your<br>
-  intake and that diagnosis, and grades Writing against the official Cambridge band descriptors.
+  A study system for people preparing the Cambridge B2 First <b>on their own</b>.<br>
+  It decides what to practise today, logs the session in three taps, tracks all four papers,<br>
+  and marks your Writing against the official Cambridge band descriptors.
 </p>
 
 <p align="center">
@@ -34,33 +34,58 @@
 
 A self-hosted study tracker for the **Cambridge B2 First (FCE)** exam. One HTML file, one
 Python server, no database: progress lives in the browser's `localStorage` and syncs per
-account to JSON files on whatever machine serves it. It covers the whole preparation loop —
-intake interview, profile-driven weekly plan, practice log, streak, exam-mode timers, per-part
-analytics, error taxonomy, and an AI writing examiner that scores against the official
-Cambridge assessment scales.
+account to JSON files on whatever machine serves it.
 
-## Why it exists
+It covers the whole preparation loop, not one skill: intake interview, profile-driven weekly
+plan, practice log, streak, exam-mode timers, per-part analytics across all four papers,
+an error taxonomy, and an AI examiner for Writing scored against the official Cambridge
+assessment scales.
 
-Writing is **25% of the B2 First score**, and it is the one skill you cannot self-mark. Practice
-tests come with answer keys for Reading and Listening; nothing tells you whether your essay is a
-Band 3 or a Band 4, or which of the four criteria is dragging the score down. That gap is what
-this project attacks.
+## The problem
 
-The second problem is habit. A tracker that records five sessions in sixty-seven days is not a
-tracker, it is a museum. Logging a session had to cost less than fifteen seconds on a phone, so
-the quick-log sits one tap away from any screen, and the streak is derived from the log instead
-of being a separate field that can drift out of sync.
+Preparing for the B2 First alone has three failure modes, and none of them is "not enough
+material". The internet is full of practice tests.
+
+**1. Nobody tells you whether your Writing is good.** Writing is 25% of the score and it is
+the one paper whose answer key cannot exist: two essays can both be "correct" and one is a
+Band 4 while the other is a Band 2. Reading and Listening practice tests come with answers,
+so they tell you. Writing does not, and neither does a friend who speaks English but has never
+seen a Cambridge scale. So people write essay after essay with no idea which of the four
+criteria is dragging their score down — and they practise the skill where the return is
+unmeasurable.
+
+**2. Nobody tells you what to study today.** Materials come in books of ten tests and forty
+exercises. The first week is easy: you start at page one. By week three the real question is
+*do I do Listening Part 3 again, or Writing Part 2, or the Use of English I keep failing?*
+Answering it takes ten minutes of second-guessing, and on a Tuesday night with forty minutes
+free, ten minutes of doubt is enough to skip the session. Most self-study plans die from
+decision fatigue, not from laziness.
+
+**3. Progress is invisible, so consistency collapses.** A candidate who does five sessions in
+sixty-seven days believes they are studying — they remember the effort, not the frequency.
+Without a record, there is no way to see that the last Listening test was three weeks ago, or
+that your Part 4 accuracy has not moved since March.
+
+That is the gap this project attacks: **the feedback loop and the decision of what to do next**,
+which is exactly the part a teacher normally provides and the part no PDF can.
 
 ## Who it is for
 
-- **Candidates studying alone**, without a teacher or an examiner to mark their writing.
-- **People preparing on a low budget**, who buy one or two official books and need to extract
-  everything from them.
-- **Anyone who wants their study data to stay theirs**: the app runs on a Raspberry Pi in a
-  living room, writes to a plain JSON file, and only sends the text you choose to correct.
+- **Self-taught candidates**, the ones with no teacher and no class: the app behaves like the
+  part of a teacher that is measurable — it diagnoses, plans the week, and marks the writing.
+- **People on a low budget**, who buy one or two official books and need to extract everything
+  from them instead of paying for weekly corrections.
+- **Candidates who already failed once**, or who studied at an academy for a year and plateaued
+  at B1+ because nobody ever told them *which* part was costing them the grade.
+- **Adults returning to English** after years away, who need a structure that fits two hours a
+  week and does not assume a classroom or a cohort.
+- **Anyone who wants their study data to stay theirs**: it runs on a Raspberry Pi in a living
+  room, writes plain JSON, and only sends the text you explicitly choose to have corrected.
 
 It is deliberately not a course. There is no content behind a paywall and no cloud to trust;
-an account is just a name and a password — no email is asked for.
+an account is just a name and a password — no email is asked for. The books you already own are
+the material; the app is the coach that tells you which page of them to open tonight.
+
 
 ## What it does
 
