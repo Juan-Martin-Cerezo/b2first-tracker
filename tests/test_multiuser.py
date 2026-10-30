@@ -282,11 +282,19 @@ with sync_playwright() as p:
         """() => ({
         hasUser: !!(window.USER && window.USER.token),
         authHidden: getComputedStyle(document.getElementById('authOverlay')).display === 'none',
-        footBadge: (document.getElementById('syncBadgeFoot')||{}).textContent || ''
+        footBadge: (() => {
+            const el = document.getElementById('syncBadgeFoot');
+            return el ? {text: (el.textContent || '').trim(), label: el.getAttribute('aria-label') || ''} : null;
+        })()
     })"""
     )
     assert state["hasUser"] and state["authHidden"], f"session UI state wrong: {state}"
-    assert state["footBadge"] in ("Synced", "Saving…", "Offline"), f"unexpected footer badge: {state}"
+    assert state["footBadge"] and state["footBadge"]["text"] == "", f"footer badge should have no text: {state}"
+    assert state["footBadge"]["label"] in (
+        "Progress saved to the server",
+        "Saving…",
+        "Offline — changes stay on this device",
+    ), f"unexpected footer badge label: {state}"
     assert errores_js == [], f"JS errors with a logged-in session: {errores_js}"
     out["18_ui_no_js_errors"] = {"state": state, "errores_js": errores_js}
     b.close()
