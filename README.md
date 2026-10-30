@@ -155,6 +155,11 @@ reads:
 | `B2_PUBLIC_HEALTH` | `0` | `1` = `GET /api/health` may expose absolute paths |
 | `B2_HOST` | `127.0.0.1` | Bind address. The public entrypoint is the local TLS proxy (Tailscale Funnel → `127.0.0.1:8088`); LAN access requires `B2_HOST=0.0.0.0`, and even then the nftables firewall is the real barrier — not this bind |
 | `B2_ALLOWED_HOSTS` | (empty) | Comma-separated `Host` allowlist. Empty = no check; a request with an unlisted `Host` gets `421` |
+| `B2_RATE_USER_API` | `600` | Requests/min per authenticated account (bucketed by `user_id`, not by IP) |
+| `B2_RATE_IP_AUTH` | `30` | Requests/min per IP for `login`, `register` and `password` |
+| `B2_RATE_IP_ANON` | `300` | Requests/min per IP for the API without a valid token (`B2_RATE_IP_API` is accepted as an alias; `0` disables the bucket) |
+| `B2_NO_CACHE` | `0` | `1` disables the static gzip/ETag cache, for measuring the uncached baseline only |
+| `B2_CONNECTION_LIMIT` | `512` | Simultaneous sockets; above it the server answers `503` + `Retry-After: 1` |
 | `B2_AI_PROVIDER` | `deepseek` | Provider used by the writing corrector |
 | `B2_AI_BASE` | (empty) | Override the provider base URL |
 | `B2_AI_MODEL` | (empty) | Override the model name |
@@ -166,6 +171,24 @@ reads:
 
 Optional exam material can be dropped into `~/Descargas/b2-first/`; the tracker indexes whatever
 it finds and hides the section when the directory is empty.
+
+## Capacity (measured, not estimated)
+
+Measured on **2026-10-30** on the target host — **Raspberry Pi 5, 8 GB** (`free -m`: 8062 MB
+total; `nproc`: 4) — with [`tests/test_capacity.py`](tests/test_capacity.py): the real
+`server.py`, 100 concurrent clients, 10 seconds per pass. The IP buckets are disabled during the
+capacity run (`B2_RATE_IP_ANON=0`) so the numbers show CPU/socket capacity, not the abuse guard.
+
+| Pass | Requests in 10 s | Throughput | p95 | 503/429 |
+| --- | --- | --- | --- | --- |
+| `GET /`, static cache ON | 4,742 | 474 req/s | 270 ms | 0 |
+| `GET /`, `B2_NO_CACHE=1` (previous behaviour) | 1,608 | 161 req/s | 790 ms | 0 |
+| `GET /`, cache ON, **300 concurrent** | 4,175 | 418 req/s | 843 ms | 0 |
+
+At 300 concurrent connections the server peaked at **45.2 MB RSS and 301 threads**, so the
+512-connection cap stays. The cache is 2.9x better at p95 than re-gzipping on every request, and a
+revalidating pass (`If-None-Match`) returns only `304`s with an empty body. The access log line is
+included in all of the above.
 
 ## AI writing correction (bring your own key)
 
@@ -197,6 +220,9 @@ and backup history under `data/users/<id>/` (directory `0700`, files `0600`).
 | --- | --- |
 | Registration | 5 / hour / IP |
 | Login | 10 / 10 min / IP and 20 / hour / username |
+| Authenticated API | 600 requests / min / **account** — a shared school/CGNAT IP cannot rate-limit other students |
+| Anonymous API | 300 requests / min / IP |
+| Login / register / password | 30 requests / min / IP |
 | Progress write | 2 MB per save, 60 saves / min |
 | AI corrections | 8 / day per account, 80 / day across the instance |
 | Session token | 30 days, sliding |
@@ -264,13 +290,15 @@ a standalone script; `tests/helpers.py` registers a throwaway account (`B2_TEST_
 | `test_legacy_guard.py` | The tokenless legacy owner path is unreachable through a proxied request |
 | `test_security2.py` | Login lockout, constant-time compares, hashed tokens, payload schema, audit log |
 | `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist (`405` + `Allow`), traversal and hidden-file guards, HSTS/COOP/CORP, banner hygiene, 500 without leaks |
+| `test_capacity.py` | Measured capacity, not estimates: cached gzip + ETag/`304`, `touch` invalidation, 100-concurrent p95 against the `B2_NO_CACHE=1` baseline, per-user rate limits behind one IP |
 
 ```bash
 cd tests
 uv run --with playwright python test_final.py
+uv run --with httpx python test_capacity.py
 ```
 
-Twelve suites (`test_ai`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
+Thirteen suites (`test_ai`, `test_capacity`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
 `test_legacy_guard`, `test_multiuser`, `test_onboard`, `test_register`, `test_security2`,
 `test_server_hardening`, `test_sync`) boot their own server on a temporary `data/` and never
 touch the real one; the other nine run against the live service on `127.0.0.1:8088`.
@@ -279,8 +307,9 @@ touch the real one; the other nine run against the live service on `127.0.0.1:80
 
 - **Accounts are isolated**: each one gets its own `data/users/<id>/` (directories `0700`, files
   `0600`), and a session token for one account can never read another's data (`403`).
-- **Limits and quotas**: 5 failed logins lock a username for 15 minutes, every endpoint is rate
-  limited, and AI corrections are capped at 8/day per account and 80/day per instance.
+- **Limits and quotas**: 5 failed logins lock a username for 15 minutes; authenticated API traffic
+  is limited per account (600/min), anonymous traffic and credential endpoints per IP; AI
+  corrections are capped at 8/day per account and 80/day per instance.
 - **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token;
   passwords are PBKDF2-HMAC-SHA256 with 200,000 iterations.
 - **Audit log**: authentication events land in `data/audit.log` (never tokens or passwords), and

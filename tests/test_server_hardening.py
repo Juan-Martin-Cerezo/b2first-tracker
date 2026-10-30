@@ -208,8 +208,8 @@ finally:
         S._CONN_SEM.release()
 payload = json.loads(body) if body else {}
 check("16_connection_cap_503",
-      st == 503 and h.get("retry-after") == "5"
-      and payload.get("error") == "busy" and payload.get("retry_after") == 5,
+      st == 503 and h.get("retry-after") == "1"
+      and payload.get("error") == "busy" and payload.get("retry_after") == 1,
       f"{st} {h.get('retry-after')} {body[:120]}")
 
 srv.shutdown()
