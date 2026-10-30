@@ -269,7 +269,11 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   display:flex;align-items:center;gap:7px;font-size:var(--fs-xs);color:var(--txt-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.topbar .sync-status .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.sync-badge{display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:50%;flex:none;background:var(--on-surface-variant)}
+.sync-badge.state-ok{background:var(--ok)}
+.sync-badge.state-local{background:var(--on-surface-variant)}
+.sync-badge.state-off{background:var(--warn)}
+.sync-badge:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .topbar .top-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .topbar .user-chip{display:flex;align-items:center;gap:8px;cursor:pointer}
 .topbar .user-chip .avatar{
@@ -1527,7 +1531,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <img src="/assets/logo-192.png" alt="B2 First logo" class="logo-img">
       <span>B2 FIRST</span>
     </div>
-    <div class="sync-status"><span class="dot"></span><span id="syncBadge" title="Save status on the server">—</span></div>
+    <div class="sync-status"><span id="syncBadge" class="sync-badge state-off" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server"></span></div>
     <div class="top-actions">
       <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
       <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
@@ -2966,7 +2970,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
     </main>
 
-    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot">—</span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
+    <footer>🎯 B2 First Mastery · Grade A · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8">Privacy</a></footer>
   </div>
 </div>
 
@@ -3808,16 +3812,27 @@ function save(){
    with the session token. On load, the user's data is downloaded and merged. */
 let SYNC_STATE='off'; // 'off' = no server, 'local' = pending, 'ok' = saved on the server
 let syncT=null;
+const SYNC_LABEL={
+  ok:'Progress saved to the server',
+  local:'Saving…',
+  off:'Offline — changes stay on this device'
+};
 function syncStatus(s){
   SYNC_STATE=s;
-  const label=s==='ok'?'Synced':s==='local'?'Saving…':'Offline';
+  const label=SYNC_LABEL[s]||SYNC_LABEL.off;
+  const cls='sync-badge '+(s==='ok'?'state-ok':s==='local'?'state-local':'state-off');
   const el=document.getElementById('syncBadge');
   if(el){
-    el.textContent=label;
-    el.style.color=s==='ok'?'var(--ok)':s==='local'?'var(--warn)':'var(--on-surface-variant)';
+    el.className=cls;
+    el.setAttribute('title',label);
+    el.setAttribute('aria-label',label);
   }
   const el2=document.getElementById('syncBadgeFoot');
-  if(el2)el2.textContent=label;
+  if(el2){
+    el2.className=cls;
+    el2.setAttribute('title',label);
+    el2.setAttribute('aria-label',label);
+  }
 }
 function syncPush(){
   if(DEMO&&DEMO.demo)return;
