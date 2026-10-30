@@ -307,13 +307,16 @@ touch the real one; the other nine run against the live service on `127.0.0.1:80
 
 - **Accounts are isolated**: each one gets its own `data/users/<id>/` (directories `0700`, files
   `0600`), and a session token for one account can never read another's data (`403`).
-- **Limits and quotas**: 5 failed logins lock a username for 15 minutes; authenticated API traffic
-  is limited per account (600/min), anonymous traffic and credential endpoints per IP; AI
-  corrections are capped at 8/day per account and 80/day per instance.
-- **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token;
-  passwords are PBKDF2-HMAC-SHA256 with 200,000 iterations.
-- **Audit log**: authentication events land in `data/audit.log` (never tokens or passwords), and
-  each account can see its own **Recent activity**.
+- **Limits and quotas**: 5 failed logins lock a username for 15 minutes, with exponential backoff
+  (5/15/60 s) after the 3rd/4th/5th failure; authenticated API traffic is limited per account
+  (600/min), anonymous traffic and credential endpoints per IP; AI corrections are capped at
+  8/day per account and 80/day per instance.
+- **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token; sessions
+  use a 30-day sliding TTL capped by a 90-day absolute limit; passwords are
+  PBKDF2-HMAC-SHA256 with 600,000 iterations (older hashes are upgraded on login).
+- **Audit log**: authentication and security events land in `data/audit.log` (never tokens,
+  passwords or student text) in a SHA-256 hash chain; `tools/verify_audit.py` detects tampering
+  and each account can see its own **Recent activity**.
 - **Backups verified**: per-save rotation plus a daily tarball whose every run does a test
   restore and parses every JSON file before it counts.
 - **Health check**: `GET /api/health` reports the data dir writable, `users.json` parsing and
