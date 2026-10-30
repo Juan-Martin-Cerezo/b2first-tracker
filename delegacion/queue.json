@@ -40,7 +40,7 @@
       "id": "11",
       "tests": "test_hardening.py test_legacy_guard.py test_multiuser.py test_demo.py",
       "title": "Blindaje: ids, locks, headers, request id, health, migraciones, reset de password",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "12",
