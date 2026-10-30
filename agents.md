@@ -124,8 +124,9 @@ Two groups:
   `test_tracker`, `test_personalization`, `test_plan`, `test_streak`, `test_schedule_advance`,
   `test_rot`, `test_exam`.
 - **Own server + temporary `data/`** (safe anywhere, never touch real data): `test_sync`,
-  `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_onboard`,
-  `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`.
+  `test_graf`, `test_demo`, `test_register`, `test_multiuser`, `test_ai`, `test_ai_guard`,
+  `test_onboard`, `test_diag`, `test_hardening`, `test_legacy_guard`, `test_security2`,
+  `test_server_hardening`, `test_telemetry`.
 
 The delegation runner gates each phase with `RUN_TESTS` (default `test_sync.py
 test_personalization.py`) — see [delegacion/README.md](delegacion/README.md).
