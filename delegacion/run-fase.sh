@@ -112,7 +112,11 @@ fi
 TESTS="${RUN_TESTS:-test_sync.py test_personalization.py}"
 TFAIL=""
 for t in $TESTS; do
-  ( cd tests && timeout 600 uv run --with playwright --with httpx python "$t" >>"$LOG" 2>&1 )
+  case "$t" in
+    *.sh) # host/security scripts: bash, not python (they are not pytest files)
+      ( cd "$REPO" && timeout 600 sudo -n bash "$t" >>"$LOG" 2>&1 ) ;;
+    *)    ( cd tests && timeout 600 uv run --with playwright --with httpx python "$t" >>"$LOG" 2>&1 ) ;;
+  esac
   RC=$?
   echo "== test $t -> exit $RC" | tee -a "$LOG"
   [ "$RC" -ne 0 ] && TFAIL="$TFAIL $t($RC)"

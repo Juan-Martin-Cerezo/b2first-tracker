@@ -65,7 +65,7 @@ every LAN device was trusted for every port the host listened on.
 
 | Port | Service | LAN | Tailnet | Internet (host filter) |
 | --- | --- | --- | --- | --- |
-| 22/tcp | sshd | **accept, 6/min burst 3** | accept | rate-limited accept (see note) |
+| 22/tcp | sshd | **accept, 6/min burst 3** | accept | **drop** (measured) |
 | 2283/tcp | Immich | **accept** | accept | **drop** |
 | 8089/tcp | existing app | **accept** | accept | **drop** |
 | 8000/tcp | Coolify panel | **drop** (measured `000`) | accept | **drop** |
@@ -77,12 +77,24 @@ every LAN device was trusted for every port the host listened on.
 
 Notes:
 
-- **SSH** keeps the explicit generic rule requested by the phase
-  (`ct state new tcp dport 22 limit rate 6/minute burst 3 accept`). It is
-  reachable from any source that can route to the host if the router ever
-  forwards 22; today the home NAT does not. To tighten to LAN + tailnet only,
-  qualify the rule with `ip saddr 192.168.1.0/24` and keep the tailnet path via
-  `iifname "tailscale0" accept`.
+- **SSH** is now **LAN + tailnet only**. Phase 25 first left the generic rule
+  (`ct state new tcp dport 22 limit rate 6/minute burst 3 accept`) with no source
+  qualifier, which the netns probe measured as **open from a simulated internet
+  source** (`203.0.113.5` → `22 -> ABIERTO`). That was the last port reachable
+  from WAN, so it was qualified on 2026-10-30 by hand:
+
+  ```
+  iifname "tailscale0" ct state new tcp dport 22 accept
+  ip saddr 192.168.1.0/24 ct state new tcp dport 22 limit rate 6/minute burst 3 accept
+  ct state new tcp dport 22 drop
+  ```
+
+  Re-measured after the change: LAN `22 -> ABIERTO`, internet `22 -> bloqueado`,
+  Funnel `/api/health` still `200`. **Consequence: SSH from outside the house
+  requires Tailscale.** That is the intended posture; the LAN rule keeps local
+  access working if the tailnet ever breaks.
+  Rollback for this change: `/root/hardened.nft.bak-*` (the automated snapshot
+  recipe is §3.1).
 - **Tailnet** still reaches every service: `iifname "tailscale0" accept` in
   `input` and `-i tailscale0 -j RETURN` in `DOCKER-USER`. This is deliberate —
   Coolify (panel + 6001-6002) is tailnet-only.
