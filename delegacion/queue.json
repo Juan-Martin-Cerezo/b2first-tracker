@@ -1,113 +1,113 @@
 {
- "queue": [
-  {
-   "id": "5",
-   "tests": "test_final.py",
-   "title": "Submission pack del hackathon (docs, sin c\u00f3digo de app)",
-   "status": "done"
-  },
-  {
-   "id": "6",
-   "tests": "test_final.py test_diag.py",
-   "title": "Plan semanal generado desde el diagn\u00f3stico + errores",
-   "status": "done"
-  },
-  {
-   "id": "7",
-   "tests": "test_final.py test_diag.py test_plan.py test_demo.py",
-   "title": "UI overhaul: design tokens, dark mode real, toda la app en ingles",
-   "status": "done"
-  },
-  {
-   "id": "8",
-   "tests": "test_register.py test_sync.py test_demo.py",
-   "title": "Cuenta real con registro cerrado + cambio de contrasena",
-   "status": "done"
-  },
-  {
-   "id": "9",
-   "tests": "test_onboard.py test_final.py test_plan.py",
-   "title": "Onboarding: welcome card + coach marks + empty states",
-   "status": "done"
-  },
-  {
-   "id": "10",
-   "tests": "test_multiuser.py test_sync.py test_demo.py test_ai.py",
-   "title": "Multiusuario real: limites, cuotas, exportar/borrar cuenta, tokens con TTL",
-   "status": "done"
-  },
-  {
-   "id": "11",
-   "tests": "test_hardening.py test_legacy_guard.py test_multiuser.py test_demo.py",
-   "title": "Blindaje: ids, locks, headers, request id, health, migraciones, reset de password",
-   "status": "done"
-  },
-  {
-   "id": "12",
-   "tests": "test_security2.py test_hardening.py test_legacy_guard.py test_multiuser.py",
-   "title": "Blindaje ronda 2: lockout, tokens hasheados, schema de payload, audit log",
-   "status": "done"
-  },
-  {
-   "id": "13",
-   "tests": "tools/audit.sh",
-   "title": "SECURITY.md + auditoria externa reproducible + README/guion actualizados",
-   "status": "done"
-  },
-  {
-   "id": "14",
-   "tests": "docs only",
-   "title": "Sincronizar toda la documentacion (README, SUBMISSION, SECURITY, agents, docs/)",
-   "status": "done"
-  },
-  {
-   "id": "15",
-   "tests": "test_telemetry.py test_hardening.py test_final.py",
-   "title": "Telemetria de producto (privacidad primero) + pagina /privacy",
-   "status": "done"
-  },
-  {
-   "id": "16",
-   "tests": "test_server_hardening.py test_hardening.py test_security2.py",
-   "title": "Endurecer servidor: timeouts, limites, traversal, archivos ocultos",
-   "status": "done"
-  },
-  {
-   "id": "17",
-   "tests": "test_ai_guard.py test_ai.py test_hardening.py",
-   "title": "Blindar IA: jerarquia de instrucciones, fence, anti prompt-injection, off-topic",
-   "status": "done"
-  },
-  {
-   "id": "18",
-   "tests": "test_speaking_metrics.py test_sync.py",
-   "title": "S1: microfono + VAD + HUD de silencios en vivo",
-   "status": "running"
-  },
-  {
-   "id": "19",
-   "tests": "test_speaking_pa.py test_server_hardening.py",
-   "title": "S2: pronunciacion real (Azure PA, fonemas + prosodia)",
-   "status": "pending"
-  },
-  {
-   "id": "20",
-   "tests": "test_speaking_live.py",
-   "title": "S3: examinador en vivo (token efimero + transporte sim)",
-   "status": "pending"
-  },
-  {
-   "id": "21",
-   "tests": "test_speaking_director.py test_speaking_duo.py",
-   "title": "S4: examinador + companero hablando a la vez (director de turnos)",
-   "status": "pending"
-  },
-  {
-   "id": "22",
-   "tests": "test_speaking_report.py",
-   "title": "S5: reporte de 4 escalas integrado al log y a los graficos",
-   "status": "pending"
-  }
- ],
- "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
+  "queue": [
+    {
+      "id": "5",
+      "tests": "test_final.py",
+      "title": "Submission pack del hackathon (docs, sin código de app)",
+      "status": "done"
+    },
+    {
+      "id": "6",
+      "tests": "test_final.py test_diag.py",
+      "title": "Plan semanal generado desde el diagnóstico + errores",
+      "status": "done"
+    },
+    {
+      "id": "7",
+      "tests": "test_final.py test_diag.py test_plan.py test_demo.py",
+      "title": "UI overhaul: design tokens, dark mode real, toda la app en ingles",
+      "status": "done"
+    },
+    {
+      "id": "8",
+      "tests": "test_register.py test_sync.py test_demo.py",
+      "title": "Cuenta real con registro cerrado + cambio de contrasena",
+      "status": "done"
+    },
+    {
+      "id": "9",
+      "tests": "test_onboard.py test_final.py test_plan.py",
+      "title": "Onboarding: welcome card + coach marks + empty states",
+      "status": "done"
+    },
+    {
+      "id": "10",
+      "tests": "test_multiuser.py test_sync.py test_demo.py test_ai.py",
+      "title": "Multiusuario real: limites, cuotas, exportar/borrar cuenta, tokens con TTL",
+      "status": "done"
+    },
+    {
+      "id": "11",
+      "tests": "test_hardening.py test_legacy_guard.py test_multiuser.py test_demo.py",
+      "title": "Blindaje: ids, locks, headers, request id, health, migraciones, reset de password",
+      "status": "done"
+    },
+    {
+      "id": "12",
+      "tests": "test_security2.py test_hardening.py test_legacy_guard.py test_multiuser.py",
+      "title": "Blindaje ronda 2: lockout, tokens hasheados, schema de payload, audit log",
+      "status": "done"
+    },
+    {
+      "id": "13",
+      "tests": "tools/audit.sh",
+      "title": "SECURITY.md + auditoria externa reproducible + README/guion actualizados",
+      "status": "done"
+    },
+    {
+      "id": "14",
+      "tests": "docs only",
+      "title": "Sincronizar toda la documentacion (README, SUBMISSION, SECURITY, agents, docs/)",
+      "status": "done"
+    },
+    {
+      "id": "15",
+      "tests": "test_telemetry.py test_hardening.py test_final.py",
+      "title": "Telemetria de producto (privacidad primero) + pagina /privacy",
+      "status": "done"
+    },
+    {
+      "id": "16",
+      "tests": "test_server_hardening.py test_hardening.py test_security2.py",
+      "title": "Endurecer servidor: timeouts, limites, traversal, archivos ocultos",
+      "status": "done"
+    },
+    {
+      "id": "17",
+      "tests": "test_ai_guard.py test_ai.py test_hardening.py",
+      "title": "Blindar IA: jerarquia de instrucciones, fence, anti prompt-injection, off-topic",
+      "status": "done"
+    },
+    {
+      "id": "18",
+      "tests": "test_speaking_metrics.py test_sync.py",
+      "title": "S1: microfono + VAD + HUD de silencios en vivo",
+      "status": "done"
+    },
+    {
+      "id": "19",
+      "tests": "test_speaking_pa.py test_server_hardening.py",
+      "title": "S2: pronunciacion real (Azure PA, fonemas + prosodia)",
+      "status": "done"
+    },
+    {
+      "id": "20",
+      "tests": "test_speaking_live.py",
+      "title": "S3: examinador en vivo (token efimero + transporte sim)",
+      "status": "running"
+    },
+    {
+      "id": "21",
+      "tests": "test_speaking_director.py test_speaking_duo.py",
+      "title": "S4: examinador + companero hablando a la vez (director de turnos)",
+      "status": "pending"
+    },
+    {
+      "id": "22",
+      "tests": "test_speaking_report.py",
+      "title": "S5: reporte de 4 escalas integrado al log y a los graficos",
+      "status": "pending"
+    }
+  ],
+  "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
 }

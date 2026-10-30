@@ -97,7 +97,7 @@ VERDICT="ok"
 TESTS="${RUN_TESTS:-test_sync.py test_personalization.py}"
 TFAIL=""
 for t in $TESTS; do
-  ( cd tests && timeout 300 uv run --with playwright python "$t" >/dev/null 2>&1 )
+  ( cd tests && timeout 300 uv run --with playwright python "$t" >>"$LOG" 2>&1 )
   RC=$?
   echo "== test $t -> exit $RC" | tee -a "$LOG"
   [ "$RC" -ne 0 ] && TFAIL="$TFAIL $t($RC)"
