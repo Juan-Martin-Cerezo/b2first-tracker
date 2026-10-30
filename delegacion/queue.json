@@ -112,13 +112,13 @@
       "id": "23",
       "tests": "test_capacity.py test_final.py test_sync.py",
       "title": "Capacidad: gzip cache + ETag/304, rate limit por usuario, 512 sockets",
-      "status": "running"
+      "status": "done"
     },
     {
       "id": "24",
       "tests": "test_security3.py test_hardening.py test_security2.py test_legacy_guard.py",
       "title": "Seguridad app nivel certificable: ASVS L2 + audit.sh 25 checks + checklist verificable",
-      "status": "pending"
+      "status": "running"
     },
     {
       "id": "25",
