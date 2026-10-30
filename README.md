@@ -128,6 +128,8 @@ reads:
 | `B2_REGISTER` | `open` | `closed` = no new accounts (existing ones still log in) |
 | `B2_OWNER_PASSWORD` | `b2first` | Password given to the owner account created when migrating old single-user data |
 | `B2_PUBLIC_HEALTH` | `0` | `1` = `GET /api/health` may expose absolute paths |
+| `B2_HOST` | `127.0.0.1` | Bind address. The public entrypoint is the local TLS proxy (Tailscale Funnel → `127.0.0.1:8088`); LAN access requires `B2_HOST=0.0.0.0`, and even then the nftables firewall is the real barrier — not this bind |
+| `B2_ALLOWED_HOSTS` | (empty) | Comma-separated `Host` allowlist. Empty = no check; a request with an unlisted `Host` gets `421` |
 | `B2_AI_PROVIDER` | `deepseek` | Provider used by the writing corrector |
 | `B2_AI_BASE` | (empty) | Override the provider base URL |
 | `B2_AI_MODEL` | (empty) | Override the model name |
@@ -236,16 +238,17 @@ a standalone script; `tests/helpers.py` registers a throwaway account (`B2_TEST_
 | `test_hardening.py` | Id validation, concurrent writes, security headers, request ids, `/api/health`, schema migration, password reset |
 | `test_legacy_guard.py` | The tokenless legacy owner path is unreachable through a proxied request |
 | `test_security2.py` | Login lockout, constant-time compares, hashed tokens, payload schema, audit log |
+| `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist (`405` + `Allow`), traversal and hidden-file guards, HSTS/COOP/CORP, banner hygiene, 500 without leaks |
 
 ```bash
 cd tests
 uv run --with playwright python test_final.py
 ```
 
-Eleven suites (`test_ai`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
+Twelve suites (`test_ai`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
 `test_legacy_guard`, `test_multiuser`, `test_onboard`, `test_register`, `test_security2`,
-`test_sync`) boot their own server on a temporary `data/` and never touch the real one; the other
-nine run against the live service on `127.0.0.1:8088`.
+`test_server_hardening`, `test_sync`) boot their own server on a temporary `data/` and never
+touch the real one; the other nine run against the live service on `127.0.0.1:8088`.
 
 ## Security
 
