@@ -136,7 +136,7 @@ names — a custom domain requires Cloudflare Tunnel instead (§12.1).
 
 ---
 
-## 5. Testing — 23 suites
+## 5. Testing — 24 suites
 
 Every file is a standalone script; there is no pytest. `tests/helpers.py` registers a throwaway
 `test-runner` account (override with `B2_TEST_USER` / `B2_TEST_PASS`) and logs in through the API,
@@ -151,11 +151,13 @@ python3 test_hardening.py                          # needs the live service
 
 | Needs the live service on :8088 | Spins up its own server + temp `data/` (safe anywhere) |
 | --- | --- |
-| `test_final` `test_mobile` `test_tracker` `test_personalization` `test_plan` `test_streak` `test_schedule_advance` `test_rot` `test_exam` | `test_sync` `test_graf` `test_demo` `test_register` `test_multiuser` `test_ai` `test_ai_guard` `test_onboard` `test_diag` `test_hardening` `test_legacy_guard` `test_security2` `test_server_hardening` `test_telemetry` |
+| `test_final` `test_mobile` `test_tracker` `test_personalization` `test_plan` `test_streak` `test_schedule_advance` `test_rot` `test_exam` | `test_sync` `test_graf` `test_demo` `test_register` `test_multiuser` `test_ai` `test_ai_guard` `test_onboard` `test_diag` `test_hardening` `test_legacy_guard` `test_security2` `test_server_hardening` `test_telemetry` `test_speaking_report` |
 
 Counts at handoff: `test_hardening` 16 · `test_security2` 14 · `test_server_hardening` 16 ·
 `test_ai_guard` 15 · `test_telemetry` 14 · `test_multiuser` 18 · `test_onboard` 15 ·
-`test_plan` 8 · `test_legacy_guard` 9.
+`test_plan` 8 · `test_legacy_guard` 9 · `test_speaking_report` 14.
+The speaking suites (`test_speaking_pa`, `test_speaking_director`, `test_speaking_live`,
+`test_speaking_duo`, `test_speaking_report`) all stub their provider locally: no key, no network.
 
 ### Two hard rules for tests
 
@@ -357,24 +359,41 @@ Rejected alternatives and why: `.me` (personal, not product), `.tech` (expensive
 `.dev` (developer connotation), `band`-based names (that is IELTS vocabulary, verified via Google
 autocomplete across `es-AR`, `es-ES`, `pt-BR`, `tr`, `en-GB` — "b2 first band" returns nothing).
 
-### 12.2 Speaking evaluator (planned, not started)
+### 12.2 Speaking evaluator — S1–S5 shipped
 
 Full plan in `docs/SPEAKING-EVALUATOR.md`. **Its staging (§4) is superseded by
 `docs/SPEAKING-REALTIME-PLAN.md`** (2026-10-30): live examiner + live partner, phoneme-level
 pronunciation via Azure PA, silences via client VAD, two simultaneous voices via two Live
 sessions plus a client-side turn director.
 
-**S1 (voice -> VAD -> HUD) shipped in phase 18, see docs/SPEAKING-REALTIME-PLAN.md.**
-**S4 (examiner + partner simultaneous) shipped in phase 21**: two Live sessions, the pure client
-director (`spkDirectorTick`), one AudioContext with two gain chains + 5 dB ducking, Part 3 overlap
-measured; `tests/test_speaking_director.py` (pure) and `tests/test_speaking_duo.py` (Playwright).
-That first slice is fully client-side (no keys, no network); the rest is still plan only, blocked
-on two new keys (Gemini + Azure) and the minute caps. Summary: 3 of the 4 Cambridge speaking scales are
-automatable (Grammar & Vocabulary and Discourse Management from the transcript; Pronunciation only
-with a phoneme-level API — Azure Speech Pronunciation Assessment supports `en-US` with prosody
-scores). **Interactive Communication is not** — Part 3 is a collaborative task and needs a second
-human. Recommended staging: S1 record-and-grade (fits the stdlib stack), S2 live metrics (wpm,
-fillers, silence), S3 turn-based partner, full duplex last and behind a flag.
+All five stages of `docs/SPEAKING-REALTIME-PLAN.md` §8 are in the tree:
+
+- **S1 (voice -> VAD -> HUD)**, phase 18 — client-only, no audio leaves the tab.
+- **S2 (Azure PA)**, phase 19 — `POST /api/speaking/pa`, key server-side only, audio discarded in
+  the handler; `tests/test_speaking_pa.py` runs it against a local Azure stub.
+- **S3 (live examiner, Parts 1–2)**, phase 20 — ephemeral token mint, one Live session,
+  `?spk=sim` transport; `tests/test_speaking_live.py`.
+- **S4 (examiner + partner simultaneous)**, phase 21 — two Live sessions, the pure client director
+  (`spkDirectorTick`), one AudioContext with two gain chains + 5 dB ducking, Part 3 overlap
+  measured; `tests/test_speaking_director.py` (pure) and `tests/test_speaking_duo.py`.
+- **S5 (report + `D.log`)**, phase 22 — `POST /api/speaking/report`: DeepSeek grades only
+  Grammar & Vocabulary and Discourse Management from the candidate's fenced turns; the
+  Pronunciation band is **mapped from the Azure PA scores** (`speaking_report.py`,
+  `score = accuracy*0.4 + prosody*0.3 + fluency*0.3`, cuts 40/55/68/80/90) and is `null` with
+  `pronunciation_source:"none"` when Azure did not score; Interactive Communication is always
+  `null` with proxies beside it. The client saves `{type:'sp', bands, metrics}` through the
+  extended `saveSP()` (the manual button is unchanged); the log row, the evolution chart and
+  `renderStats` pick it up. A failed report writes nothing and "Retry report" resends the same
+  `request_id` (server-side cache, no second model call). `tests/test_speaking_report.py`.
+
+What is still needed to leave simulation mode: a real **Google/Gemini API key** (Live session) and
+a real **Azure Speech key + region** (PA). Without them the app degrades honestly — sim voices and
+`not measured` — which is the correct behaviour, not a bug. The minute caps (`B2_SPK_MIN_DAILY_*`)
+and the AI daily quota already protect the budget.
+
+Summary of the four scales: Grammar & Vocabulary and Discourse Management come from the
+transcript, Pronunciation only from a phoneme-level API, and **Interactive Communication is not
+gradeable** without a second human — it is reported as proxies, never as a band.
 
 ### 12.3 Decisions waiting on Juan
 

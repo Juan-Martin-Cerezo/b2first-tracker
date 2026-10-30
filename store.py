@@ -25,6 +25,8 @@ __all__ = [
     "speaking_read",
     "speaking_add",
     "speaking_file",
+    "speaking_transcript_dir",
+    "write_speaking_transcript",
     "StoreBusy",
     "PROGRESS_SCHEMA",
 ]
@@ -106,6 +108,31 @@ def _prog_file(uid: str) -> str:
 def speaking_file(uid: str) -> str:
     """Path to a user's speaking-minute ledger (data/users/<uid>/speaking.json)."""
     return os.path.join(_user_dir(uid), "speaking.json")
+
+
+def speaking_transcript_dir(uid: str) -> str:
+    """Opt-in transcript folder (data/users/<uid>/speaking/), never inside progress."""
+    return os.path.join(_user_dir(uid), "speaking")
+
+
+_STAMP_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")
+
+
+def write_speaking_transcript(uid: str, stamp: str, data: dict) -> str:
+    """Write one opt-in transcript as data/users/<uid>/speaking/<stamp>.json.
+
+    Only called when the client sets `store_transcript: true`; the folder and
+    the file are 0700/0600 like the rest of the account data. Returns the path.
+    """
+    _safe_uid(uid)
+    if not isinstance(stamp, str) or not _STAMP_RE.fullmatch(stamp) or stamp.startswith("."):
+        raise ValueError("invalid stamp")
+    with _locked(_prog_lock(uid)):
+        folder = speaking_transcript_dir(uid)
+        _ensure_private_dir(folder)
+        path = os.path.join(folder, f"{stamp}.json")
+        _write_json(path, data)
+        return path
 
 
 def _bk_dir(uid: str) -> str:

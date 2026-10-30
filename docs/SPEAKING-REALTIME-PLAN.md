@@ -1,7 +1,11 @@
 # Speaking: real-time examiner + partner, live pronunciation and silence
 
-> **Status: plan only, except S1 (§8): mic -> AudioWorklet VAD -> live HUD shipped in phase 18.
-> It is client-only; no audio leaves the tab. Everything from S2 onwards is unimplemented.**
+> **Status: S1–S5 shipped (phases 18–22).** S1 (mic -> AudioWorklet VAD -> HUD) is client-only;
+> S2 is `POST /api/speaking/pa`; S3 is the ephemeral-token Live examiner; S4 is the two-session
+> examiner + partner director; S5 is `POST /api/speaking/report` plus the four-scale panel and the
+> `{type:"sp", bands, metrics}` entry. The Pronunciation band is mapped from Azure PA and is
+> `null` when Azure did not score; Interactive Communication is always `null` with proxies.
+> A real Google/Gemini key and a real Azure Speech key are still needed to leave simulation mode.
 > Supersedes the staging in `docs/SPEAKING-EVALUATOR.md` §4 (that document stays as the
 > research record; §2's capability table is still correct and is not repeated here).
 > Written 2026-10-30. Facts marked *(verified)* were read from the vendor's own docs on this
