@@ -100,13 +100,13 @@
       "id": "21",
       "tests": "test_speaking_director.py test_speaking_duo.py",
       "title": "S4: examinador + companero hablando a la vez (director de turnos)",
-      "status": "running"
+      "status": "done"
     },
     {
       "id": "22",
       "tests": "test_speaking_report.py",
       "title": "S5: reporte de 4 escalas integrado al log y a los graficos",
-      "status": "pending"
+      "status": "running"
     }
   ],
   "notes": "El loop toma el primer 'pending'. Cuando termina, el watchdog reporta y el loop avanza solo. Si verdict != ok, reintenta una vez con command-code; si vuelve a fallar, queda 'blocked' y avisa."
