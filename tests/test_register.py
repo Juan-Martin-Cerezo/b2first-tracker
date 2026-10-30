@@ -110,7 +110,7 @@ URL2 = f"http://127.0.0.1:{S.PORT}"
 st_cfg2, body_cfg2 = req(URL2, "GET", "/api/config")
 cfg2 = json.loads(body_cfg2)
 assert st_cfg2 == 200 and cfg2.get("register") == "open", f"bad open config: {cfg2}"
-st_reg2, body_reg2 = req(URL2, "POST", "/api/register", {"name": "bob", "password": "password123"})
+st_reg2, body_reg2 = req(URL2, "POST", "/api/register", {"name": "bob", "password": "correct-horse-9"})
 reg2 = json.loads(body_reg2)
 assert st_reg2 == 200 and reg2.get("token"), f"open register failed: {st_reg2} {body_reg2}"
 out["9_register_open"] = {"register": cfg2["register"], "signup": st_reg2}

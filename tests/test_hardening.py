@@ -169,7 +169,7 @@ check("C4_csp_allows_inline_js",
 # ---------------------------------------------------------------------------
 # B. Concurrent writes (20 PUTs, same user)
 # ---------------------------------------------------------------------------
-u_b = register("hard-conc", "password123")
+u_b = register("hard-conc", "correct-horse-9")
 tok_b, uid_b = u_b["token"], u_b["id"]
 
 put_codes = []
@@ -264,7 +264,7 @@ check("E3_health_readonly_503",
 # ---------------------------------------------------------------------------
 # F. Versioned progress migration (v1 -> PROGRESS_SCHEMA)
 # ---------------------------------------------------------------------------
-u_f = register("hard-f", "password123")
+u_f = register("hard-f", "correct-horse-9")
 uid_f, tok_f = u_f["id"], u_f["token"]
 v1 = {"log": [{"date": "2026-01-01", "type": "ue"}], "errs": [], "stage": 1,
       "future_field": "keep-me", "settings": {"planMin": 25}}

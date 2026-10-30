@@ -1294,6 +1294,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
       <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()">Update password</button>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px">Recent activity</div>
+      <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -3396,12 +3398,42 @@ function openUserModal(){
   if(ug)ug.textContent=USER.id||'—';
   const uc=document.getElementById('modalUserSchedule');
   if(uc)uc.textContent=schedSummary;
-  
+
   ov.style.display='flex';
+  loadAccountActivity();
 }
 function closeUserModal(){
   const ov=document.getElementById('userModal');
   if(ov)ov.style.display='none';
+}
+const ACTIVITY_LABELS={
+  login_ok:'Signed in',login_fail:'Failed sign-in',register:'Account created',
+  password_change:'Password changed',account_delete:'Account deleted',
+  quota_hit:'AI daily quota reached',ua_changed:'New device / browser'
+};
+async function loadAccountActivity(){
+  const box=document.getElementById('acctActivity');
+  if(!box)return;
+  box.textContent='Loading…';
+  try{
+    const r=await fetch(apiUrl('/api/audit',{limit:20}),{headers:authHeaders()});
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    const evs=Array.isArray(d.events)?d.events:[];
+    if(!evs.length){box.textContent='No recent activity.';return}
+    box.textContent='';
+    evs.forEach(e=>{
+      const row=document.createElement('div');
+      row.style.display='flex';row.style.justifyContent='space-between';row.style.gap='8px';
+      const ev=document.createElement('span');
+      ev.textContent=ACTIVITY_LABELS[e.event]||String(e.event||'?');
+      const ts=document.createElement('span');
+      ts.textContent=String(e.ts||'');
+      ts.style.opacity='.75';ts.style.whiteSpace='nowrap';
+      row.appendChild(ev);row.appendChild(ts);
+      box.appendChild(row);
+    });
+  }catch(err){box.textContent='Activity unavailable.'}
 }
 
 /* ---------- LOAD / SAVE (per user) ---------- */
