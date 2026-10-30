@@ -96,21 +96,33 @@ con la cadena `DOCKER-USER` (iptables-nft). Reglas exactas, en este orden:
 ## E — Procedimiento de aplicación con rollback (obligatorio)
 
 ```bash
-# 1. snapshot
-sudo nft list ruleset > /root/nft-snapshot-$(date +%s).nft
-# 2. armar el rollback ANTES de aplicar
-sudo systemd-run --on-active=150 --unit=nft-auto-rollback \
-     /usr/sbin/nft -f /root/nft-snapshot-<ts>.nft
-# 3. aplicar
+# 1. snapshot SOLO de nuestra tabla (nft list ruleset NO sirve como rollback:
+#    reaplicarlo AGREGA reglas duplicadas en vez de restaurar -- así se duplicó
+#    el ruleset que hay hoy).
+sudo nft list table inet hardened > /root/hardened-snapshot.nft
+sudo cat > /root/nft-rollback.sh <<'EOF'
+#!/bin/bash
+/usr/sbin/nft delete table inet hardened 2>/dev/null
+/usr/sbin/nft -f /root/hardened-snapshot.nft
+logger -t nft-rollback "nft hardened restaurado desde snapshot"
+EOF
+sudo chmod +x /root/nft-rollback.sh
+# 2. probá el rollback AHORA, antes de aplicar nada: tiene que dejar la tabla
+#    idéntica (mismo sha256) y el servicio 200. Si el rollback no funciona,
+#    no apliques la fase.
+sudo /root/nft-rollback.sh && sudo nft list table inet hardened | sha256sum
+# 3. armar el rollback automático ANTES de aplicar
+sudo systemd-run --on-active=150 --unit=nft-auto-rollback /root/nft-rollback.sh
+# 4. aplicar
 sudo nft -f /home/juan/.config/nft/hardened.nft
-# 4. verificar TODO esto
+# 5. verificar TODO esto
 #    - curl -s -o /dev/null -w '%{http_code}' https://vps-server.tail40095b.ts.net/api/health   -> 200
 #    - curl -s from LAN IP on 2283 -> 200 ; on 8000 from LAN -> debe FALLAR ahora (tailnet only)
 #    - tailscale status | head -3  (sin cambios)
 #    - ss -tlnp | grep -c LISTEN  (mismo conteo o más, nunca menos por servicios caídos)
 #    - docker ps --format '{{.Names}} {{.Status}}' | grep -c healthy  (igual o más)
 #    - timeout 5 bash -c 'echo > /dev/tcp/192.168.1.83/22' && echo ssh-lan-ok
-# 5. solo si TODO pasa:
+# 6. solo si TODO pasa:
 sudo systemctl stop nft-auto-rollback.timer nft-auto-rollback.service 2>/dev/null
 ```
 
