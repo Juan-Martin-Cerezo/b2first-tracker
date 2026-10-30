@@ -71,18 +71,41 @@ provider's own retention policy applies to what they receive. The resulting
 bands and feedback are saved only inside your own progress when you accept the
 correction.
 
-## 7. Do Not Track
+## 7. Speaking practice — pronunciation
+
+The speaking studio can score pronunciation. That is the one thing a transcript
+cannot measure, so a short clip of your voice is sent to **Azure AI Speech
+(Pronunciation Assessment)** — a Microsoft service — to get phoneme-level
+scores. What is sent: at most **10 seconds of audio per turn** (not the whole
+session) and, optionally, the reference text of the sentence you were asked to
+read. Nothing else: no account data, no identifiers, no transcript.
+
+Your audio is **not stored**, not even temporarily on this server: it is
+forwarded for the single request and discarded in the same handler. It is
+never written to disk, never put in the audit log, never kept for "quality" or
+"debugging". Only the numeric result (accuracy, fluency, completeness, prosody
+and per-word scores) is kept, and only if you choose to save the session. The
+Azure subscription key lives in this server's environment and never reaches
+your browser.
+
+Azure/Microsoft processes the audio **outside Argentina** (their regional
+speech endpoints), under Microsoft's own retention policy for the request. If
+the speech service is not configured on this instance, the endpoint answers
+"speech not configured" and pronunciation is reported as **not measured** — the
+app never invents that score.
+
+## 8. Do Not Track
 
 If your browser sends `Do Not Track: 1` (or the global privacy control signal),
 the app sends **no telemetry at all** — no usage events, no error reports. Every
 feature keeps working exactly the same.
 
-## 8. Contact
+## 9. Contact
 
 Questions or requests about your data: **TODO_OWNER_EMAIL** (this placeholder is
 replaced with the real owner address before public deployment — see the README).
 
-## 9. Applicable law
+## 10. Applicable law
 
 This policy is written with Argentina's Personal Data Protection Law
 (**Ley 25.326**) in mind, including access, correction and deletion rights.
