@@ -155,8 +155,8 @@ check("C2_security_headers_api_config",
       st_cfg == 200 and all(k in h_cfg for k in SEC)
       and h_cfg.get("Cache-Control") == "no-store"
       and "Access-Control-Allow-Origin" not in h_cfg
-      and "Cache-Control" not in h_root,
-      f"{h_cfg}")
+      and h_root.get("Cache-Control") == "no-cache",
+      f"{h_cfg} {h_root}")
 st_opt, _, h_opt = req("OPTIONS", "/api/progress")
 check("C3_options_no_cors",
       st_opt in (200, 204) and not any(k.lower().startswith("access-control") for k in h_opt),

@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """B2 First study portal — serves the tracker + material (PDF/audio) from the Pi.
 
-Access: http://100.112.213.66:8088 (Tailscale) or http://127.0.0.1:8088 (local).
+Access: http://127.0.0.1:8088 by default (B2_HOST); the public entrypoint is a TLS
+proxy in front of it (Tailscale Funnel). LAN access requires B2_HOST=0.0.0.0 and the
+nftables firewall remains the real barrier.
 Dynamically scans ~/Descargas/b2-first: any PDF/MP3/ZIP you add to that folder
 shows up on /libros (catalog with a search box) and on /libros.json (consumed
 by the LIBROS tab of the tracker).
@@ -63,6 +65,23 @@ PROGRESS_MAX_BYTES = 2 * 1024 * 1024                    # max size of a progress
 AI_MAX_BYTES = 32 * 1024                                # max size of an AI request body (32 KB)
 B2_PUBLIC_HEALTH = os.environ.get("B2_PUBLIC_HEALTH", "0").strip() == "1"
 _START_TS = time.time()                                 # for /api/health uptime_s
+
+# --- Network surface (fase 16) ---------------------------------------------
+# Bind address. Defaults to loopback: the public entrypoint is a TLS proxy
+# (Tailscale Funnel) talking to 127.0.0.1. LAN access requires B2_HOST=0.0.0.0,
+# and even then the nftables firewall is the real barrier, not this bind.
+B2_HOST = os.environ.get("B2_HOST", "127.0.0.1")
+# Optional comma-separated allowlist of Host headers. Empty = no check.
+B2_ALLOWED_HOSTS = os.environ.get("B2_ALLOWED_HOSTS", "")
+
+CONNECTION_LIMIT = 200                                  # simultaneous sockets (hard cap)
+_CONN_SEM = threading.BoundedSemaphore(CONNECTION_LIMIT)
+SOCKET_TIMEOUT = 15                                     # seconds (slowloris cut-off)
+MAX_URI_LEN = 2048                                      # request-target characters
+MAX_HEADERS = 60                                        # request header count
+MAX_BODY_BYTES = 3 * 1024 * 1024                        # global request body ceiling
+ALLOWED_METHODS = ("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
+ALLOW_HEADER = ", ".join(ALLOWED_METHODS)
 
 
 def _is_demo():
@@ -153,8 +172,9 @@ def _is_trusted_proxy(peer):
 def _real_ip(handler):
     """Client IP: X-Forwarded-For only when the request comes from loopback/internal."""
     peer = handler.client_address[0] if handler.client_address else ""
-    if _is_trusted_proxy(peer):
-        xff = handler.headers.get("X-Forwarded-For")
+    headers = getattr(handler, "headers", None)
+    if headers is not None and _is_trusted_proxy(peer):
+        xff = headers.get("X-Forwarded-For")
         if xff:
             cand = xff.split(",")[0].strip()
             if cand:
@@ -1403,6 +1423,10 @@ def _validate_progress(data):
 # HTTP handler
 # ---------------------------------------------------------------------------
 SECURITY_HEADERS = {
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
+    "X-Permitted-Cross-Domain-Policies": "none",
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
@@ -1413,6 +1437,56 @@ SECURITY_HEADERS = {
         "base-uri 'none'; form-action 'self'"
     ),
 }
+
+
+def _allowed_hosts():
+    """Host allowlist from B2_ALLOWED_HOSTS (comma-separated, case-insensitive)."""
+    raw = B2_ALLOWED_HOSTS if isinstance(B2_ALLOWED_HOSTS, str) else ""
+    return {h.strip().lower() for h in raw.split(",") if h.strip()}
+
+
+def _host_allowed(host):
+    """True when no allowlist is configured or `host` (port-stripped) is listed."""
+    allowed = _allowed_hosts()
+    if not allowed:
+        return True
+    raw = (host or "").strip().lower()
+    name = raw
+    if name.startswith("["):                 # IPv6 literal: [::1]:8088
+        end = name.find("]")
+        if end != -1:
+            name = name[:end + 1]
+    elif ":" in name:                        # host:port
+        name = name.split(":", 1)[0]
+    return name in allowed or raw in allowed
+
+
+def _bad_path_code(raw_target):
+    """Return 400/403 for a hostile request-target, else None.
+
+    Checks only the path (never the query): literal NUL, backslash, `..` in any
+    encoding (single or double percent-encoded), empty `//` segments and hidden
+    dot-files. The target is decoded for inspection only; routing still decodes
+    exactly once.
+    """
+    path = raw_target.split("?", 1)[0]
+    candidate = path
+    for _ in range(3):                       # path, one decode, two decodes
+        low = candidate.lower()
+        if "\x00" in candidate or "\\" in candidate or ".." in low:
+            return 400
+        decoded = unquote(candidate)
+        if decoded == candidate:
+            break
+        candidate = decoded
+    if "//" in path or "//" in candidate:
+        return 400
+    for seg in candidate.split("/"):
+        if seg not in ("", ".") and seg.startswith("."):
+            return 403                       # hidden files: no existence oracle
+    return None
+
+
 _LOG_LOCK = threading.Lock()  # keeps one access-log line atomic under concurrency
 
 
@@ -1421,6 +1495,76 @@ class H(BaseHTTPRequestHandler):
     # attacker which interpreter CVEs to try. Send a bare, unversioned product name.
     server_version = "B2First"
     sys_version = ""
+    # Slow clients (slowloris) are cut off after this many seconds of socket stall.
+    timeout = SOCKET_TIMEOUT
+
+    def version_string(self):
+        """Bare product name: never expose the interpreter version."""
+        return self.server_version
+
+    def __getattr__(self, name):
+        """Send 405 + Allow for any method the router does not implement.
+
+        BaseHTTPRequestHandler would answer 501 for unknown `do_*` names; this
+        keeps every unsupported method (TRACE, FROB, PATCH...) on the same
+        documented 405 path without enumerating them.
+        """
+        if name.startswith("do_"):
+            return self._method_not_allowed
+        raise AttributeError(name)
+
+    def handle(self):
+        """Cap simultaneous connections; answer 503 when the semaphore is exhausted."""
+        if not _CONN_SEM.acquire(blocking=False):
+            self._begin()
+            self.close_connection = True
+            try:
+                self._send_json(503, {"error": "busy", "retry_after": 5},
+                                {"Retry-After": "5"})
+            except OSError:
+                pass
+            finally:
+                self._log_line()
+            return
+        try:
+            super().handle()
+        finally:
+            _CONN_SEM.release()
+
+    def _begin(self):
+        """Initialize the per-request logging state.
+
+        Used before parse_request in the connection-cap path, so path/command
+        may not exist yet: give them neutral defaults rather than letting a
+        logging or header helper raise while answering 503.
+        """
+        self._rid = secrets.token_hex(4)
+        self._status = 0
+        self._t0 = time.time()
+        if getattr(self, "path", None) is None:
+            self.path = ""
+        if not getattr(self, "command", None):
+            self.command = "-"
+        if getattr(self, "requestline", None) is None:
+            self.requestline = ""
+        if getattr(self, "request_version", None) is None:
+            self.request_version = ""
+
+    def _method_not_allowed(self):
+        """405 + Allow for any method outside ALLOWED_METHODS (e.g. TRACE)."""
+        self._begin()
+        try:
+            self._send_json(405, {"error": "method not allowed"})
+        except OSError:
+            pass
+        finally:
+            self.close_connection = True
+            self._log_line()
+
+    def _reject(self, code, obj):
+        """Answer a hostile request and close, without reading its body."""
+        self.close_connection = True
+        self._safe_json(code, obj)
 
     def log_message(self, fmt, *a):
         """Silence per-request logging (replaced by _log_line: one line, no secrets)."""
@@ -1431,15 +1575,13 @@ class H(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         ms = int((time.time() - self._t0) * 1000)
         ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        line = f"{ts} rid={self._rid} {self.command} {path} {self._status} {ms}ms ip={_real_ip(self)}\n"
         with _LOG_LOCK:
-            print(f"{ts} rid={self._rid} {self.command} {path} {self._status} {ms}ms ip={_real_ip(self)}",
-                  flush=True)
+            print(line, end="", flush=True)   # one write: no interleaved log lines
 
     def _run(self):
         """Route one request: request id, access log and error containment."""
-        self._rid = secrets.token_hex(4)
-        self._status = 0
-        self._t0 = time.time()
+        self._begin()
         try:
             self._handle()
         except store.StoreBusy:
@@ -1464,6 +1606,10 @@ class H(BaseHTTPRequestHandler):
     def _send(self, code, body, ctype, extra=None):
         """Helper: response with security headers + Content-Length."""
         self._status = code
+        if code == 405:
+            # Every 405 advertises the supported methods, wherever it comes from.
+            extra = dict(extra or {})
+            extra.setdefault("Allow", ALLOW_HEADER)
         self.send_response(code)
         for k, v in SECURITY_HEADERS.items():
             self.send_header(k, v)
@@ -1519,6 +1665,25 @@ class H(BaseHTTPRequestHandler):
 
     def _handle(self):
         """Single router (used by GET and HEAD)."""
+        # --- Request-target and header limits (before touching any state) ---
+        if len(self.path) > MAX_URI_LEN:
+            self._reject(414, {"error": "uri too long"})
+            return
+        if len(self.headers) > MAX_HEADERS:
+            self._reject(431, {"error": "too many headers"})
+            return
+        if not _host_allowed(self.headers.get("Host", "")):
+            self._reject(421, {"error": "misdirected request"})
+            return
+        bad = _bad_path_code(self.path)
+        if bad:
+            self._reject(bad, {"error": "invalid path" if bad == 400 else "forbidden"})
+            return
+        if self._clen() > MAX_BODY_BYTES:
+            # Reject before reading the body; closing stops the upload.
+            self._reject(413, {"error": "payload too large"})
+            return
+
         path = unquote(self.path.split("?")[0])
 
         # Global per-IP limit for the whole API (health is excluded on purpose).
@@ -1531,11 +1696,12 @@ class H(BaseHTTPRequestHandler):
             self._send(204, b"", "text/plain")
             return
 
-        # Tracker (index.html)
+        # Tracker (index.html) — revalidate so a redeploy is picked up immediately.
         if path in ("/", "/index.html"):
             try:
                 body = open(TRACKER, "rb").read()
-                self._send(200, body, "text/html; charset=utf-8")
+                self._send(200, body, "text/html; charset=utf-8",
+                           {"Cache-Control": "no-cache"})
             except OSError:
                 self._send(404, b"tracker not found", "text/plain")
             return
@@ -1574,11 +1740,13 @@ class H(BaseHTTPRequestHandler):
                     self._send(206, data, ctype, {
                         "Content-Range": f"bytes {start}-{end}/{size}",
                         "Accept-Ranges": "bytes",
+                        "Cache-Control": "public, max-age=3600",
                     })
                     return
             with open(full, "rb") as f:
                 data = f.read()
-            self._send(200, data, ctype, {"Accept-Ranges": "bytes"})
+            self._send(200, data, ctype, {"Accept-Ranges": "bytes",
+                                          "Cache-Control": "public, max-age=3600"})
             return
 
         # Static tracker assets (favicon, manifest, apple-touch-icon)
@@ -2151,5 +2319,5 @@ class H(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     if not _is_demo():
         migrate_legacy()
-    print(f"B2First portal at http://0.0.0.0:{PORT} (root={ROOT})")
-    ThreadingHTTPServer(("0.0.0.0", PORT), H).serve_forever()
+    print(f"B2First portal at http://{B2_HOST}:{PORT} (root={ROOT})")
+    ThreadingHTTPServer((B2_HOST, PORT), H).serve_forever()
