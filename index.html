@@ -6872,18 +6872,22 @@ function makeLiveTransport(cfg){
         }});
       };
       ws.onmessage=async function(ev){
-        /* The Live API streams the examiner's voice as RAW BINARY PCM frames,
-           not as base64 inside JSON. The old code only looked at strings, so the
-           audio was thrown away and the panel sat silent while Google talked.
-           24 kHz, 16-bit signed little endian, mono. */
-        if(typeof ev.data!=='string'&&ev.data){
+        /* Two kinds of frames arrive. Some are JSON sent as BINARY (the
+           sessionResumptionUpdate and the serverContent messages): they must be
+           decoded as UTF-8 and parsed. Treating them as raw audio is what made
+           the examiner answer with noise. A frame that starts with '{' is JSON;
+           anything else is the fallback raw-PCM path. */
+        let text=null;
+        if(typeof ev.data==='string')text=ev.data;
+        else if(ev.data){
           let ab=null;
           if(ev.data instanceof ArrayBuffer)ab=ev.data;
           else if(typeof ev.data.arrayBuffer==='function')ab=await ev.data.arrayBuffer();
-          if(ab&&ab.byteLength>1)spkPlayPcm16(ab,role);
-          return;
+          if(ab&&ab.byteLength){
+            if(new Uint8Array(ab,0,1)[0]===0x7b)text=new TextDecoder().decode(ab);
+            else spkPlayPcm16(ab,role);
+          }
         }
-        let text=ev.data;
         if(!text)return;
         let msg=null;
         try{msg=JSON.parse(text)}catch(e){return}
