@@ -6823,6 +6823,7 @@ function makeSimTransport(cfg){
 
 function makeLiveTransport(cfg){
   const on=(cfg&&cfg.on)||{};
+  const role=(cfg&&cfg.role)||'examiner';
   let ws=null,closed=false,muted=false;
   function send(obj){
     if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj));
@@ -6871,9 +6872,18 @@ function makeLiveTransport(cfg){
         }});
       };
       ws.onmessage=async function(ev){
-        let text=null;
-        if(typeof ev.data==='string')text=ev.data;
-        else if(ev.data&&typeof ev.data.text==='function')text=await ev.data.text();
+        /* The Live API streams the examiner's voice as RAW BINARY PCM frames,
+           not as base64 inside JSON. The old code only looked at strings, so the
+           audio was thrown away and the panel sat silent while Google talked.
+           24 kHz, 16-bit signed little endian, mono. */
+        if(typeof ev.data!=='string'&&ev.data){
+          let ab=null;
+          if(ev.data instanceof ArrayBuffer)ab=ev.data;
+          else if(typeof ev.data.arrayBuffer==='function')ab=await ev.data.arrayBuffer();
+          if(ab&&ab.byteLength>1)spkPlayPcm16(ab,role);
+          return;
+        }
+        let text=ev.data;
         if(!text)return;
         let msg=null;
         try{msg=JSON.parse(text)}catch(e){return}
@@ -6983,6 +6993,18 @@ function spkOnBuffer(buf,who){
   };
   return true;
 }
+function spkPlayPcm16(arrayBuffer,who,rate){
+  /* Raw PCM frames from the Live API: 24 kHz mono, 16-bit signed LE. */
+  if(!arrayBuffer||!arrayBuffer.byteLength)return false;
+  if(!spkEnsureCtx())return false;
+  const pcm=new Int16Array(arrayBuffer);
+  if(!pcm.length)return false;
+  const ctx=SPK.ctx, buf=ctx.createBuffer(1,pcm.length,rate||24000);
+  const ch=buf.getChannelData(0);
+  for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
+  return spkOnBuffer(buf,who);
+}
+
 async function spkPlayWav(b64,who){
   if(typeof b64!=='string'||!b64)return false;
   if(!spkEnsureCtx())return false;

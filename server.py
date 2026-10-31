@@ -1075,14 +1075,18 @@ def _spk_model_has_live(api_key, model):
             return _SPK_LIVE_CACHE["ok"]
     ok = False
     try:
+        # Ask for THIS model. `/models` is paginated at 50 and the Live model is
+        # not on the first page: scanning the list is how we wrongly reported
+        # live:false while gemini-3.8-live was available all along.
         req = urllib.request.Request(
-            _spk_turn_base() + "/models",
+            _spk_turn_base() + "/models/" + str(model),
             headers={"x-goog-api-key": api_key},
         )
         with urllib.request.urlopen(req, timeout=8) as resp:
             raw = resp.read(256 * 1024)
-        body = json.loads(raw.decode("utf-8"))
-        for item in (body.get("models") if isinstance(body, dict) else []) or []:
+        single = json.loads(raw.decode("utf-8"))
+        body = {"models": [single] if isinstance(single, dict) else []}
+        for item in body.get("models") or []:
             if not isinstance(item, dict):
                 continue
             name = str(item.get("name") or "").split("/")[-1]
