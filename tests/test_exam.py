@@ -1,8 +1,8 @@
 import json
 from playwright.sync_api import sync_playwright
-from helpers import login_owner
+from helpers import isolated_server, login_owner
 
-URL = "http://127.0.0.1:8088/"
+URL = isolated_server() + "/"
 out = {}
 with sync_playwright() as p:
     b = p.chromium.launch()

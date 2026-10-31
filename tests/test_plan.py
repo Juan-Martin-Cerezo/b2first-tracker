@@ -8,7 +8,9 @@ import asyncio
 import json
 from playwright.async_api import async_playwright
 
-URL = "http://127.0.0.1:8088/"
+from helpers import isolated_server
+
+URL = isolated_server() + "/"
 
 DIAG_FIXTURE = (
     "{date:'2026-10-20',correct:4,total:12,"

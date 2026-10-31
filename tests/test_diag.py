@@ -31,7 +31,9 @@ local_port = local_srv.server_address[1]
 local_th = threading.Thread(target=local_srv.serve_forever, daemon=True)
 local_th.start()
 
-URL_8088 = "http://127.0.0.1:8088"
+# Both URLs point at the same in-process server, started over a temporary data
+# dir: the suite no longer reads or writes the production instance on 8088.
+URL_8088 = f"http://127.0.0.1:{local_port}"
 URL_LOCAL = f"http://127.0.0.1:{local_port}"
 
 

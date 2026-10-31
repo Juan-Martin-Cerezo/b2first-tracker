@@ -18,9 +18,9 @@ import wave
 
 from playwright.sync_api import sync_playwright
 
-from helpers import login_owner
+from helpers import isolated_server, login_owner
 
-URL = "http://127.0.0.1:8088/"
+URL = isolated_server() + "/"
 RATE = 16000
 DURATION = 90.0
 KNOWN_PAUSES = [1.2, 2.5, 4.4]

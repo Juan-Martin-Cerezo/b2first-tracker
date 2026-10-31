@@ -5,8 +5,16 @@ password (it is a human secret and it gets rotated), so they use a dedicated
 account that the helper registers on first use and reuses afterwards.
 
 Override with B2_TEST_USER / B2_TEST_PASS when running against another host.
+
+Isolation (mandatory for anything that creates accounts): call
+`isolated_server()` before touching the app. It starts the real `server.py`
+on a free port with a throwaway data directory, so account records, tokens
+and progress never land in the repo's `data/`.
 """
 import os
+import sys
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 OWNER_NAME = os.environ.get("B2_TEST_USER", "test-runner")
 OWNER_PASS = os.environ.get("B2_TEST_PASS", "test-runner-pass-9")
@@ -66,3 +74,68 @@ def login_user(pg, url, name, password, register=True):
 def login_owner(pg, url):
     """Log in as the shared throwaway test account."""
     return login_user(pg, url, OWNER_NAME, OWNER_PASS)
+
+
+# ---------------------------------------------------------------------------
+# Isolation: one temporary data dir per suite, never the repo's data/
+# ---------------------------------------------------------------------------
+
+def isolated_data_dir(prefix="b2test-"):
+    """Create a throwaway data dir and export it as B2_DATA_DIR.
+
+    server.py reads the variable at import time, so this must run before the
+    first `import server`. Safe to call again later: the newest dir wins.
+    """
+    import tempfile
+
+    if REPO_ROOT not in sys.path:
+        sys.path.insert(0, REPO_ROOT)
+    path = tempfile.mkdtemp(prefix=prefix)
+    os.environ["B2_DATA_DIR"] = path
+    return path
+
+
+def _adopt_data_dir(path):
+    """Point server.py and store.py at `path`, whatever they were imported with."""
+    import server as S
+    import store
+
+    S.DATA_DIR = path
+    store.DATA_DIR = path
+    # server.py derives these at import time; re-derive them for the new dir.
+    S.PROG_FILE = os.path.join(path, "progress.json")
+    S.BK_DIR = os.path.join(path, "backups")
+    S.USERS_FILE = os.path.join(path, "users.json")
+    S.TOKENS_FILE = os.path.join(path, "tokens.json")
+    S.USERS_DIR = os.path.join(path, "users")
+    return S
+
+
+def isolated_server(extra_env=None, data_dir=None):
+    """Start the real server.py on a free port over a private, empty data dir.
+
+    Returns the base URL without a trailing slash. The server is shut down at
+    interpreter exit (atexit): the request handler logs to stdout, so letting a
+    daemon thread die during finalization aborts the process with a
+    `_enter_buffered_busy` fatal error. `extra_env` is applied before the server
+    module is imported (its config is read then).
+    """
+    import atexit
+    import threading
+
+    path = data_dir or isolated_data_dir()
+    for k, v in (extra_env or {}).items():
+        os.environ[str(k)] = str(v)
+    S = _adopt_data_dir(path)
+    srv = S.ThreadingHTTPServer(("127.0.0.1", 0), S.H)
+    thread = threading.Thread(target=srv.serve_forever, daemon=True)
+    thread.start()
+
+    def _stop():
+        srv.shutdown()
+        srv.server_close()          # waits for in-flight handlers (block_on_close)
+        thread.join(2)
+
+    atexit.register(_stop)
+    return "http://127.0.0.1:%d" % srv.server_address[1]
+

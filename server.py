@@ -64,7 +64,8 @@ DIAG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "material",
 _DIAG_CACHE = {"path": None, "mtime": None, "body": None}
 PORT      = int(os.environ.get("PORT", 8088))           # 8080 is taken by docker-proxy
 EXTS      = {".pdf": "PDF", ".mp3": "AUDIO", ".zip": "ZIP"}
-DATA_DIR  = os.environ.get("DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
+DATA_DIR  = (os.environ.get("B2_DATA_DIR") or os.environ.get("DATA_DIR")
+             or os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
 store.DATA_DIR = DATA_DIR
 PROG_FILE = os.path.join(DATA_DIR, "progress.json")
 BK_DIR    = os.path.join(DATA_DIR, "backups")

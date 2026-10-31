@@ -11,9 +11,10 @@ import urllib.request
 
 from playwright.sync_api import sync_playwright
 
+from helpers import isolated_server
 from helpers import OWNER_NAME as TEST_USER, OWNER_PASS as TEST_PASS
 
-URL = "http://127.0.0.1:8088/"
+URL = isolated_server() + "/"
 NAME = "i18n-suite"
 PASS = "i18n-suite-pass-9"
 

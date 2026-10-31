@@ -14,9 +14,9 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-from helpers import login_owner
+from helpers import isolated_server, login_owner
 
-URL = "http://127.0.0.1:8088/"
+URL = isolated_server() + "/"
 SKILLS = ["rue", "w", "l", "sp"]
 KINDS = ["free", "freemium", "paid"]
 
