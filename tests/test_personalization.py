@@ -45,7 +45,7 @@ with sync_playwright() as p:
         localStorage.setItem('b2first_user', JSON.stringify(u));
         localStorage.setItem('b2first_tracker_v1_' + u.id, JSON.stringify(d));
     }""", [maria_user, maria_data])
-    pg.reload(wait_until="networkidle")
+    pg.reload(wait_until="load")
     pg.wait_for_timeout(900)
     pg.wait_for_timeout(300)
 
