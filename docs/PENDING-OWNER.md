@@ -46,7 +46,7 @@ Nada corriendo en este momento. La cola está vacía.
 | --- | --- | --- | --- |
 | 1 | Nombre y deadline del hackathon | sin eso no hay README, descripción ni guion de video | pasame el link |
 | 2 | Cuenta adulta de Stripe | tenés 16; Stripe exige 18 y cuenta bancaria | padre/madre/tutor abre la cuenta |
-| 3 | Cambiar la password de owner | `[redacted]` quedó escrita en este chat | Settings → Account |
+| 3 | Cambiar la password de owner | quedó escrita en un chat que no es privado | Settings → Account |
 | 4 | Rotar la key de Gemini | también quedó en el chat | AI Studio → Delete → Create |
 | 5 | Apagar Web Analytics en Cloudflare | contradice la política que publicamos | Dashboard → Web Analytics → Disable |
 | 6 | Tres pruebas de celular | solo vos tenés los dispositivos | datos móviles, iPhone/Safari con micrófono, escuchar voces |
