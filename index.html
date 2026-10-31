@@ -7437,8 +7437,12 @@ function spkHoldAudio(buf,who){
   SPK.heldChunks++;
   return true;
 }
-function spkClearHeld(){
-  if(SPK.heldAudio)SPK.heldAudio.length=0;
+function spkClearHeld(who){
+  if(!SPK.heldAudio){SPK.heldSince=0;return}
+  if(!who){SPK.heldAudio.length=0;SPK.heldSince=0;return}
+  /* Dropping the whole queue once silenced the partner as a side effect of an
+     examiner barge-in: the text was on screen but never spoken. */
+  SPK.heldAudio=SPK.heldAudio.filter(function(i){return i&&i.who!==who});
   SPK.heldSince=0;
 }
 function spkVoicePlaying(who){
@@ -7494,6 +7498,9 @@ function spkFlushJitterAll(now){
   ['examiner','partner'].forEach(function(w){n+=spkFlushJitter(w,now,false)});
   return n;
 }
+/* Two voices scheduling into their own timelines overlap: the examiner and the
+   partner ended up talking over each other. One bus, one speaker at a time. */
+const SPK_SPK_GAP=0.12;
 function spkScheduleBuffer(buf,who){
   who=who||'examiner';
   if(!SPK.ctx||!buf)return false;
@@ -7503,9 +7510,14 @@ function spkScheduleBuffer(buf,who){
   const src=ctx.createBufferSource();
   src.buffer=buf;
   src.connect(v.gain||ctx.destination);
-  const when=Math.max(ctx.currentTime,v.nextTime);
+  const now=ctx.currentTime;
+  const lastEnd=SPK.busEnd||0;
+  const gap=(SPK.busWho&&SPK.busWho!==who&&lastEnd>now)?SPK_SPK_GAP:0;
+  const when=Math.max(now,v.nextTime||0,lastEnd+gap);
   src.start(when);
   v.nextTime=when+buf.duration;
+  SPK.busEnd=when+buf.duration;
+  SPK.busWho=who;
   v.sources.push(src);
   src.onended=function(){
     const i=v.sources.indexOf(src);
@@ -8103,7 +8115,7 @@ function spkBargeIn(){
   spkClearQueue('examiner');
   /* Held audio belongs to the turn that was just interrupted: playing it after
      the barge-in would answer a question the candidate already cut off. */
-  spkClearHeld();
+  spkClearHeld('examiner');
   /* The device voice is cancelled the same way: barge-in must stop the words,
      not just lower a gain node that speechSynthesis does not use. */
   spkCancelBrowserSpeech();
