@@ -6824,7 +6824,7 @@ function makeSimTransport(cfg){
 function makeLiveTransport(cfg){
   const on=(cfg&&cfg.on)||{};
   const role=(cfg&&cfg.role)||'examiner';
-  let ws=null,closed=false,muted=false;
+  let ws=null,closed=false,muted=false,capTimer=null;
   function send(obj){
     if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj));
   }
@@ -6858,6 +6858,15 @@ function makeLiveTransport(cfg){
       }
       const sep=cfg.ws_url.indexOf('?')<0?'?':'&';
       ws=new WebSocket(cfg.ws_url+sep+'access_token='+encodeURIComponent(cfg.token));
+      /* Hard session cap. A forgotten tab would keep a Live session open and keep
+         billing audio by the minute; 15 min bounds one tab to about $0.10. */
+      clearTimeout(capTimer);
+      capTimer=setTimeout(function(){
+        if(closed)return;
+        closed=true;
+        try{ws.close(1000,'session cap')}catch(e){}
+        if(on.capped)on.capped();
+      },SPK_LIVE_MAX_MS);
       ws.onopen=function(){
         send({setup:{
           model:'models/'+(cfg.model||SPK_DEFAULT_MODEL),
@@ -6932,6 +6941,7 @@ function makeLiveTransport(cfg){
     },
     close:function(){
       closed=true;
+      clearTimeout(capTimer);
       try{if(ws)ws.close()}catch(e){}
     }
   };
@@ -6946,6 +6956,9 @@ function makeLiveTransport(cfg){
 
    This is turn-based, not full duplex: while the examiner's audio is playing
    the microphone is not recorded, because the candidate cannot interrupt. */
+/* A Live session bills by the minute, so it cannot run forever: a tab left open
+   is the one way to spend money without using the app. */
+const SPK_LIVE_MAX_MS=15*60*1000;
 const SPK_TURN_SILENCE_MS=800;
 const SPK_TURN_MAX_MS=15000;
 const SPK_TURN_MIN_MS=300;
