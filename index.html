@@ -6323,7 +6323,7 @@ async function liveStart(){
   try{
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error('no microphone API in this browser');
     const stream=await navigator.mediaDevices.getUserMedia({audio:{
-      echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1
+      echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1
     }});
     LIVE.stream=stream;
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -6835,7 +6835,7 @@ function spkMergeChunk(buf,chunk){
 function makeLiveTransport(cfg){
   const on=(cfg&&cfg.on)||{};
   const role=(cfg&&cfg.role)||'examiner';
-  let ws=null,closed=false,muted=false,capTimer=null,inBuf='',outBuf='';
+  let ws=null,closed=false,muted=false,capTimer=null,inBuf='',outBuf='',lastIn=0,lastOut=0;
   function send(obj){
     if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj));
   }
@@ -6845,11 +6845,16 @@ function makeLiveTransport(cfg){
        Can you" → "tell me your name,"). Printing each fragment as its own line
        made one sentence look like four repetitions of the same question, so the
        text is buffered and emitted once per turn. */
+    const nowMs=Date.now();
     if(sc.inputTranscription&&typeof sc.inputTranscription.text==='string'&&sc.inputTranscription.text){
       inBuf=spkMergeChunk(inBuf,sc.inputTranscription.text);
+      if(on.inText&&nowMs-lastIn>350){lastIn=nowMs;on.inText(inBuf,true);}
     }
     if(sc.outputTranscription&&typeof sc.outputTranscription.text==='string'&&sc.outputTranscription.text){
       outBuf=spkMergeChunk(outBuf,sc.outputTranscription.text);
+      /* Throttled partial so the transcript box fills while the examiner talks,
+         instead of staying empty until the turn closes. */
+      if(on.outText&&nowMs-lastOut>350){lastOut=nowMs;on.outText(outBuf,true);}
     }
     if(sc.modelTurn&&Array.isArray(sc.modelTurn.parts)){
       sc.modelTurn.parts.forEach(function(part){
@@ -6865,8 +6870,8 @@ function makeLiveTransport(cfg){
       if(on.interrupted)on.interrupted();
     }
     if(sc.turnComplete===true){
-      if(outBuf&&on.outText)on.outText(outBuf);
-      if(inBuf&&on.inText)on.inText(inBuf);
+      if(outBuf&&on.outText)on.outText(outBuf,false);
+      if(inBuf&&on.inText)on.inText(inBuf,false);
       inBuf='';
       outBuf='';
       if(on.turnComplete)on.turnComplete();
@@ -7503,9 +7508,10 @@ function spkBargeIn(){
   SPK.interrupted++;
   const turn=SPK.turns[SPK.turns.length-1];
   if(turn)turn.interrupted=true;
-  const v=SPK.voices.examiner;
-  if(v&&v.transport)v.transport.mute(true);
-  SPK.muted=true;
+  /* Stop the LOCAL playback only. Sending audioStreamEnd here told the model the
+     candidate had finished their turn, so it answered again with the greeting:
+     that is why "Good morning" repeated forever without anyone speaking. The
+     model has its own voice-activity detection and will emit `interrupted`. */
   spkClearQueue('examiner');
   /* The device voice is cancelled the same way: barge-in must stop the words,
      not just lower a gain node that speechSynthesis does not use. */
@@ -7541,7 +7547,7 @@ function spkVad(speaking){
        chair or a noisy room muted the examiner mid-word, so it never finished a
        question and kept re-asking — "repite constantemente" and "habla trabado"
        were the same bug. */
-    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=600)spkBargeIn();
+    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=1200)spkBargeIn();
   }else{
     if(SPK.running&&!SPK.silStartedAt)SPK.silStartedAt=now;
     SPK.speechSince=0;
@@ -7556,15 +7562,27 @@ function spkVad(speaking){
   }
 }
 
-function spkAddLine(side,text,who){
+function spkAddLine(side,text,who,partial){
   if(typeof text!=='string')return;
   text=text.trim();
   if(!text)return;
   who=who||(side==='in'?'candidate':'examiner');
   const ts=Math.max(0,(performance.now()-SPK.startedAt)/1000);
   const box=document.getElementById(side==='in'?'spkInText':'spkOutText');
+  /* A partial update rewrites the row already on screen. The transcript arrives
+     in fragments; appending each one printed the same question several times. */
+  if(box&&box.lastElementChild&&box.lastElementChild.getAttribute('data-who')===who
+     &&(partial||box.lastElementChild.getAttribute('data-partial')==='1')){
+    const last=box.lastElementChild;
+    const span=last.querySelector('.txt');
+    if(span){span.textContent=(who==='partner'?'Partner: ':text);
+      last.setAttribute('data-partial',partial?'1':'0');
+      box.scrollTop=box.scrollHeight;return;}
+  }
   if(box){
     const row=document.createElement('div');
+    row.setAttribute('data-who',who);
+    row.setAttribute('data-partial',partial?'1':'0');
     row.className='spk-line spk-'+(who==='candidate'?'you':who);
     const t=document.createElement('span');
     t.className='ts';
@@ -7812,7 +7830,7 @@ function spkTeardownMic(){
 
 async function spkStartMic(){
   const stream=await navigator.mediaDevices.getUserMedia({audio:{
-    echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1
+    echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1
   }});
   SPK.micStream=stream;
   const AC=window.AudioContext||window.webkitAudioContext;
@@ -7869,8 +7887,8 @@ function spkHandlers(who){
   return {
     audio:function(pcm){spkOnAudio(pcm,who)},
     inText:function(t){spkAddLine('in',t,'candidate')},
-    outText:function(t){
-      spkAddLine('out',t,who);
+    outText:function(t,partial){
+      spkAddLine('out',t,who,partial);
       /* The partner cannot hear the examiner, so the director hands it the
          examiner's words as text. This is the only bridge between voices. */
       if(who==='examiner'&&SPK.part>=2){
