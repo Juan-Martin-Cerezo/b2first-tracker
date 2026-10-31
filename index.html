@@ -234,7 +234,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 /* numbers that change never shift layout */
 .timer,.exam-timer,.stat-val,.stat-card-val,.streak-main,.metric-val,
 .dur-val,.phase-mini .ph-val,.ia-band-score,table,.tnum,
-.streak-ascii,.streak-week-txt,.streak-foot-pill,.ql-chips .chip,
+.streak-ascii,.streak-week-txt,.ql-chips .chip,
 .gate .ov-label,.diag-progress-label{
   font-variant-numeric:tabular-nums;
 }
@@ -266,13 +266,9 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .topbar .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .topbar .brand img{height:28px;width:auto;object-fit:contain}
 .topbar .brand span{font-size:var(--fs-md);font-weight:600;letter-spacing:-.01em;color:var(--txt);white-space:nowrap}
-.topbar .sync-status{
-  display:flex;align-items:center;gap:7px;font-size:var(--fs-xs);color:var(--txt-2);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;
-}
 .sync-badge{display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:50%;flex:none;background:var(--on-surface-variant)}
-.sync-badge.state-ok{background:var(--ok)}
-.sync-badge.state-local{background:var(--on-surface-variant)}
+/* Only the offline/error state is shown: "saved" and "saving" stay silent. */
+.sync-badge.state-ok,.sync-badge.state-local{display:none}
 .sync-badge.state-off{background:var(--warn)}
 .sync-badge:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
 .topbar .top-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -321,10 +317,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 
 /* ---------- PAGE HEADERS ---------- */
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
-.page-head .page-kicker{
-  display:block;font-size:var(--fs-xs);letter-spacing:.14em;color:var(--acc-text);
-  text-transform:uppercase;margin-bottom:4px;font-weight:600;
-}
 .page-head .page-title{font-size:var(--fs-xl);font-weight:600;letter-spacing:-.02em;color:var(--txt);line-height:1.15}
 .page-head .page-sub{font-size:var(--fs-sm);color:var(--txt-2);margin-top:6px;max-width:680px;line-height:1.5}
 .page-stat{text-align:right;flex:none}
@@ -1200,10 +1192,6 @@ footer{
   margin-top:8px;font-size:var(--fs-xs);color:var(--warn-text);
   background:var(--warn-soft);border-left:4px solid var(--warn);padding:8px 12px;border-radius:var(--r-panel);
 }
-.streak-foot-pill{
-  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;
-  background:var(--acc-soft);color:var(--acc-text);font-weight:600;font-size:var(--fs-xs);
-}
 
 /* ---------- IA WRITING CORRECTOR ---------- */
 .ia-bands-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
@@ -1261,7 +1249,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   /* top bar */
   .topbar{padding:10px clamp(16px,4vw,32px);gap:8px;flex-wrap:nowrap}
-  .topbar .sync-status{font-size:var(--fs-xs);max-width:130px}
   .topbar .top-actions{gap:6px}
   .stage-badge{max-width:180px}
   .theme-toggle{width:40px;height:40px}
@@ -1325,7 +1312,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .stat-card{padding:14px}
 
   .rot-cycles{flex-direction:column;gap:8px}
-  #bookCats{flex-wrap:wrap;white-space:normal;overflow-x:visible}
   footer{text-align:center;padding:12px clamp(16px,4vw,32px)}
 
   /* no sideways scrolling inside cards: let these rows wrap instead */
@@ -1364,7 +1350,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 @media (max-width:400px){
   .stat-grid{grid-template-columns:1fr}
-  .topbar .sync-status{display:none}
 }
 
 /* ---------- MOTION SAFETY ---------- */
@@ -1375,6 +1360,30 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     transition-duration:0.01ms !important;
     scroll-behavior:auto !important;
   }
+}
+
+/* === U2: chrome cleanup === */
+.top-streak{
+  display:inline-flex;align-items:center;gap:4px;flex:none;
+  padding:4px 10px;border-radius:999px;line-height:1;
+  background:var(--acc-soft);color:var(--acc-text);
+  font-size:var(--fs-xs);font-weight:600;
+}
+.top-streak b{font-weight:700}
+.card,.tile,.panel{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.card img,.card svg{max-width:100%}
+.grid-12,.grid-12>*,.practice-grid,.stat-grid,.phase-stepper,
+.ia-bands-grid,.spx-parts,.spx-photos,.rot-override-grid{min-width:0}
+.rot-override-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.book{flex-wrap:wrap}
+.book>div,.book-main,.spx-task,.spx-part{min-width:0;overflow-wrap:anywhere}
+@media (max-width:768px){
+  .topbar{gap:6px}
+  .top-streak{padding:4px 8px}
+  .card{padding:16px}
+}
+@media (max-width:400px){
+  .top-streak{padding:4px 6px}
 }
 </style>
 </head>
@@ -1400,7 +1409,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
       <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
       <button class="btn gray" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()" data-i18n="auth_google">Continue with Google</button>
-      <button class="btn gray" id="passkeyLoginBtn" type="button" style="width:100%;margin-top:8px" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
+      <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
       <div class="auth-error" id="altAuthError"></div>
     </div>
     <div id="authRegister" style="display:none">
@@ -1568,16 +1577,18 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
       <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()" data-i18n="user_update_pw">Update password</button>
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_security">Security</div>
-      <div id="passkeyWarn" class="auth-error" style="display:none;margin-bottom:8px" data-i18n="user_no_password_warn">This account has no password. Set one below as a fallback.</div>
-      <div id="passkeyList" style="display:flex;flex-direction:column;gap:6px"></div>
-      <div id="passkeyEmpty" style="font-size:12px;color:var(--on-surface-variant)" data-i18n="user_no_passkeys">No passkeys on this account yet.</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-        <input type="text" id="passkeyLabel" placeholder="Device name (e.g. iPhone)" data-i18n-placeholder="user_passkey_label_ph" autocomplete="off">
-        <input type="password" id="passkeyPassword" placeholder="Your password (once)" data-i18n-placeholder="user_passkey_password_ph" autocomplete="current-password">
+      <div id="passkeySection" style="display:none">
+        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_security">Security</div>
+        <div id="passkeyWarn" class="auth-error" style="display:none;margin-bottom:8px" data-i18n="user_no_password_warn">This account has no password. Set one below as a fallback.</div>
+        <div id="passkeyList" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div id="passkeyEmpty" style="font-size:12px;color:var(--on-surface-variant)" data-i18n="user_no_passkeys">No passkeys on this account yet.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <input type="text" id="passkeyLabel" placeholder="Device name (e.g. iPhone)" data-i18n-placeholder="user_passkey_label_ph" autocomplete="off">
+          <input type="password" id="passkeyPassword" placeholder="Your password (once)" data-i18n-placeholder="user_passkey_password_ph" autocomplete="current-password">
+        </div>
+        <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+        <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
       </div>
-      <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_recent">Recent activity</div>
       <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
       <div id="diagMetricsBox" style="display:none">
@@ -1616,7 +1627,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div class="plan-limit-options">
       <div class="plan-limit-option">
         <b data-i18n="license_option_free">Free (you are here)</b>
-        <span data-i18n="license_option_free_desc">3 AI corrections a day and 1 mock a week.</span>
+        <span data-i18n="license_option_free_desc">3 corrections with the AI Corrector a day and 1 mock a week.</span>
       </div>
       <div class="plan-limit-option">
         <b data-i18n="license_option_byo">Your own key</b>
@@ -1768,8 +1779,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <img src="/assets/logo-192.png" alt="B2 First logo" class="logo-img">
       <span>B2 FIRST</span>
     </div>
-    <div class="sync-status"><span id="syncBadge" class="sync-badge state-off" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span></div>
     <div class="top-actions">
+      <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
+      <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
       <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
       <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
     </div>
@@ -1786,8 +1798,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="libros" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label" data-i18n="nav_books">Books</span></button>
-    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">AI</span></button>
-    <button data-view="diag" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-diag"/></svg><span class="nav-label" data-i18n="nav_diag">Diag</span></button>
+    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">AI Corrector</span></button>
     <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
   </nav>
 
@@ -1800,7 +1811,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-hoy" class="view active">
         <div class="page-head">
           <div>
-            <span class="page-kicker" id="userKicker">[ COACH_OVERVIEW ]</span>
             <h1 class="page-title" id="userTitle">Today</h1>
             <p class="page-sub" id="userSub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
           </div>
@@ -1971,7 +1981,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
                     <div class="ps-num">Phase 3</div>
                     <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
-                    <div class="ps-time">20:00 · 7-point rubric + AI</div>
+                    <div class="ps-time">20:00 · 7-point rubric + AI Corrector</div>
                   </div>
                 </div>
 
@@ -2074,7 +2084,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
                     </div>
                     <div class="row" style="margin-top:10px">
-                      <div><label>AI / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
+                      <div><label>AI Corrector / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
                       <div><label>Audited Score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
                     </div>
                     <div class="row" style="margin-top:10px">
@@ -2710,7 +2720,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-exam" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ EXAM_SIMULATION ]</span>
             <h1 class="page-title" data-i18n="exam_title">Exam Simulation</h1>
             <p class="page-sub" data-i18n="exam_sub">Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.</p>
           </div>
@@ -2796,7 +2805,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-partes" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ SYLLABUS_INDEX ]</span>
             <h1 class="page-title" data-i18n="parts_title">Practice by Part</h1>
             <p class="page-sub" data-i18n="parts_sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
           </div>
@@ -2812,7 +2820,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-prog" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ METRICS_OVERVIEW ]</span>
             <h1 class="page-title" data-i18n="prog_title">Progress</h1>
             <p class="page-sub" data-i18n="prog_sub">Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.</p>
           </div>
@@ -2877,7 +2884,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-graf" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ PERFORMANCE_ANALYTICS ]</span>
             <h1 class="page-title" data-i18n="charts_title">Performance Analytics</h1>
             <p class="page-sub" data-i18n="charts_sub">Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.</p>
           </div>
@@ -2940,7 +2946,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-err" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ ERROR_TAXONOMY ]</span>
             <h1 class="page-title" data-i18n="err_title">Error Taxonomy</h1>
             <p class="page-sub" data-i18n="err_sub">Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.</p>
           </div>
@@ -2984,7 +2989,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-plan" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ COACH_CONFIGURATION ]</span>
             <h1 class="page-title" data-i18n="plan_title">Plan Configuration</h1>
             <p class="page-sub" data-i18n="plan_sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
           </div>
@@ -3002,7 +3006,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="plan_week_plan">Week plan</h2>
             <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
-          <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no AI).</div>
+          <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no model calls).</div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
           <details id="wpWhy" style="margin-top:12px">
             <summary data-i18n="plan_why">Why this?</summary>
@@ -3029,10 +3033,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="license_title">Subscription</h2>
             <span class="chip-plan" id="planNameChip"><span class="dot"></span><span id="planNameText" data-i18n="license_chip_free">Free</span></span>
           </div>
-          <div class="sub" data-i18n="license_sub">Your plan decides how much AI you get. Free is here to try the loop; a code or your own key lifts it.</div>
+          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the AI Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
           <div class="plan-usage">
             <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_write">AI corrections &amp; reports</span>
+              <span class="plan-usage-label" data-i18n="license_write">AI Corrector &amp; reports</span>
               <span class="plan-usage-count tnum" id="planWriteText">—</span>
             </div>
             <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
@@ -3095,7 +3099,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
                     <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
                   </select>
-                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one AI call. Natural asks Gemini for the audio and costs one more.</div>
+                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one AI Corrector request. Natural asks Gemini for the audio and costs one more.</div>
                 </div>
               </div>
               <div class="row">
@@ -3212,7 +3216,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-12">
             <div class="card" id="byoCard">
               <div class="plan-card-head">
-                <h2 data-i18n="byo_title">✨ AI provider</h2>
+                <h2 data-i18n="byo_title">✨ AI Writing Corrector provider</h2>
                 <span class="chip-plan"><span class="dot"></span><span data-i18n="byo_chip">Your key, your cost</span></span>
               </div>
               <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
@@ -3267,7 +3271,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-practice" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ PRACTICE_SOURCES ]</span>
             <h1 class="page-title" data-i18n="practice_title">Practice sources</h1>
             <p class="page-sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</p>
           </div>
@@ -3295,9 +3298,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-libros" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ RESOURCE_LIBRARY ]</span>
             <h1 class="page-title" data-i18n="books_title">Resource Library</h1>
-            <p class="page-sub" data-i18n="books_sub">PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
+            <p class="page-sub" data-i18n="books_sub">PDFs, audio and online resources for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
           </div>
         </div>
         <div class="card">
@@ -3311,20 +3313,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
           <div id="matList"></div>
         </div>
-        <div class="card">
-          <h2 data-i18n="books_all">🛒 All Recommended Books (Verified Options)</h2>
-          <div class="sub" data-i18n-html="books_all_sub">Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.</div>
-          <div id="bookCats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-            <input type="text" id="bookFilter" placeholder="🔍 Search books... (e.g. practice, grammar, fce)" data-i18n-placeholder="books_search_ph" style="flex:1;min-width:160px">
-            <select id="bookSort" style="background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px">
-              <option value="cat" data-i18n="books_sort_cat">Sort: Category</option>
-              <option value="asc" data-i18n="books_sort_asc">Price: Low to High ↑</option>
-              <option value="desc" data-i18n="books_sort_desc">Price: High to Low ↓</option>
-            </select>
-          </div>
-          <div id="bookList"></div>
-        </div>
       </section>
 
       <!-- ============ AI WRITING CORRECTOR ============ -->
@@ -3332,14 +3320,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="view-ia">
           <div class="page-head">
             <div>
-              <span class="page-kicker">[ CAMBRIDGE_AI_EXAMINER ]</span>
-              <h1 class="page-title" data-i18n="ai_title">Writing corrector</h1>
+              <h1 class="page-title" data-i18n="ai_title">AI Writing Corrector</h1>
               <p class="page-sub" data-i18n="ai_sub">Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).</p>
             </div>
           </div>
 
           <div class="card" id="iaCard" data-state="idle">
-            <h2 data-i18n="ai_title">Writing corrector</h2>
+            <h2 data-i18n="ai_title">AI Writing Corrector</h2>
             <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
             <div class="row" style="margin-bottom:10px">
@@ -3406,7 +3393,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="view-diag" class="view">
         <div class="page-head">
           <div>
-            <span class="page-kicker">[ COLD_START_PLACEMENT ]</span>
             <h1 class="page-title" data-i18n="diag_title">Initial diagnostic</h1>
             <p class="page-sub" data-i18n="diag_sub">10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.</p>
           </div>
@@ -3419,7 +3405,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
     </main>
 
-    <footer>🎯 <span data-i18n="footer_brand">B2 First Mastery · Grade A</span> · <span id="streakFootPill" class="streak-foot-pill">🔥 0</span><span id="syncFootSep"> · </span><span id="syncBadgeFoot" class="sync-badge state-off" tabindex="0" title="Save status on the server" aria-label="Save status on the server"></span> · <a href="/privacy" style="color:inherit;opacity:.8" data-i18n="footer_privacy">Privacy</a> · <a href="/terms" style="color:inherit;opacity:.8" data-i18n="footer_terms">Terms</a> · <a href="/security" style="color:inherit;opacity:.8" data-i18n="footer_security">Security</a></footer>
+    <footer><a href="/privacy" style="color:inherit;opacity:.8" data-i18n="footer_privacy">Privacy</a> · <a href="/terms" style="color:inherit;opacity:.8" data-i18n="footer_terms">Terms</a> · <a href="/security" style="color:inherit;opacity:.8" data-i18n="footer_security">Security</a></footer>
   </div>
 </div>
 
@@ -3528,8 +3514,7 @@ const I18N={
     nav_charts:'Charts',
     nav_errors:'Errors',
     nav_books:'Books',
-    nav_ai:'AI',
-    nav_diag:'Diag',
+    nav_ai:'AI Corrector',
     nav_more:'More',
     nav_more_aria:'More sections',
     practice_title:'Practice sources',
@@ -3597,7 +3582,7 @@ const I18N={
     activity_register:'Account created',
     activity_password_change:'Password changed',
     activity_account_delete:'Account deleted',
-    activity_quota_hit:'AI daily quota reached',
+    activity_quota_hit:'AI Corrector daily quota reached',
     activity_ua_changed:'New device / browser',
     activity_google_login:'Signed in with Google',
     activity_google_register:'Account created with Google',
@@ -3621,7 +3606,6 @@ const I18N={
     footer_privacy:'Privacy',
     footer_terms:'Terms',
     footer_security:'Security',
-    footer_brand:'B2 First Mastery · Grade A',
     today_log_single:'Log single part',
     today_start_session:'Start session',
     today_diag_title:'Initial diagnostic · 10 min · 12 questions',
@@ -3689,7 +3673,6 @@ const I18N={
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
     today_sub_fmt:'Personalized study plan for {name} · {stage} · Schedule: {sched}.',
-    today_kicker_fmt:'[ STUDENT_PORTAL · {name} ]',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
@@ -3809,7 +3792,7 @@ const I18N={
     plan_import_backup:'📥 Import Backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
-    plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no AI).',
+    plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no model calls).',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
@@ -3830,7 +3813,7 @@ const I18N={
     plan_voice:'Speaking voice',
     plan_voice_fast:'Instant — device voice (~2 s)',
     plan_voice_natural:'Natural voice — Gemini (~6 s)',
-    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one AI call. Natural asks Gemini for the audio and costs one more.',
+    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one AI Corrector request. Natural asks Gemini for the audio and costs one more.',
     plan_wmin:'Writing — min words',
     plan_wmax:'Writing — max words',
     plan_streak_freeze:'Streak freeze / week (🛡)',
@@ -3867,7 +3850,7 @@ const I18N={
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
-    byo_title:'✨ AI provider',
+    byo_title:'✨ AI Writing Corrector provider',
     byo_chip:'Your key, your cost',
     byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
     byo_provider:'Provider',
@@ -3888,8 +3871,8 @@ const I18N={
     license_chip_free:'Free',
     license_chip_byo:'Your key',
     license_chip_pro:'Pro',
-    license_sub:'Your plan decides how much AI you get. Free is here to try the loop; a code or your own key lifts it.',
-    license_write:'AI corrections & reports',
+    license_sub:'Your plan decides how much you can use the AI Corrector. Free is here to try the loop; a code or your own key lifts it.',
+    license_write:'AI Corrector & reports',
     license_speak:'Speaking mocks',
     license_usage:'{n} of {limit} · {window}',
     license_window_day:'today',
@@ -3921,7 +3904,7 @@ const I18N={
     license_limit_body:'Your free plan is there to try the loop. Keep going in one of these ways:',
     license_limit_short:'Plan limit reached — open Plan to keep going.',
     license_option_free:'Free (you are here)',
-    license_option_free_desc:'3 AI corrections a day and 1 mock a week.',
+    license_option_free_desc:'3 corrections with the AI Corrector a day and 1 mock a week.',
     license_option_byo:'Your own key',
     license_option_byo_desc:'Unlimited for this app: you pay your provider directly.',
     license_option_pro:'Pro',
@@ -3933,19 +3916,13 @@ const I18N={
     plan_save:'💾 Save plan',
     plan_restore:'↩ Restore original plan',
     books_title:'Resource Library',
-    books_sub:'PDFs, audio and all the books available for your preparation. Dynamic: whatever you add to the folder shows up automatically.',
+    books_sub:'PDFs, audio and online resources for your preparation. Dynamic: whatever you add to the folder shows up automatically.',
     books_online:'🌐 Online Practice (1-Click — Free)',
     books_online_sub:'Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).',
     books_material:'📥 Downloaded Material (PDFs & Audio)',
     books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
     books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
-    books_all:'🛒 All Recommended Books (Verified Options)',
-    books_all_sub:'Filter by category + real-time search + sort by price. <span style="color:var(--green-text)">With answers</span> = self-correctable (key for solo preparation). All options verified. 🆕 = 2020-2025 editions.',
-    books_search_ph:'🔍 Search books... (e.g. practice, grammar, fce)',
-    books_sort_cat:'Sort: Category',
-    books_sort_asc:'Price: Low to High ↑',
-    books_sort_desc:'Price: High to Low ↓',
-    ai_title:'Writing corrector',
+    ai_title:'AI Writing Corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
     ai_byo_badge:'using your key',
@@ -4176,8 +4153,7 @@ const I18N={
     nav_charts:'Gráficos',
     nav_errors:'Errores',
     nav_books:'Libros',
-    nav_ai:'IA',
-    nav_diag:'Diagn.',
+    nav_ai:'AI Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
     practice_title:'Fuentes de práctica',
@@ -4245,7 +4221,7 @@ const I18N={
     activity_register:'Cuenta creada',
     activity_password_change:'Contraseña cambiada',
     activity_account_delete:'Cuenta eliminada',
-    activity_quota_hit:'Límite diario de IA alcanzado',
+    activity_quota_hit:'Límite diario del AI Corrector alcanzado',
     activity_ua_changed:'Dispositivo o navegador nuevo',
     activity_google_login:'Ingreso con Google',
     activity_google_register:'Cuenta creada con Google',
@@ -4269,7 +4245,6 @@ const I18N={
     footer_privacy:'Privacidad',
     footer_terms:'Términos',
     footer_security:'Seguridad',
-    footer_brand:'B2 First Mastery · Grado A',
     today_log_single:'Registrar una parte',
     today_start_session:'Empezar sesión',
     today_diag_title:'Diagnóstico inicial · 10 min · 12 preguntas',
@@ -4337,7 +4312,6 @@ const I18N={
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
     today_sub_fmt:'Plan de estudio personalizado para {name} · {stage} · Horario: {sched}.',
-    today_kicker_fmt:'[ PORTAL_ESTUDIANTE · {name} ]',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
@@ -4457,7 +4431,7 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
-    plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin IA).',
+    plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
@@ -4478,7 +4452,7 @@ const I18N={
     plan_voice:'Voz del examinador',
     plan_voice_fast:'Instantánea — voz del dispositivo (~2 s)',
     plan_voice_natural:'Natural — Gemini (~6 s)',
-    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una llamada de IA. La natural pide el audio a Gemini y cuesta una más.',
+    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una solicitud al AI Corrector. La natural pide el audio a Gemini y cuesta una más.',
     plan_wmin:'Writing — mínimo de palabras',
     plan_wmax:'Writing — máximo de palabras',
     plan_streak_freeze:'Congelar racha / semana (🛡)',
@@ -4515,7 +4489,7 @@ const I18N={
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
-    byo_title:'✨ Proveedor de IA',
+    byo_title:'✨ Proveedor del AI Writing Corrector',
     byo_chip:'Tu clave, tu costo',
     byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
     byo_provider:'Proveedor',
@@ -4536,8 +4510,8 @@ const I18N={
     license_chip_free:'Gratis',
     license_chip_byo:'Tu clave',
     license_chip_pro:'Pro',
-    license_sub:'Tu plan define cuánta IA tenés. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
-    license_write:'Correcciones y reportes de IA',
+    license_sub:'Tu plan define cuánto podés usar el AI Corrector. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
+    license_write:'AI Corrector y reportes',
     license_speak:'Simulacros de speaking',
     license_usage:'{n} de {limit} · {window}',
     license_window_day:'hoy',
@@ -4569,7 +4543,7 @@ const I18N={
     license_limit_body:'El plan gratis sirve para probar el circuito. Podés seguir de alguna de estas formas:',
     license_limit_short:'Límite del plan alcanzado — abrí Plan para seguir.',
     license_option_free:'Gratis (estás acá)',
-    license_option_free_desc:'3 correcciones de IA por día y 1 simulacro por semana.',
+    license_option_free_desc:'3 correcciones con el AI Corrector por día y 1 simulacro por semana.',
     license_option_byo:'Tu propia clave',
     license_option_byo_desc:'Sin límite en esta app: le pagás directo a tu proveedor.',
     license_option_pro:'Pro',
@@ -4581,19 +4555,13 @@ const I18N={
     plan_save:'💾 Guardar plan',
     plan_restore:'↩ Restaurar plan original',
     books_title:'Biblioteca de recursos',
-    books_sub:'PDF, audio y todos los libros disponibles para tu preparación. Dinámico: lo que agregues a la carpeta aparece automáticamente.',
+    books_sub:'PDF, audio y recursos online para tu preparación. Dinámico: lo que agregues a la carpeta aparece automáticamente.',
     books_online:'🌐 Práctica online (1 clic — gratis)',
     books_online_sub:'Ejercicios interactivos ilimitados por habilidad. Materiales oficiales de Cambridge + plataformas gratuitas (sin descargas).',
     books_material:'📥 Material descargado (PDF y audio)',
     books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
     books_filter_ph:'🔍 Filtrar material... (ej. listening, parte 3, writing)',
-    books_all:'🛒 Todos los libros recomendados (opciones verificadas)',
-    books_all_sub:'Filtrá por categoría + búsqueda en tiempo real + orden por precio. <span style="color:var(--green-text)">Con respuestas</span> = autocorregible (clave para prepararte solo). Todas las opciones verificadas. 🆕 = ediciones 2020-2025.',
-    books_search_ph:'🔍 Buscar libros... (ej. práctica, gramática, fce)',
-    books_sort_cat:'Ordenar: categoría',
-    books_sort_asc:'Precio: menor a mayor ↑',
-    books_sort_desc:'Precio: mayor a menor ↓',
-    ai_title:'Corrector de writing',
+    ai_title:'AI Writing Corrector',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
     ai_byo_badge:'usando tu clave',
@@ -5844,7 +5812,7 @@ async function loadDiagnostics(){
       <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${evRows||'<tr><td>No events yet.</td></tr>'}</tbody></table>
       <div style="font-weight:600;color:var(--on-surface)">Top errors</div>
       <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${errs||'<tr><td>No errors ✔</td></tr>'}</tbody></table>
-      <div style="font-weight:600;color:var(--on-surface)">AI: ${ai.requests||0} requests · ${ai.success||0} ok · ${ai.errors||0} errors · ${ai.blocked||0} blocked</div>`;
+      <div style="font-weight:600;color:var(--on-surface)">AI Corrector: ${ai.requests||0} requests · ${ai.success||0} ok · ${ai.errors||0} errors · ${ai.blocked||0} blocked</div>`;
     box.style.display='block';
   }catch(e){box.style.display='none'}
 }
@@ -5908,12 +5876,6 @@ function syncStatus(s){
     el.className=cls;
     el.setAttribute('title',label);
     el.setAttribute('aria-label',label);
-  }
-  const el2=document.getElementById('syncBadgeFoot');
-  if(el2){
-    el2.className=cls;
-    el2.setAttribute('title',label);
-    el2.setAttribute('aria-label',label);
   }
 }
 function syncPush(){
@@ -10400,7 +10362,7 @@ const PARTS=[
  {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
- {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the AI or your teacher'},
+ {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the AI Corrector or your teacher'},
  {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'}
@@ -10595,45 +10557,11 @@ function renderErrPills(){
   }).join('');
 }
 
-/* ---------- BOOKS + MATERIAL ----------
-   BUY_BOOKS: the 25 recommended books (prices verified on the product
-   page; ML and Buscalibre) with live search.
+/* ---------- MATERIAL + ONLINE ----------
+   ONLINE: curated free practice links per skill.
    MATERIAL: catalogue of files served by /libros.json (the server
    scans ~/Descargas/b2-first dynamically). renderMaterial() paints
    PDFs (open/download) and audio (inline player). */
-const BUY_BOOKS=[
- {i:'⭐',n:'Practice Tests Plus B2 First Vol 1 (WITH KEY)',m:'6-8 complete tests with full answer keys and online audio codes. Best overall value for self-study.',p:'$50.485',v:1,u:'https://www.mercadolibre.com.ar/p/MLA22024707?matt_tool=89488245&pdp_filters=item_id:MLA1912011443&origin=share&action=copy',src:'MercadoLibre',use:'Mock Exams · Listening · Writing',c:'Practice Tests'},
- {i:'⭐',n:'FCE 6 With Answers (USED)',m:'4 authentic real Cambridge examination papers with answer keys.',p:'$13.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-6-with-answers--cambridge/up/MLAU3477820563',src:'MercadoLibre',use:'Full Exam Simulations',c:'Practice Tests'},
- {i:'⭐',n:'Grammar & Vocabulary for First (WITH answers + audio)',m:'Grammar + vocabulary foundation for Use of English Parts 1-4. ISBN 9781107481060.',p:'$72.051',v:1,u:'https://www.buscalibre.com.ar/libro-grammar-and-vocabulary-for-first-and-first-for-schools-book-with-answers-and-audio/9781107481060/p/46519442',src:'Buscalibre',use:'UoE Rules & Structures',c:'Grammar'},
- {i:'⭐',n:'FCE Practice Tests 2 (USED, with answers)',m:'5 practice tests for the revised B2 First exam with answers.',p:'$7.390',v:1,u:'https://www.mercadolibre.com.ar/practice-tests-for-cambridge-first-certificate-in-english-2/p/MLA71813973',src:'MercadoLibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'⭐',n:'Complete First For Schools Workbook (USED)',m:'Exercises unit by unit for extra practice.',p:'$6.189',v:1,u:'https://www.mercadolibre.com.ar/complete-first-for-schools-workbook-no-answers-audio-cd-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA23640324',src:'MercadoLibre',use:'R&UoE 1-4 Extra Practice',c:'Workbook'},
- {i:'',n:'Objective First Workbook (USED)',m:'Official workbook from the Objective First series.',p:'$10.000',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-workbook-cambridge/p/MLA73565196',src:'MercadoLibre',use:'Extra Practice',c:'Workbook'},
- {i:'',n:'FCE 3 (USED)',m:'Authentic Cambridge exam papers with answers.',p:'$14.990',v:1,u:'https://www.mercadolibre.com.ar/first-certificate-in-english-3--cambridge/up/MLAU3483859281',src:'MercadoLibre',use:'Mock Exams',c:'Practice Tests'},
- {i:'',n:'Objective First SB (USED)',m:'Comprehensive Cambridge student coursebook.',p:'$19.900',v:1,u:'https://www.mercadolibre.com.ar/objective-first-certificate-students-book--cambridge/up/MLAU3858582818',src:'MercadoLibre',use:'Course + UoE',c:'Coursebook'},
- {i:'',n:'Complete First Certificate SB (USED)',m:'Full coursebook with lessons and practice.',p:'$9.620',v:1,u:'https://www.mercadolibre.com.ar/complete-first-certificate-students-book--cambridge/up/MLAU3471421556',src:'MercadoLibre',use:'Course + UoE',c:'Coursebook'},
- {i:'',n:'Authentic Digital Practice Test B2 First',m:'Official Cambridge ADPT computer-based practice test.',p:'$30.900',v:1,u:'https://www.mercadolibre.com.ar/authentic-digital-practice-test-b2-first--adpt-class-based/up/MLAU4409975382',src:'MercadoLibre',use:'Digital Exam Simulation',c:'Practice Tests'},
- {i:'',n:'English Master B2 Key Word Transformation',m:'200 targeted Key Word Transformation exercises for Part 4.',p:'$39.706',v:1,u:'https://www.mercadolibre.com.ar/english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-de-laura-broadbent-vol-1-editorial-prosperity-education-tapa-blanda-en-ingles/p/MLA40518563',src:'MercadoLibre',use:'UoE Part 4 Mastery',c:'Use of English'},
- {i:'',n:'Cambridge English First 1 SB (NEW)',m:'Authentic exam papers for realistic simulation.',p:'$43.895',v:1,u:'https://www.mercadolibre.com.ar/libro-cambridge-english-first-1-students-book-without-answers-2015-exam-de-vv-aa-editorial-cambridge-university-press-tapa-blanda-en-ingles-internacional-2014/p/MLA22082701',src:'MercadoLibre',use:'Exam Practice',c:'Practice Tests'},
- {i:'',n:'Complete First 3rd Edition Workbook (NEW)',m:'3rd edition workbook with updated exercises.',p:'$44.512',v:1,u:'https://www.mercadolibre.com.ar/complete-first-3ed-workbook-without-answers-with-audio-3rd-edition-de-jacopo-dandria-ursoleo-editorial-cambridge-university-press-tapa-blanda-edicion-1-en-ingles-2021/p/MLA22422898',src:'MercadoLibre',use:'R&UoE + Writing Tasks',c:'Workbook'},
- {i:'',n:'Collins B2 First Practice Tests',m:'Collins practice exam series for B2 First.',p:'$47.428',v:1,u:'https://www.mercadolibre.com.ar/collins-cambridge-english-practice-tests-for-b2-first-fce-de-travis-peter-editorial-harpercollins-tapa-blanda-en-ingles-2015/p/MLA49646743',src:'MercadoLibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'',n:'Grammar & Vocabulary for First (Official Store)',m:'Same edition with answers from official Cambridge distributor.',p:'$95.942',v:1,u:'https://www.mercadolibre.com.ar/grammar-vocabulary-for-first-first-for-schools-wkey-de-thomas-barbara-others-editorial-cambridge-university-press-tapa-blanda-en-ingles-2015/p/MLA24907197',src:'MercadoLibre',use:'UoE Parts 1-4',c:'Grammar'},
- {i:'',n:'Complete First 2nd Edition SB',m:'Previous edition coursebook with full syllabus.',p:'$28.499',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-student-s-book-without-answers-with-cd-rom-second-edition/9781107633902/p/46489982',src:'Buscalibre',use:'Coursebook',c:'Coursebook'},
- {i:'',n:'Cambridge English First 1 without answers',m:'Authentic exam papers for self-evaluation.',p:'$42.097',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-without-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107668577/p/46248424',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'',n:'English Master B2 Key Word Transformation (BC)',m:'200 transformations for Part 4 mastery.',p:'$41.550',v:1,u:'https://www.buscalibre.com.ar/libro-english-master-b2-key-word-transformation-20-practice-tests-for-the-cambridge-first-200-transformations/9783949651775/p/55838619',src:'Buscalibre',use:'UoE Part 4',c:'Use of English'},
- {i:'',n:'Improve Your B2 Use of English',m:'All Use of English formats: MC, Open Cloze, Word Formation, KWT.',p:'$81.599',v:1,u:'https://www.buscalibre.com.ar/libro-improve-your-b2-use-of-english-practice-for-cambridge-first-multiple-choice-open-cloze-word-formation-key-word-transformation/9783949651782/p/55838620',src:'Buscalibre',use:'UoE Parts 1-4',c:'Use of English'},
- {i:'',n:'First Certificate Practice Tests 2 (WITH answers)',m:'5 complete tests with answers.',p:'Out of stock',v:0,u:'https://www.buscalibre.com.ar/libro-first-certificate-practice-tests-2-2-book-with-answers-five-tests-for-the-new-cambridge-first-certificate-in-english/9781900783992/p/46489980',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'',n:'B2 First 4 (without answers)',m:'Authentic Cambridge practice papers.',p:'$52.393',v:1,u:'https://www.buscalibre.com.ar/libro-b2-first-4-student-s-book-without-answers-fce-practice-tests/9781108748100/p/52973959',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'',n:'B2 First Complete Practice PLUS',m:'6 complete examinations covering all 4 papers.',p:'$51.366',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-b2-first-complete-practice-plus-6-full-tests-for-all-papers-listening-reading-use-of-english-writing-speaking/9798248900367/p/66573911',src:'Buscalibre',use:'Practice Tests',c:'Practice Tests'},
- {i:'',n:'Cambridge English First 1 (WITH answers)',m:'Authentic examination papers with complete answers.',p:'$73.191',v:1,u:'https://www.buscalibre.com.ar/libro-cambridge-english-first-1-for-revised-exam-from-2015-student-s-book-with-answers-authentic-examination-papers-from-cambridge-english-language-assessment-fce-practice-tests/9781107695917/p/46248427',src:'Buscalibre',use:'Self-Study Simulations',c:'Practice Tests'},
- {i:'',n:'Complete First 3rd Edition SB',m:'Official student coursebook for comprehensive study.',p:'$93.394',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-student-s-book-without-answers-third-edition-student-s-book-without-answers/9783125354616/p/55792075',src:'Buscalibre',use:'Coursebook',c:'Coursebook'},
- {i:'',n:'Complete First 3rd Edition Self-Study Pack',m:'SB + Workbook with answers + audio CDs (complete package).',p:'$129.611',v:1,u:'https://www.buscalibre.com.ar/libro-complete-first-third-edition-self-study-pack-student-s-book-with-answers-and-workbook-with-answers-with-audio-cds/9783125354654/p/55792076',src:'Buscalibre',use:'Complete Self-Study Course',c:'Coursebook'},
-
-  {i:'🆕',n:'B2 First 5 - Student’s Book + Audio (2023)',m:'Latest in the Cambridge official series (4 complete tests, 2023 format) with audio.',p:'$65.052',u:'https://www.mercadolibre.com.ar/libro-para-estudiantes-de-b2-first-5-sin-respuestas-con-audio-de-cambridge-vol-1-editorial-de-la-universidad-de-cambridge-tapa-blanda-numero-1-en-ingles-2023/p/MLA46064082',src:'MercadoLibre',use:'Full Mocks + Audio',c:'Practice Tests',v:1},
-  {i:'🆕',n:'B2 First Trainer 3 - With Key & Digital Pack (2025)',m:'Latest Cambridge Trainer: 6 tests + part-by-part strategy guides. Includes key.',p:'$103.688',u:'https://www.mercadolibre.com.ar/libro-b2-first-trainer-3-with-key-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2025/p/MLA63963996',src:'MercadoLibre',use:'Mocks + Strategy Tips',c:'Practice Tests',v:1},
-  {i:'🆕',n:'B2 First for Schools Trainer 3 (2024)',m:'For Schools edition of Trainer 3 (2024): 6 official tests with strategy guides.',p:'$53.690',u:'https://www.mercadolibre.com.ar/libro-b2-first-for-schools-trainer-3-with-digital-pack-de-indefinido-vol-1-editorial-cambridge-university-press-tapa-blanda-en-ingles-2024/p/MLA63266580',src:'MercadoLibre',use:'Mocks + Strategy Tips',c:'Practice Tests',v:1},
-  {i:'🆕',n:'Cambridge English First 4 (2020)',m:'Official series of authentic examination papers: 4 real tests.',p:'$58.214',u:'https://www.mercadolibre.com.ar/cambridge-english-first-4-b2-students-without-answers-de-indefinido-vol-1-editorial-cambridge-tapa-blanda-en-ingles-2020/p/MLA39630037',src:'MercadoLibre',use:'4 Real Tests',c:'Practice Tests',v:1},
-  {i:'🆕',n:'Practice Tests B2 First 1 - With Key (Exam Essentials)',m:'National Geographic Learning exam preparation with answers.',p:'$106.883',u:'https://www.mercadolibre.com.ar/practice-tests-b2-first-1-with-key-rev-2020-exam-essent/p/MLA21228349',src:'MercadoLibre',use:'Mocks + Key',c:'Practice Tests',v:1},
-];
 const ONLINE=[
  {g:'🎧 Listening',l:[
   {n:'Cambridge English — Official B2 Listening Activities',u:'https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=independent'},
@@ -10858,7 +10786,6 @@ function renderGuides(){
   set('gSpChips',[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+spPart,'lpSp'+spPart],['Lesson FS P'+spPart,'fSp'+spPart],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']]);
 }
 let MATERIALS=[];
-let BOOK_CAT=''; // active category filter ('' = all)
 /* matDone/matUndo: mark a Material exercise as done (counter of
    times in D.mat[rel]={n,last}). Persists with save() → server. */
 function matCell(m){
@@ -10891,37 +10818,6 @@ function renderMaterial(){
 function fmtSize(n){
   if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return Number(n.toFixed(1)).toLocaleString(currentLocale())+' MB';
 }
-function renderBookCats(){
-  const el=document.getElementById('bookCats');
-  const cats=[...new Set(BUY_BOOKS.map(b=>b.c||'Other'))];
-  el.innerHTML=`<button class="chip ${!BOOK_CAT?'on':''}" onclick="setBookCat('')">All (${BUY_BOOKS.length})</button>`+
-    cats.map(c=>`<button class="chip ${BOOK_CAT===c?'on':''}" onclick="setBookCat('${c}')">${c} (${BUY_BOOKS.filter(b=>(b.c||'Other')===c).length})</button>`).join('');
-}
-function setBookCat(c){BOOK_CAT=c;renderBookCats();renderBooks()}
-function priceNum(p){const m=(p||'').match(/[\d.,]+/);if(!m)return Infinity;return parseFloat(m[0].replace(/\./g,'').replace(',','.'))}
-function renderBooks(){
-  const q=(document.getElementById('bookFilter').value||'').toLowerCase().trim();
-  const s=document.getElementById('bookSort').value;
-  let list=BUY_BOOKS.filter(b=>!q||b.n.toLowerCase().includes(q));
-  if(BOOK_CAT)list=list.filter(b=>(b.c||'Other')===BOOK_CAT);
-  if(s==='asc')list=list.slice().sort((a,b)=>priceNum(a.p)-priceNum(b.p));
-  else if(s==='desc')list=list.slice().sort((a,b)=>priceNum(b.p)-priceNum(a.p));
-  else list=list.slice().sort((a,b)=>(a.c||'Other').localeCompare(b.c||'Other'));
-  const el=document.getElementById('bookList');
-  if(!list.length){el.innerHTML='<div class="empty">No results for "'+esc(q)+'"</div>';return}
-  el.innerHTML=list.map(b=>`<div class="book">
-    <div class="ico">${b.i||'📖'}</div>
-    <div style="flex:1">
-      <b>${b.n}</b>
-      <div class="meta"><span class="pill" style="font-size:12px;padding:1px 8px;background:var(--bg);border:1px solid var(--line);color:var(--acc-text)">${b.c||'Other'}</span> <span style="color:var(--on-surface-variant)">${b.src}</span></div>
-      <div class="meta">${b.m}</div>
-      <div class="meta" style="font-size:12px;color:var(--dim)">use in: ${b.use}</div>
-      <a href="${b.u}" target="_blank">View Offer →</a>
-    </div>
-    <div class="price">${b.v===0?'⚠ ':''}${b.p}</div>
-  </div>`).join('');
-}
-
 /* ---------- CHARTS ----------
    The 4 panels are drawn with pure SVG (zero dependencies) and
    re-render on every refreshAll():
@@ -11279,8 +11175,6 @@ function updatePersonalizedUI(){
   const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
 
   // Dynamic Header
-  const kickerEl=document.getElementById('userKicker');
-  if(kickerEl)kickerEl.textContent=t('today_kicker_fmt',{name:userName.toUpperCase()});
   const titleEl=document.getElementById('userTitle');
   if(titleEl)titleEl.textContent=t('today_title_fmt',{name:userName});
   const subEl=document.getElementById('userSub');
@@ -11681,8 +11575,8 @@ function renderStreak(){
     }
     _prevStreakVal=st.current;
   }
-  const pill=document.getElementById('streakFootPill');
-  if(pill)pill.textContent=`🔥 ${st.current}`;
+  const pill=document.getElementById('streakTopNum');
+  if(pill)pill.textContent=st.current;
 }
 
 /* ---------- QUICK-LOG (3 TAPS) ---------- */
@@ -12376,25 +12270,29 @@ function renderDiag(){
 }
 
 /* ---------- NAV + INIT ----------
-   Views (hoy/exam/partes/prog/graf/plan/err/libros/ia/diag) switch
-   with the .active class on <nav> and <section>.
+   Views (hoy/exam/partes/prog/graf/plan/err/libros/ia) switch
+   with the .active class on <nav> and <section>. The diagnostic has
+   no nav entry; showView('diag') activates its section directly.
    refreshAll() is the central render: every save/change calls it.
    loadMaterial() fetches the file catalogue from the server and on
    failure (e.g. opened as file:// with no server) uses a minimal local
    list. init: wires listeners, applies PLAN timers and refreshes all. */
-(function ensureDiagNav(){
-  const nav=document.getElementById('sideNav')||document.querySelector('nav');
-  if(nav&&!nav.querySelector('button[data-view="diag"]')){
-    const btn=document.createElement('button');
-    btn.setAttribute('data-view','diag');
-    btn.classList.add('extra');
-    btn.innerHTML='<svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-diag"/></svg><span class="nav-label">Diag</span>';
-    nav.insertBefore(btn,document.getElementById('navMoreBtn')||null);
-  }
-})();
 function showView(viewId){
   const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
-  if(btn)btn.click();
+  if(btn){btn.click();return}
+  // Views without a nav entry (the diagnostic) still open when the plan
+  // or the onboarding links to them.
+  const sec=document.getElementById('v-'+viewId)||document.getElementById('view-'+viewId);
+  if(!sec)return;
+  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  sec.classList.add('active');
+  if(viewId==='diag')renderDiag();
+  if(viewId==='practice')renderPractice();
+  const nav=document.getElementById('sideNav');
+  if(nav)nav.classList.remove('more-open');
+  TEV_VIEW=viewId;
+  track('view_change',{view:viewId,ms:0});
 }
 document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   const _tevT0=Date.now();
@@ -12420,7 +12318,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -12435,8 +12333,6 @@ function loadMaterial(){
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
   }).catch(()=>{ /* local file mode: no dynamic material */ });
 }
-document.getElementById('bookFilter').addEventListener('input',renderBooks);
-document.getElementById('bookSort').addEventListener('change',renderBooks);
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
 document.getElementById('uePart').addEventListener('change',renderGuides);
 document.getElementById('spPart').addEventListener('change',renderGuides);
@@ -12499,7 +12395,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
   if(passkeyBtn&&!window.PublicKeyCredential)passkeyBtn.style.display='none';
   const altSep=document.getElementById('authAltSep');
-  if(altSep&&!(DEMO&&DEMO.google)&&!window.PublicKeyCredential)altSep.style.display='none';
+  if(altSep&&!(DEMO&&DEMO.google))altSep.style.display='none';
   track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
   if(DEMO&&DEMO.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
@@ -12516,11 +12412,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     hideOnboarding();
     const db=document.getElementById('demoBanner');
     if(db)db.style.display='block';
-    const sf=document.getElementById('syncBadgeFoot');
-    if(sf)sf.style.display='none';
-    const ssep=document.getElementById('syncFootSep');
-    if(ssep)ssep.style.display='none';
-    const sb=document.querySelector('.sync-status');
+    const sb=document.getElementById('syncBadge');
     if(sb)sb.style.display='none';
     const sideFoot=document.querySelector('.side-foot');
     if(sideFoot)sideFoot.style.display='none';
