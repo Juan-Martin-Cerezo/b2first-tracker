@@ -39,15 +39,14 @@ with sync_playwright() as p:
             "e2": {"r": 80, "rm": 50, "w": 16, "l": 26, "ln": 4}
         }
     }
+    # Boot the app as Maria instead of poking its internals: the Today view now
+    # rebuilds its own header, so a manual render left the page half-drawn.
     pg.evaluate("""([u, d]) => {
         localStorage.setItem('b2first_user', JSON.stringify(u));
         localStorage.setItem('b2first_tracker_v1_' + u.id, JSON.stringify(d));
-        USER = u;
-        D = d;
-        renderUserChip();
-        renderToday();
-        renderPlan();
     }""", [maria_user, maria_data])
+    pg.reload(wait_until="networkidle")
+    pg.wait_for_timeout(900)
     pg.wait_for_timeout(300)
 
     out["maria_title"] = pg.text_content("#userTitle")

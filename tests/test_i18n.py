@@ -11,7 +11,7 @@ import urllib.request
 
 from playwright.sync_api import sync_playwright
 
-from helpers import isolated_server
+from helpers import isolated_server, dismiss_onboarding
 from helpers import OWNER_NAME as TEST_USER, OWNER_PASS as TEST_PASS
 
 URL = isolated_server() + "/"
@@ -22,7 +22,7 @@ PASS = "i18n-suite-pass-9"
 # onboarding, not as a section); Practice replaced it in the main navigation.
 NAV_KEYS = [
     "nav_today", "nav_practice", "nav_exam", "nav_parts", "nav_progress",
-    "nav_plan", "nav_charts", "nav_errors", "nav_books", "nav_ai", "nav_more",
+    "nav_plan", "nav_charts", "nav_errors", "nav_ai", "nav_more",
 ]
 
 
@@ -114,6 +114,7 @@ with sync_playwright() as p:
     pg.evaluate("localStorage.setItem('b2first_user', %s)" % json.dumps(json.dumps(user)))
     pg.reload(wait_until="networkidle")
     settle(pg)
+    dismiss_onboarding(pg)
 
     # 1. A fresh account is English.
     assert pg.evaluate("document.documentElement.lang") == "en", "fresh <html lang> is not en"

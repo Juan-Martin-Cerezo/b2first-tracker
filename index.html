@@ -3442,6 +3442,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <span class="tnum"><span data-i18n="ai_words">Words:</span> <b id="iaWordCount">0</b> <span class="muted" data-i18n="ai_target_short">(target 140–190)</span></span>
                 <span id="iaWordStatus" class="tnum" style="font-weight:600">Target: 140–190 words</span>
               </div>
+              <details class="ia-task" style="margin-top:10px">
+                <summary data-i18n="ai_task_toggle">Paste the exam task (optional, but it grades more accurately)</summary>
+                <textarea id="iaPrompt" rows="3" maxlength="800" style="margin-top:8px"
+                  placeholder="e.g. Your teacher has asked you to write an essay on whether technology has made us less social..."
+                  data-i18n-placeholder="ai_task_ph"></textarea>
+                <p class="muted" style="font-size:var(--fs-xs);margin:6px 0 0" data-i18n="ai_task_help">With the task the corrector also checks that you covered every content point and kept the right register.</p>
+              </details>
             </div>
 
             <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -4069,6 +4076,11 @@ const I18N={
     ai_err_words:'The text must be between 40 and 700 words.',
     ai_err_not_task:'That does not look like a B2 First writing task. Paste the task and your text.',
     ai_err_network:'Could not reach the corrector. Check your connection and try again.',
+    ai_err_generic:'The corrector could not finish this time. Your text is safe — press Check again.',
+    ai_retrying:'Taking longer than usual, trying again…',
+    ai_task_toggle:'Paste the exam task (optional, but it grades more accurately)',
+    ai_task_ph:'e.g. Your teacher has asked you to write an essay on whether technology has made us less social...',
+    ai_task_help:'With the task the corrector also checks that you covered every content point and kept the right register.',
     diag_title:'Initial diagnostic',
     diag_sub:'10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.',
     diag_total_time:'Total time',
@@ -4747,6 +4759,11 @@ const I18N={
     ai_err_words:'El texto debe tener entre 40 y 700 palabras.',
     ai_err_not_task:'Eso no parece una consigna de writing del B2 First. Pegá la consigna y tu texto.',
     ai_err_network:'No se pudo contactar al corrector. Revisá tu conexión e intentá de nuevo.',
+    ai_err_generic:'El corrector no pudo terminar esta vez. Tu texto está a salvo: tocá Comprobar de nuevo.',
+    ai_retrying:'Está tardando más de lo normal, reintentando…',
+    ai_task_toggle:'Pegá la consigna del examen (opcional, pero corrige con más precisión)',
+    ai_task_ph:'ej. Tu profesor te pidió un essay sobre si la tecnología nos volvió menos sociales...',
+    ai_task_help:'Con la consigna, el corrector también revisa que hayas cubierto todos los puntos y mantenido el registro.',
     diag_title:'Diagnóstico inicial',
     diag_sub:'10 min · 12 preguntas de nivel B2 (partes 1 a 7). No se muestra retroalimentación durante la prueba.',
     diag_total_time:'Tiempo total',
@@ -12435,18 +12452,40 @@ async function submitIaWriting(){
   setIaState('loading');
   track('ai_request',{kind});
   const aiT0=Date.now();
-  const ctrl=new AbortController();
-  const timer=setTimeout(()=>ctrl.abort(),28000);
+  /* A correction never dead-ends in "server error": transient failures are
+     retried twice with a short pause before the student sees anything. */
+  let r=null,data=null,lastErr='';
+  for(let attempt=0;attempt<3;attempt++){
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),28000);
+    data=null;
+    try{
+      r=await fetch('/api/ai/writing',{
+        method:'POST',
+        headers:Object.assign({},authHeaders(),byoHeaders()),
+        body:JSON.stringify({text,task:kind.toLowerCase(),kind,
+          prompt:(document.getElementById('iaPrompt')||{}).value||''}),
+        signal:ctrl.signal
+      });
+      clearTimeout(timer);
+      try{data=await r.json();}catch(e){}
+    }catch(err){
+      clearTimeout(timer);
+      r=null;lastErr=String(err&&err.name||'network');
+    }
+    const transient=!r||r.status>=500||r.status===408;
+    const plan=(data&&isPlanLimit(data))||(r&&r.status===429&&!isPlanLimit(data));
+    if(!transient||plan||attempt===2)break;
+    if(typeof setIaState==='function')setIaState('loading',t('ai_retrying')||'Taking longer than usual, trying again…');
+    track('ai_retry',{attempt:attempt+1,code:(r&&r.status)||0});
+    await new Promise(function(res){setTimeout(res,900*(attempt+1))});
+  }
   try{
-    const r=await fetch('/api/ai/writing',{
-      method:'POST',
-      headers:Object.assign({},authHeaders(),byoHeaders()),
-      body:JSON.stringify({text,task:kind.toLowerCase(),kind}),
-      signal:ctrl.signal
-    });
-    clearTimeout(timer);
-    let data=null;
-    try{data=await r.json();}catch(e){}
+    if(!r){
+      track('ai_error',{code:0,reason:lastErr||'network'});
+      setIaState('error',t('ai_err_network'));
+      return;
+    }
     if(r.ok&&data&&data.refused){
       track('ai_blocked',{code:422});
       setIaState('error',t('ai_err_not_task'));
@@ -12460,7 +12499,7 @@ async function submitIaWriting(){
         setIaState('error',t('license_limit_short'));
         return;
       }
-      const msg=(data&&data.error)?`Error (${r.status}): ${data.error}`:`Server error (${r.status})`;
+      const msg=data&&data.error?`${data.error}`:t('ai_err_generic');
       if(r.status===429)track('ai_blocked',{code:429});
       else track('ai_error',{code:r.status||0});
       setIaState('error',msg);

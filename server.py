@@ -5681,7 +5681,16 @@ class H(BaseHTTPRequestHandler):
                     return
             # Fresh nonce per request: the fence cannot be predicted or
             # pre-closed by a text prepared in advance.
-            student_block, _nonce = prompts.student_message(_fit_ai_text(clean_text), kind)
+            # Optional: the exam task the student was answering. Without it the
+            # model can only judge the language, never whether the answer does
+            # what the task asked for.
+            task_prompt = req.get("prompt")
+            if isinstance(task_prompt, str):
+                task_prompt = " ".join(task_prompt.split())[:800]
+            else:
+                task_prompt = ""
+            student_block, _nonce = prompts.student_message(
+                _fit_ai_text(clean_text), kind, task_prompt=task_prompt or None)
             if wire == "gemini":
                 payload = {
                     "contents": [{"parts": [{"text": f"{prompts.WRITING_SYSTEM}\n\n{student_block}"}]}],
@@ -5697,7 +5706,17 @@ class H(BaseHTTPRequestHandler):
                     "response_format": {"type": "json_object"},
                     "temperature": 0.2,
                 }
-            up_json, up_err = _provider_complete(base, api_key, model, payload, wire=wire)
+            # A correction that ends in "server error" is the worst outcome for a
+            # student mid-essay. Transient upstream failures get three attempts
+            # with a short backoff before anything is shown to the user.
+            up_json, up_err = None, None
+            for _attempt in range(3):
+                up_json, up_err = _provider_complete(base, api_key, model, payload, wire=wire)
+                if not up_err:
+                    break
+                if _attempt == 2 or "key" in str(up_err).lower():
+                    break
+                time.sleep(0.8 * (2 ** _attempt))
             if up_err:
                 self._send_json(502, {"error": "upstream provider failed"})
                 return

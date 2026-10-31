@@ -254,7 +254,7 @@ def main():
         # 8. Barge-in: local speech during the examiner's turn empties the queue.
         assert wait_until(pg, "SPK.turns.length >= 1 && SPK.speaking === true", 10), \
             "the examiner never started speaking"
-        pg.evaluate("SPK.simulateUserSpeech(1500)")   # barge-in now needs 1.2 s of speech
+        pg.evaluate("SPK.simulateUserSpeech(2400)")   # barge-in needs 1.8 s of speech
         assert wait_until(pg, "SPK.turns.some(t => t.interrupted === true)", 10), \
             "barge-in did not mark the turn"
         assert wait_until(pg, "SPK.queueEmpty() === true", 5), \
