@@ -7255,9 +7255,15 @@ function makeLiveTransport(cfg){
           // sits silent until the candidate talks, which reads as "the examiner
           // does not start". One bracketed client turn kicks it off. Brackets are
           // there so the transcript is obvious about who said it.
-          send({clientContent:{
-            turns:[{role:'user',parts:[{text:'[(Examiner: begin the exam now — greet the candidate and ask your first question.)]'}]}],
-            turnComplete:true}});
+          // Only the examiner is kicked off here. The partner has no greeting of
+          // its own: its scripted lines are spoken by spxSay(), and an
+          // unsolicited model greeting would talk over the examiner now that the
+          // partner voice is no longer hard-muted.
+          if(role==='examiner'){
+            send({clientContent:{
+              turns:[{role:'user',parts:[{text:'[(Examiner: begin the exam now — greet the candidate and ask your first question.)]'}]}],
+              turnComplete:true}});
+          }
           if(on.ready)on.ready();
           return;
         }
@@ -7478,12 +7484,24 @@ const SPK_BROWSER_PREFS=[
   'Microsoft Sonia Online (Natural) - English (United Kingdom)',
   'Libby','Sonia','Daniel','Serena','Kate'
 ];
+/* The partner has to sound like a second person, not like the examiner. In
+   natural mode the server already picks a different Gemini voice for each role
+   (Kore for the partner, Puck for the examiner); these lists cover the fast
+   mode device voice. The picker below refuses the examiner's own voice name,
+   so a two-voice device always gives two distinguishable speakers. A one-voice
+   device falls back to the same voice at a lower pitch (see spkSpeakText). */
+const SPK_BROWSER_PARTNER_PREFS=[
+  'Google UK English Male','Daniel',
+  'Microsoft Ryan Online (Natural) - English (United Kingdom)',
+  'Microsoft George Online (Natural) - English (United Kingdom)',
+  'Ryan','George','Alex','Arthur','Google US English'
+];
 let SPK_BROWSER_VOICE=null,SPK_BROWSER_VOICE_NAME='',SPK_BROWSER_LOGGED=false;
+let SPK_BROWSER_PARTNER_VOICE=null,SPK_BROWSER_PARTNER_NAME='';
 let SPK_UTTERANCE=null;
-function spkBrowserVoice(){
+function spkBrowserVoicePool(){
   const ss=spkBrowserSpeech();
   if(!ss||typeof ss.getVoices!=='function')return null;
-  if(SPK_BROWSER_VOICE)return SPK_BROWSER_VOICE;
   const voices=ss.getVoices()||[];
   if(!voices.length)return null;      /* some browsers fill this asynchronously */
   const gb=[],en=[];
@@ -7492,21 +7510,50 @@ function spkBrowserVoice(){
     if(/^en[-_]GB/i.test(lang))gb.push(v);
     else if(/^en/i.test(lang))en.push(v);
   });
-  const pool=gb.length?gb:en;
+  return gb.length?gb:en;
+}
+function spkPickBrowserVoice(pool,prefs,avoid){
   let pick=null;
-  for(let i=0;i<SPK_BROWSER_PREFS.length&&!pick;i++){
-    const want=SPK_BROWSER_PREFS[i].toLowerCase();
+  for(let i=0;i<prefs.length&&!pick;i++){
+    const want=prefs[i].toLowerCase();
     pick=pool.find(function(v){
-      return String((v&&v.name)||'').toLowerCase().indexOf(want)>=0;
+      const name=String((v&&v.name)||'').toLowerCase();
+      return name.indexOf(want)>=0&&name!==avoid;
+    })||null;
+  }
+  if(!pick&&avoid){
+    pick=pool.find(function(v){
+      return String((v&&v.name)||'').toLowerCase()!==avoid;
     })||null;
   }
   if(!pick)pick=pool.find(function(v){return v&&v.default})||pool[0]||null;
+  return pick;
+}
+function spkLogBrowserVoice(who,name){
+  if(SPK_BROWSER_LOGGED)return;
+  SPK_BROWSER_LOGGED=true;
+  try{console.info('[speaking] '+who+' device voice: '+name)}catch(e){}
+}
+function spkBrowserVoice(who){
+  who=who||'examiner';
+  const pool=spkBrowserVoicePool();
+  if(!pool)return null;
+  if(who==='partner'){
+    if(SPK_BROWSER_PARTNER_VOICE)return SPK_BROWSER_PARTNER_VOICE;
+    /* Pick the examiner first so the partner can be a different name. */
+    const ex=spkBrowserVoice('examiner');
+    const avoid=String((ex&&ex.name)||'').toLowerCase();
+    const pick=spkPickBrowserVoice(pool,SPK_BROWSER_PARTNER_PREFS,avoid);
+    SPK_BROWSER_PARTNER_VOICE=pick||null;
+    SPK_BROWSER_PARTNER_NAME=pick?String(pick.name||'default'):'device default';
+    spkLogBrowserVoice('partner',SPK_BROWSER_PARTNER_NAME);
+    return SPK_BROWSER_PARTNER_VOICE;
+  }
+  if(SPK_BROWSER_VOICE)return SPK_BROWSER_VOICE;
+  const pick=spkPickBrowserVoice(pool,SPK_BROWSER_PREFS,'');
   SPK_BROWSER_VOICE=pick||null;
   SPK_BROWSER_VOICE_NAME=pick?String(pick.name||'default'):'device default';
-  if(!SPK_BROWSER_LOGGED){
-    SPK_BROWSER_LOGGED=true;
-    try{console.info('[speaking] device voice: '+SPK_BROWSER_VOICE_NAME)}catch(e){}
-  }
+  spkLogBrowserVoice('examiner',SPK_BROWSER_VOICE_NAME);
   return SPK_BROWSER_VOICE;
 }
 function spkBrowserBusy(who){
@@ -7540,9 +7587,14 @@ function spkSpeakText(who,text){
   try{u=new SpeechSynthesisUtterance(text)}catch(e){return false}
   u.lang='en-GB';
   u.rate=0.95;
-  const voice=spkBrowserVoice();
+  const voice=spkBrowserVoice(who);
   /* A device can list a voice it refuses to accept; the default still speaks. */
   if(voice){try{u.voice=voice}catch(e){}}
+  /* One en voice on the whole device: the partner keeps the same voice but a
+     lower pitch, so the candidate can still tell the two speakers apart. */
+  if(who==='partner'&&SPK_BROWSER_PARTNER_NAME===SPK_BROWSER_VOICE_NAME){
+    try{u.pitch=0.85}catch(e){}
+  }
   v.browserBusy=true;
   v.since=performance.now();
   SPK_UTTERANCE=u;
@@ -8095,16 +8147,22 @@ function spkRenderVoices(out){
 }
 
 /* Exam mode: the clock (SP_EXAM) owns whose turn it is, so the director keeps
-   measuring overlap and barge-in but the mute policy comes from the phase. The
-   partner is live only on its own turn — that is also the cost control. */
+   measuring overlap and barge-in but the mute policy comes from the phase.
+   The partner is NOT hard-muted by the phase. Its scripted lines can arrive
+   while the phase belongs to the candidate (Part 3 discussion) or during the
+   examiner's hand-off, and muting by `partnerTurn` dropped every one of them
+   before they reached TTS. Only an absent or dead voice is muted; when both
+   voices overlap, spkApplyDirector's SPK_DUCK_GAIN lowers the one that was not
+   addressed instead of silencing it. */
 function spkExamDirectorOut(out){
   if(!out)return;
   out.examiner.live=true;
   out.examiner.muted=!!SPK.barged;
   const ph=(window.SP_EXAM&&window.SP_EXAM.phases)?window.SP_EXAM.phases[window.SP_EXAM.phase]:null;
   const partnerTurn=!!ph&&ph.who==='partner';
+  const paV=SPK.voices.partner;
   out.partner.live=true;
-  out.partner.muted=!partnerTurn||!SPK.voices.partner;
+  out.partner.muted=!paV||!!paV.offline;
   out.addressed=partnerTurn?'partner':'candidate';
 }
 
@@ -9036,6 +9094,13 @@ function spxPhases(){
     return {at:Math.round(4+i*36),who:'examiner',text:q,qi:i,
       answer:answers[i%answers.length]};
   });
+  /* The backend never sends partner lines in live mode, so Part 4 would leave
+     the candidate answering alone. These turns are client-side scripted lines
+     spoken by spxSay('partner'), using Part 3's discussion prompts. */
+  [[22,0],[58,1],[130,3]].forEach(function(slot){
+    const line=SPK_SIM_PARTNER_SCRIPT[slot[1]];
+    if(line&&line.q)events.push({at:slot[0],who:'partner',text:line.q});
+  });
   return [
     {key:'spx_listen',who:'examiner',sec:14,untilQuiet:true,
      line:'Now we are going to talk about the task you have just done.'},
@@ -9047,13 +9112,14 @@ function spxPhases(){
 /* The examiner's stage lines for this part, exactly as the director will say
    them. Sent once when the brief opens so the server can cache their TTS and
    the opening question plays immediately. */
-function spxWarmLines(){
+function spxWarmLines(who){
+  who=who||'examiner';
   const lines=[];
   try{
     spxPhases().forEach(function(ph){
-      if(ph.who==='examiner'&&ph.line)lines.push(ph.line);
+      if((ph.who||'examiner')===who&&ph.line)lines.push(ph.line);
       (ph.events||[]).forEach(function(ev){
-        if(ev.who==='examiner'&&ev.text)lines.push(ev.text);
+        if((ev.who||'examiner')===who&&ev.text)lines.push(ev.text);
       });
     });
   }catch(e){}
@@ -9063,10 +9129,16 @@ function spkWarmPart(){
   if(spkSimMode())return;
   /* Fast mode has nothing to pre-generate: the device voice needs no audio. */
   if(spkTtsMode()==='none')return;
-  fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
-    body:JSON.stringify({warm:true,part:SP_EXAM.part,role:'examiner',
-      task:SP_EXAM.task||{},lines:spxWarmLines(),session_id:spkTurnSessionId()})})
-    .catch(function(){});
+  /* Both voices are warmed: the partner's scripted lines are client-side, so
+     without this its first turn pays the full TTS round trip. */
+  ['examiner','partner'].forEach(function(who){
+    const lines=spxWarmLines(who);
+    if(!lines.length)return;
+    fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({warm:true,part:SP_EXAM.part,role:who,
+        task:SP_EXAM.task||{},lines:lines,session_id:spkTurnSessionId()})})
+      .catch(function(){});
+  });
 }
 
 function spxQueueQuiet(){
@@ -9095,6 +9167,38 @@ function spxSpeechMs(text){
   const words=String(text||'').split(/\s+/).filter(Boolean).length;
   return Math.min(24000,Math.max(1200,Math.round(words*380)));
 }
+/* The Live partner socket is not a script reader: sending it controller text
+   makes it improvise, and in the exam it may never answer at all (the backend
+   has no partner script). This helper uses the same TTS-only call the examiner
+   uses in turn mode, with role "partner" — the server answers in the partner
+   voice (Kore) — and falls back to the device voice, which spkSpeakText now
+   renders in a different voice than the examiner. */
+function spxPartnerTts(text){
+  if(typeof text!=='string'||!text.trim())return;
+  /* Show the line now: this path never waits for a model transcript. */
+  spkAddLine('out',text,'partner');
+  const body={say:text,role:'partner',part:SP_EXAM.part||SPK.part||1,tts:'gemini'};
+  try{body.session_id=spkTurnSessionId()}catch(e){}
+  fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
+    body:JSON.stringify(body)})
+    .then(function(r){
+      if(!r.ok)throw new Error('partner tts '+r.status);
+      return r.json();
+    })
+    .then(function(j){
+      if(j&&j.audio_b64){
+        return spkPlayWav(j.audio_b64,'partner').then(function(played){
+          /* The WAV could not reach the queue (dead voice): still say it. */
+          if(!played)spkSpeakText('partner',text);
+          return played;
+        });
+      }
+      /* TTS refused: the device voice still says the line. */
+      spkSpeakText('partner',text);
+      return false;
+    })
+    .catch(function(){spkSpeakText('partner',text)});
+}
 function spxSay(who,text,ms){
   const v=SPK.voices&&SPK.voices[who];
   if(!v||!v.transport||v.offline||typeof text!=='string'||!text)return;
@@ -9102,10 +9206,13 @@ function spxSay(who,text,ms){
   /* Sim and turn-based both have say(): the line is spoken as written (turn
      mode asks the server for TTS only, no model call). */
   if(v.transport.say){v.transport.say(text,duration);return}
-  /* Live: the model owns the words, the controller owns the stage. */
-  if(v.transport.sendText){
+  /* Live examiner: the model owns the words, the controller owns the stage. */
+  if(who!=='partner'&&v.transport.sendText){
     v.transport.sendText('EXAM CONTROLLER: say exactly this and nothing else: "'+text+'"');
+    return;
   }
+  /* Live partner: never leave the line as text. Speak it on the partner voice. */
+  if(who==='partner')spxPartnerTts(text);
 }
 function spxHear(text){
   const v=SPK.voices&&SPK.voices.examiner;
