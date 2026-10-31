@@ -169,7 +169,393 @@
       "source_page": 45,
       "retrieved": "2026-10-31",
       "note": "Handbook, paper-based sample test, Question 1, Candidate C (source PDF page 47)."
+    },
+    {
+      "task_type": "article",
+      "prompt": "Part 2 - article. You see this notice in your school magazine..\n\nArticles wanted\nHow to have fun without spending too much money\n\nLife can be expensive – especially for teenagers!\nTell us how you and your friends have fun without spending a lot of money.\nThe best article will be published in next month's magazine.\n\nWrite your article",
+      "answer": "By watch a nature and birds are the best to take pleasure there is different feeling\nto have fun in nature. Nature make us happy and relive stressful. I think to Have fun\nit would be bether to stay with nature because al it is the best place to have fun.\nSo, It would be better to have fun in Nature with friends.\n\nW We went this last Saturday to Chiseni for traking and which we was climbing that\nwe saw many trees and fruits we also saw water fall and river we play there and by\non the grass on the top mid top of at hill there was picnic spot where many people\nwas doing picnic there. Wheld we also joint them as they invited to join them we had\na lot of fun there by dancing sing and By having delicious food so, I think I suggest\nyou to go such place where we can have a lot of fun and less money can be spend.",
+      "word_count": 169,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 2,
+        "language": 2,
+        "overall": 3.25,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant to the task.\nThe target reader is fully informed. The text describes how the writer and his/her friends have fun without spending a lot of money: to Have fun it would be bether to stay with nature; we had a lot of fun there by dancing … ; less money can be spend.\n\nCommunicative Achievement 4\nConventions of an article, such as using a personal narrative to illustrate a point and making a suggestion to the reader are used. The target reader's attention is held more effectively in the second part of the text, due to a lack of cohesion in the first paragraph. Straightforward ideas are communicated: We went last Saturday to Chiseni; I suggest you to go such place.\n\nOrganisation 2\nThe text has an overall organisation, with a progression of ideas, although cohesion within paragraphs is not always successful. There is a variety of linking words and cohesive devices: because it is the best place; we also joint them; we play there; picnic spot where many people; as they invited; so, I suggest you.\n\nLanguage 2\nThere is some overuse of certain lexis in the first paragraph, but then there is some range of everyday vocabulary appropriate to the topic: take pleasure; relive stress; climbing; water fall; picnic spot; delicious food.\nSimple grammatical forms are used with a good degree of control: Nature make us happy; to Have fun it would be bether to stay with nature; they invited to join them; we had a lot of fun there by dancing; less money can be spend.\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/600975-teacher-guide-for-writing-b2-first-for-schools.pdf",
+      "source_page": 42,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools teacher guide, Sample answer 5. The teacher guide heads this sample 'Task: Part 2 - review', but the printed task, the answer and the examiner comments (Conventions of an article') are all for an ARTICLE. The Assessing Writing guide (290476-assessing-writing-performance-at-level-b2.pdf, page 21) labels the same sample correctly as an article. Recorded here as an article."
+    },
+    {
+      "task_type": "article",
+      "prompt": null,
+      "answer": "The most useful thing I have ever learned\n\nThe most useful thing i have learned is surely speaking English. I've been studing English for nine years till now. I used to take regular classes in these language which i found very interesting. Also, i learn English in school, my teacher is awesome but strict, so i have to study constantly. But most of all, i learn English, watching movies, TV shows. Allso cartoons when i was younger. When i came across a movie which was subtitled i turned the subtitle off. I enjoy wathing TV and movies on English.\n\nEnglish is the most spoken language across the world. It is studied all over the world. In order to get in a conversation with a stranger from other country, you need to speak English. I'm a swimmer, so i go on competissions in many countries, and in all of those countries i speak English. I want to study abroad when i finish highschool, so i'll defenetly need English.\n\nAll in all, i enjoy speaking it, writing it, and I'm very glad I got to learn it, i find it very useful.",
+      "word_count": 190,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 3,
+        "overall": 3.5,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant and the target reader is fully informed.\nThe article describes the most useful thing which the writer has learned: speaking English, and explains why it is useful (English is the most spoken language across the world; i go on competissions in many countries … in all of those countries i speak English).\nThe second aspect of the task is discussed in detail and various methods of learning are described (I used to take regular classes; i learn English in school; watching movies, TV shows. Allso cartoons).\n\nCommunicative Achievement 3\nThe conventions of writing an article are used appropriately to hold the reader's attention. The tone is friendly and informative and the topic is clearly introduced and developed through the paragraphs. The subject is appropriate for the English website and straightforward ideas are communicated. The conclusion summarises the candidate's opinions and rounds off the article, re-stating the main points of the question (All in all … I'm very glad I got to learn it, i find it very useful).\n\nOrganisation 3\nThe text is generally well organised and coherent. There is a clear structure to the whole text, an introduction of the topic, paragraphs dealing with different aspects, and a neat conclusion.\nThere are a variety of linking words and cohesive devices used to connect ideas across sentences and paragraphs (which i found; Also; so; But most of all; It is studied; In order to; those countries; All in all).\n\nLanguage 3\nA range of everyday vocabulary is used appropriately and some attempts are made to use less common lexis (awesome but strict; study constantly; came across; subtitle).\nThe writer uses both simple and some more complex grammatical forms with a good degree of control.\nThere are some slips with plural/singular pronouns (these language) and some prepositions (on English; other country), as well as a few errors with spelling (studing; Allso; wathing; competissions) but these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167791-b2-first-handbook.pdf",
+      "source_page": 40,
+      "retrieved": "2026-10-31",
+      "note": "Handbook, digital sample test, Question 3, Candidate E. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null rather than reconstructed."
+    },
+    {
+      "task_type": "article",
+      "prompt": "Part 2 - article. You see this announcement on an English-language website:\n\nArticles wanted\nMUSIC AND ME\n\nWhen do you listen to music?\nHow do you choose what to listen to at different times?\n\nWrite us an article answering these questions.\nThe best articles will be posted on our website.\n\nWrite your article.",
+      "answer": "I always listen to music, wherever I go I have my headphones on my ears. Listening to what I like satisfy's me and makes me calm all the time. When the bus is taking me to school I listen to the music so I could wake up.\n\nI love to listen to classical music, jazz, rock, hip-hop, dubstep, pop music. But I can't listen to Serbian folk, any rap, techno or K-pop music. It just anoy's me. Of all the songs I can listen, I adore pop and dubstep the most. I'm glad that my parents listened to rock and ninetees serbian songs which I like to listen sometimes.\n\nEverybody has his own taste for music, somebody likes rock, somebody likes rap or something else, and that's ok. I'm proud of myself that I'm listening to what I'm listening.",
+      "word_count": 139,
+      "score": {
+        "content": 4,
+        "communicative_achievement": 3,
+        "organisation": 2,
+        "language": 2,
+        "overall": 2.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 2",
+        "derived": true
+      },
+      "examiner_comment": "Content 4\nAll content is relevant. The article discusses music, describes when the writer listens to music, and explains personal musical preferences.\nHowever, the second question is not fully addressed. We learn about the music the writer likes but not about how certain music is chosen at different times. The writer does mention When the bus is taking me to school I listen to the music so I could wake up but doesn't say what sort of music it is.\nThis second point is not fully developed but the target reader is on the whole informed about this aspect.\n\nCommunicative Achievement 3\nThe article generally follows the conventions of the task. The subject is personal to the writer and relevant examples are given from personal experience. The article is written in a tone that is appropriate for a general audience and holds the reader's attention.\nStraightforward ideas are communicated (I love to listen to; I can't listen to; Everybody has his own taste for music) despite the relatively simple language used.\n\nOrganisation 2\nThe article is generally well organised and coherent at sentence level. The text is separated into paragraphs and basic linking words are used to connect the ideas within sentences (and; When; But; it) but there are fewer cohesive devices used to connect ideas across the whole text.\nWhen presenting musical preferences, the information is presented in a list format, rather than comparing or contrasting different styles, with cohesive devices to show the relationship between the writer and the music described.\n\nLanguage 2\nEveryday vocabulary is used appropriately and there is a range of vocabulary connected with musical styles (classical; jazz; rock; hip-hop; dubstep; pop; Serbian folk; rap; techno; K-pop).\nSimple grammatical forms are used with a good degree of control, but there is a lack of range with the present tense being most frequently used.\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167791-b2-first-handbook.pdf",
+      "source_page": 47,
+      "retrieved": "2026-10-31",
+      "note": "Handbook, paper-based sample test, Question 3, Candidate E (source PDF page 49)."
+    },
+    {
+      "task_type": "article",
+      "prompt": "Part 2 - article. You see this notice in an international English-language magazine for teenagers.\n\nArticles wanted\nWe're looking for articles about unusual objects.\nHave you, or a member of your family, ever owned an unusual object? Tell us about it – describe the object and explain why it's so unusual.\nThe best articles will be published in our next issue.\n\nWrite your article.",
+      "answer": "The perfect seat, or not.\n\nHave you ever gone to Australia? Well, my brother had. And he bought there a totally unusual object: an special chair which has a variety of facilities to enjoy.\n\nThis product is as big as a common chair, but with lots of other characteristics. It contains many boxes, places for food and drinks, a radio and a little tv too! All these make this special chair a complete unusual object. Sitting on it you feel like a kind or a queen. It is really comfortable and not as expensive as I thought it was.\n\nThe chair seamed to be perfect, but it was not. One day, an uncle of my brother and I came to our house and he sitted on it without taking much care. It was the ending of the product. It came into pieces. Apparently, the chair was not strong enough to support my uncle weight.\n\nIn our country this is an unusual object, but if you go to Australia you will find it everywhere. I recommend you to buy it, but try not to allow everybody to sit on it. The chair will not survive.",
+      "word_count": 194,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 3,
+        "organisation": 5,
+        "language": 2,
+        "overall": 3.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll the content is relevant and the target reader is fully informed.\nThe candidate writes about an object and explains what is unusual about it.\nThe chair and its features are described and there is a narrative which describes the history of the chair, explaining how the chair arrived in the family and what happened to it in the end. The reader learns about the importance of the chair to the family.\n\nCommunicative Achievement 3\nThe style is appropriate for an article. The register is neutral to informal and the details are discussed from a personal perspective. There are direct questions which immediately engage the reader (Have you ever gone to Australia? Well …) and at the end, there is some advice for others thinking of buying a similar object (I recommend you to buy it, but try not to allow everybody to sit on it).\nThe target reader's attention is held and straightforward ideas are communicated.\n\nOrganisation 5\nThe article is well organised and uses a range of cohesive devices and organisational features to generally good effect. There is a range of sentence structures used to good effect (The chair seamed to be perfect, but it was not) and the article is organised around a narrative which provides an overall structure to the text.\nThere is good use of pronouns, substitution and ellipsis which help to avoid repetition of the main subject (an special chair; This product; It; this special chair; All these; Sitting on it) and these provide good examples of internal cohesion.\n\nLanguage 2\nA range of everyday vocabulary is used appropriately and some collocations are effectively employed (other characteristics; not as expensive as; seamed to be perfect; not strong enough to support). There is some awkwardness and errors occur at times (variety of facilities to enjoy; complete unusual object; came into pieces).\nSimple grammatical forms are used with a good degree of control. There are few examples of more complex language as the article is mainly written in the present tense and simple past.\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 46,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, paper-based sample test, Question 2, Candidate C (source PDF page 46)."
+    },
+    {
+      "task_type": "email/letter",
+      "prompt": "Part 2 - email. You have just received an email from your English-speaking friend, Jo.\n\nFrom: Jo\nHi,\nYou know I've joined my local swimming team – well, I love it! We train every Tuesday and Thursday after school. Now my parents want me to go to an extra maths class on Tuesdays, so I won't be able to swim then.\nHow do you think I can persuade them to change their minds?\nWrite soon,\nJo\n\nWrite your email.",
+      "answer": "Hi Jo,\n\nIt is good to receive news from you! I bet you are swimming like a fish. Do you remember when we were kids and we made a few races in Angelina's pool?\n\nI understand why you are trying to persuade them but remember that they want your best. If I were you firstly I would try to talk with your swimming coach and ask him about the possibilities of training another day. Then if the answer would have been negative I will probably try to do the same with yours future math teacher. I am sure that everyone knows the importance of practising sports while studying. So they will find a solution.\n\nIf everything goes don't doesn't happen as you and I expect ensure that your parents don't get mad with your decision. They are giving their best! Put your education in front first place. Opportunities to swim you will have a lot during your life. Moreover\n, you can come to Barcelone and try to catch me in the pool.\n\nGood luck,\nSam",
+      "word_count": 176,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 3,
+        "language": 3,
+        "overall": 3.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll of the content is relevant to the task. The question in the input has been answered in detail, and the target reader is fully informed.\n\nCommunicative Achievement 4\nAlthough the style is slightly formal in places, the conventions of the email genre have been used effectively to hold the target reader's attention and communicate straightforward ideas: Hi Jo; I bet you are swimming like a fish; Do you remember when; I understand why; If I were you; you can come to Barcelone and try to catch me in the pool; Good luck.\n\nOrganisation 3\nThe text is generally well organised and coherent, using a variety of linking words and cohesive devices: talk with your swimming coach and ask him; Then; the answer; do the same; so; Moreover.\n\nLanguage 3\nA range of everyday vocabulary is used appropriately, with occasional inappropriate use of less common lexis: swimming like a fish; kids; made a few races; pool; they want your best; coach; find a solution; ensure; giving their best; catch me.\nA range of simple and some complex grammatical forms has been used with a good degree of control: I understand … best; If I were you … another day; I am sure … solution; If everything … decision; Opportunities … your life.\nThe errors do not impede communication: if the answer would have been negative I will try; yours; Opportunities to swim you will have.",
+      "source_url": "https://www.cambridgeenglish.org/Images/600975-teacher-guide-for-writing-b2-first-for-schools.pdf",
+      "source_page": 40,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools teacher guide, Sample answer 4. Source PDF page 21 (printed page 40/41)."
+    },
+    {
+      "task_type": "email/letter",
+      "prompt": null,
+      "answer": "Hey Sam!\n\nWhat's up? Thanks for your last email, I really hope I'll be helpful. So, my special place is defenetly my building's roof. I always go up there when I need to stay alone for a bit, take an important decision, or think carefully about something.\n\nPreviously I didn't have a special place, this discover dates back to when I was 13. I was looking for a place with a great view to take a picture for my grandparents, so I decided to climb the roof beacause this building pretty high, and when I got there I was just speechless. From there you got the complete view of the entire city, beacause of the heigh there are no cars noises or other annoying noises. I brought a chair and a few pillows over there just to make it a little bit more comfortable. No one else come there, cause the access is forbidden for some reasons, and, of course, nobody knows I climb there. At first It was just a place where I could be alone but then it got special. I gave my first kiss on that roof, and we are still togheter.\n\nlove\nCamilla.",
+      "word_count": 197,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 3,
+        "language": 4,
+        "overall": 4.0,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant and the target reader is fully informed.\nThe candidate responds to all the questions asked in the input by describing a place which is special to them and explaining why. The email gives details about the location, the roof of the building, what the special place looks like and what you can see from it.\nThe writer successfully describes discovering the space and how it has changed over time (At first It was just a place where I could be alone but then it got special).\n\nCommunicative Achievement 4\nThe email communicates straightforward ideas to the reader using an informal tone which is friendly and informative. The conventions of email writing are used (Hey Sam!; What's up?; Thanks for your last email; love Camilla).\nThe main body of the email has certain narrative features, but these are appropriate to the subject. The writer's emotional attachment to the special place is clearly communicated.\n\nOrganisation 3\nThe text is generally well organised and coherent. The structure of the email is logical and the ideas are connected within sentences to show cause and effect and to clarify the sequence of events (So; or; Previously; and when I got there; beacause; and, of course).\nA variety of linking words and cohesive devices is used. Although there is an overall progression of ideas through the text, paragraphs would improve the organisation of the email.\n\nLanguage 4\nA range of vocabulary is used appropriately for emphasis and to show emotional attachment (my special place is defenetly; I always go up there when I need to stay alone for a bit; I was just speechless; of course, nobody knows). There is some good use of collocations (important decision; think carefully; a great view; annoying noises).\nA range of simple and some complex grammatical forms is used with a good degree of control. Although there are some errors or slips (No one else come there) these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 40,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, digital sample test, Question 2, Candidate C. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null."
+    },
+    {
+      "task_type": "email/letter",
+      "prompt": "Part 2 - email. You have received this email from your English-speaking friend, Alex.\n\nFrom: Alex\nSubject: I need your advice\n\nI play the guitar in a band with three friends. We play for fun after school. Now my friends would like our band to play in a music competition on TV, but I'm not sure if I want to. Do you think it's a good idea? If I say 'no', it will upset my friends. What should I do?\n\nAlex\n\nWrite your email.",
+      "answer": "Hi Alex,\n\nhow are you? I hope you're ok. I've rethinked your problem. I found out two things. First of all, if you want me to give you the best advice, I would like to have more information. Secondly, you can't make anything you really don't want to. Talk with them, and maybe you'll together find a solution. But anyway, I think that you don't want to talk with them. Well, at least I wouldn't want to. So, if you're just like me, just talk with them face-to-face and clearly say: 'no'. But if it still isn't a good solution for you, I've got one more idea. Perhaps, there is a person who plays guitar as good as you, and maybe he or she will agree to replace you for a couple of hours. Think about these ideas. I hope I helped. Write back soon, what you decided. Good luck,\n\nyour XYZ",
+      "word_count": 152,
+      "score": {
+        "content": 4,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 3,
+        "overall": 3.25,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 4\nAll the content is relevant, as the email gives general advice regarding Alex's problem. However, the specific problem of whether it's a good idea to play with the band in the music competition is not clearly addressed, so the target reader is not fully informed.\nThe advice is appropriate, but rather unclear as no specific details are given about the problem until towards the end, when the guitar is mentioned.\n\nCommunicative Achievement 3\nThe email uses the conventions of the communicative task and straightforward ideas are communicated. The email provides advice for a friend and the tone is friendly and polite. It also offers a number of suggestions which could work (Talk with them; you'll together find a solution; maybe he or she will agree to replace you).\nThe email is sympathetic and the candidate identifies with the problem (I wouldn't want to; if you're just like me). The candidate also expresses hope that the email provides a solution (Think about these ideas. I hope I helped) and this holds the reader's attention.\n\nOrganisation 3\nThe email is generally well organised and coherent. A variety of linking words is used to connect the ideas throughout the text (First of all; Secondly; and; But anyway; So).\nCohesive devices, such as referencing pronouns, are used within sentences to refer back to the original email and to avoid excessive repetition (you don't want to talk with them; if it still isn't a good solution; these ideas).\n\nLanguage 3\nThere is a range of everyday vocabulary used appropriately to give advice (find a solution; talk with them face-to-face). Although there are some awkward expressions and errors with collocation (I've rethinked your problem; you can't make anything) the message is still communicated.\nThere is a range of simple and some complex grammatical forms used with a good degree of control. Some simple past and present forms are used appropriately (But if it still isn't; Perhaps, there is a person who; will agree to replace you).\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 47,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, paper-based sample test, Question 3, Candidate D (source PDF page 47)."
+    },
+    {
+      "task_type": "email/letter",
+      "prompt": null,
+      "answer": "Dear David,\n\nI'm glad your friends are visiting my area soon for a week's touring holiday. I have many ideas what I can show them and tell about.\n\nIn my opinion the best way to travel around will be by bike because of small distances between the places and views are amazing.\n\nMy area includes also beautiful Baltic Sea which many tourist visit especially in summer. Your friends could sunbath or swim if they would like but the water is quite cold in this season. Beautiful sightseeing of sunrise is the best memorise!\n\nYou wrote that they are intrested in history of my local area. That's great! We have museum of our local history where I can go with them. Tickets are not so expensive and I can think about some discount.\n\nWhat do you think about it? Would you mind send me some your ideas?\n\nI look forward to hearing from you soon.\n\nBest wishes,\nSam",
+      "word_count": 157,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 3,
+        "organisation": 4,
+        "language": 3,
+        "overall": 3.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant and the target reader is fully informed.\nThe candidate responds to the questions that have been asked and gives details about the places David's friends can visit (Baltic Sea; museum of our local history).\nThe email explains that the best mode of transport is bike, because of small distances between the places and views are amazing.\n\nCommunicative Achievement 3\nThe conventions of the task are used to hold the reader's attention. The response is written in an informal, friendly but polite tone, which is appropriate for the task. The conventions for opening and closing an email of this type are used appropriately, as well as standard phrases for communication to a friend (You wrote that; What do you think about it; I look forward to hearing from you soon; Best wishes).\nStraightforward ideas are communicated. Information and advice are given and the overall tone is enthusiastic and positive.\n\nOrganisation 4\nThe text is well organised and coherent, and uses the input email well to structure the response (I'm glad your friends are visiting; I have many ideas; In my opinion; My area includes also; which many; Your friends could; You wrote that; That's great).\nA variety of linking words (because of) and cohesive devices, such as substitution and referencing, are used across some sentences and to connect simple ideas.\n\nLanguage 3\nThere is a range of everyday vocabulary used which is relevant to the topic (beautiful Baltic Sea; many tourist visit; in this season; Tickets are not so expensive).\nThere is a range of simple and some complex grammatical forms used with a good degree of control, e.g. modals, present and past forms of verbs.\nThere are some errors (My area includes also; send me some your ideas) and some spelling mistakes (sunbath; memorise; intrested) but these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167791-b2-first-handbook.pdf",
+      "source_page": 41,
+      "retrieved": "2026-10-31",
+      "note": "Handbook, digital sample test, Question 4, Candidate F. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null."
+    },
+    {
+      "task_type": "review",
+      "prompt": null,
+      "answer": "“Life of Buddah”: A Book Review\n\nWhat would you do if you were born as a prince with all the exclusive fasilities to enjoy this material world? yes, most of people will celebrate and enjoy every single right that they have as a son of a king. Beautiful women, money, parties and all senses' gratification stuff. Surprisingly, it didn't work that way for little Gautama who in the future would be a Buddah.\n\nIn the book “Life of Buddha”, it is told that Gautama was born as a prince. He got all the facilities to make him being comfortable staying in the palace. The king didn't allow him to get out from the palace for outside of the palace is the place of real life happened.\n\nOne day, the king asked him to get married but the prince rejected it and decided to leave the palace instead. There, he started his spiritual journey and later on had self realization and became a buddha.\n\nThis book is suitable for you who like to read about someone's autobiography and life's lesson. As a reader I can say that I learn a lot from this book. High recommended as something to read before going to bed!",
+      "word_count": 203,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 3,
+        "overall": 3.5,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll the content is relevant and the target reader is fully informed.\nThe review gives details about a book which contains a character who does something surprising (Gautama was born as a prince; (he) decided to leave the palace instead; (he) had self realization and became a buddha).\nThe candidate recommends the book by explaining what they liked about it and saying who would find it enjoyable.\n\nCommunicative Achievement 3\nThe review uses the conventions of the communicative task to hold the reader's attention. The candidate introduces the topic of the book and the subject matter in an engaging way, using a rhetorical question, then summarises some of the events in the narrative (In the book; it is told that; One day, the king; later on).\nStraightforward ideas are communicated. Information is given about some of the characters and main events, and the writer concludes with their opinions of the book (This book is suitable for; I can say that; High recommended as …).\n\nOrganisation 3\nThe text is generally well organised and coherent. It moves from general information in the introduction, to more specific details about the story in the next two paragraphs, and concludes with an appropriate summary and opinion about the book. A variety of linking words and cohesive devices are used in the text, including reference pronouns (it didn't work that way for little Gautama; he; him; One day; and; there; later on; This book).\n\nLanguage 3\nA range of everyday vocabulary is used appropriately, and although there are some errors (fasilities; all senses' gratification stuff) there is also some good use of less common lexis (started his spiritual journey).\nBoth simple and more complex grammatical forms are used with a good degree of control (What would you do if you were born; who in the future would be a Buddah; before going to bed).\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167791-b2-first-handbook.pdf",
+      "source_page": 39,
+      "retrieved": "2026-10-31",
+      "note": "Handbook, digital sample test, Question 2, Candidate D. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null."
+    },
+    {
+      "task_type": "review",
+      "prompt": null,
+      "answer": "Are you searching for an interisting but at the same time cheap present? Do you want to go shopping in a trendy shop, but you have no idea where you can go? Came and visit the new store of Lodi, called ‘Little Treasures’, where you can find and buy all type of clothes, from strange and unusual to ordinary and trendy. This shop is in the centre of the city and it's open from Monday to Saturday from 9.00am to 19.00pm.\n\nIt sells every type of clothes (t-shirts, bluses, jeans, coats, scarfs, gloves, trousers, shorts, skirts, underware, pullovers, dresses…) for teenegers, both male and female, from 12 to 20 years. Inside it you can find everything you need or you dream, and it has special discount!\n\nShops assistants are really kind and patient with the costumers and they can help you in the choice or they can give you some useful advice!\n\nIf you don't believe it, came and enter in the shop… it will be like a dream!",
+      "word_count": 169,
+      "score": {
+        "content": 4,
+        "communicative_achievement": 4,
+        "organisation": 4,
+        "language": 3,
+        "overall": 3.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 4\nAll the content is relevant. The candidate writes a review of a shop which sells clothes suitable for teenagers. There are details about the opening hours of the shop and what type of clothes it sells (strange and unusual to ordinary and trendy) as well as a description of the shop assistants.\nThe recommendation is implicit in the description of the shop. Everything is very positive, which implies that it is a good place to go if you are between 12 and 20.\nThere is no information about what the shop looks like. It is possible to imagine, but no details are given. However, the reader is on the whole informed.\n\nCommunicative Achievement 4\nThe conventions of a review are used effectively to hold the target reader's attention. The style is appropriate for a teenage audience, and good use is made of rhetorical questions to generate interest in the opening.\nDescriptive and persuasive language is used to communicate straightforward ideas (you can find everything you need or you dream; If you don't believe it, came and enter in the shop).\n\nOrganisation 4\nThe structure of the text is well organised and coherent. There is a good introduction to the topic and the final closing sentence invites people to come and have a look themselves.\nWithin the paragraphs, there is some use of cohesive devices and linking words, but the punctuation is also effective and appropriate for the age of the target reader (for teenegers, both male and female, from 12 to 20 years) making the sentences short but powerful. The list of clothes could be organised more effectively.\n\nLanguage 3\nA range of everyday vocabulary specific to the topic is used appropriately (trendy shop; all type of clothes; special discount).\nWithin this review, there is a range of simple and some more complex grammatical forms, but little demonstration of the ability to control a range of tenses. However, different forms of the present are accurately used, as well as imperatives. There are a few errors, but these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 41,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, digital sample test, Question 3, Candidate D. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null."
+    },
+    {
+      "task_type": "report",
+      "prompt": "Part 2 - report. A group of British teachers is going to visit your college for two days. The aim of their trip is to learn about how technology is used in education in your country. You have been asked to write a report for the group leader.\n\nYour report should:\n• include information about how technology is used to teach different subjects\n• recommend which lessons the teachers should watch to see technology being used.\n\nWrite your report.",
+      "answer": "Use of Technology in education\n\nIntroduction\nThis report is intended to inform how technology is used in common lessons and recommend the most interesting technical developments to be seen. I conducted a survey among teachers and students in order to find out what is prefered to be used by them.\n\nTechnology in different subjects\nThe majority of the people claimed that the best thing were computers and interactive boards. I was given these reasons:\n1 They provide an oportunity to make the lessons more enjoyable\n2 Everybody is able to find information on the internet whenever they want to\n3 Computer presentations can be easily given\n\nHowever, use of another technical developments vary among students and teachers depending on which subject they focus on. For instance, people were interested in Science mentioned these points:\n \u0007\n– newly equipped chemical lab with its recently purchased substances\n– equipment suitable for teaching Physics (e.g. digital watches, laser)\n\nRecommendations\nFor most of the people who I asked for their reply were really important computers and interactive boards in the classrooms. I would therefore recommend seeing this. On the other hand, if you are interested in particular subjects you ought to see their specialised classrooms with a variety of modern technical developments, too.",
+      "word_count": 209,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 4,
+        "language": 3,
+        "overall": 4.0,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant and the target reader is fully informed.\nThe report gives information about which technology is used for teaching purposes around the school (interactive boards; computers) and specifically in science (newly equipped chemical lab).\nThe report has a clear recommendation at the end and gives options about what would be good for the reader to see: either going to see what the students have decided is important (computers and interactive boards) or what the reader has a specific interest in (if you are interested in particular subjects you ought to see their specialised classrooms).\n\nCommunicative Achievement 4\nThe conventions of report writing are used effectively to hold the target reader's attention. The register is neutral and information is given in an objective tone, making good use of the passive voice (This report is intended; developments to be seen; can be easily given). The format of the report is effective in using headings, sub-headings and a numbering system in the second section to highlight important aspects.\nStraightforward ideas are communicated.\n\nOrganisation 4\nThe text is well organised and coherent, and the overall organisation of the report is effective in helping to communicate the main points.\nA variety of appropriate linking words are used (However; which; For instance).\n\nLanguage 3\nA range of everyday vocabulary is used appropriately and there is some good use of topic-specific vocabulary (technical developments; conducted a survey; interactive boards; provide an oportunity; I would therefore recommend).\nA range of simple and some more complex grammatical forms is used, particularly different passive structures. Some errors occur when attempting more complex ideas (For most of the people who I asked for their reply were really important computers).\nHowever, the errors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167791-b2-first-handbook.pdf",
+      "source_page": 46,
+      "retrieved": "2026-10-31",
+      "note": "Handbook, paper-based sample test, Question 2, Candidate D (source PDF page 48)."
+    },
+    {
+      "task_type": "story",
+      "prompt": "Part 2 - story. You have seen this announcement in an English-language magazine for teenagers.\n\nStories wanted\nWe are looking for stories for our new English-language magazine for teenagers. Your story must begin with this sentence:\nWhen Susie's family arrived at the hotel, they were surprised to see hundreds of photographers waiting outside.\n\nYour story must include:\n• a famous person\n• a request\n\nWrite your story.",
+      "answer": "When Susie's family arrived at the hotel, they were surprised to see hundreds of photographers waiting outside. They had no idea what was going on. Everyone acted like crazy. It wasn't a famous hotel. The only thing less famous than the hotel itself are the clients of this hotel. So why would any photographer and or journalist be interested in this place?\n\nBecause they already had a reservation, they entered the hotel. Everything seemed normal, until they went on a dinner. They hadn't had a proper meal the whole day, so a restaurant in the hotel was what they were had been looking forward to.\n\nAfter they recieved their meal, their happiness disappeared. It was disgusting, the steaks they ordered were dry like a shoe. Before they managed to chew those steaks, the a celebrity showed up. It was Gordon Ramsay, a famous chef. He was had been shooting his series “Hotel Hell” here. He asked everyone to leave. Unusual request, but not from him. That was it, he closed the kitchen. Everyone knew what that meant … and regreted every bite.",
+      "word_count": 182,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 3,
+        "language": 5,
+        "overall": 4.25,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant to the task.\nThe story carries on from the prompt and includes a famous person and a request, so the target reader is fully informed.\n\nCommunicative Achievement 4\nThe conventions of a story, such as chronological development, narrative verb forms, and varying sentence length for dramatic effect, are used to hold the target reader's attention. Straightforward and complex ideas are communicated: They had no idea what was going on; Everything seemed normal, until; They hadn't had a proper meal … ; That was it.\n\nOrganisation 3\nThe text is generally well organised and coherent, using a variety of linking words and cohesive devices: So why would … ? Because they already; After they recieved; those steaks; knew what that meant.\n\nLanguage 5\nA range of vocabulary, including less common lexis, is used appropriately: the clients; had a reservation; a proper meal; looking forward to; disgusting; to chew; a celebrity; showed up; a famous chef; shooting his series; regreted every bite.\nA range of simple and complex grammatical forms is used with control and flexibility: They had no idea … ; The only thing less famous than the hotel itself; why would … be interested; was what they had been looking forward to; He had been shooting his series.\nThere are a few errors, which do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/600975-teacher-guide-for-writing-b2-first-for-schools.pdf",
+      "source_page": 38,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools teacher guide, Sample answer 3. Source PDF page 20 (printed page 38/39)."
+    },
+    {
+      "task_type": "story",
+      "prompt": null,
+      "answer": "Tom got off the train and as the train left, he realised he was holding the wrong suitcase. He was shocked. He didn't know what he had to do. 1 hour later he opened this suitcase. He wanted to find number to person whose is this suitcase. He this adress. It was Oxford Street 42. He knocked the door but nobody opened him. When he was getting home, somebody told him that person who is he looking for had moved to another city. He was a little bit angry, but next day he went to right city. He went to house on Shakespear Street. When some body opened the door he was shocked. It was Mary, his first love. He was seraching for her for many years. Finally they gave right suitcases their selves and they wanted to meet in the future. They were meeting through two years and these days they are happy marriage with many childrens.",
+      "word_count": 158,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 2,
+        "organisation": 2,
+        "language": 2,
+        "overall": 2.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 2",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll the content is relevant and the target reader is fully informed.\nThe story follows on from the prompt and develops a narrative which includes the two content points asked for in the question, an address and a surprise.\nThe reader can follow the sequence of events and there is a logical development which connects the separate aspects of the story. Tom gets off the train with the wrong suitcase, finds an address and when he goes there to hand the suitcase over, surprisingly, he finds his ex-girlfriend.\n\nCommunicative Achievement 2\nThe conventions of a story are used to communicate straightforward ideas. The narrative describes Tom's emotions (He was shocked; He was a little bit angry) and tells the story through a sequence of events.\nThe target reader's attention is not always held because some of the sentences are quite short and this interrupts the narrative flow of the story (He this adress. It was Oxford Street 42. He knocked the door).\n\nOrganisation 2\nThe story is generally well organised and coherent. The story has a beginning, a middle and an end and there are events which take place in sequence.\nBasic linking words and a limited number of cohesive devices, mainly time references, (1 hour later; finally; but next day) are used to connect sentences and move the story forward.\n\nLanguage 2\nA range of everyday vocabulary is used appropriately, although some lexis is repeated (shocked; went; When; city).\nThere is a range of grammatical forms, past and present tenses, generally used with a good degree of control. Sentence structures are mostly simple and quite short.\nErrors do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 42,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, digital sample test, Question 4, Candidate E. The handbook does not reproduce the task prompt for the digital sample answers, so 'prompt' is null."
+    },
+    {
+      "task_type": "story",
+      "prompt": null,
+      "answer": "“THE FAIRY”\n\nJerry read the email and decided to go to the shopping centre immediately. The idea of getting something for free was just too tempting. He sat in the café, as the instructions in the email told him to do so, and waited. Suddenly, a mysterious woman in a pink, sparkling coat appeard in front of him. Jerry swore he saw wings hidden under it. Could that really be a fairy? The woman looked at the boy and said: “I'm going to give you a present but you have to promise me not to be mean to other people”. She handed him a package and then walked away. At this point you should know that Jerry was a bully, who was never nice to his friends at school.\n\nThe boy rushed home and opened the present. Inside he found a brand new xbox. Jerry spent hours playing video games from that day on. One time, Timmy - his neighbour asked if he could join in. “Don't even think about it, stupid!” Jerry said. And then, the xbox disappeared. Jerry knew he hadn't listened to the fairy. He apologised and decided not to hurt others anymore.",
+      "word_count": 196,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 5,
+        "organisation": 4,
+        "language": 5,
+        "overall": 4.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll the content is relevant and the target reader is fully informed.\nThe story follows on from the prompt and develops into a narrative referring back to the prompt to make the connection clear (as the instructions in the email told him to do).\nThe required elements, a request and a present, are used effectively and integrated well into the story (I'm going to give you a present but you have to promise me not to be mean to other people). The request is implicit in the promise he has to make.\n\nCommunicative Achievement 5\nThe text uses the conventions of story-telling to communicate effectively and hold the target reader's attention.\nGood use is made of features such as narrative tenses, intensifying adverbs, direct speech and descriptive language. Certain aspects of the plot are revealed later rather than stated immediately (The idea of getting something for free was just too tempting; At this point you should know), which is an effective narrative technique and keeps the reader interested.\n\nOrganisation 4\nThe text is well organised and coherent, using a variety of linking words and cohesive devices to generally good effect. Sequential linking is good (Suddenly, a mysterious woman … appeard; She handed him a package and then; The boy rushed home; One time; And then) and this keeps the narrative moving forward.\nThere is a clear beginning and middle, and the end provides a moral conclusion to the whole tale (He apologised and decided not to hurt others anymore) referring to the lesson he has learned and what the fairy expected him to do.\n\nLanguage 5\nThere is a range of vocabulary used appropriately to describe characters and events in a very effective way and the reader can visualise what is being described (was just too tempting; in a pink, sparkling coat; swore he saw wings hidden under it; a brand new). The reader feels Jerry's surprise and learns about his character.\nThere is a range of grammatical forms used with control and flexibility to create images and the language is used very economically (The idea of getting something for free was just too tempting). In this statement, we learn that Jerry is an opportunist; that the email was an offer; and that Jerry didn't know what he was going to get. And then, the xbox disappeared – although this is a very simple sentence, it conveys the fact that Jerry hasn't kept his promise and that he is being punished.\nErrors are minimal.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 48,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, paper-based sample test, Question 4, Candidate E (source PDF page 48)."
+    },
+    {
+      "task_type": "essay",
+      "prompt": null,
+      "answer": "Nowadays, more and more parents are making the controversial decision to teach their children at home rather than sending them to school. Although this approach to education has advantages, pupils who learn only at home definitely lose more oportunities.\n\nFirst, children who don't go to school only know two teachers, the same people who are also their parents. Because of this, the pupils may not learn other points of view outside their family. Besides this, there is also the question if parents have the qualifications and knowledge to teach every subject. Perhaps their mother and father are experts in one or two subjects, but any school provides teachers expert in every subject.\n\nWe should remember that there is more to education than learning about topics. In addition, going to school is also a way to meet people your own age and to make friends. It is clear that children can socialise better at school, and as a result children at school will have the chance to start many lifelong relationships.\n\nI agree that parents can have some good reasons for having home school, but overall, considering teachers and friends, it's much better for children to attend school.",
+      "word_count": 197,
+      "score": {
+        "content": 4,
+        "communicative_achievement": 5,
+        "organisation": 5,
+        "language": 5,
+        "overall": 4.75,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 4\nAll content is relevant and the target reader is on the whole informed.\nThe candidate discusses the first two numbered points in the question. They address disadvantages of having parents teaching their own children, explaining that only one view may be offered and th ere might also be a lack of knowledge about certain subjects.\nThe second point is addressed by saying that children have more opportunities to socialise at school and will find it easier to make friends.\nHowever, although these two points are covered in some depth, there is no third point (your own idea) introduced by the candidate, resulting in the target reader not being fully informed.\n\nCommunicative Achievement 5\nThe essay is very well written, using the conventions of the task effectively to hold the target reader's attention. The language is formal throughout and the topic is treated in an appropriate way. Balanced views and opinions are given and the candidate also suggests scenarios to support certain views (Perhaps their mother and father are experts in one or two subjects).\nBoth straightforward and more complex, abstract ideas are communicated clearly to the reader (pupils may not learn other points of view outside their family).\n\nOrganisation 5\nThe essay is well organised and coherent and uses a variety of cohesive devices, referencing, pronouns, substitution and conjunctions to link the ideas across the text.\nOrganisational patterns are used to generally good effect with positive and negative opinions being given (Although this approach to education has advantages; Because of this; Besides this, there is also; I agree that … but).\nThe essay has a good overall structure, with a clear opening paragraph setting out the topic of the essay. Two points are developed in the main body and there is an effective conclusion which summarises the writer's view.\n\nLanguage 5\nA good range of vocabulary is used appropriately, including some effective collocations (controversial decision; this approach to education; more to education than learning; socialise better; lifelong relationships).\nThere is a range of simple and complex grammatical forms used with control and flexibility to communicate specific ideas. Occasional errors occur, but these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 36,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, digital sample test, Question 1, Candidate A. Beyond the 8 essays in the original inventory. The handbook does not reproduce the digital task prompt, so 'prompt' is null."
+    },
+    {
+      "task_type": "essay",
+      "prompt": null,
+      "answer": "In my opinion studying at home is not a bad things because you are the only student and your parents, who becomes your teacher, can help you better than a “normal” teacher with more students; you don't have to wait for other students who don't do their homework or students who don't understand something.\n\nBy the way there is a bad thing: studying on your own doesn't let you meet other children and making friends becomes harder. A “normal” student stay with other people 5 or 6 hours per day, so he or she must learn how to approche with other children.\n\nAt the end this kind of school improve the relation between parents and his son because they study together so the son can see also his parents trying to learn his school subject and also the parents become important figures for the child, not just because they teach the education, but because they teach history, geography and maths, too.",
+      "word_count": 161,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 3,
+        "overall": 3.5,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant to the task and the target reader is fully informed.\nThe candidate discusses the advantages of staying at home to be taught by parents (your parents, who becomes your teacher, can help you better than a “normal” teacher). The disadvantages of this method are also explored, including the difficulties of making friends if you are home schooled (making friends becomes harder). The candidate also includes their own idea, suggesting that families become closer through this type of contact (this kind of school improve the relation between parents and his son because they study together).\n\nCommunicative Achievement 3\nThe conventions of essay writing are evident in this response. Three distinct ideas are clearly addressed and an attempt is made to introduce the ideas in a formal way. This helps to hold the target reader's attention and communicate straightforward ideas. The topic is clearly stated in the first sentence and is referred to throughout. It is written from a general perspective and uses examples to support statements made by the writer (In my opinion studying at home is not a bad things because you are the only student).\n\nOrganisation 3\nThe text is generally well organised through the use of linkers and cohesive devices, although these are not always used correctly, for example, By the way; At the end, which are not appropriate in this context. There is a variety of linkers within the text (because; so; not just … but because) and there is some use of relative clauses as well (other students who don't do their homework or students who don't understand something). The text is coherent and the main message moves forward logically.\n\nLanguage 3\nThere is a range of everyday, relevant vocabulary, which is used appropriately within the context of the question (students; teacher; subject; homework; study) and some collocations are used correctly as well. A range of simple and some more complex grammatical forms is used, including gerund and modal verbs (you don't have to wait; can help you better than; he or she must learn how to) and comparatives.\nThere are a number of errors with plurals and verb agreement, but these are non-impeding.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 37,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, digital sample test, Question 1, Candidate B. Beyond the 8 essays in the original inventory. The handbook does not reproduce the digital task prompt, so 'prompt' is null."
+    },
+    {
+      "task_type": "essay",
+      "prompt": "Part 1 - essay. In your English class you have been talking about what different people can teach each other. Now your English teacher has asked you to write an essay for homework. Write your essay using all the notes and giving reasons for your point of view.\n\n'Teenagers are too young to teach other people about anything.'\nDo you agree?\n\nNotes\nWrite about:\n1. technology\n2. the environment\n3. ……………………… (your own idea)",
+      "answer": "“Teenagers are too young to teach other people about anything”\n\nAdults often think teenagers to be noisy, childish and violent. Some of them even don't think they have any adult senses or wise thoughts at all but, as a teenager, I think we're intelligent enough to teach other people some things, and, according to this, I'm not agree with the quotation on top of the page.\n\nFor example, lots of teenagers have better knowledge in technology, so they can teach the older generation how to deal with gadgets. In our gymnasium there are special classes for the senior people where they are taught to work on computers, and their teachers are teenagers.\n\nMoreover, teenagers have the great knowledge in ecology, and they are really concerned on saving the planet alive. We talk a lot about environment on classes, we take part in ecology olympiades and contests for the best ecological projects and often won them, so we have a lot to tell the others about environmental problems and ways of their solving.\n\nBesides this, teenagers can teach adults foreign languages. According to the statistics, 50% of adult generation of our country don't know any foreign languages, so we can help them to come by the new knowledge or to improve that what they have. And, of course, students from foreign countries can teach Russian students their language, and Russians can teach them Russian. It is sometimes done in linguistic centres.\n\nTo sum up I can say that teenagers have great knowledge in many fields of study, so they can also teach the people of older generation and their classmates and friends.",
+      "word_count": 271,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 4,
+        "organisation": 5,
+        "language": 4,
+        "overall": 4.5,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 4",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll content is relevant and the target reader is fully informed.\nThe candidate discusses the statement and disagrees with the main idea that teenagers are too young to teach others. Examples are provided which support the opinions and develop the argument.\nThe essay is focused on the knowledge and skills that teenagers have. Teenagers can teach older people about technology and gadgets. They are more environmentally aware so can bring about change to protect the planet. The third point, the candidate's own idea, focuses on language skills that teenagers have and how they can use these to help others communicate.\n\nCommunicative Achievement 4\nThe essay uses the conventions of the task effectively to communicate straightforward ideas to the reader. The paragraphs are well constructed and the main points are introduced with suitably formal phrases (For example; Moreover; Besides this; According to; To sum up).\nThe main points are supported by examples, relevant to the candidate's experience, and the register is consistent throughout. The essay does not present both sides of the argument, portraying teenagers in a positive light throughout, but this is acceptable.\n\nOrganisation 5\nThe text is well organised and coherent, using a variety of cohesive devices.\nSome organisational patterns are used to good effect; for example, the introductory paragraph presents a popular view of teenagers (noisy, childish and violent; Some of them [adults] even don't think). This is contrasted with, but, as a teenager, I think, mirroring the construction of the previous statement.\nThe use of referencing and ellipsis increases the internal cohesion of the paragraphs (lots of teenagers have better knowledge in technology, so they can teach the older generation how to deal with gadgets).\n\nLanguage 4\nThere is a range of technical and some environmental vocabulary used appropriately and there is some use of formal essay lexis (According to the statistics). Some errors occur when the candidate attempts less common lexis, but these are mainly due to ambition.\nThere is a range of simple and complex grammatical forms, and these are used with a good degree of control. Errors with plurals, prepositions and articles are present, but these do not impede communication.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 42,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, paper-based sample test, Question 1, Candidate A. Beyond the 8 essays in the original inventory (source PDF page 44)."
+    },
+    {
+      "task_type": "essay",
+      "prompt": "Part 1 - essay. In your English class you have been talking about what different people can teach each other. Now your English teacher has asked you to write an essay for homework. Write your essay using all the notes and giving reasons for your point of view.\n\n'Teenagers are too young to teach other people about anything.'\nDo you agree?\n\nNotes\nWrite about:\n1. technology\n2. the environment\n3. ……………………… (your own idea)",
+      "answer": "I don't think that teenagers are too young to teach other people about anything. Of course, they can't know very well some things, for example: some scientific theories, history, mathematic at all and etc, but a lot of teenagers know a lot about technology. It's normal for them to spend a lot of time with computer, different gadgets. Most of them know, how these gadgets work, so they can explain other people different moments of their working. My Granny often asks to me for a piece of advice about her mobile phone. Teenagers' knowledge about technology usually based on practice, so often they don't know about process of creating the phone, the TV, etc. They really shouldn't try to tell about things, which they don't know.\n\nPeople don't need special knowledge about our world to make it better. Teenagers have a lot of time for help the environment and sometimes they tell about it people, who usually are very busy and couldn't notice the awful problems. So they can and must tell and teach people to help our planet.\n\nIn my opinion, teenagers shouldn't teach other people about things, which they know very bad, it may be only funny and of course they ought to teach other people and help them with things, which they know very good. Today all people have opportunity to learn everything, what they want. They can search information in the Internet, in books and the age doesn't matter.",
+      "word_count": 243,
+      "score": {
+        "content": 5,
+        "communicative_achievement": 2,
+        "organisation": 3,
+        "language": 2,
+        "overall": 3.0,
+        "scale": "0-5 per subscale (Cambridge B2 Writing Assessment Scale)",
+        "band_label": "Band 3",
+        "derived": true
+      },
+      "examiner_comment": "Content 5\nAll the content is relevant and the target reader is fully informed.\nThe essay discusses the main question of whether teenagers are too young to teach and provides an opinion on what teenagers are good at (a lot of teenagers know a lot about technology), and how practical knowledge of technology can help others (they can explain other people different moments of their working). In the second point, concerning the environment, the candidate explains that teenagers have time to learn about environmental problems and should share this knowledge.\nFinally, the third point presents the negative aspect that teenagers are more practical and sometimes don't have all the resources to teach a subject in depth (they can't know very well some things, for example: some scientific theories; often they don't know about process of creating the phone; shouldn't teach other people about things, which they know very bad).\n\nCommunicative Achievement 2\nStraightforward ideas are communicated and the conventions of the essay task are used in generally appropriate ways. The first two points are dealt with in separate paragraphs but the third is an idea which runs throughout the essay. This point would be more successfully communicated by discussing it in a distinct paragraph. The three points would then be presented more clearly, and thus hold the target reader's attention better.\nThe register and tone of the essay are consistent and there is language of explanation and opinion.\n\nOrganisation 3\nThe essay is generally well organised, with a clear introduction and paragraphs. A variety of linking words and cohesive devices is demonstrated, including relative clauses, pronouns and other referencing features (Of course; for example; Most of them; In my opinion).\nThe conclusion doesn't summarise all of the main points but it does state an opinion on the central question (teenagers shouldn't teach other people about things, which they know very bad).\n\nLanguage 2\nA range of everyday vocabulary is used appropriately in the context of this essay (a piece of advice; based on practice; process of creating; special knowledge).\nSimple grammatical forms are used with a good degree of control, but there are a number of errors when more complex forms are attempted, for example specific expressions or use of prepositions (they can't know very well; explain other people; tell about things; time for help).\nThe number of errors affects the overall communicative achievement, although the intended meaning can still be determined.",
+      "source_url": "https://www.cambridgeenglish.org/Images/167792-b2-first-for-schools-handbook.pdf",
+      "source_page": 43,
+      "retrieved": "2026-10-31",
+      "note": "B2 First for Schools handbook, paper-based sample test, Question 1, Candidate B. Beyond the 8 essays in the original inventory (source PDF page 45)."
     }
   ],
-  "gaps": []
+  "gaps": [
+    "No official Cambridge B2 First sample answer for a formal LETTER. Every official letter/email sample in these PDFs is an email to a friend (informal); the 'email/letter' samples here cover the email form only.",
+    "The paper-based Part 2 Question 4 in the B2 First handbook is a review of a course, but the handbook prints sample answers only for Questions 1-3 of that paper. No official sample answer exists for that review task.",
+    "The B2 First and B2 First for Schools handbooks do not print the task prompts for the digital sample test answers, so prompt is null for every digital-sample record rather than being reconstructed from the answer.",
+    "Only one official REPORT sample (B2 First handbook, paper-based Part 2 Question 2). No second report sample exists in these sources, so report reliability cannot be cross-checked from more than one official answer.",
+    "The teacher guide heads its fifth sample 'Task: Part 2 - review', but the task, the answer and the examiner comment are all for an article. 290476-assessing-writing-performance-at-level-b2.pdf page 21 labels the same sample as an article. Recorded here as an article.",
+    "Marks are printed per subscale in the sources; 'overall' is the arithmetic mean of the four subscales and is marked derived=true. Cambridge does not publish a single aggregate mark for these samples."
+  ],
+  "transcription_note": "Answer texts are copied verbatim from the PDFs. The Cambridge handbooks print candidates' crossed-out revisions and insertions inline (e.g. 'They are It is our future', 'very a discussed'), so some answers contain adjacent duplicate words. These are reproduction artefacts of the source, not transcription errors. Spelling mistakes are preserved deliberately."
 }
