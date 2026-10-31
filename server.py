@@ -4818,6 +4818,7 @@ class H(BaseHTTPRequestHandler):
                     req = json.loads(raw.decode("utf-8") or "{}")
                 except (ValueError, UnicodeDecodeError):
                     req = {}
+                session_id = ""
                 if isinstance(req, dict):
                     if req.get("role") == "partner":
                         role = "partner"
@@ -4832,6 +4833,9 @@ class H(BaseHTTPRequestHandler):
                     # `clean_task()` whitelists and caps it; a malformed task
                     # degrades to the generic exam, it never rejects the mint.
                     task = req.get("task")
+                    # The exam session id lets the partner's token ride on the
+                    # mock the examiner's token already paid for.
+                    session_id = str(req.get("session_id") or "")[:64]
             api_key = _spk_google_key()
             if not api_key:
                 # One line, no secret: only the missing knob is named.
@@ -4842,7 +4846,8 @@ class H(BaseHTTPRequestHandler):
                     print(line, end="", flush=True)
                 self._send_json(503, {"error": "speech_not_configured"})
                 return
-            if not self._speaking_gate(uid):
+            charged = bool(session_id) and _spk_turn_session_known(uid, session_id)
+            if not charged and not self._speaking_gate(uid):
                 return
             if _spk_remaining_s(uid) <= 0:
                 reset = (date.today() + timedelta(days=1)).isoformat()
@@ -4856,7 +4861,15 @@ class H(BaseHTTPRequestHandler):
                 return
             # A failed mint never burns a mock: the plan meter is bumped only
             # once Google handed us a token.
-            plans.speaking_add_mock(uid)
+            if not charged:
+                # One mock per exam, not per voice: the examiner and the partner
+                # are two tokens of the same test, and charging each one made a
+                # free account (1 mock/week) unable to open the second voice.
+                plans.speaking_add_mock(uid)
+                if session_id:
+                    _spk_turn_session_mark(uid, session_id)
+            # The microsecond meter counts every mint (observability); only the
+            # mock ledger above is per exam.
             store.speaking_add(uid, _spk_today(), 0, 1)
             _audit("token_minted", uid, _real_ip(self), self._rid,
                    {"part": part, "role": role})

@@ -75,3 +75,28 @@ Cada línea se verifica contra el repo, la cola o el servicio antes de decir "li
 - No afirmar que algo funciona en producción si solo se probó contra un stub.
 - Avisar antes de tocar o reiniciar cosas del sistema.
 - Sin piratería: solo material oficial gratuito o comprado.
+
+---
+
+## F. Actualización 2026-10-31 — speaking en tiempo real
+
+Resuelto:
+
+- **El Live API sí funciona con esta key.** Google manda la voz del examinador como
+  **frames binarios** (PCM 24 kHz), no como base64 dentro de JSON. El cliente solo leía
+  strings y descartaba el audio: por eso el examinador "no hablaba" aunque Google
+  generaba 7,6 s de voz. `spkPlayPcm16()` los reproduce.
+- **El sondeo de capacidades mentía.** Consultaba `/models` paginado (50 por página) y
+  `gemini-3.8-live` no estaba en la primera página → `live:false`. Ahora consulta
+  `/models/<modelo>` directo. `live:true` habilitado con `zz-live.conf`.
+- **Un mock por examen, no por voz.** Examinador y partner mandan el mismo `session_id`;
+  antes el partner quemaba un segundo mock y un plan free daba 429.
+- **El examinador ya no repite la línea dos veces** (texto + fallback del navegador).
+- Suites verdes: `test_speaking_exam`, `test_speaking_live`, `test_speaking_duo`,
+  `test_speaking_metrics`, `test_final`.
+
+Pendiente del owner:
+
+- **Client ID + secret de Google** en `~/.config/b2first/oauth.env` (el drop-in ya lo lee
+  si existe). Sin eso `/api/auth/google/start` devuelve 503 y el botón no aparece.
+- **Probar el Live examiner con voz real** y decir si contesta a lo dicho o repite el guion.

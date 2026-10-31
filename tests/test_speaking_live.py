@@ -123,7 +123,7 @@ def main():
     saved_key = os.environ.pop("B2_SPK_GOOGLE_KEY", None)
     try:
         reset_limits()
-        st, body, headers = http("/api/speaking/token", {}, token=token)
+        st, body, headers = http("/api/speaking/token", {"session_id": "suite-live-1"}, token=token)
         j = json.loads(body)
         assert st == 503 and j.get("error") == "speech_not_configured", f"{st} {body}"
         assert "Retry-After" not in {k.title() for k in headers}, headers
@@ -134,7 +134,7 @@ def main():
     # 2. With a fake key + local stub: 200 and the documented body, no key leak.
     reset_limits()
     before = STUB["calls"]
-    st, body, _ = http("/api/speaking/token", {}, token=token)
+    st, body, _ = http("/api/speaking/token", {"session_id": "suite-live-1"}, token=token)
     j = json.loads(body)
     assert st == 200, f"mint failed: {st} {body}"
     assert j["token"] == "ephemeral-token-abc", j
@@ -153,7 +153,7 @@ def main():
 
     # 2b. S4: the same endpoint mints the partner's own instruction.
     reset_limits()
-    st, body, _ = http("/api/speaking/token", {"role": "partner", "part": 3},
+    st, body, _ = http("/api/speaking/token", {"role": "partner", "part": 3, "session_id": "suite-live-1"},
                        token=token)
     j = json.loads(body)
     assert st == 200 and j["role"] == "partner" and j["part"] == 3, (st, body)
@@ -172,7 +172,7 @@ def main():
 
     # 4. 10 tokens/min/user, the 11th -> 429 + Retry-After.
     reset_limits()
-    codes = [http("/api/speaking/token", {}, token=token)[0] for _ in range(11)]
+    codes = [http("/api/speaking/token", {"session_id": "suite-live-1"}, token=token)[0] for _ in range(11)]
     assert codes[:10] == [200] * 10, codes
     assert codes[10] == 429, f"11th mint allowed: {codes}"
     out["4_token_rate_429"] = codes[10]
