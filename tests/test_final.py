@@ -5,7 +5,9 @@ from helpers import isolated_server, login_owner
 URL = isolated_server() + "/"
 # Views hidden behind the "More" button in the mobile bottom nav (5 + More)
 HIDDEN_VIEWS = {"graf", "err", "libros", "ia", "diag"}
-ALL_VIEWS = ["hoy", "practice", "exam", "partes", "prog", "graf", "plan", "err", "libros", "ia", "diag"]
+# "libros" is gone: u4 merged Books into Practice, so that nav entry now opens
+# Practice. The diagnostic has no tab either but still opens through showView.
+ALL_VIEWS = ["hoy", "practice", "exam", "partes", "prog", "graf", "plan", "err", "ia", "diag"]
 
 
 def goto_view(pg, name):
