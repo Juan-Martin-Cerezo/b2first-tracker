@@ -32,12 +32,13 @@ Cada línea se verifica contra el repo, la cola o el servicio antes de decir "li
 
 | Fase | Qué hace | Estado |
 | --- | --- | --- |
-| 35 | Examen de speaking real: 4 partes, tarea en pantalla, cronómetro, 5 pantallas, examinador con guion | **corriendo** |
-| 36 | Voz por turnos que sí funciona con esta key (STT + LLM + TTS, latencia medida) | en cola |
-| 33 | Stripe US$5/mes: checkout, webhooks firmados, idempotencia, gracia de 3 días | en cola |
-| 34 | Login con Google (OAuth + PKCE) y passkeys (WebAuthn) | en cola |
+| 34 | Login con Google (OAuth + PKCE) y passkeys (WebAuthn) | **hecho**: botón visible, Google acepta el redirect, 51 checks de passkeys |
+| 35 | Examen de speaking real: 4 partes, cronómetro, examinador con guion | **hecho** |
+| 36 | Voz por turnos (STT + LLM + TTS) como respaldo del Live | **hecho** |
+| 38 | Examen en vivo con examinador + compañero simultáneos | **hecho** |
+| 33 | Stripe US$5/mes | **revertida**: Stripe exige 18+, ver C.2 |
 
----
+Nada corriendo en este momento. La cola está vacía.
 
 ## C. Bloqueado en vos (nadie más puede hacerlo)
 
@@ -51,6 +52,8 @@ Cada línea se verifica contra el repo, la cola o el servicio antes de decir "li
 | 6 | Tres pruebas de celular | solo vos tenés los dispositivos | datos móviles, iPhone/Safari con micrófono, escuchar voces |
 | 7 | Azure Speech (opcional) | pronunciación por fonema; rechaza tarjetas prepagas | adulto + tarjeta |
 | 8 | Precio y límites de pro | hoy US$5 con 60 writing + 6 mocks; costo ~US$2,10 | confirmá o cambiá |
+| 9 | Rotar el **Google Client Secret** | lo pegaste en el chat | Cloud Console → Credentials → reset |
+| 10 | Probar el examinador con tu voz | el micrófono falso no tiene eco; tu oído es la única prueba | abrir Live examiner con auriculares |
 
 ---
 
@@ -62,7 +65,7 @@ Cada línea se verifica contra el repo, la cola o el servicio antes de decir "li
 4. **Página en 129 KB gzip** — se puede partir el material en otro request.
 5. **No hay recuperación de contraseña** por email; solo `tools/reset_password.py` desde la Pi.
 6. **Límite de login 10/10 min por IP** — molesto en una casa con dos dispositivos. Diferido a propósito.
-7. **Full-duplex imposible** con esta key: 0 de 50 modelos con `bidiGenerateContent`.
+7. ~~**Full-duplex imposible**~~ — corregido: `gemini-3.8-live` lo soporta; el "0 de 50" era la primera página del catálogo paginado.
 8. **Cloudflare inyecta su beacon** de analytics; el CSP lo bloquea pero tira error en consola.
 
 ---
@@ -100,3 +103,30 @@ Pendiente del owner:
 - **Client ID + secret de Google** en `~/.config/b2first/oauth.env` (el drop-in ya lo lee
   si existe). Sin eso `/api/auth/google/start` devuelve 503 y el botón no aparece.
 - **Probar el Live examiner con voz real** y decir si contesta a lo dicho o repite el guion.
+
+---
+
+## G. Actualización 2026-10-31 (tarde) — speaking, dinero y publicación
+
+Resuelto y medido:
+
+- **El "ruido" del examinador** eran frames JSON leídos como PCM. Se decodifica UTF-8 primero.
+- **"Repite la misma frase"**: la transcripción llega troceada (a veces acumulativa, a veces delta)
+  y el panel imprimía cada trozo. Ahora se fusiona y la fila se reescribe en el sitio.
+- **Se cortaba a mitad de palabra**: el micrófono no tenía cancelación de eco, así que el VAD
+  oía al parlante y lo interrumpía. AEC activo.
+- **"Good morning" en loop**: cada barge-in mandaba `audioStreamEnd`, o sea "el candidato
+  terminó" → el modelo volvía a saludar. Ya no se manda; solo se corta el audio local.
+- **Barge-in sin retorno**: la pausa se liberaba esperando 300 ms de silencio del micrófono;
+  en un cuarto ruidoso nunca llegaba y el examinador quedaba mudo. Ahora expira a los 2 s.
+- **Tope de gasto**: Google no tiene tope duro por dólares. Presupuesto propio en el servidor
+  (`B2_SPK_MONTHLY_MINUTES`, 900 min = US$6,30) + 15 min por sesión en el navegador.
+  Medición real: **US$0,0070 por minuto**, examen de 12 min ≈ US$0,08.
+- **La cuenta ya está en tier pago**: 15 peticiones en 2,9 s sin un solo 429.
+- **Registro público abierto**: cuenta creada y borrada de punta a punta contra el dominio.
+- **Watchdog** cada 15 min avisa por Telegram si `firsttracker.app` deja de responder.
+- **Fuera la opción "guardar mi email como hash"**: era una decisión técnica puesta sobre el
+  estudiante. El hash no se guarda nunca, sin preguntar.
+
+Suites verdes hoy: `test_speaking_exam`, `test_speaking_live`, `test_speaking_duo`,
+`test_speaking_metrics`, `test_final`, `test_legal`, `test_i18n`, `test_auth_methods`.
