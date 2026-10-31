@@ -235,6 +235,13 @@ SPK_TURN_HISTORY_CHARS = 500
 SPK_TURN_RATE_PER_MIN = 20           # turns per minute per account
 SPK_TURN_TIMEOUT = 20                # seconds per upstream call
 SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
+
+# Money guard. Google Cloud has no hard dollar cap: when the credit runs out the
+# card is charged. This process is the only client of the API key, so the ceiling
+# lives here. Measured cost is $0.007 per wall-clock minute of Live audio, so the
+# default 900 min/month tops out around $6.30 — below a $10 credit balance.
+SPK_MONTH_MINUTES = int(os.environ.get("B2_SPK_MONTHLY_MINUTES") or "900")
+_SPK_SPEND_LOCK = threading.Lock()
 SPK_TURN_SESSIONS_MAX = 500          # accounts remembered for that window
 SPK_TURN_PCM_RATE = 16000            # client wire format: 16 kHz mono 16-bit
 SPK_PCM_BYTES_PER_S = SPK_TURN_PCM_RATE * 2
@@ -1114,6 +1121,43 @@ def _spk_live_available():
 
 _SPK_TURN_LOCK = threading.Lock()
 _SPK_TURN_SESSIONS = {}   # {uid: {session_id: first_seen}}
+
+
+def _spk_spend_file():
+    return os.path.join(DATA_DIR, "spk_spend.json")
+
+
+def _spk_month_key():
+    return time.strftime("%Y-%m", time.gmtime())
+
+
+def _spk_month_seconds():
+    """Voice seconds billed this calendar month. Fails closed at 0, never raises."""
+    try:
+        with open(_spk_spend_file(), "r", encoding="utf-8") as fh:
+            rec = json.load(fh)
+    except (OSError, ValueError):
+        return 0.0
+    if not isinstance(rec, dict) or rec.get("month") != _spk_month_key():
+        return 0.0
+    try:
+        return max(0.0, float(rec.get("seconds") or 0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _spk_month_add(seconds):
+    with _SPK_SPEND_LOCK:
+        total = _spk_month_seconds() + max(0.0, float(seconds))
+        try:
+            store.write_json_private(_spk_spend_file(),
+                                     {"month": _spk_month_key(), "seconds": round(total, 3)})
+        except OSError:
+            pass
+
+
+def _spk_budget_left_s():
+    return max(0.0, SPK_MONTH_MINUTES * 60.0 - _spk_month_seconds())
 
 
 def _spk_turn_session_known(uid, session_id):
@@ -4854,6 +4898,17 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(429, {"error": "daily speaking limit reached",
                                       "reset": reset})
                 return
+            if _spk_budget_left_s() <= 0:
+                # The monthly voice budget is spent: refuse to mint rather than
+                # letting Google bill the card past the credit balance.
+                t = time.gmtime()
+                ny, nm = (t.tm_year + 1, 1) if t.tm_mon == 12 else (t.tm_year, t.tm_mon + 1)
+                nxt = "%04d-%02d-01T00:00:00Z" % (ny, nm)
+                self._send_json(429, {"error": "voice budget exhausted for this month",
+                                      "limit": "voice_month",
+                                      "limit_minutes": SPK_MONTH_MINUTES,
+                                      "reset": nxt})
+                return
             token, mint_err = _spk_mint_token(api_key)
             if not token:
                 self._send_json(502, {"error": "token_mint_failed",
@@ -5176,6 +5231,7 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(422, {"error": "invalid seconds"})
                 return
             rec = store.speaking_add(uid, _spk_today(), float(seconds))
+            _spk_month_add(float(seconds))   # feeds the monthly money guard
             plans.speaking_add_seconds(uid, seconds)
             per_user_min, _total_min = _spk_min_limits()
             plan_limits = _plan_for(uid)["limits"]["speaking"]
