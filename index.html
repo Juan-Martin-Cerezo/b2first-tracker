@@ -7405,7 +7405,7 @@ const SPK={
   voices:{},
   dir:null,overlapMs:0,addressed:null,
   activeVoices:0,billedSeconds:0,
-  speaking:false,muted:false,barged:false,
+  speaking:false,muted:false,barged:false,bargeTimer:0,
   turns:[],lines:[],inCount:0,outCount:0,interrupted:0,
   elapsed:0,startedAt:0,lastReport:0,capMin:20,remaining:null,
   raf:null,micCtx:null,micStream:null,micNode:null,micSource:null,micSink:null,
@@ -7512,6 +7512,16 @@ function spkBargeIn(){
      candidate had finished their turn, so it answered again with the greeting:
      that is why "Good morning" repeated forever without anyone speaking. The
      model has its own voice-activity detection and will emit `interrupted`. */
+  SPK.muted=true;              // drop audio already in flight for this voice
+  /* A barge-in must always release: relying only on 300 ms of VAD silence left
+     the examiner muted forever when the environment never went quiet. */
+  clearTimeout(SPK.bargeTimer);
+  SPK.bargeTimer=setTimeout(function(){
+    if(!SPK.running)return;
+    SPK.muted=false;SPK.barged=false;SPK.silSince=0;
+    const vx=SPK.voices.examiner;
+    if(vx&&vx.transport)vx.transport.mute(false);
+  },2000);
   spkClearQueue('examiner');
   /* The device voice is cancelled the same way: barge-in must stop the words,
      not just lower a gain node that speechSynthesis does not use. */
