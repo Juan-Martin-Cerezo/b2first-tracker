@@ -88,6 +88,90 @@ Band 2: Performance shares features of Bands 1 and 3.
 Band 1: Uses everyday vocabulary generally appropriately, while occasionally overusing certain lexis. Uses simple grammatical forms with a good degree of control. While errors are noticeable, meaning can still be determined.
 Band 0: Performance below Band 1."""
 
+# --- Calibration on real graded samples -----------------------------------
+# material/writing-samples.json holds real Cambridge-graded B2 First responses
+# with the examiner's verbatim comment. Each summary below is distilled from
+# the highest-band sample for that task type (marks in C/CA/O/L order), and
+# every phrase comes from the scale wording or the examiner's own comment.
+# tools/calibrate.py verifies those band/mark pairs against the JSON.
+
+TASK_TYPES = ("essay", "article", "report", "review", "email")
+
+CALIBRATION_EXEMPLARS = {
+    "essay": {
+        "band": 5,
+        "marks": (5, 5, 5, 5),
+        "praised": (
+            "content all relevant, reader fully informed; conventions hold "
+            "attention; well organised, cohesive devices; less common lexis, "
+            "complex forms controlled"
+        ),
+        "penalised": "minimal errors on ambitious language only",
+    },
+    "article": {
+        "band": 3,
+        "marks": (5, 3, 5, 2),
+        "praised": (
+            "content relevant, reader fully informed; appropriate style, questions "
+            "engage; cohesive devices, narrative structure"
+        ),
+        "penalised": (
+            "everyday vocabulary, awkward errors; few complex forms, so ideas stay "
+            "straightforward"
+        ),
+    },
+    "email": {
+        "band": 4,
+        "marks": (5, 4, 3, 4),
+        "praised": (
+            "content relevant, reader fully informed; friendly informal "
+            "conventions; vocabulary range, some complex forms"
+        ),
+        "penalised": (
+            "no paragraphing; slips do not impede; no official formal-letter sample"
+        ),
+    },
+    "review": {
+        "band": 3,
+        "marks": (4, 4, 4, 3),
+        "praised": (
+            "content relevant, reader on the whole informed; review conventions "
+            "hold attention; rhetorical questions"
+        ),
+        "penalised": (
+            "no shop description; limited tense control; list could be ordered better"
+        ),
+    },
+    "report": {
+        "band": 4,
+        "marks": (5, 4, 4, 3),
+        "praised": (
+            "content relevant, reader fully informed; objective passive, headings, "
+            "linking"
+        ),
+        "penalised": "everyday vocabulary; errors on complex ideas",
+    },
+}
+
+
+def _calibration_block():
+    """ONE exemplar per task type; missing types are named, never invented."""
+    lines = ["CALIBRATION EXEMPLARS (highest-band samples; marks C/CA/O/L):"]
+    for task in TASK_TYPES:
+        exemplar = CALIBRATION_EXEMPLARS.get(task)
+        if not exemplar:
+            lines.append(f"{task} | no official exemplar; grade from the scale only.")
+            continue
+        marks = "/".join(str(mark) for mark in exemplar["marks"])
+        lines.append(
+            f"{task} | Band {exemplar['band']} ({marks}) | "
+            f"praised: {exemplar['praised']} | penalised: {exemplar['penalised']}"
+        )
+    return "\n".join(lines)
+
+
+CALIBRATION = _calibration_block()
+
 WRITING_SYSTEM = f"""You are a senior official Cambridge Assessment English examiner for the B2 First (FCE) exam.
 Your task is to assess Writing texts by strictly applying the official Cambridge scale included below:
 
@@ -114,6 +198,8 @@ MANDATORY MARKING RULES:
 5. In "feedback", write the explanatory feedback for the student in clear English; keep quotes and English corrections in English.
 6. In "rewrite", return exactly 3 strings: 3 sentences from the student's own text rewritten and improved in English at B2+/C1 level (do not invent new text unrelated to the student's writing).
 7. Do not invent grammatical rules or descriptors that are not in the official rubric.
+
+{CALIBRATION}
 
 CALIBRATION RULES (mandatory):
 1. Be strict. Band 5 means performance at the top of B2 / start of C1. Most real B2
