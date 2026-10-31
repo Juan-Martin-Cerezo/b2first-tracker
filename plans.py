@@ -35,6 +35,7 @@ import secrets
 import threading
 import time
 
+import billing
 import store
 
 __all__ = [
@@ -249,6 +250,21 @@ def effective_plan(uid, byo=False, now=None):
             "until": rec.get("until"),
             "source": rec.get("source") or "code",
             "limits": LIMITS[plan],
+        }
+    # Phase 33: a paid subscription is the second source of `pro`. It is read
+    # after the code and always evaluated against the clock (billing.py owns
+    # the ±grace logic), so a cancellation or a failed payment demotes here
+    # without a cron job.
+    sub = billing.active_plan(uid, now=ts) if uid else None
+    if sub:
+        return {
+            "plan": "pro",
+            "since": sub.get("since"),
+            "until": sub.get("until"),
+            "source": sub.get("source") or "stripe",
+            "limits": LIMITS["pro"],
+            "grace_until": sub.get("grace_until"),
+            "status": sub.get("status"),
         }
     if byo:
         return {
