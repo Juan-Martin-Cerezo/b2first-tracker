@@ -1367,6 +1367,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .topbar .sync-status{display:none}
 }
 
+/* === U3: view reorder === */
+.prog-moved-grid{margin-bottom:20px}
+
 /* ---------- MOTION SAFETY ---------- */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -1578,12 +1581,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
       <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
-      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_recent">Recent activity</div>
-      <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
-      <div id="diagMetricsBox" style="display:none">
-        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_diag">Diagnostics (owner · last 24 h)</div>
-        <div id="diagMetricsBody" style="font-size:11.5px;color:var(--on-surface-variant)"></div>
-      </div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -1813,22 +1810,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="grid-12">
           <!-- Main column -->
           <div class="col-8">
-            <div class="card diag-banner" id="diagBanner" style="display:none">
-              <div>
-                <div class="t-md" style="font-weight:600" data-i18n="today_diag_title">Initial diagnostic · 10 min · 12 questions</div>
-                <div class="t-xs diag-banner-sub" data-i18n="today_diag_sub">Find your weak spots across the 7 Reading &amp; Use of English parts to personalise your study.</div>
-              </div>
-              <button type="button" class="btn ok" id="diagBannerBtn" onclick="openDiagAndStart()" data-i18n="common_start">Start</button>
-            </div>
             <div class="next-session" id="nextBox"></div>
             <div class="card practice-now" id="practiceNow"></div>
-            <div class="card streak-card" id="streakCard"></div>
-            <div class="card" id="examCountdown"></div>
-            <div class="card">
-              <h2 data-i18n="today_recent">Recent sessions</h2>
-              <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
-              <div id="recentList"></div>
-            </div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
@@ -2692,16 +2675,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
             </div>
 
-            <div class="card metrics-card">
-              <h4 class="metrics-title" data-i18n="metric_title">Weekly Metrics</h4>
-              <div class="metric-row"><span data-i18n="metric_hours">Total hours</span><span class="metric-val" id="mHoras">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
-            </div>
           </div>
         </div>
       </section>
@@ -2836,6 +2809,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <span class="stat-card-label" data-i18n="prog_total_time">Total Study Time</span>
             <span class="stat-card-val" id="pTime">0</span>
             <span class="stat-card-sub" data-i18n="prog_logged_min">logged minutes</span>
+          </div>
+        </div>
+
+        <div class="grid-12 prog-moved-grid">
+          <div class="col-6">
+            <div class="card metrics-card">
+              <h4 class="metrics-title" data-i18n="metric_title">Weekly Metrics</h4>
+              <div class="metric-row"><span data-i18n="metric_hours">Total hours</span><span class="metric-val" id="mHoras">—</span></div>
+              <div class="metric-divider"></div>
+              <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
+              <div class="metric-divider"></div>
+              <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
+              <div class="metric-divider"></div>
+              <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card">
+              <h2 data-i18n="today_recent">Recent sessions</h2>
+              <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
+              <div id="recentList"></div>
+            </div>
           </div>
         </div>
 
@@ -2995,6 +2990,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup">📥 Import Backup</button>
           </div>
         </div>
+
+        <div class="card" id="examCountdown" style="margin-bottom:16px"></div>
 
         <!-- Week plan (derived from the diagnostic + error taxonomy) -->
         <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
@@ -3592,19 +3589,6 @@ const I18N={
     google_link_btn:'Link and sign in',
     google_link_error:'Could not continue with Google. Try again.',
     google_user_ph:'e.g. maria',
-    activity_login_ok:'Signed in',
-    activity_login_fail:'Failed sign-in',
-    activity_register:'Account created',
-    activity_password_change:'Password changed',
-    activity_account_delete:'Account deleted',
-    activity_quota_hit:'AI daily quota reached',
-    activity_ua_changed:'New device / browser',
-    activity_google_login:'Signed in with Google',
-    activity_google_register:'Account created with Google',
-    activity_google_link:'Google account linked',
-    activity_passkey_add:'Passkey added',
-    activity_passkey_remove:'Passkey removed',
-    activity_passkey_login:'Signed in with a passkey',
     common_cancel:'Cancel',
     common_save:'Save',
     common_start:'Start',
@@ -3624,8 +3608,6 @@ const I18N={
     footer_brand:'B2 First Mastery · Grade A',
     today_log_single:'Log single part',
     today_start_session:'Start session',
-    today_diag_title:'Initial diagnostic · 10 min · 12 questions',
-    today_diag_sub:'Find your weak spots across the 7 Reading & Use of English parts to personalise your study.',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
     rot_title:'Fortnightly Rotation Matrix',
@@ -3673,11 +3655,6 @@ const I18N={
     recent_empty:'Nothing logged yet. Your first session takes 15 seconds.',
     recent_quick:'Quick log',
     exam_countdown:'Exam countdown',
-    exam_countdown_sub:'Your next official exam date.',
-    exam_days_to_go:'{days} {unit} to go · {date}',
-    exam_day:'day',
-    exam_days:'days',
-    exam_remove:'Remove date',
     exam_no_date:'No exam date set. Add one to get a countdown (exam days never break your streak).',
     exam_set_date:'Set your exam date',
     exam_date_label:'Exam date',
@@ -4032,8 +4009,6 @@ const I18N={
     user_passkey_removed:'Passkey removed.',
     user_passkey_error:'Could not add the passkey.',
     user_passkey_removed_error:'Could not remove the passkey.',
-    user_recent:'Recent activity',
-    user_diag:'Diagnostics (owner · last 24 h)',
     user_delete:'Delete my account',
     user_delete_btn:'Delete my account',
     user_delete_pass:'Your password',
@@ -4240,19 +4215,6 @@ const I18N={
     google_link_btn:'Vincular y entrar',
     google_link_error:'No se pudo continuar con Google. Probá de nuevo.',
     google_user_ph:'ej. maria',
-    activity_login_ok:'Sesión iniciada',
-    activity_login_fail:'Intento de ingreso fallido',
-    activity_register:'Cuenta creada',
-    activity_password_change:'Contraseña cambiada',
-    activity_account_delete:'Cuenta eliminada',
-    activity_quota_hit:'Límite diario de IA alcanzado',
-    activity_ua_changed:'Dispositivo o navegador nuevo',
-    activity_google_login:'Ingreso con Google',
-    activity_google_register:'Cuenta creada con Google',
-    activity_google_link:'Cuenta de Google vinculada',
-    activity_passkey_add:'Passkey agregada',
-    activity_passkey_remove:'Passkey quitada',
-    activity_passkey_login:'Ingreso con passkey',
     common_cancel:'Cancelar',
     common_save:'Guardar',
     common_start:'Empezar',
@@ -4272,8 +4234,6 @@ const I18N={
     footer_brand:'B2 First Mastery · Grado A',
     today_log_single:'Registrar una parte',
     today_start_session:'Empezar sesión',
-    today_diag_title:'Diagnóstico inicial · 10 min · 12 preguntas',
-    today_diag_sub:'Detectá tus puntos débiles en las 7 partes de Reading & Use of English para personalizar tu estudio.',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
     rot_title:'Matriz de rotación quincenal',
@@ -4321,11 +4281,6 @@ const I18N={
     recent_empty:'Todavía no registraste nada. Tu primera sesión dura 15 segundos.',
     recent_quick:'Registro rápido',
     exam_countdown:'Cuenta regresiva al examen',
-    exam_countdown_sub:'Tu próxima fecha oficial de examen.',
-    exam_days_to_go:'{days} {unit} para el examen · {date}',
-    exam_day:'día',
-    exam_days:'días',
-    exam_remove:'Quitar fecha',
     exam_no_date:'No hay fecha de examen. Agregá una para ver la cuenta regresiva (los días de examen no cortan tu racha).',
     exam_set_date:'Definir fecha del examen',
     exam_date_label:'Fecha del examen',
@@ -4680,8 +4635,6 @@ const I18N={
     user_passkey_removed:'Passkey quitada.',
     user_passkey_error:'No se pudo agregar la passkey.',
     user_passkey_removed_error:'No se pudo quitar la passkey.',
-    user_recent:'Actividad reciente',
-    user_diag:'Diagnósticos (owner · últimas 24 h)',
     user_delete:'Eliminar mi cuenta',
     user_delete_btn:'Eliminar mi cuenta',
     user_delete_pass:'Tu contraseña',
@@ -5667,13 +5620,12 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-/* ---------- FEATURE TOUR (3 coach marks) ----------
+/* ---------- FEATURE TOUR (2 coach marks) ----------
    Anchored with getBoundingClientRect(), repositioned on resize/scroll.
    A step whose target is not visible is skipped. */
 const TOUR_STEPS=[
   {sel:'#sideNav',title:'Everything is one tap away',body:'Today, Exam, Parts, Progress and Plan: your whole B2 First lives in this navigation.'},
-  {sel:'#qlFab',title:'Quick log',body:'Log any practice session in 15 seconds — 3 taps from anywhere in the app.'},
-  {sel:'#diagBannerBtn',title:'Take the diagnostic',body:'10 minutes, 12 questions: it pins your weakest exam parts and tightens the plan.'}
+  {sel:'#qlFab',title:'Quick log',body:'Log any practice session in 15 seconds — 3 taps from anywhere in the app.'}
 ];
 var TOUR={i:0,active:false};
 function tourVisible(sel){
@@ -5782,73 +5734,12 @@ function openUserModal(){
   if(uc)uc.textContent=schedSummary;
 
   ov.style.display='flex';
-  loadAccountActivity();
-  loadDiagnostics();
   loadPasskeys();
 }
 function closeUserModal(){
   const ov=document.getElementById('userModal');
   if(ov)ov.style.display='none';
 }
-const ACTIVITY_LABELS={
-  login_ok:'activity_login_ok',login_fail:'activity_login_fail',register:'activity_register',
-  password_change:'activity_password_change',account_delete:'activity_account_delete',
-  quota_hit:'activity_quota_hit',ua_changed:'activity_ua_changed',
-  google_login:'activity_google_login',google_register:'activity_google_register',
-  google_link:'activity_google_link',passkey_add:'activity_passkey_add',
-  passkey_remove:'activity_passkey_remove',passkey_login:'activity_passkey_login'
-};
-async function loadAccountActivity(){
-  const box=document.getElementById('acctActivity');
-  if(!box)return;
-  box.textContent='Loading…';
-  try{
-    const r=await fetch(apiUrl('/api/audit',{limit:20}),{headers:authHeaders()});
-    if(!r.ok)throw 0;
-    const d=await r.json();
-    const evs=Array.isArray(d.events)?d.events:[];
-    if(!evs.length){box.textContent='No recent activity.';return}
-    box.textContent='';
-    evs.forEach(e=>{
-      const row=document.createElement('div');
-      row.style.display='flex';row.style.justifyContent='space-between';row.style.gap='8px';
-      const ev=document.createElement('span');
-      ev.textContent=ACTIVITY_LABELS[e.event]?t(ACTIVITY_LABELS[e.event]):String(e.event||'?');
-      const ts=document.createElement('span');
-      ts.textContent=String(e.ts||'');
-      ts.style.opacity='.75';ts.style.whiteSpace='nowrap';
-      row.appendChild(ev);row.appendChild(ts);
-      box.appendChild(row);
-    });
-  }catch(err){box.textContent='Activity unavailable.'}
-}
-/* Owner-only product diagnostics: aggregates from GET /api/metrics.
-   No personal data — event counts, truncated error messages and the AI
-   counters. Visible only when the signed-in user is the owner. */
-async function loadDiagnostics(){
-  const box=document.getElementById('diagMetricsBox');
-  if(!box)return;
-  if(!USER||USER.id!=='owner'){box.style.display='none';return}
-  const body=document.getElementById('diagMetricsBody');
-  try{
-    const r=await fetch('/api/metrics',{headers:authHeaders()});
-    if(!r.ok)throw 0;
-    const m=await r.json();
-    const evs=m.events||{};
-    const evRows=Object.keys(evs).sort((a,b)=>evs[b]-evs[a])
-      .map(k=>`<tr><td>${esc(k)}</td><td class="tnum" style="text-align:right">${evs[k]}</td></tr>`).join('');
-    const errs=(m.errors||[]).map(e=>`<tr><td>${esc(e.n)}</td><td class="tnum" style="text-align:right">${e.count}</td><td>${esc(String(e.last_message_trunc||''))}</td></tr>`).join('');
-    const ai=m.ai||{};
-    body.innerHTML=`
-      <div>${m.users_active||0} active sessions · p50 view ${m.p50_view_ms||0} ms</div>
-      <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${evRows||'<tr><td>No events yet.</td></tr>'}</tbody></table>
-      <div style="font-weight:600;color:var(--on-surface)">Top errors</div>
-      <table style="width:100%;border-collapse:collapse;margin:6px 0"><tbody>${errs||'<tr><td>No errors ✔</td></tr>'}</tbody></table>
-      <div style="font-weight:600;color:var(--on-surface)">AI: ${ai.requests||0} requests · ${ai.success||0} ok · ${ai.errors||0} errors · ${ai.blocked||0} blocked</div>`;
-    box.style.display='block';
-  }catch(e){box.style.display='none'}
-}
-
 /* ---------- LOAD / SAVE (per user) ---------- */
 var D=load();
 window.D=D;
@@ -9737,6 +9628,7 @@ function renderPlan(){
   document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
   renderByoSettings();
   renderPlanCard();
+  renderExamCountdown();
 }
 /* ---------- BRING YOUR OWN KEY (phase 30) ----------
    The key lives in localStorage under `b2first_byo_<userId>`, never in D:
@@ -11333,11 +11225,6 @@ function updatePersonalizedUI(){
 
 function renderToday(){
   updatePersonalizedUI();
-  const diagBanner=document.getElementById('diagBanner');
-  if(diagBanner){
-    const hasDiag=Array.isArray(D.log)&&D.log.filter(x=>x&&x.type==='diag').length>0;
-    diagBanner.style.display=hasDiag?'none':'flex';
-  }
   const d=new Date(),wd=d.getDay();
   const week=isoWeek(d);
   const s=D.settings||SETTINGS_DEFAULT;
@@ -11473,12 +11360,12 @@ function renderToday(){
     curEl.textContent=`${isWeekA?t('week_a'):t('week_b')}: ${currentWeekSlots}`;
   }
 
-  renderExamCountdown();
-  renderRecent();
 }
 
-/* Exam countdown card: prefers D.profile.examDate (intake); falls back to
-   D.examDates (exam days never break the streak). */
+/* Exam countdown card: PLAN only, one-time setup. It is visible while no
+   exam date exists and hides as soon as one is set. Prefers
+   D.profile.examDate (intake); falls back to D.examDates (exam days never
+   break the streak). */
 function renderExamCountdown(){
   const el=document.getElementById('examCountdown');
   if(!el)return;
@@ -11486,24 +11373,15 @@ function renderExamCountdown(){
   const profDate=(D.profile&&D.profile.examDate)?dayKey(D.profile.examDate):null;
   const dates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(Boolean).sort();
   const next=((profDate&&profDate>=todayStr)?profDate:null)||dates.find(x=>x>=todayStr);
-  if(next){
-    const days=Math.round((_parseLocalDay(next)-_parseLocalDay(todayStr))/86400000);
-    el.innerHTML=`<h2>${t('exam_countdown')}</h2>
-      <div class="sub">${t('exam_countdown_sub')}</div>
-      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-        <span class="exam-days tnum">${days}</span>
-        <span class="muted">${t('exam_days_to_go',{days:days,unit:t(days===1?'exam_day':'exam_days'),date:fmtDate(next)})}</span>
-        <button type="button" class="btn sm gray" onclick="clearExamDate()">${t('exam_remove')}</button>
-      </div>`;
-  }else{
-    el.innerHTML=`<h2>${t('exam_countdown')}</h2>
-      <div class="sub">${t('exam_no_date')}</div>
-      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
-        <button type="button" class="btn ok sm" onclick="openIntake()">${t('exam_set_date')}</button>
-        <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
-        <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
-      </div>`;
-  }
+  if(next){el.style.display='none';return}
+  el.style.display='';
+  el.innerHTML=`<h2>${t('exam_countdown')}</h2>
+    <div class="sub">${t('exam_no_date')}</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <button type="button" class="btn ok sm" onclick="openIntake()">${t('exam_set_date')}</button>
+      <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
+      <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
+    </div>`;
 }
 function setExamDate(){
   const inp=document.getElementById('examDateInput');
@@ -11511,12 +11389,6 @@ function setExamDate(){
   D.examDates=Array.isArray(D.examDates)?D.examDates:[];
   const k=dayKey(inp.value);
   if(!D.examDates.map(dayKey).includes(k))D.examDates.push(k);
-  save();refreshAll();
-}
-function clearExamDate(){
-  const todayStr=dayKey(new Date());
-  D.examDates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(x=>x<todayStr);
-  if(D.profile)D.profile.examDate=null;
   save();refreshAll();
 }
 
@@ -12420,7 +12292,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderRecent();renderStats();renderErrs();renderBooks();renderBookCats();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
