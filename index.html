@@ -1388,6 +1388,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:400px){
   .top-streak{padding:4px 6px}
 }
+
+/* === U4: practice + exam === */
+.u4-real-mocks{margin-bottom:16px}
+.u4-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.u4-section-head>div{min-width:0}
+.u4-section-head h2{margin-bottom:4px}
+.u4-fullmock-btn{flex:none}
+.u4-mock-hint{margin:12px 0 0;font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5}
+.u4-exam-sources{margin-top:16px}
+.u4-sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:12px}
+.u4-source-group{display:flex;flex-direction:column;gap:6px;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:12px}
+.u4-source-link{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:var(--fs-sm);color:var(--txt);text-decoration:none;overflow-wrap:anywhere;border-radius:var(--r-ctl);padding:4px 2px}
+.u4-source-link:hover{color:var(--acc-text)}
+.u4-source-link span{flex:none;font-size:var(--fs-xs);color:var(--txt-2)}
+.u4-source-all{margin-top:12px}
+.u4-practice-books{margin-top:16px}
+.spx-overlay{position:fixed;inset:0;z-index:1200;margin:0;border:0;border-radius:0;overflow-y:auto;background:var(--bg);box-shadow:none;padding:24px}
+.spx-overlay>.spx-head{position:sticky;top:0;z-index:1;background:var(--bg);padding-bottom:8px}
+@media (max-width:640px){.spx-overlay{padding:16px}}
 </style>
 </head>
 <body>
@@ -2700,40 +2719,60 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <!-- Module selection grid (like Stitch) -->
-        <div class="exam-select-grid" id="examSelectGrid">
-          <button class="exam-card" data-paper="rue" onclick="startExamFromCard('rue')">
-            <div class="exam-card-top">
-              <span class="exam-card-kicker">Part 1 &amp; 2</span>
-              <span class="exam-card-min">75 Min</span>
+        <!-- U4: Real mocks. The four papers, one click each, with the same
+             countdown; the full mock chains the written papers and ends in
+             the SP_EXAM speaking test. -->
+        <div class="card u4-real-mocks">
+          <div class="u4-section-head">
+            <div>
+              <h2 data-i18n="exam_real_mocks">Real mocks</h2>
+              <div class="sub" data-i18n="exam_real_mocks_sub">All four papers in one place. One click starts a real timed mock with the official duration.</div>
             </div>
-            <h3 class="exam-card-title">Reading &amp; Use of English</h3>
-            <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
-          </button>
-          <button class="exam-card" data-paper="w" onclick="startExamFromCard('w')">
-            <div class="exam-card-top">
-              <span class="exam-card-kicker">Part 3</span>
-              <span class="exam-card-min">80 Min</span>
-            </div>
-            <h3 class="exam-card-title">Writing</h3>
-            <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
-          </button>
-          <button class="exam-card" data-paper="l" onclick="startExamFromCard('l')">
-            <div class="exam-card-top">
-              <span class="exam-card-kicker">Part 4</span>
-              <span class="exam-card-min">40 Min</span>
-            </div>
-            <h3 class="exam-card-title">Listening</h3>
-            <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
-          </button>
-          <button class="exam-card exam-card-full" data-paper="full" onclick="startExamFromCard('full')">
-            <div class="exam-card-top">
-              <span class="exam-card-kicker">Comprehensive</span>
-              <span class="exam-card-min">195 Min</span>
-            </div>
-            <h3 class="exam-card-title" data-i18n="exam_full_title">Full B2 First Exam</h3>
-            <p class="exam-card-desc" data-i18n="exam_desc_full">Complete sequential run of all three written papers without breaks.</p>
-          </button>
+            <button class="btn ok u4-fullmock-btn" type="button" onclick="startFullMock()" data-i18n="exam_start_full">Start full mock</button>
+          </div>
+          <div class="exam-select-grid" id="examSelectGrid">
+            <button class="exam-card" data-paper="rue" onclick="startRealMock('rue')">
+              <div class="exam-card-top">
+                <span class="exam-card-kicker">Paper 1 &amp; 2</span>
+                <span class="exam-card-min">75 min</span>
+              </div>
+              <h3 class="exam-card-title">Reading &amp; Use of English</h3>
+              <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
+            </button>
+            <button class="exam-card" data-paper="w" onclick="startRealMock('w')">
+              <div class="exam-card-top">
+                <span class="exam-card-kicker">Paper 3</span>
+                <span class="exam-card-min">80 min</span>
+              </div>
+              <h3 class="exam-card-title">Writing</h3>
+              <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
+            </button>
+            <button class="exam-card" data-paper="l" onclick="startRealMock('l')">
+              <div class="exam-card-top">
+                <span class="exam-card-kicker">Paper 4</span>
+                <span class="exam-card-min">40 min</span>
+              </div>
+              <h3 class="exam-card-title">Listening</h3>
+              <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
+            </button>
+            <button class="exam-card" data-paper="sp" onclick="openSpeakingExam()">
+              <div class="exam-card-top">
+                <span class="exam-card-kicker">Paper 5 · AI</span>
+                <span class="exam-card-min">14 min</span>
+              </div>
+              <h3 class="exam-card-title">Speaking</h3>
+              <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
+            </button>
+          </div>
+          <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
+        </div>
+
+        <!-- U4: short official source list, built from PRACTICE_SOURCES -->
+        <div class="card u4-exam-sources">
+          <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
+          <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
+          <div id="examSources" class="u4-sources"></div>
+          <div class="u4-source-all"><button class="btn sm gray" type="button" onclick="showView('practice')" data-i18n="exam_sources_all">Open the full source library</button></div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -2764,7 +2803,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div style="text-align:center;margin:6px 0 18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
               <button class="btn" onclick="exStart()" data-i18n="common_start">▶ Start</button>
               <button class="btn gray" onclick="exPause()">⏸ <span data-i18n="exam_pause">Pause</span></button>
-              <button class="btn gray" onclick="exReset()">↺ <span data-i18n="exam_reset">Reset</span></button>
+              <button class="btn gray" onclick="exResetUser()">↺ <span data-i18n="exam_reset">Reset</span></button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:14px;text-align:left">
@@ -3291,26 +3330,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="practice-grid" id="practiceGrid"></div>
           <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
         </div>
-      </section>
 
-      <!-- ============ BOOKS ============ -->
-      <section id="v-libros" class="view">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" data-i18n="books_title">Resource Library</h1>
-            <p class="page-sub" data-i18n="books_sub">PDFs, audio and online resources for your preparation. Dynamic: whatever you add to the folder shows up automatically.</p>
-          </div>
-        </div>
-        <div class="card">
-          <h2 data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h2>
+        <!-- U4: Books merged into Practice. Same #onlineList / #matList /
+             #matFilter ids so renderOnline() and renderMaterial() keep working. -->
+        <div class="card u4-practice-books" id="practiceBooks">
+          <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
+          <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
+          <h3 class="folder" data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h3>
           <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
           <div id="onlineList"></div>
-        </div>
-        <div class="card">
-          <h2 data-i18n="books_material">📥 Downloaded Material (PDFs &amp; Audio)</h2>
+          <h3 class="folder" data-i18n="books_material" style="margin-top:18px">📥 Downloaded Material (PDFs &amp; Audio)</h3>
           <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
           <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
           <div id="matList"></div>
+        </div>
+      </section>
+
+      <!-- ============ BOOKS (legacy, redirects to Practice) ============ -->
+      <section id="v-libros" class="view">
+        <div class="card">
+          <h2 data-i18n="books_moved_title">Books &amp; PDFs are now inside Practice</h2>
+          <p class="sub" data-i18n="books_moved_sub">The Books tab was merged into Practice. PDFs, audio and online practice are still one click away.</p>
+          <button class="btn" type="button" onclick="showView('practice')" data-i18n="books_moved_cta">Go to Practice</button>
         </div>
       </section>
 
@@ -3700,6 +3741,14 @@ const I18N={
     exam_opt_w:'Writing — 80 min (2 texts)',
     exam_opt_l:'Listening — 40 min (30 questions)',
     exam_opt_full:'FULL EXAM — 195 min (all components)',
+    exam_real_mocks:'Real mocks',
+    exam_real_mocks_sub:'All four papers in one place. One click starts a real timed mock with the official duration.',
+    exam_start_full:'Start full mock',
+    exam_full_hint:'Full mock runs R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.',
+    exam_desc_sp:'4 parts with the AI examiner: interview, long turn, collaborative task and discussion.',
+    exam_sources_title:'Official sources, one click',
+    exam_sources_sub:'Hand-checked official resources to practise each paper without leaving the exam.',
+    exam_sources_all:'Open the full source library',
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_title:'Practice by Part',
@@ -3901,6 +3950,11 @@ const I18N={
     books_material:'📥 Downloaded Material (PDFs & Audio)',
     books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
     books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
+    practice_books_title:'Books & PDFs',
+    practice_books_sub:'The full library: online practice plus every downloaded PDF and audio file.',
+    books_moved_title:'Books & PDFs are now inside Practice',
+    books_moved_sub:'The Books tab was merged into Practice. PDFs, audio and online practice are still one click away.',
+    books_moved_cta:'Go to Practice',
     ai_title:'AI Writing Corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
@@ -4317,6 +4371,14 @@ const I18N={
     exam_opt_w:'Writing — 80 min (2 textos)',
     exam_opt_l:'Listening — 40 min (30 preguntas)',
     exam_opt_full:'EXAMEN COMPLETO — 195 min (todos los componentes)',
+    exam_real_mocks:'Mocks reales',
+    exam_real_mocks_sub:'Las cuatro pruebas en un solo lugar. Un clic arranca un mock real cronometrado con la duración oficial.',
+    exam_start_full:'Empezar mock completo',
+    exam_full_hint:'El mock completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
+    exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
+    exam_sources_title:'Fuentes oficiales a un clic',
+    exam_sources_sub:'Recursos oficiales verificados para practicar cada prueba sin salir del examen.',
+    exam_sources_all:'Abrir la biblioteca completa',
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_title:'Practicar por parte',
@@ -4518,6 +4580,11 @@ const I18N={
     books_material:'📥 Material descargado (PDF y audio)',
     books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
     books_filter_ph:'🔍 Filtrar material... (ej. listening, parte 3, writing)',
+    practice_books_title:'Libros y PDFs',
+    practice_books_sub:'La biblioteca completa: práctica online y todos los PDF y audios descargados.',
+    books_moved_title:'Libros y PDFs ahora están en Práctica',
+    books_moved_sub:'La pestaña Libros se fusionó con Práctica. Los PDF, el audio y la práctica online siguen a un clic.',
+    books_moved_cta:'Ir a Práctica',
     ai_title:'AI Writing Corrector',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
@@ -10322,15 +10389,58 @@ function wpStart(i){
    savePart(i) logs the entry in D.log (ue/lp/sp). */
 const EX_DUR={rue:75*60,w:80*60,l:40*60,full:195*60};
 let exLeft=75*60,exIv=null,exPaper='rue';
-function startExamFromCard(p){
-  exPaper=p;
-  const sel=document.getElementById('exPaper');
-  if(sel)sel.value=p;
-  const titleEl=document.getElementById('exActiveTitle');
-  if(titleEl)titleEl.textContent=p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':t('exam_full_title');
-  exReset();
-  document.getElementById('exActive').scrollIntoView({behavior:'smooth',block:'start'});
+/* U4: real mocks. A card sets the paper, its official duration and starts
+   the existing countdown in one click. The full mock chains the three written
+   papers and hands over to the SP_EXAM speaking test (14 min). */
+const FULL_MOCK={active:false,idx:0,phases:['rue','w','l']};
+function examPaperTitle(p){
+  return p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':t('exam_full_title');
 }
+function startRealMock(paper,keepFull){
+  if(paper==='full'){startFullMock();return}
+  if(paper==='sp'){openSpeakingExam();return}
+  FULL_MOCK.active=!!keepFull;
+  exPaper=paper;
+  const sel=document.getElementById('exPaper');
+  if(sel)sel.value=paper;
+  renderEx();
+  const titleEl=document.getElementById('exActiveTitle');
+  if(titleEl)titleEl.textContent=examPaperTitle(paper);
+  exStart();
+  const box=document.getElementById('exActive');
+  if(box)box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startFullMock(){
+  FULL_MOCK.active=true;
+  FULL_MOCK.idx=0;
+  startRealMock(FULL_MOCK.phases[0],true);
+}
+function fullMockAdvance(){
+  FULL_MOCK.idx++;
+  if(FULL_MOCK.idx>=FULL_MOCK.phases.length){
+    FULL_MOCK.active=false;
+    openSpeakingExam();
+    return;
+  }
+  startRealMock(FULL_MOCK.phases[FULL_MOCK.idx],true);
+}
+function exResetUser(){
+  FULL_MOCK.active=false;
+  exReset();
+}
+/* Open the existing SP_EXAM flow from Exam. The panel lives inside Today's
+   speaking studio, so mount it on <body> once and float it as an overlay:
+   the exam is reachable from any view without re-implementing it. */
+function openSpeakingExam(){
+  const panel=document.getElementById('spxPanel');
+  if(panel){
+    if(panel.parentElement!==document.body)document.body.appendChild(panel);
+    panel.classList.add('spx-overlay');
+  }
+  if(window.SP_EXAM&&typeof SP_EXAM.open==='function')SP_EXAM.open();
+}
+/* Keep backward compatibility with the old exam cards. */
+function startExamFromCard(p){startRealMock(p)}
 function renderEx(){
   exPaper=document.getElementById('exPaper').value;
   exReset();
@@ -10346,10 +10456,31 @@ function renderEx(){
   else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
   else f.innerHTML=`<div><label>R&UoE correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
+  renderExamSources();
+}
+/* U4: a short, official list for the Exam screen. It is a subset of
+   PRACTICE_SOURCES (already checked, all https) so the catalogue stays in
+   one place; the full list lives in Practice. */
+function renderExamSources(){
+  const el=document.getElementById('examSources');
+  if(!el)return;
+  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))?PRACTICE_SOURCES:[];
+  const groups=[['rue','practice_skill_rue'],['w','practice_skill_w'],['l','practice_skill_l'],['sp','practice_skill_sp']];
+  el.innerHTML=groups.map(function(g){
+    const picks=sources.filter(function(s){return s.skill===g[0]&&/^https?:\/\//.test(s.url)}).slice(0,2);
+    if(!picks.length)return '';
+    return `<div class="u4-source-group"><span class="badge ${g[0]==='rue'||g[0]==='sp'?'mon':'fri'}">${esc(t(g[1]))}</span>`+
+      picks.map(function(s){return `<a class="u4-source-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.n)} <span>${esc(t('practice_mins',{mins:s.mins}))}</span> ↗</a>`}).join('')+
+      `</div>`;
+  }).join('');
 }
 function exStart(){
   if(exIv){exPause();return}
-  exIv=setInterval(()=>{exLeft--;exTick();if(exLeft<=0){clearInterval(exIv);exIv=null;exTick();document.getElementById('exRegister').style.display='block';}},1000);
+  exIv=setInterval(()=>{exLeft--;exTick();if(exLeft<=0){clearInterval(exIv);exIv=null;exTick();
+    /* U4: a full mock advances through the written papers by itself and
+       ends by opening the speaking test. */
+    if(FULL_MOCK.active){fullMockAdvance();return}
+    document.getElementById('exRegister').style.display='block';}},1000);
   exTick();
 }
 function exPause(){if(exIv){clearInterval(exIv);exIv=null;exTick()}}
@@ -12279,6 +12410,10 @@ function renderDiag(){
    failure (e.g. opened as file:// with no server) uses a minimal local
    list. init: wires listeners, applies PLAN timers and refreshes all. */
 function showView(viewId){
+  /* U4 one-door decision: Books has no door of its own any more. Old links
+     and calls keep working, but they land on Practice, where the library
+     (PDFs, audio, online practice) now lives. */
+  if(viewId==='libros')viewId='practice';
   const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
   if(btn){btn.click();return}
   // Views without a nav entry (the diagnostic) still open when the plan
@@ -12297,6 +12432,11 @@ function showView(viewId){
 }
 document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   const _tevT0=Date.now();
+  /* U4: the legacy Books tab is a redirect to Practice, never a second view. */
+  if(b.dataset.view==='libros'){
+    const practiceBtn=document.querySelector("nav button[data-view='practice']");
+    if(practiceBtn){practiceBtn.click();return}
+  }
   if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
     PARTS_FILTER=null;
     renderParts();
