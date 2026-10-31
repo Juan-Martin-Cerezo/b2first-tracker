@@ -2265,6 +2265,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <section class="spx-screen" data-spx-screen="report">
                       <p class="spx-sentence" id="spxRpSentence"></p>
                       <div class="spx-saved" id="spxRpSaved"></div>
+                      <div class="spx-saved" id="spxRpLatency"></div>
                       <div class="spx-actions">
                         <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again">Practise another part</button>
                         <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
@@ -3048,6 +3049,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div><label data-i18n="plan_speaking_p34">Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
               </div>
               <div class="row">
+                <div>
+                  <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
+                  <select id="pVoice">
+                    <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
+                    <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
+                  </select>
+                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one AI call. Natural asks Gemini for the audio and costs one more.</div>
+                </div>
+              </div>
+              <div class="row">
                 <div><label data-i18n="plan_wmin">Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
                 <div><label data-i18n="plan_wmax">Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
               </div>
@@ -3749,6 +3760,10 @@ const I18N={
     plan_review_min:'Review (min)',
     plan_speaking_p2:'Speaking Part 2 (sec)',
     plan_speaking_p34:'Speaking Parts 3-4 (sec)',
+    plan_voice:'Speaking voice',
+    plan_voice_fast:'Instant — device voice (~2 s)',
+    plan_voice_natural:'Natural voice — Gemini (~6 s)',
+    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one AI call. Natural asks Gemini for the audio and costs one more.',
     plan_wmin:'Writing — min words',
     plan_wmax:'Writing — max words',
     plan_streak_freeze:'Streak freeze / week (🛡)',
@@ -4049,6 +4064,9 @@ const I18N={
     spx_retry:'Try the report again',
     spx_report_sentence:'Part {n} is saved to your log.',
     spx_report_saved:'{min} min · {bands} · silence prompts: {silences}',
+    spx_report_latency:'Reply in {s} s ({voice}).',
+    spx_voice_fast:'instant, device voice',
+    spx_voice_natural:'natural, Gemini voice',
     spx_again:'Practise another part',
     spx_no_task:'The task bank could not be loaded. Check your connection and try again.',
     spx_no_bank:'No task found for Part {n}.',
@@ -4340,6 +4358,10 @@ const I18N={
     plan_review_min:'Revisar (min)',
     plan_speaking_p2:'Speaking parte 2 (s)',
     plan_speaking_p34:'Speaking partes 3-4 (s)',
+    plan_voice:'Voz del examinador',
+    plan_voice_fast:'Instantánea — voz del dispositivo (~2 s)',
+    plan_voice_natural:'Natural — Gemini (~6 s)',
+    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una llamada de IA. La natural pide el audio a Gemini y cuesta una más.',
     plan_wmin:'Writing — mínimo de palabras',
     plan_wmax:'Writing — máximo de palabras',
     plan_streak_freeze:'Congelar racha / semana (🛡)',
@@ -4640,6 +4662,9 @@ const I18N={
     spx_retry:'Probar el informe de nuevo',
     spx_report_sentence:'La Parte {n} quedó guardada en tu registro.',
     spx_report_saved:'{min} min · {bands} · avisos de silencio: {silences}',
+    spx_report_latency:'Respuesta en {s} s ({voice}).',
+    spx_voice_fast:'voz instantánea del dispositivo',
+    spx_voice_natural:'voz natural de Gemini',
     spx_again:'Practicar otra parte',
     spx_no_task:'No se pudo cargar el banco de tareas. Revisá la conexión y probá de nuevo.',
     spx_no_bank:'No hay tarea para la Parte {n}.',
@@ -4703,6 +4728,9 @@ function setLang(code){
 function syncLangFromD(){LANG=normalizeLang(D&&D.settings&&D.settings.lang)}
 const SETTINGS_DEFAULT={
   lang:'en',
+  /* Phase 38: `fast` speaks the reply with the browser's own speechSynthesis
+     (one AI call per turn, ~2 s); `natural` asks Gemini for audio (+3-4 s). */
+  voice:'fast',
   sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
@@ -6565,10 +6593,125 @@ async function spkPlayWav(b64,who){
   return spkOnBuffer(buf,who);
 }
 
+/* Phase 38: the fast voice. The server returns the reply text only and the
+   browser speaks it with `speechSynthesis`: no TTS call, ~2 s per turn, and a
+   device voice that is immediate but robotic. The setting is per account
+   (D.settings.voice), so the exam can be fast for practice and natural for a
+   dress rehearsal without touching the server. */
+function spkVoiceMode(){
+  const s=(typeof D!=='undefined'&&D&&D.settings)?D.settings:null;
+  return (s&&s.voice==='natural')?'natural':'fast';
+}
+function spkTtsMode(){return spkVoiceMode()==='natural'?'gemini':'none'}
+function spkBrowserSpeech(){
+  return (typeof window!=='undefined'&&window.speechSynthesis)?window.speechSynthesis:null;
+}
+/* A short, ordered preference list: the first en-GB voice the device has.
+   Chosen once, logged once — a per-turn log would be noise. */
+const SPK_BROWSER_PREFS=[
+  'Google UK English Female','Google UK English Male',
+  'Microsoft Libby Online (Natural) - English (United Kingdom)',
+  'Microsoft Sonia Online (Natural) - English (United Kingdom)',
+  'Libby','Sonia','Daniel','Serena','Kate'
+];
+let SPK_BROWSER_VOICE=null,SPK_BROWSER_VOICE_NAME='',SPK_BROWSER_LOGGED=false;
+let SPK_UTTERANCE=null;
+function spkBrowserVoice(){
+  const ss=spkBrowserSpeech();
+  if(!ss||typeof ss.getVoices!=='function')return null;
+  if(SPK_BROWSER_VOICE)return SPK_BROWSER_VOICE;
+  const voices=ss.getVoices()||[];
+  if(!voices.length)return null;      /* some browsers fill this asynchronously */
+  const gb=[],en=[];
+  voices.forEach(function(v){
+    const lang=String((v&&v.lang)||'');
+    if(/^en[-_]GB/i.test(lang))gb.push(v);
+    else if(/^en/i.test(lang))en.push(v);
+  });
+  const pool=gb.length?gb:en;
+  let pick=null;
+  for(let i=0;i<SPK_BROWSER_PREFS.length&&!pick;i++){
+    const want=SPK_BROWSER_PREFS[i].toLowerCase();
+    pick=pool.find(function(v){
+      return String((v&&v.name)||'').toLowerCase().indexOf(want)>=0;
+    })||null;
+  }
+  if(!pick)pick=pool.find(function(v){return v&&v.default})||pool[0]||null;
+  SPK_BROWSER_VOICE=pick||null;
+  SPK_BROWSER_VOICE_NAME=pick?String(pick.name||'default'):'device default';
+  if(!SPK_BROWSER_LOGGED){
+    SPK_BROWSER_LOGGED=true;
+    try{console.info('[speaking] device voice: '+SPK_BROWSER_VOICE_NAME)}catch(e){}
+  }
+  return SPK_BROWSER_VOICE;
+}
+function spkBrowserBusy(who){
+  const v=SPK.voices&&SPK.voices[who];
+  return !!(v&&v.browserBusy);
+}
+function spkCancelBrowserSpeech(){
+  const ss=spkBrowserSpeech();
+  if(ss&&typeof ss.cancel==='function'){
+    try{ss.cancel()}catch(e){}
+  }
+  SPK_UTTERANCE=null;
+  ['examiner','partner'].forEach(function(w){
+    const v=SPK.voices&&SPK.voices[w];
+    if(v)v.browserBusy=false;
+  });
+}
+/* Never queue two utterances: the previous one is cancelled first. An empty
+   or missing device voice falls back to the browser default, not to silence. */
+function spkSpeakText(who,text){
+  who=who||'examiner';
+  const ss=spkBrowserSpeech();
+  if(!ss||typeof ss.speak!=='function')return false;
+  if(typeof SpeechSynthesisUtterance!=='function')return false;
+  if(typeof text!=='string'||!text.trim())return false;
+  if(who==='examiner'&&SPK.muted)return false;
+  const v=spkVoice(who);
+  if(v.muted===true)return false;
+  if(ss.cancel){try{ss.cancel()}catch(e){}}
+  let u=null;
+  try{u=new SpeechSynthesisUtterance(text)}catch(e){return false}
+  u.lang='en-GB';
+  u.rate=0.95;
+  const voice=spkBrowserVoice();
+  /* A device can list a voice it refuses to accept; the default still speaks. */
+  if(voice){try{u.voice=voice}catch(e){}}
+  v.browserBusy=true;
+  v.since=performance.now();
+  SPK_UTTERANCE=u;
+  u.onstart=function(){v.browserBusy=true;v.since=performance.now()};
+  u.onend=u.onerror=function(){
+    if(SPK_UTTERANCE===u)SPK_UTTERANCE=null;
+    v.browserBusy=false;
+  };
+  try{ss.speak(u)}catch(e){v.browserBusy=false;return false}
+  return true;
+}
+/* iOS/Safari unlocks speech only inside a user gesture. The "I'm ready" click
+   is that gesture; the real first line arrives later, after the network. */
+function spkPrimeSpeech(){
+  const ss=spkBrowserSpeech();
+  if(!ss||typeof ss.speak!=='function')return;
+  if(typeof SpeechSynthesisUtterance!=='function')return;
+  try{
+    const u=new SpeechSynthesisUtterance(' ');
+    u.volume=0;
+    u.rate=1;
+    u.lang='en-GB';
+    ss.speak(u);
+  }catch(e){}
+}
+
 function makeTurnTransport(cfg){
   const on=(cfg&&cfg.on)||{};
   const role=(cfg&&cfg.role)||'examiner';
   const part=(cfg&&cfg.part)||1;
+  /* Phase 38: `none` = the browser speaks the reply text; `gemini` = audio in
+     the response, as before. The mode is fixed for the transport's lifetime. */
+  const tts=(cfg&&cfg.tts)||spkTtsMode();
   /* Only the examiner listens. The partner is a text/TTS voice here: the
      candidate's audio is one conversation, not two. */
   const listens=(role==='examiner');
@@ -6597,10 +6740,14 @@ function makeTurnTransport(cfg){
     /* A candidate turn is streamed: the reply text arrives first, the WAV
        follows. `say` (text only) keeps the plain JSON response. */
     const body=Object.assign({},payload);
+    body.tts=tts;
     if(body.audio_b64)body.stream=true;
     function applyText(j){
       if(j.transcript&&on.inText)on.inText(j.transcript);
       if(j.reply&&on.outText)on.outText(j.reply);
+      /* One utterance per turn: this runs from the stream's text event or from
+         the plain JSON response, never from both. */
+      if(j.reply&&tts==='none')spkSpeakText(role,j.reply);
     }
     function finish(j,audioP){
       return Promise.resolve(audioP).then(function(){
@@ -6708,7 +6855,7 @@ function makeTurnTransport(cfg){
     send(payload,true);
   }
   return {
-    on:on,role:role,session_id:sessionId,
+    on:on,role:role,session_id:sessionId,tts:tts,
     start:function(){},
     /* Frames arrive every 20 ms from the same VAD the rest of the app uses. */
     sendAudio:function(pcm,speaking){
@@ -6807,7 +6954,8 @@ window.spkDirectorTick=spkDirectorTick;
 function spkVoice(who){
   if(!SPK.voices[who]){
     SPK.voices[who]={who:who,transport:null,gain:null,gainLevel:null,
-      sources:[],nextTime:0,speaking:false,since:null,muted:null,offline:false};
+      sources:[],nextTime:0,speaking:false,since:null,muted:null,offline:false,
+      browserBusy:false};
   }
   return SPK.voices[who];
 }
@@ -6886,6 +7034,9 @@ function spkBargeIn(){
   if(v&&v.transport)v.transport.mute(true);
   SPK.muted=true;
   spkClearQueue('examiner');
+  /* The device voice is cancelled the same way: barge-in must stop the words,
+     not just lower a gain node that speechSynthesis does not use. */
+  spkCancelBrowserSpeech();
   spkSetSpeaking(false);
   const el=document.getElementById('spkInterrupts');
   if(el)el.textContent=String(SPK.interrupted);
@@ -6982,6 +7133,7 @@ function spkReset(){
   SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
   SPK.lastTurnMs=null;SPK.turnLatencyMs=null;SPK.turnTextMs=null;
+  spkCancelBrowserSpeech();
   spxShowVoiceRetry(false);
   SPK.voices={};
   const repBtn=document.getElementById('spkReportBtn');
@@ -7139,7 +7291,8 @@ function spkLoop(){
   ['examiner','partner'].forEach(function(w){
     const v=SPK.voices[w];
     if(!v)return;
-    const busy=spkVoiceBusy(w);
+    /* Browser speech has no WebAudio source, so it is its own busy signal. */
+    const busy=spkVoiceBusy(w)||spkBrowserBusy(w);
     if(busy!==v.speaking){v.speaking=busy;v.since=now}
   });
   const exBusy=!!(SPK.voices.examiner&&SPK.voices.examiner.speaking);
@@ -7366,7 +7519,7 @@ async function spkStart(){
       const v=spkVoice(role);
       v.transport=makeTransport(Object.assign(
         {mode:c.mode,role:role,part:part,driven:!!SPK.examDriven,
-         on:spkHandlers(role)},c.liveCfg||{}));
+         tts:spkTtsMode(),on:spkHandlers(role)},c.liveCfg||{}));
       v.offline=false;v.muted=null;v.gainLevel=null;
     });
     SPK.activeVoices=roles.length;
@@ -7433,6 +7586,7 @@ async function spkStop(limitHit){
     if(v){v.transport=null;v.speaking=false}
   });
   spkClearQueue('examiner');spkClearQueue('partner');
+  spkCancelBrowserSpeech();
   spkTeardownMic();
   if(SPK.ctx){
     SPK.lastCtx=SPK.ctx;
@@ -8001,6 +8155,8 @@ function spxWarmLines(){
 }
 function spkWarmPart(){
   if(spkSimMode())return;
+  /* Fast mode has nothing to pre-generate: the device voice needs no audio. */
+  if(spkTtsMode()==='none')return;
   fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
     body:JSON.stringify({warm:true,part:SP_EXAM.part,role:'examiner',
       task:SP_EXAM.task||{},lines:spxWarmLines(),session_id:spkTurnSessionId()})})
@@ -8355,6 +8511,9 @@ SP_EXAM.toChoose=function(){
 
 SP_EXAM.ready=async function(){
   if(SP_EXAM.busy||SP_EXAM.screen==='exam')return;
+  /* iOS unlocks speechSynthesis only inside a user gesture. This click is it,
+     so the device voice is primed here, before any await loses the gesture. */
+  if(spkTtsMode()==='none'&&!spkSimMode())spkPrimeSpeech();
   SP_EXAM.busy=true;
   spxSetError('');
   const briefErr=spx$('spxBriefErr');
@@ -8513,6 +8672,16 @@ function spxRenderReportScreen(){
     min:SP_EXAM.entry?SP_EXAM.entry.min:Math.ceil((data.duration_s||0)/60),
     bands:parts.join(' · ')||t('spx_not_measured'),
     silences:SP_EXAM.entry?SP_EXAM.entry.silence_prompts:SP_EXAM.silencePrompts});
+  /* The measured stop-talking → reply latency of the last turn, printed so the
+     number is visible instead of claimed. Hidden when no turn was measured. */
+  const latEl=spx$('spxRpLatency');
+  if(latEl){
+    const lat=SPK.turnLatencyMs;
+    latEl.textContent=(typeof lat==='number'&&lat>0)
+      ?t('spx_report_latency',{s:(lat/1000).toFixed(lat<1000?2:1),
+          voice:t(spkVoiceMode()==='fast'?'spx_voice_fast':'spx_voice_natural')})
+      :'';
+  }
 }
 
 SP_EXAM.saveReport=function(){
@@ -9059,6 +9228,8 @@ function renderPlan(){
   document.getElementById('pUeMin').value=s.ueMin||50;document.getElementById('pPlanMin').value=s.planMin||5;
   document.getElementById('pWriteMin').value=s.writeMin||35;document.getElementById('pRevMin').value=s.revMin||20;
   document.getElementById('pListenMin').value=s.listenMin||40;document.getElementById('pSp1Sec').value=s.sp1Sec||60;document.getElementById('pSp2Sec').value=s.sp2Sec||180;
+  const pv=document.getElementById('pVoice');
+  if(pv)pv.value=spkVoiceMode();
   document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
   if(document.getElementById('pStreakFreeze'))document.getElementById('pStreakFreeze').value=s.streakFreeze??1;
   if(document.getElementById('pWeekGoal'))document.getElementById('pWeekGoal').value=s.weekGoal??5;
@@ -9331,6 +9502,8 @@ function savePlan(){
   const s=D.settings,g=id=>document.getElementById(id)?document.getElementById(id).value:'';
   s.ueMin=+g('pUeMin')||50;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||35;s.revMin=+g('pRevMin')||20;
   s.listenMin=+g('pListenMin')||40;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
+  const pv=g('pVoice');
+  if(pv==='fast'||pv==='natural')s.voice=pv;
   s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
   if(g('pStreakFreeze')!=='')s.streakFreeze=Math.max(0,+g('pStreakFreeze'));
   if(g('pWeekGoal')!=='')s.weekGoal=Math.max(1,+g('pWeekGoal'));
