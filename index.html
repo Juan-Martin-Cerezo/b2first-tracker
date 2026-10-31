@@ -6955,10 +6955,11 @@ function makeLiveTransport(cfg){
       send({realtimeInput:{text:s}});
     },
     mute:function(b){
-      const next=!!b;
-      if(next===muted)return;
-      muted=next;
-      if(muted)send({realtimeInput:{audioStreamEnd:true}});
+      /* Do not send audioStreamEnd here. That told the model the candidate had
+         finished a turn, so it answered the greeting again even though the
+         candidate had only barged in. The Live API emits `interrupted` on its
+         own; the turn is never closed by hand. */
+      muted=!!b;
     },
     close:function(){
       closed=true;
@@ -6980,6 +6981,13 @@ function makeLiveTransport(cfg){
 /* A Live session bills by the minute, so it cannot run forever: a tab left open
    is the one way to spend money without using the app. */
 const SPK_LIVE_MAX_MS=15*60*1000;
+/* U1 turn-taking. The examiner never starts over the candidate: audio that
+   arrives while the candidate is holding the floor is queued here and played
+   afterwards. Two numbers, both measured in milliseconds:
+     HOLD    - candidate speech that counts as holding the floor
+     SILENCE - silence the candidate must leave before the examiner starts */
+const SPK_FLOOR_HOLD_MS=250;
+const SPK_FLOOR_SILENCE_MS=900;
 const SPK_TURN_SILENCE_MS=800;
 const SPK_TURN_MAX_MS=15000;
 const SPK_TURN_MIN_MS=300;
@@ -7008,15 +7016,46 @@ function spkTurnTaskId(){
   return (task&&task.id)?String(task.id):undefined;
 }
 
-/* A decoded WAV buffer plays exactly like a PCM chunk: same gain node, same
-   queue, so spkVoiceBusy/mute/sources keep working untouched. */
-function spkOnBuffer(buf,who){
+/* U1: the floor belongs to whoever is talking. The candidate holds it from
+   SPK_FLOOR_HOLD_MS of speech until SPK_FLOOR_SILENCE_MS of silence; any
+   examiner audio that arrives in between waits in SPK.heldAudio instead of
+   being dropped or mixed on top. */
+function spkCandidateHoldsFloor(now){
+  now=now||performance.now();
+  if(!SPK.running)return false;
+  /* If the examiner is already mid-sentence, do not queue chunk by chunk: the
+     local barge-in decides whether that turn is cut, so a short cough cannot
+     chop the sentence into 200 ms islands. */
+  if(spkVoiceBusy('examiner'))return false;
+  if(SPK.micSpeaking){
+    return !!SPK.speechSince&&(now-SPK.speechSince)>=SPK_FLOOR_HOLD_MS;
+  }
+  if(!SPK.lastSpeechEnd)return false;
+  return (now-SPK.lastSpeechEnd)<SPK_FLOOR_SILENCE_MS;
+}
+function spkExaminerMaySpeak(now){
+  now=now||performance.now();
+  if(!SPK.running)return true;
+  if(SPK.micSpeaking)return false;
+  if(!SPK.lastSpeechEnd)return true;
+  return (now-SPK.lastSpeechEnd)>=SPK_FLOOR_SILENCE_MS;
+}
+function spkHoldAudio(buf,who){
+  if(!SPK.heldAudio)SPK.heldAudio=[];
+  const now=performance.now();
+  if(!SPK.heldSince)SPK.heldSince=now;
+  SPK.heldAudio.push({buf:buf,who:who||'examiner'});
+  SPK.heldChunks++;
+  return true;
+}
+function spkClearHeld(){
+  if(SPK.heldAudio)SPK.heldAudio.length=0;
+  SPK.heldSince=0;
+}
+function spkScheduleBuffer(buf,who){
   who=who||'examiner';
-  if(!SPK.running||!buf)return false;
-  if(who==='examiner'&&SPK.muted)return false;
+  if(!SPK.ctx||!buf)return false;
   const v=spkVoice(who);
-  if(v.offline||!v.transport)return false;
-  if(!spkEnsureCtx())return false;
   const ctx=SPK.ctx;
   const src=ctx.createBufferSource();
   src.buffer=buf;
@@ -7030,6 +7069,40 @@ function spkOnBuffer(buf,who){
     if(i>=0)v.sources.splice(i,1);
   };
   return true;
+}
+/* Called every frame from spkLoop: once the candidate has been quiet for
+   SPK_FLOOR_SILENCE_MS, the held audio goes out in order. */
+function spkFlushHeld(now){
+  const q=SPK.heldAudio;
+  if(!q||!q.length)return 0;
+  if(!spkExaminerMaySpeak(now))return 0;
+  now=now||performance.now();
+  if(SPK.heldSince){
+    const held=now-SPK.heldSince;
+    SPK.heldMsTotal+=held;
+    if(held>SPK.heldMaxMs)SPK.heldMaxMs=held;
+  }
+  SPK.heldSince=0;
+  SPK.heldFlushes++;
+  let n=0;
+  while(q.length){
+    const item=q.shift();
+    if(item&&item.buf&&spkScheduleBuffer(item.buf,item.who))n++;
+  }
+  return n;
+}
+
+/* A decoded WAV buffer plays exactly like a PCM chunk: same gain node, same
+   queue, so spkVoiceBusy/mute/sources keep working untouched. */
+function spkOnBuffer(buf,who){
+  who=who||'examiner';
+  if(!SPK.running||!buf)return false;
+  if(who==='examiner'&&SPK.muted)return false;
+  const v=spkVoice(who);
+  if(v.offline||!v.transport)return false;
+  if(!spkEnsureCtx())return false;
+  if(who==='examiner'&&spkCandidateHoldsFloor())return spkHoldAudio(buf,who);
+  return spkScheduleBuffer(buf,who);
 }
 function spkPlayPcm16(arrayBuffer,who,rate){
   /* Raw PCM frames from the Live API: 24 kHz mono, 16-bit signed LE. */
@@ -7407,6 +7480,9 @@ const SPK={
      retry (same request_id, so the server never pays for a second call) and
      the last report rendered. `lastPA` is filled by the Azure PA endpoint. */
   silences:[],silStartedAt:0,speechMs:0,lastFrameAt:0,
+  /* U1: examiner audio parked while the candidate holds the floor. The three
+     counters are the numbers the test session reports. */
+  heldAudio:[],heldChunks:0,heldFlushes:0,heldMsTotal:0,heldMaxMs:0,heldSince:0,
   lastPA:null,reportId:'',reportPayload:null,reportData:null,
   reportSaved:false,reportDuration:0,
   /* Phase 35 exam mode: the SP_EXAM screen owns the floor, the transport is
@@ -7458,25 +7534,12 @@ function spkEnsureCtx(){
 function spkOnAudio(pcm,who){
   who=who||'examiner';
   if(!SPK.running||!pcm||!pcm.length)return;
-  if(who==='examiner'&&SPK.muted)return;
-  const v=spkVoice(who);
-  if(v.offline||!v.transport)return;
   if(!spkEnsureCtx())return;
   const ctx=SPK.ctx;
   const buf=ctx.createBuffer(1,pcm.length,24000);
   const ch=buf.getChannelData(0);
   for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-  const src=ctx.createBufferSource();
-  src.buffer=buf;
-  src.connect(v.gain||ctx.destination);
-  const when=Math.max(ctx.currentTime,v.nextTime);
-  src.start(when);
-  v.nextTime=when+buf.duration;
-  v.sources.push(src);
-  src.onended=function(){
-    const i=v.sources.indexOf(src);
-    if(i>=0)v.sources.splice(i,1);
-  };
+  return spkOnBuffer(buf,who);
 }
 
 function spkClearQueue(who){
@@ -7504,7 +7567,7 @@ function spkBargeIn(){
      that is why "Good morning" repeated forever without anyone speaking. The
      model has its own voice-activity detection and will emit `interrupted`. */
   SPK.muted=true;              // drop audio already in flight for this voice
-  /* A barge-in must always release: relying only on 300 ms of VAD silence left
+  /* A barge-in must always release: relying only on 900 ms of VAD silence left
      the examiner muted forever when the environment never went quiet. */
   clearTimeout(SPK.bargeTimer);
   SPK.bargeTimer=setTimeout(function(){
@@ -7514,6 +7577,9 @@ function spkBargeIn(){
     if(vx&&vx.transport)vx.transport.mute(false);
   },2000);
   spkClearQueue('examiner');
+  /* Held audio belongs to the turn that was just interrupted: playing it after
+     the barge-in would answer a question the candidate already cut off. */
+  spkClearHeld();
   /* The device voice is cancelled the same way: barge-in must stop the words,
      not just lower a gain node that speechSynthesis does not use. */
   spkCancelBrowserSpeech();
@@ -7522,9 +7588,11 @@ function spkBargeIn(){
   if(el)el.textContent=String(SPK.interrupted);
 }
 
-/* Local VAD drives barge-in: >300 ms of student speech while the examiner is
+/* Local VAD drives barge-in: >1200 ms of student speech while the examiner is
    talking mutes the examiner only (the partner keeps its own channel), and
-   300 ms of silence releases the hold so the examiner can reply. */
+   SPK_FLOOR_SILENCE_MS of silence releases the hold so the examiner can reply.
+   The old 300 ms release let the examiner resume in the middle of a normal
+   pause between the candidate's words. */
 function spkVad(speaking){
   const now=performance.now();
   if(speaking){
@@ -7554,7 +7622,7 @@ function spkVad(speaking){
     SPK.speechSince=0;
     if(SPK.muted){
       if(!SPK.silSince)SPK.silSince=now;
-      if(now-SPK.silSince>=300){
+      if(now-SPK.silSince>=SPK_FLOOR_SILENCE_MS){
         SPK.muted=false;SPK.barged=false;SPK.silSince=0;
         const v=SPK.voices.examiner;
         if(v&&v.transport)v.transport.mute(false);
@@ -7621,6 +7689,8 @@ function spkReset(){
   SPK.micSpeaking=false;SPK.lastSpeechEnd=0;SPK.candSilenceMs=9999;
   SPK.lastExaminerText='';SPK.lastExaminerAt=0;SPK.lastOut=null;
   SPK.silences=[];SPK.silStartedAt=0;SPK.speechMs=0;SPK.lastFrameAt=0;
+  SPK.heldAudio=[];SPK.heldChunks=0;SPK.heldFlushes=0;
+  SPK.heldMsTotal=0;SPK.heldMaxMs=0;SPK.heldSince=0;
   SPK.reportId='';SPK.reportPayload=null;SPK.reportData=null;
   SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
@@ -7799,6 +7869,9 @@ function spkLoop(){
     }
     spkVad(simSpeaking);
   }
+  /* Held examiner audio only leaves after the candidate's silence reaches
+     SPK_FLOOR_SILENCE_MS. */
+  spkFlushHeld(now);
   const r=spkDirectorTick(SPK.dir,spkDirectorInput(now));
   SPK.dir=r.state;
   if(SPK.examMode)spkExamDirectorOut(r.out);
@@ -8079,6 +8152,7 @@ async function spkStop(limitHit){
     if(v){v.transport=null;v.speaking=false}
   });
   spkClearQueue('examiner');spkClearQueue('partner');
+  spkClearHeld();
   spkCancelBrowserSpeech();
   spkTeardownMic();
   if(SPK.ctx){
@@ -8440,6 +8514,10 @@ const SP_EXAM={
   screen:'',part:2,bank:null,task:null,
   phases:[],phase:0,phaseStart:0,
   timer:null,silencePrompts:0,awaitSince:0,promptUsed:false,
+  /* U1: one counter per candidate turn. It counts the current question
+     (1 = asked) and caps the silence repeat at 2, so a slow start can never
+     produce two questions or the same question twice in a row. */
+  askedOnce:0,lastAsked:'',answered:false,pendingLine:null,
   micMuted:false,txShown:0,answerTimer:null,
   reportData:null,saved:false,entry:null,
   busy:false,error:'',startedAt:0
@@ -8709,7 +8787,9 @@ function spxCandidateLine(text,ms){
   const now=performance.now();
   SPK.simSpeechUntil=now+(ms||Math.min(18000,Math.max(2000,words*420)));
   SP_EXAM.awaitSince=0;
-  SP_EXAM.promptUsed=false;
+  /* The turn is answered: a new question may follow. The question counter is
+     left alone, so a pause later cannot re-arm the repeat. */
+  SP_EXAM.answered=true;
 }
 function spxScriptAnswer(text,delay){
   if(SPK.mode!=='sim')return;
@@ -8734,11 +8814,18 @@ function spxFireEvent(ev){
   const ms=ev.ms||spxSpeechMs(ev.text);
   spxSay(ev.who==='partner'?'partner':'examiner',ev.text,ms);
   if(ev.qi!==undefined)spxHighlight(ev.qi);
-  if(ev.answer&&!SP_EXAM.micMuted){
-    /* A question was just asked: the 5-second rule starts now. The scripted
-       answer waits for the examiner to finish, so it can never barge in. */
-    SP_EXAM.awaitSince=performance.now();
+  /* A question opens the candidate's turn. `askedOnce` starts at 1 and the
+     silence repeat below may take it to 2, never further. */
+  if(ev.who!=='partner'&&(ev.qi!==undefined||ev.answer)){
+    SP_EXAM.askedOnce=1;
+    SP_EXAM.lastAsked=ev.text;
+    SP_EXAM.answered=false;
     SP_EXAM.promptUsed=false;
+    SP_EXAM.awaitSince=performance.now();
+  }
+  if(ev.answer&&!SP_EXAM.micMuted){
+    /* The scripted answer waits for the examiner to finish, so it can never
+       barge in. */
     spxScriptAnswer(ev.answer,ev.delay||(ms+900));
   }
 }
@@ -8749,12 +8836,18 @@ function spxEnterPhase(i){
   SP_EXAM.phase=i;
   SP_EXAM.phaseStart=performance.now();
   SP_EXAM.promptUsed=false;
+  SP_EXAM.pendingLine=null;
   SP_EXAM.awaitSince=ph.who==='candidate'?SP_EXAM.phaseStart:0;
   (ph.events||[]).forEach(function(ev){ev.done=false});
   spxPhaseHeader();
-  if(ph.line)spxFireEvent({who:ph.who==='partner'?'partner':'examiner',
-    text:ph.line,qi:ph.qi,answer:ph.answer});
-  else spxHighlight(ph.qi);
+  if(ph.line){
+    const ev={who:ph.who==='partner'?'partner':'examiner',
+      text:ph.line,qi:ph.qi,answer:ph.answer};
+    /* The examiner never starts over the candidate: if the floor is not free,
+       the line waits in spxTickLoop for SPK_FLOOR_SILENCE_MS of silence. */
+    if(ev.who==='examiner'&&!spkExaminerMaySpeak())SP_EXAM.pendingLine=ev;
+    else spxFireEvent(ev);
+  }else spxHighlight(ph.qi);
   spxTickRender(ph.sec);
 }
 
@@ -8813,25 +8906,26 @@ function spxTickRender(left){
 }
 
 function spxSilence(now){
-  if(SPK.micSpeaking){SP_EXAM.awaitSince=0;SP_EXAM.promptUsed=false;return}
   if(!SP_EXAM.awaitSince)return;            // nobody is waiting for an answer
+  if(SPK.micSpeaking){
+    /* The answer clock runs from the last moment the candidate spoke, but the
+       question counter is not reset: a pause is not a new turn. */
+    SP_EXAM.answered=true;
+    SP_EXAM.awaitSince=now;
+    return;
+  }
+  if(!spkExaminerMaySpeak(now))return;      // same 900 ms rule as the audio path
   const quiet=(now-SP_EXAM.awaitSince)/1000;
   if(quiet>=SPX_SILENCE_MOVE_S){spxNextPhase();return}
-  if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed){
+  if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
     SP_EXAM.promptUsed=true;
+    SP_EXAM.askedOnce++;
     SP_EXAM.silencePrompts++;
-    const ph=SP_EXAM.phases[SP_EXAM.phase];
-    const next=SPK.mode==='turn'&&((ph&&ph.events)||[]).find(function(ev){
-      return ev.who==='examiner'&&!ev.done&&ev.text;
-    });
-    if(next){
-      /* Turn mode fallback: a real silence gets the next scripted question,
-         not a generic line. */
-      next.done=true;
-      spxFireEvent(next);
-    }else{
-      spxSay('examiner',SPX_LINES.silence);
-    }
+    /* A slow start gets the same question once (never a second one). If the
+       candidate did answer and then went quiet, the nudge is the generic line,
+       not the question again. */
+    spxSay('examiner',SP_EXAM.answered?SPX_LINES.silence:
+      (SP_EXAM.lastAsked||SPX_LINES.silence));
   }
 }
 
@@ -8841,12 +8935,38 @@ function spxTickLoop(){
   if(!ph)return;
   const now=performance.now();
   const elapsed=(now-SP_EXAM.phaseStart)/1000;
+  /* The candidate may answer while the examiner's phase is still draining; that
+     answer counts for the next question too, so the flag is set in any phase. */
+  if(SPK.micSpeaking)SP_EXAM.answered=true;
+  const maySpeak=spkExaminerMaySpeak(now);
+  if(SP_EXAM.pendingLine){
+    if(maySpeak){
+      const ev=SP_EXAM.pendingLine;
+      SP_EXAM.pendingLine=null;
+      spxFireEvent(ev);
+    }else if(elapsed<ph.sec+8){
+      /* A stage line the candidate talked over has not been said yet: keep the
+         turn open instead of advancing past it. */
+      spxTickRender(ph.sec-elapsed);
+      spxRenderTx();
+      return;
+    }else{
+      SP_EXAM.pendingLine=null;
+    }
+  }
   (ph.events||[]).forEach(function(ev){
     if(ev.done||elapsed<ev.at)return;
     /* Turn mode: the model hears the answer and asks the next question. The
        scripted examiner questions stay untouched as the silence fallback
        (spxSilence), never as the normal path. */
     if(SPK.mode==='turn'&&ev.who==='examiner')return;
+    if(ev.who==='examiner'){
+      /* An examiner line waits for the candidate's silence, and a follow-up
+         question waits until the current one has been answered. This is what
+         used to ask the next question before the candidate had started. */
+      if(!maySpeak)return;
+      if(ph.who==='candidate'&&SP_EXAM.askedOnce>=1&&!SP_EXAM.answered)return;
+    }
     ev.done=true;spxFireEvent(ev);
   });
   spxTickRender(ph.sec-elapsed);
@@ -9014,6 +9134,13 @@ SP_EXAM.ready=async function(){
   SP_EXAM.phases=spxPhases();
   SP_EXAM.phase=0;
   SP_EXAM.silencePrompts=0;
+  /* U1: fresh turn counters for every exam run. */
+  SP_EXAM.askedOnce=0;
+  SP_EXAM.lastAsked='';
+  SP_EXAM.answered=false;
+  SP_EXAM.pendingLine=null;
+  SP_EXAM.promptUsed=false;
+  SP_EXAM.awaitSince=0;
   SP_EXAM.saved=false;
   SP_EXAM.entry=null;
   SP_EXAM.txShown=0;
