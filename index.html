@@ -1398,6 +1398,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="authError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
+      <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
+      <button class="btn gray" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()" data-i18n="auth_google">Continue with Google</button>
+      <button class="btn gray" id="passkeyLoginBtn" type="button" style="width:100%;margin-top:8px" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
+      <div class="auth-error" id="altAuthError"></div>
     </div>
     <div id="authRegister" style="display:none">
       <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
@@ -1408,6 +1412,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()" data-i18n="auth_create_enter">Create account &amp; enter</button>
       <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
+  </div>
+</div>
+
+<!-- ============ GOOGLE LINK / CONFIRMATION (phase 34) ============
+     A first Google sign-in never creates an account silently: this screen
+     asks for an explicit choice, and the email opt-in is off by default. -->
+<div id="googleLinkOverlay" class="overlay" style="display:none">
+  <div class="auth-card" style="max-width:440px">
+    <h3 style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0 0 8px" data-i18n="google_link_title">This Google account is new here</h3>
+    <p class="sub" style="font-size:12px;margin:0 0 12px" data-i18n="google_link_body">Choose how to continue. Nothing is created until you confirm.</p>
+    <div><label data-i18n="google_link_name">Choose a username</label><input type="text" id="googleName" placeholder="e.g. maria" data-i18n-placeholder="google_user_ph" autocomplete="username"></div>
+    <label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin-top:10px">
+      <input type="checkbox" id="googleStoreEmail" style="margin-top:2px">
+      <span data-i18n="google_link_email_optin">Store my email as a hash (optional)</span>
+    </label>
+    <div style="font-size:11px;color:var(--on-surface-variant);margin:6px 0 0" data-i18n="google_link_email_note">Only a SHA-256 hash is stored, never the address itself. You can leave this off.</div>
+    <button class="btn ok" style="width:100%;margin-top:12px" onclick="googleCreateAccount()" data-i18n="google_create_btn">Create a new account</button>
+    <div style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
+    <div><label data-i18n="google_link_existing">Link an existing account</label>
+      <input type="text" id="googleLinkName" placeholder="User name" data-i18n-placeholder="auth_username" autocomplete="username">
+      <input type="password" id="googleLinkPass" placeholder="Password" data-i18n-placeholder="auth_password" autocomplete="current-password">
+    </div>
+    <button class="btn gray" style="width:100%;margin-top:8px" onclick="googleLinkAccount()" data-i18n="google_link_btn">Link and sign in</button>
+    <div class="auth-error" id="googleLinkError"></div>
+    <button class="btn gray" style="width:100%;margin-top:10px" onclick="hideGoogleLink();showAuthOverlay()" data-i18n="common_cancel">Cancel</button>
   </div>
 </div>
 
@@ -1544,6 +1573,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
       <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()" data-i18n="user_update_pw">Update password</button>
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_security">Security</div>
+      <div id="passkeyWarn" class="auth-error" style="display:none;margin-bottom:8px" data-i18n="user_no_password_warn">This account has no password. Set one below as a fallback.</div>
+      <div id="passkeyList" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div id="passkeyEmpty" style="font-size:12px;color:var(--on-surface-variant)" data-i18n="user_no_passkeys">No passkeys on this account yet.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <input type="text" id="passkeyLabel" placeholder="Device name (e.g. iPhone)" data-i18n-placeholder="user_passkey_label_ph" autocomplete="off">
+        <input type="password" id="passkeyPassword" placeholder="Your password (once)" data-i18n-placeholder="user_passkey_password_ph" autocomplete="current-password">
+      </div>
+      <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_recent">Recent activity</div>
       <div id="acctActivity" style="font-size:12px;color:var(--on-surface-variant);display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto"></div>
       <div id="diagMetricsBox" style="display:none">
@@ -3544,6 +3583,35 @@ const I18N={
     auth_privacy_html:'By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
     auth_ph_owner:'e.g. Owner',
     auth_ph_maria:'e.g. maria',
+    auth_or:'or',
+    auth_google:'Continue with Google',
+    auth_passkey:'Sign in with a passkey',
+    auth_passkey_cancel:'Passkey sign-in was cancelled.',
+    auth_passkey_error:'Passkey sign-in failed. Try again or use your password.',
+    auth_google_error:'Google sign-in failed. Try again.',
+    google_link_title:'This Google account is new here',
+    google_link_body:'Choose how to continue. Nothing is created until you confirm.',
+    google_link_name:'Choose a username',
+    google_link_email_optin:'Store my email as a hash (optional)',
+    google_link_email_note:'Only a SHA-256 hash is stored, never the address itself. You can leave this off.',
+    google_create_btn:'Create a new account',
+    google_link_existing:'Link an existing account',
+    google_link_btn:'Link and sign in',
+    google_link_error:'Could not continue with Google. Try again.',
+    google_user_ph:'e.g. maria',
+    activity_login_ok:'Signed in',
+    activity_login_fail:'Failed sign-in',
+    activity_register:'Account created',
+    activity_password_change:'Password changed',
+    activity_account_delete:'Account deleted',
+    activity_quota_hit:'AI daily quota reached',
+    activity_ua_changed:'New device / browser',
+    activity_google_login:'Signed in with Google',
+    activity_google_register:'Account created with Google',
+    activity_google_link:'Google account linked',
+    activity_passkey_add:'Passkey added',
+    activity_passkey_remove:'Passkey removed',
+    activity_passkey_login:'Signed in with a passkey',
     common_cancel:'Cancel',
     common_save:'Save',
     common_start:'Start',
@@ -3959,6 +4027,18 @@ const I18N={
     user_new_pw:'New password (10+ characters)',
     user_repeat_pw:'Repeat new password',
     user_update_pw:'Update password',
+    user_security:'Security',
+    user_no_password_warn:'This account has no password. Set one above as a fallback.',
+    user_no_passkeys:'No passkeys on this account yet.',
+    user_passkey_label_ph:'Device name (e.g. iPhone)',
+    user_passkey_label_default:'Passkey',
+    user_passkey_password_ph:'Your password (once)',
+    user_add_passkey:'Add a passkey',
+    user_remove_passkey:'Remove',
+    user_passkey_added:'Passkey added.',
+    user_passkey_removed:'Passkey removed.',
+    user_passkey_error:'Could not add the passkey.',
+    user_passkey_removed_error:'Could not remove the passkey.',
     user_recent:'Recent activity',
     user_diag:'Diagnostics (owner · last 24 h)',
     user_delete:'Delete my account',
@@ -4153,6 +4233,35 @@ const I18N={
     auth_privacy_html:'Al crear una cuenta aceptás los <a href="/terms" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
     auth_ph_owner:'ej. Owner',
     auth_ph_maria:'ej. maria',
+    auth_or:'o',
+    auth_google:'Continuar con Google',
+    auth_passkey:'Entrar con una passkey',
+    auth_passkey_cancel:'Se canceló el ingreso con passkey.',
+    auth_passkey_error:'No se pudo entrar con la passkey. Probá de nuevo o usá tu contraseña.',
+    auth_google_error:'No se pudo entrar con Google. Probá de nuevo.',
+    google_link_title:'Esta cuenta de Google es nueva acá',
+    google_link_body:'Elegí cómo continuar. No se crea nada hasta que confirmes.',
+    google_link_name:'Elegí un usuario',
+    google_link_email_optin:'Guardar mi email como hash (opcional)',
+    google_link_email_note:'Solo se guarda un hash SHA-256, nunca la dirección. Podés dejarlo desactivado.',
+    google_create_btn:'Crear una cuenta nueva',
+    google_link_existing:'Vincular una cuenta existente',
+    google_link_btn:'Vincular y entrar',
+    google_link_error:'No se pudo continuar con Google. Probá de nuevo.',
+    google_user_ph:'ej. maria',
+    activity_login_ok:'Sesión iniciada',
+    activity_login_fail:'Intento de ingreso fallido',
+    activity_register:'Cuenta creada',
+    activity_password_change:'Contraseña cambiada',
+    activity_account_delete:'Cuenta eliminada',
+    activity_quota_hit:'Límite diario de IA alcanzado',
+    activity_ua_changed:'Dispositivo o navegador nuevo',
+    activity_google_login:'Ingreso con Google',
+    activity_google_register:'Cuenta creada con Google',
+    activity_google_link:'Cuenta de Google vinculada',
+    activity_passkey_add:'Passkey agregada',
+    activity_passkey_remove:'Passkey quitada',
+    activity_passkey_login:'Ingreso con passkey',
     common_cancel:'Cancelar',
     common_save:'Guardar',
     common_start:'Empezar',
@@ -4568,6 +4677,18 @@ const I18N={
     user_new_pw:'Nueva contraseña (10+ caracteres)',
     user_repeat_pw:'Repetir la nueva contraseña',
     user_update_pw:'Actualizar contraseña',
+    user_security:'Seguridad',
+    user_no_password_warn:'Esta cuenta no tiene contraseña. Configurá una arriba como respaldo.',
+    user_no_passkeys:'Todavía no hay passkeys en esta cuenta.',
+    user_passkey_label_ph:'Nombre del dispositivo (ej. iPhone)',
+    user_passkey_label_default:'Passkey',
+    user_passkey_password_ph:'Tu contraseña (una vez)',
+    user_add_passkey:'Agregar una passkey',
+    user_remove_passkey:'Quitar',
+    user_passkey_added:'Passkey agregada.',
+    user_passkey_removed:'Passkey quitada.',
+    user_passkey_error:'No se pudo agregar la passkey.',
+    user_passkey_removed_error:'No se pudo quitar la passkey.',
     user_recent:'Actividad reciente',
     user_diag:'Diagnósticos (owner · últimas 24 h)',
     user_delete:'Eliminar mi cuenta',
@@ -4919,6 +5040,255 @@ async function apiRegister(name,password,color){
 async function apiLogout(){
   if(USER&&USER.token){
     try{await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:USER.token})})}catch(e){}
+  }
+}
+
+/* ---------- PHASE 34: Google sign-in + passkeys ---------- */
+function b64uToBuf(value){
+  let s=String(value||'').replace(/-/g,'+').replace(/_/g,'/');
+  while(s.length%4)s+='=';
+  const bin=atob(s);
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+  return out.buffer;
+}
+function bufToB64u(buf){
+  const bytes=new Uint8Array(buf);
+  let s='';
+  for(let i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function pkNormalizeCreate(pk){
+  if(!pk)return pk;
+  pk.challenge=b64uToBuf(pk.challenge);
+  if(pk.user&&pk.user.id)pk.user.id=b64uToBuf(pk.user.id);
+  if(Array.isArray(pk.excludeCredentials))pk.excludeCredentials=pk.excludeCredentials.map(c=>Object.assign({},c,{id:b64uToBuf(c.id)}));
+  return pk;
+}
+function pkNormalizeGet(pk){
+  if(!pk)return pk;
+  pk.challenge=b64uToBuf(pk.challenge);
+  if(Array.isArray(pk.allowCredentials))pk.allowCredentials=pk.allowCredentials.map(c=>Object.assign({},c,{id:b64uToBuf(c.id)}));
+  return pk;
+}
+function pkCredentialJSON(cred){
+  const r=cred.response||{};
+  const out={id:cred.id,rawId:bufToB64u(cred.rawId),type:cred.type,
+    response:{clientDataJSON:bufToB64u(r.clientDataJSON)}};
+  if(r.attestationObject)out.response.attestationObject=bufToB64u(r.attestationObject);
+  if(r.authenticatorData)out.response.authenticatorData=bufToB64u(r.authenticatorData);
+  if(r.signature)out.response.signature=bufToB64u(r.signature);
+  if(r.userHandle)out.response.userHandle=bufToB64u(r.userHandle);
+  try{out.clientExtensionResults=cred.getClientExtensionResults?cred.getClientExtensionResults():{}}catch(e){out.clientExtensionResults={}}
+  return out;
+}
+function showAltError(msg){
+  const el=document.getElementById('altAuthError');
+  if(el)el.textContent=msg?('❌ '+msg):'';
+}
+function startGoogleLogin(){location.href='/api/auth/google/start'}
+async function passkeyLogin(){
+  if(!window.PublicKeyCredential)throw new Error(t('auth_passkey_error'));
+  const begin=await fetch('/api/webauthn/login/begin',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  if(!begin.ok)throw new Error(t('auth_passkey_error'));
+  const pk=await begin.json();
+  let cred;
+  try{
+    cred=await navigator.credentials.get({publicKey:pkNormalizeGet(pk.publicKey)});
+  }catch(e){
+    if(e&&(e.name==='NotAllowedError'||e.name==='AbortError'))throw new Error(t('auth_passkey_cancel'));
+    throw new Error(t('auth_passkey_error'));
+  }
+  const r=await fetch('/api/webauthn/login/finish',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({credential:pkCredentialJSON(cred)})});
+  if(!r.ok){
+    const err=new Error(t('auth_passkey_error'));
+    err.status=r.status;
+    throw err;
+  }
+  return r.json();
+}
+async function startPasskeyLogin(){
+  showAltError('');
+  const btn=document.getElementById('passkeyLoginBtn');
+  if(btn)btn.disabled=true;
+  try{
+    const u=await passkeyLogin();
+    saveUserSession(u);
+    track('login');
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){
+    showAltError(e&&e.message?e.message:t('auth_passkey_error'));
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+async function addPasskey(){
+  const st=document.getElementById('passkeyStatus');
+  const btn=document.getElementById('passkeyAddBtn');
+  const set=(msg,color)=>{if(st){st.textContent=msg;st.style.color=color||''}};
+  if(!window.PublicKeyCredential){set('❌ '+t('user_passkey_error'),'var(--bad-text)');return}
+  const label=(document.getElementById('passkeyLabel')||{}).value||t('user_passkey_label_default');
+  const password=(document.getElementById('passkeyPassword')||{}).value||'';
+  if(btn)btn.disabled=true;
+  set('','');
+  try{
+    const begin=await fetch('/api/webauthn/register/begin',{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({password:password,label:label})});
+    if(!begin.ok)throw new Error(t('user_passkey_error'));
+    const pk=await begin.json();
+    let cred;
+    try{
+      cred=await navigator.credentials.create({publicKey:pkNormalizeCreate(pk.publicKey)});
+    }catch(e){
+      throw new Error(e&&e.name==='NotAllowedError'?t('auth_passkey_cancel'):t('user_passkey_error'));
+    }
+    const r=await fetch('/api/webauthn/register/finish',{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({credential:pkCredentialJSON(cred)})});
+    if(!r.ok)throw new Error(t('user_passkey_error'));
+    const lp=document.getElementById('passkeyPassword');if(lp)lp.value='';
+    const ll=document.getElementById('passkeyLabel');if(ll)ll.value='';
+    set('✔ '+t('user_passkey_added'),'var(--ok-text)');
+    await loadPasskeys();
+  }catch(e){
+    set('❌ '+(e&&e.message?e.message:t('user_passkey_error')),'var(--bad-text)');
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+async function loadPasskeys(){
+  const list=document.getElementById('passkeyList');
+  const empty=document.getElementById('passkeyEmpty');
+  const warn=document.getElementById('passkeyWarn');
+  if(!list||!USER||!USER.token)return;
+  try{
+    const r=await fetch('/api/webauthn/credentials',{headers:authHeaders()});
+    if(r.status===401){sessionExpired();return}
+    if(!r.ok)return;
+    const data=await r.json();
+    list.innerHTML='';
+    const rows=Array.isArray(data.credentials)?data.credentials:[];
+    rows.forEach(c=>{
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--outline-variant);border-radius:6px;padding:8px';
+      const info=document.createElement('div');
+      info.style.cssText='font-size:12px;color:var(--on-surface);min-width:0';
+      const name=document.createElement('b');name.textContent=c.label||t('user_passkey_label_default');
+      const meta=document.createElement('div');
+      meta.style.cssText='font-size:11px;color:var(--on-surface-variant)';meta.textContent=c.created||'';
+      info.appendChild(name);info.appendChild(meta);
+      const del=document.createElement('button');
+      del.type='button';del.className='btn sm gray';
+      del.setAttribute('data-i18n','user_remove_passkey');
+      del.textContent=t('user_remove_passkey');
+      del.onclick=()=>removePasskey(c.id);
+      row.appendChild(info);row.appendChild(del);
+      list.appendChild(row);
+    });
+    if(empty)empty.style.display=rows.length?'none':'block';
+    if(warn)warn.style.display=data.has_password===false?'block':'none';
+  }catch(e){}
+}
+async function removePasskey(id){
+  const st=document.getElementById('passkeyStatus');
+  try{
+    const r=await fetch('/api/webauthn/remove',{method:'POST',headers:authHeaders(),
+      body:JSON.stringify({credential_id:id})});
+    if(!r.ok)throw new Error(t('user_passkey_removed_error'));
+    if(st){st.textContent='✔ '+t('user_passkey_removed');st.style.color='var(--ok-text)'}
+    await loadPasskeys();
+  }catch(e){
+    if(st){st.textContent='❌ '+(e&&e.message?e.message:t('user_passkey_removed_error'));st.style.color='var(--bad-text)'}
+  }
+}
+function cleanAuthQuery(){
+  try{history.replaceState({},'',location.pathname+location.hash)}catch(e){}
+}
+async function handleGoogleRedirect(){
+  let params;
+  try{params=new URLSearchParams(location.search)}catch(e){return false}
+  const loginTicket=params.get('google_login');
+  const linkTicket=params.get('google_link');
+  if(!loginTicket&&!linkTicket)return false;
+  cleanAuthQuery();
+  if(loginTicket){
+    try{
+      const r=await fetch('/api/auth/google/session?ticket='+encodeURIComponent(loginTicket));
+      if(!r.ok)throw new Error(t('auth_google_error'));
+      const u=await r.json();
+      saveUserSession(u);
+      track('login');
+      hideAuthOverlay();
+      await afterAuth();
+    }catch(e){
+      showAltError(e&&e.message?e.message:t('auth_google_error'));
+      showAuthOverlay();
+    }
+    return true;
+  }
+  await showGoogleLink(linkTicket);
+  return true;
+}
+var GOOGLE_TICKET=null;
+async function showGoogleLink(ticket){
+  GOOGLE_TICKET=ticket;
+  try{
+    const r=await fetch('/api/auth/google/pending?ticket='+encodeURIComponent(ticket));
+    if(!r.ok)throw new Error(t('google_link_error'));
+    const data=await r.json();
+    const name=document.getElementById('googleName');
+    if(name)name.value=data.suggested||'';
+    const box=document.getElementById('googleStoreEmail');
+    if(box){box.checked=false;box.disabled=!data.has_email}
+    applyI18n();
+    const ov=document.getElementById('googleLinkOverlay');
+    if(ov)ov.style.display='flex';
+  }catch(e){
+    showAltError(e&&e.message?e.message:t('google_link_error'));
+    showAuthOverlay();
+  }
+}
+function hideGoogleLink(){
+  const ov=document.getElementById('googleLinkOverlay');
+  if(ov)ov.style.display='none';
+}
+async function googleComplete(payload){
+  const r=await fetch('/api/auth/google/complete',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({ticket:GOOGLE_TICKET},payload))});
+  if(!r.ok)throw new Error(t('google_link_error'));
+  return r.json();
+}
+async function googleCreateAccount(){
+  const err=document.getElementById('googleLinkError');
+  if(err)err.textContent='';
+  const name=(document.getElementById('googleName')||{}).value||'';
+  const storeEmail=!!(document.getElementById('googleStoreEmail')||{}).checked;
+  try{
+    const u=await googleComplete({mode:'create',name:name,store_email:storeEmail});
+    saveUserSession(u);
+    track('register');
+    hideGoogleLink();
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){
+    if(err)err.textContent='❌ '+(e&&e.message?e.message:t('google_link_error'));
+  }
+}
+async function googleLinkAccount(){
+  const err=document.getElementById('googleLinkError');
+  if(err)err.textContent='';
+  const name=(document.getElementById('googleLinkName')||{}).value||'';
+  const password=(document.getElementById('googleLinkPass')||{}).value||'';
+  try{
+    const u=await googleComplete({mode:'link',name:name,password:password});
+    saveUserSession(u);
+    track('login');
+    hideGoogleLink();
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){
+    if(err)err.textContent='❌ '+(e&&e.message?e.message:t('google_link_error'));
   }
 }
 
@@ -5423,15 +5793,19 @@ function openUserModal(){
   ov.style.display='flex';
   loadAccountActivity();
   loadDiagnostics();
+  loadPasskeys();
 }
 function closeUserModal(){
   const ov=document.getElementById('userModal');
   if(ov)ov.style.display='none';
 }
 const ACTIVITY_LABELS={
-  login_ok:'Signed in',login_fail:'Failed sign-in',register:'Account created',
-  password_change:'Password changed',account_delete:'Account deleted',
-  quota_hit:'AI daily quota reached',ua_changed:'New device / browser'
+  login_ok:'activity_login_ok',login_fail:'activity_login_fail',register:'activity_register',
+  password_change:'activity_password_change',account_delete:'activity_account_delete',
+  quota_hit:'activity_quota_hit',ua_changed:'activity_ua_changed',
+  google_login:'activity_google_login',google_register:'activity_google_register',
+  google_link:'activity_google_link',passkey_add:'activity_passkey_add',
+  passkey_remove:'activity_passkey_remove',passkey_login:'activity_passkey_login'
 };
 async function loadAccountActivity(){
   const box=document.getElementById('acctActivity');
@@ -5448,7 +5822,7 @@ async function loadAccountActivity(){
       const row=document.createElement('div');
       row.style.display='flex';row.style.justifyContent='space-between';row.style.gap='8px';
       const ev=document.createElement('span');
-      ev.textContent=ACTIVITY_LABELS[e.event]||String(e.event||'?');
+      ev.textContent=ACTIVITY_LABELS[e.event]?t(ACTIVITY_LABELS[e.event]):String(e.event||'?');
       const ts=document.createElement('span');
       ts.textContent=String(e.ts||'');
       ts.style.opacity='.75';ts.style.whiteSpace='nowrap';
@@ -12033,6 +12407,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     DEMO={demo:false};
   }
   window.DEMO=DEMO;
+  const googleBtn=document.getElementById('googleLoginBtn');
+  if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'block':'none';
+  const passkeyBtn=document.getElementById('passkeyLoginBtn');
+  if(passkeyBtn&&!window.PublicKeyCredential)passkeyBtn.style.display='none';
+  const altSep=document.getElementById('authAltSep');
+  if(altSep&&!(DEMO&&DEMO.google)&&!window.PublicKeyCredential)altSep.style.display='none';
   track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
   if(DEMO&&DEMO.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
@@ -12080,7 +12460,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!D.onboarded&&!localStorage.getItem('ob_'+USER.id))showOnboarding();
   }else{
     clearUserSession();
-    showAuthOverlay();
+    const handled=await handleGoogleRedirect();
+    if(!handled)showAuthOverlay();
   }
 })();
 

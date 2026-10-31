@@ -8,7 +8,9 @@ map of it. Every claim below is implemented in `store.py`, `plans.py` or
 
 | Store | Path | Contents | Protection |
 | --- | --- | --- | --- |
-| accounts | `data/users.json` | `id`, `name`, `salt`, `hash` (PBKDF2-HMAC-SHA256, 600k), `algo`, `iters`, `color`, `created` | `0600`, atomic writes |
+| accounts | `data/users.json` | `id`, `name`, `salt`, `hash` (PBKDF2-HMAC-SHA256, 600k), `algo`, `iters`, `color`, `created`; optional `email_hash` and `password_set: false` for Google-created accounts | `0600`, atomic writes |
+| Google links | `data/oauth.json` | Google `sub` → local account id; never a name or address | `0600`, atomic writes |
+| passkeys | `data/webauthn/<id>.json` | `{credential_id, public_key_cose, sign_count, created, label}` | directory `0700`, file `0600` |
 | sessions | `data/tokens.json` | `sha256(token)` → `{user_id, exp, issued, absolute_exp, last_seen, ua_hash}` | `0600`; the raw token is never written |
 | progress | `data/users/<id>/progress.json` | practice log, errors, profile, settings, plan mirror | directory `0700`, file `0600` |
 | backups | `data/users/<id>/backups/` | last 20 progress documents (`BK_KEEP = 20`) | directory `0700`, files `0600` |
@@ -27,7 +29,8 @@ are created with `0700` and re-`chmod`ed on every write.
 
 ## What is deliberately absent
 
-- No email address, phone number, real name, address or birth date.
+- No email address in readable form, phone number, real name, address or birth date.
+  A Google sign-in can opt in to store only `sha256(email)` for account recovery.
 - No raw IP address: access logs, audit lines and product events keep only a
   truncated `sha256` of the client address.
 - No User-Agent string: sessions store `sha256(user agent)`.
@@ -65,7 +68,9 @@ logged.
 4. Remove every token whose `user_id` is the account.
 5. `plans.forget_user`: remove the plan row and the usage row, and detach
    redeemed licence rows (`user_id = null`) while keeping the code burnt.
-6. Append one final `account_delete` audit event that carries the account id and
+6. Remove the Google link (`data/oauth.json`) and the passkey file
+   (`data/webauthn/<id>.json`), so neither can outlive the account.
+7. Append one final `account_delete` audit event that carries the account id and
    the request id — **never the username**. This is the only file left that
    mentions the account.
 
