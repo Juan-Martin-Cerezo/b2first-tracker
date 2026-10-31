@@ -1696,7 +1696,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div class="plan-limit-options">
       <div class="plan-limit-option">
         <b data-i18n="license_option_free">Free (you are here)</b>
-        <span data-i18n="license_option_free_desc">3 corrections with the AI Corrector a day and 1 mock a week.</span>
+        <span data-i18n="license_option_free_desc">3 corrections with the Writing Corrector a day and 1 mock a week.</span>
       </div>
       <div class="plan-limit-option">
         <b data-i18n="license_option_byo">Your own key</b>
@@ -1867,8 +1867,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
     <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
-    <button data-view="libros" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label" data-i18n="nav_books">Books</span></button>
-    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">AI Corrector</span></button>
+    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
     <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
   </nav>
 
@@ -2037,7 +2036,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
                     <div class="ps-num">Phase 3</div>
                     <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
-                    <div class="ps-time">20:00 · 7-point rubric + AI Corrector</div>
+                    <div class="ps-time">20:00 · 7-point rubric + Writing Corrector</div>
                   </div>
                 </div>
 
@@ -2099,6 +2098,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="live-word-meter">
                       <span>Live word count: <b id="wLiveWordCount">0 words</b></span>
                       <span id="wWordMeter" style="font-weight:600">Target: 140–190 words</span>
+                      <button class="btn sm" type="button" onclick="openWritingCorrectorFromDraft()"
+                        title="Send this draft to the Writing Corrector">Check with Writing Corrector →</button>
                     </div>
                     <div class="contraction-alert" id="wContractionWarn" style="display:none"></div>
                     <div class="row" style="margin-top:12px">
@@ -2140,7 +2141,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
                     </div>
                     <div class="row" style="margin-top:10px">
-                      <div><label>AI Corrector / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
+                      <div><label>Writing Corrector / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
                       <div><label>Audited Score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
                     </div>
                     <div class="row" style="margin-top:10px">
@@ -3123,10 +3124,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="license_title">Subscription</h2>
             <span class="chip-plan" id="planNameChip"><span class="dot"></span><span id="planNameText" data-i18n="license_chip_free">Free</span></span>
           </div>
-          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the AI Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
+          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
           <div class="plan-usage">
             <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_write">AI Corrector &amp; reports</span>
+              <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
               <span class="plan-usage-count tnum" id="planWriteText">—</span>
             </div>
             <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
@@ -3189,7 +3190,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
                     <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
                   </select>
-                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one AI Corrector request. Natural asks Gemini for the audio and costs one more.</div>
+                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
                 </div>
               </div>
               <div class="row">
@@ -3306,7 +3307,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-12">
             <div class="card" id="byoCard">
               <div class="plan-card-head">
-                <h2 data-i18n="byo_title">✨ AI Writing Corrector provider</h2>
+                <h2 data-i18n="byo_title">✨ Writing Corrector provider</h2>
                 <span class="chip-plan"><span class="dot"></span><span data-i18n="byo_chip">Your key, your cost</span></span>
               </div>
               <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
@@ -3412,13 +3413,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="view-ia">
           <div class="page-head">
             <div>
-              <h1 class="page-title" data-i18n="ai_title">AI Writing Corrector</h1>
+              <h1 class="page-title" data-i18n="ai_title">Writing Corrector</h1>
               <p class="page-sub" data-i18n="ai_sub">Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).</p>
             </div>
           </div>
 
           <div class="card" id="iaCard" data-state="idle">
-            <h2 data-i18n="ai_title">AI Writing Corrector</h2>
+            <h2 data-i18n="ai_title">Writing Corrector</h2>
             <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
             <div class="row" style="margin-bottom:10px">
@@ -3606,7 +3607,7 @@ const I18N={
     nav_charts:'Charts',
     nav_errors:'Errors',
     nav_books:'Books',
-    nav_ai:'AI Corrector',
+    nav_ai:'Writing',
     nav_more:'More',
     nav_more_aria:'More sections',
     practice_title:'Practice sources',
@@ -3925,7 +3926,7 @@ const I18N={
     plan_voice:'Speaking voice',
     plan_voice_fast:'Instant — device voice (~2 s)',
     plan_voice_natural:'Natural voice — Gemini (~6 s)',
-    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one AI Corrector request. Natural asks Gemini for the audio and costs one more.',
+    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.',
     plan_wmin:'Writing — min words',
     plan_wmax:'Writing — max words',
     plan_streak_freeze:'Streak freeze / week (🛡)',
@@ -3962,7 +3963,7 @@ const I18N={
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
-    byo_title:'✨ AI Writing Corrector provider',
+    byo_title:'✨ Writing Corrector provider',
     byo_chip:'Your key, your cost',
     byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
     byo_provider:'Provider',
@@ -3983,8 +3984,8 @@ const I18N={
     license_chip_free:'Free',
     license_chip_byo:'Your key',
     license_chip_pro:'Pro',
-    license_sub:'Your plan decides how much you can use the AI Corrector. Free is here to try the loop; a code or your own key lifts it.',
-    license_write:'AI Corrector & reports',
+    license_sub:'Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.',
+    license_write:'Writing Corrector & reports',
     license_speak:'Speaking mocks',
     license_usage:'{n} of {limit} · {window}',
     license_window_day:'today',
@@ -4016,7 +4017,7 @@ const I18N={
     license_limit_body:'Your free plan is there to try the loop. Keep going in one of these ways:',
     license_limit_short:'Plan limit reached — open Plan to keep going.',
     license_option_free:'Free (you are here)',
-    license_option_free_desc:'3 corrections with the AI Corrector a day and 1 mock a week.',
+    license_option_free_desc:'3 corrections with the Writing Corrector a day and 1 mock a week.',
     license_option_byo:'Your own key',
     license_option_byo_desc:'Unlimited for this app: you pay your provider directly.',
     license_option_pro:'Pro',
@@ -4039,7 +4040,7 @@ const I18N={
     books_moved_title:'Books & PDFs are now inside Practice',
     books_moved_sub:'The Books tab was merged into Practice. PDFs, audio and online practice are still one click away.',
     books_moved_cta:'Go to Practice',
-    ai_title:'AI Writing Corrector',
+    ai_title:'Writing Corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
     ai_byo_badge:'using your key',
@@ -4284,7 +4285,7 @@ const I18N={
     nav_charts:'Gráficos',
     nav_errors:'Errores',
     nav_books:'Libros',
-    nav_ai:'AI Corrector',
+    nav_ai:'Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
     practice_title:'Fuentes de práctica',
@@ -4603,7 +4604,7 @@ const I18N={
     plan_voice:'Voz del examinador',
     plan_voice_fast:'Instantánea — voz del dispositivo (~2 s)',
     plan_voice_natural:'Natural — Gemini (~6 s)',
-    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una solicitud al AI Corrector. La natural pide el audio a Gemini y cuesta una más.',
+    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una solicitud al Writing Corrector. La natural pide el audio a Gemini y cuesta una más.',
     plan_wmin:'Writing — mínimo de palabras',
     plan_wmax:'Writing — máximo de palabras',
     plan_streak_freeze:'Congelar racha / semana (🛡)',
@@ -4640,7 +4641,7 @@ const I18N={
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
-    byo_title:'✨ Proveedor del AI Writing Corrector',
+    byo_title:'✨ Proveedor del Writing Corrector',
     byo_chip:'Tu clave, tu costo',
     byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
     byo_provider:'Proveedor',
@@ -4661,8 +4662,8 @@ const I18N={
     license_chip_free:'Gratis',
     license_chip_byo:'Tu clave',
     license_chip_pro:'Pro',
-    license_sub:'Tu plan define cuánto podés usar el AI Corrector. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
-    license_write:'AI Corrector y reportes',
+    license_sub:'Tu plan define cuánto podés usar el Writing Corrector. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
+    license_write:'Writing Corrector y reportes',
     license_speak:'Simulacros de speaking',
     license_usage:'{n} de {limit} · {window}',
     license_window_day:'hoy',
@@ -4694,7 +4695,7 @@ const I18N={
     license_limit_body:'El plan gratis sirve para probar el circuito. Podés seguir de alguna de estas formas:',
     license_limit_short:'Límite del plan alcanzado — abrí Plan para seguir.',
     license_option_free:'Gratis (estás acá)',
-    license_option_free_desc:'3 correcciones con el AI Corrector por día y 1 simulacro por semana.',
+    license_option_free_desc:'3 correcciones con el Writing Corrector por día y 1 simulacro por semana.',
     license_option_byo:'Tu propia clave',
     license_option_byo_desc:'Sin límite en esta app: le pagás directo a tu proveedor.',
     license_option_pro:'Pro',
@@ -4717,7 +4718,7 @@ const I18N={
     books_moved_title:'Libros y PDFs ahora están en Práctica',
     books_moved_sub:'La pestaña Libros se fusionó con Práctica. Los PDF, el audio y la práctica online siguen a un clic.',
     books_moved_cta:'Ir a Práctica',
-    ai_title:'AI Writing Corrector',
+    ai_title:'Writing Corrector',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
     ai_byo_badge:'usando tu clave',
@@ -6448,7 +6449,7 @@ class SpkVad extends AudioWorkletProcessor {
       if(this.cal.length>=25){
         const s=this.cal.slice().sort((a,b)=>a-b);
         const floor=s[s.length>>1];
-        this.on=floor*3.0+0.004;
+        this.on=floor*4.0+0.008;
         this.off=this.on*0.6;
         this.ready=true;
       }
@@ -7007,7 +7008,7 @@ class SpkTx extends AudioWorkletProcessor {
       if(this.cal.length>=10){
         const s=this.cal.slice().sort((a,b)=>a-b);
         const floor=s[s.length>>1];
-        this.on=floor*3.0+0.004;
+        this.on=floor*4.0+0.008;
         this.off=this.on*0.6;
         this.ready=true;
       }
@@ -7016,7 +7017,7 @@ class SpkTx extends AudioWorkletProcessor {
       if(rms>this.on){this.above++;this.below=0}
       else if(rms<this.off){this.below++;this.above=0}
       else{this.above=0;this.below=0}
-      if(!this.speaking&&this.above>=2)this.speaking=true;
+      if(!this.speaking&&this.above>=3)this.speaking=true;
       else if(this.speaking&&this.below>=3)this.speaking=false;
     }
     this.port.postMessage({pcm:pcm,speaking:this.speaking,ready:this.ready,rms:rms},[pcm.buffer]);
@@ -7297,7 +7298,7 @@ const SPK_LIVE_MAX_MS=15*60*1000;
    afterwards. Two numbers, both measured in milliseconds:
      HOLD    - candidate speech that counts as holding the floor
      SILENCE - silence the candidate must leave before the examiner starts */
-const SPK_FLOOR_HOLD_MS=250;
+const SPK_FLOOR_HOLD_MS=700;
 const SPK_FLOOR_SILENCE_MS=900;
 const SPK_TURN_SILENCE_MS=800;
 const SPK_TURN_MAX_MS=15000;
@@ -7932,7 +7933,8 @@ function spkVad(speaking){
        chair or a noisy room muted the examiner mid-word, so it never finished a
        question and kept re-asking — "repite constantemente" and "habla trabado"
        were the same bug. */
-    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=1200)spkBargeIn();
+    if(!SPK.barged&&examinerNear&&now-SPK.speechSince>=1800&&
+       !(SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800))spkBargeIn();
   }else{
     if(SPK.running&&!SPK.silStartedAt)SPK.silStartedAt=now;
     SPK.speechSince=0;
@@ -10908,7 +10910,7 @@ const PARTS=[
  {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
- {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the AI Corrector or your teacher'},
+ {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the Writing Corrector or your teacher'},
  {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'}
@@ -12385,6 +12387,15 @@ async function refreshIaQuota(){
     }
     el.style.display='';
   }catch(e){el.style.display='none'}
+}
+/* One click from the draft to the corrector: the same text, no copy and paste. */
+function openWritingCorrectorFromDraft(){
+  const d=document.getElementById('wTextDraft'), t=document.getElementById('iaText');
+  const txt=d&&d.value?d.value.trim():'';
+  if(txt&&t){t.value=txt;if(typeof onIaTextChange==='function')onIaTextChange();}
+  if(typeof showView==='function')showView('ia');
+  const ta=document.getElementById('iaText');
+  if(ta){try{ta.focus({preventScroll:true})}catch(e){}}
 }
 function onIaTextChange(){
   const el=document.getElementById('iaText');
