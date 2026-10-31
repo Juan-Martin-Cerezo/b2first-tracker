@@ -3020,6 +3020,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
           </div>
           <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
+            <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
+          </div>
+          <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
+          <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
           <div class="t-xs muted" style="margin-top:2px">
             <span data-i18n="license_own_key">Using your own API key? This app is unlimited for you.</span>
             <button type="button" class="btn sm gray" style="margin-left:6px" onclick="focusByoCard()" data-i18n="license_own_key_link">Set it up</button>
@@ -3839,6 +3845,17 @@ const I18N={
     license_code_needed:'Type your code first.',
     license_own_key:'Using your own API key? This app is unlimited for you.',
     license_own_key_link:'Set it up',
+    billing_subscribe:'Subscribe — US$5/month',
+    billing_manage:'Manage subscription',
+    billing_copy:'US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.',
+    billing_renews:'Renews {date}.',
+    billing_grace:'Payment failed · {days} days of pro left.',
+    billing_cancelled:'Checkout cancelled. Nothing was charged.',
+    billing_checking:'Checking your subscription…',
+    billing_active:'Pro is active. Enjoy!',
+    billing_pending:'Payment received. Your plan will update in a moment.',
+    billing_not_configured:'Billing is not configured on this server yet.',
+    billing_error:'Could not reach the payment provider. Try again.',
     license_limit_title:'You reached your plan limit',
     license_limit_body:'Your free plan is there to try the loop. Keep going in one of these ways:',
     license_limit_short:'Plan limit reached — open Plan to keep going.',
@@ -4437,6 +4454,17 @@ const I18N={
     license_code_needed:'Escribí tu código primero.',
     license_own_key:'¿Usás tu propia clave de API? Para vos esta app no tiene límite.',
     license_own_key_link:'Configurarla',
+    billing_subscribe:'Suscribirme — US$5/mes',
+    billing_manage:'Gestionar suscripción',
+    billing_copy:'US$5 por mes, cancelás cuando quieras desde Gestionar suscripción. La tarjeta la maneja Stripe; nunca la vemos.',
+    billing_renews:'Se renueva {date}.',
+    billing_grace:'El pago falló · te quedan {days} días de pro.',
+    billing_cancelled:'Checkout cancelado. No se cobró nada.',
+    billing_checking:'Consultando tu suscripción…',
+    billing_active:'Pro activo. ¡A darle!',
+    billing_pending:'Pago recibido. Tu plan se actualiza en un momento.',
+    billing_not_configured:'Este servidor todavía no tiene la facturación configurada.',
+    billing_error:'No pudimos contactar al proveedor de pagos. Probá de nuevo.',
     license_limit_title:'Llegaste al límite de tu plan',
     license_limit_body:'El plan gratis sirve para probar el circuito. Podés seguir de alguna de estas formas:',
     license_limit_short:'Límite del plan alcanzado — abrí Plan para seguir.',
@@ -6783,6 +6811,10 @@ function makeTurnTransport(cfg){
           out.ms=ev.ms||out.ms;
           if(out.audio_b64)audioP=spkPlayWav(out.audio_b64,role)
             .catch(function(){return false});
+          /* TTS is the fragile half: it is quota-limited and the free tier runs
+             out. When the server could not speak, say the line with the device
+             voice instead of failing a turn mid-exam. */
+          else if(out.reply)spkSpeakText(role,out.reply);
         }else if(ev.type==='error'){
           throw new Error(ev.error||('turn failed ('+ev.reason+')'));
         }
@@ -9392,7 +9424,9 @@ async function loadPlan(){
     if(!r.ok)throw 0;
     PLAN_STATE=await r.json();
   }catch(e){return null}
+  await loadBillingStatus();
   renderPlanCard();
+  handleBillingReturn();
   return PLAN_STATE;
 }
 function renderPlanCard(){
@@ -9436,6 +9470,103 @@ function renderPlanCard(){
     const when=usage.reset_at||p.reset_at;
     resetEl.textContent=when?t('license_reset',{date:planDate(when)}):'';
   }
+}
+/* ---------- BILLING (phase 33) ----------
+   Subscribe opens a provider-hosted Checkout page; the card is typed there,
+   never here. The plan lands through a signed webhook, so after returning from
+   Checkout the card polls /api/billing/status for up to 10 s. */
+var BILLING_STATE=null;
+async function loadBillingStatus(){
+  if(!USER||!USER.token)return null;
+  try{
+    const r=await fetch('/api/billing/status',{headers:authHeaders()});
+    if(!r.ok)return null;
+    BILLING_STATE=await r.json();
+  }catch(e){return null}
+  renderBillingCard();
+  return BILLING_STATE;
+}
+function billingDaysLeft(value){
+  const end=new Date(value);
+  if(isNaN(end.getTime()))return 0;
+  return Math.max(0,Math.ceil((end.getTime()-Date.now())/86400000));
+}
+function renderBillingCard(){
+  const sub=document.getElementById('planSubscribeBtn');
+  const portal=document.getElementById('planPortalBtn');
+  const st=document.getElementById('planBillingStatus');
+  const b=BILLING_STATE||{};
+  const pro=!!(PLAN_STATE&&PLAN_STATE.plan==='pro');
+  if(sub)sub.style.display=pro?'none':'';
+  if(portal)portal.style.display=b.portal_available?'':'none';
+  if(!st)return;
+  if(b.status==='past_due'&&b.grace_until){
+    st.textContent=t('billing_grace',{days:billingDaysLeft(b.grace_until)});
+  }else if(pro&&b.renews_at){
+    st.textContent=t('billing_renews',{date:planDate(b.renews_at)});
+  }else{
+    st.textContent='';
+  }
+}
+async function startBillingCheckout(){
+  const st=document.getElementById('planBillingStatus');
+  const btn=document.getElementById('planSubscribeBtn');
+  if(btn)btn.disabled=true;
+  if(st)st.textContent='…';
+  try{
+    const r=await fetch('/api/billing/checkout',{method:'POST',headers:authHeaders()});
+    let j=null;try{j=await r.json()}catch(e){}
+    if(r.status===401){sessionExpired();return;}
+    if(r.ok&&j&&j.url){window.location.href=j.url;return;}
+    if(st)st.textContent=(r.status===503)?t('billing_not_configured'):t('billing_error');
+  }catch(e){
+    if(st)st.textContent=t('billing_error');
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+async function openBillingPortal(){
+  const st=document.getElementById('planBillingStatus');
+  const btn=document.getElementById('planPortalBtn');
+  if(btn)btn.disabled=true;
+  if(st)st.textContent='…';
+  try{
+    const r=await fetch('/api/billing/portal',{method:'POST',headers:authHeaders()});
+    let j=null;try{j=await r.json()}catch(e){}
+    if(r.status===401){sessionExpired();return;}
+    if(r.ok&&j&&j.url){window.location.href=j.url;return;}
+    if(st)st.textContent=(r.status===503)?t('billing_not_configured'):t('billing_error');
+  }catch(e){
+    if(st)st.textContent=t('billing_error');
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
+async function handleBillingReturn(){
+  let q=null;
+  try{q=new URLSearchParams(location.search)}catch(e){return}
+  if(!q)return;
+  const flag=q.get('billing');
+  if(!flag)return;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  const st=document.getElementById('planBillingStatus');
+  if(flag==='cancel'){
+    if(st)st.textContent=t('billing_cancelled');
+    return;
+  }
+  if(flag!=='success')return;
+  if(st)st.textContent=t('billing_checking');
+  for(let i=0;i<10;i++){
+    await new Promise(function(res){setTimeout(res,1000)});
+    const s=await loadBillingStatus();
+    if(s&&s.plan==='pro'){
+      await loadPlan();
+      const el=document.getElementById('planBillingStatus');
+      if(el)el.textContent=t('billing_active');
+      return;
+    }
+  }
+  if(st)st.textContent=t('billing_pending');
 }
 async function redeemPlanCode(){
   const input=document.getElementById('planCode');

@@ -47,6 +47,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
 import plans
+import billing
 import speech
 import speaking_prompts
 import speaking_report
@@ -256,6 +257,11 @@ RATE_USER_API = _env_int("B2_RATE_USER_API", 600)   # requests/min per user
 RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 30)      # login+register+password per IP/min
 RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
 AUTH_RATE_PATHS = ("/api/login", "/api/register", "/api/password")
+
+# Phase 33: Stripe callbacks are capped before a single byte is read. Stripe
+# events are small; 64 KB is generous and keeps a hostile upload cheap to refuse.
+BILLING_WEBHOOK_MAX_BYTES = 64 * 1024
+_BILLING_EVENT_LOCK = threading.Lock()   # idempotency check + apply + record
 
 
 def _rate_stat(kind):
@@ -658,6 +664,137 @@ def _license_secret():
 def _plan_for(uid, byo=False):
     """The one place that answers 'what may this account do right now'."""
     return plans.effective_plan(uid, byo=byo)
+
+
+# --- Billing events (phase 33) ---------------------------------------------
+# A verified Stripe event is reduced to the handful of ids and statuses this
+# server understands. Nothing from the payload beyond those fields is copied
+# to disk, so a body that carried card data could not persist it.
+def _billing_object(event):
+    """The `data.object` of an event, or {} when the shape is unexpected."""
+    data = event.get("data") if isinstance(event, dict) else None
+    obj = data.get("object") if isinstance(data, dict) else None
+    return obj if isinstance(obj, dict) else {}
+
+
+def _billing_user_for(obj):
+    """Resolve the account an event belongs to (client ref, sub id, customer)."""
+    ref = obj.get("client_reference_id")
+    if isinstance(ref, str) and ref:
+        return ref
+    metadata = obj.get("metadata")
+    if isinstance(metadata, dict):
+        stamped = metadata.get("user_id")
+        if isinstance(stamped, str) and stamped:
+            return stamped
+    for value in (obj.get("subscription"), obj.get("id")):
+        if isinstance(value, str) and value.startswith("sub_"):
+            uid, _row = billing.find_by_subscription(value)
+            if uid:
+                return uid
+    customer = obj.get("customer")
+    if isinstance(customer, str) and customer:
+        uid, _row = billing.find_by_customer(customer)
+        if uid:
+            return uid
+    return ""
+
+
+def _billing_iso(value):
+    """ISO timestamp for a Stripe epoch value, or None."""
+    stamp = billing.epoch(value)
+    return billing.iso(stamp) if stamp is not None else None
+
+
+def _apply_billing_event(event, now=None):
+    """Apply one verified event; returns (type, uid, applied).
+
+    Only the documented types are handled. The row written is built from
+    allow-listed fields (ids, status, period end, grace) — never the payload.
+    """
+    kind = event.get("type") if isinstance(event, dict) else ""
+    if not isinstance(kind, str) or not kind:
+        return "", "", False
+    obj = _billing_object(event)
+    ts = time.time() if now is None else float(now)
+    uid = _billing_user_for(obj)
+    if not uid:
+        return kind, "", False
+    row = billing.get_sub(uid)
+
+    if kind == "checkout.session.completed":
+        new = dict(row)
+        customer = obj.get("customer")
+        sub = obj.get("subscription")
+        if isinstance(customer, str) and customer:
+            new["customer_id"] = customer
+        if isinstance(sub, str) and sub:
+            new["subscription_id"] = sub
+        # Only the ids are trusted here: the period end arrives with
+        # `customer.subscription.*`, and granting pro before it is known could
+        # leave an account paid forever if that event never lands.
+        new.setdefault("status", "pending")
+        new.setdefault("since", billing.iso(ts))
+        billing.put_sub(uid, new)
+        return kind, uid, True
+
+    if kind in ("customer.subscription.updated",
+                "customer.subscription.deleted"):
+        status = obj.get("status")
+        if kind.endswith("deleted"):
+            status = "canceled"
+        if not isinstance(status, str) or not status:
+            status = "active"
+        end = _billing_iso(obj.get("current_period_end"))
+        new = dict(row)
+        customer = obj.get("customer")
+        sub = obj.get("id")
+        if isinstance(customer, str) and customer:
+            new["customer_id"] = customer
+        if isinstance(sub, str) and sub:
+            new["subscription_id"] = sub
+        new["status"] = status
+        if end:
+            new["current_period_end"] = end
+        new["plan"] = billing.plan_from_subscription(status, end, ts)
+        if new["plan"] == "pro" and status in ("active", "trialing"):
+            new.pop("grace_until", None)
+        new.setdefault("since", billing.iso(ts))
+        billing.put_sub(uid, new)
+        return kind, uid, True
+
+    if kind == "invoice.payment_failed":
+        new = dict(row)
+        customer = obj.get("customer")
+        sub = obj.get("subscription")
+        if isinstance(customer, str) and customer:
+            new["customer_id"] = customer
+        if isinstance(sub, str) and sub:
+            new["subscription_id"] = sub
+        new["status"] = "past_due"
+        new["plan"] = "pro"
+        new["grace_until"] = billing.iso(ts + billing.GRACE_DAYS * 86400)
+        new.setdefault("since", billing.iso(ts))
+        billing.put_sub(uid, new)
+        return kind, uid, True
+
+    return kind, uid, False
+
+
+def _apply_billing_event_once(event):
+    """Idempotent wrapper: (type, uid, applied, duplicate), serialized.
+
+    The check, the apply and the ledger write happen under one lock, so two
+    concurrent deliveries of the same event id cannot both grant time.
+    """
+    event_id = event.get("id") if isinstance(event, dict) else ""
+    with _BILLING_EVENT_LOCK:
+        if isinstance(event_id, str) and event_id and billing.event_seen(event_id):
+            return "", "", False, True
+        kind, uid, applied = _apply_billing_event(event)
+        if isinstance(event_id, str) and event_id:
+            billing.record_event(event_id)
+        return kind, uid, applied, False
 
 
 def _legacy_per_user_cap():
@@ -3212,6 +3349,11 @@ class H(BaseHTTPRequestHandler):
         if path == "/api/progress" and self.command == "PUT" and clen > PROGRESS_MAX_BYTES:
             self._reject(413, {"error": "progress too large"})
             return
+        if path == "/api/billing/webhook" and clen > BILLING_WEBHOOK_MAX_BYTES:
+            _audit("billing_webhook_rejected", "", _real_ip(self), self._rid,
+                   {"reason": "too_large"})
+            self._reject(413, {"error": "payload too large"})
+            return
 
         # Rate limits: authenticated traffic is bucketed by user_id, everything
         # else by IP. A shared CGNAT/school IP therefore cannot 429 a logged-in
@@ -3467,6 +3609,130 @@ class H(BaseHTTPRequestHandler):
                    {"plan": found["plan"], "days": found["days"]})
             self._send_json(200, {"ok": True, "plan": rec["plan"],
                                   "until": rec["until"], "source": rec["source"]})
+            return
+
+        # ---- Phase 33: billing (Stripe Checkout, portal, signed webhooks) ----
+        if path == "/api/billing/status":
+            if self.command != "GET":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            plan = _plan_for(uid)
+            row = billing.get_sub(uid)
+            self._send_json(200, {
+                "plan": plan["plan"],
+                "source": plan["source"],
+                "renews_at": row.get("current_period_end"),
+                "status": row.get("status") or (plan["source"] if plan["plan"] == "pro" else None),
+                "grace_until": row.get("grace_until"),
+                "portal_available": bool(row.get("customer_id")) and billing.portal_ready(),
+                "billing_mode": billing.mode(),
+            })
+            return
+
+        if path == "/api/billing/checkout":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            self._drain()
+            if not billing.checkout_ready():
+                self._send_json(503, {"error": "billing_not_configured"})
+                return
+            cfg = billing.config()
+            idem = "%s-%s" % (uid, time.strftime("%Y-%m-%d", time.gmtime()))
+            try:
+                session = billing.create_checkout_session(
+                    uid, cfg["price_id"],
+                    cfg["public_url"] + "/?billing=success",
+                    cfg["public_url"] + "/?billing=cancel",
+                    idem)
+            except billing.BillingError:
+                _audit("billing_checkout_failed", uid, _real_ip(self), self._rid)
+                self._send_json(502, {"error": "billing_provider_error"})
+                return
+            url = session.get("url")
+            if not isinstance(url, str) or not url.startswith(("https://", "http://")):
+                _audit("billing_checkout_failed", uid, _real_ip(self), self._rid)
+                self._send_json(502, {"error": "billing_provider_error"})
+                return
+            _audit("billing_checkout", uid, _real_ip(self), self._rid,
+                   {"session": str(session.get("id") or "")[:64]})
+            self._send_json(200, {"url": url, "id": session.get("id")})
+            return
+
+        if path == "/api/billing/portal":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            self._drain()
+            if not billing.portal_ready():
+                self._send_json(503, {"error": "billing_not_configured"})
+                return
+            customer = billing.get_sub(uid).get("customer_id")
+            if not customer:
+                self._send_json(400, {"error": "no_subscription"})
+                return
+            try:
+                session = billing.create_portal_session(
+                    customer, billing.config()["public_url"] + "/?billing=portal")
+            except billing.BillingError:
+                _audit("billing_portal_failed", uid, _real_ip(self), self._rid)
+                self._send_json(502, {"error": "billing_provider_error"})
+                return
+            url = session.get("url")
+            if not isinstance(url, str) or not url.startswith(("https://", "http://")):
+                self._send_json(502, {"error": "billing_provider_error"})
+                return
+            _audit("billing_portal", uid, _real_ip(self), self._rid)
+            self._send_json(200, {"url": url})
+            return
+
+        # No auth here: the signature is the credential. The body is never
+        # echoed, never logged and never applied twice for the same event id.
+        if path == "/api/billing/webhook":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            length = self._clen()
+            if length > BILLING_WEBHOOK_MAX_BYTES:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            if not billing.webhook_ready():
+                self._drain()
+                self._send_json(503, {"error": "billing_not_configured"})
+                return
+            raw = self.rfile.read(length) if length > 0 else b""
+            ok, event = billing.verify_webhook(
+                raw, self.headers.get("Stripe-Signature", ""),
+                billing.config()["webhook_secret"], time.time())
+            if not ok:
+                _audit("billing_bad_signature", "", _real_ip(self), self._rid,
+                       {"bytes": len(raw)})
+                self._send_json(400, {"error": "invalid_signature"})
+                return
+            kind, event_uid, applied, duplicate = _apply_billing_event_once(event)
+            if applied and event_uid:
+                _audit("billing_event", event_uid, _real_ip(self), self._rid,
+                       {"type": kind[:60]})
+            if kind == "invoice.payment_failed" and event_uid:
+                # Audit the account only: never amounts, never the invoice.
+                _audit("billing_payment_failed", event_uid, _real_ip(self), self._rid,
+                       {"status": "past_due"})
+            self._send_json(200, {"ok": True})
             return
 
         # Storage health check (no auth): 200 sane / 503 broken
@@ -4109,8 +4375,12 @@ class H(BaseHTTPRequestHandler):
                 })
                 wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
                 if tts_err:
-                    self._send_ndjson({"type": "error", "error": "turn_failed",
-                                       "reason": tts_err})
+                    # The text is already on its way, so do not fail the turn:
+                    # tell the client to use the device voice. A dead TTS quota
+                    # must degrade, not break the exam.
+                    self._send_ndjson({"type": "audio", "audio_b64": None,
+                                       "fallback": "device", "reason": tts_err,
+                                       "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms}})
                     return
                 total = int((time.time() - started) * 1000)
                 if session_id and not known:
@@ -4129,9 +4399,14 @@ class H(BaseHTTPRequestHandler):
 
             wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
             if tts_err:
-                # The examiner did not speak: say so instead of returning text
-                # as if the turn had happened.
-                self._send_json(502, {"error": "turn_failed", "reason": tts_err})
+                # Same degrade as the streaming path: the turn happened, only the
+                # voice is missing. The client speaks the text itself.
+                self._send_json(200, {
+                    "transcript": transcript, "reply": reply, "audio_b64": None,
+                    "mime": "audio/wav", "fallback": "device", "reason": tts_err,
+                    "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
+                           "total": int((time.time() - started) * 1000)},
+                })
                 return
             total = int((time.time() - started) * 1000)
             if session_id and not known:

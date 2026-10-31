@@ -2,11 +2,11 @@
  "queue": [
   {
    "id": "38",
-   "status": "running"
+   "status": "done"
   },
   {
    "id": "33",
-   "status": "pending"
+   "status": "running"
   },
   {
    "id": "34",
