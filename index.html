@@ -7186,6 +7186,9 @@ function makeTurnTransport(cfg){
     }
     function consume(j){
       applyText(j);
+      /* Plain JSON response with no audio: only the TTS-failure fallback needs
+         the device voice here; `tts:"none"` already spoke it in applyText. */
+      if(!j.audio_b64&&j.fallback==='device'&&j.reply)spkSpeakText(role,j.reply);
       return finish(j,spkPlayWav(j.audio_b64,role).catch(function(){return false}));
     }
     function readStream(r){
@@ -7207,10 +7210,10 @@ function makeTurnTransport(cfg){
           out.ms=ev.ms||out.ms;
           if(out.audio_b64)audioP=spkPlayWav(out.audio_b64,role)
             .catch(function(){return false});
-          /* TTS is the fragile half: it is quota-limited and the free tier runs
-             out. When the server could not speak, say the line with the device
-             voice instead of failing a turn mid-exam. */
-          else if(out.reply)spkSpeakText(role,out.reply);
+          /* Only when the server says the TTS failed. In `tts:"none"` the text
+             was already spoken by applyText, and speaking it again here made the
+             examiner say every line twice. */
+          else if(ev.fallback==='device'&&out.reply)spkSpeakText(role,out.reply);
         }else if(ev.type==='error'){
           throw new Error(ev.error||('turn failed ('+ev.reason+')'));
         }
@@ -7913,7 +7916,8 @@ async function spkStart(){
         if(caps&&caps.live){
           try{
             const r=await fetch('/api/speaking/token',{method:'POST',
-              headers:authHeaders(),body:JSON.stringify({role:role,part:part})});
+              headers:authHeaders(),body:JSON.stringify({role:role,part:part,
+                session_id:(typeof spkTurnSessionId==='function'?spkTurnSessionId():'')})});
             if(r.ok){
               const j=await r.json();
               if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
