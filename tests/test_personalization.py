@@ -1,6 +1,6 @@
 import json
 from playwright.sync_api import sync_playwright
-from helpers import isolated_server, login_owner
+from helpers import isolated_server, login_owner, login_user, dismiss_onboarding
 
 URL = isolated_server() + "/"
 out = {}
@@ -23,7 +23,9 @@ with sync_playwright() as p:
     out["owner_rot_b"] = pg.text_content("#rotWkASesBDay")
 
     # 2. Switch to Maria Fatima (Ses A: Tue 17:00, Ses B: Thu 17:00)
-    maria_user = {"id": "mar-a-f-tima", "name": "María Fátima", "color": "#ffade5"}
+    # A fabricated session no longer boots the app: the token has to exist on
+    # the server, so Maria gets a real throwaway account and then her own plan.
+    maria_user = login_user(pg, URL, "maria-fatima", "Maria-fatima-2026!")
     maria_data = {
         "log": [], "errs": [], "stage": 0, "onboarded": True,
         "settings": {
@@ -47,10 +49,10 @@ with sync_playwright() as p:
     }""", [maria_user, maria_data])
     pg.reload(wait_until="load")
     pg.wait_for_timeout(900)
+    dismiss_onboarding(pg)
     pg.wait_for_timeout(300)
 
     out["maria_title"] = pg.text_content("#userTitle")
-    out["maria_kicker"] = pg.text_content("#userKicker")
     out["maria_nav_a"] = pg.text_content("#navLblMonA")
     out["maria_nav_b"] = pg.text_content("#navLblFriA")
     out["maria_st1_badge"] = pg.text_content("#st1WkBadge")
