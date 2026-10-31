@@ -1388,6 +1388,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:400px){
   .top-streak{padding:4px 6px}
 }
+
+/* === U5: charts === */
+:root{--u5-chart-ue:oklch(0.55 0.14 300)}
+:root[data-theme="dark"]{--u5-chart-ue:oklch(0.76 0.11 300)}
+.u5-chart-total{font-size:var(--fs-sm);font-weight:600;color:var(--txt-2);margin-left:6px;white-space:nowrap}
+#gEvol svg,#gPart svg,#gErr svg,#gCons svg{max-width:100%;height:auto;display:block}
+@media (max-width:400px){
+  #v-graf .card{padding:14px}
+  .u5-chart-total{display:block;margin-left:0}
+}
 </style>
 </head>
 <body>
@@ -2911,28 +2921,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
-              <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
+              <div class="sub" data-i18n="charts_evolution_sub">Each marker is a log entry on its real date. Dashed red segments and ▼ mark a dip vs the previous point.</div>
               <div id="gEvol"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
-              <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
+              <div class="sub" data-i18n="charts_by_part_sub">Error rate per part — worst first. The dashed line is the pass target (at most 40% wrong).</div>
               <div id="gPart"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2 data-i18n="charts_errors">🧩 Errors by type</h2>
-              <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy.</div>
+              <h2><span data-i18n="charts_errors">🧩 Errors by type</span><span class="u5-chart-total" id="gErrTotal"></span></h2>
+              <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy — the total sits in the title.</div>
               <div id="gErr"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
-              <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
+              <div class="sub"><span data-i18n="charts_cons_sub">Logs per week (last 12)</span> · <span id="gStreak"></span></div>
               <div id="gCons"></div>
             </div>
           </div>
@@ -3739,12 +3749,36 @@ const I18N={
     charts_streak:'Study Streak',
     charts_streak_sub:'consecutive days',
     charts_evolution:'📈 Temporal Evolution',
-    charts_evolution_sub:'Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.',
+    charts_evolution_sub:'Each marker is a log entry on its real date. Dashed red segments and ▼ mark a dip vs the previous point.',
     charts_by_part:'📊 By Part & Exercise',
-    charts_by_part_sub:'Average % of each exam part — red bars are your weakest.',
+    charts_by_part_sub:'Error rate per part — worst first. The dashed line is the pass target (at most 40% wrong).',
     charts_errors:'🧩 Errors by type',
-    charts_errors_sub:'Accumulated root-cause taxonomy.',
+    charts_errors_sub:'Accumulated root-cause taxonomy — the total sits in the title.',
     charts_consistency:'🔥 Weekly Consistency',
+    charts_cons_sub:'Logs per week (last 12)',
+    charts_empty:'No data yet — log a session to see this chart.',
+    charts_quick_log:'Log a session',
+    charts_err_empty:'No errors logged yet. Tag a miss after a practice test.',
+    charts_log_err:'Log an error',
+    charts_total:'{n} in total',
+    charts_err_lex:'L-GAP · lexical',
+    charts_err_gram:'G-ERR · grammar',
+    charts_err_dist:'T-MIS · distractor',
+    charts_err_time:'T-LIM · time',
+    charts_err_other:'Other',
+    charts_err_svg_title:'Errors by type: {total} logged. {breakdown}.',
+    charts_part_svg_title:'Error rate per part, worst first. {top}. Target: at most {target}% wrong.',
+    charts_target:'target ≤ {pct}% wrong',
+    charts_worst_first:'worst → best',
+    charts_lbl_ue:'UoE P{part}',
+    charts_lbl_lp:'Listening P{part}',
+    charts_lbl_w:'Writing {kind}',
+    charts_lbl_full_rue:'Full R&UoE',
+    charts_lbl_full_l:'Full Listening',
+    charts_evol_svg_title:'Temporal evolution: {n} sessions from {from} to {to}. {drops} dips vs the previous point of the same series.',
+    charts_streak_one:'Current streak: 1 week',
+    charts_streak_many:'Current streak: {n} weeks',
+    charts_cons_svg_title:'Weekly consistency: {n} logs across {weeks} weeks. Current streak: {streak}.',
     err_title:'Error Taxonomy',
     err_sub:'Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.',
     err_root_log:'🔖 Root-Cause Log',
@@ -4356,12 +4390,36 @@ const I18N={
     charts_streak:'Racha de estudio',
     charts_streak_sub:'días consecutivos',
     charts_evolution:'📈 Evolución temporal',
-    charts_evolution_sub:'Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.',
+    charts_evolution_sub:'Cada marcador es un registro en su fecha real. Los tramos rojos punteados y ▼ marcan una caída respecto del punto anterior.',
     charts_by_part:'📊 Por parte y ejercicio',
-    charts_by_part_sub:'Porcentaje promedio de cada parte — las barras rojas son tus puntos más débiles.',
+    charts_by_part_sub:'Tasa de error por parte — de peor a mejor. La línea punteada es el objetivo de aprobación (como máximo 40 % mal).',
     charts_errors:'🧩 Errores por tipo',
-    charts_errors_sub:'Taxonomía de causa raíz acumulada.',
+    charts_errors_sub:'Taxonomía de causa raíz acumulada — el total figura en el título.',
     charts_consistency:'🔥 Constancia semanal',
+    charts_cons_sub:'Registros por semana (últimas 12)',
+    charts_empty:'Todavía sin datos — registrá una sesión para ver este gráfico.',
+    charts_quick_log:'Registrar sesión',
+    charts_err_empty:'Todavía no hay errores registrados. Marcá un fallo después de un simulacro.',
+    charts_log_err:'Registrar error',
+    charts_total:'{n} en total',
+    charts_err_lex:'L-GAP · léxico',
+    charts_err_gram:'G-ERR · gramática',
+    charts_err_dist:'T-MIS · distractor',
+    charts_err_time:'T-LIM · tiempo',
+    charts_err_other:'Otro',
+    charts_err_svg_title:'Errores por tipo: {total} registrados. {breakdown}.',
+    charts_part_svg_title:'Tasa de error por parte, de peor a mejor. {top}. Objetivo: como máximo {target} % mal.',
+    charts_target:'objetivo ≤ {pct} % mal',
+    charts_worst_first:'peor → mejor',
+    charts_lbl_ue:'UoE P{part}',
+    charts_lbl_lp:'Listening P{part}',
+    charts_lbl_w:'Writing {kind}',
+    charts_lbl_full_rue:'R&UoE completa',
+    charts_lbl_full_l:'Listening completo',
+    charts_evol_svg_title:'Evolución temporal: {n} sesiones del {from} al {to}. {drops} caídas respecto del punto anterior de la misma serie.',
+    charts_streak_one:'Racha actual: 1 semana',
+    charts_streak_many:'Racha actual: {n} semanas',
+    charts_cons_svg_title:'Constancia semanal: {n} registros en {weeks} semanas. Racha actual: {streak}.',
     err_title:'Taxonomía de errores',
     err_sub:'Registro de causa raíz: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo). Identificá patrones sistemáticos para optimizar el tiempo de estudio restante.',
     err_root_log:'🔖 Registro de causa raíz',
@@ -10840,123 +10898,208 @@ function fmtSize(n){
   if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return Number(n.toFixed(1)).toLocaleString(currentLocale())+' MB';
 }
 /* ---------- CHARTS ----------
-   The 4 panels are drawn with pure SVG (zero dependencies) and
-   re-render on every refreshAll():
-   - renderGrafEvol(): lines per series (Writing /20 → %, Listening /30,
-     UoE %) over time (X axis = log index).
-   - renderGrafPart(): horizontal bars with the average % per part
-     (UoE P1-7, Listening P1-4, Writing per kind, full R&UoE and full
-     Listening) — bars below the minimum threshold turn red.
-   - renderGrafErr(): bars with the accumulated error taxonomy.
-   - renderGrafCons(): bars of logs per ISO week (last 12)
-     + streak of weeks with >= 1 log. */
-function svgChart(w,h,inner,extra){
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);display:block;margin:8px 0" ${extra||''}>${inner}</svg>`;
+   Pure SVG, zero dependencies. Every panel is role="img" with a <title>
+   summary and prints its values, so colour is never the only signal.
+   - renderGrafEvol(): % per series over real dates. Every point carries
+     a marker; a dashed red segment + ▼ marks a dip vs the previous point
+     of the same series.
+   - renderGrafPart(): error rate per part (100 - average % correct),
+     worst first, with a target reference line.
+   - renderGrafErr(): taxonomy counts with a fixed colour per type and
+     the total in the card title.
+   - renderGrafCons(): logs per ISO week (last 12) + week streak.
+   Missing data shows an explicit no-data state; no zeroes are invented. */
+function svgChart(w,h,inner,title,extra){
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" preserveAspectRatio="xMinYMin meet" role="img" ${extra||''} style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);display:block;margin:8px 0;max-width:100%;height:auto"><title>${esc(title||'')}</title>${inner}</svg>`;
 }
-function svgTxt(x,y,t,fill,size,anchor){
-  return `<text x="${x}" y="${y}" fill="${fill||'var(--txt-2)'}" font-size="12" text-anchor="${anchor||'start'}" font-family="system-ui,sans-serif">${esc(t)}</text>`;
+function svgTxt(x,y,txt,fill,size,anchor,weight){
+  return `<text x="${x}" y="${y}" fill="${fill||'var(--txt-2)'}" font-size="${size||12}" font-weight="${weight||400}" text-anchor="${anchor||'start'}" font-family="system-ui,sans-serif">${esc(txt)}</text>`;
 }
-function svgBar(label,pct,min,color){
-  const c=pct>=min?'var(--ok)':(color||'var(--bad)');
-  return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0">
-    <span style="flex:0 0 130px;font-size:12px;color:var(--dim);text-align:right">${esc(label)}</span>
-    <div style="flex:1;background:var(--bg);border-radius:6px;height:14px;overflow:hidden"><div style="width:${Math.min(100,pct)}%;height:100%;background:${c};border-radius:6px"></div></div>
-    <span style="flex:0 0 40px;font-size:12px;color:var(--txt)">${Math.round(pct)}%</span></div>`;
+function chartEmpty(el,msgKey,btnKey,onclick){
+  el.innerHTML=`<div class="empty">${esc(t(msgKey))}${btnKey?`<button class="btn sm ok" onclick="${onclick}">${esc(t(btnKey))}</button>`:''}</div>`;
+}
+/* Fixed taxonomy colours: a type keeps the same colour here and in the
+   error-log pills. */
+const U5_ERR_TYPES=[
+  {code:'L-GAP',color:'var(--acc)',labelKey:'charts_err_lex'},
+  {code:'G-ERR',color:'var(--bad)',labelKey:'charts_err_gram'},
+  {code:'T-MIS',color:'var(--warn)',labelKey:'charts_err_dist'},
+  {code:'T-LIM',color:'var(--txt-2)',labelKey:'charts_err_time'}
+];
+function u5DateMs(key){
+  const m=String(key||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?Date.UTC(+m[1],+m[2]-1,+m[3]):null;
+}
+function u5ShortDate(ms){
+  const d=new Date(ms);
+  return pad(d.getUTCDate())+'/'+pad(d.getUTCMonth()+1);
+}
+/* Normalised score (0-100) or null when the entry has no measurement. */
+function u5Pct(e){
+  let v;
+  if(e.type==='w')v=(e.score!==undefined?e.score:e.total)/20*100;
+  else if(e.type==='sp')v=typeof e.score==='number'?e.score/5*100:NaN;
+  else v=e.correct/e.total*100;
+  return (typeof v==='number'&&isFinite(v))?Math.max(0,Math.min(100,v)):null;
 }
 function renderGrafEvol(){
   const el=document.getElementById('gEvol'),log=D.log||[];
   /* A speaking entry has no correct/total: its band (0-5) is scaled to the
-     same 0-100 axis as the other series. Old "done" entries are skipped. */
-  const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
-  const pctVal=e=>e.type==='w'?wVal(e):(e.type==='sp'?e.score/5*100:e.correct/e.total*100);
-  const series=[
-    {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
-    {name:'Listening',color:'var(--ok-text)',es:log.filter(e=>e.type==='l')},
-    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')},
-    {name:'Speaking',color:'var(--warn-text)',es:log.filter(e=>e.type==='sp'&&typeof e.score==='number')}
+     same 0-100 axis as the other series. Entries without a measurement or
+     a real date are skipped instead of being plotted as zero. */
+  const defs=[
+    {name:'Writing',color:'var(--acc)',type:'w'},
+    {name:'Listening',color:'var(--ok-text)',type:'l'},
+    {name:'UoE',color:'var(--u5-chart-ue)',type:'ue'},
+    {name:'Speaking',color:'var(--warn-text)',type:'sp'}
   ];
-  const seriesOk=series.filter(s=>s.es.length);
-  if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
-  const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
-  const n=Math.max(...seriesOk.map(s=>s.es.length));
-  const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
-  const ys=v=>padT+(H-padT-padB)*(1-v/100);
-  const last=Math.max(...seriesOk.map(s=>s.es.map(pctVal)).flat());
-  const ymax=Math.ceil(Math.max(100,last)/10)*10;
+  const series=defs.map(s=>({
+    name:s.name,color:s.color,
+    pts:log.filter(e=>e.type===s.type)
+      .map(e=>({v:u5Pct(e),ms:u5DateMs(e.date)}))
+      .filter(p=>p.v!==null&&p.ms!==null)
+      .sort((a,b)=>a.ms-b.ms)
+  })).filter(s=>s.pts.length);
+  const all=series.reduce((a,s)=>a.concat(s.pts),[]);
+  if(!all.length){chartEmpty(el,'charts_empty','charts_quick_log','openQuickLog()');return}
+  const W=420,H=250,padL=34,padR=12,padT=36,padB=28;
+  const minMs=Math.min(...all.map(p=>p.ms)),maxMs=Math.max(...all.map(p=>p.ms));
+  const x=ms=>padL+(W-padL-padR)*(maxMs===minMs?0.5:(ms-minMs)/(maxMs-minMs));
+  const y=v=>padT+(H-padT-padB)*(1-v/100);
   let g='';
-  for(let v=0;v<=ymax;v+=ymax/4){
-    g+=`<line x1="${padL}" x2="${W-padR}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-width="1"/>`;
-    g+=svgTxt(padL-4,ys(v)+3,Math.round(v)+'%','var(--dim)',10,'end');
-  }
-  seriesOk.forEach((s,si)=>{
-    const pts=s.es.map((e,i)=>`${xs(i)},${ys(pctVal(e))}`).join(' ');
-    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
-    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(pctVal(e))}" r="3" fill="${s.color}"/>`});
-    g+=svgTxt(xs(s.es.length-1)+6,ys(pctVal(s.es[s.es.length-1]))+3,s.name,s.color,11,'start');
+  /* Legend doubles as a text readout of the latest value per series. */
+  series.forEach((s,i)=>{
+    const lx=padL+i*93;
+    g+=`<rect x="${lx}" y="7" width="8" height="8" rx="2" fill="${s.color}"/>`;
+    g+=svgTxt(lx+12,15,s.name+' '+Math.round(s.pts[s.pts.length-1].v)+'%','var(--txt-2)',10.5,'start');
   });
-  g+=svgTxt(padL,H-4,'← older · more recent →','var(--dim)',10,'middle');
-  el.innerHTML=svgChart(W,H,g);
+  [0,25,50,75,100].forEach(v=>{
+    g+=`<line x1="${padL}" x2="${W-padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(padL-5,y(v)+3,v+'%','var(--dim)',10,'end');
+  });
+  /* Real dates on the X axis: unique logged dates, sampled to 5 ticks so
+     they never overlap at narrow widths. */
+  const uniq=[...new Set(all.map(p=>p.ms))].sort((a,b)=>a-b);
+  let ticks=uniq;
+  if(uniq.length>5){
+    ticks=[0,1,2,3,4].map(i=>uniq[Math.round(i*(uniq.length-1)/4)])
+      .filter((ms,i,a)=>a.indexOf(ms)===i);
+  }
+  ticks.forEach(ms=>{
+    const anchor=ms===minMs?'start':(ms===maxMs?'end':'middle');
+    g+=svgTxt(x(ms),H-8,u5ShortDate(ms),'var(--dim)',10.5,anchor);
+  });
+  let drops=0;
+  series.forEach(s=>{
+    for(let i=1;i<s.pts.length;i++){
+      const a=s.pts[i-1],b=s.pts[i],down=b.v<a.v-0.01;
+      if(down)drops++;
+      g+=`<line x1="${x(a.ms)}" y1="${y(a.v)}" x2="${x(b.ms)}" y2="${y(b.v)}" stroke="${down?'var(--bad)':s.color}" stroke-width="${down?2.5:2}"${down?' stroke-dasharray="5 3"':''} stroke-linecap="round"/>`;
+    }
+    s.pts.forEach((p,i)=>{
+      g+=`<circle cx="${x(p.ms)}" cy="${y(p.v)}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="1.5"/>`;
+      if(i>0&&p.v<s.pts[i-1].v-0.01){
+        g+=`<path d="M ${x(p.ms)-4} ${y(p.v)-9} L ${x(p.ms)+4} ${y(p.v)-9} L ${x(p.ms)} ${y(p.v)-2} Z" fill="var(--bad)"/>`;
+      }
+    });
+  });
+  const from=fmtDate(new Date(minMs).toISOString().slice(0,10));
+  const to=fmtDate(new Date(maxMs).toISOString().slice(0,10));
+  el.innerHTML=svgChart(W,H,g,t('charts_evol_svg_title',{n:all.length,from,to,drops}));
 }
 function renderGrafPart(){
   const el=document.getElementById('gPart'),log=D.log||[];
-  const MIN=60;
+  const TARGET=40; /* 60% correct pass line, expressed as % wrong */
   const rows=[];
-  const push=(label,es,extra)=>{
-    if(!es.length)return;
-    const vals=es.map(e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.correct/e.total*100);
-    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-    rows.push({label,pct:avg,min:MIN});
+  const push=(label,es)=>{
+    let sum=0,n=0;
+    es.forEach(e=>{const v=u5Pct(e);if(v!==null){sum+=v;n++}});
+    if(!n)return;
+    rows.push({label,err:Math.max(0,Math.min(100,100-sum/n)),n});
   };
-  for(let i=1;i<=7;i++)push('UoE P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
-  for(let i=1;i<=4;i++)push('Listening P'+i,log.filter(e=>e.type==='lp'&&e.part===i));
-  ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
-  const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
-  if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
-  rows.sort((a,b)=>a.pct-b.pct);
-  el.innerHTML='<div style="max-width:560px">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
+  for(let i=1;i<=7;i++)push(t('charts_lbl_ue',{part:i}),log.filter(e=>e.type==='ue'&&e.part===i));
+  for(let i=1;i<=4;i++)push(t('charts_lbl_lp',{part:i}),log.filter(e=>e.type==='lp'&&e.part===i));
+  ['Essay','Article','Report','Review','Email'].forEach(k=>push(t('charts_lbl_w',{kind:k}),log.filter(e=>e.type==='w'&&e.kind===k)));
+  push(t('charts_lbl_full_rue'),log.filter(e=>e.type==='rue'));
+  push(t('charts_lbl_full_l'),log.filter(e=>e.type==='l'));
+  if(!rows.length){chartEmpty(el,'charts_empty','charts_quick_log','openQuickLog()');return}
+  rows.sort((a,b)=>b.err-a.err||b.n-a.n);
+  const W=420,labelW=116,padR=58,rowH=26,plotW=W-labelW-padR,rowsH=rows.length*rowH;
+  const H=18+rowsH+6;
+  const x=v=>labelW+plotW*Math.max(0,Math.min(100,v))/100;
+  let g='';
+  g+=svgTxt(labelW,10,t('charts_worst_first'),'var(--dim)',10,'start');
+  const tx=x(TARGET);
+  g+=`<line x1="${tx}" x2="${tx}" y1="16" y2="${16+rowsH}" stroke="var(--bad)" stroke-width="1" stroke-dasharray="4 3"/>`;
+  g+=svgTxt(tx+4,10,t('charts_target',{pct:TARGET}),'var(--bad-text)',9.5,'start');
+  rows.forEach((r,i)=>{
+    const cy=18+i*rowH+rowH/2,bh=12;
+    const col=r.err>=TARGET?'var(--bad)':(r.err>=TARGET/2?'var(--warn)':'var(--ok)');
+    g+=svgTxt(labelW-8,cy+3.5,r.label,'var(--txt-2)',11,'end');
+    g+=`<rect x="${labelW}" y="${cy-bh/2}" width="${plotW}" height="${bh}" rx="3" fill="var(--surface-2)"/>`;
+    if(r.err>0)g+=`<rect x="${labelW}" y="${cy-bh/2}" width="${plotW*r.err/100}" height="${bh}" rx="3" fill="${col}"/>`;
+    g+=svgTxt(W-padR+6,cy+5,Math.round(r.err)+'%','var(--txt)',15,'start',700);
+  });
+  const top=rows.slice(0,3).map(r=>`${r.label}: ${Math.round(r.err)}%`).join(' · ');
+  el.innerHTML=svgChart(W,H,g,t('charts_part_svg_title',{top,target:TARGET}));
 }
 function renderGrafErr(){
   const el=document.getElementById('gErr'),errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
-  const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
-  const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
-  const max=Math.max(...counts.map(c=>c.n));
-  const W=340,H=140,padL=110,padB=18,padT=8,padR=8;
-  const bw=(H-padT-padB)/counts.length;
+  const totalEl=document.getElementById('gErrTotal');
+  const total=errs.length;
+  if(totalEl)totalEl.textContent=total?'· '+t('charts_total',{n:total}):'';
+  if(!total){chartEmpty(el,'charts_err_empty','charts_log_err','openSoloModal()');return}
+  const codeOf=e=>e.code||e.tax;
+  const counts=U5_ERR_TYPES.map(c=>({
+    ...c,n:errs.filter(e=>codeOf(e)===c.code).length,label:t(c.labelKey)
+  }));
+  const known=counts.reduce((a,c)=>a+c.n,0);
+  if(total-known>0)counts.push({code:'OTHER',color:'var(--txt-2)',n:total-known,label:t('charts_err_other')});
+  const max=Math.max(...counts.map(c=>c.n),1);
+  const W=420,labelW=126,padR=56,rowH=30,plotW=W-labelW-padR,rowsH=counts.length*rowH;
+  const H=18+rowsH+6;
   let g='';
   counts.forEach((c,i)=>{
-    const y=padT+i*bw;
-    const bwid=(W-padL-padR)*(max?c.n/max:0);
-    g+=svgTxt(padL-6,y+bw/2+3,c.label,'var(--dim)',10.5,'end');
-    g+=`<rect x="${padL}" y="${y+2}" width="${bwid}" height="${bw-6}" rx="3" fill="var(--acc)"/>`;
-    g+=svgTxt(padL+bwid+4,y+bw/2+3,c.n,'var(--txt)',11,'start');
+    const cy=18+i*rowH+rowH/2,bh=13;
+    g+=svgTxt(labelW-8,cy+3.5,c.label,'var(--txt-2)',11,'end');
+    g+=`<rect x="${labelW}" y="${cy-bh/2}" width="${plotW}" height="${bh}" rx="3" fill="var(--surface-2)"/>`;
+    if(c.n)g+=`<rect x="${labelW}" y="${cy-bh/2}" width="${plotW*c.n/max}" height="${bh}" rx="3" fill="${c.color}"/>`;
+    g+=svgTxt(W-padR+6,cy+4,String(c.n),'var(--txt)',13,'start',700);
+    g+=svgTxt(W-padR+26,cy+4,Math.round(c.n/total*100)+'%','var(--txt-2)',10,'start');
   });
-  el.innerHTML=svgChart(W,H,g);
+  const breakdown=counts.map(c=>`${c.label} ${c.n}`).join(' · ');
+  el.innerHTML=svgChart(W,H,g,t('charts_err_svg_title',{total,breakdown}));
 }
 function renderGrafCons(){
   const el=document.getElementById('gCons'),log=D.log||[];
-  if(!log.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  const dated=log.filter(e=>u5DateMs(e.date)!==null);
+  if(!dated.length){
+    const emptyStreak=document.getElementById('gStreak');
+    if(emptyStreak)emptyStreak.textContent=t('charts_streak_many',{n:0});
+    chartEmpty(el,'charts_empty','charts_quick_log','openQuickLog()');return;
+  }
   const byWeek={};
-  log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
+  dated.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
   const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
   const max=Math.max(...weeks.map(w=>byWeek[w]));
-  const W=340,H=150,padL=24,padB=20,padT=8,padR=8;
+  const W=420,H=170,padL=22,padB=22,padT=12,padR=10;
   const bw=(W-padL-padR)/weeks.length;
   let g='';
   weeks.forEach((w,i)=>{
     const n=byWeek[w];
     const h=(H-padT-padB)*(max?n/max:0);
     const x=padL+i*bw;
-    g+=`<rect x="${x+2}" y="${H-padB-h}" width="${bw-4}" height="${h}" rx="3" fill="var(--acc)"/>`;
-    g+=svgTxt(x+bw/2,H-5,'W'+w,'var(--dim)',9,'middle');
+    g+=`<rect x="${x+2}" y="${H-padB-h}" width="${Math.max(4,bw-4)}" height="${h}" rx="3" fill="var(--acc)"/>`;
+    if(n)g+=svgTxt(x+bw/2,H-padB-h-4,n,'var(--txt-2)',10,'middle');
+    g+=svgTxt(x+bw/2,H-6,'W'+w,'var(--dim)',9.5,'middle');
   });
-  // Streak: consecutive weeks (backwards from the current one) with >= 1 log
+  /* Streak: consecutive weeks (backwards from the current one) with >= 1 log */
   let streak=0,wCur=isoWeek(new Date());
   while(byWeek[wCur]){streak++;wCur--}
-  document.getElementById('gStreak').textContent='Current streak: '+streak+' week'+(streak===1?'':'s');
-  el.innerHTML=svgChart(W,H,g);
+  const streakEl=document.getElementById('gStreak');
+  if(streakEl)streakEl.textContent=t(streak===1?'charts_streak_one':'charts_streak_many',{n:streak});
+  const total=weeks.reduce((a,w)=>a+byWeek[w],0);
+  el.innerHTML=svgChart(W,H,g,t('charts_cons_svg_title',{n:total,weeks:weeks.length,streak}));
 }
 /* ---------- TODAY VIEW & SESSION ENGINE ---------- */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
