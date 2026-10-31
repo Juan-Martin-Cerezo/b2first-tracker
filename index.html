@@ -6149,6 +6149,11 @@ function maybeStartOnboarding(){
   let legacy=null;
   try{legacy=localStorage.getItem('ob_'+USER.id)}catch(e){}
   if(legacy){D.onboarded=true;save();return}
+  /* Anyone with history, a diagnostic or a declared profile went through setup
+     before this screen existed. Walling them out would look like data loss. */
+  if((D.log&&D.log.length)||D.diag||(D.profile&&D.profile.declaredAt)){
+    D.onboarded=true;save();return;
+  }
   if((Number(D.onboardStep)||1)>=5){maybeStartTourFromStep();return}
   showOnboarding();
 }

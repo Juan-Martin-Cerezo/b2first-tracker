@@ -64,11 +64,27 @@ def login_user(pg, url, name, password, register=True):
     )
     pg.reload(wait_until="networkidle")
     pg.wait_for_timeout(400)
-    # Close the first-run onboarding if it appears (user without D.onboarded)
-    if pg.evaluate("typeof finishOnboarding==='function' && document.getElementById('onboardingOverlay') && document.getElementById('onboardingOverlay').style.display==='flex'"):
-        pg.evaluate("finishOnboarding()")
-        pg.wait_for_timeout(300)
+    dismiss_onboarding(pg)
     return u
+
+
+def dismiss_onboarding(pg):
+    """Get the mandatory first-run setup out of the way.
+
+    Suite accounts are created empty on purpose, so the app walks them through the
+    onboarding — which covers the whole page and makes every later click time out.
+    The app's own flag is set, not a test-only backdoor, and any tour overlay that
+    is already on screen is hidden.
+    """
+    pg.evaluate("""() => {
+        try { D.onboarded = true; if (typeof save === 'function') save(); } catch (e) {}
+        for (const id of ['onboardingOverlay', 'tourOverlay', 'obOverlay']) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+        document.body.classList.remove('ob-open', 'tour-open');
+    }""")
+    pg.wait_for_timeout(250)
 
 
 def login_owner(pg, url):
