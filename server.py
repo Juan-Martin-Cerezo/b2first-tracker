@@ -42,7 +42,7 @@ import traceback
 from collections import deque
 from datetime import date, timedelta
 from email.utils import formatdate, parsedate_to_datetime
-from urllib.parse import quote, unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
@@ -52,6 +52,8 @@ import speech
 import speaking_prompts
 import speaking_report
 import legal
+import webauthn
+import oauth_google
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -256,7 +258,11 @@ _RATE_STATS = {"user": 0, "ip": 0}  # cumulative 429s, exposed by /api/metrics
 RATE_USER_API = _env_int("B2_RATE_USER_API", 600)   # requests/min per user
 RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 30)      # login+register+password per IP/min
 RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
-AUTH_RATE_PATHS = ("/api/login", "/api/register", "/api/password")
+AUTH_RATE_PATHS = (
+    "/api/login", "/api/register", "/api/password",
+    "/api/auth/google/start", "/api/auth/google/callback",
+    "/api/webauthn/login/begin", "/api/webauthn/login/finish",
+)
 
 # Phase 33: Stripe callbacks are capped before a single byte is read. Stripe
 # events are small; 64 KB is generous and keeps a hostile upload cheap to refuse.
@@ -2024,6 +2030,10 @@ def verify_password(user_id, password):
         pw = password if isinstance(password, str) else ""
         hmac.compare_digest(_dummy_digest(), hash_password(DUMMY_SALT, pw))
         return False
+    if u.get("password_set", True) is False:
+        # A Google-created account holds a random, unusable hash on purpose.
+        hmac.compare_digest(_dummy_digest(), hash_password(DUMMY_SALT, password))
+        return False
     algo = u.get("algo")
     if algo == "pbkdf2":
         return hmac.compare_digest(
@@ -2249,6 +2259,351 @@ def login_user(name, password):
     return None, "wrong password"
 
 
+# ---------------------------------------------------------------------------
+# Phase 34: Google sign-in + passkeys (WebAuthn)
+# ---------------------------------------------------------------------------
+GOOGLE_STATE_TTL = 300          # the consent round-trip must finish in 5 min
+GOOGLE_TICKET_TTL = 600         # one-time client hand-off ticket
+GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+GOOGLE_JWKS_ENDPOINT = "https://www.googleapis.com/oauth2/v3/certs"
+DEFAULT_RP_ID = "firsttracker.app"
+DEFAULT_PUBLIC_URL = "https://firsttracker.app"
+
+_GOOGLE_STATES = {}             # state -> {verifier, nonce, exp}
+_GOOGLE_TICKETS = {}            # one-time ticket -> {kind, exp, ...}
+_GOOGLE_LOCK = threading.Lock()
+_OAUTH_LOCK = threading.Lock()
+
+_PASSKEY_REG = {}               # uid -> {challenge, label, exp}
+_PASSKEY_LOGIN = {}             # b64url(challenge) -> exp
+_PASSKEY_LOCK = threading.Lock()
+
+_PASSKEY_MAX = 20
+_PASSKEY_LABEL_MAX = 40
+
+
+def _env_text(name, default=""):
+    """Environment value with surrounding whitespace removed."""
+    value = os.environ.get(name)
+    return value.strip() if isinstance(value, str) else default
+
+
+def google_client_id():
+    return _env_text("B2_GOOGLE_CLIENT_ID")
+
+
+def google_client_secret():
+    return _env_text("B2_GOOGLE_CLIENT_SECRET")
+
+
+def _google_token_url():
+    return _env_text("B2_GOOGLE_TOKEN_URL", GOOGLE_TOKEN_ENDPOINT)
+
+
+def _google_jwks_url():
+    return _env_text("B2_GOOGLE_JWKS_URL", GOOGLE_JWKS_ENDPOINT)
+
+
+def _google_auth_endpoint():
+    return _env_text("B2_GOOGLE_AUTH_URL", GOOGLE_AUTH_ENDPOINT)
+
+
+def _app_public_url():
+    """Public origin used by Google's redirect_uri and by WebAuthn."""
+    return (_env_text("B2_PUBLIC_URL", DEFAULT_PUBLIC_URL).rstrip("/")
+            or DEFAULT_PUBLIC_URL)
+
+
+def _google_redirect_uri():
+    return _app_public_url() + "/api/auth/google/callback"
+
+
+def webauthn_rp_id():
+    return _env_text("B2_RP_ID", DEFAULT_RP_ID) or DEFAULT_RP_ID
+
+
+def webauthn_origin():
+    return _app_public_url()
+
+
+def _prune_google_states(now):
+    for key in [k for k, v in _GOOGLE_STATES.items() if v.get("exp", 0) <= now]:
+        _GOOGLE_STATES.pop(key, None)
+
+
+def google_start():
+    """Build the consent URL and remember state/nonce/verifier for 5 minutes.
+
+    Returns (url, error).  The state is single use: the callback pops it.
+    """
+    client_id = google_client_id()
+    if not client_id:
+        return None, "google_not_configured"
+    verifier, challenge = oauth_google.new_pkce()
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(24)
+    now = time.time()
+    with _GOOGLE_LOCK:
+        _prune_google_states(now)
+        _GOOGLE_STATES[state] = {
+            "verifier": verifier,
+            "nonce": nonce,
+            "exp": now + GOOGLE_STATE_TTL,
+        }
+    url = oauth_google.authorize_url(
+        client_id, _google_redirect_uri(), state, challenge, nonce,
+        endpoint=_google_auth_endpoint())
+    return url, None
+
+
+def _take_google_state(state):
+    """Pop a state (single use) and return its record, or None."""
+    if not isinstance(state, str) or not state:
+        return None
+    now = time.time()
+    with _GOOGLE_LOCK:
+        _prune_google_states(now)
+        record = _GOOGLE_STATES.pop(state, None)
+    if record is None or record.get("exp", 0) <= now:
+        return None
+    return record
+
+
+def _new_google_ticket(payload):
+    """Create a one-time, token-free hand-off ticket for the browser."""
+    now = time.time()
+    ticket = secrets.token_urlsafe(32)
+    record = dict(payload)
+    record["exp"] = now + GOOGLE_TICKET_TTL
+    with _GOOGLE_LOCK:
+        for key in [k for k, v in _GOOGLE_TICKETS.items() if v.get("exp", 0) <= now]:
+            _GOOGLE_TICKETS.pop(key, None)
+        _GOOGLE_TICKETS[ticket] = record
+    return ticket
+
+
+def _take_google_ticket(ticket, kind=None):
+    """Pop a ticket (single use) and return it, or None when invalid/expired."""
+    if not isinstance(ticket, str) or not ticket:
+        return None
+    now = time.time()
+    with _GOOGLE_LOCK:
+        record = _GOOGLE_TICKETS.pop(ticket, None)
+    if record is None or record.get("exp", 0) <= now:
+        return None
+    if kind is not None and record.get("kind") != kind:
+        return None
+    return record
+
+
+def _peek_google_ticket(ticket, kind=None):
+    """Read a ticket without consuming it (used by the confirmation screen)."""
+    if not isinstance(ticket, str) or not ticket:
+        return None
+    now = time.time()
+    with _GOOGLE_LOCK:
+        record = _GOOGLE_TICKETS.get(ticket)
+    if record is None or record.get("exp", 0) <= now:
+        return None
+    if kind is not None and record.get("kind") != kind:
+        return None
+    return record
+
+
+def _oauth_path():
+    return os.path.join(DATA_DIR, "oauth.json")
+
+
+def _read_oauth_map():
+    data = _read_json(_oauth_path(), {})
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items()
+            if isinstance(k, str) and isinstance(v, str)}
+
+
+def _write_oauth_map(mapping):
+    _write_json(_oauth_path(), mapping)
+
+
+def _oauth_user(sub):
+    return _read_oauth_map().get(sub)
+
+
+def _oauth_link(sub, user_id):
+    """Map a Google `sub` to one local account; never silently re-point it."""
+    with _OAUTH_LOCK:
+        mapping = _read_oauth_map()
+        current = mapping.get(sub)
+        if current is not None and current != user_id:
+            return False
+        mapping[sub] = user_id
+        _write_oauth_map(mapping)
+        return True
+
+
+def _oauth_forget_user(user_id):
+    """Drop every Google link owned by a deleted account."""
+    with _OAUTH_LOCK:
+        mapping = _read_oauth_map()
+        kept = {k: v for k, v in mapping.items() if v != user_id}
+        if len(kept) != len(mapping):
+            _write_oauth_map(kept)
+
+
+def _username_slug(raw, fallback="student"):
+    base = re.sub(r"[^a-z0-9]+", "-", str(raw or "").lower()).strip("-")
+    return (base or fallback)[:32]
+
+
+def _unique_username(base):
+    """Return a display name that is not taken yet (suffix -2, -3, ...)."""
+    names = {(u.get("name") or "").strip().lower() for u in store.list_users().values()}
+    candidate = base
+    suffix = 2
+    while candidate.strip().lower() in names:
+        candidate = f"{base}-{suffix}"
+        suffix += 1
+    return candidate
+
+
+def suggest_google_username(claims):
+    """A generated local username derived from the Google profile, made unique."""
+    claimed = claims.get("name")
+    if not claimed:
+        claimed = (claims.get("email") or "").split("@")[0]
+    return _unique_username(_username_slug(claimed))
+
+
+def _hash_email(email):
+    """Opt-in email storage is a hash only; the raw address is never written."""
+    clean = str(email or "").strip().lower()
+    if not clean:
+        return ""
+    return hashlib.sha256(clean.encode("utf-8")).hexdigest()
+
+
+def _create_google_user(sub, name, email_hash=""):
+    """Create a local account for a Google profile (never silently: caller asked).
+
+    The account is marked `password_set: False`, so the UI warns that there is
+    no password fallback until the signed-in user sets one.
+    """
+    uid, err = register_user(name, secrets.token_urlsafe(32))
+    if err:
+        return None, err
+    record = store.get_user(uid) or {}
+    record["password_set"] = False
+    record["oauth"] = True
+    if email_hash:
+        record["email_hash"] = email_hash
+    store.create_user(uid, record)
+    if not _oauth_link(sub, uid):
+        store.remove_user(uid)
+        return None, "google account already linked"
+    return uid, None
+
+
+def _webauthn_dir():
+    return os.path.join(DATA_DIR, "webauthn")
+
+
+def _passkey_file(user_id):
+    return os.path.join(_webauthn_dir(), store._safe_uid(user_id) + ".json")
+
+
+def load_passkeys(user_id):
+    """Return the stored passkey records of one account (never another's)."""
+    data = store.read_json_private(_passkey_file(user_id), [])
+    if not isinstance(data, list):
+        return []
+    return [rec for rec in data
+            if isinstance(rec, dict) and isinstance(rec.get("credential_id"), str)]
+
+
+def save_passkeys(user_id, items):
+    folder = _webauthn_dir()
+    os.makedirs(folder, mode=0o700, exist_ok=True)
+    os.chmod(folder, 0o700)
+    store.write_json_private(_passkey_file(user_id), items)
+
+
+def find_passkey(credential_id):
+    """Locate a credential across every account: {uid, items, item, index}."""
+    if not isinstance(credential_id, str) or not credential_id:
+        return None
+    try:
+        names = sorted(os.listdir(_webauthn_dir()))
+    except OSError:
+        return None
+    for name in names:
+        if not name.endswith(".json"):
+            continue
+        uid = name[:-5]
+        try:
+            store._safe_uid(uid)
+        except ValueError:
+            continue
+        items = load_passkeys(uid)
+        for index, item in enumerate(items):
+            if item.get("credential_id") == credential_id:
+                return {"uid": uid, "items": items, "item": item, "index": index}
+    return None
+
+
+def _webauthn_forget_user(user_id):
+    try:
+        os.remove(_passkey_file(user_id))
+    except OSError:
+        pass
+
+
+def _passkey_label(raw):
+    label = str(raw or "").strip()[:_PASSKEY_LABEL_MAX]
+    return label or "Passkey"
+
+
+def _passkey_reg_begin(user_id, label):
+    now = time.time()
+    challenge = os.urandom(32)
+    with _PASSKEY_LOCK:
+        for key in [k for k, v in _PASSKEY_REG.items() if v.get("exp", 0) <= now]:
+            _PASSKEY_REG.pop(key, None)
+        _PASSKEY_REG[user_id] = {
+            "challenge": challenge, "label": _passkey_label(label),
+            "exp": now + GOOGLE_STATE_TTL,
+        }
+    return challenge
+
+
+def _passkey_reg_take(user_id):
+    now = time.time()
+    with _PASSKEY_LOCK:
+        record = _PASSKEY_REG.pop(user_id, None)
+    if record is None or record.get("exp", 0) <= now:
+        return None
+    return record
+
+
+def _passkey_login_begin():
+    now = time.time()
+    challenge = os.urandom(32)
+    with _PASSKEY_LOCK:
+        for key in [k for k, v in _PASSKEY_LOGIN.items() if v <= now]:
+            _PASSKEY_LOGIN.pop(key, None)
+        _PASSKEY_LOGIN[webauthn.b64url_encode(challenge)] = now + GOOGLE_STATE_TTL
+    return challenge
+
+
+def _passkey_login_take(challenge):
+    now = time.time()
+    key = webauthn.b64url_encode(challenge)
+    with _PASSKEY_LOCK:
+        expiry = _PASSKEY_LOGIN.pop(key, None)
+    return expiry is not None and expiry > now
+
+
 def change_password(user_id, current, new_password):
     """Verify `current` and set `new_password` (pbkdf2). Return (error, http_code)."""
     u = store.get_user(user_id)
@@ -2257,7 +2612,9 @@ def change_password(user_id, current, new_password):
     problem = password_problem(u.get("name", ""), new_password)
     if problem:
         return _PASSWORD_ERRORS.get(problem, problem), 400
-    if not verify_password(user_id, current):
+    # A Google/passkey-only account has no password to confirm: the
+    # authenticated session is the credential that sets the first one.
+    if u.get("password_set", True) is not False and not verify_password(user_id, current):
         return "Wrong password.", 401
     salt = secrets.token_hex(8)  # 16 chars
     rec = dict(u)
@@ -2265,6 +2622,7 @@ def change_password(user_id, current, new_password):
     rec["hash"] = hash_password(salt, new_password)
     rec["algo"] = "pbkdf2"
     rec["iters"] = PBKDF2_ITERATIONS
+    rec["password_set"] = True
     store.create_user(user_id, rec)
     return None, 200
 
@@ -2275,6 +2633,9 @@ def delete_user(user_id):
     # Phase 31: a closed account leaves no plan, no usage and no license link
     # behind (the code stays burnt: only the hash row survives, detached).
     plans.forget_user(user_id)
+    # Phase 34: the Google link and any passkeys must not outlive the account.
+    _oauth_forget_user(user_id)
+    _webauthn_forget_user(user_id)
     with _TOKENS_LOCK:
         tokens = load_tokens()
         tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
@@ -3302,6 +3663,25 @@ class H(BaseHTTPRequestHandler):
     def _bearer(self):
         return (self.headers.get("Authorization") or "").replace("Bearer ", "").strip()
 
+    def _json_body(self, limit=16384):
+        """Read a small JSON object body. Return (obj, http_code); code 0 is ok."""
+        length = self._clen()
+        if length > limit:
+            return None, 413
+        raw = self.rfile.read(length) if length > 0 else b""
+        try:
+            obj = json.loads(raw.decode("utf-8")) if raw else {}
+        except (ValueError, UnicodeDecodeError):
+            return None, 400
+        if not isinstance(obj, dict):
+            return None, 400
+        return obj, 0
+
+    def _redirect(self, location):
+        """302 with no body, no caching and no referrer leak for the target."""
+        self._send_raw(302, b"", "text/plain",
+                       {"Location": location, "Cache-Control": "no-store"})
+
     def _auth(self):
         """Return (user_id, error) from the Authorization header (once per request).
 
@@ -3536,8 +3916,329 @@ class H(BaseHTTPRequestHandler):
         # Public server configuration (demo mode, version, AI support, registration)
         if path == "/api/config":
             body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True,
-                               "register": _register_mode()}, ensure_ascii=False).encode("utf-8")
+                               "register": _register_mode(),
+                               "google": bool(google_client_id())},
+                              ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        # ---- Phase 34: Google sign-in (authorization code + PKCE) ----
+        if path == "/api/auth/google/start":
+            if self.command not in ("GET", "HEAD"):
+                self._send_json(405, {"error": "method not allowed"}); return
+            url, err = google_start()
+            if err:
+                self._send_json(503, {"error": err}); return
+            self._redirect(url)
+            return
+
+        if path == "/api/auth/google/callback":
+            if self.command not in ("GET", "HEAD"):
+                self._send_json(405, {"error": "method not allowed"}); return
+            query = parse_qs(urlsplit(self.path).query)
+            code = (query.get("code") or [""])[0]
+            state = (query.get("state") or [""])[0]
+            pending = _take_google_state(state)
+            if not code or not state or pending is None:
+                self._send_json(400, {"error": "google_signin_failed"}); return
+            client_id = google_client_id()
+            if not client_id:
+                self._send_json(400, {"error": "google_signin_failed"}); return
+            try:
+                tokens = oauth_google.exchange_code(
+                    _google_token_url(), client_id, google_client_secret(),
+                    code, _google_redirect_uri(), pending["verifier"])
+                jwks = oauth_google.fetch_jwks(_google_jwks_url())
+                claims = oauth_google.verify_id_token(
+                    tokens.get("id_token"), jwks, client_id, pending["nonce"])
+            except (oauth_google.OAuthError, KeyError, TypeError):
+                # Never echo the code, the token or the provider's message.
+                self._send_json(400, {"error": "google_signin_failed"}); return
+
+            sub = claims["sub"]
+            mapped = _oauth_user(sub)
+            user = store.get_user(mapped) if mapped else None
+            if mapped and not user:
+                _oauth_forget_user(mapped)   # the local account is gone
+            if user:
+                token = new_token(user["id"], self.headers.get("User-Agent", ""))
+                payload = dict(public_user(user))
+                payload["token"] = token
+                ticket = _new_google_ticket({"kind": "login", "user": payload})
+                _audit("google_login", user["id"], _real_ip(self), self._rid)
+                self._redirect("/?google_login=" + quote(ticket, safe=""))
+                return
+            verified = (claims.get("email_verified") is True
+                        or claims.get("email_verified") == "true")
+            email = claims.get("email") if verified else ""
+            ticket = _new_google_ticket({
+                "kind": "link",
+                "sub": sub,
+                "suggested": suggest_google_username(claims),
+                "email": email if isinstance(email, str) else "",
+                "email_verified": bool(verified),
+            })
+            self._redirect("/?google_link=" + quote(ticket, safe=""))
+            return
+
+        if path == "/api/auth/google/session":
+            if self.command not in ("GET", "HEAD"):
+                self._send_json(405, {"error": "method not allowed"}); return
+            query = parse_qs(urlsplit(self.path).query)
+            ticket = (query.get("ticket") or [""])[0]
+            record = _take_google_ticket(ticket, "login")
+            if record is None:
+                self._send_json(400, {"error": "google_signin_failed"}); return
+            self._send_json(200, record["user"])
+            return
+
+        if path == "/api/auth/google/pending":
+            if self.command not in ("GET", "HEAD"):
+                self._send_json(405, {"error": "method not allowed"}); return
+            query = parse_qs(urlsplit(self.path).query)
+            ticket = (query.get("ticket") or [""])[0]
+            record = _peek_google_ticket(ticket, "link")
+            if record is None:
+                self._send_json(400, {"error": "google_signin_failed"}); return
+            self._send_json(200, {
+                "suggested": record.get("suggested", ""),
+                "has_email": bool(record.get("email")),
+                "email_verified": bool(record.get("email_verified")),
+            })
+            return
+
+        if path == "/api/auth/google/complete":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            body, bad = self._json_body()
+            if bad:
+                self._send_json(bad, {"error": "invalid JSON"}); return
+            record = _peek_google_ticket(body.get("ticket"), "link")
+            if record is None:
+                self._send_json(400, {"error": "google_signin_failed"}); return
+            mode = body.get("mode")
+            name = str(body.get("name") or record.get("suggested") or "").strip()
+            if not name:
+                self._send_json(400, {"error": "username required"}); return
+            if mode == "create":
+                email_hash = ""
+                if body.get("store_email") and record.get("email") and record.get("email_verified"):
+                    email_hash = _hash_email(record["email"])
+                uid, err = _create_google_user(record["sub"], name, email_hash)
+                if err:
+                    self._send_json(409 if err == "username taken" else 400,
+                                    {"error": err}); return
+                _audit("google_register", uid, _real_ip(self), self._rid)
+            elif mode == "link":
+                uid, err = login_user(name, body.get("password", ""))
+                if err:
+                    self._send_json(401, {"error": "Wrong username or password."}); return
+                if not _oauth_link(record["sub"], uid):
+                    self._send_json(409, {"error": "google account already linked"}); return
+                _audit("google_link", uid, _real_ip(self), self._rid)
+            else:
+                self._send_json(400, {"error": "invalid mode"}); return
+            _take_google_ticket(body.get("ticket"), "link")
+            u = store.get_user(uid) or {}
+            token = new_token(uid, self.headers.get("User-Agent", ""))
+            payload = dict(public_user(u))
+            payload["token"] = token
+            self._send_json(200, payload)
+            return
+
+        # ---- Phase 34: passkeys (WebAuthn) ----
+        if path == "/api/webauthn/credentials":
+            if self.command != "GET":
+                self._send_json(405, {"error": "method not allowed"}); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            u = store.get_user(uid) or {}
+            items = load_passkeys(uid)
+            self._send_json(200, {
+                "credentials": [
+                    {"id": item["credential_id"], "label": item.get("label", ""),
+                     "created": item.get("created", "")}
+                    for item in items
+                ],
+                "has_password": u.get("password_set", True) is not False,
+            })
+            return
+
+        if path == "/api/webauthn/register/begin":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            body, bad = self._json_body()
+            if bad:
+                self._send_json(bad, {"error": "invalid JSON"}); return
+            u = store.get_user(uid) or {}
+            if (u.get("password_set", True) is not False
+                    and not verify_password(uid, body.get("password", ""))):
+                self._send_json(401, {"error": "Wrong password."}); return
+            existing = load_passkeys(uid)
+            if len(existing) >= _PASSKEY_MAX:
+                self._send_json(400, {"error": "too many passkeys"}); return
+            challenge = _passkey_reg_begin(uid, body.get("label"))
+            self._send_json(200, {"publicKey": {
+                "challenge": webauthn.b64url_encode(challenge),
+                "rp": {"id": webauthn_rp_id(), "name": "B2 First Tracker"},
+                "user": {"id": webauthn.b64url_encode(uid.encode("utf-8")),
+                         "name": u.get("name", uid), "displayName": u.get("name", uid)},
+                "pubKeyCredParams": [{"type": "public-key", "alg": -7}],
+                "timeout": 60000,
+                "attestation": "none",
+                "authenticatorSelection": {
+                    "residentKey": "preferred", "requireResidentKey": False,
+                    "userVerification": "preferred",
+                },
+                "excludeCredentials": [
+                    {"type": "public-key", "id": item["credential_id"]}
+                    for item in existing
+                ],
+            }})
+            return
+
+        if path == "/api/webauthn/register/finish":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            body, bad = self._json_body()
+            if bad:
+                self._send_json(bad, {"error": "invalid JSON"}); return
+            credential = body.get("credential")
+            response = credential.get("response") if isinstance(credential, dict) else None
+            pending = _passkey_reg_take(uid)
+            try:
+                if pending is None or not isinstance(response, dict):
+                    raise webauthn.WebAuthnError("no pending challenge")
+                client_raw = webauthn.b64url_decode(response.get("clientDataJSON"))
+                attestation_raw = webauthn.b64url_decode(response.get("attestationObject"))
+                webauthn.verify_client_data(
+                    client_raw, "webauthn.create", pending["challenge"],
+                    webauthn_origin())
+                attestation = webauthn.loads(attestation_raw)
+                if not isinstance(attestation, dict) or not isinstance(
+                        attestation.get("authData"), (bytes, bytearray)):
+                    raise webauthn.WebAuthnError("invalid attestation object")
+                if not isinstance(attestation.get("fmt", ""), str):
+                    raise webauthn.WebAuthnError("invalid attestation format")
+                auth_data = webauthn.parse_authenticator_data(attestation["authData"])
+                webauthn.verify_rp_id(auth_data, webauthn_rp_id())
+                if not auth_data.get("up") or "credential_id" not in auth_data:
+                    raise webauthn.WebAuthnError("missing credential data")
+                supplied = credential.get("rawId") or credential.get("id")
+                if not hmac.compare_digest(webauthn.b64url_decode(supplied),
+                                           auth_data["credential_id_bytes"]):
+                    raise webauthn.WebAuthnError("credential id mismatch")
+                duplicate = find_passkey(auth_data["credential_id"])
+                if duplicate is not None:
+                    if duplicate["uid"] != uid:
+                        self._send_json(409, {"error": "credential already registered"}); return
+                    raise webauthn.WebAuthnError("credential already registered")
+            except (webauthn.WebAuthnError, KeyError, TypeError, AttributeError):
+                self._send_json(400, {"error": "passkey registration failed"}); return
+
+            item = {
+                "credential_id": auth_data["credential_id"],
+                "public_key_cose": webauthn.b64url_encode(auth_data["public_key_cose"]),
+                "sign_count": int(auth_data["sign_count"]),
+                "created": time.strftime("%Y-%m-%d %H:%M"),
+                "label": pending.get("label") or _passkey_label(body.get("label")),
+            }
+            items = load_passkeys(uid)
+            items.append(item)
+            save_passkeys(uid, items)
+            _audit("passkey_add", uid, _real_ip(self), self._rid)
+            self._send_json(200, {"ok": True, "credential": {
+                "id": item["credential_id"], "label": item["label"],
+                "created": item["created"]}})
+            return
+
+        if path == "/api/webauthn/login/begin":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            self._drain()
+            challenge = _passkey_login_begin()
+            self._send_json(200, {"publicKey": {
+                "challenge": webauthn.b64url_encode(challenge),
+                "rpId": webauthn_rp_id(),
+                "timeout": 60000,
+                "userVerification": "preferred",
+                "allowCredentials": [],
+            }})
+            return
+
+        if path == "/api/webauthn/login/finish":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            body, bad = self._json_body()
+            if bad:
+                self._send_json(bad, {"error": "invalid JSON"}); return
+            credential = body.get("credential")
+            response = credential.get("response") if isinstance(credential, dict) else None
+            uid = None
+            try:
+                if not isinstance(response, dict):
+                    raise webauthn.WebAuthnError("invalid credential")
+                client_raw = webauthn.b64url_decode(response.get("clientDataJSON"))
+                auth_raw = webauthn.b64url_decode(response.get("authenticatorData"))
+                signature = webauthn.b64url_decode(response.get("signature"))
+                client = webauthn.parse_client_data(client_raw)
+                challenge = webauthn.b64url_decode(client.get("challenge"))
+                if not _passkey_login_take(challenge):
+                    raise webauthn.WebAuthnError("unknown challenge")
+                webauthn.verify_client_data(client_raw, "webauthn.get", challenge,
+                                            webauthn_origin())
+                auth_data = webauthn.parse_authenticator_data(auth_raw)
+                webauthn.verify_rp_id(auth_data, webauthn_rp_id())
+                credential_id = webauthn.b64url_encode(
+                    webauthn.b64url_decode(credential.get("rawId") or credential.get("id")))
+                found = find_passkey(credential_id)
+                if found is None:
+                    raise webauthn.WebAuthnError("unknown credential")
+                public_key = webauthn.b64url_decode(found["item"]["public_key_cose"])
+                webauthn.verify_assertion(public_key, auth_raw, client_raw, signature)
+                stored_count = int(found["item"].get("sign_count") or 0)
+                if auth_data["sign_count"] < stored_count:
+                    raise webauthn.WebAuthnError("signature counter went backwards")
+                if auth_data["sign_count"] > stored_count:
+                    found["item"]["sign_count"] = auth_data["sign_count"]
+                    save_passkeys(found["uid"], found["items"])
+                uid = found["uid"]
+            except (webauthn.WebAuthnError, KeyError, TypeError, AttributeError):
+                self._send_json(400, {"error": "passkey sign-in failed"}); return
+            u = store.get_user(uid) if uid else None
+            if not u:
+                self._send_json(400, {"error": "passkey sign-in failed"}); return
+            token = new_token(uid, self.headers.get("User-Agent", ""))
+            _audit("passkey_login", uid, _real_ip(self), self._rid)
+            payload = dict(public_user(u))
+            payload["token"] = token
+            self._send_json(200, payload)
+            return
+
+        if path == "/api/webauthn/remove":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"}); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            body, bad = self._json_body()
+            if bad:
+                self._send_json(bad, {"error": "invalid JSON"}); return
+            credential_id = body.get("credential_id")
+            items = load_passkeys(uid)
+            kept = [item for item in items if item.get("credential_id") != credential_id]
+            if len(kept) == len(items):
+                self._send_json(404, {"error": "passkey not found"}); return
+            save_passkeys(uid, kept)
+            _audit("passkey_remove", uid, _real_ip(self), self._rid)
+            self._send_json(200, {"ok": True, "removed": len(items) - len(kept)})
             return
 
         # Phase 31: the plan behind the current account (auth, read-only).
@@ -3925,9 +4626,12 @@ class H(BaseHTTPRequestHandler):
                     req = json.loads(raw.decode("utf-8"))
                 except ValueError:
                     self._send_json(400, {"error": "invalid JSON"}); return
-                if not verify_password(uid, req.get("password", "")):
-                    self._send_json(401, {"error": "Wrong password."}); return
                 u = store.get_user(uid) or {}
+                # A Google/passkey-only account has no password to type; the
+                # live session is the proof of ownership in that case.
+                if (u.get("password_set", True) is not False
+                        and not verify_password(uid, req.get("password", ""))):
+                    self._send_json(401, {"error": "Wrong password."}); return
                 name = u.get("name", "")
                 delete_user(uid)
                 _scrub_audit_user({uid, name})

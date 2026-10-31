@@ -37,13 +37,22 @@ directories `0700`).
 | Licence rows | `sha256(code)`, never the code in readable form | `data/licenses.json` |
 | Security audit | event type, timestamp, request id, account name or id, hashed client address | `data/audit.log` |
 | Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash | `data/events/*.jsonl` |
+| Google link | Google's stable `sub` mapped to your local account id (no name, no address) | `data/oauth.json` |
+| Passkeys | credential id, public key (COSE), signature counter and the device label you choose | `data/webauthn/<id>.json` |
 
 The password itself is never stored. The raw session token is never stored. Raw
 IP addresses are not stored: the audit log and the access log keep only the
 first 12 hex characters of `sha256(IP)`, and product events keep 16 characters
-of a salted hash. There is no email address, no real name, no user agent string
-(only `sha256(user agent)` attached to a session) and no payment data anywhere
-in `data/`.
+of a salted hash. There is no email address in readable form, no real name, no
+user agent string (only `sha256(user agent)` attached to a session) and no
+payment data anywhere in `data/`.
+
+**Optional email hash.** When you sign in with Google for the first time, the
+confirmation screen offers a checkbox to keep your email for account recovery.
+It is off by default. If you enable it, the server stores only
+`sha256(normalised email)` in `data/users.json`; the address itself is never
+written to disk, logged or sent anywhere else. Turning the checkbox off stores
+nothing.
 
 ## 3. What is never stored
 
@@ -56,7 +65,9 @@ in `data/`.
   request sends the text you chose to correct and receives feedback; the text is
   not persisted by this server beyond the request (the accepted result is saved
   in your own progress).
-- No email, phone, address, age, or government identifier is collected.
+- No email, phone, address, age, or government identifier is collected. The only
+  exception is the opt-in email hash described in §2, which cannot be read back
+  as an address.
 - No advertising identifiers, no tracking pixels, no third-party analytics
   script. Cloudflare may inject its Web Analytics beacon at the edge; this
   instance's Content-Security-Policy blocks `static.cloudflareinsights.com`, so
@@ -68,6 +79,7 @@ in `data/`.
 | Provider | When | What it receives | Where it processes |
 | --- | --- | --- | --- |
 | **Cloudflare, Inc.** | Every public request | the full HTTP request **in plaintext** (TLS terminates at Cloudflare's edge), including headers, path, cookies and request bodies; your IP address | global edge network |
+| **Google Identity (OAuth)** | Only if you press “Continue with Google” | the authorization request (`openid email profile`), your Google account choice and the authorization code; the code is exchanged server-side and never stored | Google infrastructure outside Argentina |
 | **Google (Gemini Live)** | Speaking Parts 1–4 with the live examiner/partner | your microphone audio (16 kHz PCM), the examiner script, and the session token | Google infrastructure outside Argentina |
 | **Google (Gemini API)** | If the owner configures Gemini as the text provider, or for speaking-report generation | the text you asked to correct or the transcript you chose to analyse | Google infrastructure |
 | **DeepSeek** | Writing corrections and speaking reports, by default | the text you explicitly submitted for correction, plus the task type | DeepSeek infrastructure |
@@ -130,7 +142,8 @@ repository ships the tool, and the host schedules it.
 - **Delete the account.** Same **Account** panel → **Delete my account** → enter
   your password and type `DELETE` (or `DELETE /api/account`). This removes the
   user record, every session, the progress directory including backups, the plan
-  and usage rows, and any licence link. A final audit event records that an
+  and usage rows, your Google link (`data/oauth.json`) and your passkeys
+  (`data/webauthn/<id>.json`). A final audit event records that an
   account was deleted; it contains the account id, never the username.
 - **Clear your own provider key.** Open the **AI** tab → the **✨ AI provider**
   card → **Clear key**. A BYO key lives only in your browser's localStorage and
@@ -166,6 +179,10 @@ sends no product events at all. Every feature keeps working.
 - The 1,000 most common passwords are rejected, as are passwords equal to the
   username and passwords shorter than 10 characters.
 - Tokens are stored hashed, rotate on password change, and are capped at 90 days.
+- Passkey assertions are verified locally (P-256 ECDSA, RP-ID hash, challenge,
+  origin); a signature counter that goes backwards is refused. A Google
+  `id_token` is verified against Google's published JWKS (RS256, `iss`, `aud`,
+  `exp`, `nonce`) before the account is touched.
 - Login lockout and exponential backoff; per-IP and per-account rate limits.
 - The audit log is a SHA-256 hash chain; `tools/verify_audit.py` detects edited
   or deleted lines.
