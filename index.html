@@ -7324,7 +7324,7 @@ const SPK={
   voices:{},
   dir:null,overlapMs:0,addressed:null,
   activeVoices:0,billedSeconds:0,
-  speaking:false,muted:false,barged:false,bargeTimer:0,
+  speaking:false,muted:false,barged:false,bargeTimer:0,turnOpen:false,
   turns:[],lines:[],inCount:0,outCount:0,interrupted:0,
   elapsed:0,startedAt:0,lastReport:0,capMin:20,remaining:null,
   raf:null,micCtx:null,micStream:null,micNode:null,micSource:null,micSink:null,
@@ -7389,6 +7389,9 @@ function spkEnsureCtx(){
 function spkOnAudio(pcm,who){
   who=who||'examiner';
   if(!SPK.running||!pcm||!pcm.length)return;
+  /* The examiner has an open turn from its first frame until it completes, even
+     if the candidate's speech silences the playback in between. */
+  if(who==='examiner')SPK.turnOpen=true;
   if(!spkEnsureCtx())return;
   const ctx=SPK.ctx;
   const buf=ctx.createBuffer(1,pcm.length,24000);
@@ -7421,6 +7424,7 @@ function spkBargeIn(){
      candidate had finished their turn, so it answered again with the greeting:
      that is why "Good morning" repeated forever without anyone speaking. The
      model has its own voice-activity detection and will emit `interrupted`. */
+  SPK.turnOpen=false;          // the interrupted turn is closed
   SPK.muted=true;              // drop audio already in flight for this voice
   /* A barge-in must always release: relying only on 900 ms of VAD silence left
      the examiner muted forever when the environment never went quiet. */
@@ -7466,7 +7470,8 @@ function spkVad(speaking){
     /* A playback queue has tiny gaps (a 200 ms tone every 210 ms). Treat the
        examiner as still talking for 800 ms after its last busy frame, so the
        300 ms of candidate speech accumulates instead of restarting on a gap. */
-    const examinerNear=SPK.speaking||(SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800);
+    const examinerNear=SPK.speaking||SPK.turnOpen||
+      (SPK.lastExaminerAt&&now-SPK.lastExaminerAt<800);
     /* Barge-in needs 600 ms of sustained speech, not 300. At 300 a cough, a
        chair or a noisy room muted the examiner mid-word, so it never finished a
        question and kept re-asking — "repite constantemente" and "habla trabado"

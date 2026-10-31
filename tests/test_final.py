@@ -5,14 +5,23 @@ from helpers import isolated_server, login_owner
 URL = isolated_server() + "/"
 # Views hidden behind the "More" button in the mobile bottom nav (5 + More)
 HIDDEN_VIEWS = {"graf", "err", "libros", "ia", "diag"}
-ALL_VIEWS = ["hoy", "exam", "partes", "prog", "graf", "plan", "err", "libros", "ia", "diag"]
+ALL_VIEWS = ["hoy", "practice", "exam", "partes", "prog", "graf", "plan", "err", "libros", "ia", "diag"]
 
 
 def goto_view(pg, name):
+    """Open a view the way the app does.
+
+    Some views have no nav entry any more (the diagnostic moved into the plan and
+    the onboarding), so the test falls back to showView() instead of failing on a
+    button that is deliberately gone.
+    """
     if name in HIDDEN_VIEWS:
         pg.evaluate("document.getElementById('navMoreBtn').click()")
         pg.wait_for_timeout(80)
-    pg.click(f"nav button[data-view='{name}']")
+    if pg.evaluate(f"!!document.querySelector(\"nav button[data-view='{name}']\")"):
+        pg.click(f"nav button[data-view='{name}']")
+    else:
+        pg.evaluate(f"showView('{name}')")
     pg.wait_for_timeout(250)
 
 
