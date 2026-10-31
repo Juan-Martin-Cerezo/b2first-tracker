@@ -1453,6 +1453,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .ob-title{font-size:var(--fs-md)}
   .ob-actions{flex-direction:row}
 }
+/* ---------- U8: turn-gap micrometer ---------- */
+.spx-gap{
+  display:inline-block;margin:-4px 0 10px;
+  padding:3px 10px;border-radius:999px;
+  font-size:var(--fs-xs);font-variant-numeric:tabular-nums;
+  color:var(--txt-2);background:var(--surface-2);border:1px solid var(--line);
+}
+.spx-gap[data-gap="1"]{color:var(--ok-text);border-color:var(--ok-border)}
 </style>
 </head>
 <body>
@@ -2338,6 +2346,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         </div>
                       </div>
                       <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
+                      <div class="spx-gap" id="spxGap" aria-live="polite" title="Average milliseconds from you stopping to the examiner's first sound">turn gap —</div>
                       <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
@@ -7314,9 +7323,16 @@ const SPK_LIVE_MAX_MS=15*60*1000;
    arrives while the candidate is holding the floor is queued here and played
    afterwards. Two numbers, both measured in milliseconds:
      HOLD    - candidate speech that counts as holding the floor
-     SILENCE - silence the candidate must leave before the examiner starts */
+     SILENCE - silence the candidate must leave before the examiner starts
+   U8: SILENCE was 900 ms and that pause was the walkie-talkie feel. 450 ms is
+   still longer than a natural breath, so a short pause is not a handoff, but
+   the reply no longer arrives a full beat late. */
 const SPK_FLOOR_HOLD_MS=700;
-const SPK_FLOOR_SILENCE_MS=900;
+const SPK_FLOOR_SILENCE_MS=450;
+/* U8 jitter buffer: the first chunk of a reply waits for a second chunk or
+   this long, then the whole run is scheduled back-to-back. A late chunk can
+   no longer open a hole right after the reply starts. */
+const SPK_JITTER_MS=180;
 const SPK_TURN_SILENCE_MS=800;
 const SPK_TURN_MAX_MS=15000;
 const SPK_TURN_MIN_MS=300;
@@ -7369,6 +7385,44 @@ function spkExaminerMaySpeak(now){
   if(!SPK.lastSpeechEnd)return true;
   return (now-SPK.lastSpeechEnd)>=SPK_FLOOR_SILENCE_MS;
 }
+/* U8 micrometer: "the candidate stopped" starts the clock, the first examiner
+   buffer that actually reaches the output stops it. One entry per turn in
+   SPK.turnGaps; the HUD shows the average so the next round is measured. */
+function spkNoteCandidateStop(now){
+  now=now||performance.now();
+  SPK.lastSpeechEnd=now;
+  SPK.gapFrom=now;
+  SPK.gapArmed=true;
+}
+function spkGapAverage(){
+  const g=SPK.turnGaps;
+  if(!g||!g.length)return null;
+  let sum=0;
+  for(let i=0;i<g.length;i++)sum+=g[i];
+  return Math.round(sum/g.length);
+}
+function spkRenderGap(){
+  const el=document.getElementById('spxGap');
+  if(!el)return;
+  const avg=spkGapAverage();
+  el.textContent=avg===null?'turn gap —':'turn gap '+avg+' ms';
+  el.setAttribute('data-gap',avg===null?'':'1');
+}
+function spkNoteFirstAudioAt(perfTime){
+  if(!SPK.gapArmed)return;
+  const gap=Math.max(0,Math.round(perfTime-SPK.gapFrom));
+  SPK.gapArmed=false;
+  SPK.turnGaps.push(gap);
+  if(SPK.turnGaps.length>120)SPK.turnGaps.shift();
+  spkRenderGap();
+}
+function spkNoteFirstAudio(when){
+  if(!SPK.gapArmed||!SPK.ctx)return;
+  /* `when` is AudioContext time: the moment the first sample is due, not the
+     moment the chunk arrived. That is the gap the candidate actually hears. */
+  spkNoteFirstAudioAt(
+    performance.now()+Math.max(0,(when-SPK.ctx.currentTime))*1000);
+}
 function spkHoldAudio(buf,who){
   if(!SPK.heldAudio)SPK.heldAudio=[];
   const now=performance.now();
@@ -7381,11 +7435,65 @@ function spkClearHeld(){
   if(SPK.heldAudio)SPK.heldAudio.length=0;
   SPK.heldSince=0;
 }
+function spkVoicePlaying(who){
+  const v=SPK.voices[who];
+  if(!v||!SPK.ctx)return false;
+  return v.sources.length>0&&v.nextTime>SPK.ctx.currentTime;
+}
+/* U8 jitter buffer. Chunks from a streamed reply (Live PCM, sim tones) are
+   collected instead of being started one by one: the first chunk waits for a
+   second chunk or SPK_JITTER_MS, then both are scheduled contiguously. Without
+   it the first chunk could finish before the second arrived, and the reply
+   started, stalled and continued. */
+function spkChunkBuffer(buf,who){
+  who=who||'examiner';
+  const v=spkVoice(who);
+  if(!v.jitter)v.jitter=[];
+  if(!v.jitter.length)v.jitterSince=performance.now();
+  v.jitter.push({buf:buf,who:who});
+  clearTimeout(v.jitterTimer);
+  v.jitterTimer=setTimeout(function(){spkFlushJitter(who,performance.now(),false)},
+    SPK_JITTER_MS);
+  if(v.jitter.length>=2)return spkFlushJitter(who,performance.now(),true);
+  return true;
+}
+function spkFlushJitter(who,now,force){
+  who=who||'examiner';
+  if(!SPK.running)return 0;
+  const v=spkVoice(who);
+  const q=v.jitter;
+  if(!q||!q.length)return 0;
+  now=now||performance.now();
+  /* The floor override wins even over a full jitter buffer: never start a new
+     examiner reply while the candidate is speaking. The chunks go back to the
+     held queue, in order, and leave when the floor is free. */
+  if(who==='examiner'&&!spkExaminerMaySpeak(now)){
+    while(q.length){const it=q.shift();spkHoldAudio(it.buf,it.who)}
+    v.jitterSince=0;
+    clearTimeout(v.jitterTimer);v.jitterTimer=0;
+    return 0;
+  }
+  if(!force&&now-v.jitterSince<SPK_JITTER_MS)return 0;
+  v.jitterSince=0;
+  clearTimeout(v.jitterTimer);v.jitterTimer=0;
+  let n=0;
+  while(q.length){
+    const it=q.shift();
+    if(it&&it.buf&&spkScheduleBuffer(it.buf,it.who))n++;
+  }
+  return n;
+}
+function spkFlushJitterAll(now){
+  let n=0;
+  ['examiner','partner'].forEach(function(w){n+=spkFlushJitter(w,now,false)});
+  return n;
+}
 function spkScheduleBuffer(buf,who){
   who=who||'examiner';
   if(!SPK.ctx||!buf)return false;
   const v=spkVoice(who);
   const ctx=SPK.ctx;
+  const idle=!spkVoicePlaying(who);
   const src=ctx.createBufferSource();
   src.buffer=buf;
   src.connect(v.gain||ctx.destination);
@@ -7397,6 +7505,9 @@ function spkScheduleBuffer(buf,who){
     const i=v.sources.indexOf(src);
     if(i>=0)v.sources.splice(i,1);
   };
+  /* A reply that starts while the examiner was idle is the one the candidate
+     waited for: close the micrometer here, not on every later chunk. */
+  if(who==='examiner'&&idle)spkNoteFirstAudio(when);
   return true;
 }
 /* Called every frame from spkLoop: once the candidate has been quiet for
@@ -7422,15 +7533,23 @@ function spkFlushHeld(now){
 }
 
 /* A decoded WAV buffer plays exactly like a PCM chunk: same gain node, same
-   queue, so spkVoiceBusy/mute/sources keep working untouched. */
-function spkOnBuffer(buf,who){
+   queue, so spkVoiceBusy/mute/sources keep working untouched.
+   `streaming` marks the chunked paths (Live PCM, sim tones): those go through
+   the jitter buffer. A turn-mode reply is one whole WAV and starts at once. */
+function spkOnBuffer(buf,who,streaming){
   who=who||'examiner';
   if(!SPK.running||!buf)return false;
   if(who==='examiner'&&SPK.muted)return false;
   const v=spkVoice(who);
   if(v.offline||!v.transport)return false;
   if(!spkEnsureCtx())return false;
+  /* Never open a new examiner reply under a speaking candidate. Once the line
+     is already playing, chunks keep flowing so the current sentence finishes;
+     only a real barge-in (1.8 s) cuts it. */
+  if(who==='examiner'&&SPK.running&&SPK.micSpeaking&&!spkVoicePlaying(who))
+    return spkHoldAudio(buf,who);
   if(who==='examiner'&&spkCandidateHoldsFloor())return spkHoldAudio(buf,who);
+  if(streaming&&!spkVoicePlaying(who))return spkChunkBuffer(buf,who);
   return spkScheduleBuffer(buf,who);
 }
 function spkPlayPcm16(arrayBuffer,who,rate){
@@ -7442,7 +7561,7 @@ function spkPlayPcm16(arrayBuffer,who,rate){
   const ctx=SPK.ctx, buf=ctx.createBuffer(1,pcm.length,rate||24000);
   const ch=buf.getChannelData(0);
   for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-  return spkOnBuffer(buf,who);
+  return spkOnBuffer(buf,who,true);
 }
 
 async function spkPlayWav(b64,who){
@@ -7546,7 +7665,12 @@ function spkSpeakText(who,text){
   v.browserBusy=true;
   v.since=performance.now();
   SPK_UTTERANCE=u;
-  u.onstart=function(){v.browserBusy=true;v.since=performance.now()};
+  u.onstart=function(){
+    v.browserBusy=true;v.since=performance.now();
+    /* Device voice: onstart is the first audible sample, so it closes the
+       turn-gap micrometer just like a WebAudio buffer does. */
+    if(who==='examiner')spkNoteFirstAudioAt(performance.now());
+  };
   u.onend=u.onerror=function(){
     if(SPK_UTTERANCE===u)SPK_UTTERANCE=null;
     v.browserBusy=false;
@@ -7616,6 +7740,9 @@ function makeTurnTransport(cfg){
     function finish(j,audioP){
       return Promise.resolve(audioP).then(function(){
         SPK.lastTurnMs=j.ms||null;
+        /* U8: a cached scripted line must show up as a hit, not a second paid
+           TTS call. The counter is the proof the prefetch/warm actually works. */
+        spkNoteTts(j&&j.ms);
         /* stop-talking → first-audio is measured here, on the client,
            because that is the number the candidate actually feels. */
         SPK.turnLatencyMs=Math.round(performance.now()-t0);
@@ -7812,6 +7939,12 @@ const SPK={
   /* U1: examiner audio parked while the candidate holds the floor. The three
      counters are the numbers the test session reports. */
   heldAudio:[],heldChunks:0,heldFlushes:0,heldMsTotal:0,heldMaxMs:0,heldSince:0,
+  /* U8: per-turn ms from "the candidate stopped" to "the examiner's first
+     sample played". `ttsCacheHits` proves a scripted repeat came from
+     data/tts instead of a second upstream call. */
+  gapFrom:0,gapArmed:false,turnGaps:[],
+  ttsCacheHits:0,ttsCacheMisses:0,prefetchCount:0,
+  prefetchLines:[],prefetchSeen:null,prefetchIdx:-1,
   lastPA:null,reportId:'',reportPayload:null,reportData:null,
   reportSaved:false,reportDuration:0,
   /* Phase 35 exam mode: the SP_EXAM screen owns the floor, the transport is
@@ -7829,7 +7962,7 @@ function spkVoice(who){
   if(!SPK.voices[who]){
     SPK.voices[who]={who:who,transport:null,gain:null,gainLevel:null,
       sources:[],nextTime:0,speaking:false,since:null,muted:null,offline:false,
-      browserBusy:false};
+      browserBusy:false,jitter:[],jitterSince:0,jitterTimer:0};
   }
   return SPK.voices[who];
 }
@@ -7871,12 +8004,15 @@ function spkOnAudio(pcm,who){
   const buf=ctx.createBuffer(1,pcm.length,24000);
   const ch=buf.getChannelData(0);
   for(let i=0;i<pcm.length;i++)ch[i]=pcm[i]/32768;
-  return spkOnBuffer(buf,who);
+  return spkOnBuffer(buf,who,true);
 }
 
 function spkClearQueue(who){
   const v=who?SPK.voices[who]:null;
   if(!v||!SPK.ctx)return;
+  clearTimeout(v.jitterTimer);v.jitterTimer=0;
+  if(v.jitter)v.jitter.length=0;
+  v.jitterSince=0;
   v.sources.forEach(function(src){try{src.stop()}catch(e){}});
   v.sources=[];
   v.nextTime=SPK.ctx.currentTime;
@@ -7885,6 +8021,9 @@ function spkClearQueue(who){
 function spkVoiceBusy(who){
   const v=SPK.voices[who];
   if(!v||!SPK.ctx)return false;
+  /* Buffered chunks count as busy: the voice is mid-reply even before the
+     first sample starts, so the turn must not advance underneath it. */
+  if(v.jitter&&v.jitter.length)return true;
   return v.sources.length>0&&v.nextTime>SPK.ctx.currentTime;
 }
 
@@ -7900,7 +8039,7 @@ function spkBargeIn(){
      model has its own voice-activity detection and will emit `interrupted`. */
   SPK.turnOpen=false;          // the interrupted turn is closed
   SPK.muted=true;              // drop audio already in flight for this voice
-  /* A barge-in must always release: relying only on 900 ms of VAD silence left
+  /* A barge-in must always release: relying only on the floor silence left
      the examiner muted forever when the environment never went quiet. */
   clearTimeout(SPK.bargeTimer);
   SPK.bargeTimer=setTimeout(function(){
@@ -8026,6 +8165,9 @@ function spkReset(){
   SPK.silences=[];SPK.silStartedAt=0;SPK.speechMs=0;SPK.lastFrameAt=0;
   SPK.heldAudio=[];SPK.heldChunks=0;SPK.heldFlushes=0;
   SPK.heldMsTotal=0;SPK.heldMaxMs=0;SPK.heldSince=0;
+  SPK.gapFrom=0;SPK.gapArmed=false;SPK.turnGaps=[];
+  SPK.ttsCacheHits=0;SPK.ttsCacheMisses=0;SPK.prefetchCount=0;
+  SPK.prefetchLines=[];SPK.prefetchSeen=null;SPK.prefetchIdx=-1;
   SPK.reportId='';SPK.reportPayload=null;SPK.reportData=null;
   SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
@@ -8051,6 +8193,7 @@ function spkReset(){
   const i=document.getElementById('spkInterrupts');if(i)i.textContent='0';
   const r=document.getElementById('spkRemaining');if(r)r.textContent='—';
   spkSetBadge('');
+  spkRenderGap();
 }
 
 function spkSetVoiceGain(who,level,constant){
@@ -8200,12 +8343,14 @@ function spkLoop(){
   if(SPK.mode==='sim'){
     if(simSpeaking!==SPK.micSpeaking){
       SPK.micSpeaking=simSpeaking;
-      if(!simSpeaking)SPK.lastSpeechEnd=now;
+      if(!simSpeaking)spkNoteCandidateStop(now);
     }
     spkVad(simSpeaking);
   }
-  /* Held examiner audio only leaves after the candidate's silence reaches
-     SPK_FLOOR_SILENCE_MS. */
+  /* Jitter first: a buffered reply that has waited its 180 ms leaves as one
+     contiguous run. Held audio only leaves after the candidate's silence
+     reaches SPK_FLOOR_SILENCE_MS. */
+  spkFlushJitterAll(now);
   spkFlushHeld(now);
   const r=spkDirectorTick(SPK.dir,spkDirectorInput(now));
   SPK.dir=r.state;
@@ -8265,7 +8410,7 @@ async function spkStartMic(){
     const speaking=!!m.speaking;
     if(speaking!==SPK.micSpeaking){
       SPK.micSpeaking=speaking;
-      if(!speaking)SPK.lastSpeechEnd=performance.now();
+      if(!speaking)spkNoteCandidateStop(performance.now());
     }
     spkVad(speaking);
   };
@@ -9068,6 +9213,63 @@ function spkWarmPart(){
       task:SP_EXAM.task||{},lines:spxWarmLines(),session_id:spkTurnSessionId()})})
     .catch(function(){});
 }
+/* U8 prefetch: the ordered stage script (examiner + partner) for this part.
+   When a scripted line starts, the entry after it is exactly what the next
+   turn will ask the TTS for, so its WAV can be generated while the current
+   line is still playing. */
+function spxScriptQueue(){
+  const out=[];
+  const phases=(SP_EXAM.phases&&SP_EXAM.phases.length)?SP_EXAM.phases:spxPhases();
+  phases.forEach(function(ph){
+    if((ph.who==='examiner'||ph.who==='partner')&&ph.line)
+      out.push({who:ph.who,text:ph.line});
+    (ph.events||[]).forEach(function(ev){
+      if((ev.who==='examiner'||ev.who==='partner')&&ev.text)
+        out.push({who:ev.who,text:ev.text});
+    });
+  });
+  return out;
+}
+function spkNoteTts(ms){
+  if(!ms||typeof ms.cached!=='boolean')return;
+  if(ms.cached)SPK.ttsCacheHits++;else SPK.ttsCacheMisses++;
+}
+function spkPrefetchNext(who,text){
+  /* A live-model reply is not in any script: there is nothing to pre-generate.
+     Sim (and fast voice) need no server WAV at all. */
+  if(SPK.mode==='live'||SPK.mode==='sim')return;
+  if(spkSimMode()||spkTtsMode()!=='gemini')return;
+  if(typeof text!=='string'||!text)return;
+  const lines=SPK.prefetchLines||[];
+  if(!lines.length)return;
+  if(!SPK.prefetchSeen)SPK.prefetchSeen={};
+  let i=SPK.prefetchIdx;
+  if(typeof i!=='number'||i<0||!lines[i]||
+     lines[i].text!==text||lines[i].who!==who){
+    i=-1;
+    for(let k=0;k<lines.length;k++){
+      if(lines[k].text===text&&lines[k].who===who){i=k;break}
+    }
+    if(i<0)return;
+  }
+  SPK.prefetchIdx=i+1;
+  const next=lines[SPK.prefetchIdx];
+  if(!next||!next.text)return;
+  const key=next.who+'\u0000'+next.text;
+  if(SPK.prefetchSeen[key])return;
+  SPK.prefetchSeen[key]=true;
+  SPK.prefetchCount++;
+  fetch(apiUrl('/api/speaking/turn'),{method:'POST',headers:authHeaders(),
+    body:JSON.stringify({say:next.text,
+      role:next.who==='partner'?'partner':'examiner',
+      part:SPK.part,session_id:spkTurnSessionId(),tts:'gemini'})})
+    .then(function(r){
+      /* The WAV itself is not wanted: only the data/tts entry it leaves. Read
+         nothing, just release the body. */
+      if(r&&r.body&&r.body.cancel)r.body.cancel().catch(function(){});
+    })
+    .catch(function(){});
+}
 
 function spxQueueQuiet(){
   /* A turn in flight (transcript + TTS) has not produced audio yet: the floor
@@ -9101,7 +9303,12 @@ function spxSay(who,text,ms){
   const duration=ms||spxSpeechMs(text);
   /* Sim and turn-based both have say(): the line is spoken as written (turn
      mode asks the server for TTS only, no model call). */
-  if(v.transport.say){v.transport.say(text,duration);return}
+  if(v.transport.say){
+    v.transport.say(text,duration);
+    /* U8: while this line plays, make sure the next one is already cached. */
+    spkPrefetchNext(who,text);
+    return;
+  }
   /* Live: the model owns the words, the controller owns the stage. */
   if(v.transport.sendText){
     v.transport.sendText('EXAM CONTROLLER: say exactly this and nothing else: "'+text+'"');
@@ -9249,7 +9456,7 @@ function spxSilence(now){
     SP_EXAM.awaitSince=now;
     return;
   }
-  if(!spkExaminerMaySpeak(now))return;      // same 900 ms rule as the audio path
+  if(!spkExaminerMaySpeak(now))return;      // same floor rule as the audio path
   const quiet=(now-SP_EXAM.awaitSince)/1000;
   if(quiet>=SPX_SILENCE_MOVE_S){spxNextPhase();return}
   if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
@@ -9499,6 +9706,11 @@ SP_EXAM.ready=async function(){
     if(briefErr){briefErr.textContent=status||t('spx_report_failed');briefErr.style.display='block'}
     return;
   }
+  /* U8: the ordered script the prefetch follows. It is built after spkStart()
+     because spkReset() clears SPK, and rebuilt for every run. */
+  SPK.prefetchLines=spxScriptQueue();
+  SPK.prefetchSeen={};
+  SPK.prefetchIdx=-1;
   SP_EXAM.startedAt=performance.now();
   spxEnterPhase(0);
   spxStopTimer();
