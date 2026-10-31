@@ -29,6 +29,14 @@ Phase 36 adds the turn-based voice contract, all against a stubbed Gemini:
      owner is never limited.
  13. The UI shows the turn note and never advertises "real-time" wording.
 
+Phase 38 adds the two voices (fast = device speech, natural = Gemini TTS):
+
+ 14. `tts:"none"` returns `audio_b64: null`, makes no TTS call, and consumes
+     exactly one AI call; the same transcript with `tts:"gemini"` returns audio.
+ 15. The client hands the reply text to `speechSynthesis.speak` once per turn
+     (en-GB, rate 0.95) and a barge-in cancels it.
+ 16. The report prints the measured latency of the last turn.
+
     cd tests && uv run --with playwright python test_speaking_exam.py
 """
 import base64
@@ -486,7 +494,7 @@ def main():
         body = json.loads(raw.decode("utf-8"))
         system = body["systemInstruction"]["parts"][0]["text"]
         assert "REACT FIRST" in system, system[:200]
-        assert "14 words" in system, system[:200]
+        assert "10 words" in system, system[:200]
         assert "FALLBACK" in system, system[:200]
         assert "fewer than 4 words" in system, system[:200]
         assert "follow-up" in system, system[:200]
@@ -494,7 +502,9 @@ def main():
         assert "Examiner: QUESTION MARKER" in json.dumps(body["contents"])
         generation = body["generationConfig"]
         assert generation["thinkingConfig"] == {"thinkingBudget": 0}, generation
-        assert generation["maxOutputTokens"] == 80, generation
+        # A 6-10 word reply: 60 tokens is the ceiling from phase 38's short
+        # examiner lines (80 was the old, longer prompt).
+        assert generation["maxOutputTokens"] == 60, generation
         assert generation["responseSchema"] == S._SPK_TURN_SCHEMA, generation
     out["37a_prompt"] = {"bodies": len(turn_bodies), "history": True, "task": True}
 
@@ -584,6 +594,65 @@ def main():
     out["37d_stream"] = {"events": [ev.get("type") for ev in events],
                          "text_ms": events[0]["ms"], "audio_ms": events[1]["ms"]}
 
+    # --- 38. Two voices: tts:"none" skips TTS and costs ONE AI call --------
+    def ai_total():
+        with S._AI_QUOTA_LOCK:
+            return S._ai_quota_today()["total"]
+
+    # A cold TTS cache: a cache hit makes no upstream call either, so without
+    # this the "no TTS request" assertion could hide a regression.
+    tts_dir = os.path.join(_tmp, "tts")
+    if os.path.isdir(tts_dir):
+        for name in os.listdir(tts_dir):
+            os.remove(os.path.join(tts_dir, name))
+    before_calls = len(TextModelStub.calls)
+    before_ai = ai_total()
+    t_fast = time.time()
+    status, fast_turn = api("/api/speaking/turn",
+                            turn_body("fast-api-1", tts="none"), owner_token)
+    fast_wall = int((time.time() - t_fast) * 1000)
+    assert status == 200, (status, fast_turn)
+    assert fast_turn.get("audio_b64") is None, "fast mode built audio anyway"
+    assert fast_turn.get("mime") is None, fast_turn.get("mime")
+    assert fast_turn.get("reply") == TURN_REPLY, fast_turn.get("reply")
+    assert fast_turn["ms"].get("tts") == 0, fast_turn["ms"]
+    assert fast_turn["ms"].get("cached") is False, fast_turn["ms"]
+    # The only upstream call is the reply call (it carries inlineData). A TTS
+    # request would appear as a second call with had_audio=false.
+    new_calls = TextModelStub.calls[before_calls:]
+    assert [had for _p, had in new_calls] == [True], \
+        "fast mode made %d calls, not one reply call: %r" % (len(new_calls), new_calls)
+    assert ai_total() == before_ai + 1, \
+        "fast mode consumed %d AI calls, not 1" % (ai_total() - before_ai)
+    assert fast_wall < 3000, \
+        "fast mode took %d ms — over the 3000 ms ceiling" % fast_wall
+
+    # Same transcript, natural mode: the audio is present again.
+    before_ai = ai_total()
+    status, nat_turn = api("/api/speaking/turn",
+                           turn_body("fast-api-2", tts="gemini"), owner_token)
+    assert status == 200, (status, nat_turn)
+    assert nat_turn.get("transcript") == fast_turn.get("transcript")
+    assert nat_turn.get("reply") == fast_turn.get("reply")
+    nat_wav = base64.b64decode(nat_turn.get("audio_b64") or "")
+    assert nat_wav[:4] == b"RIFF" and len(nat_wav) > 44, nat_wav[:16]
+    print("phase 38 latency (stubbed upstream):")
+    print("  fast  : %r (wall %d ms)" % (fast_turn["ms"], fast_wall))
+    print("  natural: %r" % (nat_turn["ms"],))
+    assert fast_turn["ms"]["total"] < 3000, fast_turn["ms"]
+
+    # Pre-generation is a no-op in fast mode: there is no audio to warm.
+    before_calls = len(TextModelStub.calls)
+    status, no_warm = api("/api/speaking/turn",
+                          {"warm": True, "tts": "none", "part": 1,
+                           "role": "examiner", "lines": ["Do you work?"],
+                           "session_id": "fast-api-3"}, owner_token)
+    assert status == 200 and no_warm.get("warmed") == 0, no_warm
+    assert len(TextModelStub.calls) == before_calls, no_warm
+    out["38_voices"] = {"fast": fast_turn["ms"], "fast_wall_ms": fast_wall,
+                        "natural": nat_turn["ms"],
+                        "ai_calls_fast": 1, "warm": no_warm.get("warmed")}
+
     # Cold vs warm, printed honestly. Upstream is a local stub, so these are
     # the software overheads, not Google's network time.
     print("phase 37 latency (stubbed upstream):")
@@ -620,6 +689,9 @@ def main():
         assert caps == {"live": False, "turn": True}, caps
         pg.evaluate("""
             () => {
+              /* Phase 38: this block exercises the natural voice (a WAV comes
+                 back). The fast voice is tested right after. */
+              D.settings.voice='natural';
               SPK.running=true;SPK.mode='turn';SPK.muted=false;SPK.speaking=false;
               SPK.lines=[];SPK.turns=[];SPK.turnState='';SPK.turnLatencyMs=null;
               spkEnsureCtx();
@@ -688,6 +760,116 @@ def main():
             "document.getElementById('spxVoiceRetry').style.display") == "none", \
             "the retry button stayed after a successful retry"
         out["9c_failure_retry"] = True
+
+        # --- 9d. Fast voice: the reply text goes to speechSynthesis --------
+        # tts:"none" means no WAV comes back; the browser speaks the reply.
+        # The stub counts speak/cancel calls and keeps the first utterance open
+        # so barge-in has something to cancel.
+        pg.evaluate("""
+            () => {
+              D.settings.voice='fast';
+              SPK_BROWSER_VOICE=null;SPK_BROWSER_LOGGED=true;
+              window.__spkSpoken=[];window.__spkCancelled=0;window.__spkHold=false;
+              const stub={
+                speak:function(u){
+                  window.__spkSpoken.push({text:u.text,lang:u.lang,rate:u.rate});
+                  if(u.onstart)u.onstart();
+                  if(!window.__spkHold&&u.onend)u.onend();
+                },
+                cancel:function(){window.__spkCancelled++},
+                getVoices:function(){return [
+                  {name:'Google UK English Female',lang:'en-GB',default:true}
+                ]}
+              };
+              try{Object.defineProperty(window,'speechSynthesis',
+                {configurable:true,value:stub})}
+              catch(e){try{window.speechSynthesis=stub}catch(e2){}}
+              SPK.voices={};spkEnsureCtx();
+              const v=spkVoice('examiner');
+              v.transport=makeTurnTransport({mode:'turn',role:'examiner',part:2,
+                tts:'none',on:spkHandlers('examiner'),
+                /* Same session as 9b: the free account already spent its one
+                   mock, and a known session keeps working (phase 36). */
+                session_id:'browser-turn-1'});
+              v.offline=false;v.muted=null;v.gainLevel=null;
+              SPK.running=true;SPK.muted=false;SPK.barged=false;
+              SPK.turnState='';SPK.turnLatencyMs=null;SPK.turnError='';
+              v.transport.start();
+              return true;
+            }
+        """)
+        pg.evaluate("""
+            () => {
+              const v=SPK.voices.examiner;
+              const frame=new Int16Array(320);
+              for(let i=0;i<frame.length;i++){
+                frame[i]=Math.round(Math.sin(2*Math.PI*300*i/16000)*8000);
+              }
+              for(let k=0;k<60;k++)v.transport.sendAudio(frame,true);
+              const quiet=new Int16Array(320);
+              for(let k=0;k<50;k++)v.transport.sendAudio(quiet,false);
+              return true;
+            }
+        """)
+        fast_ok = wait_until(pg, "SPK.turnLatencyMs!==null", 20)
+        if not fast_ok:
+            print("fast turn state:", pg.evaluate(
+                "({state:SPK.turnState,err:SPK.turnError,speaking:SPK.speaking,"
+                "lastEx:SPK.lastExaminerAt,muted:SPK.muted,lines:SPK.lines.length,"
+                "transport:!!(SPK.voices.examiner&&SPK.voices.examiner.transport),"
+                "closed:!!(SPK.voices.examiner&&SPK.voices.examiner.transport&&"
+                "SPK.voices.examiner.transport.closed)})"))
+            print("page errors so far:", page_errors)
+            print("console errors so far:", console_errors[-5:])
+        assert fast_ok, "the fast turn never came back"
+        assert pg.evaluate("SPK.turnError") in (None, ""), pg.evaluate("SPK.turnError")
+        spoken = pg.evaluate("window.__spkSpoken")
+        assert len(spoken) == 1, "the reply was spoken %d times: %r" % (len(spoken), spoken)
+        assert spoken[0]["text"] == TURN_REPLY, spoken[0]
+        assert spoken[0]["lang"] == "en-GB", spoken[0]
+        assert abs(spoken[0]["rate"] - 0.95) < 1e-6, spoken[0]
+        assert (pg.evaluate("SPK.lastTurnMs") or {}).get("tts") == 0, \
+            pg.evaluate("SPK.lastTurnMs")
+        fast_latency = pg.evaluate("SPK.turnLatencyMs")
+        print("fast turn latency (client, stop-talking -> text): %d ms" % fast_latency)
+        assert fast_latency < 3000, \
+            "fast mode took %d ms — the phase promises under 3000 ms" % fast_latency
+        out["9d_fast_voice"] = {"spoken": spoken, "latency_ms": fast_latency,
+                                "server_ms": pg.evaluate("SPK.lastTurnMs")}
+
+        # The report prints the measured latency, so the number is visible
+        # instead of claimed.
+        report_line = pg.evaluate("""
+            () => {
+              SPK.reportData={bands:{},duration_s:60};
+              SP_EXAM.entry=null;
+              spxRenderReportScreen();
+              return document.getElementById('spxRpLatency').textContent;
+            }
+        """)
+        assert report_line.startswith("Reply in") and "device voice" in report_line, \
+            report_line
+        out["9f_report_latency"] = report_line
+
+        # Barge-in cancels the device voice instead of stacking a second line.
+        pg.evaluate("""
+            () => {
+              window.__spkHold=true;window.__spkSpoken=[];window.__spkCancelled=0;
+              SPK.muted=false;SPK.barged=false;
+              spkSpeakText('examiner',
+                'This examiner line is still being spoken when the candidate interrupts.');
+              return true;
+            }
+        """)
+        assert pg.evaluate("window.__spkSpoken.length") == 1
+        pg.evaluate("spkBargeIn()")
+        assert pg.evaluate("window.__spkCancelled") >= 1, "barge-in left the voice running"
+        assert pg.evaluate("SPK.voices.examiner.browserBusy") is False, \
+            "the utterance was not cancelled on barge-in"
+        assert pg.evaluate("SPK.muted") is True
+        out["9e_barge_in"] = {"cancelled": pg.evaluate("window.__spkCancelled")}
+        pg.evaluate("window.__spkHold=false;SPK.muted=false;SPK.barged=false;"
+                    "D.settings.voice='natural'")
 
         # Back to a clean slate for the simulated exam below.
         pg.evaluate("""
@@ -954,8 +1136,8 @@ def main():
     srv.server_close()
     stub_srv.shutdown()
     print(json.dumps(out, ensure_ascii=False, indent=1))
-    print("OK: phase 37 speaking exam acceptance passed "
-          "(turn-based, listens to the answer, TTS cached)")
+    print("OK: phase 38 speaking exam acceptance passed "
+          "(turn-based, two voices: instant device voice and natural TTS)")
 
 
 if __name__ == "__main__":

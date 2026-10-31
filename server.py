@@ -1283,6 +1283,9 @@ def _spk_tts_cached(api_key, text, voice):
     wav, ms, error = _spk_tts(api_key, text, voice)
     if error:
         return None, ms, False, error
+    # One paid upstream call, one tick of the instance meter. A cache hit above
+    # returns before this line, so it costs nothing.
+    _ai_total_consume()
     with _SPK_TTS_LOCK:
         _spk_tts_cache_put(text, voice, wav)
     return wav, ms, False, None
@@ -3945,12 +3948,22 @@ class H(BaseHTTPRequestHandler):
                 part = 0
             task = speaking_prompts.clean_task(req.get("task"))
             voice = SPK_TTS_VOICES.get(role, SPK_TTS_VOICES["examiner"])
+            # Phase 38: `tts:"none"` means the browser speaks the reply text
+            # with speechSynthesis — the turn costs the reply call only. The
+            # default stays "gemini" so an old client keeps the old behaviour.
+            tts = req.get("tts")
+            tts = tts if tts in ("gemini", "none") else "gemini"
 
             # Phase 37: the client asks once, when a part opens, to pre-generate
             # the scripted lines it is about to speak. Free: no model call, no
             # mock, no minutes, and it returns immediately (the work is a
             # daemon thread).
             if req.get("warm") is True:
+                if tts == "none":
+                    # Nothing to pre-generate: the device voice needs no audio.
+                    self._send_json(200, {"warmed": 0, "voice": voice,
+                                          "tts": "none"})
+                    return
                 lines = _spk_warm_lines(req.get("lines"))
                 if not lines:
                     lines = speaking_prompts.scripted_lines(part or 1, task, role)
@@ -3976,6 +3989,22 @@ class H(BaseHTTPRequestHandler):
             say = req.get("say")
             if "audio_b64" not in req and isinstance(say, str) and say.strip():
                 text = say.strip()[:SPK_TURN_MAX_SAY]
+                if tts == "none":
+                    # No TTS call, no cache write, no quota: the browser speaks.
+                    total = int((time.time() - started) * 1000)
+                    if session_id and not known:
+                        _spk_turn_session_mark(uid, session_id)
+                        plans.speaking_add_mock(uid)
+                    _audit("speaking_turn", uid, _real_ip(self), self._rid,
+                           {"part": part, "role": role, "ms": total,
+                            "say": True, "tts": "none"})
+                    self._send_json(200, {
+                        "transcript": "", "reply": text,
+                        "audio_b64": None, "mime": None,
+                        "ms": {"stt": 0, "llm": 0, "tts": 0,
+                               "total": total, "cached": False},
+                    })
+                    return
                 wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, text, voice)
                 if tts_err:
                     self._send_json(502, {"error": "tts_failed", "reason": tts_err})
@@ -4029,12 +4058,46 @@ class H(BaseHTTPRequestHandler):
             if llm_err:
                 self._send_json(502, {"error": "turn_failed", "reason": llm_err})
                 return
+            # One upstream reply call, one tick of the instance meter. Fast mode
+            # stops here (one call per turn); natural mode adds the TTS tick.
+            _ai_total_consume()
             transcript = (transcript or "").strip()
             reply = (reply or "").strip()
             # Never invent what was not heard: an empty transcript gets the
             # server's own repeat request, whatever the model tried to say.
             if not transcript or not reply:
                 reply = _SPK_TURN_REPEAT
+
+            if tts == "none":
+                # The browser owns the voice: no TTS request is built, cached or
+                # paid for. The reply text is the whole answer.
+                total = int((time.time() - started) * 1000)
+                if session_id and not known:
+                    _spk_turn_session_mark(uid, session_id)
+                    plans.speaking_add_mock(uid)
+                _audit("speaking_turn", uid, _real_ip(self), self._rid,
+                       {"part": part, "role": role, "ms": total,
+                        "tts": "none"})
+                ms = {"stt": 0, "llm": llm_ms, "tts": 0,
+                      "total": total, "cached": False}
+                if stream:
+                    self._send_ndjson_start()
+                    self._send_ndjson({
+                        "type": "text", "transcript": transcript,
+                        "reply": reply,
+                        "ms": {"stt": 0, "llm": llm_ms},
+                    })
+                    self._send_ndjson({"type": "audio", "audio_b64": None,
+                                       "mime": None, "ms": ms})
+                    return
+                self._send_json(200, {
+                    "transcript": transcript,
+                    "reply": reply,
+                    "audio_b64": None,
+                    "mime": None,
+                    "ms": ms,
+                })
+                return
 
             if stream:
                 # Text first, audio second: the examiner's words reach the UI
