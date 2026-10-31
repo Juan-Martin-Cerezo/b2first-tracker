@@ -6821,20 +6821,35 @@ function makeSimTransport(cfg){
   };
 }
 
+/* The transcript chunks are not consistent: sometimes each message carries the
+   whole sentence so far (cumulative), sometimes only the new words (delta). This
+   merges both shapes so a turn is spoken and printed once, whole. */
+function spkMergeChunk(buf,chunk){
+  if(!buf)return chunk;
+  if(chunk.indexOf(buf)===0)return chunk;
+  if(buf.indexOf(chunk)===0)return buf;
+  const sep=(/^[\s.,!?;:]/.test(chunk)||/\s$/.test(buf))?'':' ';
+  return (buf+sep+chunk).replace(/\s{2,}/g,' ').replace(/\s+([.,!?])/g,'$1');
+}
+
 function makeLiveTransport(cfg){
   const on=(cfg&&cfg.on)||{};
   const role=(cfg&&cfg.role)||'examiner';
-  let ws=null,closed=false,muted=false,capTimer=null;
+  let ws=null,closed=false,muted=false,capTimer=null,inBuf='',outBuf='';
   function send(obj){
     if(ws&&ws.readyState===1)ws.send(JSON.stringify(obj));
   }
   function handle(sc){
     if(!sc||typeof sc!=='object')return;
-    if(sc.inputTranscription&&typeof sc.inputTranscription.text==='string'&&sc.inputTranscription.text&&on.inText){
-      on.inText(sc.inputTranscription.text);
+    /* The transcript arrives in CUMULATIVE fragments ("Good" → "Good morning.
+       Can you" → "tell me your name,"). Printing each fragment as its own line
+       made one sentence look like four repetitions of the same question, so the
+       text is buffered and emitted once per turn. */
+    if(sc.inputTranscription&&typeof sc.inputTranscription.text==='string'&&sc.inputTranscription.text){
+      inBuf=spkMergeChunk(inBuf,sc.inputTranscription.text);
     }
-    if(sc.outputTranscription&&typeof sc.outputTranscription.text==='string'&&sc.outputTranscription.text&&on.outText){
-      on.outText(sc.outputTranscription.text);
+    if(sc.outputTranscription&&typeof sc.outputTranscription.text==='string'&&sc.outputTranscription.text){
+      outBuf=spkMergeChunk(outBuf,sc.outputTranscription.text);
     }
     if(sc.modelTurn&&Array.isArray(sc.modelTurn.parts)){
       sc.modelTurn.parts.forEach(function(part){
@@ -6844,8 +6859,18 @@ function makeLiveTransport(cfg){
         if(pcm.length&&on.audio)on.audio(pcm);
       });
     }
-    if(sc.interrupted===true&&on.interrupted)on.interrupted();
-    if(sc.turnComplete===true&&on.turnComplete)on.turnComplete();
+    if(sc.interrupted===true){
+      inBuf='';
+      outBuf='';
+      if(on.interrupted)on.interrupted();
+    }
+    if(sc.turnComplete===true){
+      if(outBuf&&on.outText)on.outText(outBuf);
+      if(inBuf&&on.inText)on.inText(inBuf);
+      inBuf='';
+      outBuf='';
+      if(on.turnComplete)on.turnComplete();
+    }
   }
   return {
     on:on,role:(cfg&&cfg.role)||'examiner',
