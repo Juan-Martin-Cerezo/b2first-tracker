@@ -974,6 +974,28 @@ tbody tr:hover{background:var(--surface-2)}
 .plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
 
 /* language switcher (PLAN) */
+.wp-regen{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wp-regen .t-xs{min-height:0}
+details.card>summary{
+  list-style:none;cursor:pointer;min-height:48px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-size:var(--fs-md);font-weight:600;color:var(--txt);
+}
+details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{
+  content:"";width:9px;height:9px;flex:none;margin-right:4px;
+  border-right:2px solid var(--txt-2);border-bottom:2px solid var(--txt-2);
+  transform:rotate(45deg);transition:transform 150ms ease;
+}
+details.card[open]>summary::after{transform:rotate(-135deg)}
+.plan-details-body{margin-top:14px;display:flex;flex-direction:column;gap:14px}
+.plan-fieldset{border:1px solid var(--line);border-radius:var(--r-panel);padding:14px 16px;margin:0;background:var(--surface)}
+.plan-fieldset>legend{font-size:var(--fs-sm);font-weight:700;color:var(--txt);padding:0 6px}
+.plan-fieldset .sub{margin-top:2px}
+.plan-subhead{margin-top:12px;font-weight:600;color:var(--txt)}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;align-items:start;margin-top:10px}
+.plan-grid label{margin-top:0}
+.plan-actions{display:flex;gap:8px;flex-wrap:wrap}
 .lang-switch{display:inline-flex;gap:6px;margin-top:12px;padding:4px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface-2)}
 .lang-btn{border:0;background:transparent;color:var(--txt-2);font:inherit;font-size:var(--fs-sm);font-weight:600;min-height:40px;min-width:44px;padding:7px 16px;border-radius:calc(var(--r-panel) - 3px);cursor:pointer}
 .lang-btn:hover{color:var(--txt)}
@@ -990,8 +1012,6 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 
 /* custom plan editor */
-#planCustom>summary{list-style:none;cursor:pointer}
-#planCustom>summary::-webkit-details-marker{display:none}
 .pc-group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .pc-group:first-child{border-top:0;padding-top:0;margin-top:0}
 .pc-group .chip-btn{min-width:44px;min-height:44px;padding:10px 16px}
@@ -3226,150 +3246,109 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <!-- Custom plan editor (phase 42): days, times, minutes, type,
              exercise and rotation are all controlled here. The onboarding
              renders the same editor inline in step 4. -->
-        <details class="card" id="planCustom" style="margin-bottom:16px">
-          <summary class="plan-card-head">
+        <div class="card" id="planCustom" style="margin-bottom:16px">
+          <div class="plan-card-head">
             <h2 data-i18n="plan_custom_title">Customize</h2>
-            <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_custom_chip">Your week, your rules</span></span>
-          </summary>
+          </div>
           <div class="sub" data-i18n="plan_custom_sub">Build the week session by session, or keep the automatic plan and only narrow the exercises it may use.</div>
           <div id="planCustomBody"></div>
-        </details>
-
-        <!-- Language (English by default, Spanish available) -->
-        <div class="card" id="languageCard" style="margin-bottom:16px">
-          <div class="plan-card-head">
-            <h2 data-i18n="plan_language">Language</h2>
-            <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_language_chip">Interface</span></span>
-          </div>
-          <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
-          <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
-            <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
-            <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
-          </div>
         </div>
 
-        <!-- Subscription plan (phase 31): free / byo / pro, shown up front -->
-        <div class="card" id="planStatusCard" style="margin-bottom:16px">
-          <div class="plan-card-head">
-            <h2 data-i18n="license_title">Subscription</h2>
-            <span class="chip-plan" id="planNameChip"><span class="dot"></span><span id="planNameText" data-i18n="license_chip_free">Free</span></span>
-          </div>
-          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
-          <div class="plan-usage">
-            <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
-              <span class="plan-usage-count tnum" id="planWriteText">—</span>
-            </div>
-            <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
-            <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
-              <span class="plan-usage-count tnum" id="planSpeakText">—</span>
-            </div>
-            <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
-            <div class="plan-usage-reset" id="planResetText"></div>
-          </div>
-          <div class="plan-code-row">
-            <div>
-              <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
-              <input type="text" id="planCode" autocomplete="off" spellcheck="false"
-                     placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
-                     data-i18n-placeholder="license_code_placeholder"
-                     aria-label="Activation code">
-            </div>
-            <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
-          </div>
-          <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
-            <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
-          </div>
-          <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
-          <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-          <div class="t-xs muted" style="margin-top:2px">
-            <span data-i18n="license_own_key">Using your own API key? This app is unlimited for you.</span>
-            <button type="button" class="btn sm gray" style="margin-left:6px" onclick="focusByoCard()" data-i18n="license_own_key_link">Set it up</button>
-          </div>
-        </div>
-
-        <div class="grid-12">
-          <!-- Exam Timers (white, like Stitch) -->
-          <div class="col-7">
-            <div class="card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_exam_timers">🧪 Exam Timers</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_fce_format">FCE Format</span></span>
-              </div>
+        <!-- Everything that is not the week itself lives in two collapsed
+             blocks: fine-tuning (timers, gates, cycles, rotation, schedule)
+             and account/provider. Both are plain <details> cards. -->
+        <details class="card" id="planTuning" style="margin-bottom:16px">
+          <summary data-i18n="plan_tuning">Fine-tuning</summary>
+          <div class="plan-details-body">
+            <fieldset class="plan-fieldset">
+              <legend data-i18n="plan_exam_timers">🧪 Exam Timers</legend>
               <div class="sub" data-i18n="plan_official_durations">Official durations for each paper.</div>
-              <div class="row">
+              <div class="plan-grid">
                 <div><label data-i18n="plan_uoe_focus">UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
                 <div><label data-i18n="plan_listening_min">Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
-              </div>
-              <div class="row">
                 <div><label data-i18n="plan_plan_writing">Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
                 <div><label data-i18n="plan_write_min">Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
                 <div><label data-i18n="plan_review_min">Review (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
-              </div>
-              <div class="row">
                 <div><label data-i18n="plan_speaking_p2">Speaking Part 2 (sec)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
                 <div><label data-i18n="plan_speaking_p34">Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
-              </div>
-              <div class="row">
                 <div>
                   <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
                   <select id="pVoice">
                     <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
                     <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
                   </select>
-                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
                 </div>
-              </div>
-              <div class="row">
                 <div><label data-i18n="plan_wmin">Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
                 <div><label data-i18n="plan_wmax">Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
-              </div>
-              <div class="row">
                 <div><label data-i18n="plan_streak_freeze">Streak freeze / week (🛡)</label><input type="number" id="pStreakFreeze" min="0" max="7" value="1"></div>
-                <div><label data-i18n="plan_week_goal">Weekly goal (days/week)</label><input type="number" id="pWeekGoal" min="1" max="7" value="5"></div>
               </div>
-            </div>
-          </div>
+              <div class="t-xs muted" style="margin-top:8px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
+            </fieldset>
 
-          <!-- Thresholds (Gates) navy, like Stitch -->
-          <div class="col-5">
-            <div class="card plan-dark-card">
-              <h2 data-i18n="plan_thresholds">🎯 Thresholds (Gates)</h2>
+            <fieldset class="plan-fieldset">
+              <legend data-i18n="plan_thresholds">🎯 Thresholds (Gates)</legend>
               <div class="sub" data-i18n="plan_thresholds_sub">Numerical criteria per stage.</div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage0">Stage 0</div>
-              <div class="row">
+              <div class="sub plan-subhead" data-i18n="plan_stage0">Stage 0</div>
+              <div class="plan-grid">
                 <div><label data-i18n="plan_g_e0w">Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
                 <div><label data-i18n="plan_g_e0u">UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
                 <div><label data-i18n="plan_g_e0l">L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
               </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage1">Stage 1</div>
-              <div class="row">
+              <div class="sub plan-subhead" data-i18n="plan_stage1">Stage 1</div>
+              <div class="plan-grid">
                 <div><label data-i18n="plan_g_e1w">Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
                 <div><label data-i18n="plan_g_e1u">UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
                 <div><label data-i18n="plan_g_e1l">L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
               </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage2">Stage 2</div>
-              <div class="row">
+              <div class="sub plan-subhead" data-i18n="plan_stage2">Stage 2</div>
+              <div class="plan-grid">
                 <div><label data-i18n="plan_g_e2r">R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
                 <div><label data-i18n="plan_g_e2w">Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
                 <div><label data-i18n="plan_g_e2l">L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
-            </div>
-          </div>
+            </fieldset>
 
-          <!-- Session Schedules -->
-          <div class="col-6">
-            <div class="card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
+            <fieldset class="plan-fieldset">
+              <legend data-i18n="plan_cycles">Cycles</legend>
+              <div class="sub" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
+              <div class="plan-grid">
+                <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
+                <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
+                <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
+                <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
+              </div>
+            </fieldset>
+
+            <fieldset class="plan-fieldset">
+              <legend data-i18n="plan_rotation">🔁 Continuous Rotation &amp; Upcoming Slots</legend>
+              <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
+              <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
+              <div class="plan-grid">
+                <div>
+                  <label data-i18n="plan_week_a_odd">Week A (Odd)</label>
+                  <div class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</div>
+                  <label data-i18n="plan_uoe_focus">UoE Focus</label>
+                  <select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                </div>
+                <div>
+                  <label data-i18n="plan_week_b_even">Week B (Even)</label>
+                  <div class="cycle-val" id="rotWkBSummary">Full W + Full Sp</div>
+                  <label data-i18n="plan_uoe_alt">UoE Alternative</label>
+                  <select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset class="plan-fieldset">
+              <legend data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</legend>
+              <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
+              <div class="plan-grid">
+                <div><label for="pWeekGoal" data-i18n="plan_sessions_week">Sessions per week</label><input type="number" id="pWeekGoal" min="1" max="14" value="5" onchange="onWeekGoalChange(this.value)"></div>
+              </div>
+              <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
+              <div style="margin-top:10px">
                 <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
               </div>
-              <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
-              
-              <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
 
               <!-- Fallback inputs for test compatibility -->
               <input type="hidden" id="pADay">
@@ -3381,9 +3360,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div style="margin-top:16px;padding:12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
                   <div>
-                    <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
+                    <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                       <span data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</span>
-                      <span class="badge mon" id="planOffsetBadge">Offset: +0</span>
+                      <span class="t-xs muted" id="planOffsetBadge">Offset: +0</span>
                     </div>
                     <div class="sub" style="margin-top:2px;font-size:12px" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
                   </div>
@@ -3394,54 +3373,65 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                 </div>
               </div>
-            </div>
+            </fieldset>
           </div>
+        </details>
 
-          <!-- Rotation Cycles & Schedule Roadmap -->
-          <div class="col-6">
-            <div class="card plan-green-card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_rotation">🔁 Continuous Rotation &amp; Upcoming Slots</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_rotation_chip">4-Session Loop</span></span>
+        <details class="card" id="planAccount" style="margin-bottom:16px">
+          <summary data-i18n="plan_account">Account &amp; provider</summary>
+          <div class="plan-details-body">
+            <fieldset class="plan-fieldset" id="languageCard">
+              <legend data-i18n="plan_language">Language</legend>
+              <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
+              <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
+                <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
+                <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
               </div>
-              <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
+            </fieldset>
 
-              <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
-
-              <div class="rot-cycles" style="display:none">
-                <div class="cycle-box">
-                  <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
-                  <span class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</span>
-                  <div style="margin-top:8px">
-                    <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-                  </div>
+            <fieldset class="plan-fieldset" id="planStatusCard">
+              <legend><span data-i18n="license_title">Subscription</span> · <span class="muted" id="planNameChip"><span id="planNameText" data-i18n="license_chip_free">Free</span></span></legend>
+              <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
+              <div class="plan-usage">
+                <div class="plan-usage-row">
+                  <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
+                  <span class="plan-usage-count tnum" id="planWriteText">—</span>
                 </div>
-                <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
-                <div class="cycle-box">
-                  <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
-                  <span class="cycle-val" id="rotWkBSummary">Full W + Full Sp</span>
-                  <div style="margin-top:8px">
-                    <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-                  </div>
+                <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
+                <div class="plan-usage-row">
+                  <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
+                  <span class="plan-usage-count tnum" id="planSpeakText">—</span>
                 </div>
+                <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
+                <div class="plan-usage-reset" id="planResetText"></div>
               </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
-              <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
-              <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
-              <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
-              <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
-            </div>
-          </div>
+              <div class="plan-code-row">
+                <div>
+                  <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
+                  <input type="text" id="planCode" autocomplete="off" spellcheck="false"
+                         placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
+                         data-i18n-placeholder="license_code_placeholder"
+                         aria-label="Activation code">
+                </div>
+                <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
+              </div>
+              <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+                <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
+                <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
+              </div>
+              <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
+              <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
+              <div class="t-xs muted" style="margin-top:2px">
+                <span data-i18n="license_own_key">Using your own API key? This app is unlimited for you.</span>
+                <button type="button" class="btn sm gray" style="margin-left:6px" onclick="focusByoCard()" data-i18n="license_own_key_link">Set it up</button>
+              </div>
+            </fieldset>
 
-          <!-- AI provider (bring your own key) -->
-          <div class="col-12">
-            <div class="card" id="byoCard">
-              <div class="plan-card-head">
-                <h2 data-i18n="byo_title">✨ Writing Corrector provider</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="byo_chip">Your key, your cost</span></span>
-              </div>
+            <fieldset class="plan-fieldset" id="byoCard">
+              <legend data-i18n="byo_title">✨ Writing Corrector provider</legend>
               <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
-              <div class="row">
+              <div class="plan-grid">
                 <div>
                   <label for="byoProvider" data-i18n="byo_provider">Provider</label>
                   <select id="byoProvider" onchange="onByoProviderChange()">
@@ -3459,8 +3449,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <button type="button" class="btn sm gray" id="byoKeyToggle" onclick="toggleByoKeyVisibility()" data-i18n="byo_show">Show</button>
                   </div>
                 </div>
-              </div>
-              <div class="row">
                 <div>
                   <label for="byoBase" data-i18n="byo_base">Base URL (optional)</label>
                   <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" oninput="onByoConfigInput()">
@@ -3476,16 +3464,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <span id="byoTestStatus" class="t-xs muted" role="status"></span>
               </div>
               <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
-            </div>
-          </div>
+            </fieldset>
 
-          <div class="col-12">
-            <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+            <div class="plan-actions">
               <button class="btn ok" onclick="savePlan()" data-i18n="plan_save">💾 Save plan</button>
               <button class="btn gray" onclick="resetPlan()" data-i18n="plan_restore">↩ Restore original plan</button>
             </div>
           </div>
-        </div>
+        </details>
       </section>
 
       <!-- ============ PRACTICE SOURCES ============ -->
@@ -4068,6 +4054,9 @@ const I18N={
     plan_regen_done:'Plan rebuilt · {count} sessions',
     plan_regen_rotated:'Plan rebuilt · {count} sessions (rotated for week {n})',
     plan_regen_nothing:'Nothing to rebuild yet',
+    plan_tuning:'Fine-tuning',
+    plan_account:'Account & provider',
+    plan_cycles:'Cycles',
     plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no model calls).',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
@@ -4822,6 +4811,9 @@ const I18N={
     plan_regen_done:'Plan reconstruido · {count} sesiones',
     plan_regen_rotated:'Plan reconstruido · {count} sesiones (rotado para la semana {n})',
     plan_regen_nothing:'Nada que reconstruir todavía',
+    plan_tuning:'Ajustes finos',
+    plan_account:'Cuenta y proveedor',
+    plan_cycles:'Ciclos',
     plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
@@ -11269,6 +11261,8 @@ function closePlanLimit(){
 function focusByoCard(){
   closePlanLimit();
   showView('plan');
+  const account=document.getElementById('planAccount');
+  if(account)account.open=true;
   const card=document.getElementById('byoCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
   const key=document.getElementById('byoKey');
@@ -11278,6 +11272,8 @@ function planLimitUseKey(){focusByoCard()}
 function planLimitHaveCode(){
   closePlanLimit();
   showView('plan');
+  const account=document.getElementById('planAccount');
+  if(account)account.open=true;
   const card=document.getElementById('planStatusCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
   const input=document.getElementById('planCode');
@@ -11661,10 +11657,8 @@ function planChipGroup(key,labelKey,values,scope){
   }</div></div>`;
 }
 function planRhythmHtml(s,scope,mode){
-  const weekGoal=Math.max(1,Math.min(14,Number(s.weekGoal)||5));
   const slotMin=Math.max(10,Math.min(180,Number(s.slotMin)||45));
-  const autoFields=`<div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>
-      <div><label for="pcWeekGoal_${scope}">${t('plan_sessions_week')}</label><input type="number" id="pcWeekGoal_${scope}" min="1" max="14" value="${weekGoal}" onchange="customSetSetting('weekGoal',this.value,'${scope}')"></div>`;
+  const autoFields=`<div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>`;
   const rhythmFields=mode==='custom'
     ?`<div class="pc-autoonly"><div class="pc-autoonly-label" data-i18n="plan_auto_only">${t('plan_auto_only')}</div>${autoFields}</div>`
     :autoFields;
@@ -11675,14 +11669,6 @@ function planRhythmHtml(s,scope,mode){
       <label class="pc-check"><input type="checkbox" ${s.ignoreIntakeHours?'checked':''} onchange="customSetSetting('ignoreIntakeHours',this.checked,'${scope}')"><span>${t('plan_ignore_intake')}</span></label>
       <label class="pc-check"><input type="checkbox" ${s.customRotate!==false?'checked':''} onchange="customSetSetting('customRotate',this.checked,'${scope}')"><span>${t('plan_rotate')}</span></label>
     </div>
-  </div>`;
-}
-function planSessionTimesHtml(s,scope){
-  const times=s.sessionTime||{};
-  return `<div class="pc-group">
-    <div class="pc-group-label">${t('plan_week_rhythm')}</div>
-    <div class="sub" style="margin:0 0 8px">${t('plan_week_rhythm_sub')}</div>
-    <div class="pc-times">${PLAN_DAYS.map(([k,js])=>`<div><label for="pcTime_${scope}_${k}">${dayShort(js)}</label><input type="time" id="pcTime_${scope}_${k}" value="${esc(times[k]||'')}" onchange="customSetSessionTime('${k}',this.value,'${scope}')"></div>`).join('')}</div>
   </div>`;
 }
 function customEditorHtml(scope){
@@ -11696,7 +11682,6 @@ function customEditorHtml(scope){
   out.push(planChipGroup('spParts','plan_allowed_sp',PLAN_PART_FULL.sp,scope));
   out.push(planChipGroup('wKinds','plan_allowed_w',PLAN_W_KINDS,scope));
   out.push(planRhythmHtml(s,scope,mode));
-  out.push(planSessionTimesHtml(s,scope));
   out.push(`<div class="pc-group"><div class="pc-group-label">${t('plan_preview')}</div><div id="pcPreviewBody_${scope}">${planPreviewBodyHtml(scope)}</div></div>`);
   out.push(`<div class="pc-actions-row"><button type="button" class="btn gray" data-pc-action="reset" onclick="customBackToAuto('${scope}')">${t('plan_reset_auto')}</button></div>`);
   return out.join('');
@@ -11811,13 +11796,6 @@ function customSetSetting(key,value,scope){
   }
   customSettle(scope,false);
 }
-function customSetSessionTime(day,value,scope){
-  const s=D.settings||{};
-  s.sessionTime=Object.assign({},s.sessionTime||{});
-  if(value)s.sessionTime[day]=value;
-  else delete s.sessionTime[day];
-  customSettle(scope,false);
-}
 function customBackToAuto(scope){
   D.settings.planMode='auto';
   customSettle(scope,true);
@@ -11905,6 +11883,16 @@ function regenWeeklyPlan(){
   }finally{
     if(btn)btn.disabled=false;
   }
+}
+function onWeekGoalChange(value){
+  const n=Math.max(1,Math.min(14,Math.round(Number(value)||5)));
+  D.settings.weekGoal=n;
+  const el=document.getElementById('pWeekGoal');
+  if(el)el.value=n;
+  save();
+  renderWeeklyPlan();
+  const prev=document.getElementById('pcPreviewBody_plan');
+  if(prev)prev.innerHTML=planPreviewBodyHtml('plan');
 }
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
@@ -12758,6 +12746,21 @@ function renderScheduleRows(){
   renderSchedulePreview();
 }
 
+const SCHED_DAY_KEYS=['sun','mon','tue','wed','thu','fri','sat'];
+function syncSessionTimes(sched){
+  const times={};
+  (sched||[]).forEach(sl=>{
+    const key=SCHED_DAY_KEYS[Number(sl.day)];
+    if(key&&sl.time)times[key]=sl.time;
+  });
+  D.settings.sessionTime=times;
+}
+function refreshPlanAfterSchedule(){
+  save();
+  if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
+  const prev=document.getElementById('pcPreviewBody_plan');
+  if(prev)prev.innerHTML=planPreviewBodyHtml('plan');
+}
 function updateScheduleFromUI(){
   const dayEls=document.querySelectorAll('.sched-day-select');
   const timeEls=document.querySelectorAll('.sched-time-input');
@@ -12771,6 +12774,8 @@ function updateScheduleFromUI(){
     D.settings.schedule=newSched;
     D.settings.sesA=newSched[0]||{day:1,time:'15:30'};
     D.settings.sesB=newSched[1]||newSched[0];
+    syncSessionTimes(newSched);
+    refreshPlanAfterSchedule();
   }
   renderSchedulePreview();
 }
@@ -12790,7 +12795,9 @@ function addScheduleRow(){
   D.settings.schedule=sched;
   D.settings.sesA=sched[0];
   D.settings.sesB=sched[1]||sched[0];
+  syncSessionTimes(sched);
   renderScheduleRows();
+  refreshPlanAfterSchedule();
 }
 
 function removeScheduleRow(idx){
@@ -12800,7 +12807,9 @@ function removeScheduleRow(idx){
   D.settings.schedule=sched;
   D.settings.sesA=sched[0];
   D.settings.sesB=sched[1]||sched[0];
+  syncSessionTimes(sched);
   renderScheduleRows();
+  refreshPlanAfterSchedule();
 }
 
 function renderSchedulePreview(){

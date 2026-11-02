@@ -409,6 +409,151 @@ def main():
         pg.locator("#todayPlan").screenshot(path=str(OUT / "plan_custom_today.png"))
         out["10_today"] = f"OK: {today['rows']} custom rows, time + kind shown"
 
+        # ---------- Phase 44: three blocks, two of them collapsed ----------
+        def reset_plan_tab():
+            pg.evaluate(
+                """() => {
+                D.settings = JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+                D.settings.weekGoal = 4;
+                D.settings.ignoreIntakeHours = true;
+                D.profile = %s;
+                D.diag = null;
+                D.log = []; D.errs = [];
+                save(); refreshAll(); showView('plan'); refreshAll();
+            }"""
+                % BASE_PROFILE
+            )
+            pg.wait_for_timeout(250)
+
+        reset_plan_tab()
+
+        # 11. The editor is visible with no click; the two blocks start collapsed.
+        pg.evaluate("window.scrollTo(0, 0)")
+        state = pg.evaluate(
+            """() => ({
+            customVisible: document.getElementById('planCustom').getBoundingClientRect().height > 0,
+            tuningOpen: document.getElementById('planTuning').open,
+            accountOpen: document.getElementById('planAccount').open,
+            order: Array.from(document.getElementById('v-plan').children)
+                .map(el => el.id).filter(Boolean)
+        })"""
+        )
+        assert state["customVisible"], f"editor is not visible without a click: {state}"
+        assert state["tuningOpen"] is False, f"fine-tuning is open: {state}"
+        assert state["accountOpen"] is False, f"account block is open: {state}"
+        assert state["order"][:3] == ["examCountdown", "weeklyPlanCard", "planCustom"], (
+            f"PLAN blocks out of order: {state['order']}"
+        )
+        pg.screenshot(path=str(OUT / "plan44_top.png"))
+        out["11_editor_visible"] = f"OK: order={state['order']}, both blocks collapsed"
+
+        # 12. Regenerate rebuilds the plan (and stores the snapshot).
+        pg.click("#wpRegenBtn")
+        pg.wait_for_function(
+            "document.getElementById('wpRegenStatus').textContent.indexOf('Plan rebuilt') >= 0",
+            timeout=5000,
+        )
+        regen = pg.evaluate(
+            """() => ({
+            status: document.getElementById('wpRegenStatus').textContent,
+            role: document.getElementById('wpRegenStatus').getAttribute('role'),
+            slots: buildWeeklyPlan(D).slots.length,
+            snapshot: D.profile && D.profile.plan ? D.profile.plan.slots.length : null,
+            stored: D.profile && !!D.profile.plan
+        })"""
+        )
+        assert "Plan rebuilt" in regen["status"], f"no rebuilt status: {regen}"
+        assert str(regen["slots"]) in regen["status"], f"slot count missing: {regen}"
+        assert regen["stored"] and regen["snapshot"] == regen["slots"], f"snapshot not stored: {regen}"
+        assert regen["role"] == "status", f"status has no role: {regen}"
+        out["12_regen"] = regen["status"]
+
+        # 12b. In custom mode the message says the week rotation was re-applied.
+        pg.evaluate(
+            """() => {
+            D.settings.planMode = 'custom';
+            D.settings.customRotate = true;
+            D.settings.rueParts = [1,2,3,4,5,6,7];
+            D.settings.customSlots = [
+                {day:'mon', time:'', min:45, type:'ue', part:1, kind:null, timed:false},
+                {day:'wed', time:'', min:30, type:'l', part:2, kind:null, timed:false}
+            ];
+            save(); refreshAll();
+        }"""
+        )
+        pg.click("#wpRegenBtn")
+        pg.wait_for_function(
+            "document.getElementById('wpRegenStatus').textContent.indexOf('rotated for week') >= 0",
+            timeout=5000,
+        )
+        out["12b_regen_custom"] = pg.text_content("#wpRegenStatus")
+
+        # 13. No dotted bubbles left inside the PLAN tab.
+        bubbles = pg.evaluate(
+            """() => ({
+            dots: document.querySelectorAll('#v-plan .dot').length,
+            chips: document.querySelectorAll('#v-plan .chip-plan').length,
+            emptyDots: Array.from(document.querySelectorAll('#v-plan span.dot'))
+                .filter(el => !el.textContent.trim()).length
+        })"""
+        )
+        assert bubbles == {"dots": 0, "chips": 0, "emptyDots": 0}, f"bubbles remain: {bubbles}"
+        out["13_sin_burbujas"] = "OK: no .dot / .chip-plan in #v-plan"
+
+        # 14. One control sets the weekly session count, and the preview follows.
+        reset_plan_tab()
+        pg.click("#planTuning > summary")
+        pg.wait_for_timeout(150)
+        count_controls = pg.evaluate(
+            """() => ({
+            goal: document.querySelectorAll('#v-plan #pWeekGoal').length,
+            editorGoal: !!document.getElementById('pcWeekGoal_plan')
+        })"""
+        )
+        assert count_controls == {"goal": 1, "editorGoal": False}, f"duplicate week controls: {count_controls}"
+        pg.fill("#pWeekGoal", "2")
+        pg.dispatch_event("#pWeekGoal", "change")
+        pg.wait_for_timeout(200)
+        weekly = pg.evaluate(
+            """() => ({
+            goal: D.settings.weekGoal,
+            value: document.getElementById('pWeekGoal').value,
+            slots: buildWeeklyPlan(D).slots.length,
+            preview: document.querySelectorAll('#pcPreviewBody_plan .ob-preview-row').length,
+            label: (document.querySelector('label[for="pWeekGoal"]') || {}).textContent || ''
+        })"""
+        )
+        assert weekly["goal"] == 2 and weekly["value"] == "2", f"weekGoal did not apply: {weekly}"
+        assert weekly["slots"] == 2, f"preview did not follow weekGoal: {weekly}"
+        assert weekly["preview"] == 2, f"editor preview did not follow weekGoal: {weekly}"
+        assert "Sessions per week" in weekly["label"], f"wrong weekGoal label: {weekly['label']!r}"
+        out["14_un_control_semana"] = f"OK: weekGoal={weekly['goal']}, slots={weekly['slots']}"
+        pg.locator("#planTuning").screenshot(path=str(OUT / "plan44_tuning_open.png"))
+
+        # 15. Every id the JS reads survived the re-parenting.
+        ids = [
+            "pUeMin", "pE0w", "pRueCycle", "pEven", "pOdd", "pADay", "pATime",
+            "pBDay", "pBTime", "scheduleRowsContainer", "planCode", "byoKey",
+            "langEnBtn", "langEsBtn", "pListenMin", "pPlanMin", "pWriteMin",
+            "pRevMin", "pSp1Sec", "pSp2Sec", "pVoice", "pWMin", "pWMax",
+            "pStreakFreeze", "pWeekGoal", "pE0u", "pE0l", "pE1w", "pE1wm",
+            "pE1u", "pE1l", "pE2r", "pE2rm", "pE2w", "pE2l", "pE2ln",
+            "byoProvider", "byoBase", "byoModel", "byoKeyToggle", "byoTestStatus",
+            "planNameText", "planWriteText", "planSpeakText", "planRedeemBtn",
+            "planSubscribeBtn", "planPortalBtn", "wpRegenBtn", "wpRegenStatus",
+            "planCustomBody", "weeklyPlanCard", "examCountdown",
+        ]
+        missing = pg.evaluate("(ids) => ids.filter(id => !document.getElementById(id))", ids)
+        assert missing == [], f"ids lost in the restructure: {missing}"
+        out["15_ids"] = f"OK: {len(ids)} ids present"
+
+        # Account block opens on demand; screenshot for the record.
+        pg.click("#planAccount > summary")
+        pg.wait_for_timeout(200)
+        assert pg.evaluate("document.getElementById('planAccount').open") is True
+        pg.locator("#planAccount").screenshot(path=str(OUT / "plan44_account_open.png"))
+        out["16_account"] = "OK: account block opens and shows provider + restore"
+
         assert errs == [], f"JS errors: {errs}"
         out["errores_js"] = errs
         browser.close()

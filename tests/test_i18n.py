@@ -126,6 +126,9 @@ with sync_playwright() as p:
     # 2. The switcher lives in PLAN and turns the UI into Spanish.
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(200)
+    if not pg.is_visible("#langEsBtn"):
+        pg.click("#planAccount > summary")
+        pg.wait_for_timeout(150)
     assert pg.is_visible("#langEsBtn"), "language switch is not visible in PLAN"
     pg.click("#langEsBtn")
     pg.wait_for_function("document.documentElement.lang === 'es'")
@@ -152,6 +155,9 @@ with sync_playwright() as p:
     # 4. Switch back to English.
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(200)
+    if not pg.is_visible("#langEnBtn"):
+        pg.click("#planAccount > summary")
+        pg.wait_for_timeout(150)
     pg.click("#langEnBtn")
     pg.wait_for_function("document.documentElement.lang === 'en'")
     settle(pg)

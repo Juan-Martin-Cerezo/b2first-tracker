@@ -45,6 +45,9 @@ with sync_playwright() as p:
 
     # 3. Check session shift / fast-forward (+1) from Plan view
     offset_initial = pg.evaluate("D.sessionOffset || 0")
+    if not pg.is_visible("#v-plan button[onclick='advanceSession(1)']"):
+        pg.click("#planTuning > summary")
+        pg.wait_for_timeout(150)
     pg.click("#v-plan button[onclick='advanceSession(1)']")
     pg.wait_for_timeout(200)
     offset_after_1 = pg.evaluate("D.sessionOffset || 0")
