@@ -1,335 +1,226 @@
+<p align="left">
+  <img src="assets/logo-192.png" alt="B2 First Tracker logo" width="72" height="72">
+</p>
+
 # B2 First Tracker
 
-<p align="center">
-  A study system for people preparing the Cambridge B2 First <b>on their own</b>.<br>
-  It decides what to practise today, logs the session in three taps, tracks all four papers,<br>
-  and marks your Writing against the official Cambridge band descriptors.
-</p>
+A self-hosted study system for the Cambridge B2 First: writing marked against the four Cambridge
+bands, a plan for today, and progress you can see.
 
-<p align="center">
-  <a href="https://vps-server.tail40095b.ts.net"><b>Live demo</b></a> ·
-  <a href="#quick-start">Run locally</a>
-</p>
+**Live demo:** https://firsttracker.app
 
-<p align="center">
-  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-3f3f46">
-  <img alt="Python 3.13" src="https://img.shields.io/badge/python-3.13-3f3f46">
-  <img alt="Zero dependencies" src="https://img.shields.io/badge/dependencies-none-3f3f46">
-  <img alt="Single file frontend" src="https://img.shields.io/badge/frontend-1%20html%20file-3f3f46">
-</p>
+![The landing page at firsttracker.app](docs/screenshots/landing.webp)
+
+![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B-stdlib-3f3f46)
+![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)
+![License MIT](https://img.shields.io/badge/license-MIT-3f3f46)
+![Self-hosted](https://img.shields.io/badge/self--hosted-yes-3f3f46)
+
+## Why it exists
+
+**Nobody tells you whether your Writing is good.** Writing is a quarter of the mark, and it is the
+one paper whose answer key cannot exist: two answers can both be correct English while one is a
+Band 4 and the other a Band 2. Reading and Listening practice tests come with answers, so they tell
+you. Writing does not, and neither does a friend who has never seen a Cambridge scale. The app marks
+every text on the four official bands, quotes the sentence that earned or cost each mark, and
+rewrites three of your own sentences.
+
+**Nobody tells you what to study today.** By week three the real question is not *what exists* but
+*which of the ten things in front of me should I open tonight?* Answering it costs ten minutes of
+second-guessing, and on a Tuesday night with forty minutes free that is enough to skip the session.
+The app reads the diagnostic, your practice log and your exam date, and hands you today's session:
+what to do, how long it takes, and why it was chosen.
+
+**Progress is invisible, so consistency collapses.** A candidate who does five sessions in sixty-seven
+days remembers the effort, not the frequency. Without a record there is no way to notice that the
+last Listening test was three weeks ago or that Part 4 accuracy has not moved since March. The app
+charts every log entry per part, per error type and per skill, and keeps the streak and the exam-day
+countdown in view.
+
+## Screenshots
 
 <table>
   <tr>
-    <td width="72%"><img src="docs/screenshots/desktop.webp" alt="Today view with the session log, streak and exam countdown"></td>
-    <td width="28%"><img src="docs/screenshots/mobile.webp" alt="Mobile layout with the quick-log button"></td>
+    <td width="50%"><img src="docs/screenshots/desktop.webp" alt="Today view in dark mode: the session for today, a practice suggestion with three sources, the A/B rotation and the quick-log button"></td>
+    <td width="50%"><img src="docs/screenshots/writing.webp" alt="Writing Corrector result: four Cambridge band cards scored 5/5 with feedback, plus the total of 20/20"></td>
   </tr>
   <tr>
-    <td align="center"><sub>Desktop: today view, exam countdown, streak and the Week A/B rotation</sub></td>
-    <td align="center"><sub>Mobile: same tracker, quick-log button in one corner</sub></td>
+    <td align="center"><sub>Today: the session chosen for you, with its reason</sub></td>
+    <td align="center"><sub>Writing: four bands, quoted evidence and a total out of 20</sub></td>
   </tr>
 </table>
 
-## What it is
+<p align="center">
+  <img src="docs/screenshots/mobile.webp" alt="The same Today view on a 390-pixel-wide phone, with the bottom navigation and the quick-log button" width="260">
+</p>
 
-A self-hosted study tracker for the **Cambridge B2 First (FCE)** exam. One HTML file, one
-Python server, no database: progress lives in the browser's `localStorage` and syncs per
-account to JSON files on whatever machine serves it.
+![The landing page at 1280 pixels wide](docs/screenshots/landing.webp)
 
-It covers the whole preparation loop, not one skill: intake interview, profile-driven weekly
-plan, practice log, streak, exam-mode timers, per-part analytics across all four papers,
-an error taxonomy, and an AI examiner for Writing scored against the official Cambridge
-assessment scales.
+## Features
 
-## The problem
-
-Preparing for the B2 First alone has three failure modes, and none of them is "not enough
-material". The internet is full of practice tests.
-
-**1. Nobody tells you whether your Writing is good.** Writing is 25% of the score and it is
-the one paper whose answer key cannot exist: two essays can both be "correct" and one is a
-Band 4 while the other is a Band 2. Reading and Listening practice tests come with answers,
-so they tell you. Writing does not, and neither does a friend who speaks English but has never
-seen a Cambridge scale. So people write essay after essay with no idea which of the four
-criteria is dragging their score down — and they practise the skill where the return is
-unmeasurable.
-
-**2. Nobody tells you what to study today.** Materials come in books of ten tests and forty
-exercises. The first week is easy: you start at page one. By week three the real question is
-*do I do Listening Part 3 again, or Writing Part 2, or the Use of English I keep failing?*
-Answering it takes ten minutes of second-guessing, and on a Tuesday night with forty minutes
-free, ten minutes of doubt is enough to skip the session. Most self-study plans die from
-decision fatigue, not from laziness.
-
-**3. Progress is invisible, so consistency collapses.** A candidate who does five sessions in
-sixty-seven days believes they are studying — they remember the effort, not the frequency.
-Without a record, there is no way to see that the last Listening test was three weeks ago, or
-that your Part 4 accuracy has not moved since March.
-
-That is the gap this project attacks: **the feedback loop and the decision of what to do next**,
-which is exactly the part a teacher normally provides and the part no PDF can.
-
-## Who it is for
-
-- **Self-taught candidates**, the ones with no teacher and no class: the app behaves like the
-  part of a teacher that is measurable — it diagnoses, plans the week, and marks the writing.
-- **People on a low budget**, who buy one or two official books and need to extract everything
-  from them instead of paying for weekly corrections.
-- **Candidates who already failed once**, or who studied at an academy for a year and plateaued
-  at B1+ because nobody ever told them *which* part was costing them the grade.
-- **Adults returning to English** after years away, who need a structure that fits two hours a
-  week and does not assume a classroom or a cohort.
-- **Anyone who wants their study data to stay theirs**: it runs on a Raspberry Pi in a living
-  room, writes plain JSON, and only sends the text you explicitly choose to have corrected.
-
-It is deliberately not a course. There is no content behind a paywall and no cloud to trust;
-an account is just a name and a password — no email is asked for. The books you already own are
-the material; the app is the coach that tells you which page of them to open tonight.
-
-
-## What it does
-
-| Feature | What it actually does |
+| Area | What it does |
 | --- | --- |
-| **Onboarding intake** | Six-step intake before the first session: exam date, target grade, self-rated skills, hours per week, available days, and what is hard. The answers seed the weekly plan, so the app is useful before you have logged anything |
-| **Quick-log** | Records type, part, score and minutes in three taps, with sane defaults per part |
-| **Streak** | Derived from the log, not stored: today counts, a missed day is shielded once a week, exam days never break it |
-| **Diagnostic** | 12 items across the seven Reading & Use of English parts, 10 minutes, ranks the weakest parts and feeds the error taxonomy |
-| **Weekly plan** | Deterministic rules, not a model: slots on your 3 weakest parts (diagnostic) or lowest-rated skills (intake), slot count from hours per week (2h→3, 10+h→6), days from your intake, one reinforcement slot per flagged struggle — each with its reason |
-| **Writing examiner** | Four Cambridge criteria (Content, Communicative Achievement, Organisation, Language), 0–5 each, cited evidence, two mandatory weaknesses per criterion, three rewritten sentences |
-| **Error taxonomy** | Every miss is tagged `L-GAP`, `G-ERR`, `T-MIS` or `T-LIM`, so the plan can target the cause instead of the symptom |
-| **Analytics** | Four SVG panels, no chart library: progress over time, per-part accuracy, error mix, score consistency |
-| **Exam mode** | Real timings for Reading & Use of English, Listening and Writing |
-| **Speaking exam** | The B2 First Speaking test part by part: the task on screen (photo pair, topic card), a countdown for every turn, a scripted examiner who only asks the questions, and four Cambridge bands with evidence quoted from your own words |
-| **Recent activity** | Your account's security log (logins, password changes, deletion) in the Account view, straight from the server's audit log — only your own events |
-| **Accounts** | Multi-user: register with a name and a password, sync across devices, and export, change password or delete your account |
-| **Interface** | English UI with light and dark themes; the choice is saved per device |
-
-## The grading is calibrated, not generous
-
-A corrector that says 19/20 to a mediocre essay is worse than no corrector: you stop studying
-what is missing. The first version did exactly that. Two changes fixed it.
-
-1. Before scoring, the model must list **two concrete weaknesses per criterion**. If it can name
-   two, that criterion cannot be a 5.
-2. For any criterion scored 4 or 5 it must explain **why it is not one band higher**.
-
-Measured on three graded samples of different quality:
-
-| Sample | Before | After |
-| --- | --- | --- |
-| Weak (A2, frequent basic errors) | 19/20 | **9/20** |
-| Typical B2 | 19/20 | **14/20** |
-| Strong (C1-leaning, inversions, passives) | 19/20 | **20/20** |
-
-The rubric itself is not invented: it is transcribed from the official *B2 First Handbook*
-(pages 32–35), with the page number recorded next to every band descriptor in `prompts.py`.
-
-## Stack
-
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Frontend | `landing.html` plus `index.html`, vanilla JS and CSS | No build step, no `node_modules`; the landing is the public pitch at `/`, the app lives at `/app` |
-| Backend | `server.py`, Python standard library only | No pip install, no framework, no version drift on a small server |
-| Storage | JSON files on disk, with rotated backups | Readable, diffable, trivial to back up; a database would add a dependency without adding a feature |
-| AI | Provider-agnostic proxy, bring your own key | The key never leaves your device except to reach the proxy; the repository ships no credentials |
+| **Use of English & Reading** | Parts 1–7, with real exam-mode timings. Every session logs the part, score and minutes. |
+| **Writing** | Four Cambridge bands, 0–5 each (Content, Communicative Achievement, Organisation, Language). Each band quotes evidence from your text, lists two concrete weaknesses, and adds three rewritten sentences. You can paste the exam task so the content is judged against it. |
+| **Listening** | Full tests scored out of 30, or one part at a time. Part 2 errors are tracked against the stage gate. |
+| **Speaking** | Parts 1–4 with their real timings: a real-time examiner, a partner voice for Part 3, and a report that bands grammar and vocabulary, discourse management, pronunciation and interactive communication. |
+| **Plan** | The diagnostic ranks your weakest parts, the weekly plan turns that into sessions, the gates track the next stage, and the streak and countdown keep the week honest. |
+| **Charts** | Four SVG panels, no chart library: progress over time, accuracy per part, the mix of error types, and score consistency per skill. |
+| **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress under `data/users/<id>/`. Recovery works through Google, a passkey, or a manual operator reset. |
+| **Privacy** | Progress is JSON on your server. No analytics SDK, no ads, no external database. |
 
 ## Quick start
 
-```bash
-git clone https://github.com/Juan-Martin-Cerezo/b2first-tracker.git
-cd b2first-tracker
-python3 server.py
-```
-
-Open `http://127.0.0.1:8088`. That is the whole installation: no database, no migrations, no
-environment file required.
-
-Every setting is optional and lives in `B2_*` environment variables — the complete list the code
-reads:
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `B2_DEMO` | `0` | `1` = demo mode: account and sync routes answer `403`, state stays in `localStorage` |
-| `B2_REGISTER` | `open` | `closed` = no new accounts (existing ones still log in) |
-| `B2_OWNER_PASSWORD` | `b2first` | Password given to the owner account created when migrating old single-user data |
-| `B2_PUBLIC_HEALTH` | `0` | `1` = `GET /api/health` may expose absolute paths |
-| `B2_HOST` | `127.0.0.1` | Bind address. The public entrypoint is the local TLS proxy (Tailscale Funnel → `127.0.0.1:8088`); LAN access requires `B2_HOST=0.0.0.0`, and even then the nftables firewall is the real barrier — not this bind |
-| `B2_ALLOWED_HOSTS` | (empty) | Comma-separated `Host` allowlist. Empty = no check; a request with an unlisted `Host` gets `421` |
-| `B2_RATE_USER_API` | `600` | Requests/min per authenticated account (bucketed by `user_id`, not by IP) |
-| `B2_RATE_IP_AUTH` | `30` | Requests/min per IP for `login`, `register` and `password` |
-| `B2_RATE_IP_ANON` | `300` | Requests/min per IP for the API without a valid token (`B2_RATE_IP_API` is accepted as an alias; `0` disables the bucket) |
-| `B2_NO_CACHE` | `0` | `1` disables the static gzip/ETag cache, for measuring the uncached baseline only |
-| `B2_CONNECTION_LIMIT` | `512` | Simultaneous sockets; above it the server answers `503` + `Retry-After: 1` |
-| `B2_AI_PROVIDER` | `deepseek` | Provider used by the writing corrector |
-| `B2_AI_BASE` | (empty) | Override the provider base URL |
-| `B2_AI_MODEL` | (empty) | Override the model name |
-| `B2_AI_KEY` | (empty) | Server-side provider key; users can still bring their own |
-| `B2_AI_DAILY_TOTAL` | `80` | LLM calls per day for the whole instance (the ceiling that protects the Pi) |
-| `B2_LICENSE_SECRET` | (empty) | 32+ byte secret that signs pro activation codes. Without it `POST /api/plan/redeem` answers `503`. Keep it out of the repo (systemd drop-in); generate with `python3 tools/issue_license.py --gen-secret` |
-| `B2_AI_DAILY_PER_USER` | (unset) | **Legacy** emergency cap. Leave it unset: when set it overrides the plan allowance and responds with the old `daily AI quota reached` body |
-| `B2_TEST_USER` | `test-runner` | Account the Playwright suites register (`tests/helpers.py`) |
-| `B2_TEST_PASS` | `test-runner-pass-9` | Password for that account (`tests/helpers.py`) |
-
-Optional exam material can be dropped into `~/Descargas/b2-first/`; the tracker indexes whatever
-it finds and hides the section when the directory is empty.
-
-## Capacity (measured, not estimated)
-
-Measured on **2026-10-30** on the target host — **Raspberry Pi 5, 8 GB** (`free -m`: 8062 MB
-total; `nproc`: 4) — with [`tests/test_capacity.py`](tests/test_capacity.py): the real
-`server.py`, 100 concurrent clients, 10 seconds per pass. The IP buckets are disabled during the
-capacity run (`B2_RATE_IP_ANON=0`) so the numbers show CPU/socket capacity, not the abuse guard.
-
-| Pass | Requests in 10 s | Throughput | p95 | 503/429 |
-| --- | --- | --- | --- | --- |
-| `GET /app`, static cache ON | 4,742 | 474 req/s | 270 ms | 0 |
-| `GET /app`, `B2_NO_CACHE=1` (previous behaviour) | 1,608 | 161 req/s | 790 ms | 0 |
-| `GET /app`, cache ON, **300 concurrent** | 4,175 | 418 req/s | 843 ms | 0 |
-
-At 300 concurrent connections the server peaked at **45.2 MB RSS and 301 threads**, so the
-512-connection cap stays. The cache is 2.9x better at p95 than re-gzipping on every request, and a
-revalidating pass (`If-None-Match`) returns only `304`s with an empty body. The access log line is
-included in all of the above.
-
-## AI writing correction (bring your own key)
-
-The corrector needs a provider key, and the key is yours:
-
-1. Get one at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (Gemini) or
-   [platform.deepseek.com](https://platform.deepseek.com) (DeepSeek).
-2. Paste it in the **PLAN** tab; it is stored in `localStorage` on that device only.
-3. On the server side the key can also come from the environment:
-
-```bash
-# outside the repository, chmod 600
-B2_AI_PROVIDER=deepseek
-B2_AI_MODEL=deepseek-chat
-B2_AI_KEY=...
-```
-
-`POST /api/ai/writing` is a proxy: it validates the request, enforces a 25-second timeout, rate
-limits to 10 requests per minute and 60 per hour per IP, validates the model's JSON against a
-strict schema, and returns `422` when the shape is wrong. Keys are never logged and never written
-to disk. **The repository contains no keys.**
-
-## Accounts
-
-Registration is open on the public instance, and every account gets its own progress file
-and backup history under `data/users/<id>/` (directory `0700`, files `0600`).
-
-| Protection | Limit |
-| --- | --- |
-| Registration | 5 / hour / IP |
-| Login | 10 / 10 min / IP and 20 / hour / username |
-| Authenticated API | 600 requests / min / **account** — a shared school/CGNAT IP cannot rate-limit other students |
-| Anonymous API | 300 requests / min / IP |
-| Login / register / password | 30 requests / min / IP |
-| Progress write | 2 MB per save, 60 saves / min |
-| AI calls (free plan) | 3 / day per account |
-| AI calls (pro plan) | 60 / month per account |
-| Speaking mocks (free / pro) | 1 / week (5 min) / 6 per month (90 min) |
-| Instance ceiling | 80 LLM calls / day (`B2_AI_DAILY_TOTAL`) |
-| Session token | 30 days, sliding |
-
-### Plans
-
-Every account starts on **free**. There are three effective plans:
-
-| Plan | How you get it | AI corrections & reports | Speaking mocks | Pronunciation |
-| --- | --- | --- | --- | --- |
-| `free` | default | 3 / day | 1 / week (5 min) | preview |
-| `byo` | paste your own provider key (Settings → AI provider) | unlimited for this app | whatever your key pays for* | preview |
-| `pro` | activation code (or, later, a subscription) | 60 / month | 6 / month (90 min) | full |
-
-\* the Gemini Live token still comes from the server, so mocks on a BYO key stay on the
-free/pro allowance. Writing corrections and speaking reports go to the user's key and are
-not metered.
-
-Users who paste their own provider key are not charged against the instance quota — the
-owner's key stays for people who just want to try it. Plan state lives in `data/plans.json`
-and the meters in `data/usage.json` (both `0600`, gitignored); the progress document only
-carries a read-only mirror so the UI can render it.
-
-**Issuing a pro code** (stdlib only, run on the Pi):
-
-```bash
-# once: generate the signing secret and store it OUTSIDE the repo
-python3 tools/issue_license.py --gen-secret   # copy the value into ~/.config/b2first/ai.env
-# from a shell that carries the same secret as the server:
-export B2_LICENSE_SECRET=...                  # never commit it
-python3 tools/issue_license.py pro 30         # prints FT-PRO-1M-XXXX-XXXX-XXXX (single use)
-python3 tools/issue_license.py --list         # issued codes as hashes + who redeemed them
-```
-
-The code is signed with HMAC-SHA256 and the server stores only `sha256(code)` in
-`data/licenses.json`, so the ledger cannot be used to redeem anything. Redemption
-(`POST /api/plan/redeem`) is limited to 5 attempts / hour / account and answers the same
-`400 {"error":"invalid_code"}` for a wrong, reused or unknown code (no oracle). Expiry is
-evaluated on read: once `until` passes, the next request is `free` again.
-
-Every account can **export its data** as JSON, **change its password** (which invalidates the
-other sessions) and **delete itself**, which removes the files from disk.
-
-To lock an instance to a fixed set of accounts after you have created yours:
-
-```bash
-B2_REGISTER=closed python3 server.py
-```
-
-Requests that arrive through a proxy (Tailscale Funnel, Cloudflare) always carry
-`X-Forwarded-For`, and the progress API requires a session token for those. Only a direct
-local request may use the legacy no-token owner path.
-
-## Demo mode
-
-```bash
-B2_DEMO=1 python3 server.py
-```
-
-In demo mode registration, login and progress sync all return `403`; the tracker runs entirely on
-`localStorage`. The public instance does not use it: `GET /api/config` reports
-`{"demo": false, "register": "open"}` and visitors create real accounts. Demo mode is for
-installs where nobody should write data at all.
-
-## Docker
+### Docker
 
 ```bash
 docker build -t b2first .
-docker run -p 8088:8088 -e B2_DEMO=1 b2first
+docker run -p 8088:8088 -v "$PWD/data:/app/data" b2first
 ```
+
+Open `http://127.0.0.1:8088`. The image listens on `8088`, binds `0.0.0.0` inside the container and
+declares `/app/data` as the volume; the command above mounts your checkout's `data/` there. The
+container needs no Python packages and no external database.
+
+### systemd
+
+The repository ships `b2first.service`. Copy it, change `User=` and `WorkingDirectory=` to match
+your checkout, and add the settings file as a drop-in so secrets stay outside the repository:
+
+```bash
+sudo cp b2first.service /etc/systemd/system/b2first.service
+sudo mkdir -p /etc/systemd/system/b2first.service.d
+sudo tee /etc/systemd/system/b2first.service.d/env.conf >/dev/null <<'EOF'
+[Service]
+EnvironmentFile=/etc/b2first.env
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now b2first
+```
+
+Put `B2_*` values in `/etc/b2first.env` (`chmod 600`). The unit binds `127.0.0.1` by default, which
+is the right choice behind a TLS proxy; set `B2_HOST=0.0.0.0` only if something else must reach the
+port directly. No pip install, no migrations, no database.
+
+## Configuration
+
+Every setting is optional and read from the environment.
+
+**Server**
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `PORT` | `8088` | TCP port. |
+| `B2_DATA_DIR` or `DATA_DIR` | `<repo>/data` | Where accounts, progress and backups live. |
+| `B2_HOST` | `127.0.0.1` | Bind address. |
+| `B2_ALLOWED_HOSTS` | empty | Comma-separated `Host` allowlist. Empty means no check; an unlisted host gets `421`. |
+| `B2_DEMO` | `0` | `1` answers `403` on account and sync routes and keeps state in `localStorage`. |
+| `B2_REGISTER` | `open` | `closed` blocks new registrations; existing accounts still log in. |
+| `B2_OWNER_PASSWORD` | `b2first` | Password for the owner account created when migrating old single-user data. |
+| `B2_OWNER_UIDS` | `owner` | Account ids that bypass plan caps. |
+| `B2_PUBLIC_HEALTH` | `0` | `1` lets `GET /api/health` report absolute paths. |
+| `B2_CONNECTION_LIMIT` | `512` | Simultaneous sockets; above it the server answers `503` with `Retry-After`. |
+| `B2_REQUEST_QUEUE_SIZE` | `256` | `listen()` backlog. |
+| `B2_NO_CACHE` | `0` | `1` disables the static gzip/ETag cache. |
+| `B2_RATE_USER_API` | `600` | Authenticated API requests per minute per account. |
+| `B2_RATE_IP_AUTH` | `30` | Login, register and password requests per minute per IP. |
+| `B2_RATE_IP_ANON` | `300` | Anonymous API requests per minute per IP. `B2_RATE_IP_API` is accepted as an alias. |
+| `B2_LICENSE_SECRET` | empty | 32+ byte secret that signs pro activation codes. Unset makes redemption answer `503`. |
+
+**AI writing**
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `B2_AI_PROVIDER` | `deepseek` | `deepseek` or `gemini`. |
+| `B2_AI_BASE` | provider default | Override the provider base URL. |
+| `B2_AI_MODEL` | provider default (`deepseek-chat` or `gemini-2.0-flash`) | Override the model name. |
+| `B2_AI_KEY` | empty | Server-side key. Users can still send their own key from the app. |
+| `B2_AI_DAILY_TOTAL` | `80` | LLM calls per day for the whole instance. |
+| `B2_AI_DAILY_PER_USER` | unset | Legacy per-account hard cap. Leave it unset to use the plan allowance. |
+| `B2_BYO_TRUSTED_BASES` | empty | Extra origins accepted for bring-your-own keys. |
+
+**Google sign-in and passkeys**
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `B2_GOOGLE_CLIENT_ID` | empty | Enables Google sign-in when set. |
+| `B2_GOOGLE_CLIENT_SECRET` | empty | Google sign-in secret. |
+| `B2_GOOGLE_AUTH_URL` | Google authorisation endpoint | Override for a stub or proxy. |
+| `B2_GOOGLE_TOKEN_URL` | Google token endpoint | Override for a stub or proxy. |
+| `B2_GOOGLE_JWKS_URL` | Google certificate endpoint | Override for a stub or proxy. |
+| `B2_PUBLIC_URL` | `https://firsttracker.app` | Public origin used by the Google redirect and WebAuthn. |
+| `B2_RP_ID` | `firsttracker.app` | WebAuthn relying-party id. |
+
+**Speaking**
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `B2_SPK_GOOGLE_KEY` | empty | Gemini key for the examiner and partner voices. |
+| `B2_SPK_GOOGLE_MODEL` | `gemini-3.8-live` | Live model name. |
+| `B2_SPK_GOOGLE_TOKEN_URL` | Google token endpoint | Ephemeral-token endpoint override. |
+| `B2_SPK_WS_URL` | Google Live WebSocket | WebSocket endpoint override. |
+| `B2_SPK_LIVE` | `0` | `1` forces the Live path when the key supports it. |
+| `B2_SPK_MIN_DAILY_PER_USER` | `20` | Speaking minutes per account per day. |
+| `B2_SPK_MIN_DAILY_TOTAL` | `120` | Speaking minutes per instance per day. |
+| `B2_SPK_MONTHLY_MINUTES` | `900` | Hard monthly ceiling for Live audio. |
+| `B2_SPK_TURN_BASE` | Gemini API base | Base URL for the turn-based examiner. |
+| `B2_SPK_TURN_MODEL` | `gemini-2.5-flash` | Turn-based examiner model. |
+| `B2_SPK_TTS_MODEL` | `gemini-2.5-flash-preview-tts` | Examiner and partner voice model. |
+| `B2_SPK_AZURE_KEY` | empty | Azure pronunciation key. |
+| `B2_SPK_AZURE_REGION` | empty | Azure region. |
+| `B2_SPK_AZURE_ENDPOINT` | empty | Azure endpoint override. |
+| `B2_SPK_PA_DAILY_PER_USER` | `60` | Pronunciation calls per account per day. |
+
+**Billing**
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `B2_BILLING_MODE` | `off` | `live` or `test` enables Stripe; anything else is off. |
+| `B2_STRIPE_SECRET_KEY` | empty | Stripe API key. |
+| `B2_STRIPE_PRICE_ID` | empty | Stripe price used by Checkout. |
+| `B2_STRIPE_WEBHOOK_SECRET` | empty | Stripe webhook signing secret. |
+| `B2_STRIPE_API_BASE` | `https://api.stripe.com` | Stripe API base override. |
+
+## Architecture
+
+`landing.html` is the public page at `/`; `index.html` is the whole tracker at `/app`. `server.py` is
+a standard-library `ThreadingHTTPServer`: it serves those two files and the assets, handles accounts
+and sessions, persists progress, proxies the AI calls and mints the speaking tokens. `store.py` is
+the storage seam, so the JSON files could be replaced without changing the HTTP API. There is no
+database. Every per-account write is a temporary file followed by an atomic `os.replace`, under a
+per-account lock, with the previous version kept in a rotated backup. Security events land in
+`data/audit.log` as a SHA-256 hash chain, so an edited line is detectable.
+
+```
+┌────────────┐   GET /              ┌────────────────────────────────────────────────┐
+│  browser   │ ───────────────────► │ server.py — stdlib ThreadingHTTPServer          │
+│  /         │   GET /app          │  static: landing.html, index.html, /assets     │
+│  /app      │   /api/*            │  API: accounts · progress · plan · AI · speaking│
+└────────────┘ ◄─────────────────── └───────────────────────┬────────────────────────┘
+                                                           │ store.py
+                                                           ▼
+                                              data/
+                                              ├── users.json          0600
+                                              ├── tokens.json         0600 (sha256)
+                                              ├── audit.log           0600 (hash chain)
+                                              └── users/<id>/
+                                                  ├── progress.json   0600
+                                                  ├── backups/        0600, last 20
+                                                  └── speaking.json   0600
+
+                                        no database · every write is tmp + os.replace
+```
+
+The frontend is one HTML file on purpose. There is no build step, no `node_modules` and no bundled
+output that can drift from the source: the file the server sends is the file you edit. That keeps a
+two-hour install on a small server honest, and it means a fix can be made over SSH and picked up on
+the next request.
 
 ## Tests
 
-No mocks of the app itself: the suites drive a real browser against a real server. Every suite is
-a standalone script; `tests/helpers.py` registers a throwaway account (`B2_TEST_USER`/
-`B2_TEST_PASS`) so nothing depends on the owner's password.
-
-| Suite | Covers |
-| --- | --- |
-| `test_final.py` | Main UI: every view renders, dark mode persists, contrast and focus rings, no JS errors |
-| `test_layout.py` | Phase 27 layout gate: every view at 360/768/1440 px in English and Spanish — no horizontal scroll, no overlapping cards, no button under 40 px, nothing past the viewport, zero console errors |
-| `test_mobile.py` | 390x844 layout: no horizontal overflow, bottom nav, quick-log button |
-| `test_tracker.py` | Books and material views: cards, filters, links, audio players |
-| `test_onboard.py` | Six-step intake wizard, `D.profile`, profile-driven plan, feature tour, empty states |
-| `test_plan.py` | Deterministic weekly plan (`buildWeeklyPlan`) and its PLAN card |
-| `test_diag.py` | Diagnostic end to end: item fetch, error taxonomy writes, result maths |
-| `test_streak.py` | Streak rules: freeze shield, gaps, future dates, records, weekly goal |
-| `test_schedule_advance.py` | Schedule rows and shifting sessions (`sessionOffset`) |
-| `test_rot.py` | Week A/B rotation, per-skill cycles and manual overrides |
-| `test_exam.py` | Exam-mode timers, pause, guides, exam-mode logging |
-| `test_graf.py` | The four SVG charts and their empty states |
-| `test_sync.py` | Progress persistence, backup rotation, invalid payloads |
-| `test_personalization.py` | Per-account data isolation |
-| `test_register.py` | Registration (open and closed), login, password change |
-| `test_multiuser.py` | Accounts end to end: quotas, limits, export and delete |
-| `test_ai.py` | Writing proxy against a mock provider: validation, `422` schema rejection, rate limits, no key leakage |
-| `test_demo.py` | Demo mode returns `403` on every account and sync route |
-| `test_hardening.py` | Id validation, concurrent writes, security headers, request ids, `/api/health`, schema migration, password reset |
-| `test_legacy_guard.py` | The tokenless legacy owner path is unreachable through a proxied request |
-| `test_security2.py` | Login lockout, constant-time compares, hashed tokens, payload schema, audit log |
-| `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist (`405` + `Allow`), traversal and hidden-file guards, HSTS/COOP/CORP, banner hygiene, 500 without leaks |
-| `test_capacity.py` | Measured capacity, not estimates: cached gzip + ETag/`304`, `touch` invalidation, 100-concurrent p95 against the `B2_NO_CACHE=1` baseline, per-user rate limits behind one IP |
-| `test_password_reset_request.py` | Manual recovery request: no user enumeration, queued line with a hashed address, contact sanitising, 5/hour/IP limit, `tools/reset_password.py --pending` |
+The suites are standalone scripts, not pytest. Each one exits non-zero on failure and prints JSON,
+and every suite that boots its own server sets `B2_DATA_DIR` (and a free port) before importing
+`server.py`, so the real `data/` is never read or written.
 
 ```bash
 cd tests
@@ -337,94 +228,46 @@ uv run --with playwright python test_final.py
 uv run --with httpx python test_capacity.py
 ```
 
-Fourteen suites (`test_ai`, `test_capacity`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
-`test_legacy_guard`, `test_multiuser`, `test_onboard`, `test_password_reset_request`,
-`test_register`, `test_security2`, `test_server_hardening`, `test_sync`) boot their own server on a
-temporary `data/` and never touch the real one; the other nine run against the live service on
-`127.0.0.1:8088`.
+| Suite | Covers |
+| --- | --- |
+| `test_final.py` | Every view renders in a real browser, dark mode persists, contrast and focus rings, no JS errors. |
+| `test_landing.py` | `/` is the landing, `/app` is the tracker, scoped microphone permission, manifest `start_url`, crawler files, no CDN. |
+| `test_i18n.py` | Every visible string exists in both English and Spanish, with no untranslated keys. |
+| `test_layout.py` | 360/768/1440 px in English and Spanish: no horizontal scroll, no overlap, no control under 40 px. |
+| `test_mobile.py` | The 390×844 layout, bottom navigation and quick-log button. |
+| `test_onboard.py` | The intake wizard, the profile it writes and the plan it seeds. |
+| `test_plan.py` | The deterministic weekly plan and its card. |
+| `test_diag.py` | The 12-item diagnostic end to end, including the error taxonomy. |
+| `test_streak.py` | Streak rules: shields, gaps, future dates and the weekly goal. |
+| `test_exam.py` | Exam-mode timers, pause and exam-mode logging. |
+| `test_graf.py` | The four SVG charts and their empty states. |
+| `test_sync.py` | Progress persistence, backup rotation and invalid payloads. |
+| `test_register.py` | Registration open and closed, login and password change. |
+| `test_multiuser.py` | Accounts end to end: isolation, quotas, export and delete. |
+| `test_auth_methods.py` | Google sign-in and passkeys. |
+| `test_ai.py` | The writing proxy against a mock provider: schema validation, `422` on bad shape, rate limits, no key leakage. |
+| `test_ai_guard.py` | Injection and abuse guards on the writing endpoint. |
+| `test_legal.py` | `/privacy`, `/terms` and `/security` render from Markdown. |
+| `test_security2.py` | Login lockout, hashed tokens, payload schema and the audit log. |
+| `test_security3.py` | Additional authentication and secret-handling checks. |
+| `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist, traversal guards, security headers. |
+| `test_capacity.py` | Measured throughput and p95 with the real server, cached and uncached. |
+| `test_speaking_*.py` | The speaking parts, the examiner flow, the partner voice and the report. |
 
-## Security
+## Privacy and security
 
-- **Accounts are isolated**: each one gets its own `data/users/<id>/` (directories `0700`, files
-  `0600`), and a session token for one account can never read another's data (`403`).
-- **Limits and quotas**: 5 failed logins lock a username for 15 minutes, with exponential backoff
-  (5/15/60 s) after the 3rd/4th/5th failure; authenticated API traffic is limited per account
-  (600/min), anonymous traffic and credential endpoints per IP; the plans cap AI calls (3/day
-  free, 60/month pro, 80/day across the instance) and activation codes are single-use,
-  stored only as `sha256`, with 5 redemption attempts/hour/account.
-- **Tokens hashed at rest**: `data/tokens.json` stores `sha256(token)`, never the token; sessions
-  use a 30-day sliding TTL capped by a 90-day absolute limit; passwords are
-  PBKDF2-HMAC-SHA256 with 600,000 iterations (older hashes are upgraded on login).
-- **Audit log**: authentication and security events land in `data/audit.log` (never tokens,
-  passwords or student text) in a SHA-256 hash chain; `tools/verify_audit.py` detects tampering
-  and each account can see its own **Recent activity**.
-- **Backups verified**: per-save rotation plus a daily tarball whose every run does a test
-  restore and parses every JSON file before it counts.
-- **Health check**: `GET /api/health` reports the data dir writable, `users.json` parsing and
-  every account directory present (`200 {"ok": true}` / `503`).
+Your progress is plain JSON on the machine that runs the app, and no analytics SDK, ad network or
+external database is loaded. The only outbound text is the writing you explicitly submit for
+correction, which goes to the configured provider and is not stored; speaking audio goes from the
+browser to the speaking provider and is never written to disk. Accounts use PBKDF2-HMAC-SHA256 with
+600,000 iterations, session tokens are stored hashed, and the audit log is a hash chain.
 
-Threat model, control checklist and the tested restore runbook: [SECURITY.md](SECURITY.md).
-Reproducible external audit of the live instance: `bash tools/audit.sh` — 14/14 checks passed on
-2026-10-30.
+Read the policies at [`/privacy`](https://firsttracker.app/privacy),
+[`/terms`](https://firsttracker.app/terms) and [`SECURITY.md`](SECURITY.md).
 
-## Account recovery
+## Contributing and license
 
-There is no email on file and no mail server, so this app cannot send a reset link. Three routes
-work instead:
-
-1. **Google.** If the account was created or linked with Google, *Continue with Google* on the
-   login screen signs straight in.
-2. **Passkey.** If a passkey was set from the Account panel, *Sign in with a passkey* works without
-   a password.
-3. **Manual reset.** *Forgot your password?* on the login screen opens a short form: user name and
-   an optional contact (an email or a `@telegram` handle). The request is appended to
-   `data/pwreset.jsonl`; the operator resets the password by hand on the host with
-   `python3 tools/reset_password.py <username>` (`--generate` prints a random one) and answers at
-   the contact the user left. `--pending` lists the queue oldest first and `--clear-pending` empties
-   it. Requests are kept for 90 days.
-
-The request endpoint never says whether an account exists: every valid request gets
-`200 {"ok": true}`. It is limited to 5 requests per IP per hour.
-
-## Data and privacy
-
-- **Legal pages**: the app serves the privacy policy at [`GET /privacy`](docs/PRIVACY.md), the
-  terms at [`GET /terms`](docs/TERMS.md) and the security policy at
-  [`GET /security`](docs/SECURITY.md), rendered from Markdown by `legal.py` (stdlib only,
-  sanitised). They are linked from the footer and from the registration form.
-- The documents name the third parties that actually receive data (Cloudflare, Google,
-  DeepSeek, Azure), the retention windows, export/delete rights and the 16+ age policy. There
-  is no published owner mailbox: contact goes through the GitHub advisory form in
-  `/.well-known/security.txt`.
-- The full data map (paths, contents, permissions) is [`docs/DATA-MAP.md`](docs/DATA-MAP.md).
-  `tools/retention.py` enforces 90-day audit retention, 13-month usage counters and 20 backups;
-  `tools/scan_texts.py` checks that no visible string is left untranslated.
-- Progress lives in `localStorage` and in `data/users/<id>/progress.json` on your machine, with
-  the previous version kept as a rotated backup.
-- `data/` is gitignored: no personal progress is ever committed.
-- **Product telemetry is privacy-first**: `POST /api/events` stores whitelisted usage events
-  (never content, never free text) as JSONL in `data/events/` for 7 days, with the client IP
-  stored only as a salted hash. Owner-only aggregates live at `GET /api/metrics`. Browsers
-  sending `Do Not Track: 1` emit nothing at all.
-- Outbound calls: the text you submit goes to DeepSeek (or the configured provider), live
-  speaking audio goes from the browser directly to Google Gemini, and pronunciation clips go to
-  Azure only when the owner configures it. Audio is never written to disk.
-- Demo mode cannot write to `data/`; those routes answer `403`.
-
-## Project layout
-
-```
-landing.html        the public product page served at /
-index.html          the entire frontend: views, timers, charts, quick-log, streak
-server.py           standard-library HTTP server, auth, sync API, AI proxy
-store.py            storage seam (swap JSON for SQLite without touching the API)
-prompts.py          Cambridge band descriptors transcribed from the official handbook
-material/           diagnostic items and local exam material index
-tests/              Playwright suites
-tools/              external audit script, password reset, rubric extractor
-docs/               policies (terms, privacy, security, data map) and screenshots
-```
-
-## License
+Keep the backend standard-library only, keep the frontend in one file, and run the relevant suites
+before opening a pull request.
 
 MIT © 2026 Juan Martín Cerezo
