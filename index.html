@@ -1027,6 +1027,10 @@ input.wk-time{flex:0 0 auto;min-height:44px;width:112px}
 .wk-reset{border:0;background:transparent;color:var(--primary);font:inherit;font-size:var(--fs-sm);font-weight:600;min-height:44px;padding:0 6px;cursor:pointer}
 .wk-reset:hover{text-decoration:underline}
 .wk-reset:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.plan-badge{display:inline-block;font-size:var(--fs-xs);font-weight:700;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--txt-2);margin-left:4px;vertical-align:middle}
+.plan-badge.suggested{background:var(--surface-2)}
+.plan-badge.yours{color:var(--txt);border-color:var(--acc);background:var(--acc-soft)}
+.plan-change{min-height:36px}
 .pc-rot{font-weight:600;color:var(--txt-2)}
 @media (max-width:640px){
   .wk-controls{flex:1 0 100%;margin-left:0}
@@ -4009,6 +4013,9 @@ const I18N={
     plan_opt_ue_w:'Use of English + Writing',
     plan_opt_l_sp:'Listening + Speaking',
     plan_opt_parts:'Specific parts…',
+    plan_badge_suggested:'Suggested',
+    plan_badge_yours:'Yours',
+    plan_change:'Change',
     plan_week_footer:'Days you leave on "Follow the suggestion" use the plan below',
     plan_reset_choices:'Reset my choices',
     plan_reset_choices_confirm:'Reset every day to "Follow the suggestion"?',
@@ -4789,6 +4796,9 @@ const I18N={
     plan_opt_ue_w:'Use of English + Writing',
     plan_opt_l_sp:'Listening + Speaking',
     plan_opt_parts:'Partes específicas…',
+    plan_badge_suggested:'Sugerido',
+    plan_badge_yours:'Tuyo',
+    plan_change:'Cambiar',
     plan_week_footer:'Los días que dejes en "Seguir la sugerencia" usan el plan de abajo',
     plan_reset_choices:'Restablecer mis elecciones',
     plan_reset_choices_confirm:'¿Volver todos los días a "Seguir la sugerencia"?',
@@ -11765,6 +11775,19 @@ function planSlotLabel(sl){
   if(items.length)return items.map(planItemLabel).join(' + ');
   return planItemLabel(sl||{});
 }
+function planBadgeHtml(sl){
+  return sl&&sl.origin==='custom'
+    ? `<span class="plan-badge yours">${t('plan_badge_yours')}</span>`
+    : `<span class="plan-badge suggested">${t('plan_badge_suggested')}</span>`;
+}
+function planFocusDay(key){
+  if(typeof showView==='function')showView('plan');
+  const sel=document.querySelector('#planCustomBody select[data-week-day="'+key+'"]');
+  if(sel){
+    if(sel.scrollIntoView)sel.scrollIntoView({behavior:'smooth',block:'center'});
+    if(sel.focus)sel.focus();
+  }
+}
 function renderWeeklyPlan(){
   const el=document.getElementById('weeklyPlanCard');
   if(!el)return;
@@ -11785,12 +11808,13 @@ function renderWeeklyPlan(){
     const partTxt=(sl.items&&sl.items.length===1&&sl.part!=null)?`Part ${sl.part} · `:'';
     const timeTxt=sl.time?' · '+t('plan_planned_for',{time:sl.time}):'';
     const dayKey=sl.dayKey||planDayKey(sl.day);
+    const change=sl.origin==='custom'?'':`<button type="button" class="btn sm gray plan-change" onclick="planFocusDay('${dayKey}')">${t('plan_change')}</button>`;
     return `<div class="wp-row" data-day="${sl.day}" data-day-key="${dayKey}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-origin="${sl.origin||'auto'}">
       <div class="wp-main">
-        <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${timeTxt}${sl.timed?' · timed (exam mode)':''}</div>
+        <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${timeTxt}${sl.timed?' · timed (exam mode)':''} ${planBadgeHtml(sl)}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <div class="wp-actions"><button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button></div>
+      <div class="wp-actions">${change}<button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button></div>
     </div>`;
   }).join('');
   const src=plan.source||{};
@@ -12749,7 +12773,7 @@ function renderTodayPlan(plan){
       ${slots.map(sl=>{
         const time=sl.time?`<span class="badge">${esc(t('plan_planned_for',{time:sl.time}))}</span> `:'';
         return `<div class="today-plan-row">
-          <div><div class="t">${esc(planDayLabel(sl.day))} · ${esc(planSlotTitle(sl))}</div>
+          <div><div class="t">${esc(planDayLabel(sl.day))} · ${esc(planSlotTitle(sl))} ${planBadgeHtml(sl)}</div>
           <div class="wp-reason">${esc(sl.reason||'')}</div></div>
           <div class="m">${time}${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</div>
         </div>`;

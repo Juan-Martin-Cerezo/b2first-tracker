@@ -70,6 +70,9 @@ def main():
                 slots: plan.slots.map(sl => ({dayKey:sl.dayKey, origin:sl.origin})),
                 offOk: plan.slots.every(sl => week[sl.dayKey].mode !== 'off'),
                 rows: document.querySelectorAll('#wpRows .wp-row').length,
+                suggested: document.querySelectorAll('#wpRows .plan-badge.suggested').length,
+                yours: document.querySelectorAll('#wpRows .plan-badge.yours').length,
+                changes: document.querySelectorAll('#wpRows .plan-change').length
             };
         }"""
         )
@@ -77,7 +80,19 @@ def main():
         assert all(s["origin"] == "auto" for s in res1["slots"]), f"non-auto slot: {res1}"
         assert res1["offOk"], f"a session landed on an off day: {res1}"
         assert res1["rows"] == len(res1["slots"]), f"card rows mismatch: {res1}"
-        out["1_todo_auto"] = f"OK: {res1['rows']} auto rows, no off day"
+        assert res1["suggested"] == res1["rows"], f"missing Suggested labels: {res1}"
+        assert res1["yours"] == 0, f"unexpected Yours label: {res1}"
+        assert res1["changes"] == res1["rows"], f"missing Change buttons: {res1}"
+        first_key = pg.evaluate(
+            "() => document.querySelector('#wpRows .wp-row').dataset.dayKey"
+        )
+        pg.click(f'#wpRows .wp-row[data-day-key="{first_key}"] .plan-change')
+        pg.wait_for_timeout(150)
+        focused = pg.evaluate(
+            "() => document.activeElement ? document.activeElement.dataset.weekDay : null"
+        )
+        assert focused == first_key, f"Change did not focus the {first_key} select: {focused}"
+        out["1_todo_auto"] = f"OK: {res1['rows']} suggested rows, Change focuses the row"
 
         # 2. Monday custom whole-UoE: one session, 30 min, 18:00, Yours.
         reset(
@@ -101,6 +116,8 @@ def main():
             return {
                 mon: mon.map(sl => ({dayKey:sl.dayKey,min:sl.min,time:sl.time,type:sl.type,part:sl.part,items:sl.items,origin:sl.origin})),
                 title: mon.length ? planSlotLabel(mon[0]) : '',
+                badge: row ? row.querySelector('.plan-badge').textContent.trim() : '',
+                hasChange: row ? !!row.querySelector('.plan-change') : null,
                 week: D.settings.week.mon
             };
         }"""
@@ -112,6 +129,15 @@ def main():
         assert mon["time"] == "18:00", f"day time ignored: {mon}"
         assert mon["origin"] == "custom", f"custom origin lost: {mon}"
         assert "whole paper" in res2["title"].lower(), f"title does not name the paper: {res2['title']!r}"
+        assert res2["badge"] == "Yours", f"Monday row is not marked Yours: {res2}"
+        assert res2["hasChange"] is False, f"custom row offered Change: {res2}"
+        today = pg.evaluate(
+            """() => ({
+            yours: document.querySelectorAll('#todayPlan .plan-badge.yours').length,
+            suggested: document.querySelectorAll('#todayPlan .plan-badge.suggested').length
+        })"""
+        )
+        assert today["yours"] >= 1 and today["suggested"] >= 1, f"Today labels missing: {today}"
         assert res2["week"]["min"] == 30 and res2["week"]["time"] == "18:00", f"week row not stored: {res2}"
         before = res2["mon"]
         pg.click("#wpRegenBtn")
@@ -295,6 +321,15 @@ def main():
         pg.wait_for_timeout(250)
         pg.screenshot(path=str(OUT / "plan45_desktop_dark.png"), full_page=True)
         pg.locator("#planCustom").screenshot(path=str(OUT / "plan45_week_rows.png"))
+        pg.locator("#weeklyPlanCard").screenshot(path=str(OUT / "plan45_week_mix.png"))
+        mixed = pg.evaluate(
+            """() => ({
+            suggested: document.querySelectorAll('#wpRows .plan-badge.suggested').length,
+            yours: document.querySelectorAll('#wpRows .plan-badge.yours').length
+        })"""
+        )
+        assert mixed["suggested"] and mixed["yours"], f"mixed plan has no two labels: {mixed}"
+
         pg.set_viewport_size({"width": 390, "height": 844})
         pg.evaluate(
             "showView('plan'); document.getElementById('planCustom')"
@@ -306,7 +341,7 @@ def main():
 
         assert errs == [], f"JS errors: {errs}"
         out["errores_js"] = errs
-        out["screenshots"] = ["plan45_desktop_dark.png", "plan45_mobile_390.png"]
+        out["screenshots"] = ["plan45_desktop_dark.png", "plan45_mobile_390.png", "plan45_week_mix.png"]
         browser.close()
 
     print(json.dumps(out, ensure_ascii=False, indent=2))
