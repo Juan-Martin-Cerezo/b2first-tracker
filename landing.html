@@ -10,8 +10,14 @@
 <meta property="og:description" content="Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Free and self-hostable.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://firsttracker.app/">
-<meta property="og:image" content="/assets/logo-512.png">
+<meta property="og:image" content="https://firsttracker.app/assets/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="B2 First Tracker — someone finally marks your writing.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://firsttracker.app/assets/og.png">
+<meta name="twitter:image:alt" content="B2 First Tracker — someone finally marks your writing.">
 <link rel="icon" type="image/png" href="/assets/logo-512.png">
 <link rel="apple-touch-icon" href="/assets/logo-512.png">
 <meta name="theme-color" id="metaTheme" content="#fbfcfd">
@@ -179,14 +185,8 @@ b,strong{font-weight:600}
 .brand:hover{text-decoration:none;color:var(--txt)}
 .brand img{height:30px;width:30px;border-radius:8px;object-fit:contain}
 .nav-links{display:flex;align-items:center;gap:2px;margin-left:auto}
-.nav-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--r-ctl);color:var(--txt-2);font-size:14px;font-weight:500;text-decoration:none;transition:background-color 150ms ease,color 150ms ease}
-.nav-links a:hover{color:var(--txt);background:var(--surface-2);text-decoration:none}
-.nav-cta{margin-left:8px}
-.nav-cta-mobile{display:none;margin-left:auto}
-@media (max-width:760px){
-  .nav-links{display:none}
-  .nav-cta-mobile{display:inline-flex}
-}
+.nav-links a:not(.btn){display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--r-ctl);color:var(--txt-2);font-size:14px;font-weight:500;text-decoration:none;transition:background-color 150ms ease,color 150ms ease}
+.nav-links a:not(.btn):hover{color:var(--txt);background:var(--surface-2);text-decoration:none}
 
 /* ---------- BUTTONS ---------- */
 .btn{
@@ -203,6 +203,12 @@ b,strong{font-weight:600}
 .btn-ghost:hover{background:var(--surface-2);color:var(--txt);box-shadow:none;transform:none}
 .quiet-link{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:var(--acc-text);font-size:15px;font-weight:600;text-decoration:none}
 .quiet-link:hover{text-decoration:underline}
+.nav-cta{margin-left:8px}
+.nav-cta-mobile{display:none;margin-left:auto}
+@media (max-width:760px){
+  .nav-links{display:none}
+  .nav-cta-mobile{display:inline-flex}
+}
 
 /* ---------- TYPE ---------- */
 .eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-text);margin-bottom:18px}
