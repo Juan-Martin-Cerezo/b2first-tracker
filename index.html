@@ -989,6 +989,35 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-row .wp-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 
+/* custom plan editor */
+#planCustom>summary{list-style:none;cursor:pointer}
+#planCustom>summary::-webkit-details-marker{display:none}
+.pc-group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.pc-group:first-child{border-top:0;padding-top:0;margin-top:0}
+.pc-group .chip-btn{min-width:44px;min-height:44px}
+.pc-group-label{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-bottom:8px}
+.pc-table-wrap{overflow-x:auto}
+.pc-table{width:100%;border-collapse:collapse;min-width:980px}
+.pc-table th{font-size:var(--fs-xs);color:var(--txt-2);text-align:left;font-weight:600;padding:0 6px 6px;white-space:nowrap}
+.pc-table td{padding:4px 6px;vertical-align:middle;white-space:nowrap}
+.pc-table select,.pc-table input[type=number],.pc-table input[type=time]{width:100%;min-width:72px}
+.pc-table select[data-pc-field="type"]{min-width:180px}
+.pc-table select[data-pc-field="day"]{min-width:84px}
+.pc-table input[data-pc-field="time"]{min-width:112px}
+.pc-table input[data-pc-field="min"]{min-width:76px}
+.pc-table select[data-pc-field="kind"]{min-width:104px}
+.pc-actions{white-space:nowrap;display:flex;gap:4px;min-width:196px}
+.pc-icon{min-width:44px;min-height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.pc-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--txt);min-height:44px;cursor:pointer;margin:0;text-transform:none}
+.pc-check input{width:20px;height:20px;margin:0}
+.pc-rhythm{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}
+.pc-rhythm .pc-check{min-width:0}
+.pc-times{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
+.pc-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.today-plan-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:var(--r-panel);background:var(--surface-2)}
+.today-plan-row .t{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
+.today-plan-row .m{font-size:var(--fs-xs);color:var(--txt-2)}
+
 /* ---------- ERROR TAXONOMY ---------- */
 .err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .err-head .del{margin-left:auto}
@@ -1684,6 +1713,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px" data-i18n="user_exam_date">Exam date</div>
+      <div id="profileExamDate"></div>
+    </div>
+
+    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px" data-i18n="user_account">Account</div>
       <button class="btn gray" style="width:100%" onclick="doExportAccount()" data-i18n="user_export">💾 Export my data</button>
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_change_pw">Change password</div>
@@ -1938,6 +1972,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
             <div class="card practice-now" id="practiceNow"></div>
+            <div class="card" id="todayPlan" style="display:none"></div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
@@ -3150,6 +3185,18 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </details>
         </div>
 
+        <!-- Custom plan editor (phase 42): days, times, minutes, type,
+             exercise and rotation are all controlled here. The onboarding
+             renders the same editor inline in step 4. -->
+        <details class="card" id="planCustom" style="margin-bottom:16px">
+          <summary class="plan-card-head">
+            <h2 data-i18n="plan_custom_title">Customize</h2>
+            <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_custom_chip">Your week, your rules</span></span>
+          </summary>
+          <div class="sub" data-i18n="plan_custom_sub">Build the week session by session, or keep the automatic plan and only narrow the exercises it may use.</div>
+          <div id="planCustomBody"></div>
+        </details>
+
         <!-- Language (English by default, Spanish available) -->
         <div class="card" id="languageCard" style="margin-bottom:16px">
           <div class="plan-card-head">
@@ -3801,9 +3848,14 @@ const I18N={
     recent_quick:'Quick log',
     exam_countdown:'Exam countdown',
     exam_no_date:'No exam date set. Add one to get a countdown (exam days never break your streak).',
+    exam_no_date_yet:'No exam date yet',
+    exam_days_left:'{days} days left',
+    exam_days_left_one:'1 day left',
+    exam_days_today:'Today is exam day',
     exam_set_date:'Set your exam date',
     exam_date_label:'Exam date',
     exam_save_date:'Save date',
+    user_exam_date:'Exam date',
     session_mock:'Mock Exam',
     full_mock_title:'Full Mock Exam (All 4 Papers)',
     full_mock_sub:'Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).',
@@ -3811,6 +3863,8 @@ const I18N={
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
     today_sub_fmt:'Personalized study plan for {name} · {stage} · Schedule: {sched}.',
+    today_plan_title:'This week at a glance',
+    today_plan_sub:'The sessions in your weekly plan. Start any of them from Plan or from the studios below.',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
@@ -3830,11 +3884,12 @@ const I18N={
     ob_goal_title:'What are you preparing for?',
     ob_goal_body:'Choose your exam date and the grade you want. Every session the app builds starts from these two answers.',
     ob_exam_date:'Exam date',
+    ob_exam_date_unknown:'I don\'t know yet',
     ob_target_grade:'Target grade',
     ob_grade_a:'A · C1 level',
     ob_grade_b:'B · solid B2',
     ob_grade_c:'C · pass',
-    ob_exam_date_required:'Add your exam date to continue.',
+    ob_exam_date_required:'Pick a date, or choose "I don\'t know yet".',
     ob_skills_title:'How do you feel about each skill today?',
     ob_skills_body:'Rate each one from 1 (just starting) to 5 (confident). Your first week starts with your two lowest ratings.',
     ob_rate_legend:'1 = just starting · 5 = confident',
@@ -3854,6 +3909,7 @@ const I18N={
     ob_plan_accept:'Use this plan and continue',
     ob_plan_edit_hint:'Change your hours or days and the sessions update right away.',
     ob_plan_none:'No sessions yet.',
+    ob_customize:'Customize every detail',
     ob_part:'Part {n}',
     ob_timed:'timed',
     ob_diag_weak_hint:'These are the parts your first week will focus on.',
@@ -3996,6 +4052,48 @@ const I18N={
     plan_wmax:'Writing — max words',
     plan_streak_freeze:'Streak freeze / week (🛡)',
     plan_week_goal:'Weekly goal (days/week)',
+    plan_not_set:'Not set',
+    plan_custom_title:'Customize',
+    plan_custom_chip:'Your week, your rules',
+    plan_custom_sub:'Build the week session by session, or keep the automatic plan and only narrow the exercises it may use.',
+    plan_mode_title:'Plan mode',
+    plan_mode_auto:'Automatic',
+    plan_mode_custom:'My own plan',
+    plan_sessions_title:'Session template',
+    plan_add_session:'Add session',
+    plan_duplicate:'Duplicate',
+    plan_remove:'Remove',
+    plan_move_up:'Move up',
+    plan_move_down:'Move down',
+    plan_col_day:'Day',
+    plan_col_time:'Time',
+    plan_col_min:'Min',
+    plan_col_type:'Type',
+    plan_col_part:'Part',
+    plan_col_kind:'Kind',
+    plan_col_timed:'Timed',
+    plan_col_actions:'Actions',
+    plan_no_sessions:'No sessions in your custom plan yet.',
+    plan_allowed_rue:'Reading & Use of English parts',
+    plan_allowed_l:'Listening parts',
+    plan_allowed_sp:'Speaking parts',
+    plan_allowed_w:'Writing kinds',
+    plan_rhythm:'Rhythm',
+    plan_slot_min:'Minutes per session',
+    plan_sessions_week:'Sessions per week',
+    plan_ignore_intake:'Ignore the intake estimate',
+    plan_ignore_intake_short:'intake estimate ignored',
+    plan_rotate:'Rotate parts week by week',
+    plan_week_rhythm:'Weekly rhythm',
+    plan_week_rhythm_sub:'Optional start times, one per day. They show in the plan but never block a session.',
+    plan_preview:'Week preview',
+    plan_reset_auto:'Back to automatic',
+    plan_planned_for:'Planned for {time}',
+    plan_rotated:'Rotated for this week',
+    plan_custom_empty:'Your custom plan is empty, using the automatic one.',
+    plan_custom_reason:'your custom plan',
+    plan_custom_reason_rotated:'your custom plan, rotated for week {n}',
+    plan_why_fallback:'fell back to all parts for {keys}',
     plan_thresholds:'🎯 Thresholds (Gates)',
     plan_thresholds_sub:'Numerical criteria per stage.',
     plan_stage0:'Stage 0',
@@ -4497,9 +4595,14 @@ const I18N={
     recent_quick:'Registro rápido',
     exam_countdown:'Cuenta regresiva al examen',
     exam_no_date:'No hay fecha de examen. Agregá una para ver la cuenta regresiva (los días de examen no cortan tu racha).',
+    exam_no_date_yet:'Todavía no hay fecha de examen',
+    exam_days_left:'Faltan {days} días',
+    exam_days_left_one:'Falta 1 día',
+    exam_days_today:'Hoy es el día del examen',
     exam_set_date:'Definir fecha del examen',
     exam_date_label:'Fecha del examen',
     exam_save_date:'Guardar fecha',
+    user_exam_date:'Fecha del examen',
     session_mock:'Simulacro',
     full_mock_title:'Simulacro completo (las 4 pruebas)',
     full_mock_sub:'Examen completo en condiciones reales de Cambridge y con los tiempos oficiales (195 min escritos + 14 min de speaking).',
@@ -4507,6 +4610,8 @@ const I18N={
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
     today_sub_fmt:'Plan de estudio personalizado para {name} · {stage} · Horario: {sched}.',
+    today_plan_title:'Tu semana de un vistazo',
+    today_plan_sub:'Las sesiones de tu plan semanal. Empezá cualquiera desde Plan o desde los estudios de abajo.',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
@@ -4526,11 +4631,12 @@ const I18N={
     ob_goal_title:'¿Para qué te preparás?',
     ob_goal_body:'Elegí la fecha del examen y la nota que querés. Cada sesión que arma la app empieza con estas dos respuestas.',
     ob_exam_date:'Fecha del examen',
+    ob_exam_date_unknown:'Todavía no sé',
     ob_target_grade:'Nota objetivo',
     ob_grade_a:'A · nivel C1',
     ob_grade_b:'B · B2 sólido',
     ob_grade_c:'C · aprobado',
-    ob_exam_date_required:'Agregá la fecha del examen para seguir.',
+    ob_exam_date_required:'Elegí una fecha o marcá “Todavía no sé”.',
     ob_skills_title:'¿Cómo te sentís hoy con cada habilidad?',
     ob_skills_body:'Puntuá cada una de 1 (recién empezás) a 5 (con confianza). Tu primera semana arranca con las dos notas más bajas.',
     ob_rate_legend:'1 = recién empezás · 5 = con confianza',
@@ -4550,6 +4656,7 @@ const I18N={
     ob_plan_accept:'Usar este plan y seguir',
     ob_plan_edit_hint:'Cambiá las horas o los días y las sesiones se actualizan al instante.',
     ob_plan_none:'Todavía no hay sesiones.',
+    ob_customize:'Personalizá cada detalle',
     ob_part:'Parte {n}',
     ob_timed:'cronometrada',
     ob_diag_weak_hint:'En estas partes se va a enfocar tu primera semana.',
@@ -4692,6 +4799,48 @@ const I18N={
     plan_wmax:'Writing — máximo de palabras',
     plan_streak_freeze:'Congelar racha / semana (🛡)',
     plan_week_goal:'Meta semanal (días/semana)',
+    plan_not_set:'Sin definir',
+    plan_custom_title:'Personalizar',
+    plan_custom_chip:'Tu semana, tus reglas',
+    plan_custom_sub:'Armá la semana sesión por sesión, o quedate con el plan automático y achicá solo los ejercicios que puede usar.',
+    plan_mode_title:'Modo del plan',
+    plan_mode_auto:'Automático',
+    plan_mode_custom:'Mi propio plan',
+    plan_sessions_title:'Plantilla de sesiones',
+    plan_add_session:'Agregar sesión',
+    plan_duplicate:'Duplicar',
+    plan_remove:'Quitar',
+    plan_move_up:'Subir',
+    plan_move_down:'Bajar',
+    plan_col_day:'Día',
+    plan_col_time:'Hora',
+    plan_col_min:'Min',
+    plan_col_type:'Tipo',
+    plan_col_part:'Parte',
+    plan_col_kind:'Género',
+    plan_col_timed:'Cronometrada',
+    plan_col_actions:'Acciones',
+    plan_no_sessions:'Todavía no hay sesiones en tu plan personalizado.',
+    plan_allowed_rue:'Partes de Reading & Use of English',
+    plan_allowed_l:'Partes de Listening',
+    plan_allowed_sp:'Partes de Speaking',
+    plan_allowed_w:'Géneros de Writing',
+    plan_rhythm:'Ritmo',
+    plan_slot_min:'Minutos por sesión',
+    plan_sessions_week:'Sesiones por semana',
+    plan_ignore_intake:'Ignorar la estimación del intake',
+    plan_ignore_intake_short:'estimación del intake ignorada',
+    plan_rotate:'Rotar partes semana a semana',
+    plan_week_rhythm:'Ritmo semanal',
+    plan_week_rhythm_sub:'Horarios de inicio opcionales, uno por día. Se muestran en el plan pero nunca bloquean una sesión.',
+    plan_preview:'Vista previa de la semana',
+    plan_reset_auto:'Volver a automático',
+    plan_planned_for:'Previsto para {time}',
+    plan_rotated:'Rotado para esta semana',
+    plan_custom_empty:'Tu plan personalizado está vacío; usamos el automático.',
+    plan_custom_reason:'tu plan personalizado',
+    plan_custom_reason_rotated:'tu plan personalizado, rotado para la semana {n}',
+    plan_why_fallback:'volvimos a todas las partes para {keys}',
     plan_thresholds:'🎯 Umbrales (gates)',
     plan_thresholds_sub:'Criterios numéricos por etapa.',
     plan_stage0:'Etapa 0',
@@ -5102,6 +5251,13 @@ const SETTINGS_DEFAULT={
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
   streakFreeze:1,weekGoal:5,
+  /* Phase 42: the weekly plan can be fully hand-built. `slotMin` is the
+     exact minutes per auto session; the *Parts/*Kinds lists are allowlists
+     that every generated slot must respect (empty -> full list + fallback). */
+  planMode:'auto',customSlots:[],customRotate:true,slotMin:45,ignoreIntakeHours:false,
+  rueParts:[1,2,3,4,5,6,7],lParts:[1,2,3,4],spParts:[1,2,3,4],
+  wKinds:['Essay','Article','Report','Review','Email'],
+  sessionTime:{},
   rueCycle:[1,2,3,4,5,6,7],
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
@@ -5738,7 +5894,7 @@ function obDefaultDays(){
   return out;
 }
 function obDefaultDraft(){
-  return {examDate:'',targetGrade:'B',skills:{rue:3,w:3,l:3,sp:3},hoursWeek:6,days:obDefaultDays(),strugglesDeclared:[]};
+  return {examDate:'',examDateUnknown:false,targetGrade:'B',skills:{rue:3,w:3,l:3,sp:3},hoursWeek:6,days:obDefaultDays(),strugglesDeclared:[]};
 }
 function obCodes(d){
   return STRUGGLE_MAP.filter(([label])=>d.strugglesDeclared.indexOf(label)>=0).map(([,code])=>code).filter((c,i,a)=>a.indexOf(c)===i);
@@ -5746,7 +5902,8 @@ function obCodes(d){
 function obDraftProfile(){
   const d=OB.draft||obDefaultDraft();
   return {
-    examDate:d.examDate||null,
+    examDate:d.examDateUnknown?null:(d.examDate||null),
+    examDateUnknown:!!d.examDateUnknown,
     targetGrade:d.targetGrade,
     skills:{rue:d.skills.rue,w:d.skills.w,l:d.skills.l,sp:d.skills.sp},
     hoursWeek:d.hoursWeek,
@@ -5759,6 +5916,7 @@ function obDraftProfile(){
 function obDraftFromProfile(p){
   return {
     examDate:p.examDate||'',
+    examDateUnknown:!!p.examDateUnknown,
     targetGrade:p.targetGrade||'B',
     skills:Object.assign({rue:3,w:3,l:3,sp:3},p.skills||{}),
     hoursWeek:Number(p.hoursWeek)||6,
@@ -5809,8 +5967,10 @@ function obPersistDraft(){
 }
 function obSkillName(k){return k==='rue'?t('ob_type_ue'):t('ob_type_'+k)}
 function obDayShortLabel(day){
-  const i=OB_DAY_INDEX[day];
-  return i==null?day:dayShort(i);
+  const raw=String(day||'');
+  const key=raw.slice(0,1).toUpperCase()+raw.slice(1,3).toLowerCase();
+  const i=OB_DAY_INDEX[key];
+  return i==null?esc(raw):dayShort(i);
 }
 function obPlanFor(prof){
   return buildWeeklyPlan(Object.assign({},D,{profile:prof}));
@@ -5819,7 +5979,9 @@ function obPlanRowsHtml(plan){
   if(!plan||!plan.slots||!plan.slots.length)return `<div class="ob-plan-empty">${t('ob_plan_none')}</div>`;
   return plan.slots.map(sl=>{
     const part=sl.part!=null?' · '+t('ob_part',{n:sl.part}):'';
-    return `<div class="ob-preview-row"><span class="t">${obDayShortLabel(sl.day)} · ${t('ob_type_'+sl.type)}${part}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
+    const kind=sl.kind?' · '+esc(sl.kind):'';
+    const time=sl.time?' · '+esc(t('plan_planned_for',{time:sl.time})):'';
+    return `<div class="ob-preview-row"><span class="t">${obDayShortLabel(sl.day)} · ${t('ob_type_'+sl.type)}${kind}${part}${time}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
   }).join('');
 }
 function obPlanSummaryHtml(plan){
@@ -5835,8 +5997,11 @@ function obStepHtml(){
   if(OB.step===1){
     return `<h2 class="ob-title" id="obTitle">${t('ob_goal_title')}</h2>
       <p class="ob-body">${t('ob_goal_body')}</p>
-      <div class="ob-field"><label for="obExamDate">${t('ob_exam_date')}</label>
-        <input type="date" id="obExamDate" min="${today()}" value="${esc(d.examDate)}" onchange="OB.draft.examDate=this.value"></div>
+      <div class="ob-field"><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+        <div style="flex:1;min-width:160px"><label for="obExamDate">${t('ob_exam_date')}</label>
+          <input type="date" id="obExamDate" min="${today()}" value="${esc(d.examDate)}" ${d.examDateUnknown?'disabled':''} onchange="obSetExamDate(this.value)"></div>
+        <button type="button" class="chip-btn" id="obDateUnknown" data-i18n="ob_exam_date_unknown" aria-pressed="${d.examDateUnknown?'true':'false'}" style="min-height:44px" onclick="obToggleExamDateUnknown()">${t('ob_exam_date_unknown')}</button>
+      </div></div>
       <fieldset class="ob-field" style="border:none;padding:0;margin:12px 0"><legend class="ob-field-label">${t('ob_target_grade')}</legend>
         <div class="ob-radio-cards">${[['A','ob_grade_a'],['B','ob_grade_b'],['C','ob_grade_c']].map(([v,key])=>`
           <label class="ob-radio-card"><input type="radio" name="obGrade" value="${v}" ${d.targetGrade===v?'checked':''} onchange="OB.draft.targetGrade=this.value"><span>${t(key)}</span></label>`).join('')}
@@ -5889,6 +6054,8 @@ function obStepHtml(){
       </div></div>
     <div class="ob-plan-preview" id="obPlanPreview">${obPlanRowsHtml(plan)}</div>
     <p class="ob-note">${t('ob_plan_edit_hint')} ${t('ob_day_note')}</p>
+    <div class="ob-cta-row"><button type="button" class="btn gray" id="obCustomizeBtn" aria-expanded="false" onclick="obToggleCustom()" data-i18n="ob_customize">Customize every detail</button></div>
+    <div id="obCustomEditor" style="display:none"></div>
     <p class="ob-error" id="obError" role="alert">${esc(OB.error||'')}</p>
     <div class="ob-cta-row"><button type="button" class="btn ok" id="obAcceptBtn" onclick="obAcceptPlan()">${t('ob_plan_accept')}</button></div>`;
 }
@@ -5928,16 +6095,18 @@ function obNext(){
   OB.error='';
   if(OB.step===1){
     const inp=document.getElementById('obExamDate');
-    if(inp)OB.draft.examDate=inp.value||'';
+    if(inp&&!OB.draft.examDateUnknown)OB.draft.examDate=inp.value||'';
     const g=document.querySelector('input[name="obGrade"]:checked');
     if(g)OB.draft.targetGrade=g.value;
-    if(!OB.draft.examDate){
+    const valid=/^\d{4}-\d{2}-\d{2}$/.test(String(OB.draft.examDate||''))&&OB.draft.examDate>=today();
+    if(!OB.draft.examDateUnknown&&!valid){
       OB.error=t('ob_exam_date_required');
       obShowError();
       const el=document.getElementById('obExamDate');
       if(el)el.focus();
       return;
     }
+    if(OB.draft.examDateUnknown)OB.draft.examDate='';
     obPersistDraft();
     OB.step=2;
   }else if(OB.step===2){
@@ -5947,6 +6116,38 @@ function obNext(){
   D.onboardStep=OB.step;
   save();
   obRender();
+}
+function obSetExamDate(v){
+  if(!OB.draft)return;
+  OB.draft.examDate=v||'';
+  if(v)OB.draft.examDateUnknown=false;
+  OB.error='';
+  const chip=document.getElementById('obDateUnknown');
+  if(chip)chip.setAttribute('aria-pressed',OB.draft.examDateUnknown?'true':'false');
+  obRefreshPlan();
+}
+function obToggleExamDateUnknown(){
+  if(!OB.draft)return;
+  const d=OB.draft;
+  d.examDateUnknown=!d.examDateUnknown;
+  if(d.examDateUnknown){
+    d.examDatePrev=d.examDate||'';
+    d.examDate='';
+  }else if(d.examDatePrev){
+    d.examDate=d.examDatePrev;
+    d.examDatePrev='';
+  }
+  OB.error='';
+  obRender();
+}
+function obToggleCustom(){
+  const box=document.getElementById('obCustomEditor');
+  const btn=document.getElementById('obCustomizeBtn');
+  if(!box)return;
+  const open=!(box.style.display&&box.style.display!=='none');
+  box.style.display=open?'':'none';
+  if(btn)btn.setAttribute('aria-expanded',String(open));
+  if(open)box.innerHTML=customEditorHtml('ob');
 }
 function obBack(){
   if(!OB.active||OB.step<=1)return;
@@ -6030,7 +6231,7 @@ function obAcceptPlan(){
     generatedAt:new Date().toISOString(),
     hoursWeek:prof.hoursWeek,
     days:prof.days.slice(),
-    slots:(plan.slots||[]).map(sl=>({day:sl.day,type:sl.type,part:sl.part,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
+    slots:(plan.slots||[]).map(sl=>({day:sl.day,type:sl.type,part:sl.part,kind:sl.kind||null,time:sl.time||null,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
   };
   D.profile=prof;
   obApplySchedule(prof);
@@ -6264,6 +6465,43 @@ function renderUserChip(){
     renderGates();
   }
 }
+function renderProfileExamDate(){
+  const el=document.getElementById('profileExamDate');
+  if(!el)return;
+  const p=D.profile||{};
+  const unknown=!!p.examDateUnknown;
+  el.innerHTML=`<div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+    <div style="flex:1;min-width:140px"><input type="date" id="profileExamDateInput" value="${esc(p.examDate||'')}" ${unknown?'disabled':''} onchange="setProfileExamDate(this.value)"></div>
+    <button type="button" class="chip-btn" id="profileDateUnknown" aria-pressed="${unknown?'true':'false'}" style="min-height:44px" onclick="toggleProfileExamDateUnknown()">${t('ob_exam_date_unknown')}</button>
+  </div>
+  <div class="t-xs muted" style="margin-top:6px">${p.examDate?fmtDate(p.examDate):t('plan_not_set')}</div>`;
+}
+function setProfileExamDate(value){
+  if(!value)return;
+  D.profile=D.profile||{};
+  D.profile.examDate=value;
+  D.profile.examDateUnknown=false;
+  save();
+  renderProfileExamDate();
+  renderExamCountdown();
+  if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
+}
+function toggleProfileExamDateUnknown(){
+  D.profile=D.profile||{};
+  const unknown=!D.profile.examDateUnknown;
+  D.profile.examDateUnknown=unknown;
+  if(unknown){
+    D.profile.examDatePrev=D.profile.examDate||'';
+    D.profile.examDate=null;
+  }else if(D.profile.examDatePrev){
+    D.profile.examDate=D.profile.examDatePrev;
+    D.profile.examDatePrev='';
+  }
+  save();
+  renderProfileExamDate();
+  renderExamCountdown();
+  if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
+}
 function openUserModal(){
   if(DEMO&&DEMO.demo)return;
   const ov=document.getElementById('userModal');
@@ -6286,6 +6524,7 @@ function openUserModal(){
   if(uc)uc.textContent=schedSummary;
 
   ov.style.display='flex';
+  renderProfileExamDate();
   loadPasskeys();
 }
 function closeUserModal(){
@@ -10633,6 +10872,7 @@ function renderPlan(){
   renderByoSettings();
   renderPlanCard();
   renderExamCountdown();
+  renderPlanCustom();
 }
 /* ---------- BRING YOUR OWN KEY (phase 30) ----------
    The key lives in localStorage under `b2first_byo_<userId>`, never in D:
@@ -11033,13 +11273,34 @@ function resetPlan(){
       same day. Without D.profile and without a diagnostic the plan is
       empty with needDiag (previous behaviour).
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
-function buildWeeklyPlan(D){
+const PLAN_W_KINDS=['Essay','Article','Report','Review','Email'];
+const PLAN_PART_FULL={ue:[1,2,3,4,5,6,7],l:[1,2,3,4],sp:[1,2,3,4]};
+function planPartListFor(type,s){
+  if(type==='l')return planAllowedList(s,'lParts',PLAN_PART_FULL.l);
+  if(type==='sp')return planAllowedList(s,'spParts',PLAN_PART_FULL.sp);
+  if(type==='ue')return planAllowedList(s,'rueParts',PLAN_PART_FULL.ue);
+  return [];
+}
+function planAllowedList(s,key,full){
+  const arr=s&&s[key];
+  if(!Array.isArray(arr)||!arr.length)return full.slice();
+  const out=arr.filter(v=>full.indexOf(v)>=0).filter((v,i,a)=>a.indexOf(v)===i);
+  return out.length?out:full.slice();
+}
+function planDayKey(day){return String(day||'').toLowerCase().slice(0,3)}
+function planTimeFor(s,day){
+  const st=(s&&s.sessionTime)||{};
+  return st[planDayKey(day)]||null;
+}
+function buildWeeklyPlan(D,nowArg){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
+  const now=nowArg?new Date(nowArg):new Date();
   const weekGoal=Math.max(1,Number(s.weekGoal)||5);
   const prof=(D&&D.profile)||null;
   const hoursWeek=prof?(Number(prof.hoursWeek)||4):null;
-  const slotsPerWeek=prof?(hoursWeek<=2?3:hoursWeek<=4?4:hoursWeek<=6?5:6):weekGoal;
+  const ignoreHours=!!s.ignoreIntakeHours;
+  const slotsPerWeek=(prof&&!ignoreHours)?(hoursWeek<=2?3:hoursWeek<=4?4:hoursWeek<=6?5:6):weekGoal;
   const slotMin=Math.max(1,Number(s.slotMin)||45);
   const errs=Array.isArray(D&&D.errs)?D.errs:[];
   const log=Array.isArray(D&&D.log)?D.log:[];
@@ -11050,7 +11311,7 @@ function buildWeeklyPlan(D){
     if(tax[code]!==undefined)tax[code]++;
     if(code==='T-MIS'&&Number(e.part)>=1&&Number(e.part)<=4)tMisByPart[Number(e.part)]=(tMisByPart[Number(e.part)]||0)+1;
   });
-  const t0=dayKey(new Date());
+  const t0=dayKey(now);
   const t14=_addDaysKey(t0,-13);
   const sessions14=log.filter(e=>e&&e.date&&e.date>=t14&&e.date<=t0).length;
   const diag=(D&&D.diag)||null;
@@ -11061,10 +11322,78 @@ function buildWeeklyPlan(D){
       parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
     tax:tax,sessions14:sessions14,weekGoal:slotsPerWeek,
     profile:prof?{examDate:prof.examDate||null,targetGrade:prof.targetGrade||null,skills:prof.skills||null,
-      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
+      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null,
+    fallback:[]
   };
+  const allowNums=(key,full,min,max)=>{
+    const arr=s[key];
+    if(!Array.isArray(arr)||!arr.length){
+      if(Array.isArray(arr))source.fallback.push(key);
+      return full.slice();
+    }
+    const out=[];
+    arr.forEach(v=>{const n=Number(v);if(n>=min&&n<=max&&out.indexOf(n)<0)out.push(n)});
+    if(!out.length){source.fallback.push(key);return full.slice()}
+    return out;
+  };
+  const allowKinds=()=>{
+    const arr=s.wKinds;
+    if(!Array.isArray(arr)||!arr.length){
+      if(Array.isArray(arr))source.fallback.push('wKinds');
+      return PLAN_W_KINDS.slice();
+    }
+    const out=arr.filter(k=>PLAN_W_KINDS.indexOf(k)>=0).filter((k,i,a)=>a.indexOf(k)===i);
+    if(!out.length){source.fallback.push('wKinds');return PLAN_W_KINDS.slice()}
+    return out;
+  };
+  const rueAllowed=allowNums('rueParts',PLAN_PART_FULL.ue,1,7);
+  const lAllowed=allowNums('lParts',PLAN_PART_FULL.l,1,4);
+  const spAllowed=allowNums('spParts',PLAN_PART_FULL.sp,1,4);
+  const wKindsAllowed=allowKinds();
+  if(s.planMode==='custom'){
+    const raw=Array.isArray(s.customSlots)?s.customSlots:[];
+    if(raw.length){
+      const wk=isoWeek(now);
+      const rotate=!!s.customRotate;
+      const lists={ue:rueAllowed,l:lAllowed,sp:spAllowed,w:wKindsAllowed};
+      const counters={ue:0,l:0,sp:0,w:0};
+      const slots=raw.map(c=>{
+        c=c||{};
+        const type=(c.type==='w'||c.type==='l'||c.type==='sp')?c.type:'ue';
+        const day=planDayKey(c.day||'mon');
+        const min=Math.max(10,Math.min(180,Number(c.min)||slotMin));
+        const origPart=c.part!=null?Number(c.part):null;
+        const origKind=c.kind||null;
+        let part=origPart;
+        let kind=type==='w'?origKind:null;
+        if(rotate){
+          if(type==='w'){
+            part=null;
+            const list=lists.w;
+            kind=list[(wk+counters.w)%list.length];
+            counters.w++;
+          }else{
+            kind=null;
+            const list=lists[type]||lists.ue;
+            part=list[(wk+counters[type])%list.length];
+            counters[type]++;
+          }
+        }
+        return {
+          day:day,time:(c.time||planTimeFor(s,day)||null),min:min,type:type,
+          part:type==='w'?null:part,kind:type==='w'?kind:null,timed:!!c.timed,
+          rotated:rotate&&(part!==origPart||kind!==origKind),
+          reason:rotate?t('plan_custom_reason_rotated',{n:wk}):t('plan_custom_reason')
+        };
+      });
+      const reason={};
+      slots.forEach((sl,i)=>{reason[i]=sl.reason});
+      return {slots:slots,reason:reason,source:source,rotated:slots.some(sl=>sl.rotated)};
+    }
+    source.customEmpty=true;
+  }
   if(!useDiag&&!prof)return mk({source:source,needDiag:true});
-  const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3):[];
+  const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7&&rueAllowed.indexOf(p)>=0).slice(0,3):[];
   const hasW=log.some(e=>e&&e.type==='w');
   const ranked=Object.keys(tax).map(k=>({k:k,n:tax[k]})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
   let fillMode='rot',fillSeq=[];
@@ -11075,11 +11404,23 @@ function buildWeeklyPlan(D){
     else if(top==='T-MIS'){fillMode='text';fillSeq=[5,6]}
     else if(top==='T-LIM'){fillMode='time';fillSeq=[]}
   }
-  const rue=(Array.isArray(s.rueCycle)&&s.rueCycle.length)?s.rueCycle.map(Number).filter(p=>p>=1&&p<=7):[1,2,3,4,5,6,7];
-  const seq=fillSeq.concat(rue.filter(p=>fillSeq.indexOf(p)<0));
+  const rueRaw=(Array.isArray(s.rueCycle)&&s.rueCycle.length)?s.rueCycle.map(Number).filter(p=>p>=1&&p<=7):PLAN_PART_FULL.ue.slice();
+  let rue=rueRaw.filter(p=>rueAllowed.indexOf(p)>=0);
+  if(!rue.length)rue=rueAllowed.slice();
+  let seq=fillSeq.filter(p=>rueAllowed.indexOf(p)>=0).concat(rue.filter(p=>fillSeq.indexOf(p)<0));
+  if(!seq.length)seq=rueAllowed.slice();
   let lPart=0,lCount=0;
-  for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
-  if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
+  lAllowed.forEach(p=>{const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}});
+  if(!lPart){
+    const lc=(Array.isArray(s.lCycle)?s.lCycle:[]).map(Number).filter(p=>lAllowed.indexOf(p)>=0);
+    lPart=lc[0]||lAllowed[0];
+  }
+  const spCycle=(Array.isArray(s.spCycle)?s.spCycle:[]).map(Number).filter(p=>spAllowed.indexOf(p)>=0);
+  const spPart=spCycle[0]||spAllowed[0];
+  const wCycle=(Array.isArray(s.wCycle)?s.wCycle:[]).filter(k=>PLAN_W_KINDS.indexOf(k)>=0);
+  const wPool=wCycle.filter(k=>wKindsAllowed.indexOf(k)>=0);
+  const wList=wPool.length?wPool:wKindsAllowed;
+  const wKind=wList[isoWeek(now)%wList.length];
   const DAY_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
   const DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
   let DAYS=['Mon','Tue','Wed','Thu','Fri'];
@@ -11100,7 +11441,7 @@ function buildWeeklyPlan(D){
       return {part:p,type:'ue',min:slotMin,timed:false,
         reason:(i===0?`part ${p} is your weakest`:`part ${p} is weakness #${i+1}`)+` (${bp.ok}/${bp.n} in the diagnostic)`};
     });
-    const wSlot={part:null,type:'w',min:slotMin,timed:false,
+    const wSlot={part:null,type:'w',kind:wKind,min:slotMin,timed:false,
       reason:hasW?'Writing is 25% of the exam and you already practise it: keep it every week':'you never practised Writing and it is 25% of the exam'};
     const lSlot={part:lPart,type:'l',min:slotMin,timed:false,
       reason:lCount?`Listening boost: ${lCount} T-MIS errors concentrated in part ${lPart}`:`Listening boost part ${lPart}: 0 T-MIS errors per part, lCycle rotation`};
@@ -11115,11 +11456,10 @@ function buildWeeklyPlan(D){
     const skills=(prof&&prof.skills)||{};
     const skillLabel={rue:'Reading & Use of English',w:'Writing',l:'Listening',sp:'Speaking'};
     const rated=['rue','w','l','sp'].map(k=>({k:k,n:Math.min(5,Math.max(1,Number(skills[k])||3))})).sort((a,b)=>a.n-b.n);
-    const spPart=(Array.isArray(s.spCycle)&&s.spCycle.length)?(Number(s.spCycle[0])||1):1;
     rated.forEach(sk=>{
       if(ordered.length>=slotsPerWeek)return;
       const n=sk.n;
-      if(sk.k==='w')ordered.push({part:null,type:'w',min:slotMin,timed:false,
+      if(sk.k==='w')ordered.push({part:null,type:'w',kind:wKind,min:slotMin,timed:false,
         reason:`you rated Writing ${n}/5 and it is 25% of the exam`});
       else if(sk.k==='l'){usedParts[lPart]=true;ordered.push({part:lPart,type:'l',min:slotMin,timed:false,
         reason:`you rated Listening ${n}/5: listening boost part ${lPart}`})}
@@ -11162,15 +11502,263 @@ function buildWeeklyPlan(D){
         const m=STRUGGLE_MAP.filter(([l])=>l===label)[0];
         if(m&&m[1]===c)decl=label;
       });
-      ordered.push({part:r.part,type:'ue',min:slotMin,timed:!!r.timed,
-        reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
+      const part=rueAllowed.indexOf(r.part)>=0?r.part:rueAllowed[0];
+      ordered.push({part:part,type:'ue',min:slotMin,timed:!!r.timed,
+        reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${part} — ${partName(part).toLowerCase()}`});
     });
   }
   const slots=ordered;
   slots.forEach((sl,i)=>{sl.day=DAYS[i%dayN]});
+  slots.forEach(sl=>{sl.time=planTimeFor(s,sl.day)});
   const reason={};
   slots.forEach((sl,i)=>{reason[i]=sl.reason});
   return {slots:slots,reason:reason,source:source};
+}
+
+/* ---------- CUSTOM PLAN EDITOR (phase 42) ----------
+   One renderer feeds both the PLAN card (#planCustomBody) and onboarding
+   step 4 (#obCustomEditor). Every change writes D.settings immediately, so
+   the live preview, the week card and the server sync stay in step. Slots
+   are never sorted: the student's order is the plan. */
+const PLAN_DAYS=[['mon',1],['tue',2],['wed',3],['thu',4],['fri',5],['sat',6],['sun',7]];
+const PLAN_TYPE_KEYS={ue:'ob_type_ue',w:'ob_type_w',l:'ob_type_l',sp:'ob_type_sp'};
+function planForScope(scope){
+  if(scope==='ob'&&typeof obDraftProfile==='function'){
+    try{return obPlanFor(obDraftProfile())}catch(e){}
+  }
+  return buildWeeklyPlan(D);
+}
+function planCustomSlots(){
+  if(!D.settings)D.settings={};
+  if(!Array.isArray(D.settings.customSlots))D.settings.customSlots=[];
+  return D.settings.customSlots;
+}
+function planPreviewBodyHtml(scope){
+  const plan=planForScope(scope);
+  return `<div class="ob-summary">${obPlanSummaryHtml(plan)}</div>
+    <div class="ob-plan-preview">${obPlanRowsHtml(plan)}</div>`;
+}
+function planCustomTypeOptions(type){
+  return ['ue','w','l','sp'].map(k=>`<option value="${k}" ${type===k?'selected':''}>${esc(t(PLAN_TYPE_KEYS[k]))}</option>`).join('');
+}
+function planModeCards(mode,scope){
+  return `<div class="ob-radio-cards" role="radiogroup" aria-labelledby="pcModeLbl_${scope}">
+    <label class="ob-radio-card"><input type="radio" name="pcMode_${scope}" value="auto" ${mode==='auto'?'checked':''} onchange="customSetMode('auto','${scope}')"><span>${t('plan_mode_auto')}</span></label>
+    <label class="ob-radio-card"><input type="radio" name="pcMode_${scope}" value="custom" ${mode==='custom'?'checked':''} onchange="customSetMode('custom','${scope}')"><span>${t('plan_mode_custom')}</span></label>
+  </div>`;
+}
+function planCustomTableHtml(s,slots,scope){
+  const rows=slots.map((sl,i)=>{
+    sl=sl||{};
+    const type=(sl.type==='w'||sl.type==='l'||sl.type==='sp')?sl.type:'ue';
+    const day=planDayKey(sl.day||'mon');
+    const parts=planPartListFor(type,s);
+    const kinds=planAllowedList(s,'wKinds',PLAN_W_KINDS);
+    const partCell=type==='w'
+      ?`<span class="muted">—</span>`
+      :`<select data-pc-field="part" aria-label="${esc(t('plan_col_part'))}" onchange="customSlotSet(${i},'part',this.value,'${scope}')">${parts.map(p=>`<option value="${p}" ${Number(sl.part)===p?'selected':''}>${p}</option>`).join('')}</select>`;
+    const kindCell=type==='w'
+      ?`<select data-pc-field="kind" aria-label="${esc(t('plan_col_kind'))}" onchange="customSlotSet(${i},'kind',this.value,'${scope}')">${kinds.map(k=>`<option value="${esc(k)}" ${sl.kind===k?'selected':''}>${esc(k)}</option>`).join('')}</select>`
+      :`<span class="muted">—</span>`;
+    return `<tr data-pc-row="${i}">
+      <td><select data-pc-field="day" aria-label="${esc(t('plan_col_day'))}" onchange="customSlotSet(${i},'day',this.value,'${scope}')">${PLAN_DAYS.map(([k,js])=>`<option value="${k}" ${day===k?'selected':''}>${dayShort(js)}</option>`).join('')}</select></td>
+      <td><input type="time" data-pc-field="time" value="${esc(sl.time||'')}" aria-label="${esc(t('plan_col_time'))}" onchange="customSlotSet(${i},'time',this.value,'${scope}')"></td>
+      <td><input type="number" min="10" max="180" data-pc-field="min" value="${Math.max(10,Math.min(180,Number(sl.min)||45))}" aria-label="${esc(t('plan_col_min'))}" onchange="customSlotSet(${i},'min',this.value,'${scope}')"></td>
+      <td><select data-pc-field="type" aria-label="${esc(t('plan_col_type'))}" onchange="customSlotSet(${i},'type',this.value,'${scope}')">${planCustomTypeOptions(type)}</select></td>
+      <td>${partCell}</td>
+      <td>${kindCell}</td>
+      <td><label class="pc-check" title="${esc(t('plan_col_timed'))}"><input type="checkbox" data-pc-field="timed" aria-label="${esc(t('plan_col_timed'))}" ${sl.timed?'checked':''} onchange="customSlotSet(${i},'timed',this.checked,'${scope}')"></label></td>
+      <td class="pc-actions">
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="up" onclick="customSlotMove(${i},-1,'${scope}')" aria-label="${esc(t('plan_move_up'))}" ${i===0?'disabled':''}>↑</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="down" onclick="customSlotMove(${i},1,'${scope}')" aria-label="${esc(t('plan_move_down'))}" ${i===slots.length-1?'disabled':''}>↓</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="dup" onclick="customSlotDup(${i},'${scope}')" aria-label="${esc(t('plan_duplicate'))}">⧉</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="del" onclick="customSlotRemove(${i},'${scope}')" aria-label="${esc(t('plan_remove'))}">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return `<div class="pc-group">
+    <div class="pc-group-label">${t('plan_sessions_title')}</div>
+    <div class="pc-table-wrap"><table class="pc-table">
+      <thead><tr>
+        <th>${t('plan_col_day')}</th><th>${t('plan_col_time')}</th><th>${t('plan_col_min')}</th>
+        <th>${t('plan_col_type')}</th><th>${t('plan_col_part')}</th><th>${t('plan_col_kind')}</th>
+        <th>${t('plan_col_timed')}</th><th>${t('plan_col_actions')}</th>
+      </tr></thead>
+      <tbody>${rows||`<tr><td colspan="8" class="muted">${t('plan_no_sessions')}</td></tr>`}</tbody>
+    </table></div>
+    <div class="pc-actions-row">
+      <button type="button" class="btn ok sm" data-pc-action="add" onclick="customSlotAdd('${scope}')">${t('plan_add_session')}</button>
+    </div>
+  </div>`;
+}
+function planChipGroup(key,labelKey,values,scope){
+  const s=D.settings||{};
+  const list=Array.isArray(s[key])?s[key]:values.slice();
+  return `<div class="pc-group"><div class="pc-group-label">${t(labelKey)}</div><div class="ob-chips">${
+    values.map(v=>{
+      const on=list.indexOf(v)>=0;
+      const last=on&&list.length===1;
+      return `<button type="button" class="chip-btn" data-pc-list="${key}" data-pc-value="${v}" aria-pressed="${on}" ${last?'disabled aria-disabled="true"':''} onclick="customToggleAllowed('${key}',this.dataset.pcValue,'${scope}')">${esc(String(v))}</button>`;
+    }).join('')
+  }</div></div>`;
+}
+function planRhythmHtml(s,scope){
+  const weekGoal=Math.max(1,Math.min(14,Number(s.weekGoal)||5));
+  const slotMin=Math.max(10,Math.min(180,Number(s.slotMin)||45));
+  return `<div class="pc-group">
+    <div class="pc-group-label">${t('plan_rhythm')}</div>
+    <div class="pc-rhythm">
+      <div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>
+      <div><label for="pcWeekGoal_${scope}">${t('plan_sessions_week')}</label><input type="number" id="pcWeekGoal_${scope}" min="1" max="14" value="${weekGoal}" onchange="customSetSetting('weekGoal',this.value,'${scope}')"></div>
+      <label class="pc-check"><input type="checkbox" ${s.ignoreIntakeHours?'checked':''} onchange="customSetSetting('ignoreIntakeHours',this.checked,'${scope}')"><span>${t('plan_ignore_intake')}</span></label>
+      <label class="pc-check"><input type="checkbox" ${s.customRotate!==false?'checked':''} onchange="customSetSetting('customRotate',this.checked,'${scope}')"><span>${t('plan_rotate')}</span></label>
+    </div>
+  </div>`;
+}
+function planSessionTimesHtml(s,scope){
+  const times=s.sessionTime||{};
+  return `<div class="pc-group">
+    <div class="pc-group-label">${t('plan_week_rhythm')}</div>
+    <div class="sub" style="margin:0 0 8px">${t('plan_week_rhythm_sub')}</div>
+    <div class="pc-times">${PLAN_DAYS.map(([k,js])=>`<div><label for="pcTime_${scope}_${k}">${dayShort(js)}</label><input type="time" id="pcTime_${scope}_${k}" value="${esc(times[k]||'')}" onchange="customSetSessionTime('${k}',this.value,'${scope}')"></div>`).join('')}</div>
+  </div>`;
+}
+function customEditorHtml(scope){
+  const s=D.settings||{};
+  const mode=s.planMode==='custom'?'custom':'auto';
+  const out=[];
+  out.push(`<div class="pc-group"><div class="pc-group-label" id="pcModeLbl_${scope}">${t('plan_mode_title')}</div>${planModeCards(mode,scope)}</div>`);
+  if(mode==='custom')out.push(planCustomTableHtml(s,planCustomSlots(),scope));
+  out.push(planChipGroup('rueParts','plan_allowed_rue',PLAN_PART_FULL.ue,scope));
+  out.push(planChipGroup('lParts','plan_allowed_l',PLAN_PART_FULL.l,scope));
+  out.push(planChipGroup('spParts','plan_allowed_sp',PLAN_PART_FULL.sp,scope));
+  out.push(planChipGroup('wKinds','plan_allowed_w',PLAN_W_KINDS,scope));
+  out.push(planRhythmHtml(s,scope));
+  out.push(planSessionTimesHtml(s,scope));
+  out.push(`<div class="pc-group"><div class="pc-group-label">${t('plan_preview')}</div><div id="pcPreviewBody_${scope}">${planPreviewBodyHtml(scope)}</div></div>`);
+  out.push(`<div class="pc-actions-row"><button type="button" class="btn gray" data-pc-action="reset" onclick="customBackToAuto('${scope}')">${t('plan_reset_auto')}</button></div>`);
+  return out.join('');
+}
+function renderPlanCustom(){
+  const body=document.getElementById('planCustomBody');
+  if(body)body.innerHTML=customEditorHtml('plan');
+}
+function customSettle(scope,rerender){
+  save();
+  const root=document.getElementById(scope==='ob'?'obCustomEditor':'planCustomBody');
+  if(rerender&&root)root.innerHTML=customEditorHtml(scope);
+  const body=document.getElementById('pcPreviewBody_'+scope);
+  if(body)body.innerHTML=planPreviewBodyHtml(scope);
+  if(scope==='ob'){
+    if(typeof obRefreshPlan==='function')obRefreshPlan();
+  }else{
+    if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
+    if(typeof renderExamCountdown==='function')renderExamCountdown();
+  }
+}
+function customClampSlots(){
+  const s=D.settings||{};
+  planCustomSlots().forEach(sl=>{
+    if(!sl)return;
+    const type=(sl.type==='w'||sl.type==='l'||sl.type==='sp')?sl.type:'ue';
+    if(type==='w'){
+      const kinds=planAllowedList(s,'wKinds',PLAN_W_KINDS);
+      if(kinds.indexOf(sl.kind)<0)sl.kind=kinds[0];
+    }else{
+      const parts=planPartListFor(type,s);
+      if(parts.indexOf(Number(sl.part))<0)sl.part=parts[0];
+    }
+  });
+}
+function customSetMode(mode,scope){
+  D.settings.planMode=mode==='custom'?'custom':'auto';
+  customSettle(scope,true);
+}
+function customSlotSet(i,field,value,scope){
+  const s=D.settings||{};
+  const slots=Array.isArray(s.customSlots)?s.customSlots:[];
+  const sl=slots[i];
+  if(!sl)return;
+  if(field==='min')sl.min=Math.max(10,Math.min(180,Math.round(Number(value)||45)));
+  else if(field==='timed')sl.timed=!!value;
+  else if(field==='part')sl.part=value===''?null:Number(value);
+  else if(field==='kind')sl.kind=value||null;
+  else if(field==='time')sl.time=value||'';
+  else if(field==='day')sl.day=value;
+  else if(field==='type'){
+    sl.type=(value==='w'||value==='l'||value==='sp')?value:'ue';
+    if(sl.type==='w')sl.part=null;
+    else sl.kind=null;
+    customClampSlots();
+  }
+  customSettle(scope,field==='type');
+}
+function customSlotAdd(scope){
+  const s=D.settings||{};
+  const slots=planCustomSlots();
+  const min=Math.max(10,Math.min(180,Number(s.slotMin)||45));
+  const parts=planPartListFor('ue',s);
+  slots.push({day:'mon',time:'',min:min,type:'ue',part:parts[0],kind:null,timed:false});
+  customClampSlots();
+  customSettle(scope,true);
+}
+function customSlotDup(i,scope){
+  const slots=planCustomSlots();
+  if(!slots[i])return;
+  slots.splice(i+1,0,JSON.parse(JSON.stringify(slots[i])));
+  customSettle(scope,true);
+}
+function customSlotRemove(i,scope){
+  const slots=planCustomSlots();
+  if(!slots[i])return;
+  slots.splice(i,1);
+  customSettle(scope,true);
+}
+function customSlotMove(i,dir,scope){
+  const slots=planCustomSlots();
+  const j=i+dir;
+  if(!slots[i]||j<0||j>=slots.length)return;
+  const tmp=slots[i];slots[i]=slots[j];slots[j]=tmp;
+  customSettle(scope,true);
+}
+function customToggleAllowed(key,raw,scope){
+  const s=D.settings||{};
+  const full=key==='wKinds'?PLAN_W_KINDS.slice():PLAN_PART_FULL[key==='lParts'?'l':key==='spParts'?'sp':'ue'].slice();
+  const v=key==='wKinds'?String(raw):Number(raw);
+  let list=Array.isArray(s[key])?s[key].slice():full.slice();
+  const idx=list.indexOf(v);
+  if(idx>=0){
+    if(list.length<=1)return;
+    list.splice(idx,1);
+  }else{
+    list.push(v);
+  }
+  s[key]=full.filter(x=>list.indexOf(x)>=0);
+  customClampSlots();
+  customSettle(scope,true);
+}
+function customSetSetting(key,value,scope){
+  const s=D.settings||{};
+  if(key==='slotMin')s.slotMin=Math.max(10,Math.min(180,Math.round(Number(value)||45)));
+  else if(key==='weekGoal'){
+    s.weekGoal=Math.max(1,Math.min(14,Math.round(Number(value)||5)));
+    const el=document.getElementById('pWeekGoal');
+    if(el)el.value=s.weekGoal;
+  }else{
+    s[key]=!!value;
+  }
+  customSettle(scope,false);
+}
+function customSetSessionTime(day,value,scope){
+  const s=D.settings||{};
+  s.sessionTime=Object.assign({},s.sessionTime||{});
+  if(value)s.sessionTime[day]=value;
+  else delete s.sessionTime[day];
+  customSettle(scope,false);
+}
+function customBackToAuto(scope){
+  D.settings.planMode='auto';
+  customSettle(scope,true);
 }
 let WEEK_PLAN=null;
 function lpName(p){return {1:'Short extracts',2:'Sentence completion',3:'Multiple matching',4:'Multiple choice (long)'}[p]||'general'}
@@ -11190,11 +11778,12 @@ function renderWeeklyPlan(){
   }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking part '+sl.part):('UoE '+partName(sl.part).toLowerCase());
+    const label=sl.type==='w'?('Writing'+(sl.kind?' ('+sl.kind+')':'')):sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking part '+sl.part):('UoE '+partName(sl.part).toLowerCase());
     const partTxt=sl.part!=null?`Part ${sl.part} · `:'';
+    const timeTxt=sl.time?' · '+t('plan_planned_for',{time:sl.time}):'';
     return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}">
       <div class="wp-main">
-        <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${sl.timed?' · timed (exam mode)':''}</div>
+        <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${timeTxt}${sl.timed?' · timed (exam mode)':''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
       <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
@@ -11203,12 +11792,19 @@ function renderWeeklyPlan(){
   const src=plan.source||{};
   const diagTxt=(src.diag&&src.diag.parts&&src.diag.parts.length)?src.diag.parts.map(p=>`Part ${p.part}: ${p.ok}/${p.n} correct`).join(' · '):'no diagnostic';
   const taxTxt=Object.keys(src.tax||{}).map(k=>`${k}: ${src.tax[k]}`).join(' · ');
+  const intakeTxt=src.profile?(D.settings.ignoreIntakeHours?' ('+t('plan_ignore_intake_short')+')':' (from your intake: '+src.profile.hoursWeek+'h/week)'):'';
   if(why)why.innerHTML=`<div>· <b>Diagnostic</b> (parts + correct answers): ${esc(diagTxt)}</div>
     <div>· <b>Error taxonomy counts</b>: ${esc(taxTxt)}</div>
     <div>· <b>Sessions in the last 14 days</b>: ${src.sessions14}</div>
-    <div>· <b>weekGoal</b>: ${src.weekGoal} slots`+(src.profile?` (from your intake: ${src.profile.hoursWeek}h/week)`:'')+`</div>`;
+    <div>· <b>weekGoal</b>: ${src.weekGoal} slots${intakeTxt}</div>`;
   if(why&&src.profile){
     why.innerHTML+=`<div>· <b>Intake</b>: exam ${esc(src.profile.examDate||'not set')} · target ${esc(src.profile.targetGrade||'-')} · days ${esc((src.profile.days||[]).join(', ')||'-')} · struggles ${esc((src.profile.struggles||[]).join(', ')||'none')}</div>`;
+  }
+  if(why&&src.fallback&&src.fallback.length){
+    why.innerHTML+=`<div>· <b>Allowlist</b>: ${esc(t('plan_why_fallback',{keys:src.fallback.join(', ')}))}</div>`;
+  }
+  if(why&&src.customEmpty){
+    why.innerHTML+=`<div>· ${esc(t('plan_custom_empty'))}</div>`;
   }
 }
 function regenWeeklyPlan(){renderWeeklyPlan()}
@@ -12223,6 +12819,43 @@ function updatePersonalizedUI(){
   if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
 
+function planDayLabel(day){
+  const raw=String(day||'');
+  const key=raw.slice(0,1).toUpperCase()+raw.slice(1,3).toLowerCase();
+  const i=OB_DAY_INDEX[key];
+  return i==null?raw:dayShort(i);
+}
+function planSlotTitle(sl){
+  const type=sl.type||'ue';
+  let title=t('ob_type_'+type);
+  if(type==='w'&&sl.kind)title+=' · '+sl.kind;
+  if(type!=='w'&&sl.part!=null)title+=' · '+t('ob_part',{n:sl.part});
+  return title;
+}
+function renderTodayPlan(plan){
+  const el=document.getElementById('todayPlan');
+  if(!el)return;
+  const slots=(plan&&plan.slots)||[];
+  if(!slots.length){el.style.display='none';el.innerHTML='';return}
+  el.style.display='';
+  const src=(plan&&plan.source)||{};
+  const sub=src.customEmpty?t('plan_custom_empty'):t('today_plan_sub');
+  el.innerHTML=`<div class="plan-card-head">
+      <h2>${t('today_plan_title')}</h2>
+      ${plan.rotated?`<span class="chip-plan"><span class="dot"></span><span>${t('plan_rotated')}</span></span>`:''}
+    </div>
+    <div class="sub">${esc(sub)}</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      ${slots.map(sl=>{
+        const time=sl.time?`<span class="badge">${esc(t('plan_planned_for',{time:sl.time}))}</span> `:'';
+        return `<div class="today-plan-row">
+          <div><div class="t">${esc(planDayLabel(sl.day))} · ${esc(planSlotTitle(sl))}</div>
+          <div class="wp-reason">${esc(sl.reason||'')}</div></div>
+          <div class="m">${time}${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
 function renderToday(){
   updatePersonalizedUI();
   const d=new Date(),wd=d.getDay();
@@ -12360,32 +12993,63 @@ function renderToday(){
     curEl.textContent=`${isWeekA?t('week_a'):t('week_b')}: ${currentWeekSlots}`;
   }
 
+  const plan=buildWeeklyPlan(D);
+  WEEK_PLAN=plan;
+  renderTodayPlan(plan);
 }
 
-/* Exam countdown card: PLAN only, one-time setup. It is visible while no
-   exam date exists and hides as soon as one is set. Prefers
-   D.profile.examDate (intake); falls back to D.examDates (exam days never
-   break the streak). */
+/* Exam countdown card. It shows the real countdown when a date exists and
+   the "not set yet" state otherwise (never a fake date, never NaN).
+   D.profile.examDate is authoritative; D.examDates is only a legacy fallback
+   for the streak and is ignored while the student chose "I don't know yet". */
+function examDaysLeft(dateKey){
+  const k=/^\d{4}-\d{2}-\d{2}$/.test(String(dateKey||''))?String(dateKey):null;
+  if(!k)return null;
+  const diff=_parseLocalDay(k).getTime()-_parseLocalDay(dayKey(new Date())).getTime();
+  const days=Math.round(diff/86400000);
+  return days>=0?days:null;
+}
+function examDaysCopy(days){
+  if(days==null)return '';
+  if(days===0)return t('exam_days_today');
+  if(days===1)return t('exam_days_left_one');
+  return t('exam_days_left',{days:days});
+}
 function renderExamCountdown(){
   const el=document.getElementById('examCountdown');
   if(!el)return;
-  const todayStr=dayKey(new Date());
-  const profDate=(D.profile&&D.profile.examDate)?dayKey(D.profile.examDate):null;
-  const dates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(Boolean).sort();
-  const next=((profDate&&profDate>=todayStr)?profDate:null)||dates.find(x=>x>=todayStr);
-  if(next){el.style.display='none';return}
+  const p=D.profile||{};
+  const unknown=!!p.examDateUnknown;
+  let date=p.examDate?dayKey(p.examDate):null;
+  if(!date&&!unknown){
+    const dates=(Array.isArray(D.examDates)?D.examDates:[]).map(x=>dayKey(x)).filter(Boolean).sort();
+    date=dates.find(x=>x>=today())||null;
+  }
+  const days=date?examDaysLeft(date):null;
   el.style.display='';
+  if(date&&days!=null){
+    el.innerHTML=`<h2>${t('exam_countdown')}</h2>
+      <div class="sub">${fmtDate(date)} · ${esc(examDaysCopy(days))}</div>
+      <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px">
+        <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput" min="${today()}" value="${esc(date)}"></div>
+        <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
+      </div>`;
+    return;
+  }
   el.innerHTML=`<h2>${t('exam_countdown')}</h2>
-    <div class="sub">${t('exam_no_date')}</div>
-    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
-      <button type="button" class="btn ok sm" onclick="openIntake()">${t('exam_set_date')}</button>
-      <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
-      <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
-    </div>`;
+    <div class="sub">${t('exam_no_date_yet')}</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-top:10px">
+      <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput" min="${today()}"></div>
+      <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_set_date')}</button>
+    </div>
+    <div class="t-xs muted" style="margin-top:6px">${t('exam_no_date')}</div>`;
 }
 function setExamDate(){
   const inp=document.getElementById('examDateInput');
   if(!inp||!inp.value)return;
+  D.profile=D.profile||{};
+  D.profile.examDate=inp.value;
+  D.profile.examDateUnknown=false;
   D.examDates=Array.isArray(D.examDates)?D.examDates:[];
   const k=dayKey(inp.value);
   if(!D.examDates.map(dayKey).includes(k))D.examDates.push(k);
