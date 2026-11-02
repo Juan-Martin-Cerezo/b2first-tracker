@@ -417,11 +417,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-primary)}
 .chip-ctl{min-width:40px;justify-content:center;padding:8px 10px}
 .chips{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
-.chip-plan{
-  display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);font-weight:600;
-  color:var(--acc-text);background:var(--surface-2);border-radius:999px;padding:4px 12px;
-}
-.chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
 /* ---------- SUBSCRIPTION PLAN (phase 31) ---------- */
 .plan-usage{display:flex;flex-direction:column;gap:7px;margin:12px 0 4px}
@@ -12949,7 +12944,7 @@ function renderTodayPlan(plan){
   const sub=src.customEmpty?t('plan_custom_empty'):t('today_plan_sub');
   el.innerHTML=`<div class="plan-card-head">
       <h2>${t('today_plan_title')}</h2>
-      ${plan.rotated?`<span class="chip-plan"><span class="dot"></span><span>${t('plan_rotated')}</span></span>`:''}
+      ${plan.rotated?`<span class="t-xs muted">${t('plan_rotated')}</span>`:''}
     </div>
     <div class="sub">${esc(sub)}</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
