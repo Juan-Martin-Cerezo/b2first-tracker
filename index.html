@@ -1075,7 +1075,18 @@ footer{
 }
 .auth-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 .auth-error{color:var(--bad-text);font-size:var(--fs-xs);margin-top:8px;min-height:16px}
-.auth-note{color:var(--dim);font-size:var(--fs-xs);margin:-10px 0 14px;text-align:center}
+.auth-ok{color:var(--ok-text);font-size:var(--fs-xs);margin-top:8px;min-height:16px}
+.auth-link{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;
+  margin-top:4px;padding:0 8px;border:none;background:transparent;cursor:pointer;
+  font-family:var(--font);font-size:var(--fs-sm);font-weight:600;color:var(--acc-text);
+  text-decoration:underline;text-underline-offset:3px;
+}
+.auth-link:hover{color:var(--txt)}
+.auth-recover-title{font-size:var(--fs-md);font-weight:600;color:var(--txt);margin:0 0 8px}
+.auth-recover-note{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;margin:0 0 8px}
+.auth-recover-list{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;margin:0 0 10px;padding-left:20px}
+.auth-recover-list li+li{margin-top:6px}
 .onboard-intro{font-size:var(--fs-sm);color:var(--txt-2);margin-bottom:16px;line-height:1.5}
 .ob-plan-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0;font-size:var(--fs-sm)}
 .ob-plan-row>span{min-width:110px;color:var(--txt-2)}
@@ -1476,13 +1487,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')" data-i18n="auth_login">Log in</button>
       <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')" data-i18n="auth_register">Create account</button>
     </div>
-    <div class="auth-note" data-i18n="auth_note">Your progress is stored on this server, not in a cloud.</div>
     <div id="regClosedNote" class="auth-error" style="display:none" data-i18n="auth_closed">Registration is closed. This instance is private.</div>
     <div id="authLogin">
       <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="e.g. Owner" data-i18n-placeholder="auth_ph_owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="authError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
+      <button type="button" class="auth-link" onclick="showPasswordRecovery()" data-i18n="auth_forgot">Forgot your password?</button>
       <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
       <button class="btn gray" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()" data-i18n="auth_google">Continue with Google</button>
       <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
@@ -1496,6 +1507,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()" data-i18n="auth_create_enter">Create account &amp; enter</button>
       <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
+    </div>
+    <div id="authRecover" style="display:none">
+      <h3 class="auth-recover-title" data-i18n="auth_recover_title">Account recovery</h3>
+      <p class="auth-recover-note" data-i18n="auth_recover_note">No email is stored for your account, so a reset link cannot be sent. Two ways back in work instantly:</p>
+      <ul class="auth-recover-list" data-i18n-aria-label="auth_recover_options">
+        <li data-i18n="auth_recover_google">Signed up with Google? Use “Continue with Google” on the login tab.</li>
+        <li data-i18n="auth_recover_passkey">Set a passkey? Use “Sign in with a passkey”.</li>
+      </ul>
+      <p class="auth-recover-note" data-i18n="auth_recover_manual">Otherwise ask for a manual reset. The operator resets the password by hand and answers at the contact you leave here.</p>
+      <div><label data-i18n="auth_username">User name</label><input type="text" id="recName" placeholder="Your user name" data-i18n-placeholder="auth_recover_name_ph" autocomplete="username"></div>
+      <div><label data-i18n="auth_recover_contact_label">Contact</label><input type="text" id="recContact" maxlength="120" placeholder="Email or @telegram (optional)" data-i18n-placeholder="auth_recover_contact_ph" autocomplete="off"></div>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="requestPasswordReset()" data-i18n="auth_recover_send">Send reset request</button>
+      <div id="recStatus" class="auth-ok"></div>
+      <button type="button" class="auth-link" onclick="hidePasswordRecovery()" data-i18n="auth_recover_back">Back to log in</button>
     </div>
   </div>
 </div>
@@ -3659,11 +3684,24 @@ const I18N={
     sync_off:'Offline — changes stay on this device',
     auth_login:'Log in',
     auth_register:'Create account',
-    auth_note:'Your progress is stored on this server, not in a cloud.',
     auth_closed:'Registration is closed. This instance is private.',
     auth_username:'User name',
     auth_password:'Password',
     auth_enter:'Enter',
+    auth_forgot:'Forgot your password?',
+    auth_recover_title:'Account recovery',
+    auth_recover_note:'No email is stored for your account, so a reset link cannot be sent. Two ways back in work instantly:',
+    auth_recover_options:'Ways back into your account',
+    auth_recover_google:'Signed up with Google? Use “Continue with Google” on the login tab.',
+    auth_recover_passkey:'Set a passkey? Use “Sign in with a passkey”.',
+    auth_recover_manual:'Otherwise ask for a manual reset. The operator resets the password by hand and answers at the contact you leave here.',
+    auth_recover_contact_label:'Contact',
+    auth_recover_name_ph:'Your user name',
+    auth_recover_contact_ph:'Email or @telegram (optional)',
+    auth_recover_send:'Send reset request',
+    auth_recover_back:'Back to log in',
+    auth_recover_ok:'Request received. The operator will review it.',
+    auth_recover_error:'Enter a valid user name.',
     auth_new_username:'New username',
     auth_password_min:'Password (10+ characters)',
     auth_pw_hint:'10+ characters. Avoid common passwords.',
@@ -4342,11 +4380,24 @@ const I18N={
     sync_off:'Sin conexión — los cambios quedan en este dispositivo',
     auth_login:'Iniciar sesión',
     auth_register:'Crear cuenta',
-    auth_note:'Tu progreso se guarda en este servidor, no en la nube.',
     auth_closed:'El registro está cerrado. Esta instancia es privada.',
     auth_username:'Usuario',
     auth_password:'Contraseña',
     auth_enter:'Entrar',
+    auth_forgot:'¿Olvidaste tu contraseña?',
+    auth_recover_title:'Recuperar la cuenta',
+    auth_recover_note:'No hay ningún email guardado en tu cuenta, así que no se puede enviar un link de restablecimiento. Hay dos formas de volver a entrar que funcionan al toque:',
+    auth_recover_options:'Formas de volver a entrar',
+    auth_recover_google:'¿Entraste con Google? Usá «Continuar con Google» en la pestaña de inicio de sesión.',
+    auth_recover_passkey:'¿Configuraste una passkey? Usá «Entrar con una passkey».',
+    auth_recover_manual:'Si no, pedí un restablecimiento manual. El operador cambia la contraseña a mano y te responde en el contacto que dejes acá.',
+    auth_recover_contact_label:'Contacto',
+    auth_recover_name_ph:'Tu nombre de usuario',
+    auth_recover_contact_ph:'Email o @telegram (opcional)',
+    auth_recover_send:'Pedir restablecimiento',
+    auth_recover_back:'Volvé a iniciar sesión',
+    auth_recover_ok:'Pedido recibido. El operador lo va a revisar.',
+    auth_recover_error:'Escribí un nombre de usuario válido.',
     auth_new_username:'Nuevo usuario',
     auth_password_min:'Contraseña (10+ caracteres)',
     auth_pw_hint:'10+ caracteres. Evitá contraseñas comunes.',
@@ -5459,8 +5510,48 @@ function hideAuthOverlay(){
 }
 function switchAuthTab(tab){
   document.querySelectorAll('#authOverlay .auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  const rec=document.getElementById('authRecover');
+  if(rec)rec.style.display='none';
   document.getElementById('authLogin').style.display=tab==='login'?'block':'none';
   document.getElementById('authRegister').style.display=tab==='register'?'block':'none';
+}
+function showPasswordRecovery(){
+  const st=document.getElementById('recStatus');
+  if(st){st.textContent='';st.className='auth-ok'}
+  document.getElementById('authLogin').style.display='none';
+  document.getElementById('authRegister').style.display='none';
+  document.getElementById('authRecover').style.display='block';
+  const name=document.getElementById('recName');
+  if(name)name.focus();
+}
+function hidePasswordRecovery(){
+  document.getElementById('authRecover').style.display='none';
+  document.getElementById('authLogin').style.display='block';
+}
+async function requestPasswordReset(){
+  const nameEl=document.getElementById('recName');
+  const contactEl=document.getElementById('recContact');
+  const st=document.getElementById('recStatus');
+  const name=(nameEl?nameEl.value:'').trim();
+  if(!name){
+    st.className='auth-error';
+    st.textContent='❌ '+t('auth_recover_error');
+    if(nameEl)nameEl.focus();
+    return;
+  }
+  const contact=contactEl?contactEl.value.trim():'';
+  try{
+    const r=await fetch('/api/password-reset/request',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,contact:contact})});
+    if(!r.ok)throw await apiError(r,t('auth_recover_error'));
+    st.className='auth-ok';
+    st.textContent='✔ '+t('auth_recover_ok');
+    if(contactEl)contactEl.value='';
+    if(nameEl)nameEl.value='';
+  }catch(e){
+    st.className='auth-error';
+    st.textContent='❌ '+(e&&e.message?e.message:t('auth_recover_error'));
+  }
 }
 async function doLogin(){
   const name=document.getElementById('authName').value.trim();

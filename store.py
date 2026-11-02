@@ -29,6 +29,8 @@ __all__ = [
     "speaking_file",
     "speaking_transcript_dir",
     "write_speaking_transcript",
+    "pwreset_file",
+    "append_pwreset",
     "data_dir",
     "read_json_private",
     "write_json_private",
@@ -43,6 +45,8 @@ DATA_DIR = _DEFAULT_DATA_DIR
 BK_KEEP = 20
 PROGRESS_SCHEMA = 2
 _LOCK_TIMEOUT = 5.0
+PWRESET_KEEP = 500
+PWRESET_RETENTION_DAYS = 90
 
 PBKDF2_ITERATIONS = 600_000
 
@@ -348,6 +352,66 @@ def speaking_add(uid: str, day: str, seconds: float = 0.0, tokens: int = 0) -> d
         }
         _write_json(speaking_file(uid), out)
         return out
+
+
+def pwreset_file() -> str:
+    """Path to the manual password-reset queue (data/pwreset.jsonl)."""
+    return os.path.join(_data_dir(), "pwreset.jsonl")
+
+
+def _pwreset_keep(lines: list) -> list:
+    """Drop lines older than the retention window, then keep the newest half.
+
+    A line whose timestamp cannot be read is kept: malformed input is not a
+    reason to delete something the operator may still need.
+    """
+    cutoff = time.strftime("%Y-%m-%dT%H:%M:%SZ",
+                           time.gmtime(time.time() - PWRESET_RETENTION_DAYS * 86400))
+    fresh = []
+    for line in lines:
+        try:
+            ts = json.loads(line).get("ts")
+        except (ValueError, AttributeError):
+            ts = None
+        if not isinstance(ts, str) or ts >= cutoff:
+            fresh.append(line)
+    if len(fresh) > PWRESET_KEEP:
+        fresh = fresh[len(fresh) // 2:]
+    return fresh
+
+
+def append_pwreset(entry: dict) -> None:
+    """Append one password-recovery request line to data/pwreset.jsonl (0600).
+
+    The file is capped at PWRESET_KEEP lines and pruned to the retention
+    window on every write; the rewrite is atomic (tmp + os.replace). The
+    caller is responsible for never putting a raw IP in `entry`.
+    """
+    with _locked(_STORE_LOCK):
+        parent = _data_dir()
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        path = pwreset_file()
+        line = json.dumps(entry, ensure_ascii=False)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            os.write(fd, (line + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+        os.chmod(path, 0o600)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                lines = [ln for ln in f.read().split("\n") if ln.strip()]
+        except OSError:
+            return
+        keep = _pwreset_keep(lines)
+        if len(keep) == len(lines):
+            return
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write("\n".join(keep) + ("\n" if keep else ""))
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+        os.chmod(path, 0o600)
 
 
 def put_progress(uid: str, data: dict) -> None:

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Stripe billing (phase 33): hosted Checkout, signed webhooks, subscriptions.
 
-Design rules (see PLAN-HACKATHON-IA.md / phase 33):
+Design rules (see the security model in SECURITY.md and the phase 33 notes):
 
 * **Stdlib only.** Stripe is called with ``urllib.request`` and JSON. There is
   no SDK and no card data anywhere near this server: the browser is sent to a

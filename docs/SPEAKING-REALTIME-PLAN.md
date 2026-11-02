@@ -6,8 +6,8 @@
 > `{type:"sp", bands, metrics}` entry. The Pronunciation band is mapped from Azure PA and is
 > `null` when Azure did not score; Interactive Communication is always `null` with proxies.
 > A real Google/Gemini key and a real Azure Speech key are still needed to leave simulation mode.
-> Supersedes the staging in `docs/SPEAKING-EVALUATOR.md` §4 (that document stays as the
-> research record; §2's capability table is still correct and is not repeated here).
+> Supersedes the earlier staging notes. The capability table from that research phase is still
+> correct and is not repeated here.
 > Written 2026-10-30. Facts marked *(verified)* were read from the vendor's own docs on this
 > date, with the URL next to them. Numbers marked *(estimate)* are arithmetic on verified
 > prices and must be re-measured before anyone quotes them as a result.
@@ -131,9 +131,9 @@ audio in `$0.005` + audio out while the agent speaks. A 14-min mock:
 | Plus DeepSeek report + PA | one LLM call + ≤ 1 audio hour Azure (free tier) | **≈ $0.01** |
 
 So **≈ $0.25 per full mock, $0 for the first ~21 mocks/month** while Azure's 5 free audio
-hours cover the PA side. That changes the earlier assumption in `SPEAKING-EVALUATOR.md` §3C
-that full duplex is "an order of magnitude above batch": at current prices it is cents per
-session, and the real constraint is **abuse**, not cost.
+hours cover the PA side. That changes the earlier assumption that full duplex is "an order of
+magnitude above batch": at current prices it is cents per session, and the real constraint is
+**abuse**, not cost.
 
 Caps to enforce server-side, in the same place the AI quotas live:
 
@@ -221,8 +221,8 @@ three gradeable scales; `interactive_communication` is `null` with the proxy num
 the entry appears in the log, the charts and the plan; a failed evaluation does not touch the
 streak.
 
-**Total: ~5 phases.** Reusable across all five: `docs/SPEAKING-EVALUATOR.md` §5's constraints
-hold unchanged (Pi, no public ports, stdlib server, quotas, injection).
+**Total: ~5 phases.** Reusable across all five: the constraints recorded in §3 above hold
+unchanged (Pi, no public ports, stdlib server, quotas, injection).
 
 ---
 
@@ -256,7 +256,7 @@ hold unchanged (Pi, no public ports, stdlib server, quotas, injection).
 | **Azure Speech key + region** | PA is Azure-only; free 5 h/month covers ~21 mocks | Create a free F0 resource, `B2_SPK_AZURE_KEY` / `B2_SPK_AZURE_REGION` |
 | **Daily minute cap** | Protects the budget | `20 min/user/day`, `120 min/instance/day` |
 | **Store transcripts?** | Privacy default | Off by default, opt-in per session |
-| Domain (HANDOFF §12.1) | Unchanged, independent | Still open |
+| Domain (deployment decision) | Unchanged, independent | Still open |
 
 If either key is missing, the feature must degrade to **S1 metrics only** — live HUD, no voices,
 no scores. That is the correct behaviour with one key absent and it needs to be true from S1.

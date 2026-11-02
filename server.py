@@ -22,6 +22,8 @@ Endpoints:
                      interactive communication as proxies only)
   GET /api/speaking/capabilities → {live, turn}: which transport this key can run
   POST /api/speaking/turn → one spoken turn: transcript + examiner reply + its audio
+  POST /api/password-reset/request → queues a manual reset (never reveals whether the
+                     account exists; no email is sent)
   GET /favicon.ico → 204 (does not exist, don't log a 404)
 
 Persistence: progress lives in <repo>/data/progress.json. Each PUT
@@ -268,6 +270,7 @@ RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 30)      # login+register+password pe
 RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
 AUTH_RATE_PATHS = (
     "/api/login", "/api/register", "/api/password",
+    "/api/password-reset/request",
     "/api/auth/google/start", "/api/auth/google/callback",
     "/api/webauthn/login/begin", "/api/webauthn/login/finish",
 )
@@ -4646,6 +4649,45 @@ class H(BaseHTTPRequestHandler):
                    {"reason": "password_change", "count": revoked})
             self._send(200, json.dumps({"ok": True, "token": fresh}).encode("utf-8"),
                        "application/json; charset=utf-8")
+            return
+
+        # Manual password recovery (public, no auth). No email is stored, so no
+        # reset link can be sent: the request is queued for the operator, who
+        # resets the password with tools/reset_password.py. The answer is the
+        # same for known and unknown users, so it cannot enumerate accounts.
+        if path == "/api/password-reset/request":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            ip = _real_ip(self)
+            if self._rate_limited("pwreset:" + ip, 5, 3600, "ip"):
+                return
+            raw = self.rfile.read(self._clen())
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send_json(400, {"error": "invalid JSON"}); return
+            name = req.get("name")
+            if not isinstance(name, str):
+                self._send_json(422, {"error": "invalid name"}); return
+            name = name.strip()
+            if not 1 <= len(name) <= 40 or any(not ch.isprintable() for ch in name):
+                self._send_json(422, {"error": "invalid name"}); return
+            contact = req.get("contact", "")
+            if not isinstance(contact, str):
+                self._send_json(422, {"error": "invalid contact"}); return
+            contact = "".join(ch for ch in contact if ch.isprintable()).strip()
+            if len(contact) > 120:
+                self._send_json(422, {"error": "invalid contact"}); return
+            if not _is_demo():
+                store.append_pwreset({
+                    "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "name": name,
+                    "contact": contact,
+                    "ip_hash": _ip_hash(ip),
+                    "rid": self._rid,
+                })
+            _audit("pwreset_request", "", ip, self._rid, {"name_len": len(name)})
+            self._send_json(200, {"ok": True})
             return
 
         # Account overview: uid, creation date, data usage and today's AI quota (auth)
