@@ -5395,8 +5395,7 @@ async function showGoogleLink(ticket){
     const data=await r.json();
     const name=document.getElementById('googleName');
     if(name)name.value=data.suggested||'';
-    /* No email option in the UI: the hash is only a legal safeguard, not a decision. */
-    if(box){box.checked=false;box.disabled=!data.has_email}
+    /* No email is stored: store_email is always false, so there is nothing to toggle here. */
     applyI18n();
     const ov=document.getElementById('googleLinkOverlay');
     if(ov)ov.style.display='flex';
