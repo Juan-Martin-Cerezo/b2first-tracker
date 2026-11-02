@@ -11689,9 +11689,9 @@ function planWeekRowHtml(key,js,scope){
         ${PLAN_WEEK_OPTIONS.map(v=>`<option value="${v}" ${selected===v?'selected':''}>${esc(planWeekOptionLabel(v))}</option>`).join('')}
       </select>
       <div class="wk-controls">
-        <label class="wk-min"><input type="number" min="10" max="180" step="5" value="${min}" data-week-min="${key}" aria-label="${esc(t('plan_day_min_label',{day:dayShort(js)}))}" onchange="weekSetNumber('${key}','min',this.value,'${scope}')"><span>${t('plan_min_short')}</span></label>
+        ${e.mode==='off'?'':`<label class="wk-min"><input type="number" min="10" max="180" step="5" value="${min}" data-week-min="${key}" aria-label="${esc(t('plan_day_min_label',{day:dayShort(js)}))}" onchange="weekSetNumber('${key}','min',this.value,'${scope}')"><span>${t('plan_min_short')}</span></label>
         <input class="wk-time" type="time" value="${esc(e.time)}" data-week-time="${key}" aria-label="${esc(t('plan_day_time_label',{day:dayShort(js)}))}" onchange="weekSetNumber('${key}','time',this.value,'${scope}')">
-        ${e.mode==='off'?'':`<button type="button" class="wk-rest" onclick="weekSetMode('${key}','off','${scope}')" aria-label="${esc(t('plan_opt_off'))}" title="${esc(t('plan_opt_off'))}">✕ rest</button>`}
+        <button type="button" class="wk-rest" onclick="weekSetMode('${key}','off','${scope}')" aria-label="${esc(t('plan_opt_off'))}" title="${esc(t('plan_opt_off'))}">✕ rest</button>`}
       </div>
     </div>
     ${showParts?planWeekPartsHtml(key,e,scope):''}
