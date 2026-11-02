@@ -3210,7 +3210,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_plan">Week plan</h2>
-            <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
+            <div class="wp-regen">
+              <span id="wpRegenStatus" class="t-xs muted" role="status" aria-live="polite"></span>
+              <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
+            </div>
           </div>
           <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no model calls).</div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
@@ -4062,6 +4065,9 @@ const I18N={
     plan_import_backup:'📥 Import Backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
+    plan_regen_done:'Plan rebuilt · {count} sessions',
+    plan_regen_rotated:'Plan rebuilt · {count} sessions (rotated for week {n})',
+    plan_regen_nothing:'Nothing to rebuild yet',
     plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no model calls).',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
@@ -4813,6 +4819,9 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
+    plan_regen_done:'Plan reconstruido · {count} sesiones',
+    plan_regen_rotated:'Plan reconstruido · {count} sesiones (rotado para la semana {n})',
+    plan_regen_nothing:'Nada que reconstruir todavía',
     plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
@@ -11860,7 +11869,43 @@ function renderWeeklyPlan(){
     why.innerHTML+=`<div>· ${esc(t('plan_custom_empty'))}</div>`;
   }
 }
-function regenWeeklyPlan(){renderWeeklyPlan()}
+let _wpRegenTimer=null;
+function regenWeeklyPlan(){
+  const btn=document.getElementById('wpRegenBtn');
+  const status=document.getElementById('wpRegenStatus');
+  const show=(msg)=>{
+    if(status)status.textContent=msg;
+    if(_wpRegenTimer)clearTimeout(_wpRegenTimer);
+    _wpRegenTimer=setTimeout(()=>{if(status)status.textContent=''},5000);
+  };
+  if(btn)btn.disabled=true;
+  try{
+    if(!D.profile){show(t('plan_regen_nothing'));return}
+    const plan=buildWeeklyPlan(D);
+    if(!plan||!Array.isArray(plan.slots)||!plan.slots.length){show(t('plan_regen_nothing'));return}
+    WEEK_PLAN=plan;
+    D.profile.plan={
+      generatedAt:new Date().toISOString(),
+      hoursWeek:D.profile.hoursWeek,
+      days:Array.isArray(D.profile.days)?D.profile.days.slice():[],
+      slots:plan.slots.map(sl=>({day:sl.day,type:sl.type,part:sl.part,kind:sl.kind||null,
+        time:sl.time||null,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
+    };
+    save();
+    const rotated=(D.settings.planMode==='custom')&&D.settings.customRotate!==false;
+    if(rotated){
+      const week=(plan.slots.find(sl=>sl.rotatedWeek!=null)||{}).rotatedWeek;
+      show(t('plan_regen_rotated',{count:plan.slots.length,n:week!=null?week:isoWeek(new Date())}));
+    }else{
+      show(t('plan_regen_done',{count:plan.slots.length}));
+    }
+    renderWeeklyPlan();
+  }catch(e){
+    show(t('plan_regen_nothing'));
+  }finally{
+    if(btn)btn.disabled=false;
+  }
+}
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
   if(!sl)return;
