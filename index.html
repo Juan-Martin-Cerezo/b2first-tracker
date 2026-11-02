@@ -994,14 +994,16 @@ tbody tr:hover{background:var(--surface-2)}
 #planCustom>summary::-webkit-details-marker{display:none}
 .pc-group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .pc-group:first-child{border-top:0;padding-top:0;margin-top:0}
-.pc-group .chip-btn{min-width:44px;min-height:44px}
+.pc-group .chip-btn{min-width:44px;min-height:44px;padding:10px 16px}
+.chip-btn[data-pc-list][aria-pressed="true"]{font-weight:800;border-width:3px;border-color:currentColor}
+.chip-btn[data-pc-list][aria-pressed="true"]::before{content:"✓";margin-right:6px;font-weight:800}
 .pc-group-label{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-bottom:8px}
 .pc-table-wrap{overflow-x:auto}
 .pc-table{width:100%;border-collapse:collapse;min-width:980px}
 .pc-table th{font-size:var(--fs-xs);color:var(--txt-2);text-align:left;font-weight:600;padding:0 6px 6px;white-space:nowrap}
 .pc-table td{padding:4px 6px;vertical-align:middle;white-space:nowrap}
 .pc-table select,.pc-table input[type=number],.pc-table input[type=time]{width:100%;min-width:72px}
-.pc-table select[data-pc-field="type"]{min-width:180px}
+.pc-table select[data-pc-field="type"]{min-width:230px}
 .pc-table select[data-pc-field="day"]{min-width:84px}
 .pc-table input[data-pc-field="time"]{min-width:112px}
 .pc-table input[data-pc-field="min"]{min-width:76px}
@@ -1012,8 +1014,41 @@ tbody tr:hover{background:var(--surface-2)}
 .pc-check input{width:20px;height:20px;margin:0}
 .pc-rhythm{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}
 .pc-rhythm .pc-check{min-width:0}
+.pc-autoonly{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:10px 12px;border:1px dashed var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt-2)}
+.pc-autoonly>div{flex:1 1 160px;min-width:0}
+.pc-autoonly-label{flex:1 0 100%;font-size:var(--fs-xs);font-weight:600;color:var(--txt-2);margin-bottom:2px}
+.pc-autoonly label{color:var(--txt-2)}
 .pc-times{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
 .pc-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.pc-rot{font-weight:600;color:var(--txt-2)}
+@media (max-width:899px){
+  .pc-table{min-width:0}
+  .pc-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .pc-table tbody{display:block}
+  .pc-table tr{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px 10px;padding:12px 0;border-top:1px solid var(--line)}
+  .pc-table td{padding:0;white-space:normal;min-width:0}
+  .pc-table td:nth-child(1){grid-column:1/3}
+  .pc-table td:nth-child(2){grid-column:3/5}
+  .pc-table td:nth-child(3){grid-column:5/7}
+  .pc-table td:nth-child(4){grid-column:7/13}
+  .pc-table td:nth-child(5){grid-column:1/3}
+  .pc-table td:nth-child(6){grid-column:3/6}
+  .pc-table td:nth-child(7){grid-column:6/7}
+  .pc-table td:nth-child(8){grid-column:7/13}
+  .pc-table select[data-pc-field="type"]{min-width:0;width:100%}
+  .pc-actions{min-width:0;justify-content:flex-end}
+}
+@media (max-width:600px){
+  .pc-table tr{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .pc-table td:nth-child(1){grid-column:1/3}
+  .pc-table td:nth-child(2){grid-column:3/5}
+  .pc-table td:nth-child(3){grid-column:5/7}
+  .pc-table td:nth-child(4){grid-column:1/7}
+  .pc-table td:nth-child(5){grid-column:1/3}
+  .pc-table td:nth-child(6){grid-column:3/6}
+  .pc-table td:nth-child(7){grid-column:6/7}
+  .pc-table td:nth-child(8){grid-column:1/7}
+}
 .today-plan-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:var(--r-panel);background:var(--surface-2)}
 .today-plan-row .t{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
 .today-plan-row .m{font-size:var(--fs-xs);color:var(--txt-2)}
@@ -3904,7 +3939,8 @@ const I18N={
     ob_plan_body:'This is the first week the app built from your date, your ratings and the check. You can change it any time in Plan.',
     ob_hours:'Hours per week',
     ob_days:'Days you can study',
-    ob_plan_sessions:'{n} sessions · about {min} min each',
+    ob_plan_sessions:'{n} sessions · {min} min each',
+    ob_plan_sessions_range:'{n} sessions · {min}–{max} min each',
     ob_plan_total:'{total} minutes this week',
     ob_plan_accept:'Use this plan and continue',
     ob_plan_edit_hint:'Change your hours or days and the sessions update right away.',
@@ -4061,8 +4097,8 @@ const I18N={
     plan_mode_custom:'My own plan',
     plan_sessions_title:'Session template',
     plan_add_session:'Add session',
-    plan_duplicate:'Duplicate',
-    plan_remove:'Remove',
+    plan_duplicate:'Duplicate session',
+    plan_remove:'Remove session',
     plan_move_up:'Move up',
     plan_move_down:'Move down',
     plan_col_day:'Day',
@@ -4079,6 +4115,7 @@ const I18N={
     plan_allowed_sp:'Speaking parts',
     plan_allowed_w:'Writing kinds',
     plan_rhythm:'Rhythm',
+    plan_auto_only:'Used by the automatic plan only',
     plan_slot_min:'Minutes per session',
     plan_sessions_week:'Sessions per week',
     plan_ignore_intake:'Ignore the intake estimate',
@@ -4090,6 +4127,8 @@ const I18N={
     plan_reset_auto:'Back to automatic',
     plan_planned_for:'Planned for {time}',
     plan_rotated:'Rotated for this week',
+    plan_rotated_week:'rotated for week {n}',
+    rotated:'· rot.',
     plan_custom_empty:'Your custom plan is empty, using the automatic one.',
     plan_custom_reason:'your custom plan',
     plan_custom_reason_rotated:'your custom plan, rotated for week {n}',
@@ -4651,7 +4690,8 @@ const I18N={
     ob_plan_body:'Esta es la primera semana que armó la app con tu fecha, tus notas y el chequeo. Podés cambiarla cuando quieras en Plan.',
     ob_hours:'Horas por semana',
     ob_days:'Días que podés estudiar',
-    ob_plan_sessions:'{n} sesiones · unos {min} min cada una',
+    ob_plan_sessions:'{n} sesiones · {min} min cada una',
+    ob_plan_sessions_range:'{n} sesiones · {min}–{max} min cada una',
     ob_plan_total:'{total} minutos esta semana',
     ob_plan_accept:'Usar este plan y seguir',
     ob_plan_edit_hint:'Cambiá las horas o los días y las sesiones se actualizan al instante.',
@@ -4808,8 +4848,8 @@ const I18N={
     plan_mode_custom:'Mi propio plan',
     plan_sessions_title:'Plantilla de sesiones',
     plan_add_session:'Agregar sesión',
-    plan_duplicate:'Duplicar',
-    plan_remove:'Quitar',
+    plan_duplicate:'Duplicar sesión',
+    plan_remove:'Quitar sesión',
     plan_move_up:'Subir',
     plan_move_down:'Bajar',
     plan_col_day:'Día',
@@ -4826,6 +4866,7 @@ const I18N={
     plan_allowed_sp:'Partes de Speaking',
     plan_allowed_w:'Géneros de Writing',
     plan_rhythm:'Ritmo',
+    plan_auto_only:'Solo se usa en el plan automático',
     plan_slot_min:'Minutos por sesión',
     plan_sessions_week:'Sesiones por semana',
     plan_ignore_intake:'Ignorar la estimación del intake',
@@ -4837,6 +4878,8 @@ const I18N={
     plan_reset_auto:'Volver a automático',
     plan_planned_for:'Previsto para {time}',
     plan_rotated:'Rotado para esta semana',
+    plan_rotated_week:'rotado para la semana {n}',
+    rotated:'· rot.',
     plan_custom_empty:'Tu plan personalizado está vacío; usamos el automático.',
     plan_custom_reason:'tu plan personalizado',
     plan_custom_reason_rotated:'tu plan personalizado, rotado para la semana {n}',
@@ -5981,15 +6024,21 @@ function obPlanRowsHtml(plan){
     const part=sl.part!=null?' · '+t('ob_part',{n:sl.part}):'';
     const kind=sl.kind?' · '+esc(sl.kind):'';
     const time=sl.time?' · '+esc(t('plan_planned_for',{time:sl.time})):'';
-    return `<div class="ob-preview-row"><span class="t">${obDayShortLabel(sl.day)} · ${t('ob_type_'+sl.type)}${kind}${part}${time}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
+    const rot=sl.rotated?` <span class="pc-rot" data-i18n="rotated">${t('rotated')}</span>`:'';
+    const rotLabel=sl.rotated?t('plan_rotated_week',{n:sl.rotatedWeek!=null?sl.rotatedWeek:''}):'';
+    const rotAttrs=rotLabel?` title="${esc(rotLabel)}" aria-label="${esc(rotLabel)}"`:'';
+    return `<div class="ob-preview-row"${rotAttrs}><span class="t">${obDayShortLabel(sl.day)} · ${t('ob_type_'+sl.type)}${kind}${part}${time}${rot}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
   }).join('');
 }
 function obPlanSummaryHtml(plan){
   const slots=(plan&&plan.slots)||[];
   if(!slots.length)return '';
-  const min=Math.min.apply(null,slots.map(sl=>Number(sl.min)||0));
-  const total=slots.reduce((a,sl)=>a+(Number(sl.min)||0),0);
-  return `<span class="ob-summary-pill">${t('ob_plan_sessions',{n:slots.length,min:min})}</span>
+  const mins=slots.map(sl=>Number(sl.min)||0);
+  const min=Math.min.apply(null,mins);
+  const max=Math.max.apply(null,mins);
+  const total=mins.reduce((a,n)=>a+n,0);
+  const sessions=min===max?t('ob_plan_sessions',{n:slots.length,min:min}):t('ob_plan_sessions_range',{n:slots.length,min:min,max:max});
+  return `<span class="ob-summary-pill">${sessions}</span>
     <span class="ob-summary-pill">${t('ob_plan_total',{total:total})}</span>`;
 }
 function obStepHtml(){
@@ -11382,7 +11431,7 @@ function buildWeeklyPlan(D,nowArg){
         return {
           day:day,time:(c.time||planTimeFor(s,day)||null),min:min,type:type,
           part:type==='w'?null:part,kind:type==='w'?kind:null,timed:!!c.timed,
-          rotated:rotate&&(part!==origPart||kind!==origKind),
+          rotated:rotate&&(part!==origPart||kind!==origKind),rotatedWeek:rotate?wk:null,
           reason:rotate?t('plan_custom_reason_rotated',{n:wk}):t('plan_custom_reason')
         };
       });
@@ -11569,10 +11618,10 @@ function planCustomTableHtml(s,slots,scope){
       <td>${kindCell}</td>
       <td><label class="pc-check" title="${esc(t('plan_col_timed'))}"><input type="checkbox" data-pc-field="timed" aria-label="${esc(t('plan_col_timed'))}" ${sl.timed?'checked':''} onchange="customSlotSet(${i},'timed',this.checked,'${scope}')"></label></td>
       <td class="pc-actions">
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="up" onclick="customSlotMove(${i},-1,'${scope}')" aria-label="${esc(t('plan_move_up'))}" ${i===0?'disabled':''}>↑</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="down" onclick="customSlotMove(${i},1,'${scope}')" aria-label="${esc(t('plan_move_down'))}" ${i===slots.length-1?'disabled':''}>↓</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="dup" onclick="customSlotDup(${i},'${scope}')" aria-label="${esc(t('plan_duplicate'))}">⧉</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="del" onclick="customSlotRemove(${i},'${scope}')" aria-label="${esc(t('plan_remove'))}">✕</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="up" onclick="customSlotMove(${i},-1,'${scope}')" aria-label="${esc(t('plan_move_up'))}" title="${esc(t('plan_move_up'))}" data-i18n-aria-label="plan_move_up" data-i18n-title="plan_move_up" ${i===0?'disabled':''}>↑</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="down" onclick="customSlotMove(${i},1,'${scope}')" aria-label="${esc(t('plan_move_down'))}" title="${esc(t('plan_move_down'))}" data-i18n-aria-label="plan_move_down" data-i18n-title="plan_move_down" ${i===slots.length-1?'disabled':''}>↓</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="dup" onclick="customSlotDup(${i},'${scope}')" aria-label="${esc(t('plan_duplicate'))}" title="${esc(t('plan_duplicate'))}" data-i18n-aria-label="plan_duplicate" data-i18n-title="plan_duplicate">⧉</button>
+        <button type="button" class="btn sm gray pc-icon" data-pc-action="del" onclick="customSlotRemove(${i},'${scope}')" aria-label="${esc(t('plan_remove'))}" title="${esc(t('plan_remove'))}" data-i18n-aria-label="plan_remove" data-i18n-title="plan_remove">✕</button>
       </td>
     </tr>`;
   }).join('');
@@ -11602,14 +11651,18 @@ function planChipGroup(key,labelKey,values,scope){
     }).join('')
   }</div></div>`;
 }
-function planRhythmHtml(s,scope){
+function planRhythmHtml(s,scope,mode){
   const weekGoal=Math.max(1,Math.min(14,Number(s.weekGoal)||5));
   const slotMin=Math.max(10,Math.min(180,Number(s.slotMin)||45));
+  const autoFields=`<div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>
+      <div><label for="pcWeekGoal_${scope}">${t('plan_sessions_week')}</label><input type="number" id="pcWeekGoal_${scope}" min="1" max="14" value="${weekGoal}" onchange="customSetSetting('weekGoal',this.value,'${scope}')"></div>`;
+  const rhythmFields=mode==='custom'
+    ?`<div class="pc-autoonly"><div class="pc-autoonly-label" data-i18n="plan_auto_only">${t('plan_auto_only')}</div>${autoFields}</div>`
+    :autoFields;
   return `<div class="pc-group">
     <div class="pc-group-label">${t('plan_rhythm')}</div>
     <div class="pc-rhythm">
-      <div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>
-      <div><label for="pcWeekGoal_${scope}">${t('plan_sessions_week')}</label><input type="number" id="pcWeekGoal_${scope}" min="1" max="14" value="${weekGoal}" onchange="customSetSetting('weekGoal',this.value,'${scope}')"></div>
+      ${rhythmFields}
       <label class="pc-check"><input type="checkbox" ${s.ignoreIntakeHours?'checked':''} onchange="customSetSetting('ignoreIntakeHours',this.checked,'${scope}')"><span>${t('plan_ignore_intake')}</span></label>
       <label class="pc-check"><input type="checkbox" ${s.customRotate!==false?'checked':''} onchange="customSetSetting('customRotate',this.checked,'${scope}')"><span>${t('plan_rotate')}</span></label>
     </div>
@@ -11633,7 +11686,7 @@ function customEditorHtml(scope){
   out.push(planChipGroup('lParts','plan_allowed_l',PLAN_PART_FULL.l,scope));
   out.push(planChipGroup('spParts','plan_allowed_sp',PLAN_PART_FULL.sp,scope));
   out.push(planChipGroup('wKinds','plan_allowed_w',PLAN_W_KINDS,scope));
-  out.push(planRhythmHtml(s,scope));
+  out.push(planRhythmHtml(s,scope,mode));
   out.push(planSessionTimesHtml(s,scope));
   out.push(`<div class="pc-group"><div class="pc-group-label">${t('plan_preview')}</div><div id="pcPreviewBody_${scope}">${planPreviewBodyHtml(scope)}</div></div>`);
   out.push(`<div class="pc-actions-row"><button type="button" class="btn gray" data-pc-action="reset" onclick="customBackToAuto('${scope}')">${t('plan_reset_auto')}</button></div>`);

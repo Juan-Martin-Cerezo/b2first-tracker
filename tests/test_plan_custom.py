@@ -177,6 +177,53 @@ def main():
         assert "rotated" in res4["reason"], f"reason does not mention rotation: {res4}"
         out["4_rotacion_semanal"] = f"OK: part {res4['a']} -> {res4['b']}"
 
+        # 4b. Summary wording, rotation marker and accessible row actions.
+        res4b = pg.evaluate(
+            """() => {
+            LANG = 'en';
+            D.settings = JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+            D.settings.planMode = 'custom';
+            D.settings.customRotate = false;
+            D.settings.customSlots = [
+                {day:'mon', time:'', min:30, type:'ue', part:1, kind:null, timed:false},
+                {day:'wed', time:'', min:45, type:'l', part:2, kind:null, timed:false},
+                {day:'sat', time:'', min:45, type:'w', part:null, kind:'Essay', timed:false}
+            ];
+            const summary = obPlanSummaryHtml(buildWeeklyPlan(D));
+            D.settings.customRotate = true;
+            D.settings.rueParts = [1,2,3,4,5,6,7];
+            D.settings.customSlots = [
+                {day:'mon', time:'', min:45, type:'ue', part:1, kind:null, timed:false}
+            ];
+            const rotated = buildWeeklyPlan(D, new Date('2026-01-12T12:00:00'));
+            const rotatedRows = obPlanRowsHtml(rotated);
+            D.settings.customRotate = false;
+            const plainRows = obPlanRowsHtml(buildWeeklyPlan(D, new Date('2026-01-12T12:00:00')));
+            const box = document.createElement('div');
+            box.innerHTML = rotatedRows + plainRows;
+            const rows = Array.from(box.querySelectorAll('.ob-preview-row'));
+            return {
+                summary: summary,
+                rotatedHtml: rotatedRows,
+                plainHtml: plainRows,
+                rotatedLabel: rows[0].getAttribute('aria-label') || '',
+                plainLabel: rows[1].getAttribute('aria-label') || '',
+                rotWk: rotated.slots[0].rotatedWeek
+            };
+        }"""
+        )
+        assert (
+            "3 sessions · 30–45 min each" in res4b["summary"]
+            and "120 minutes this week" in res4b["summary"]
+        ), f"summary wording wrong: {res4b['summary']}"
+        assert (
+            "· rot." in res4b["rotatedHtml"]
+            and str(res4b["rotWk"]) in res4b["rotatedLabel"]
+            and "· rot." not in res4b["plainHtml"]
+            and "rotated for week" not in res4b["plainLabel"]
+        ), f"rotation marker wrong: {res4b}"
+        out["4b_vista_previa"] = "OK: range summary, rotated marker and week label"
+
         # 5. rueParts filters every UoE slot in automatic mode.
         res5 = pg.evaluate(
             """() => {
@@ -288,6 +335,24 @@ def main():
         assert before["min"] == 30, f"minutes not saved: {before}"
         assert "Article" not in before["kinds"], f"allowed kind not saved: {before}"
         assert before["types"] == ["ue", "l", "w"], f"types not saved: {before}"
+        labels = pg.evaluate(
+            """() => {
+            const row = document.querySelector('#planCustomBody tr[data-pc-row="0"]');
+            const out = {};
+            ['up','down','dup','del'].forEach(a => {
+                const b = row.querySelector('[data-pc-action="' + a + '"]');
+                out[a] = {label:b.getAttribute('aria-label'), title:b.getAttribute('title')};
+            });
+            return out;
+        }"""
+        )
+        assert labels == {
+            "up": {"label": "Move up", "title": "Move up"},
+            "down": {"label": "Move down", "title": "Move down"},
+            "dup": {"label": "Duplicate session", "title": "Duplicate session"},
+            "del": {"label": "Remove session", "title": "Remove session"},
+        }, f"row action labels wrong: {labels}"
+        out["9b_labels"] = labels
         pg.evaluate(
             "() => { const el=document.getElementById('planCustom');"
             " el.scrollIntoView({block:'start'}); window.scrollBy(0,-220); }"
