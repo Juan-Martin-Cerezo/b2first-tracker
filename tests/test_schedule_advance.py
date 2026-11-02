@@ -1,5 +1,8 @@
+"""Session shift controls now read the week rows instead of schedule inputs."""
 import json
+
 from playwright.sync_api import sync_playwright
+
 from helpers import isolated_server, login_owner
 
 URL = isolated_server() + "/"
@@ -14,72 +17,68 @@ with sync_playwright() as p:
     login_owner(pg, URL)
     pg.wait_for_timeout(300)
 
-    # Backup original state
-    orig_sched = pg.evaluate("JSON.stringify(D.settings.schedule || [])")
+    orig_week = pg.evaluate("JSON.stringify(D.settings.week || {})")
     orig_offset = pg.evaluate("D.sessionOffset || 0")
 
-    # 1. Check default schedule rows count
-    pg.click("nav button[data-view='plan']")
-    pg.wait_for_timeout(200)
-    initial_rows = pg.eval_on_selector_all("#scheduleRowsContainer .row", "els => els.length")
-    out["initial_schedule_rows"] = initial_rows
-
-    # 2. Add new session days (Total 4 days: Mon, Tue, Thu, Sat)
+    # The week rows are the only place days/times are set.
     pg.evaluate("""() => {
-        D.settings.schedule = [
-            { day: 1, time: '15:30' },
-            { day: 2, time: '18:00' },
-            { day: 4, time: '19:00' },
-            { day: 6, time: '10:00' }
-        ];
+        D.settings.week = {};
+        ['mon','tue','thu','sat'].forEach((k, i) => {
+            D.settings.week[k] = {mode:'auto', preset:null, parts:{ue:[],l:[],sp:[],w:[]},
+                                  min:null, time:['15:30','18:00','19:00','10:00'][i]};
+        });
         D.sessionOffset = 0;
         save();
         renderPlan();
         renderToday();
     }""")
     pg.wait_for_timeout(200)
+    schedule = pg.evaluate("getSchedule()")
+    out["schedule"] = schedule
+    assert len(schedule) == 4, schedule
+    assert [s["day"] for s in schedule] == [1, 2, 4, 6], schedule
 
-    rows_after_add = pg.eval_on_selector_all("#scheduleRowsContainer .row", "els => els.length")
-    out["rows_after_add"] = rows_after_add
-    out["preview_items_count"] = pg.eval_on_selector_all("#planUpcomingPreview > div", "els => els.length")
-
-    # 3. Check session shift / fast-forward (+1) from Plan view
-    offset_initial = pg.evaluate("D.sessionOffset || 0")
+    pg.click("nav button[data-view='plan']")
+    pg.wait_for_timeout(200)
     if not pg.is_visible("#v-plan button[onclick='advanceSession(1)']"):
         pg.click("#planTuning > summary")
         pg.wait_for_timeout(150)
+    offset_initial = pg.evaluate("D.sessionOffset || 0")
     pg.click("#v-plan button[onclick='advanceSession(1)']")
     pg.wait_for_timeout(200)
-    offset_after_1 = pg.evaluate("D.sessionOffset || 0")
-    badge_text = pg.text_content("#planOffsetBadge")
     out["offset_initial"] = offset_initial
-    out["offset_after_1"] = offset_after_1
-    out["offset_badge"] = badge_text
+    out["offset_after_1"] = pg.evaluate("D.sessionOffset || 0")
+    out["offset_badge"] = pg.text_content("#planOffsetBadge")
+    assert out["offset_after_1"] == offset_initial + 1, out
+    assert "+1" in out["offset_badge"], out
 
-    # 4. Check advance via banner on TODAY view
+    # The banner on Today keeps the same shift action.
     pg.click("nav button[data-view='hoy']")
     pg.wait_for_timeout(200)
     out["today_banner_visible"] = pg.is_visible("#nextBox")
-    
-    # Click shift (+1) from banner
     shift_btn = pg.query_selector("#nextBox button[onclick*='advanceSession']")
     if shift_btn and shift_btn.is_visible():
         shift_btn.click()
         pg.wait_for_timeout(200)
-    offset_after_banner = pg.evaluate("D.sessionOffset || 0")
-    out["offset_after_banner"] = offset_after_banner
+    out["offset_after_banner"] = pg.evaluate("D.sessionOffset || 0")
+    assert out["offset_after_banner"] == offset_initial + 2, out
 
-    # 5. Restore original state
-    pg.evaluate("""([origSched, origOff]) => {
-        D.settings.schedule = JSON.parse(origSched);
-        D.sessionOffset = origOff;
+    # Restore.
+    pg.evaluate(
+        """([week, offset]) => {
+        D.settings.week = JSON.parse(week);
+        D.sessionOffset = offset;
         save();
         renderPlan();
         renderToday();
-    }""", [orig_sched, orig_offset])
+    }""",
+        [orig_week, orig_offset],
+    )
     out["offset_restored"] = pg.evaluate("D.sessionOffset || 0")
+    assert out["offset_restored"] == orig_offset, out
 
     out["errores_js"] = errs
+    assert errs == [], errs
     b.close()
 
 print(json.dumps(out, indent=1, ensure_ascii=False))

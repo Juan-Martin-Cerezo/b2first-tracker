@@ -1005,64 +1005,34 @@ details.card[open]>summary::after{transform:rotate(-135deg)}
 .wp-row .wp-main{flex:1;min-width:220px}
 .wp-row .wp-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.wp-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 
-/* custom plan editor */
-.pc-group{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
-.pc-group:first-child{border-top:0;padding-top:0;margin-top:0}
-.pc-group .chip-btn{min-width:44px;min-height:44px;padding:10px 16px}
-.chip-btn[data-pc-list][aria-pressed="true"]{font-weight:800;border-width:3px;border-color:currentColor}
-.chip-btn[data-pc-list][aria-pressed="true"]::before{content:"✓";margin-right:6px;font-weight:800}
-.pc-group-label{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-bottom:8px}
-.pc-table-wrap{overflow-x:auto}
-.pc-table{width:100%;border-collapse:collapse;min-width:980px}
-.pc-table th{font-size:var(--fs-xs);color:var(--txt-2);text-align:left;font-weight:600;padding:0 6px 6px;white-space:nowrap}
-.pc-table td{padding:4px 6px;vertical-align:middle;white-space:nowrap}
-.pc-table select,.pc-table input[type=number],.pc-table input[type=time]{width:100%;min-width:72px}
-.pc-table select[data-pc-field="type"]{min-width:230px}
-.pc-table select[data-pc-field="day"]{min-width:84px}
-.pc-table input[data-pc-field="time"]{min-width:112px}
-.pc-table input[data-pc-field="min"]{min-width:76px}
-.pc-table select[data-pc-field="kind"]{min-width:104px}
-.pc-actions{white-space:nowrap;display:flex;gap:4px;min-width:196px}
-.pc-icon{min-width:44px;min-height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center}
-.pc-check{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);color:var(--txt);min-height:44px;cursor:pointer;margin:0;text-transform:none}
-.pc-check input{width:20px;height:20px;margin:0}
-.pc-rhythm{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end}
-.pc-rhythm .pc-check{min-width:0}
-.pc-autoonly{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:10px 12px;border:1px dashed var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt-2)}
-.pc-autoonly>div{flex:1 1 160px;min-width:0}
-.pc-autoonly-label{flex:1 0 100%;font-size:var(--fs-xs);font-weight:600;color:var(--txt-2);margin-bottom:2px}
-.pc-autoonly label{color:var(--txt-2)}
-.pc-times{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px}
-.pc-actions-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+/* your week (one row per day) */
+.wk-row{border-top:1px solid var(--line);padding:10px 0;min-width:0}
+.wk-row:first-child{border-top:0;padding-top:0}
+.wk-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+.wk-day{flex:0 0 44px;white-space:nowrap;font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
+.wk-select{flex:1 1 180px;min-width:0;max-width:100%;min-height:44px}
+.wk-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex:0 0 auto;flex-wrap:nowrap}
+.wk-min{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;margin:0;text-transform:none;font-size:var(--fs-xs);color:var(--txt-2)}
+.wk-min input{width:72px;min-height:44px}
+input.wk-time{flex:0 0 auto;min-height:44px;width:112px}
+.wk-rest{flex:0 0 auto;white-space:nowrap;border:0;background:transparent;color:var(--txt-2);font:inherit;font-size:var(--fs-xs);min-height:44px;padding:0 6px;cursor:pointer;border-radius:var(--r-ctl)}
+.wk-rest:hover{color:var(--txt)}
+.wk-rest:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.wk-parts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;padding-left:44px}
+.wk-part{display:flex;flex-direction:column;gap:2px;margin:0;text-transform:none;font-size:var(--fs-xs);color:var(--txt-2);min-width:0}
+.wk-part select{min-width:84px;max-width:100%;min-height:44px;padding:2px 4px;font-size:var(--fs-xs)}
+.wk-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:12px;padding-top:12px;font-size:var(--fs-xs);color:var(--txt-2)}
+.wk-reset{border:0;background:transparent;color:var(--primary);font:inherit;font-size:var(--fs-sm);font-weight:600;min-height:44px;padding:0 6px;cursor:pointer}
+.wk-reset:hover{text-decoration:underline}
+.wk-reset:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 .pc-rot{font-weight:600;color:var(--txt-2)}
-@media (max-width:899px){
-  .pc-table{min-width:0}
-  .pc-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .pc-table tbody{display:block}
-  .pc-table tr{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px 10px;padding:12px 0;border-top:1px solid var(--line)}
-  .pc-table td{padding:0;white-space:normal;min-width:0}
-  .pc-table td:nth-child(1){grid-column:1/3}
-  .pc-table td:nth-child(2){grid-column:3/5}
-  .pc-table td:nth-child(3){grid-column:5/7}
-  .pc-table td:nth-child(4){grid-column:7/13}
-  .pc-table td:nth-child(5){grid-column:1/3}
-  .pc-table td:nth-child(6){grid-column:3/6}
-  .pc-table td:nth-child(7){grid-column:6/7}
-  .pc-table td:nth-child(8){grid-column:7/13}
-  .pc-table select[data-pc-field="type"]{min-width:0;width:100%}
-  .pc-actions{min-width:0;justify-content:flex-end}
-}
-@media (max-width:600px){
-  .pc-table tr{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .pc-table td:nth-child(1){grid-column:1/3}
-  .pc-table td:nth-child(2){grid-column:3/5}
-  .pc-table td:nth-child(3){grid-column:5/7}
-  .pc-table td:nth-child(4){grid-column:1/7}
-  .pc-table td:nth-child(5){grid-column:1/3}
-  .pc-table td:nth-child(6){grid-column:3/6}
-  .pc-table td:nth-child(7){grid-column:6/7}
-  .pc-table td:nth-child(8){grid-column:1/7}
+@media (max-width:640px){
+  .wk-controls{flex:1 0 100%;margin-left:0}
+  .wk-parts{padding-left:0}
+  .wk-part{flex:1 1 45%}
+  .wk-part select{min-width:0;width:100%}
 }
 .today-plan-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:var(--r-panel);background:var(--surface-2)}
 .today-plan-row .t{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
@@ -3238,14 +3208,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </details>
         </div>
 
-        <!-- Custom plan editor (phase 42): days, times, minutes, type,
-             exercise and rotation are all controlled here. The onboarding
-             renders the same editor inline in step 4. -->
+        <!-- Your week (phase 45): one row per day. Changing a row is a single
+             sentence in the student's words; the automatic rules fill the
+             days left on "Follow the suggestion". The onboarding renders the
+             same rows inline in step 4. -->
         <div class="card" id="planCustom" style="margin-bottom:16px">
           <div class="plan-card-head">
-            <h2 data-i18n="plan_custom_title">Customize</h2>
+            <h2 data-i18n="plan_week_mine">Your week</h2>
           </div>
-          <div class="sub" data-i18n="plan_custom_sub">Build the week session by session, or keep the automatic plan and only narrow the exercises it may use.</div>
+          <div class="sub" data-i18n="plan_week_mine_sub">On Mondays, do these parts — or the whole paper — for this long.</div>
           <div id="planCustomBody"></div>
         </div>
 
@@ -3335,37 +3306,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </fieldset>
 
             <fieldset class="plan-fieldset">
-              <legend data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</legend>
-              <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
-              <div class="plan-grid">
-                <div><label for="pWeekGoal" data-i18n="plan_sessions_week">Sessions per week</label><input type="number" id="pWeekGoal" min="1" max="14" value="5" onchange="onWeekGoalChange(this.value)"></div>
-              </div>
-              <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
-              <div style="margin-top:10px">
-                <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
-              </div>
-
-              <!-- Fallback inputs for test compatibility -->
-              <input type="hidden" id="pADay">
-              <input type="hidden" id="pATime">
-              <input type="hidden" id="pBDay">
-              <input type="hidden" id="pBTime">
-
-              <!-- Advance / Shift Session Controls -->
-              <div style="margin-top:16px;padding:12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-                  <div>
-                    <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                      <span data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</span>
-                      <span class="t-xs muted" id="planOffsetBadge">Offset: +0</span>
-                    </div>
-                    <div class="sub" style="margin-top:2px;font-size:12px" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
-                  </div>
-                  <div style="display:flex;gap:6px;align-items:center">
-                    <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
-                    <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
-                    <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
-                  </div>
+              <legend data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</legend>
+              <div class="sub" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px">
+                <span class="t-xs muted" id="planOffsetBadge">Offset: +0</span>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
+                  <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
+                  <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
                 </div>
               </div>
             </fieldset>
@@ -3669,7 +3617,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
    D.weekOverrides → weekly rotation picked by hand
        {rue: part, w: kind, l: part, sp: part}
    D.settings      → everything configurable (SETTINGS_DEFAULT below):
-       sesA/sesB schedules · timer durations · word range · rotation
+       week (one entry per day) · timer durations · word range · rotation
        cycles (rueCycle/wCycle/lCycle/spCycle) · numeric gate criteria
        (e0/e1/e2).
 
@@ -4049,6 +3997,29 @@ const I18N={
     plan_regen_done:'Plan rebuilt · {count} sessions',
     plan_regen_rotated:'Plan rebuilt · {count} sessions (rotated for week {n})',
     plan_regen_nothing:'Nothing to rebuild yet',
+    plan_week_mine:'Your week',
+    plan_week_mine_sub:'On Mondays, do these parts — or the whole paper — for this long.',
+    plan_opt_auto:'Follow the suggestion',
+    plan_opt_off:'rest day',
+    plan_opt_ue_full:'Use of English — whole paper',
+    plan_opt_l_full:'Listening — whole paper',
+    plan_opt_w_full:'Writing — one task',
+    plan_opt_sp_full:'Speaking — full',
+    plan_opt_ue_l:'Use of English + Listening',
+    plan_opt_ue_w:'Use of English + Writing',
+    plan_opt_l_sp:'Listening + Speaking',
+    plan_opt_parts:'Specific parts…',
+    plan_week_footer:'Days you leave on "Follow the suggestion" use the plan below',
+    plan_reset_choices:'Reset my choices',
+    plan_reset_choices_confirm:'Reset every day to "Follow the suggestion"?',
+    plan_min_short:'min',
+    plan_week_day_label:'{day} plan',
+    plan_day_min_label:'{day} minutes',
+    plan_day_time_label:'{day} start time (optional)',
+    plan_parts_ue:'UoE',
+    plan_parts_l:'Listening',
+    plan_parts_sp:'Speaking',
+    plan_parts_w:'Writing',
     plan_tuning:'Fine-tuning',
     plan_account:'Account & provider',
     plan_cycles:'Cycles',
@@ -4806,6 +4777,29 @@ const I18N={
     plan_regen_done:'Plan reconstruido · {count} sesiones',
     plan_regen_rotated:'Plan reconstruido · {count} sesiones (rotado para la semana {n})',
     plan_regen_nothing:'Nada que reconstruir todavía',
+    plan_week_mine:'Tu semana',
+    plan_week_mine_sub:'Los lunes, hacé estas partes — o el examen completo — durante este tiempo.',
+    plan_opt_auto:'Seguir la sugerencia',
+    plan_opt_off:'día de descanso',
+    plan_opt_ue_full:'Use of English — examen completo',
+    plan_opt_l_full:'Listening — examen completo',
+    plan_opt_w_full:'Writing — una tarea',
+    plan_opt_sp_full:'Speaking — completo',
+    plan_opt_ue_l:'Use of English + Listening',
+    plan_opt_ue_w:'Use of English + Writing',
+    plan_opt_l_sp:'Listening + Speaking',
+    plan_opt_parts:'Partes específicas…',
+    plan_week_footer:'Los días que dejes en "Seguir la sugerencia" usan el plan de abajo',
+    plan_reset_choices:'Restablecer mis elecciones',
+    plan_reset_choices_confirm:'¿Volver todos los días a "Seguir la sugerencia"?',
+    plan_min_short:'min',
+    plan_week_day_label:'Plan del {day}',
+    plan_day_min_label:'Minutos del {day}',
+    plan_day_time_label:'Hora de inicio del {day} (opcional)',
+    plan_parts_ue:'UoE',
+    plan_parts_l:'Listening',
+    plan_parts_sp:'Speaking',
+    plan_parts_w:'Writing',
     plan_tuning:'Ajustes finos',
     plan_account:'Cuenta y proveedor',
     plan_cycles:'Ciclos',
@@ -5286,23 +5280,126 @@ const SETTINGS_DEFAULT={
   /* Phase 38: `fast` speaks the reply with the browser's own speechSynthesis
      (one AI call per turn, ~2 s); `natural` asks Gemini for audio (+3-4 s). */
   voice:'fast',
-  sesA:{day:1,time:'15:30'},sesB:{day:5,time:'13:00'},
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
   streakFreeze:1,weekGoal:5,
-  /* Phase 42: the weekly plan can be fully hand-built. `slotMin` is the
-     exact minutes per auto session; the *Parts/*Kinds lists are allowlists
-     that every generated slot must respect (empty -> full list + fallback). */
-  planMode:'auto',customSlots:[],customRotate:true,slotMin:45,ignoreIntakeHours:false,
-  rueParts:[1,2,3,4,5,6,7],lParts:[1,2,3,4],spParts:[1,2,3,4],
-  wKinds:['Essay','Article','Report','Review','Email'],
-  sessionTime:{},
+  /* Phase 45: the week is one entry per day. `mode` decides who owns the day:
+     `auto` follows the deterministic rules below, `custom` uses the preset or
+     the ticked parts, `off` is a rest day. `slotMin` is only the default
+     minutes for a day that has not set its own. */
+  week:{},slotMin:45,ignoreIntakeHours:false,
   rueCycle:[1,2,3,4,5,6,7],
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
   spCycle:[1,2,3,4],
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
+/* ---------- YOUR WEEK (phase 45) ----------
+   `D.settings.week` is the single source of truth for the plan days:
+   {mon:{mode,preset,parts,min,time}, …}. `auto` lets buildWeeklyPlan place
+   the day with its deterministic rules, `custom` means the preset/parts are
+   exactly the session and `off` means no session at all. `min:null` falls
+   back to the global slotMin default. */
+const PLAN_WEEK_KEYS=['mon','tue','wed','thu','fri','sat','sun'];
+const PLAN_WEEK_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+const PLAN_WEEK_JS={mon:1,tue:2,wed:3,thu:4,fri:5,sat:6,sun:0};
+const PLAN_WEEK_BY_JS={0:'sun',1:'mon',2:'tue',3:'wed',4:'thu',5:'fri',6:'sat'};
+const PLAN_W_KINDS=['Essay','Article','Report','Review','Email'];
+const PLAN_PART_FULL={ue:[1,2,3,4,5,6,7],l:[1,2,3,4],sp:[1,2,3,4]};
+const PLAN_PRESETS=['ue_full','l_full','w_full','sp_full','ue_l','ue_w','l_sp','parts'];
+function planEmptyParts(){return {ue:[],l:[],sp:[],w:[]}}
+function planNormParts(raw){
+  const src=(raw&&typeof raw==='object')?raw:{};
+  const out=planEmptyParts();
+  ['ue','l','sp'].forEach(k=>{
+    const max=k==='ue'?7:4;
+    const arr=Array.isArray(src[k])?src[k]:[];
+    out[k]=arr.map(Number).filter((n,i,a)=>n>=1&&n<=max&&a.indexOf(n)===i).sort((a,b)=>a-b);
+  });
+  const kinds=Array.isArray(src.w)?src.w:[];
+  out.w=kinds.filter(k=>PLAN_W_KINDS.indexOf(k)>=0).filter((k,i,a)=>a.indexOf(k)===i);
+  return out;
+}
+function planDefaultMin(s){return Math.max(10,Math.min(180,Number(s&&s.slotMin)||45))}
+function planWeek(s){
+  s=s||(D&&D.settings)||{};
+  const src=(s.week&&typeof s.week==='object')?s.week:{};
+  const out={};
+  PLAN_WEEK_KEYS.forEach(k=>{
+    const e=(src[k]&&typeof src[k]==='object')?src[k]:{};
+    const parts=planNormParts(e.parts);
+    const preset=PLAN_PRESETS.indexOf(e.preset)>=0?e.preset:null;
+    const hasData=!!preset||parts.ue.length>0||parts.l.length>0||parts.sp.length>0||parts.w.length>0;
+    out[k]={
+      mode:(e.mode==='custom'||e.mode==='off')?e.mode:(!e.mode&&hasData?'custom':'auto'),
+      preset:preset,
+      parts:parts,
+      min:(e.min!=null&&e.min!==''&&isFinite(Number(e.min)))?Math.max(10,Math.min(180,Math.round(Number(e.min)))):null,
+      time:typeof e.time==='string'?e.time:''
+    };
+  });
+  return out;
+}
+function planEntryMin(w,s,key){
+  const e=w&&w[key];
+  return (e&&e.min!=null)?e.min:planDefaultMin(s);
+}
+function planDayLabel(key){return PLAN_WEEK_LABELS[key]||key}
+function migratePlanSettings(settings){
+  const s=(settings&&typeof settings==='object')?settings:{};
+  const hadWeek=!!(s.week&&typeof s.week==='object'&&Object.keys(s.week).length);
+  const legacy=Array.isArray(s.customSlots)?s.customSlots:[];
+  const week=(s.week&&typeof s.week==='object')?JSON.parse(JSON.stringify(s.week)):{};
+  if(legacy.length){
+    legacy.forEach(raw=>{
+      if(!raw)return;
+      const key=planDayKey(raw.day||'mon');
+      if(PLAN_WEEK_KEYS.indexOf(key)<0)return;
+      const prev=(week[key]&&typeof week[key]==='object')?week[key]:{};
+      const parts=planNormParts(prev.parts);
+      const type=(raw.type==='w'||raw.type==='l'||raw.type==='sp')?raw.type:'ue';
+      if(type==='w'){
+        const kind=raw.kind||PLAN_W_KINDS[0];
+        if(parts.w.indexOf(kind)<0)parts.w.push(kind);
+      }else if(raw.part!=null){
+        const n=Number(raw.part);
+        if(n>=1&&n<=PLAN_PART_FULL[type].length&&parts[type].indexOf(n)<0)parts[type].push(n);
+        parts[type].sort((a,b)=>a-b);
+      }
+      week[key]={
+        mode:'custom',preset:'parts',parts:parts,
+        min:(raw.min!=null&&isFinite(Number(raw.min)))?Math.max(10,Math.min(180,Math.round(Number(raw.min)))):(prev.min!=null?prev.min:null),
+        time:raw.time||prev.time||''
+      };
+    });
+  }else if(!hadWeek&&Array.isArray(s.schedule)&&s.schedule.length){
+    s.schedule.forEach(sl=>{
+      if(!sl)return;
+      const key=PLAN_WEEK_BY_JS[((Number(sl.day)||0)%7+7)%7];
+      if(!key)return;
+      const prev=(week[key]&&typeof week[key]==='object')?week[key]:{};
+      week[key]=Object.assign({mode:'auto',preset:null,parts:planEmptyParts(),min:null,time:''},prev,{time:sl.time||prev.time||''});
+    });
+  }
+  const out={};
+  PLAN_WEEK_KEYS.forEach(k=>{
+    const e=(week[k]&&typeof week[k]==='object')?week[k]:{};
+    const parts=planNormParts(e.parts);
+    const preset=PLAN_PRESETS.indexOf(e.preset)>=0?e.preset:null;
+    const hasData=!!preset||parts.ue.length>0||parts.l.length>0||parts.sp.length>0||parts.w.length>0;
+    out[k]={
+      mode:(e.mode==='custom'||e.mode==='off')?e.mode:(!e.mode&&hasData?'custom':'auto'),
+      preset:preset,
+      parts:parts,
+      min:(e.min!=null&&e.min!==''&&isFinite(Number(e.min)))?Math.max(10,Math.min(180,Math.round(Number(e.min)))):null,
+      time:typeof e.time==='string'?e.time:''
+    };
+  });
+  s.week=out;
+  ['customSlots','planMode','customRotate','rueParts','lParts','spParts','wKinds',
+   'schedule','sesA','sesB','sessionTime'].forEach(k=>delete s[k]);
+  return s;
+}
 /* =====================================================================
    USERS (multi-account)
    ---------------------------------------------------------------------
@@ -6230,8 +6327,13 @@ function obApplySchedule(prof){
   const days=Array.isArray(prof.days)?prof.days:[];
   if(!days.length)return;
   if(!D.settings)D.settings={};
+  if(!D.settings.week||typeof D.settings.week!=='object')D.settings.week={};
   const times=['15:30','13:00','10:00','18:00','09:00','16:00','11:00'];
-  D.settings.schedule=days.map((k,i)=>({day:OB_DAY_TO_JS[k],time:times[i%times.length]}));
+  days.forEach((k,i)=>{
+    if(PLAN_WEEK_KEYS.indexOf(k)<0)return;
+    const prev=(D.settings.week[k]&&typeof D.settings.week[k]==='object')?D.settings.week[k]:{};
+    D.settings.week[k]=Object.assign({mode:'auto',preset:null,parts:planEmptyParts(),min:null,time:''},prev,{time:times[i%times.length]});
+  });
 }
 function obStartDiagnostic(){
   OB.error='';
@@ -6589,7 +6691,7 @@ function load(){
       const old=JSON.parse(localStorage.getItem(BASE_KEY))||{};
       if(old.log||old.errs){Object.assign(d,old)}
     }
-    const settings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{});
+    const settings=migratePlanSettings(Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), d.settings||{}));
     // Keys never live in D: they belong to the BYO store (localStorage, per
     // user) and must not be synced. Drop anything a legacy document carries.
     delete settings.aiKey;
@@ -6610,7 +6712,7 @@ function load(){
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,onboarded:false,onboardStep:1,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:migratePlanSettings(JSON.parse(JSON.stringify(SETTINGS_DEFAULT))),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,onboarded:false,onboardStep:1,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -6664,7 +6766,7 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
-          const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
+          const mergedSettings=migratePlanSettings(Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{}));
           delete mergedSettings.aiKey;
           delete mergedSettings.byo;
           D = {
@@ -10880,7 +10982,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;syncLangFromD();save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;D.settings=migratePlanSettings(Object.assign({},JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),D.settings||{}));syncLangFromD();save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
   r.readAsText(f);ev.target.value='';
 }
 function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
@@ -10896,7 +10998,8 @@ document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCoun
                    durations (called on save and on load). */
 function renderPlan(){
   const s=D.settings;
-  renderScheduleRows();
+  const offBadge=document.getElementById('planOffsetBadge');
+  if(offBadge){const off=D.sessionOffset||0;offBadge.textContent=t('plan_offset',{offset:(off>=0?'+':'')+off})}
   document.getElementById('pUeMin').value=s.ueMin||50;document.getElementById('pPlanMin').value=s.planMin||5;
   document.getElementById('pWriteMin').value=s.writeMin||35;document.getElementById('pRevMin').value=s.revMin||20;
   document.getElementById('pListenMin').value=s.listenMin||40;document.getElementById('pSp1Sec').value=s.sp1Sec||60;document.getElementById('pSp2Sec').value=s.sp2Sec||180;
@@ -10904,7 +11007,6 @@ function renderPlan(){
   if(pv)pv.value=spkVoiceMode();
   document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
   if(document.getElementById('pStreakFreeze'))document.getElementById('pStreakFreeze').value=s.streakFreeze??1;
-  if(document.getElementById('pWeekGoal'))document.getElementById('pWeekGoal').value=s.weekGoal??5;
   if(document.getElementById('pEven'))document.getElementById('pEven').value=s.even||3;
   if(document.getElementById('pOdd'))document.getElementById('pOdd').value=s.odd||4;
   document.getElementById('pRueCycle').value=(s.rueCycle||[1,2,3,4,5,6,7]).join(',');
@@ -11275,7 +11377,6 @@ function planLimitHaveCode(){
   if(input)input.focus();
 }
 function savePlan(){
-  updateScheduleFromUI();
   const s=D.settings,g=id=>document.getElementById(id)?document.getElementById(id).value:'';
   s.ueMin=+g('pUeMin')||50;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||35;s.revMin=+g('pRevMin')||20;
   s.listenMin=+g('pListenMin')||40;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
@@ -11283,7 +11384,6 @@ function savePlan(){
   if(pv==='fast'||pv==='natural')s.voice=pv;
   s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
   if(g('pStreakFreeze')!=='')s.streakFreeze=Math.max(0,+g('pStreakFreeze'));
-  if(g('pWeekGoal')!=='')s.weekGoal=Math.max(1,+g('pWeekGoal'));
   if(g('pEven'))s.even=+g('pEven')||3;if(g('pOdd'))s.odd=+g('pOdd')||4;
   s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];
   s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];
@@ -11322,25 +11422,7 @@ function resetPlan(){
       same day. Without D.profile and without a diagnostic the plan is
       empty with needDiag (previous behaviour).
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
-const PLAN_W_KINDS=['Essay','Article','Report','Review','Email'];
-const PLAN_PART_FULL={ue:[1,2,3,4,5,6,7],l:[1,2,3,4],sp:[1,2,3,4]};
-function planPartListFor(type,s){
-  if(type==='l')return planAllowedList(s,'lParts',PLAN_PART_FULL.l);
-  if(type==='sp')return planAllowedList(s,'spParts',PLAN_PART_FULL.sp);
-  if(type==='ue')return planAllowedList(s,'rueParts',PLAN_PART_FULL.ue);
-  return [];
-}
-function planAllowedList(s,key,full){
-  const arr=s&&s[key];
-  if(!Array.isArray(arr)||!arr.length)return full.slice();
-  const out=arr.filter(v=>full.indexOf(v)>=0).filter((v,i,a)=>a.indexOf(v)===i);
-  return out.length?out:full.slice();
-}
 function planDayKey(day){return String(day||'').toLowerCase().slice(0,3)}
-function planTimeFor(s,day){
-  const st=(s&&s.sessionTime)||{};
-  return st[planDayKey(day)]||null;
-}
 function buildWeeklyPlan(D,nowArg){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
@@ -11371,77 +11453,32 @@ function buildWeeklyPlan(D,nowArg){
       parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
     tax:tax,sessions14:sessions14,weekGoal:slotsPerWeek,
     profile:prof?{examDate:prof.examDate||null,targetGrade:prof.targetGrade||null,skills:prof.skills||null,
-      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null,
-    fallback:[]
+      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
   };
-  const allowNums=(key,full,min,max)=>{
-    const arr=s[key];
-    if(!Array.isArray(arr)||!arr.length){
-      if(Array.isArray(arr))source.fallback.push(key);
-      return full.slice();
-    }
-    const out=[];
-    arr.forEach(v=>{const n=Number(v);if(n>=min&&n<=max&&out.indexOf(n)<0)out.push(n)});
-    if(!out.length){source.fallback.push(key);return full.slice()}
-    return out;
+  const week=planWeek(s);
+  const customSlots=buildCustomWeekSlots(week,s,now);
+  const finish=(auto)=>{
+    const all=(auto||[]).concat(customSlots);
+    all.sort((a,b)=>PLAN_WEEK_KEYS.indexOf(a.dayKey)-PLAN_WEEK_KEYS.indexOf(b.dayKey));
+    const reason={};
+    all.forEach((sl,i)=>{reason[i]=sl.reason});
+    return {slots:all,reason:reason,source:source};
   };
-  const allowKinds=()=>{
-    const arr=s.wKinds;
-    if(!Array.isArray(arr)||!arr.length){
-      if(Array.isArray(arr))source.fallback.push('wKinds');
-      return PLAN_W_KINDS.slice();
-    }
-    const out=arr.filter(k=>PLAN_W_KINDS.indexOf(k)>=0).filter((k,i,a)=>a.indexOf(k)===i);
-    if(!out.length){source.fallback.push('wKinds');return PLAN_W_KINDS.slice()}
-    return out;
-  };
-  const rueAllowed=allowNums('rueParts',PLAN_PART_FULL.ue,1,7);
-  const lAllowed=allowNums('lParts',PLAN_PART_FULL.l,1,4);
-  const spAllowed=allowNums('spParts',PLAN_PART_FULL.sp,1,4);
-  const wKindsAllowed=allowKinds();
-  if(s.planMode==='custom'){
-    const raw=Array.isArray(s.customSlots)?s.customSlots:[];
-    if(raw.length){
-      const wk=isoWeek(now);
-      const rotate=!!s.customRotate;
-      const lists={ue:rueAllowed,l:lAllowed,sp:spAllowed,w:wKindsAllowed};
-      const counters={ue:0,l:0,sp:0,w:0};
-      const slots=raw.map(c=>{
-        c=c||{};
-        const type=(c.type==='w'||c.type==='l'||c.type==='sp')?c.type:'ue';
-        const day=planDayKey(c.day||'mon');
-        const min=Math.max(10,Math.min(180,Number(c.min)||slotMin));
-        const origPart=c.part!=null?Number(c.part):null;
-        const origKind=c.kind||null;
-        let part=origPart;
-        let kind=type==='w'?origKind:null;
-        if(rotate){
-          if(type==='w'){
-            part=null;
-            const list=lists.w;
-            kind=list[(wk+counters.w)%list.length];
-            counters.w++;
-          }else{
-            kind=null;
-            const list=lists[type]||lists.ue;
-            part=list[(wk+counters[type])%list.length];
-            counters[type]++;
-          }
-        }
-        return {
-          day:day,time:(c.time||planTimeFor(s,day)||null),min:min,type:type,
-          part:type==='w'?null:part,kind:type==='w'?kind:null,timed:!!c.timed,
-          rotated:rotate&&(part!==origPart||kind!==origKind),rotatedWeek:rotate?wk:null,
-          reason:rotate?t('plan_custom_reason_rotated',{n:wk}):t('plan_custom_reason')
-        };
-      });
-      const reason={};
-      slots.forEach((sl,i)=>{reason[i]=sl.reason});
-      return {slots:slots,reason:reason,source:source,rotated:slots.some(sl=>sl.rotated)};
-    }
-    source.customEmpty=true;
+  if(!useDiag&&!prof){
+    if(customSlots.length)return finish([]);
+    return mk({source:source,needDiag:true});
   }
-  if(!useDiag&&!prof)return mk({source:source,needDiag:true});
+  const autoKeys=PLAN_WEEK_KEYS.filter(k=>week[k].mode==='auto');
+  let autoDayKeys;
+  if(prof&&Array.isArray(prof.days)&&prof.days.length){
+    autoDayKeys=autoKeys.filter(k=>prof.days.indexOf(k)>=0);
+  }else{
+    autoDayKeys=['mon','tue','wed','thu','fri'].filter(k=>autoKeys.indexOf(k)>=0);
+  }
+  if(!autoDayKeys.length)return finish([]);
+  const rueAllowed=PLAN_PART_FULL.ue.slice();
+  const lAllowed=PLAN_PART_FULL.l.slice();
+  const spAllowed=PLAN_PART_FULL.sp.slice();
   const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7&&rueAllowed.indexOf(p)>=0).slice(0,3):[];
   const hasW=log.some(e=>e&&e.type==='w');
   const ranked=Object.keys(tax).map(k=>({k:k,n:tax[k]})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
@@ -11466,18 +11503,8 @@ function buildWeeklyPlan(D,nowArg){
   }
   const spCycle=(Array.isArray(s.spCycle)?s.spCycle:[]).map(Number).filter(p=>spAllowed.indexOf(p)>=0);
   const spPart=spCycle[0]||spAllowed[0];
-  const wCycle=(Array.isArray(s.wCycle)?s.wCycle:[]).filter(k=>PLAN_W_KINDS.indexOf(k)>=0);
-  const wPool=wCycle.filter(k=>wKindsAllowed.indexOf(k)>=0);
-  const wList=wPool.length?wPool:wKindsAllowed;
-  const wKind=wList[isoWeek(now)%wList.length];
-  const DAY_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
-  const DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
-  let DAYS=['Mon','Tue','Wed','Thu','Fri'];
-  if(prof&&Array.isArray(prof.days)&&prof.days.length){
-    const dd=DAY_ORDER.filter(k=>prof.days.indexOf(k)>=0).map(k=>DAY_LABELS[k]);
-    if(dd.length)DAYS=dd;
-  }
-  const dayN=DAYS.length;
+  const wKind=planWritingKind(s,now);
+  const dayN=autoDayKeys.length;
   const usedParts={};
   const pickPart=()=>{
     for(const p of seq){if(!usedParts[p]){usedParts[p]=true;return p}}
@@ -11556,130 +11583,117 @@ function buildWeeklyPlan(D,nowArg){
         reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${part} — ${partName(part).toLowerCase()}`});
     });
   }
-  const slots=ordered;
-  slots.forEach((sl,i)=>{sl.day=DAYS[i%dayN]});
-  slots.forEach(sl=>{sl.time=planTimeFor(s,sl.day)});
-  const reason={};
-  slots.forEach((sl,i)=>{reason[i]=sl.reason});
-  return {slots:slots,reason:reason,source:source};
+  const slots=ordered.map((sl,i)=>{
+    const key=autoDayKeys[i%dayN];
+    const built=planSlotFromItems(key,[{type:sl.type,part:sl.part,kind:sl.kind||null,full:false}],week,s,'auto');
+    built.timed=!!sl.timed;
+    built.reason=sl.reason;
+    return built;
+  });
+  return finish(slots);
 }
 
-/* ---------- CUSTOM PLAN EDITOR (phase 42) ----------
-   One renderer feeds both the PLAN card (#planCustomBody) and onboarding
-   step 4 (#obCustomEditor). Every change writes D.settings immediately, so
-   the live preview, the week card and the server sync stay in step. Slots
-   are never sorted: the student's order is the plan. */
-const PLAN_DAYS=[['mon',1],['tue',2],['wed',3],['thu',4],['fri',5],['sat',6],['sun',7]];
-const PLAN_TYPE_KEYS={ue:'ob_type_ue',w:'ob_type_w',l:'ob_type_l',sp:'ob_type_sp'};
-function planForScope(scope){
-  if(scope==='ob'&&typeof obDraftProfile==='function'){
-    try{return obPlanFor(obDraftProfile())}catch(e){}
+/* ---------- YOUR WEEK (phase 45) ----------
+   One row per day, one select per row. The suggested plan keeps its own
+   renderer; here every change writes D.settings.week and settles the live
+   views (weekly card, Today, onboarding preview). */
+function planWritingKind(s,now){
+  const wCycle=(Array.isArray(s.wCycle)?s.wCycle:[]).filter(k=>PLAN_W_KINDS.indexOf(k)>=0);
+  const list=wCycle.length?wCycle:PLAN_W_KINDS.slice();
+  const idx=((isoWeek(now)%list.length)+list.length)%list.length;
+  return list[idx];
+}
+function planPresetItems(preset,entry,wKind){
+  const full=(type)=>({type:type,part:null,kind:null,full:true});
+  if(preset==='ue_full')return [full('ue')];
+  if(preset==='l_full')return [full('l')];
+  if(preset==='sp_full')return [full('sp')];
+  if(preset==='w_full')return [{type:'w',part:null,kind:wKind,full:false}];
+  if(preset==='ue_l')return [full('ue'),full('l')];
+  if(preset==='ue_w')return [full('ue'),{type:'w',part:null,kind:wKind,full:false}];
+  if(preset==='l_sp')return [full('l'),full('sp')];
+  if(preset==='parts'){
+    const p=planNormParts(entry&&entry.parts);
+    const items=[];
+    p.ue.forEach(n=>items.push({type:'ue',part:n,kind:null,full:false}));
+    p.l.forEach(n=>items.push({type:'l',part:n,kind:null,full:false}));
+    p.sp.forEach(n=>items.push({type:'sp',part:n,kind:null,full:false}));
+    p.w.forEach(k=>items.push({type:'w',part:null,kind:k,full:false}));
+    return items;
   }
-  return buildWeeklyPlan(D);
+  return [];
 }
-function planCustomSlots(){
-  if(!D.settings)D.settings={};
-  if(!Array.isArray(D.settings.customSlots))D.settings.customSlots=[];
-  return D.settings.customSlots;
+function planSlotFromItems(dayKey,items,w,s,origin){
+  const list=items||[];
+  const single=list.length===1?list[0]:null;
+  const slot={
+    dayKey:dayKey,
+    day:planDayLabel(dayKey),
+    min:planEntryMin(w,s,dayKey),
+    time:(w&&w[dayKey]&&w[dayKey].time)||null,
+    type:single?single.type:(list.length?'mixed':'ue'),
+    part:single&&single.part!=null?single.part:null,
+    kind:single&&single.kind?single.kind:null,
+    full:single?!!single.full:false,
+    items:list.map(it=>({type:it.type,part:it.part!=null?it.part:null,kind:it.kind||null,full:!!it.full})),
+    timed:false,
+    origin:origin||'auto'
+  };
+  slot.reason=origin==='custom'?t('plan_custom_reason'):'';
+  return slot;
 }
-function planPreviewBodyHtml(scope){
-  const plan=planForScope(scope);
-  return `<div class="ob-summary">${obPlanSummaryHtml(plan)}</div>
-    <div class="ob-plan-preview">${obPlanRowsHtml(plan)}</div>`;
+function buildCustomWeekSlots(w,s,now){
+  const wKind=planWritingKind(s,now);
+  const out=[];
+  PLAN_WEEK_KEYS.forEach(key=>{
+    const e=w&&w[key];
+    if(!e||e.mode!=='custom')return;
+    const items=planPresetItems(e.preset||'parts',e,wKind);
+    if(!items.length)return;
+    out.push(planSlotFromItems(key,items,w,s,'custom'));
+  });
+  return out;
 }
-function planCustomTypeOptions(type){
-  return ['ue','w','l','sp'].map(k=>`<option value="${k}" ${type===k?'selected':''}>${esc(t(PLAN_TYPE_KEYS[k]))}</option>`).join('');
+const PLAN_WEEK_OPTIONS=['auto','off','ue_full','l_full','w_full','sp_full','ue_l','ue_w','l_sp','parts'];
+const PLAN_PART_GROUP_KEYS={ue:'plan_parts_ue',l:'plan_parts_l',sp:'plan_parts_sp',w:'plan_parts_w'};
+function planWeekOptionLabel(value){return t('plan_opt_'+value)}
+function planWeekPartsHtml(key,e,scope){
+  const groups=[['ue',PLAN_PART_FULL.ue],['l',PLAN_PART_FULL.l],['sp',PLAN_PART_FULL.sp],['w',PLAN_W_KINDS]];
+  return `<div class="wk-parts">${groups.map(([group,values])=>`
+    <label class="wk-part"><span>${t(PLAN_PART_GROUP_KEYS[group])}</span>
+      <select multiple size="3" data-week-parts="${group}" data-week-day="${key}" aria-label="${esc(t(PLAN_PART_GROUP_KEYS[group]))}" onchange="weekSetParts('${key}','${group}',this,'${scope}')">
+        ${values.map(v=>`<option value="${esc(String(v))}" ${e.parts[group].indexOf(v)>=0?'selected':''}>${esc(String(v))}</option>`).join('')}
+      </select>
+    </label>`).join('')}</div>`;
 }
-function planModeCards(mode,scope){
-  return `<div class="ob-radio-cards" role="radiogroup" aria-labelledby="pcModeLbl_${scope}">
-    <label class="ob-radio-card"><input type="radio" name="pcMode_${scope}" value="auto" ${mode==='auto'?'checked':''} onchange="customSetMode('auto','${scope}')"><span>${t('plan_mode_auto')}</span></label>
-    <label class="ob-radio-card"><input type="radio" name="pcMode_${scope}" value="custom" ${mode==='custom'?'checked':''} onchange="customSetMode('custom','${scope}')"><span>${t('plan_mode_custom')}</span></label>
-  </div>`;
-}
-function planCustomTableHtml(s,slots,scope){
-  const rows=slots.map((sl,i)=>{
-    sl=sl||{};
-    const type=(sl.type==='w'||sl.type==='l'||sl.type==='sp')?sl.type:'ue';
-    const day=planDayKey(sl.day||'mon');
-    const parts=planPartListFor(type,s);
-    const kinds=planAllowedList(s,'wKinds',PLAN_W_KINDS);
-    const partCell=type==='w'
-      ?`<span class="muted">—</span>`
-      :`<select data-pc-field="part" aria-label="${esc(t('plan_col_part'))}" onchange="customSlotSet(${i},'part',this.value,'${scope}')">${parts.map(p=>`<option value="${p}" ${Number(sl.part)===p?'selected':''}>${p}</option>`).join('')}</select>`;
-    const kindCell=type==='w'
-      ?`<select data-pc-field="kind" aria-label="${esc(t('plan_col_kind'))}" onchange="customSlotSet(${i},'kind',this.value,'${scope}')">${kinds.map(k=>`<option value="${esc(k)}" ${sl.kind===k?'selected':''}>${esc(k)}</option>`).join('')}</select>`
-      :`<span class="muted">—</span>`;
-    return `<tr data-pc-row="${i}">
-      <td><select data-pc-field="day" aria-label="${esc(t('plan_col_day'))}" onchange="customSlotSet(${i},'day',this.value,'${scope}')">${PLAN_DAYS.map(([k,js])=>`<option value="${k}" ${day===k?'selected':''}>${dayShort(js)}</option>`).join('')}</select></td>
-      <td><input type="time" data-pc-field="time" value="${esc(sl.time||'')}" aria-label="${esc(t('plan_col_time'))}" onchange="customSlotSet(${i},'time',this.value,'${scope}')"></td>
-      <td><input type="number" min="10" max="180" data-pc-field="min" value="${Math.max(10,Math.min(180,Number(sl.min)||45))}" aria-label="${esc(t('plan_col_min'))}" onchange="customSlotSet(${i},'min',this.value,'${scope}')"></td>
-      <td><select data-pc-field="type" aria-label="${esc(t('plan_col_type'))}" onchange="customSlotSet(${i},'type',this.value,'${scope}')">${planCustomTypeOptions(type)}</select></td>
-      <td>${partCell}</td>
-      <td>${kindCell}</td>
-      <td><label class="pc-check" title="${esc(t('plan_col_timed'))}"><input type="checkbox" data-pc-field="timed" aria-label="${esc(t('plan_col_timed'))}" ${sl.timed?'checked':''} onchange="customSlotSet(${i},'timed',this.checked,'${scope}')"></label></td>
-      <td class="pc-actions">
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="up" onclick="customSlotMove(${i},-1,'${scope}')" aria-label="${esc(t('plan_move_up'))}" title="${esc(t('plan_move_up'))}" data-i18n-aria-label="plan_move_up" data-i18n-title="plan_move_up" ${i===0?'disabled':''}>↑</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="down" onclick="customSlotMove(${i},1,'${scope}')" aria-label="${esc(t('plan_move_down'))}" title="${esc(t('plan_move_down'))}" data-i18n-aria-label="plan_move_down" data-i18n-title="plan_move_down" ${i===slots.length-1?'disabled':''}>↓</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="dup" onclick="customSlotDup(${i},'${scope}')" aria-label="${esc(t('plan_duplicate'))}" title="${esc(t('plan_duplicate'))}" data-i18n-aria-label="plan_duplicate" data-i18n-title="plan_duplicate">⧉</button>
-        <button type="button" class="btn sm gray pc-icon" data-pc-action="del" onclick="customSlotRemove(${i},'${scope}')" aria-label="${esc(t('plan_remove'))}" title="${esc(t('plan_remove'))}" data-i18n-aria-label="plan_remove" data-i18n-title="plan_remove">✕</button>
-      </td>
-    </tr>`;
-  }).join('');
-  return `<div class="pc-group">
-    <div class="pc-group-label">${t('plan_sessions_title')}</div>
-    <div class="pc-table-wrap"><table class="pc-table">
-      <thead><tr>
-        <th>${t('plan_col_day')}</th><th>${t('plan_col_time')}</th><th>${t('plan_col_min')}</th>
-        <th>${t('plan_col_type')}</th><th>${t('plan_col_part')}</th><th>${t('plan_col_kind')}</th>
-        <th>${t('plan_col_timed')}</th><th>${t('plan_col_actions')}</th>
-      </tr></thead>
-      <tbody>${rows||`<tr><td colspan="8" class="muted">${t('plan_no_sessions')}</td></tr>`}</tbody>
-    </table></div>
-    <div class="pc-actions-row">
-      <button type="button" class="btn ok sm" data-pc-action="add" onclick="customSlotAdd('${scope}')">${t('plan_add_session')}</button>
+function planWeekRowHtml(key,js,scope){
+  const w=planWeek(D.settings);
+  const e=w[key];
+  const selected=e.mode==='off'?'off':(e.mode==='auto'?'auto':(e.preset||'parts'));
+  const min=planEntryMin(w,D.settings,key);
+  const showParts=e.mode==='custom'&&(e.preset||'parts')==='parts';
+  return `<div class="wk-row" data-week-row="${key}">
+    <div class="wk-top">
+      <span class="wk-day">${dayShort(js)}</span>
+      <select class="wk-select" data-week-day="${key}" aria-label="${esc(t('plan_week_day_label',{day:dayShort(js)}))}" onchange="weekSetMode('${key}',this.value,'${scope}')">
+        ${PLAN_WEEK_OPTIONS.map(v=>`<option value="${v}" ${selected===v?'selected':''}>${esc(planWeekOptionLabel(v))}</option>`).join('')}
+      </select>
+      <div class="wk-controls">
+        <label class="wk-min"><input type="number" min="10" max="180" step="5" value="${min}" data-week-min="${key}" aria-label="${esc(t('plan_day_min_label',{day:dayShort(js)}))}" onchange="weekSetNumber('${key}','min',this.value,'${scope}')"><span>${t('plan_min_short')}</span></label>
+        <input class="wk-time" type="time" value="${esc(e.time)}" data-week-time="${key}" aria-label="${esc(t('plan_day_time_label',{day:dayShort(js)}))}" onchange="weekSetNumber('${key}','time',this.value,'${scope}')">
+        ${e.mode==='off'?'':`<button type="button" class="wk-rest" onclick="weekSetMode('${key}','off','${scope}')" aria-label="${esc(t('plan_opt_off'))}" title="${esc(t('plan_opt_off'))}">✕ rest</button>`}
+      </div>
     </div>
-  </div>`;
-}
-function planChipGroup(key,labelKey,values,scope){
-  const s=D.settings||{};
-  const list=Array.isArray(s[key])?s[key]:values.slice();
-  return `<div class="pc-group"><div class="pc-group-label">${t(labelKey)}</div><div class="ob-chips">${
-    values.map(v=>{
-      const on=list.indexOf(v)>=0;
-      const last=on&&list.length===1;
-      return `<button type="button" class="chip-btn" data-pc-list="${key}" data-pc-value="${v}" aria-pressed="${on}" ${last?'disabled aria-disabled="true"':''} onclick="customToggleAllowed('${key}',this.dataset.pcValue,'${scope}')">${esc(String(v))}</button>`;
-    }).join('')
-  }</div></div>`;
-}
-function planRhythmHtml(s,scope,mode){
-  const slotMin=Math.max(10,Math.min(180,Number(s.slotMin)||45));
-  const autoFields=`<div><label for="pcSlotMin_${scope}">${t('plan_slot_min')}</label><input type="number" id="pcSlotMin_${scope}" min="10" max="180" value="${slotMin}" onchange="customSetSetting('slotMin',this.value,'${scope}')"></div>`;
-  const rhythmFields=mode==='custom'
-    ?`<div class="pc-autoonly"><div class="pc-autoonly-label" data-i18n="plan_auto_only">${t('plan_auto_only')}</div>${autoFields}</div>`
-    :autoFields;
-  return `<div class="pc-group">
-    <div class="pc-group-label">${t('plan_rhythm')}</div>
-    <div class="pc-rhythm">
-      ${rhythmFields}
-      <label class="pc-check"><input type="checkbox" ${s.ignoreIntakeHours?'checked':''} onchange="customSetSetting('ignoreIntakeHours',this.checked,'${scope}')"><span>${t('plan_ignore_intake')}</span></label>
-      <label class="pc-check"><input type="checkbox" ${s.customRotate!==false?'checked':''} onchange="customSetSetting('customRotate',this.checked,'${scope}')"><span>${t('plan_rotate')}</span></label>
-    </div>
+    ${showParts?planWeekPartsHtml(key,e,scope):''}
   </div>`;
 }
 function customEditorHtml(scope){
-  const s=D.settings||{};
-  const mode=s.planMode==='custom'?'custom':'auto';
-  const out=[];
-  out.push(`<div class="pc-group"><div class="pc-group-label" id="pcModeLbl_${scope}">${t('plan_mode_title')}</div>${planModeCards(mode,scope)}</div>`);
-  if(mode==='custom')out.push(planCustomTableHtml(s,planCustomSlots(),scope));
-  out.push(planChipGroup('rueParts','plan_allowed_rue',PLAN_PART_FULL.ue,scope));
-  out.push(planChipGroup('lParts','plan_allowed_l',PLAN_PART_FULL.l,scope));
-  out.push(planChipGroup('spParts','plan_allowed_sp',PLAN_PART_FULL.sp,scope));
-  out.push(planChipGroup('wKinds','plan_allowed_w',PLAN_W_KINDS,scope));
-  out.push(planRhythmHtml(s,scope,mode));
-  out.push(`<div class="pc-group"><div class="pc-group-label">${t('plan_preview')}</div><div id="pcPreviewBody_${scope}">${planPreviewBodyHtml(scope)}</div></div>`);
-  out.push(`<div class="pc-actions-row"><button type="button" class="btn gray" data-pc-action="reset" onclick="customBackToAuto('${scope}')">${t('plan_reset_auto')}</button></div>`);
-  return out.join('');
+  const rows=PLAN_WEEK_KEYS.map(k=>planWeekRowHtml(k,PLAN_WEEK_JS[k],scope)).join('');
+  return `<div class="wk-rows">${rows}</div>
+    <div class="wk-foot">
+      <span>${t('plan_week_footer')}</span>
+      <button type="button" class="wk-reset" onclick="weekResetChoices('${scope}')">${t('plan_reset_choices')}</button>
+    </div>`;
 }
 function renderPlanCustom(){
   const body=document.getElementById('planCustomBody');
@@ -11689,114 +11703,68 @@ function customSettle(scope,rerender){
   save();
   const root=document.getElementById(scope==='ob'?'obCustomEditor':'planCustomBody');
   if(rerender&&root)root.innerHTML=customEditorHtml(scope);
-  const body=document.getElementById('pcPreviewBody_'+scope);
-  if(body)body.innerHTML=planPreviewBodyHtml(scope);
   if(scope==='ob'){
     if(typeof obRefreshPlan==='function')obRefreshPlan();
   }else{
     if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
     if(typeof renderExamCountdown==='function')renderExamCountdown();
+    const plan=buildWeeklyPlan(D);
+    WEEK_PLAN=plan;
+    if(typeof renderTodayPlan==='function')renderTodayPlan(plan);
   }
 }
-function customClampSlots(){
-  const s=D.settings||{};
-  planCustomSlots().forEach(sl=>{
-    if(!sl)return;
-    const type=(sl.type==='w'||sl.type==='l'||sl.type==='sp')?sl.type:'ue';
-    if(type==='w'){
-      const kinds=planAllowedList(s,'wKinds',PLAN_W_KINDS);
-      if(kinds.indexOf(sl.kind)<0)sl.kind=kinds[0];
-    }else{
-      const parts=planPartListFor(type,s);
-      if(parts.indexOf(Number(sl.part))<0)sl.part=parts[0];
-    }
-  });
+function weekEnsure(key){
+  if(!D.settings)D.settings={};
+  if(!D.settings.week||typeof D.settings.week!=='object')D.settings.week={};
+  const cur=D.settings.week[key];
+  if(!cur||typeof cur!=='object')D.settings.week[key]={};
+  const e=D.settings.week[key];
+  e.parts=planNormParts(e.parts);
+  return e;
 }
-function customSetMode(mode,scope){
-  D.settings.planMode=mode==='custom'?'custom':'auto';
+function weekSetMode(key,value,scope){
+  const e=weekEnsure(key);
+  if(value==='off'){e.mode='off';e.preset=null}
+  else if(value==='auto'){e.mode='auto';e.preset=null}
+  else{e.mode='custom';e.preset=value}
   customSettle(scope,true);
 }
-function customSlotSet(i,field,value,scope){
-  const s=D.settings||{};
-  const slots=Array.isArray(s.customSlots)?s.customSlots:[];
-  const sl=slots[i];
-  if(!sl)return;
-  if(field==='min')sl.min=Math.max(10,Math.min(180,Math.round(Number(value)||45)));
-  else if(field==='timed')sl.timed=!!value;
-  else if(field==='part')sl.part=value===''?null:Number(value);
-  else if(field==='kind')sl.kind=value||null;
-  else if(field==='time')sl.time=value||'';
-  else if(field==='day')sl.day=value;
-  else if(field==='type'){
-    sl.type=(value==='w'||value==='l'||value==='sp')?value:'ue';
-    if(sl.type==='w')sl.part=null;
-    else sl.kind=null;
-    customClampSlots();
-  }
-  customSettle(scope,field==='type');
-}
-function customSlotAdd(scope){
-  const s=D.settings||{};
-  const slots=planCustomSlots();
-  const min=Math.max(10,Math.min(180,Number(s.slotMin)||45));
-  const parts=planPartListFor('ue',s);
-  slots.push({day:'mon',time:'',min:min,type:'ue',part:parts[0],kind:null,timed:false});
-  customClampSlots();
-  customSettle(scope,true);
-}
-function customSlotDup(i,scope){
-  const slots=planCustomSlots();
-  if(!slots[i])return;
-  slots.splice(i+1,0,JSON.parse(JSON.stringify(slots[i])));
-  customSettle(scope,true);
-}
-function customSlotRemove(i,scope){
-  const slots=planCustomSlots();
-  if(!slots[i])return;
-  slots.splice(i,1);
-  customSettle(scope,true);
-}
-function customSlotMove(i,dir,scope){
-  const slots=planCustomSlots();
-  const j=i+dir;
-  if(!slots[i]||j<0||j>=slots.length)return;
-  const tmp=slots[i];slots[i]=slots[j];slots[j]=tmp;
-  customSettle(scope,true);
-}
-function customToggleAllowed(key,raw,scope){
-  const s=D.settings||{};
-  const full=key==='wKinds'?PLAN_W_KINDS.slice():PLAN_PART_FULL[key==='lParts'?'l':key==='spParts'?'sp':'ue'].slice();
-  const v=key==='wKinds'?String(raw):Number(raw);
-  let list=Array.isArray(s[key])?s[key].slice():full.slice();
-  const idx=list.indexOf(v);
-  if(idx>=0){
-    if(list.length<=1)return;
-    list.splice(idx,1);
-  }else{
-    list.push(v);
-  }
-  s[key]=full.filter(x=>list.indexOf(x)>=0);
-  customClampSlots();
-  customSettle(scope,true);
-}
-function customSetSetting(key,value,scope){
-  const s=D.settings||{};
-  if(key==='slotMin')s.slotMin=Math.max(10,Math.min(180,Math.round(Number(value)||45)));
-  else if(key==='weekGoal'){
-    s.weekGoal=Math.max(1,Math.min(14,Math.round(Number(value)||5)));
-    const el=document.getElementById('pWeekGoal');
-    if(el)el.value=s.weekGoal;
-  }else{
-    s[key]=!!value;
-  }
+function weekSetNumber(key,field,value,scope){
+  const e=weekEnsure(key);
+  if(field==='min')e.min=Math.max(10,Math.min(180,Math.round(Number(value)||planDefaultMin(D.settings))));
+  else if(field==='time')e.time=value||'';
   customSettle(scope,false);
 }
-function customBackToAuto(scope){
-  D.settings.planMode='auto';
+function weekSetParts(key,group,el,scope){
+  const e=weekEnsure(key);
+  const values=el&&el.selectedOptions?Array.from(el.selectedOptions).map(o=>o.value):[];
+  const allowed=group==='w'?PLAN_W_KINDS.slice():PLAN_PART_FULL[group].slice();
+  const picked=values.map(v=>group==='w'?String(v):Number(v)).filter(v=>allowed.indexOf(v)>=0);
+  e.parts=planNormParts(Object.assign({},e.parts,{[group]:picked}));
+  e.mode='custom';e.preset='parts';
+  customSettle(scope,false);
+}
+function weekResetChoices(scope){
+  if(!confirm(t('plan_reset_choices_confirm')))return;
+  const w={};
+  PLAN_WEEK_KEYS.forEach(k=>{w[k]={mode:'auto',preset:null,parts:planEmptyParts(),min:null,time:''}});
+  D.settings.week=w;
   customSettle(scope,true);
 }
 let WEEK_PLAN=null;
 function lpName(p){return {1:'Short extracts',2:'Sentence completion',3:'Multiple matching',4:'Multiple choice (long)'}[p]||'general'}
+function planItemLabel(it){
+  const type=(it&&it.type)||'ue';
+  if(type==='w')return 'Writing'+((it&&it.kind)?' ('+it.kind+')':'');
+  if(type==='l')return (it.part==null)?t('plan_opt_l_full'):('Listening '+lpName(it.part).toLowerCase());
+  if(type==='sp')return (it.part==null)?t('plan_opt_sp_full'):('Speaking part '+it.part);
+  return (it.part==null)?t('plan_opt_ue_full'):('UoE '+partName(it.part).toLowerCase());
+}
+function planSlotLabel(sl){
+  const items=(sl&&Array.isArray(sl.items))?sl.items:[];
+  if(items.length)return items.map(planItemLabel).join(' + ');
+  return planItemLabel(sl||{});
+}
 function renderWeeklyPlan(){
   const el=document.getElementById('weeklyPlanCard');
   if(!el)return;
@@ -11813,15 +11781,16 @@ function renderWeeklyPlan(){
   }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    const label=sl.type==='w'?('Writing'+(sl.kind?' ('+sl.kind+')':'')):sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking part '+sl.part):('UoE '+partName(sl.part).toLowerCase());
-    const partTxt=sl.part!=null?`Part ${sl.part} · `:'';
+    const label=planSlotLabel(sl);
+    const partTxt=(sl.items&&sl.items.length===1&&sl.part!=null)?`Part ${sl.part} · `:'';
     const timeTxt=sl.time?' · '+t('plan_planned_for',{time:sl.time}):'';
-    return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}">
+    const dayKey=sl.dayKey||planDayKey(sl.day);
+    return `<div class="wp-row" data-day="${sl.day}" data-day-key="${dayKey}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-origin="${sl.origin||'auto'}">
       <div class="wp-main">
         <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${timeTxt}${sl.timed?' · timed (exam mode)':''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
+      <div class="wp-actions"><button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button></div>
     </div>`;
   }).join('');
   const src=plan.source||{};
@@ -11835,12 +11804,6 @@ function renderWeeklyPlan(){
   if(why&&src.profile){
     why.innerHTML+=`<div>· <b>Intake</b>: exam ${esc(src.profile.examDate||'not set')} · target ${esc(src.profile.targetGrade||'-')} · days ${esc((src.profile.days||[]).join(', ')||'-')} · struggles ${esc((src.profile.struggles||[]).join(', ')||'none')}</div>`;
   }
-  if(why&&src.fallback&&src.fallback.length){
-    why.innerHTML+=`<div>· <b>Allowlist</b>: ${esc(t('plan_why_fallback',{keys:src.fallback.join(', ')}))}</div>`;
-  }
-  if(why&&src.customEmpty){
-    why.innerHTML+=`<div>· ${esc(t('plan_custom_empty'))}</div>`;
-  }
 }
 let _wpRegenTimer=null;
 function regenWeeklyPlan(){
@@ -11853,49 +11816,37 @@ function regenWeeklyPlan(){
   };
   if(btn)btn.disabled=true;
   try{
-    if(!D.profile){show(t('plan_regen_nothing'));return}
     const plan=buildWeeklyPlan(D);
     if(!plan||!Array.isArray(plan.slots)||!plan.slots.length){show(t('plan_regen_nothing'));return}
     WEEK_PLAN=plan;
-    D.profile.plan={
-      generatedAt:new Date().toISOString(),
-      hoursWeek:D.profile.hoursWeek,
-      days:Array.isArray(D.profile.days)?D.profile.days.slice():[],
-      slots:plan.slots.map(sl=>({day:sl.day,type:sl.type,part:sl.part,kind:sl.kind||null,
-        time:sl.time||null,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
-    };
-    save();
-    const rotated=(D.settings.planMode==='custom')&&D.settings.customRotate!==false;
-    if(rotated){
-      const week=(plan.slots.find(sl=>sl.rotatedWeek!=null)||{}).rotatedWeek;
-      show(t('plan_regen_rotated',{count:plan.slots.length,n:week!=null?week:isoWeek(new Date())}));
-    }else{
-      show(t('plan_regen_done',{count:plan.slots.length}));
+    if(D.profile){
+      D.profile.plan={
+        generatedAt:new Date().toISOString(),
+        hoursWeek:D.profile.hoursWeek,
+        days:Array.isArray(D.profile.days)?D.profile.days.slice():[],
+        slots:plan.slots.map(sl=>({day:sl.day,dayKey:sl.dayKey,type:sl.type,part:sl.part,kind:sl.kind||null,
+          items:sl.items||[],origin:sl.origin||'auto',
+          time:sl.time||null,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
+      };
     }
+    save();
+    show(t('plan_regen_done',{count:plan.slots.length}));
     renderWeeklyPlan();
+    renderTodayPlan(plan);
   }catch(e){
     show(t('plan_regen_nothing'));
   }finally{
     if(btn)btn.disabled=false;
   }
 }
-function onWeekGoalChange(value){
-  const n=Math.max(1,Math.min(14,Math.round(Number(value)||5)));
-  D.settings.weekGoal=n;
-  const el=document.getElementById('pWeekGoal');
-  if(el)el.value=n;
-  save();
-  renderWeeklyPlan();
-  const prev=document.getElementById('pcPreviewBody_plan');
-  if(prev)prev.innerHTML=planPreviewBodyHtml('plan');
-}
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
   if(!sl)return;
-  if(sl.type==='w')goToPartFilter(null);
-  else if(sl.type==='l')goToPartFilter(sl.part,'lp');
-  else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
-  else goToPartFilter(sl.part);
+  const first=(sl.items&&sl.items.length)?sl.items[0]:sl;
+  if(first.type==='w')goToPartFilter(null);
+  else if(first.type==='l')goToPartFilter(first.part,'lp');
+  else if(first.type==='sp')goToPartFilter(first.part,'sp');
+  else goToPartFilter(first.part);
 }
 
 /* ---------- EXAM + PARTS ----------
@@ -12622,14 +12573,15 @@ const CORE_SESSIONS=[
 ];
 
 function getSchedule(){
-  const s=D.settings||SETTINGS_DEFAULT;
-  if(Array.isArray(s.schedule)&&s.schedule.length>0){
-    return s.schedule;
-  }
-  const legacy=[];
-  if(s.sesA&&typeof s.sesA.day==='number')legacy.push({day:+s.sesA.day,time:s.sesA.time||'15:30'});
-  if(s.sesB&&typeof s.sesB.day==='number')legacy.push({day:+s.sesB.day,time:s.sesB.time||'13:00'});
-  return legacy.length>0?legacy:[{day:1,time:'15:30'},{day:5,time:'13:00'}];
+  const w=planWeek(D.settings);
+  const out=[];
+  PLAN_WEEK_KEYS.forEach(k=>{
+    const e=w[k];
+    if(!e||e.mode==='off')return;
+    if(e.mode==='custom'||e.time)out.push({day:PLAN_WEEK_JS[k],time:e.time||'15:30'});
+  });
+  if(out.length)return out;
+  return [{day:1,time:'15:30'},{day:5,time:'13:00'}];
 }
 
 function getSlotSession(weekNumber,slotIndex,scheduleLength){
@@ -12694,147 +12646,6 @@ function doNextSessionNow(){
     const nav=document.getElementById('sessionNav');
     if(nav)nav.scrollIntoView({behavior:'smooth'});
   }
-}
-
-function renderScheduleRows(){
-  const c=document.getElementById('scheduleRowsContainer');
-  if(!c)return;
-  const sched=getSchedule();
-  c.innerHTML=sched.map((slot,i)=>`
-    <div class="row" style="align-items:center;margin:0;gap:8px;background:var(--surface-container-low);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--outline-variant)">
-      <div style="flex:1">
-        <label style="font-size:12px;margin-bottom:2px">${t('plan_session_day',{n:i+1})}</label>
-        <select class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
-          ${Array.from({length:7},(_,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${dayFull(dIdx)}</option>`).join('')}
-        </select>
-      </div>
-      <div style="flex:1">
-        <label style="font-size:12px;margin-bottom:2px">${t('plan_time')}</label>
-        <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
-      </div>
-      <div style="display:flex;align-items:flex-end;padding-top:16px">
-        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" ${sched.length<=1?'disabled style="opacity:0.4;cursor:not-allowed"':''}>🗑️</button>
-      </div>
-    </div>
-  `).join('');
-  
-  // Sync fallback inputs
-  if(sched[0]){
-    const aD=document.getElementById('pADay'),aT=document.getElementById('pATime');
-    if(aD)aD.value=sched[0].day;
-    if(aT)aT.value=sched[0].time;
-  }
-  if(sched[1]||sched[0]){
-    const bSlot=sched[1]||sched[0];
-    const bD=document.getElementById('pBDay'),bT=document.getElementById('pBTime');
-    if(bD)bD.value=bSlot.day;
-    if(bT)bT.value=bSlot.time;
-  }
-
-  // Update offset badge
-  const offBadge=document.getElementById('planOffsetBadge');
-  if(offBadge){
-    const off=D.sessionOffset||0;
-    offBadge.textContent=t('plan_offset',{offset:(off>=0?'+':'')+off});
-  }
-
-  renderSchedulePreview();
-}
-
-const SCHED_DAY_KEYS=['sun','mon','tue','wed','thu','fri','sat'];
-function syncSessionTimes(sched){
-  const times={};
-  (sched||[]).forEach(sl=>{
-    const key=SCHED_DAY_KEYS[Number(sl.day)];
-    if(key&&sl.time)times[key]=sl.time;
-  });
-  D.settings.sessionTime=times;
-}
-function refreshPlanAfterSchedule(){
-  save();
-  if(typeof renderWeeklyPlan==='function')renderWeeklyPlan();
-  const prev=document.getElementById('pcPreviewBody_plan');
-  if(prev)prev.innerHTML=planPreviewBodyHtml('plan');
-}
-function updateScheduleFromUI(){
-  const dayEls=document.querySelectorAll('.sched-day-select');
-  const timeEls=document.querySelectorAll('.sched-time-input');
-  const newSched=[];
-  dayEls.forEach((el,i)=>{
-    const day=+el.value;
-    const time=(timeEls[i]&&timeEls[i].value)?timeEls[i].value:'15:30';
-    newSched.push({day,time});
-  });
-  if(newSched.length){
-    D.settings.schedule=newSched;
-    D.settings.sesA=newSched[0]||{day:1,time:'15:30'};
-    D.settings.sesB=newSched[1]||newSched[0];
-    syncSessionTimes(newSched);
-    refreshPlanAfterSchedule();
-  }
-  renderSchedulePreview();
-}
-
-function addScheduleRow(){
-  const sched=getSchedule();
-  const usedDays=new Set(sched.map(s=>s.day));
-  let nextDay=1;
-  for(let d=1;d<=7;d++){
-    const cand=d%7;
-    if(!usedDays.has(cand)){
-      nextDay=cand;
-      break;
-    }
-  }
-  sched.push({day:nextDay,time:'17:00'});
-  D.settings.schedule=sched;
-  D.settings.sesA=sched[0];
-  D.settings.sesB=sched[1]||sched[0];
-  syncSessionTimes(sched);
-  renderScheduleRows();
-  refreshPlanAfterSchedule();
-}
-
-function removeScheduleRow(idx){
-  const sched=getSchedule();
-  if(sched.length<=1)return;
-  sched.splice(idx,1);
-  D.settings.schedule=sched;
-  D.settings.sesA=sched[0];
-  D.settings.sesB=sched[1]||sched[0];
-  syncSessionTimes(sched);
-  renderScheduleRows();
-  refreshPlanAfterSchedule();
-}
-
-function renderSchedulePreview(){
-  const p=document.getElementById('planUpcomingPreview');
-  if(!p)return;
-  const sched=getSchedule();
-  if(!sched.length)return;
-  const now=new Date();
-  const curWeek=isoWeek(now);
-  const items=[];
-  
-  for(let i=0;i<4;i++){
-    const slotIdx=i%sched.length;
-    const weekOffset=Math.floor(i/sched.length);
-    const targetWeek=curWeek+weekOffset;
-    const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
-    const dayName=dayFull(sched[slotIdx].day);
-    items.push(`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--green-surface);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--green-surface-border);font-size:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:600;color:var(--on-green-card)">${slotInfo.session.icon} ${dayName} (${sched[slotIdx].time})</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="badge ${slotInfo.session.badgeClass}">${slotInfo.title}</span>
-          <span class="pill-tag">${slotInfo.session.dur}</span>
-        </div>
-      </div>
-    `);
-  }
-  p.innerHTML=items.join('');
 }
 
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
@@ -12921,27 +12732,14 @@ function updatePersonalizedUI(){
   if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
 
-function planDayLabel(day){
-  const raw=String(day||'');
-  const key=raw.slice(0,1).toUpperCase()+raw.slice(1,3).toLowerCase();
-  const i=OB_DAY_INDEX[key];
-  return i==null?raw:dayShort(i);
-}
-function planSlotTitle(sl){
-  const type=sl.type||'ue';
-  let title=t('ob_type_'+type);
-  if(type==='w'&&sl.kind)title+=' · '+sl.kind;
-  if(type!=='w'&&sl.part!=null)title+=' · '+t('ob_part',{n:sl.part});
-  return title;
-}
+function planSlotTitle(sl){return planSlotLabel(sl)}
 function renderTodayPlan(plan){
   const el=document.getElementById('todayPlan');
   if(!el)return;
   const slots=(plan&&plan.slots)||[];
   if(!slots.length){el.style.display='none';el.innerHTML='';return}
   el.style.display='';
-  const src=(plan&&plan.source)||{};
-  const sub=src.customEmpty?t('plan_custom_empty'):t('today_plan_sub');
+  const sub=t('today_plan_sub');
   el.innerHTML=`<div class="plan-card-head">
       <h2>${t('today_plan_title')}</h2>
       ${plan.rotated?`<span class="t-xs muted">${t('plan_rotated')}</span>`:''}
