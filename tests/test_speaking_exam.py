@@ -681,7 +681,7 @@ def main():
         pg.on("console", lambda m: console_errors.append(m.text)
               if m.type == "error" else None)
 
-        pg.goto(URL + "/?spk=sim", wait_until="networkidle")
+        pg.goto(URL + "/app?spk=sim", wait_until="networkidle")
         user = login_owner(pg, URL + "/")
 
         # --- 9b. The same turn through the real client transport -----------

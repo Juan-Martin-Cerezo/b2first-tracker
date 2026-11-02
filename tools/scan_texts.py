@@ -31,6 +31,7 @@ import urllib.request
 from playwright.sync_api import sync_playwright
 
 URL = os.environ.get("B2_URL", "http://127.0.0.1:8088").rstrip("/")
+APP_URL = URL if URL.endswith("/app") else URL + "/app"
 NAME = "text-scan-user"
 PASS = "text-scan-pass-9!"
 
@@ -191,7 +192,7 @@ def main():
         browser = p.chromium.launch()
         pg = browser.new_page(viewport={"width": 390, "height": 844},
                               is_mobile=True, has_touch=True)
-        pg.goto(URL, wait_until="networkidle")
+        pg.goto(APP_URL, wait_until="networkidle")
 
         # Auth screen: show it (logged out) in both languages.
         pg.evaluate("localStorage.removeItem('b2first_user')")

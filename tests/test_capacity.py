@@ -102,7 +102,7 @@ def stop_server(proc):
 
 
 def load(url, duration=DURATION_S, concurrency=CONCURRENCY, headers=None):
-    """Hammer GET / for `duration` seconds; return (statuses, p95 ms, errors).
+    """Hammer GET /app for `duration` seconds; return (statuses, p95 ms, errors).
 
     Async client on purpose: 100 Python threads would spend the run fighting
     over the GIL and hide the server-side difference we are measuring.
@@ -121,7 +121,7 @@ def load(url, duration=DURATION_S, concurrency=CONCURRENCY, headers=None):
                 # Raw stream: consuming the compressed bytes without decoding keeps
                 # the client from becoming the bottleneck (unzipping 434 KB per
                 # response would measure zlib, not the server).
-                async with client.stream("GET", "/") as r:
+                async with client.stream("GET", "/app") as r:
                     body_len = 0
                     async for chunk in r.aiter_raw():
                         body_len += len(chunk)
@@ -158,20 +158,20 @@ def main():
     # ---------------- cache ON ----------------
     proc, url, _log = start_server()
     try:
-        warm = httpx.get(url + "/", headers={"Accept-Encoding": "gzip"}, timeout=10)
+        warm = httpx.get(url + "/app", headers={"Accept-Encoding": "gzip"}, timeout=10)
         etag = warm.headers.get("etag")
         last_modified = warm.headers.get("last-modified")
-        check("GET / is 200", warm.status_code == 200, warm.status_code)
-        check("GET / sends an ETag", bool(etag), warm.headers)
-        check("GET / sends Last-Modified", bool(last_modified), warm.headers)
-        check("GET / sends Vary: Accept-Encoding",
+        check("GET /app is 200", warm.status_code == 200, warm.status_code)
+        check("GET /app sends an ETag", bool(etag), warm.headers)
+        check("GET /app sends Last-Modified", bool(last_modified), warm.headers)
+        check("GET /app sends Vary: Accept-Encoding",
               "accept-encoding" in (warm.headers.get("vary") or "").lower(),
               warm.headers.get("vary"))
-        check("GET / is gzipped for a gzip client",
+        check("GET /app is gzipped for a gzip client",
               warm.headers.get("content-encoding") == "gzip",
               warm.headers.get("content-encoding"))
 
-        raw = httpx.get(url + "/", headers={"Accept-Encoding": "identity"}, timeout=10)
+        raw = httpx.get(url + "/app", headers={"Accept-Encoding": "identity"}, timeout=10)
         check("identity client gets the uncompressed body",
               raw.headers.get("content-encoding") is None and len(raw.content) == served,
               (raw.headers.get("content-encoding"), len(raw.content)))
@@ -186,7 +186,7 @@ def main():
         st = os.stat(INDEX)
         try:
             os.utime(INDEX, None)
-            touched = httpx.get(url + "/", timeout=10)
+            touched = httpx.get(url + "/app", timeout=10)
         finally:
             os.utime(INDEX, ns=(st.st_atime_ns, st.st_mtime_ns))
         new_etag = touched.headers.get("etag")
@@ -208,7 +208,7 @@ def main():
     # ---------------- cache OFF (baseline) ----------------
     proc, url_off, _log = start_server({"B2_NO_CACHE": "1"})
     try:
-        plain = httpx.get(url_off + "/", headers={"Accept-Encoding": "gzip"}, timeout=10)
+        plain = httpx.get(url_off + "/app", headers={"Accept-Encoding": "gzip"}, timeout=10)
         check("B2_NO_CACHE=1 disables the ETag", not plain.headers.get("etag"),
               plain.headers.get("etag"))
         statuses, p95_baseline, errors = load(url_off)

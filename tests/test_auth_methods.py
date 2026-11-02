@@ -550,7 +550,7 @@ with sync_playwright() as playwright:
     cdp_a.send("WebAuthn.enable")
     auth_id = cdp_a.send("WebAuthn.addVirtualAuthenticator",
                          {"options": VIRTUAL})["authenticatorId"]
-    page_a.goto(BASE_LOCAL, wait_until="networkidle")
+    page_a.goto(BASE_LOCAL + "/app", wait_until="networkidle")
     page_a.evaluate(
         "u => localStorage.setItem('b2first_user', JSON.stringify(u))", passkey_account)
     page_a.reload(wait_until="networkidle")
@@ -603,7 +603,7 @@ with sync_playwright() as playwright:
     if exported_creds:
         cdp_b.send("WebAuthn.addCredential", {
             "authenticatorId": auth_id_b, "credential": exported_creds[0]})
-    page_b.goto(BASE_LOCAL, wait_until="networkidle")
+    page_b.goto(BASE_LOCAL + "/app", wait_until="networkidle")
     page_b.evaluate("localStorage.removeItem('b2first_user')")
     page_b.reload(wait_until="networkidle")
     page_b.wait_for_timeout(300)

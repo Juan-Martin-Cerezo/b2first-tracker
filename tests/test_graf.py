@@ -28,7 +28,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
     # CHARTS tab exists in the nav

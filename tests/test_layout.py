@@ -302,7 +302,7 @@ def main():
         # --- one login through helpers, reused by every context -----------
         boot = browser.new_context(viewport={"width": 1440, "height": 900})
         pg = boot.new_page()
-        pg.goto(URL, wait_until="networkidle")
+        pg.goto(URL + "app", wait_until="networkidle")
         try:
             user = login_user(pg, URL, NAME, PASS)
         except urllib.error.HTTPError:
@@ -325,7 +325,7 @@ def main():
                 lambda m: console_errors.append(m.text)
                 if m.type == "error" and "Failed to load resource" not in m.text else None,
             )
-            pg.goto(URL, wait_until="networkidle")
+            pg.goto(URL + "app", wait_until="networkidle")
             pg.wait_for_timeout(500)
             if pg.evaluate(
                 "typeof finishOnboarding==='function' && document.getElementById('onboardingOverlay')"
@@ -365,7 +365,7 @@ def main():
                 lambda m: console_errors.append(m.text)
                 if m.type == "error" and "Failed to load resource" not in m.text else None,
             )
-            apg.goto(URL, wait_until="networkidle")
+            apg.goto(URL + "app", wait_until="networkidle")
             apg.wait_for_timeout(500)
             measure(apg, rows, "en", label, "auth")
             actx.close()

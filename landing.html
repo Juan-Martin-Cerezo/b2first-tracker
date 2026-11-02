@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2 First Tracker — writing marked, a plan for today</title>
+<meta name="description" content="Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Free and self-hostable.">
+<link rel="canonical" href="https://firsttracker.app/">
+<meta property="og:title" content="B2 First Tracker — writing marked, a plan for today">
+<meta property="og:description" content="Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Free and self-hostable.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://firsttracker.app/">
+<meta property="og:image" content="/assets/logo-512.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="/assets/logo-512.png">
+<link rel="apple-touch-icon" href="/assets/logo-512.png">
+<meta name="theme-color" id="metaTheme" content="#fbfcfd">
+<script>
+/* Theme before first paint: an explicit choice wins, otherwise the OS
+   preference decides, so the landing never flashes the wrong palette. */
+(function(){
+  try{
+    var t=localStorage.getItem('b2first_theme');
+    if(t!=='dark'&&t!=='light'){
+      t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+    }
+    document.documentElement.setAttribute('data-theme',t);
+    if(t==='dark'){
+      var mt=document.getElementById('metaTheme');
+      if(mt)mt.setAttribute('content','#121416');
+    }
+  }catch(e){}
+})();
+</script>
+<style>
+/* ============================================================
+   Tokens copied from the tracker (index.html) so the landing is
+   the same product, not a different skin. oklch, two themes.
+   ============================================================ */
+:root, :root[data-theme="light"]{
+  color-scheme:light;
+  --bg: oklch(0.99 0.002 250);
+  --surface: oklch(0.975 0.003 250);
+  --surface-2: oklch(0.955 0.004 250);
+  --line: oklch(0.90 0.006 250);
+  --txt: oklch(0.22 0.01 250);
+  --txt-2: oklch(0.46 0.01 250);
+  --acc: oklch(0.55 0.16 255);
+  --acc-text: oklch(0.52 0.16 255);
+  --ok: oklch(0.495 0.13 150);
+  --warn: oklch(0.72 0.15 75);
+  --bad: oklch(0.535 0.19 25);
+
+  /* text-safe status colors (>=4.5:1 on light surfaces) */
+  --ok-text: oklch(0.50 0.14 150);
+  --warn-text: oklch(0.52 0.13 75);
+  --bad-text: oklch(0.50 0.19 25);
+  --ok-strong: var(--ok-text);
+  --on-primary: oklch(0.99 0.002 250);
+  --on-ok: oklch(0.99 0.002 250);
+
+  /* soft fills & state borders */
+  --acc-soft: oklch(0.955 0.004 250);
+  --ok-soft: oklch(0.965 0.02 150);
+  --warn-soft: oklch(0.97 0.025 85);
+  --bad-soft: oklch(0.965 0.025 25);
+  --acc-border: oklch(0.80 0.06 255);
+  --ok-border: oklch(0.80 0.07 150);
+  --warn-border: oklch(0.85 0.08 80);
+  --bad-border: oklch(0.80 0.09 25);
+
+  /* elevation: layered transparent shadows, never borders */
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.05), 0 2px 8px oklch(0 0 0 / 0.05);
+  --shadow-2: 0 2px 4px oklch(0 0 0 / 0.06), 0 8px 24px oklch(0 0 0 / 0.08);
+  --shadow-3: 0 4px 8px oklch(0 0 0 / 0.08), 0 16px 48px oklch(0 0 0 / 0.12);
+  --img-outline: oklch(0 0 0 / 0.1);
+  --overlay-bg: oklch(0.22 0.01 250 / 0.45);
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg: oklch(0.19 0.006 255);
+  --surface: oklch(0.23 0.008 255);
+  --surface-2: oklch(0.27 0.009 255);
+  --line: oklch(0.33 0.01 255);
+  --txt: oklch(0.94 0.004 255);
+  --txt-2: oklch(0.72 0.008 255);
+  --acc: oklch(0.72 0.13 255);
+  --acc-text: oklch(0.72 0.13 255);
+  --ok: oklch(0.74 0.13 150);
+  --warn: oklch(0.80 0.13 80);
+  --bad: oklch(0.70 0.16 25);
+
+  --ok-text: oklch(0.74 0.13 150);
+  --warn-text: oklch(0.80 0.13 80);
+  --bad-text: oklch(0.70 0.16 25);
+  --ok-strong: var(--ok);
+  --on-primary: oklch(0.19 0.006 255);
+  --on-ok: oklch(0.19 0.006 255);
+
+  --acc-soft: oklch(0.30 0.03 255);
+  --ok-soft: oklch(0.29 0.03 150);
+  --warn-soft: oklch(0.30 0.03 80);
+  --bad-soft: oklch(0.29 0.035 25);
+  --acc-border: oklch(0.42 0.07 255);
+  --ok-border: oklch(0.44 0.07 150);
+  --warn-border: oklch(0.48 0.07 80);
+  --bad-border: oklch(0.44 0.08 25);
+
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.35), 0 2px 8px oklch(0 0 0 / 0.30);
+  --shadow-2: 0 2px 4px oklch(0 0 0 / 0.40), 0 8px 24px oklch(0 0 0 / 0.35);
+  --shadow-3: 0 4px 8px oklch(0 0 0 / 0.45), 0 16px 48px oklch(0 0 0 / 0.40);
+  --img-outline: oklch(1 0 0 / 0.1);
+  --overlay-bg: oklch(0.10 0.005 255 / 0.65);
+}
+
+:root{
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius: 8px;
+  --radius-2: 20px;
+  --radius-3: 28px;
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-2);
+
+  /* type scale */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 28px;
+
+  --nav-h: 64px;
+  --content-max: 1080px;
+}
+:root{
+  --r-ctl: 8px;
+  --r-panel: 20px;
+  --r-card: 28px;
+  --r-modal: 32px;
+}
+
+/* ---------- RESET & BASE ---------- */
+*{box-sizing:border-box;margin:0;padding:0}
+html{
+  -webkit-text-size-adjust:100%;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  scroll-behavior:smooth;
+  scroll-padding-top:96px;
+}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font:400 16px/1.6 var(--font);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+img{display:block;max-width:100%;outline:1px solid var(--img-outline);outline-offset:-1px}
+a{color:var(--acc-text);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{text-wrap:balance;font-weight:600}
+p{text-wrap:pretty}
+b,strong{font-weight:600}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+
+.wrap{width:100%;max-width:1100px;margin:0 auto;padding-inline:clamp(20px,5vw,32px)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- NAV ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in oklch, var(--bg) 86%, transparent);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.nav-in{display:flex;align-items:center;gap:clamp(12px,2.5vw,28px);min-height:72px}
+.brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--txt);font-weight:600;font-size:15px;letter-spacing:-.01em;text-decoration:none}
+.brand:hover{text-decoration:none;color:var(--txt)}
+.brand img{height:30px;width:30px;border-radius:8px;object-fit:contain}
+.nav-links{display:flex;align-items:center;gap:2px;margin-left:auto}
+.nav-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--r-ctl);color:var(--txt-2);font-size:14px;font-weight:500;text-decoration:none;transition:background-color 150ms ease,color 150ms ease}
+.nav-links a:hover{color:var(--txt);background:var(--surface-2);text-decoration:none}
+.nav-cta{margin-left:8px}
+.nav-cta-mobile{display:none;margin-left:auto}
+@media (max-width:760px){
+  .nav-links{display:none}
+  .nav-cta-mobile{display:inline-flex}
+}
+
+/* ---------- BUTTONS ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;padding:0 22px;border:1px solid transparent;border-radius:10px;
+  background:var(--acc);color:var(--on-primary);font:600 15px/1.1 var(--font);
+  text-decoration:none;cursor:pointer;box-shadow:var(--shadow-1);
+  transition:background-color 150ms ease,box-shadow 150ms ease,transform 120ms ease-out;
+}
+.btn:hover{background:color-mix(in oklch, var(--acc) 88%, var(--txt));box-shadow:var(--shadow-2);transform:translateY(-1px);text-decoration:none;color:var(--on-primary)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn.sm{min-height:44px;padding:0 16px;font-size:14px}
+.btn-ghost{background:transparent;color:var(--txt);border-color:var(--line);box-shadow:none}
+.btn-ghost:hover{background:var(--surface-2);color:var(--txt);box-shadow:none;transform:none}
+.quiet-link{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:var(--acc-text);font-size:15px;font-weight:600;text-decoration:none}
+.quiet-link:hover{text-decoration:underline}
+
+/* ---------- TYPE ---------- */
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-text);margin-bottom:18px}
+h1{font-size:clamp(2.1rem,5.4vw,3.6rem);line-height:1.04;letter-spacing:-.035em;max-width:18ch}
+h2{font-size:clamp(1.55rem,3.4vw,2.3rem);line-height:1.1;letter-spacing:-.025em;max-width:24ch}
+h3{font-size:17px;line-height:1.3;letter-spacing:-.01em}
+.lede{font-size:clamp(1rem,1.5vw,1.1875rem);line-height:1.6;color:var(--txt-2);max-width:56ch;margin-top:22px}
+.kicker{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--acc-text);margin-bottom:12px}
+.section-lede{margin-top:16px;font-size:clamp(1rem,1.3vw,1.0625rem);line-height:1.65;color:var(--txt-2);max-width:62ch}
+
+/* ---------- HERO ---------- */
+.hero{padding-block:clamp(52px,8vw,100px) clamp(44px,7vw,80px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(36px,6vw,72px);align-items:center}
+.hero-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;margin-top:30px}
+.fineprint{margin-top:18px;font-size:13px;color:var(--txt-2)}
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero{padding-block:clamp(40px,7vw,64px)}
+  h1{max-width:20ch}
+}
+
+/* ---------- PRODUCT MOCK (pure CSS) ---------- */
+.mock{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mock-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:16px 18px;box-shadow:var(--shadow-2);min-width:0;
+}
+.mock-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.mock-title{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2)}
+.mock-tag{font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--acc-text);white-space:nowrap}
+.band-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;margin-top:9px}
+.band-name{font-size:12px;font-weight:600;color:var(--txt)}
+.band-score{font-size:12px;font-weight:600;color:var(--acc-text);font-variant-numeric:tabular-nums}
+.band-track{grid-column:1/-1;height:7px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.band-fill{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.band-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--txt-2);margin-top:8px;font-variant-numeric:tabular-nums}
+.ses-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.ses-row:first-of-type{padding-top:6px}
+.ses-row:last-child{border-bottom:none;padding-bottom:2px}
+.ses-dot{width:8px;height:8px;border-radius:50%;background:var(--acc);flex:none}
+.ses-main{flex:1;min-width:0}
+.ses-name{display:block;font-size:13px;font-weight:600;color:var(--txt);line-height:1.3}
+.ses-meta{display:block;font-size:12px;color:var(--txt-2);line-height:1.4}
+.ses-min{font-size:12px;font-weight:600;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mock-spark svg{display:block;width:100%;height:44px;color:var(--acc);overflow:visible}
+.mock-caption{font-size:11px;color:var(--txt-2);text-align:right;letter-spacing:.02em}
+@media (max-width:900px){.mock{max-width:440px}}
+
+/* ---------- SECTIONS ---------- */
+.band{padding-block:clamp(56px,8vw,92px);border-top:1px solid var(--line)}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,22px);margin-top:clamp(28px,4vw,44px)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:clamp(20px,3vw,28px);box-shadow:var(--shadow-2);min-width:0}
+.card .ico{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--acc-soft);color:var(--acc-text);margin-bottom:18px}
+.card .ico svg{width:20px;height:20px}
+.card h3{margin-bottom:8px}
+.card p{font-size:14px;line-height:1.65;color:var(--txt-2)}
+@media (max-width:860px){.cards{grid-template-columns:1fr;max-width:560px}}
+
+.split{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,5vw,56px);align-items:start;margin-top:clamp(28px,4vw,44px)}
+.split p{font-size:15px;line-height:1.7;color:var(--txt-2)}
+.split p+p{margin-top:16px}
+.checklist{list-style:none;display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:18px 20px;box-shadow:var(--shadow-1)}
+.checklist li{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5;color:var(--txt)}
+.checklist li svg{width:18px;height:18px;flex:none;color:var(--acc-text);margin-top:2px}
+.note{margin-top:16px;font-size:13px;line-height:1.6;color:var(--txt-2);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:12px 14px}
+.note b{color:var(--txt)}
+@media (max-width:820px){.split{grid-template-columns:1fr}}
+
+.bullets{list-style:none;display:grid;gap:16px;margin-top:clamp(26px,4vw,40px);max-width:720px}
+.bullets li{display:flex;align-items:flex-start;gap:12px;font-size:15px;line-height:1.6;color:var(--txt-2)}
+.bullets li svg{width:20px;height:20px;flex:none;color:var(--ok-text);margin-top:2px}
+.bullets b{color:var(--txt)}
+.legal-links{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:28px}
+.legal-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface);color:var(--txt-2);font-size:13px;font-weight:600}
+.legal-links a:hover{color:var(--acc-text);border-color:var(--acc);text-decoration:none}
+
+.steps{list-style:none;counter-reset:step;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,2vw,22px);margin-top:clamp(28px,4vw,44px)}
+.steps li{counter-increment:step;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);padding:22px;box-shadow:var(--shadow-1);min-width:0}
+.steps li::before{
+  content:counter(step);
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;border-radius:50%;
+  background:var(--acc-soft);color:var(--acc-text);
+  font-size:14px;font-weight:700;margin-bottom:14px;
+}
+.steps b{display:block;font-size:15px;color:var(--txt);margin-bottom:6px}
+.steps span{display:block;font-size:14px;line-height:1.6;color:var(--txt-2)}
+@media (max-width:820px){.steps{grid-template-columns:1fr;max-width:560px}}
+.start-cta{margin-top:32px}
+
+.faq{max-width:780px;margin-top:clamp(28px,4vw,40px)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq details:first-child{border-top:1px solid var(--line)}
+.faq summary{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  min-height:56px;padding:14px 2px;cursor:pointer;list-style:none;
+  font-size:15px;font-weight:600;color:var(--txt);
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:20px;font-weight:400;color:var(--acc-text);line-height:1;flex:none}
+.faq details[open] summary::after{content:"−"}
+.faq details p{padding:0 2px 18px;font-size:14px;line-height:1.7;color:var(--txt-2);max-width:68ch}
+.faq summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ---------- FOOTER ---------- */
+footer{border-top:1px solid var(--line);background:var(--surface);padding-block:32px}
+.foot-in{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.foot-brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--txt)}
+.foot-brand img{height:26px;width:26px;border-radius:7px;object-fit:contain}
+.foot-links{display:flex;flex-wrap:wrap;gap:2px}
+.foot-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-radius:var(--r-ctl);color:var(--txt-2);font-size:13px}
+.foot-links a:hover{color:var(--acc-text);background:var(--surface-2);text-decoration:none}
+.foot-note{width:100%;font-size:13px;color:var(--txt-2);padding-top:4px}
+
+/* ---------- MOTION SAFETY ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+  }
+  .btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="/">
+      <img src="/assets/logo-512.png" alt="" width="30" height="30">
+      <span>B2 First Tracker</span>
+    </a>
+    <nav class="nav-links" aria-label="Landing">
+      <a href="#how">How it works</a>
+      <a href="#speaking">Speaking</a>
+      <a href="#privacy">Privacy</a>
+      <a class="btn sm nav-cta" id="navCta" href="/app">Open the app</a>
+    </nav>
+    <a class="btn sm nav-cta-mobile" id="navCtaMobile" href="/app" aria-label="Open the app">Open the app</a>
+  </div>
+</header>
+
+<main>
+  <!-- ============ HERO ============ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Cambridge B2 First (FCE) · self-study</p>
+        <h1 id="hero-title">Someone finally marks your writing.</h1>
+        <p class="lede">B2 First Tracker is a study system for preparing the Cambridge B2 First alone. It marks your writing against the four Cambridge bands, decides what to practise today, and shows the progress you cannot see on your own.</p>
+        <div class="hero-ctas">
+          <a class="btn" id="heroCta" href="/app">Start practising — it is free</a>
+          <a class="quiet-link" href="#how">See how it works</a>
+        </div>
+        <p class="fineprint">No credit card. No ads. No trackers.</p>
+      </div>
+
+      <figure class="mock" role="img" aria-label="Product preview: four Cambridge band scores, today's session with three tasks, and a band trend line">
+        <div class="mock-card" aria-hidden="true">
+          <div class="mock-head">
+            <span class="mock-title">Writing · Essay</span>
+            <span class="mock-tag">Four bands</span>
+          </div>
+          <div class="band-row">
+            <span class="band-name">Content</span><span class="band-score">4</span>
+            <span class="band-track"><span class="band-fill" style="width:80%"></span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-name">Communicative Achievement</span><span class="band-score">3</span>
+            <span class="band-track"><span class="band-fill" style="width:60%"></span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-name">Organisation</span><span class="band-score">4</span>
+            <span class="band-track"><span class="band-fill" style="width:80%"></span></span>
+          </div>
+          <div class="band-row">
+            <span class="band-name">Language</span><span class="band-score">3</span>
+            <span class="band-track"><span class="band-fill" style="width:60%"></span></span>
+          </div>
+          <div class="band-scale"><span>0</span><span>5</span></div>
+        </div>
+
+        <div class="mock-card" aria-hidden="true">
+          <div class="mock-head">
+            <span class="mock-title">Today's session</span>
+            <span class="mock-tag">45 min</span>
+          </div>
+          <div class="ses-row">
+            <span class="ses-dot"></span>
+            <span class="ses-main"><span class="ses-name">Use of English</span><span class="ses-meta">Part 4 · key word transformation</span></span>
+            <span class="ses-min">12 min</span>
+          </div>
+          <div class="ses-row">
+            <span class="ses-dot"></span>
+            <span class="ses-main"><span class="ses-name">Writing</span><span class="ses-meta">Essay · 140–190 words</span></span>
+            <span class="ses-min">25 min</span>
+          </div>
+          <div class="ses-row">
+            <span class="ses-dot"></span>
+            <span class="ses-main"><span class="ses-name">Speaking</span><span class="ses-meta">Part 2 · long turn</span></span>
+            <span class="ses-min">8 min</span>
+          </div>
+        </div>
+
+        <div class="mock-card mock-spark" aria-hidden="true">
+          <div class="mock-head">
+            <span class="mock-title">Band trend</span>
+            <span class="mock-tag">8 weeks</span>
+          </div>
+          <svg viewBox="0 0 320 48" role="presentation" focusable="false">
+            <path d="M4 38 L48 34 L92 35 L136 26 L180 28 L224 18 L268 15 L316 9 L316 46 L4 46 Z" fill="currentColor" opacity=".08"></path>
+            <polyline points="4,38 48,34 92,35 136,26 180,28 224,18 268,15 316,9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <circle cx="316" cy="9" r="3" fill="currentColor"></circle>
+          </svg>
+        </div>
+        <figcaption class="mock-caption">Product preview · sample data</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ HOW ============ -->
+  <section class="band" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <p class="kicker">What you get</p>
+      <h2 id="how-title">Three things nobody gives you</h2>
+      <div class="cards">
+        <article class="card">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg>
+          </div>
+          <h3>Writing marked, not vibes</h3>
+          <p>Every text is scored on the four Cambridge bands from 0 to 5. Each score quotes the evidence from your own words, and every weak spot comes with three rewritten sentences you can actually reuse.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2.5"/></svg>
+          </div>
+          <h3>A plan for today, not someday</h3>
+          <p>It reads your practice log, finds the parts that are costing you marks and hands you today's session: what to do, how long it takes and why it was chosen.</p>
+        </article>
+        <article class="card">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M3 21h18"/><path d="M20 4l-4 2 4 2z"/></svg>
+          </div>
+          <h3>Progress you can see</h3>
+          <p>Charts per part, per error type and per skill, plus your study streak and the countdown to exam day. The pattern behind a bad week stops being a mystery.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPEAKING ============ -->
+  <section class="band" id="speaking" aria-labelledby="speaking-title">
+    <div class="wrap">
+      <p class="kicker">Speaking</p>
+      <h2 id="speaking-title">A real-time examiner</h2>
+      <div class="split">
+        <div>
+          <p>The speaking studio runs the four parts of the exam in the browser. You hear the examiner, answer out loud and get a transcript of the exchange when the time is up.</p>
+          <p>The report bands what Cambridge assesses: grammar and vocabulary, discourse management, pronunciation, and interactive communication. It is practice, not a certificate — the real examiner is still a person.</p>
+          <p class="note">Pronunciation is shown as <b>not measured</b> until the pronunciation service is configured on the server. The other scales work without it.</p>
+        </div>
+        <ul class="checklist">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span>Parts 1 to 4, with their real timings</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span>A partner voice for Part 3</span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span>A report that bands grammar and vocabulary, discourse management, pronunciation and interactive communication</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section class="band" id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap">
+      <p class="kicker">Privacy</p>
+      <h2 id="privacy-title">Your progress stays on the server</h2>
+      <ul class="bullets">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span><b>JSON files on the server.</b> Your progress lives in plain files on the machine that runs the app, not in a cloud database.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span><b>No analytics SDK, no ads, no selling.</b> Nothing is profiled and nothing is sold.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"/></svg><span><b>Open source and self-hostable.</b> You can read the code and run your own copy.</span></li>
+      </ul>
+      <div class="legal-links">
+        <a href="/privacy">Privacy policy</a>
+        <a href="/terms">Terms</a>
+        <a href="/security">Security</a>
+        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ START ============ -->
+  <section class="band" id="start" aria-labelledby="start-title">
+    <div class="wrap">
+      <p class="kicker">Start</p>
+      <h2 id="start-title">How it works</h2>
+      <ol class="steps">
+        <li><b>Create an account</b><span>A username and a password. No email address needed.</span></li>
+        <li><b>Take the diagnostic</b><span>Twelve questions place you across the skills, so the plan starts from what you actually know.</span></li>
+        <li><b>Open today's session</b><span>Do the work it asks for and log it. Tomorrow's plan reads the result.</span></li>
+      </ol>
+      <div class="start-cta">
+        <a class="btn" href="/app">Open the app</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="band" id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <p class="kicker">Questions</p>
+      <h2 id="faq-title">Frequently asked questions</h2>
+      <div class="faq">
+        <details>
+          <summary>Is it really free?</summary>
+          <p>Yes. The app is free to use and the source is MIT-licensed. If you use an AI key of your own, you pay your provider directly for what you use.</p>
+        </details>
+        <details>
+          <summary>Do I need an email address?</summary>
+          <p>No. An account is a username and a password. That is also why there is no email password link.</p>
+        </details>
+        <details>
+          <summary>What if I forget my password?</summary>
+          <p>Use the recovery request on the login screen. The operator resets the password by hand and answers at the contact you leave there; there is no email link.</p>
+        </details>
+        <details>
+          <summary>Who sees my writing?</summary>
+          <p>Only the AI provider used to mark it, and it is not stored.</p>
+        </details>
+        <details>
+          <summary>Which parts of the exam does it cover?</summary>
+          <p>Use of English and Reading, Writing, Listening, and Speaking.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>
+      <div class="foot-brand">
+        <img src="/assets/logo-512.png" alt="" width="26" height="26">
+        <span>B2 First Tracker</span>
+      </div>
+      <p class="foot-note" style="margin-top:6px">MIT licensed.</p>
+    </div>
+    <nav class="foot-links" aria-label="Footer">
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/security">Security</a>
+      <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">GitHub</a>
+    </nav>
+    <p class="foot-note">Self-hosted on a Raspberry Pi 5. No cloud, no database.</p>
+  </div>
+</footer>
+
+<script>
+/* One job: a returning student should not read the pitch twice. */
+(function(){
+  try{
+    var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
+    if(!u||!u.id)return;
+    var nav=document.getElementById('navCta');
+    var navMobile=document.getElementById('navCtaMobile');
+    var hero=document.getElementById('heroCta');
+    if(nav)nav.textContent='Continue studying →';
+    if(navMobile)navMobile.textContent='Continue studying →';
+    if(hero)hero.textContent='Continue studying';
+  }catch(e){}
+})();
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"isAccessibleForFree":true}
+</script>
+</body>
+</html>

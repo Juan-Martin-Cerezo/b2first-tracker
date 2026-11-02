@@ -154,7 +154,7 @@ MAIN_UID, MAIN_TOK = main["id"], main["token"]
 # ---------------------------------------------------------------------------
 # A. Headers and transport
 # ---------------------------------------------------------------------------
-st, body, h = req("GET", "/")
+st, body, h = req("GET", "/app")
 csp = h.get("Content-Security-Policy", "")
 check("A1_hsts_preload",
       h.get("Strict-Transport-Security") == "max-age=63072000; includeSubDomains; preload",

@@ -261,7 +261,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     errores_js = []
     pg.on("pageerror", lambda e: errores_js.append(str(e)))
-    pg.goto(URL + "/", wait_until="networkidle")
+    pg.goto(URL + "/app", wait_until="networkidle")
     pg.wait_for_timeout(500)
     link = pg.evaluate(
         """() => {
@@ -292,7 +292,7 @@ Object.defineProperty(window, 'doNotTrack', {get: function(){return '1'}});"""
     pg2 = ctx.new_page()
     event_requests = []
     pg2.on("request", lambda r: event_requests.append(r.url) if "/api/events" in r.url else None)
-    pg2.goto(URL + "/", wait_until="networkidle")
+    pg2.goto(URL + "/app", wait_until="networkidle")
     pg2.wait_for_timeout(400)
     pg2.evaluate("track('app_open');track('view_change',{view:'plan'});tevFlush();")
     pg2.evaluate("showView('plan')")

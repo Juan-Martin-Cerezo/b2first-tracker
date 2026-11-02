@@ -77,7 +77,7 @@ def main():
         pg.on("console", lambda m: console_errors.append(m.text)
               if m.type == "error" else None)
 
-        pg.goto(BASE["url"] + "/?spk=sim", wait_until="networkidle")
+        pg.goto(BASE["url"] + "/app?spk=sim", wait_until="networkidle")
         login_owner(pg, BASE["url"] + "/")
         pg.evaluate("showView('hoy');selectSessionStudio('fri-b')")
 

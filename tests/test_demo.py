@@ -72,8 +72,8 @@ st_usr, _ = req_http(URL1, "GET", "/api/users")
 assert st_get == 403 and st_out == 403 and st_me == 403 and st_usr == 403
 out["5_progress_get_403"] = st_get
 
-# 6. GET / -> 200 and the HTML contains the demo banner (Demo mode)
-st_idx, body_idx = req_http(URL1, "GET", "/")
+# 6. GET /app -> 200 and the HTML contains the demo banner (Demo mode)
+st_idx, body_idx = req_http(URL1, "GET", "/app")
 assert st_idx == 200 and "Demo mode" in body_idx
 out["6_index_has_demo_banner"] = "Demo mode" in body_idx
 
@@ -89,7 +89,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     errores_js = []
     pg.on("pageerror", lambda e: errores_js.append(str(e)))
-    pg.goto(URL1 + "/", wait_until="networkidle")
+    pg.goto(URL1 + "/app", wait_until="networkidle")
     # initSession() resolves /api/config asynchronously; give it a beat before
     # sampling the UI state (same pattern as test_multiuser).
     pg.wait_for_timeout(500)
@@ -99,7 +99,7 @@ with sync_playwright() as p:
         bannerVisible: getComputedStyle(document.getElementById('demoBanner')).display !== 'none',
         bannerText: document.getElementById('demoBanner').textContent.trim(),
         authHidden: getComputedStyle(document.getElementById('authOverlay')).display === 'none',
-        footSyncHidden: getComputedStyle(document.getElementById('syncBadgeFoot')).display === 'none'
+        footSyncHidden: getComputedStyle(document.getElementById('syncBadge')).display === 'none'
     })"""
     )
     assert demo_state["demo"] is True, f"Expected DEMO.demo===true, got {demo_state}"

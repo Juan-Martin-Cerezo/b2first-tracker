@@ -27,7 +27,7 @@ async def main():
         errs = []
         page.on("pageerror", lambda e: errs.append(str(e)))
 
-        await page.goto(URL, wait_until="networkidle")
+        await page.goto(URL + "app", wait_until="networkidle")
 
         # Clear localStorage on start and use an isolated test user
         await page.evaluate(

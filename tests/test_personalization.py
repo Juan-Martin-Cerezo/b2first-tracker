@@ -10,7 +10,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1200, "height": 900})
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
 
     # 1. Login as Owner
     login_owner(pg, URL)

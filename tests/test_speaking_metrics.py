@@ -117,7 +117,7 @@ def main():
         pg.on("pageerror", lambda e: page_errors.append(str(e)))
         pg.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
 
-        pg.goto(URL, wait_until="networkidle")
+        pg.goto(URL + "app", wait_until="networkidle")
         login_owner(pg, URL)
 
         # Open the speaking studio (Today view) and start the live panel.

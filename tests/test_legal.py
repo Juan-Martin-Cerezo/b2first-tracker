@@ -131,7 +131,7 @@ check("L8_security_links_security_txt",
 # ---------------------------------------------------------------------------
 # 2. Footer and signup accept both documents.
 # ---------------------------------------------------------------------------
-index = req("GET", "/").text
+index = req("GET", "/app").text
 check("L9_footer_links",
       all(f'href="{h}"' in index for h in ("/privacy", "/terms", "/security")))
 check("L10_signup_acceptance",

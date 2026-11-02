@@ -9,7 +9,7 @@ with sync_playwright() as p:
     pg = b.new_page()
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
     out["titulo"] = pg.title()
     # ir a LIBROS

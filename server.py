@@ -10,7 +10,8 @@ shows up on /libros (catalog with a search box) and on /libros.json (consumed
 by the LIBROS tab of the tracker).
 
 Endpoints:
-  GET /            → index.html (the single-file tracker)
+  GET /            → landing.html (the public product page)
+  GET /app         → index.html (the single-file tracker)
   GET /libros      → HTML page with all the material (viewer + audio)
   GET /libros.json → JSON with the catalog (for the tracker)
   GET /files/<rel> → serves a material file with Range support
@@ -62,6 +63,7 @@ import oauth_google
 # ---------------------------------------------------------------------------
 ROOT      = os.path.expanduser("~/Descargas/b2-first")  # material (PDF/MP3/ZIP)
 TRACKER   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+LANDING   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "landing.html")
 DIAG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "material", "diagnostico.json")
 _DIAG_CACHE = {"path": None, "mtime": None, "body": None}
 PORT      = int(os.environ.get("PORT", 8088))           # 8080 is taken by docker-proxy
@@ -3196,8 +3198,9 @@ SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
-    # microphone=(self) is only advertised on the tracker page, which is the one
-    # place the speaking studio captures audio. Everything else gets the minimum.
+    # microphone=(self) is only advertised on the tracker (/app), which is the
+    # one page that captures audio. The landing and everything else get the
+    # minimum.
     "Permissions-Policy": PERMISSIONS_NONE,
     # 'unsafe-inline' is still required by the single-file UI (197 inline event
     # handlers); 'unsafe-eval' is not present. object-src/base-uri close the
@@ -3219,7 +3222,7 @@ def _security_headers(path):
     response advertises no device capability at all.
     """
     headers = dict(SECURITY_HEADERS)
-    if (path or "").split("?", 1)[0] in ("/", "/index.html"):
+    if (path or "").split("?", 1)[0] in ("/app", "/index.html"):
         headers["Permissions-Policy"] = PERMISSIONS_MIC
     return headers
 
@@ -3818,10 +3821,25 @@ class H(BaseHTTPRequestHandler):
                        "text/plain; charset=utf-8", {"Cache-Control": "public, max-age=3600"})
             return
 
+        # Landing page at the root; the tracker keeps its own stable URL so an
+        # installed PWA (manifest start_url="/app") opens the app, not the pitch.
+        if path in ("/", "/home"):
+            self._serve_cached_static(LANDING, "text/html; charset=utf-8")
+            return
+
         # Tracker (index.html) — cached, revalidated by ETag so a redeploy is
         # picked up on the next request and an unchanged file costs a 304.
-        if path in ("/", "/index.html"):
+        if path in ("/app", "/index.html"):
             self._serve_cached_static(TRACKER, "text/html; charset=utf-8")
+            return
+
+        # Crawler metadata at the root (plain files, same static cache).
+        if path in ("/robots.txt", "/sitemap.xml"):
+            name = path[1:]
+            full = os.path.join(os.path.dirname(os.path.abspath(__file__)), name)
+            ctype = ("text/plain; charset=utf-8" if name.endswith(".txt")
+                     else "application/xml; charset=utf-8")
+            self._serve_cached_static(full, ctype)
             return
 
         # Legal pages (public HTML, rendered from docs/*.md, cacheable for 5 min)

@@ -114,7 +114,7 @@ with sync_playwright() as p:
             route.fulfill(status=st_p, content_type=ct_p or "application/json", body=body_p)
         pg.route("**/diagnostico.json", _proxy_diag)
 
-    pg.goto(URL_8088 + "/", wait_until="networkidle")
+    pg.goto(URL_8088 + "/app", wait_until="networkidle")
 
     # Clear localStorage on start and set up an isolated user without touching real data/
     pg.evaluate(

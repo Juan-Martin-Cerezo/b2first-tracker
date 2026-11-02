@@ -276,7 +276,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     errores_js = []
     pg.on("pageerror", lambda e: errores_js.append(str(e)))
-    pg.goto(URL + "/", wait_until="networkidle")
+    pg.goto(URL + "/app", wait_until="networkidle")
     pg.evaluate("localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(session)))
     pg.evaluate("localStorage.setItem('ob_%s', '1');" % session["id"])
     pg.reload(wait_until="networkidle")

@@ -280,7 +280,7 @@ with sync_playwright() as p:
     pg = b.new_page(viewport={"width": 1280, "height": 800})
     js_errs = []
     pg.on("pageerror", lambda e: js_errs.append(str(e)))
-    pg.goto(URL + "/", wait_until="networkidle")
+    pg.goto(URL + "/app", wait_until="networkidle")
     pg.evaluate(
         """() => {
         syncPush = () => {};

@@ -47,7 +47,7 @@ with sync_playwright() as p:
         else None,
     )
 
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
     # --- 1. The Practice item is in the nav and opens the screen ----------

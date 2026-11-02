@@ -109,7 +109,7 @@ with sync_playwright() as p:
     user = session_user()
     reset_progress(user)
 
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
     pg.evaluate("localStorage.clear()")
     pg.evaluate("localStorage.setItem('b2first_user', %s)" % json.dumps(json.dumps(user)))
     pg.reload(wait_until="networkidle")

@@ -128,7 +128,7 @@ The rubric itself is not invented: it is transcribed from the official *B2 First
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Frontend | One `index.html`, vanilla JS and CSS | No build step, no `node_modules`; it opens on any phone and Playwright can drive it directly |
+| Frontend | `landing.html` plus `index.html`, vanilla JS and CSS | No build step, no `node_modules`; the landing is the public pitch at `/`, the app lives at `/app` |
 | Backend | `server.py`, Python standard library only | No pip install, no framework, no version drift on a small server |
 | Storage | JSON files on disk, with rotated backups | Readable, diffable, trivial to back up; a database would add a dependency without adding a feature |
 | AI | Provider-agnostic proxy, bring your own key | The key never leaves your device except to reach the proxy; the repository ships no credentials |
@@ -182,9 +182,9 @@ capacity run (`B2_RATE_IP_ANON=0`) so the numbers show CPU/socket capacity, not 
 
 | Pass | Requests in 10 s | Throughput | p95 | 503/429 |
 | --- | --- | --- | --- | --- |
-| `GET /`, static cache ON | 4,742 | 474 req/s | 270 ms | 0 |
-| `GET /`, `B2_NO_CACHE=1` (previous behaviour) | 1,608 | 161 req/s | 790 ms | 0 |
-| `GET /`, cache ON, **300 concurrent** | 4,175 | 418 req/s | 843 ms | 0 |
+| `GET /app`, static cache ON | 4,742 | 474 req/s | 270 ms | 0 |
+| `GET /app`, `B2_NO_CACHE=1` (previous behaviour) | 1,608 | 161 req/s | 790 ms | 0 |
+| `GET /app`, cache ON, **300 concurrent** | 4,175 | 418 req/s | 843 ms | 0 |
 
 At 300 concurrent connections the server peaked at **45.2 MB RSS and 301 threads**, so the
 512-connection cap stays. The cache is 2.9x better at p95 than re-gzipping on every request, and a
@@ -414,6 +414,7 @@ The request endpoint never says whether an account exists: every valid request g
 ## Project layout
 
 ```
+landing.html        the public product page served at /
 index.html          the entire frontend: views, timers, charts, quick-log, streak
 server.py           standard-library HTTP server, auth, sync API, AI proxy
 store.py            storage seam (swap JSON for SQLite without touching the API)

@@ -66,7 +66,7 @@ with sync_playwright() as p:
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)))
 
-    pg.goto(URL, wait_until="networkidle")
+    pg.goto(URL + "app", wait_until="networkidle")
     pg.evaluate("u => localStorage.setItem('b2first_user', JSON.stringify(u))", user)
     pg.reload(wait_until="networkidle")
 
