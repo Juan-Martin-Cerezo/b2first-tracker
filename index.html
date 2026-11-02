@@ -380,6 +380,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
   box-shadow:var(--shadow-1);font-weight:400;
 }
 .btn.gray:hover{background:var(--surface-2);color:var(--acc-text);box-shadow:var(--shadow-2)}
+/* Provider buttons (Google): white surface in light, --surface-2 in dark,
+   official multicolour mark, 44px target, same radius as every other button. */
+.btn.provider{
+  background:oklch(1 0 0);color:var(--txt);border:1px solid var(--line);
+  box-shadow:var(--shadow-1);font-weight:600;gap:12px;min-height:44px;
+}
+.btn.provider:hover{background:var(--surface);color:var(--txt);box-shadow:var(--shadow-2);transform:translateY(-1px)}
+.btn.provider:active{transform:scale(0.96)}
+.btn.provider .provider-ico{width:18px;height:18px;flex:none;display:block}
+:root[data-theme="dark"] .btn.provider{background:var(--surface-2)}
+:root[data-theme="dark"] .btn.provider:hover{background:var(--line)}
 .btn.ok{background:var(--ok-strong);color:var(--on-ok)}
 .btn.ok:hover{background:color-mix(in oklch, var(--ok-strong) 90%, var(--txt))}
 .btn:disabled,.btn[disabled]{
@@ -1492,10 +1503,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="e.g. Owner" data-i18n-placeholder="auth_ph_owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="auth-error" id="authError"></div>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
       <button type="button" class="auth-link" onclick="showPasswordRecovery()" data-i18n="auth_forgot">Forgot your password?</button>
+      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
       <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
-      <button class="btn gray" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()" data-i18n="auth_google">Continue with Google</button>
+      <button class="btn provider" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()"><svg class="provider-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="auth_google">Continue with Google</span></button>
       <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
       <div class="auth-error" id="altAuthError"></div>
     </div>
@@ -13404,7 +13415,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   window.DEMO=DEMO;
   const googleBtn=document.getElementById('googleLoginBtn');
-  if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'block':'none';
+  // flex, not block: the provider button is an icon + label row.
+  if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'flex':'none';
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
   if(passkeyBtn&&!window.PublicKeyCredential)passkeyBtn.style.display='none';
   const altSep=document.getElementById('authAltSep');
