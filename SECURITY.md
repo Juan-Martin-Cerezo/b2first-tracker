@@ -48,7 +48,7 @@ how to get the data back after a disaster.
 | Passwords | Offline cracking of `users.json` | PBKDF2-HMAC-SHA256, **600,000 iterations**, 16-char per-user salt; constant-time compare; SHA-256 legacy hashes and 200k PBKDF2 hashes are re-hashed to 600k on the next successful login (transparent: nobody is locked out) | `server.py`: `hash_password`, `_record_iterations`, `verify_password`, `_needs_rehash`, `login_user` |
 | Session tokens | Theft from disk or replay after logout | Only `sha256(token)` is stored; 30-day **sliding** TTL capped by a 90-day **absolute** `absolute_exp` that is never extended; logout revokes; a password change revokes **every** session including the current one and returns a fresh token | `server.py`: `_token_key`, `new_token`, `auth_from_token`, `revoke_token`, `revoke_user_sessions`, `/api/password` |
 | Accounts | Brute force / credential stuffing | 5 failed logins lock the username for 15 minutes **across IPs**; **exponential backoff** of 5 s / 15 s / 60 s after the 3rd/4th/5th failure; 10 logins / 10 min / IP and 20 / h / username | `server.py`: `_login_locked`, `_login_failed`, `LOGIN_BACKOFF`, `_login_delay`, `/api/login` |
-| Username privacy | User enumeration via errors or timing | Identical "Wrong username or password." for unknown user and wrong password; the unknown-user path burns a full dummy PBKDF2; `hmac.compare_digest` everywhere | `server.py`: `login_user`, `verify_password`, `_dummy_digest` |
+| Username privacy | User enumeration via errors or timing | Identical "Wrong username or password." for unknown user and wrong password; the unknown-user path burns a full dummy PBKDF2; `hmac.compare_digest` everywhere. `POST /api/password-reset/request` answers the same `200 {"ok":true}` for every valid name and is capped at 5 requests/hour/IP | `server.py`: `login_user`, `verify_password`, `_dummy_digest`, `/api/password-reset/request`; `store.py`: `append_pwreset` |
 | Per-user data | IDOR: read/write another account's data by guessing its id | The session token must belong to the requested user (otherwise `403`); proxied requests without a token always get `401`; audit events are filtered to the caller | `server.py`: `/api/progress`, `/api/audit` |
 | Server filesystem | Path traversal via `?user=` or `/files/` | User ids validated against `[A-Za-z0-9._-]{1,64}` with explicit `..` rejection (`400`); file routes `realpath` and require the result to stay inside their root | `store.py`: `_safe_uid`; `server.py`: `/files/`, `/assets/` |
 | AI provider key | Key theft or free-riding | The key comes only from the environment (`B2_AI_KEY`, systemd `EnvironmentFile` outside the repo); never logged, never written to disk (`settings.aiKey` is stripped before persisting progress); 32 KB request cap | `server.py`: `/api/ai/writing`, `_validate_ai_payload` |
@@ -76,7 +76,7 @@ how to get the data back after a disaster.
 | Body limits by route | Implemented | Global 3 MB ceiling checked from `Content-Length` before the body is read; `/api/speaking/pa` and `PUT /api/progress` reject > 2 MB the same way (`413`, connection closed, nothing drained) |
 | Secrets outside the repo | Implemented | The AI key comes from the environment (systemd `EnvironmentFile`, chmod 600, outside the repo); the repo ships no credentials; `settings.aiKey` is stripped before persisting; keys are never logged |
 | Server-side auth | Implemented | Every data route (`/api/me`, `/api/progress`, `/api/password`, `/api/account`, `/api/export`, `/api/audit`) validates the Bearer token on every request |
-| Rate limit login / reset | Implemented | Login 10/10 min/IP + 20/h/username + 5-failure lockout; registration 5/h/IP; password change 5/h/IP. There is no remote password reset flow (no email to send to); recovery is the local CLI `tools/reset_password.py` |
+| Rate limit login / reset | Implemented | Login 10/10 min/IP + 20/h/username + 5-failure lockout; registration 5/h/IP; password change 5/h/IP; manual recovery request 5/h/IP on top of the 30/min/IP credential bucket. There is no remote password reset flow (no email to send to): the request only queues a manual reset, and the operator runs `tools/reset_password.py` on the host |
 | External timeouts | Implemented | Upstream AI call 25 s (`AI_TIMEOUT`); store locks fail after 5 s and answer `429` busy |
 | Retries only on transient errors | Implemented | Nothing retries automatically: an upstream failure returns `502` once, and the client resubmits only on user action |
 | Payment idempotency | N/A | There are no payment flows |
@@ -106,9 +106,9 @@ Backups are made at two levels:
 1. **On every save.** Before a progress file is overwritten, the previous version is copied to
    `data/users/<id>/backups/progress-<timestamp>.json`, keeping the **20** most recent per user
    (`store.py`: `put_progress` → `backup`). Pre-migration copies are kept the same way.
-2. **Daily job.** The systemd timer `b2f-backup.timer` (03:30, persistent, up to 5 min jitter)
-   runs `~/.hermes/scripts/b2f_backup.sh`, which creates
-   `~/b2first-backups/b2f-data-YYYYmmdd-HHMMSS.tgz` — a tar.gz of the whole `data/` directory.
+2. **Daily job.** A systemd timer (for example 03:30, persistent, with a few minutes of jitter)
+   runs your backup command, which creates `<your-backup-dir>/b2f-data-YYYYmmdd-HHMMSS.tgz` — a
+   tar.gz of the whole `data/` directory.
 
 **Verification on every run.** The job refuses to pass unless all of the following succeed,
 and prints `B2F BACKUP FAIL: ...` otherwise:
@@ -118,9 +118,9 @@ and prints `B2F BACKUP FAIL: ...` otherwise:
 - **every `.json` file in the restored copy parses** with `json.load` (a single corrupt file
   fails the whole run).
 
-**Retention: 14.** The 14 newest tarballs are kept (`KEEP=14`); older ones are deleted at the
-end of each run. Every run appends one line to `~/b2first-backups/backup.log`
-(timestamp, archive path, size, user count) — silence in stdout means success.
+**Retention: 14.** Keep the 14 newest tarballs and delete older ones at the end of each run.
+Every run appends one line to `<your-backup-dir>/backup.log` (timestamp, archive path, size, user
+count) — silence in stdout means success.
 
 **Restore, step by step** (the data-manipulation steps were executed against a scratch copy of
 the 2026-10-29 backup; only the `systemctl stop/start` of the live service is not part of the
@@ -131,11 +131,11 @@ drill):
 sudo systemctl stop b2first.service
 
 # 1) keep the current data aside — never delete it
-cd /home/juan/b2first-tracker
+cd /path/to/b2first-tracker
 mv data data.broken-$(date +%Y%m%d-%H%M%S)
 
 # 2) extract the chosen backup (the archive contains data/ at its root)
-tar xzf /home/juan/b2first-backups/b2f-data-YYYYmmdd-HHMMSS.tgz -C /home/juan/b2first-tracker
+tar xzf <your-backup-dir>/b2f-data-YYYYmmdd-HHMMSS.tgz -C /path/to/b2first-tracker
 
 # 3) restore private permissions
 find data -type d -exec chmod 700 {} +
@@ -208,10 +208,12 @@ There is no verified email address for this project. `/.well-known/security.txt`
 GitHub advisory URL as the working `Contact` plus the documented `TODO_OWNER_EMAIL` placeholder.
 Replace the placeholder with a real mailbox before claiming a mail contact.
 
-### 5.5 Account recovery is local only
+### 5.5 Account recovery is manual
 
-There is no email flow, so a forgotten password requires shell access to run
-`tools/reset_password.py`. This is a deliberate consequence of not collecting personal data.
+There is no email flow, so a forgotten password is handled by hand: the login screen can file a
+request (user name plus an optional contact) and the operator runs `tools/reset_password.py` on
+the host. Nothing is sent by email and the request endpoint never confirms whether an account
+exists. This is a deliberate consequence of not collecting personal data.
 
 ### 5.6 Password policy is below the ASVS L2 baseline
 

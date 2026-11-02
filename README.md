@@ -8,7 +8,6 @@
 
 <p align="center">
   <a href="https://vps-server.tail40095b.ts.net"><b>Live demo</b></a> ·
-  <a href="SUBMISSION.md">How it was built</a> ·
   <a href="#quick-start">Run locally</a>
 </p>
 
@@ -330,6 +329,7 @@ a standalone script; `tests/helpers.py` registers a throwaway account (`B2_TEST_
 | `test_security2.py` | Login lockout, constant-time compares, hashed tokens, payload schema, audit log |
 | `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist (`405` + `Allow`), traversal and hidden-file guards, HSTS/COOP/CORP, banner hygiene, 500 without leaks |
 | `test_capacity.py` | Measured capacity, not estimates: cached gzip + ETag/`304`, `touch` invalidation, 100-concurrent p95 against the `B2_NO_CACHE=1` baseline, per-user rate limits behind one IP |
+| `test_password_reset_request.py` | Manual recovery request: no user enumeration, queued line with a hashed address, contact sanitising, 5/hour/IP limit, `tools/reset_password.py --pending` |
 
 ```bash
 cd tests
@@ -337,10 +337,11 @@ uv run --with playwright python test_final.py
 uv run --with httpx python test_capacity.py
 ```
 
-Thirteen suites (`test_ai`, `test_capacity`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
-`test_legacy_guard`, `test_multiuser`, `test_onboard`, `test_register`, `test_security2`,
-`test_server_hardening`, `test_sync`) boot their own server on a temporary `data/` and never
-touch the real one; the other nine run against the live service on `127.0.0.1:8088`.
+Fourteen suites (`test_ai`, `test_capacity`, `test_demo`, `test_diag`, `test_graf`, `test_hardening`,
+`test_legacy_guard`, `test_multiuser`, `test_onboard`, `test_password_reset_request`,
+`test_register`, `test_security2`, `test_server_hardening`, `test_sync`) boot their own server on a
+temporary `data/` and never touch the real one; the other nine run against the live service on
+`127.0.0.1:8088`.
 
 ## Security
 
@@ -365,6 +366,25 @@ touch the real one; the other nine run against the live service on `127.0.0.1:80
 Threat model, control checklist and the tested restore runbook: [SECURITY.md](SECURITY.md).
 Reproducible external audit of the live instance: `bash tools/audit.sh` — 14/14 checks passed on
 2026-10-30.
+
+## Account recovery
+
+There is no email on file and no mail server, so this app cannot send a reset link. Three routes
+work instead:
+
+1. **Google.** If the account was created or linked with Google, *Continue with Google* on the
+   login screen signs straight in.
+2. **Passkey.** If a passkey was set from the Account panel, *Sign in with a passkey* works without
+   a password.
+3. **Manual reset.** *Forgot your password?* on the login screen opens a short form: user name and
+   an optional contact (an email or a `@telegram` handle). The request is appended to
+   `data/pwreset.jsonl`; the operator resets the password by hand on the host with
+   `python3 tools/reset_password.py <username>` (`--generate` prints a random one) and answers at
+   the contact the user left. `--pending` lists the queue oldest first and `--clear-pending` empties
+   it. Requests are kept for 90 days.
+
+The request endpoint never says whether an account exists: every valid request gets
+`200 {"ok": true}`. It is limited to 5 requests per IP per hour.
 
 ## Data and privacy
 
@@ -401,7 +421,7 @@ prompts.py          Cambridge band descriptors transcribed from the official han
 material/           diagnostic items and local exam material index
 tests/              Playwright suites
 tools/              external audit script, password reset, rubric extractor
-docs/               submission notes, video script, screenshots
+docs/               policies (terms, privacy, security, data map) and screenshots
 ```
 
 ## License

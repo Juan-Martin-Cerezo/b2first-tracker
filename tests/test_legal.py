@@ -104,10 +104,16 @@ check("L2_cache_5_min",
       all("max-age=300" in r.headers.get("cache-control", "")
           for r in (privacy, terms, security)),
       str([r.headers.get("cache-control") for r in (privacy, terms, security)]))
+VERSIONS = {
+    "privacy": ("Version 1.1", "Last updated: 2026-11-02"),
+    "terms": ("Version 1.1", "Last updated: 2026-11-02"),
+    "security": ("Version 1.0", "Last updated: 2026-10-30"),
+}
 for label, r in (("privacy", privacy), ("terms", terms), ("security", security)):
     body = r.text
+    version, updated = VERSIONS[label]
     check(f"L3_{label}_version",
-          "Version 1.0" in body and "Last updated: 2026-10-30" in body,
+          version in body and updated in body,
           body[:120])
     check(f"L4_{label}_names_cloudflare_google",
           "Cloudflare" in body and "Google" in body)

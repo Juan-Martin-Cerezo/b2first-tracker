@@ -27,7 +27,8 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 | Legacy hashes upgraded without locking users out | 2.1.1 | PASS | `server.py`: `_needs_rehash`, `login_user` | `test_security3.py` D1 (200k→600k) / D2 (sha256→PBKDF2) |
 | No user enumeration through errors or timing | 2.2.1 | PASS | `server.py`: `_dummy_digest`, `verify_password`, identical 401 body | `test_security2.py` 2 |
 | Cryptographically secure randomness | 2.9.1 | PASS | `secrets.token_hex` / `token_urlsafe` | `test_security3.py` E2; code inspection |
-| Password recovery | 2.5.1 | N/A | local CLI only (`tools/reset_password.py`), no email flow | SECURITY.md §5.5 |
+| Password recovery | 2.5.1 | N/A | no remote reset link (there is no email); the login screen files a manual request and `tools/reset_password.py` resets by hand | SECURITY.md §5.5 |
+| Recovery request cannot enumerate accounts and is rate-limited | 2.2.1 / 2.5.2 | PASS | `server.py`: `POST /api/password-reset/request` answers the same `200 {"ok":true}` for every valid name, 5/h/IP on top of the credential bucket; `store.append_pwreset` keeps only a 16-char IP hash | `test_password_reset_request.py` |
 
 ## V3 — Session Management
 

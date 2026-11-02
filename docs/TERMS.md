@@ -1,9 +1,11 @@
 # Terms of Use — B2 First Tracker
 
-**Version 1.0** · Last updated: 2026-10-30 · Served live at `/terms`
+**Version 1.1** · Last updated: 2026-11-02 · Served live at `/terms`
 
 **Changelog**
 
+- 1.1 — 2026-11-02 · Account recovery: reset requests from the login screen, manual
+  reset by the operator, 90-day retention of requests.
 - 1.0 — 2026-10-30 · First complete version: acceptable use, fair-use limits,
   provider costs, availability and liability.
 
@@ -30,9 +32,11 @@ authoritative result is the one issued by Cambridge.
 ## 3. Accounts
 
 - One account per person. Do not share credentials or impersonate someone else.
-- You are responsible for keeping your password safe. Because there is no email
-  on file, the owner cannot recover a lost password remotely
-  (`tools/reset_password.py` must be run locally on the host).
+- You are responsible for keeping your password safe. There is no email on file, so no
+  reset link can be sent. From the login screen you can file a reset request with your
+  user name and, optionally, a contact. The operator resets the password by hand;
+  nobody is contacted unless you left a contact. Requests are kept for 90 days, then
+  deleted.
 - You must be at least 16 years old. If you are under 18, you need permission
   from a parent or guardian.
 - We may close an account that abuses the service, attacks the host, or evades

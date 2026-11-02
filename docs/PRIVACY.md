@@ -1,9 +1,11 @@
 # Privacy Policy — B2 First Tracker
 
-**Version 1.0** · Last updated: 2026-10-30 · Served live at `/privacy`
+**Version 1.1** · Last updated: 2026-11-02 · Served live at `/privacy`
 
 **Changelog**
 
+- 1.1 — 2026-11-02 · Account-recovery requests: what the login form stores, who reads it,
+  and the 90-day retention.
 - 1.0 — 2026-10-30 · First complete version: data map, third parties, retention,
   self-service export and deletion, age policy.
 
@@ -39,6 +41,7 @@ directories `0700`).
 | Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash | `data/events/*.jsonl` |
 | Google link | Google's stable `sub` mapped to your local account id (no name, no address) | `data/oauth.json` |
 | Passkeys | credential id, public key (COSE), signature counter and the device label you choose | `data/webauthn/<id>.json` |
+| Recovery requests | user name, the optional contact you type, timestamp, 16-character hash of your address | `data/pwreset.jsonl` |
 
 The password itself is never stored. The raw session token is never stored. Raw
 IP addresses are not stored: the audit log and the access log keep only the
@@ -54,6 +57,19 @@ It is off by default. If you enable it, the server stores only
 written to disk, logged or sent anywhere else. Turning the checkbox off stores
 nothing.
 
+**Account-recovery requests.** The *Forgot your password?* form on the login screen stores exactly
+this, per request:
+
+- the user name you type;
+- the contact string you type, which is optional — it can be an email, a `@telegram` handle or
+  anything else you want the operator to use;
+- the timestamp of the request;
+- a 16-character hash of your IP address (the raw address is never written).
+
+It exists so the operator can reset the password by hand and answer you. Only the operator reads
+it; it is never sent to a third party. Entries older than 90 days are deleted, and the file is
+capped at 500 lines.
+
 ## 3. What is never stored
 
 - **Audio is never written to disk.** The live examiner streams microphone audio
@@ -66,8 +82,8 @@ nothing.
   not persisted by this server beyond the request (the accepted result is saved
   in your own progress).
 - No email, phone, address, age, or government identifier is collected. The only
-  exception is the opt-in email hash described in §2, which cannot be read back
-  as an address.
+  exceptions are the opt-in email hash described in §2 and the optional contact you type into a
+  recovery request; neither is used for anything else.
 - No advertising identifiers, no tracking pixels, no third-party analytics
   script. Cloudflare may inject its Web Analytics beacon at the edge; this
   instance's Content-Security-Policy blocks `static.cloudflareinsights.com`, so
@@ -115,6 +131,8 @@ pronunciation is reported as *not measured*; the app never invents that score.
 - **Product events** — to find crashes and slow views. They are counts and
   truncated error messages, never content.
 - **Usage counters** — to enforce the fair-use limits of your plan.
+- **Recovery requests** — so a forgotten password can be reset by hand when there is no
+  email to send a reset link to.
 
 ## 6. How long it is kept
 
@@ -126,6 +144,7 @@ pronunciation is reported as *not measured*; the app never invents that score.
 | Progress backups | the last 20 versions per account |
 | Progress, account, plan | until you delete the account |
 | Session tokens | 30 days sliding, with a 90-day absolute ceiling |
+| Recovery requests | 90 days, pruned on the next request; file capped at 500 lines |
 | Audio | never stored |
 | Transcripts | until you delete them or the account |
 
@@ -148,6 +167,9 @@ repository ships the tool, and the host schedules it.
 - **Clear your own provider key.** Open the **AI** tab → the **✨ AI provider**
   card → **Clear key**. A BYO key lives only in your browser's localStorage and
   is sent per request; it is never stored on the server.
+- **Recovery requests.** A request you filed from the login screen is deleted after at most 90
+  days. Because it carries no account id, it is not included in the export or removed by account
+  deletion; ask the operator through the advisory form to remove it sooner.
 
 Because there is no email on file, a deleted account cannot be recovered. Export
 first if you want a copy. Deletion is immediate; the only surviving trace is the

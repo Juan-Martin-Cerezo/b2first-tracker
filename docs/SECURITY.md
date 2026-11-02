@@ -65,7 +65,9 @@ not to.
   Their handling is governed by their own terms.
 - **Cloudflare is in the request path.** It terminates TLS and can see request
   bodies in plaintext.
-- **No email recovery.** A lost password requires local access to the host.
+- **No email recovery.** There is no address to send a reset link to; a user can file a manual
+  request from the login screen, but the password is only reset by the operator with local access
+  to the host.
 - **Backups are daily and rotated.** A deleted account can persist in a host
   backup for up to 14 days.
 

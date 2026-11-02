@@ -22,6 +22,7 @@ map of it. Every claim below is implemented in `store.py`, `plans.py` or
 | licenses | `data/licenses.json` | `sha256(code)` → plan, days, issue/redeem dates, user id | `0600`; plaintext codes never touch disk |
 | product events | `data/events/YYYY-MM-DD.jsonl` | whitelisted event names and scalar props, salted IP hash | `0600`, 7-day retention |
 | events salt | `data/.events_salt` | random salt for the event IP hash | `0600` |
+| recovery requests | `data/pwreset.jsonl` | one JSON line per manual password-reset request: `{ts, name, contact, ip_hash, rid}`; `contact` is the optional text the user typed, `ip_hash` is 16 hex chars | `0600`, at most 500 lines, 90-day retention |
 
 All JSON writes go through `store._write_json`: a temporary sibling file with
 mode `0600`, then `os.replace`, then a final `chmod 0600`. Account directories
@@ -30,7 +31,8 @@ are created with `0700` and re-`chmod`ed on every write.
 ## What is deliberately absent
 
 - No email address in readable form, phone number, real name, address or birth date.
-  A Google sign-in can opt in to store only `sha256(email)` for account recovery.
+  A Google sign-in can opt in to store only `sha256(email)` for account recovery. The one
+  free-text contact on disk is the optional value a user types into a manual reset request.
 - No raw IP address: access logs, audit lines and product events keep only a
   truncated `sha256` of the client address.
 - No User-Agent string: sessions store `sha256(user agent)`.
@@ -58,6 +60,7 @@ logged.
 | usage counters | 13 months | `tools/retention.py`; `plans.py` also prunes rows unseen for 13 months on write |
 | backups | 20 versions | `store.put_progress` and `tools/retention.py` |
 | product events | 7 days | `server._prune_events` |
+| recovery requests | 90 days / 500 lines | `store.append_pwreset` (prunes on write, atomic rewrite) |
 | sessions | 30 days sliding / 90 days absolute | `server.auth_from_token` |
 
 ## Deletion (`DELETE /api/account`)
