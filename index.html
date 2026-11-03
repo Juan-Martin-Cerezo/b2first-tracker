@@ -11403,6 +11403,7 @@ function listeningCardsArray(){
   for(let n=1;n<=4;n++){
     cards.push({title:t('lt_test_2_part',{n}),parts:[n],items:[
       res('res_questions','lS2'),res('res_audio','auS2p'+n),
+      res('res_answer_key','lkS2'),
       plan('lpL'+n,'Part '+n)
     ]});
   }
@@ -11416,7 +11417,7 @@ function listeningCardsArray(){
   full1.push(res('res_teacher_guide','lGuide'));
   cards.push({title:t('lt_full_1'),items:full1});
 
-  const full2=[res('res_questions','lFS2'),res('res_audio','auFS2')];
+  const full2=[res('res_questions','lFS2'),res('res_audio','auFS2'),res('res_answer_key','lkFS2')];
   for(let n=1;n<=4;n++)full2.push(plan('fL'+n,'Part '+n));
   cards.push({title:t('lt_full_2'),items:full2});
 
@@ -11869,6 +11870,7 @@ function buildMatIndex(){
   add('keyFS1',/03-Examen.*RUE-Sample-1-Answer-Key/);add('keyFS2',/04-Examen.*Answer key/);
   add('tsS1',/01-Examen.*Tapescript/);add('tsFS1',/03-Examen.*Tapescript/);
   add('lkS1',/01-Examen.*Listening-Sample-1-Answer-Key/);add('lkFS1',/03-Examen.*Listening-Sample-1-Answer-Key/);
+  add('lkS2',/02-Examen.*answer-keys/);add('lkFS2',/04-Examen.*Answer key/);
   add('auS1',/01-Examen.*listening-audio-file v2/);
   add('auS2p1',/02-Examen.*part-1/);add('auS2p2',/02-Examen.*part-2/);add('auS2p3',/02-Examen.*part-3/);add('auS2p4',/02-Examen.*part-4/);
   add('auFS1p1',/03-Examen.*audio-1-1/);add('auFS1p2',/03-Examen.*listening-audio-2/);
