@@ -1760,7 +1760,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </div>
 
 <!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
-<button id="qlFab" type="button" onclick="openQuickLog()" title="Quick-log (3 taps)" aria-label="Quick-log"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg></button>
+<button id="qlFab" type="button" onclick="openSoloModal()" title="Log single part practice" aria-label="Log single part practice" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg></button>
 
 <!-- ============ FEATURE TOUR (7 anchored steps) ============ -->
 <div id="tourSpot" class="tour-spot" aria-hidden="true" style="display:none"></div>
@@ -4142,6 +4142,7 @@ const I18N={
     diag_title:'Initial diagnostic',
     diag_sub:'10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.',
     diag_total_time:'Total time',
+    fab_log_single:'Log single part practice',
     solo_title:'Log Single Part Practice',
     solo_sub:'Extra practice done outside scheduled sessions',
     solo_skill:'Skill / Component',
@@ -4838,6 +4839,7 @@ const I18N={
     diag_title:'Diagnóstico inicial',
     diag_sub:'10 min · 12 preguntas de nivel B2 (partes 1 a 7). No se muestra retroalimentación durante la prueba.',
     diag_total_time:'Tiempo total',
+    fab_log_single:'Registrar práctica de una parte',
     solo_title:'Registrar práctica de una parte',
     solo_sub:'Práctica extra fuera de las sesiones programadas',
     solo_skill:'Habilidad / Componente',
