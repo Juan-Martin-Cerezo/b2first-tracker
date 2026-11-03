@@ -934,12 +934,6 @@ footer{
   border-top:1px solid var(--line);background:var(--surface);
   padding:14px clamp(16px,4vw,32px);font-size:var(--fs-xs);color:var(--txt-2);text-align:right;
 }
-.stage-badge{
-  font-size:var(--fs-xs);font-weight:600;padding:5px 12px;border-radius:999px;
-  background:var(--surface-2);color:var(--txt);letter-spacing:.02em;
-  white-space:nowrap;max-width:none;overflow:hidden;text-overflow:ellipsis;
-}
-
 /* ---------- EXAM SELECTION ---------- */
 .exam-select-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:8px}
 @media (max-width:560px){.exam-select-grid{grid-template-columns:1fr}}
@@ -1202,7 +1196,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   /* top bar */
   .topbar{padding:10px clamp(16px,4vw,32px);gap:8px;flex-wrap:nowrap}
   .topbar .top-actions{gap:6px}
-  .stage-badge{max-width:180px}
   .theme-toggle{width:40px;height:40px}
   .topbar .user-chip .avatar{width:28px;height:28px}
 
@@ -1294,10 +1287,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #logTable th,#logTable td,#statsTable th,#statsTable td{padding:4px;font-size:12px}
   #logTable th,#statsTable th{letter-spacing:0}
   #statsTable td:first-child,#logTable td:nth-child(2){overflow-wrap:anywhere}
-}
-@media (max-width:480px){
-  /* the stage badge competes with the brand and the theme toggle */
-  .topbar .stage-badge{display:none}
 }
 @media (max-width:400px){
   .stat-grid{grid-template-columns:1fr}
@@ -1597,17 +1586,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px">
         <span style="color:var(--on-surface-variant)" data-i18n="user_account_id">Account ID:</span>
         <b id="modalUserSlug" style="color:var(--on-surface);font-family:var(--mono)">—</b>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
-        <span style="color:var(--on-surface-variant)" data-i18n="user_schedule">Class Schedule:</span>
-        <b id="modalUserSchedule" style="color:var(--primary)">—</b>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:12px">
-        <span style="color:var(--on-surface-variant)" data-i18n="user_storage">Storage Status:</span>
-        <span style="color:var(--ok-text);font-weight:600" data-i18n="user_storage_ok">✔ Dedicated Multi-User Storage</span>
       </div>
     </div>
 
@@ -1824,7 +1805,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div class="top-actions">
       <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
       <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
-      <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
+      <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="avatar">A</span></div>
       <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
     </div>
   </div>
@@ -4128,9 +4109,6 @@ const I18N={
     solo_source_other:'Other practice',
     user_profile:'User Profile',
     user_account_id:'Account ID:',
-    user_schedule:'Class Schedule:',
-    user_storage:'Storage Status:',
-    user_storage_ok:'✔ Dedicated Multi-User Storage',
     user_account:'Account',
     user_export:'💾 Export my data',
     user_change_pw:'Change password',
@@ -4900,9 +4878,6 @@ const I18N={
     solo_source_other:'Otra práctica',
     user_profile:'Perfil de usuario',
     user_account_id:'ID de cuenta:',
-    user_schedule:'Horario de clases:',
-    user_storage:'Estado del almacenamiento:',
-    user_storage_ok:'✔ Almacenamiento dedicado multiusuario',
     user_account:'Cuenta',
     user_export:'💾 Exportar mis datos',
     user_change_pw:'Cambiar contraseña',
@@ -6276,19 +6251,14 @@ function renderUserChip(){
   const el=document.getElementById('userChip');
   if(!el)return;
   if(DEMO&&DEMO.demo){
-    const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
-    const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
-    el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>`;
+    el.innerHTML='<span class="avatar">A</span>';
     el.style.cursor='default';
     renderGates();
     return;
   }
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
-    const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
-    const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
-    el.innerHTML=`<span class="stage-badge" id="stageBadge">${curStageTxt}</span>
-      <span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
+    el.innerHTML=`<span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
       <button class="btn sm gray" onclick="event.stopPropagation();doLogout()" title="Change user">⇄</button>`;
     renderGates();
   }
@@ -6299,10 +6269,7 @@ function openUserModal(){
   if(!ov||!USER)return;
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
   const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
-  const s=D.settings||SETTINGS_DEFAULT;
-  const sched=getSchedule();
-  const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
-  
+
   const av=document.getElementById('modalAvatar');
   if(av){av.textContent=initial;av.style.background=USER.color||'var(--primary)';}
   const un=document.getElementById('modalUserName');
@@ -6311,8 +6278,6 @@ function openUserModal(){
   if(us)us.textContent=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
-  const uc=document.getElementById('modalUserSchedule');
-  if(uc)uc.textContent=schedSummary;
 
   ov.style.display='flex';
   loadPasskeys();
@@ -10605,7 +10570,6 @@ function renderGates(){
   const allOk=gates.every(x=>ovs[st+'-'+gates.indexOf(x)]||x.ok);
   document.getElementById('advanceBtn').disabled=!allOk;
   document.getElementById('advanceBtn').textContent=allOk?(st<2?t('advance_stage',{stage:t(STAGE_NAMES[st+1])}):t('advance_done')):t('advance_wait');
-  document.getElementById('stageBadge').textContent=t(STAGE_NAMES[st])+(allOk?' ✓':'');
 }
 function showGatesTab(i){window.__gatesTab=i;renderGates()}
 function toggleOverride(key,on){if(on)D.overrides[key]=true;else delete D.overrides[key];save();renderGates()}
