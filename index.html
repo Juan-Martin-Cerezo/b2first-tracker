@@ -822,6 +822,10 @@ tbody tr:hover{background:var(--surface-2)}
 .card.diag-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .card.diag-banner>div:first-child{flex:1;min-width:180px}
 /* ---------- SESSION NAV / PHASE STEPPER ---------- */
+.lt-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0 16px}
+.listen-test{background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:var(--r-panel);padding:12px 14px}
+.listen-test .lt-head{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-bottom:6px}
+.listen-test .chips{margin:0}
 .session-nav{display:flex;flex-wrap:wrap;gap:8px;overflow-x:visible;padding-bottom:6px;margin-bottom:18px}
 .session-nav-btn{
   position:relative;
@@ -3711,6 +3715,20 @@ const I18N={
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
     parts_exercises_sub:'The 15 exercises of the 4 papers, in exam order. Each with its target time, where to practise and result logging.',
+    parts_listen_hint:'The audio, questions, tapescripts and keys for this paper are grouped in the test cards above.',
+    lt_test_1:'Listening test 1',
+    lt_test_2_part:'Listening test 2 · part {n}',
+    lt_full_1:'Full test 1',
+    lt_full_2:'Full test 2',
+    lt_handbook:'Handbook exercises',
+    res_questions:'Questions',
+    res_audio:'Audio',
+    res_tapescript:'Tapescript',
+    res_answer_key:'Answer key',
+    res_lesson_plan:'Lesson plan',
+    res_teacher_guide:'Teacher guide',
+    res_tapescript_key:'Tapescript and key',
+    res_online_practice:'Online practice',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     prog_global_avg:'Global Average',
@@ -4389,6 +4407,20 @@ const I18N={
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
     parts_exercises_sub:'Los 15 ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, dónde practicarlo y registro de resultados.',
+    parts_listen_hint:'El audio, las preguntas, las transcripciones y las respuestas de esta prueba están agrupados en las tarjetas de test de arriba.',
+    lt_test_1:'Test de listening 1',
+    lt_test_2_part:'Test de listening 2 · parte {n}',
+    lt_full_1:'Test completo 1',
+    lt_full_2:'Test completo 2',
+    lt_handbook:'Ejercicios del handbook',
+    res_questions:'Preguntas',
+    res_audio:'Audio',
+    res_tapescript:'Transcripción',
+    res_answer_key:'Respuestas',
+    res_lesson_plan:'Plan de clase',
+    res_teacher_guide:'Guía del docente',
+    res_tapescript_key:'Transcripción y respuestas',
+    res_online_practice:'Práctica en línea',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     prog_global_avg:'Promedio global',
@@ -11171,6 +11203,54 @@ function goToPartFilter(partNum, type){
     if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
   }
 }
+function listeningRes(labelKey,key,title){
+  const href=/^https?:/.test(key)?key:MAT[key];
+  if(!href)return '';
+  return `<a class="chip" href="${href}" target="_blank" rel="noopener"${title?` title="${esc(title)}"`:''}>${t(labelKey)}</a>`;
+}
+function listeningTestCards(){
+  const res=listeningRes;
+  const plan=(key,title)=>res('res_lesson_plan',key,title);
+  const cards=[];
+  cards.push({title:t('lt_test_1'),items:[
+    res('res_questions','lS1'),res('res_audio','auS1'),
+    res('res_tapescript','tsS1'),res('res_answer_key','lkS1'),
+    plan('lpL1','Part 1'),plan('lpL2','Part 2'),plan('lpL3','Part 3'),plan('lpL4','Part 4'),
+    res('res_teacher_guide','lGuide')
+  ]});
+  for(let n=1;n<=4;n++){
+    cards.push({title:t('lt_test_2_part',{n}),items:[
+      res('res_questions','lS2'),res('res_audio','auS2p'+n),
+      plan('lpL'+n,'Part '+n)
+    ]});
+  }
+  const full1=[
+    res('res_questions','lFS1')
+  ];
+  for(let n=1;n<=4;n++)full1.push(res('res_audio','auFS1p'+n,'Part '+n));
+  full1.push(res('res_tapescript','tsFS1'),res('res_answer_key','lkFS1'));
+  for(let n=1;n<=4;n++)full1.push(plan('fL'+n,'Part '+n));
+  for(let n=1;n<=4;n++)full1.push(res('res_lesson_plan','fL'+n+'a','Part '+n+' audio'));
+  full1.push(res('res_teacher_guide','lGuide'));
+  cards.push({title:t('lt_full_1'),items:full1});
+
+  const full2=[res('res_questions','lFS2'),res('res_audio','auFS2')];
+  for(let n=1;n<=4;n++)full2.push(plan('fL'+n,'Part '+n));
+  cards.push({title:t('lt_full_2'),items:full2});
+
+  const handbook=[
+    res('res_audio','hbA1','Sample 1')
+  ];
+  for(let n=1;n<=4;n++)handbook.push(res('res_audio','hbA2p'+n,'Sample 2 · part '+n));
+  for(let n=1;n<=4;n++)handbook.push(res('res_audio','hbFSp'+n,'For Schools · part '+n));
+  handbook.push(res('res_audio','hbFS2','For Schools · sample 2'));
+  handbook.push(res('res_tapescript_key','hb','B2 First handbook: tapescripts and answer keys'));
+  handbook.push(res('res_tapescript_key','hbFS','For Schools handbook: tapescripts and answer keys'));
+  handbook.push(res('res_online_practice','https://www.examenglish.com/FCE/fce_listening.html'));
+  cards.push({title:t('lt_handbook'),items:handbook});
+
+  return `<div class="lt-grid">${cards.map(c=>`<div class="listen-test" data-listen-test="${esc(c.title)}"><div class="lt-head">${esc(c.title)}</div><div class="chips">${c.items.filter(Boolean).join('')}</div></div>`).join('')}</div>`;
+}
 function renderParts(){
   const el=document.getElementById('partsList');
   let html='',last='';
@@ -11190,19 +11270,22 @@ function renderParts(){
       const ok=fObj?(p.type===PARTS_FILTER.type&&p.n===PARTS_FILTER.part):(p.type==='ue'&&p.n===PARTS_FILTER);
       if(!ok)return;
     }
-    if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
+    if(p.g!==last){
+      html+=`<h3 class="folder">${p.g}</h3>`;
+      if(p.g==='Listening')html+=listeningTestCards();
+      last=p.g;
+    }
     const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
     if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
     ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
-    const lp=[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
     const sp=[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
     const wr=[['Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson P'+p.n,'lpW'+p.n],['Lesson FS P'+p.n,'fW'+p.n],['Online','https://www.examenglish.com/FCE/fce_writing.html']];
-    const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):p.type==='sp'?chips(sp):chips(wr);
+    const donde=p.type==='ue'?chips(ue):p.type==='sp'?chips(sp):p.type==='w'?chips(wr):'';
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--ok-text)">${p.note}</p>`:''}
-      <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
-      <div class="chips">${donde}</div>
+      ${p.type==='lp'?`<div style="font-size:12px;color:var(--dim);margin:6px 0">${t('parts_listen_hint')}</div>`:`<div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
+      <div class="chips">${donde}</div>`}
       ${p.type==='sp'?`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`:p.type==='w'?`<div class="row" style="margin-top:8px">
         <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
