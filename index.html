@@ -1225,17 +1225,31 @@ footer{
   .ob-progress-fill,.tour-card,.chip-btn,.ob-rate-btn,.ob-radio-card{transition:none!important;animation:none!important}
 }
 
+/* ---------- PRACTICE ROW LIST ---------- */
+.part-group{margin:18px 0 8px}
+.part-group:first-child{margin-top:0}
+.part-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface);margin-bottom:8px}
+.part-row-num{flex:none;width:34px;height:34px;border-radius:50%;background:var(--acc-soft);color:var(--acc-text);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:var(--fs-sm)}
+.part-row-main{flex:1;min-width:0}
+.part-row-title{font-weight:600;color:var(--txt);font-size:var(--fs-sm)}
+.part-row-desc{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.part-row .btn{flex:none}
+.today-plan-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+@media (min-width:769px){.top-quicklog{display:inline-flex}}
+
 /* ---------- QUICK-LOG FAB & TOAST ---------- */
 #qlFab{
   position:fixed;right:16px;z-index:60;
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
-  width:56px;height:56px;border-radius:50%;
+  width:auto;height:48px;border-radius:999px;padding:0 16px;gap:8px;
   background:var(--acc);color:var(--on-primary);border:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  box-shadow:var(--shadow-2);
+  box-shadow:var(--shadow-2);font-size:var(--fs-sm);font-weight:600;
   transition:transform 150ms ease-out, background-color 150ms ease;
 }
-#qlFab svg{width:24px;height:24px}
+#qlFab[hidden]{display:none}
+#qlFab span{white-space:nowrap}
+#qlFab svg{width:18px;height:18px}
 #qlFab:hover{background:color-mix(in oklch, var(--acc) 88%, var(--txt));transform:scale(1.05)}
 #qlFab:active{transform:scale(0.96)}
 #qlFab.ql-flash{background:var(--ok-strong);color:var(--on-ok);transform:scale(1.06)}
@@ -2902,11 +2916,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <details class="card" id="examPacing" style="margin-bottom:16px">
+        <details class="card" id="examPacing" data-home-key="pacing" style="margin-bottom:16px">
           <summary data-i18n="exam_pacing" style="cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600">How the full test is paced</summary>
           <div style="margin-top:10px">
             📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
-            <div class="chips" id="gUeChips" style="margin-top:6px"></div>
+            <div class="chips" id="gUeChips" data-home-key="reading-sources" style="margin-top:6px"></div>
             • <b>Pacing:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
             • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
           </div>
@@ -2923,13 +2937,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
             <button class="btn ok u4-fullmock-btn" type="button" onclick="startFullMock()" data-i18n="exam_start_full">Start full mock</button>
           </div>
-          <div class="exam-select-grid" id="examSelectGrid">
+          <div class="exam-select-grid" id="examSelectGrid" data-home-key="mock-grid">
             <button class="exam-card" data-paper="rue" onclick="startRealMock('rue')">
               <div class="exam-card-top">
                 <span class="exam-card-kicker">Paper 1 &amp; 2</span>
                 <span class="exam-card-min">75 min</span>
               </div>
-              <h3 class="exam-card-title">Reading &amp; Use of English</h3>
+              <h3 class="exam-card-title">Reading paper</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
             </button>
             <button class="exam-card" data-paper="w" onclick="startRealMock('w')">
@@ -2937,7 +2951,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <span class="exam-card-kicker">Paper 3</span>
                 <span class="exam-card-min">80 min</span>
               </div>
-              <h3 class="exam-card-title">Writing</h3>
+              <h3 class="exam-card-title">Writing paper</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
             </button>
             <button class="exam-card" data-paper="l" onclick="startRealMock('l')">
@@ -2945,7 +2959,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <span class="exam-card-kicker">Paper 4</span>
                 <span class="exam-card-min">40 min</span>
               </div>
-              <h3 class="exam-card-title">Listening</h3>
+              <h3 class="exam-card-title">Listening paper</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
             </button>
             <button class="exam-card" data-paper="sp" onclick="openSpeakingExam()">
@@ -2953,19 +2967,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <span class="exam-card-kicker">Paper 5 · AI</span>
                 <span class="exam-card-min">14 min</span>
               </div>
-              <h3 class="exam-card-title">Speaking</h3>
+              <h3 class="exam-card-title">Speaking paper</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
             </button>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs Reading 75 min → Writing 80 min → Listening 40 min → Speaking 14 min. The timer moves on by itself.</p>
-        </div>
-
-        <!-- U4: short official source list, built from PRACTICE_SOURCES -->
-        <div class="card u4-exam-sources">
-          <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
-          <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
-          <div id="examSources" class="u4-sources"></div>
-          <div class="u4-source-all"><button class="btn sm gray" type="button" onclick="showView('practice')" data-i18n="exam_sources_all">Open the full source library</button></div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -2982,7 +2988,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <!-- Active exam state -->
         <div id="exActive">
           <div class="card" style="text-align:center">
-            <h2 id="exActiveTitle" style="justify-content:center">Reading &amp; Use of English</h2>
+            <h2 id="exActiveTitle" style="justify-content:center">Reading paper</h2>
             <p style="font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-surface-variant)" data-i18n="exam_in_progress">In Progress</p>
             <div class="exam-dial-wrap">
               <div class="exam-dial-bg">
@@ -3010,17 +3016,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
       <!-- ============ PARTS ============ -->
       <section id="v-partes" class="view">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" data-i18n="parts_title">Practice by Part</h1>
-            <p class="page-sub" data-i18n="parts_sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
-          </div>
-          <div class="page-stat">
-            <span class="stat-label" data-i18n="parts_total">Total Parts</span>
-            <span class="stat-val">15</span>
-          </div>
+        <div class="card" id="partsMoved" data-home-key="parts-moved">
+          <h2 data-i18n="practice_parts_moved">Practice by part</h2>
+          <p class="sub" data-i18n="practice_parts_moved_body">The part list lives in Practice now, one row per part and nothing else on the screen.</p>
+          <button type="button" class="btn ok" onclick="showView('practice')" data-i18n="practice_parts_moved_cta">Open the practice list</button>
         </div>
-        <div id="partsList"></div>
       </section>
 
       <!-- ============ PROGRESS ============ -->
@@ -3452,41 +3452,49 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-practice" class="view">
         <div class="page-head">
           <div>
-            <h1 class="page-title" data-i18n="practice_title">Practice sources</h1>
-            <p class="page-sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</p>
+            <h1 class="page-title" data-i18n="practice_title_new">Practise</h1>
+            <p class="page-sub" data-i18n="practice_list_sub">One row per part. Start opens the session with its timing and options already set.</p>
           </div>
-        </div>
-        <div class="card">
-          <div class="practice-toolbar">
-            <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
-              <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
-              <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading</button>
-              <button type="button" class="chip" data-skill="w" onclick="setPracticeFilter('w')" data-i18n="practice_filter_w">Writing</button>
-              <button type="button" class="chip" data-skill="l" onclick="setPracticeFilter('l')" data-i18n="practice_filter_l">Listening</button>
-              <button type="button" class="chip" data-skill="sp" onclick="setPracticeFilter('sp')" data-i18n="practice_filter_sp">Speaking</button>
-            </div>
-            <label class="practice-free-toggle" for="practiceFreeOnly">
-              <input type="checkbox" id="practiceFreeOnly" onchange="togglePracticeFree(this.checked)">
-              <span data-i18n="practice_free_only">Free only</span>
-            </label>
-          </div>
-          <div class="practice-grid" id="practiceGrid"></div>
-          <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
         </div>
 
-        <!-- U4: Books merged into Practice. Same #onlineList / #matList /
-             #matFilter ids so renderOnline() and renderMaterial() keep working. -->
-        <div class="card u4-practice-books" id="practiceBooks">
-          <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
-          <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
-          <h3 class="folder" data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h3>
-          <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
-          <div id="onlineList"></div>
-          <h3 class="folder" data-i18n="books_material" style="margin-top:18px">📥 Downloaded Material (PDFs &amp; Audio)</h3>
-          <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
-          <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
-          <div id="matList"></div>
-        </div>
+        <!-- One row per part: the only part list in the app. Result logging
+             and timing live in the session dialog (soloModal), not here. -->
+        <div id="partsList" data-home-key="part-list"></div>
+
+        <details class="card" id="practiceLibrary" data-home-key="sources-library" style="margin-top:16px">
+          <summary data-i18n="practice_library" style="cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600">Sources, books and PDFs</summary>
+          <div style="margin-top:12px">
+            <div class="practice-toolbar">
+              <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
+                <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
+                <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading</button>
+                <button type="button" class="chip" data-skill="w" onclick="setPracticeFilter('w')" data-i18n="practice_filter_w">Writing</button>
+                <button type="button" class="chip" data-skill="l" onclick="setPracticeFilter('l')" data-i18n="practice_filter_l">Listening</button>
+                <button type="button" class="chip" data-skill="sp" onclick="setPracticeFilter('sp')" data-i18n="practice_filter_sp">Speaking</button>
+              </div>
+              <label class="practice-free-toggle" for="practiceFreeOnly">
+                <input type="checkbox" id="practiceFreeOnly" onchange="togglePracticeFree(this.checked)">
+                <span data-i18n="practice_free_only">Free only</span>
+              </label>
+            </div>
+            <div class="practice-grid" id="practiceGrid"></div>
+            <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
+          </div>
+
+          <!-- U4: Books merged into Practice. Same #onlineList / #matList /
+               #matFilter ids so renderOnline() and renderMaterial() keep working. -->
+          <div class="u4-practice-books" id="practiceBooks" data-home-key="books">
+            <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
+            <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
+            <h3 class="folder" data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h3>
+            <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
+            <div id="onlineList"></div>
+            <h3 class="folder" data-i18n="books_material" style="margin-top:18px">📥 Downloaded Material (PDFs &amp; Audio)</h3>
+            <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
+            <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
+            <div id="matList"></div>
+          </div>
+        </details>
       </section>
 
       <!-- ============ BOOKS (legacy, redirects to Practice) ============ -->
@@ -11822,7 +11830,7 @@ let exLeft=75*60,exIv=null,exPaper='rue';
    papers and hands over to the SP_EXAM speaking test (14 min). */
 const FULL_MOCK={active:false,idx:0,phases:['rue','w','l']};
 function examPaperTitle(p){
-  return p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':t('exam_full_title');
+  return p==='rue'?'Reading paper':p==='w'?'Writing paper':p==='l'?'Listening paper':t('exam_full_title');
 }
 function startRealMock(paper,keepFull){
   if(paper==='full'){startFullMock();return}
@@ -11884,23 +11892,6 @@ function renderEx(){
   else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
   else f.innerHTML=`<div><label>Reading correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
-  renderExamSources();
-}
-/* U4: a short, official list for the Exam screen. It is a subset of
-   PRACTICE_SOURCES (already checked, all https) so the catalogue stays in
-   one place; the full list lives in Practice. */
-function renderExamSources(){
-  const el=document.getElementById('examSources');
-  if(!el)return;
-  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))?PRACTICE_SOURCES:[];
-  const groups=[['rue','practice_skill_rue'],['w','practice_skill_w'],['l','practice_skill_l'],['sp','practice_skill_sp']];
-  el.innerHTML=groups.map(function(g){
-    const picks=sources.filter(function(s){return s.skill===g[0]&&/^https?:\/\//.test(s.url)}).slice(0,2);
-    if(!picks.length)return '';
-    return `<div class="u4-source-group"><span class="badge ${g[0]==='rue'||g[0]==='sp'?'mon':'fri'}">${esc(t(g[1]))}</span>`+
-      picks.map(function(s){return `<a class="u4-source-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.n)} <span>${esc(t('practice_mins',{mins:s.mins}))}</span> ↗</a>`}).join('')+
-      `</div>`;
-  }).join('');
 }
 function exStart(){
   if(exIv){exPause();return}
@@ -11959,43 +11950,39 @@ function goToPartFilter(partNum, type){
 }
 function renderParts(){
   const el=document.getElementById('partsList');
+  if(!el)return;
+  const filtered=!!PARTS_FILTER;
   let html='',last='';
-  if(PARTS_FILTER){
-    const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
-    const fType=fObj?PARTS_FILTER.type:'ue';
-    const fNum=fObj?PARTS_FILTER.part:PARTS_FILTER;
-    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':'Reading';
-    html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="badge fri">Active filter: ${fLabel} Part ${fNum}</span>
-      <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all 15 parts</button>
-    </div>`;
-  }
   PARTS.forEach((p,i)=>{
     if(PARTS_FILTER){
       const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
       const ok=fObj?(p.type===PARTS_FILTER.type&&p.n===PARTS_FILTER.part):(p.type==='ue'&&p.n===PARTS_FILTER);
       if(!ok)return;
     }
-    if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
-    const ue=[['Reading sample 1','rueS1'],['Reading sample 2','rueS2'],['Reading for Schools 1','rueFS1'],['Reading for Schools 2','rueFS2'],['Answer key 1','keyS1'],['Answer key 2','keyS2'],['Answer key FS1','keyFS1'],['Answer key FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
-    if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
-    ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
-    const lp=[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
-    const sp=[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
-    const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):chips(sp);
-    html+=`<div class="step">
-      <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
-      ${p.note?`<p style="font-size:12px;color:var(--ok-text)">${p.note}</p>`:''}
-      <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
-      <div class="chips">${donde}</div>
-      ${p.type!=='sp'?`<div class="row" style="margin-top:8px">
-        <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
-        <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
-        <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Save</button></div>
-      </div>`:`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`}
+    if(p.g!==last){html+=`<h3 class="folder part-group">${p.g}</h3>`;last=p.g}
+    const desc=p.note||(p.q?`${p.q} questions · ~${p.min} min`:`~${p.min} min`);
+    html+=`<div class="step part-row" data-home-key="part-${p.type}-${p.n}">
+      <span class="part-row-num tnum">${p.n}</span>
+      <div class="part-row-main">
+        <div class="part-row-title">Part ${p.n} — ${p.t}</div>
+        <div class="part-row-desc">${esc(desc)}</div>
+      </div>
+      <button type="button" class="btn sm ok" onclick="openSoloModal('${p.type}',${p.n})">${t('today_start')}</button>
     </div>`;
   });
+  if(!filtered){
+    html+=`<h3 class="folder part-group">${t('writing_parts')}</h3>`;
+    [['Essay','Part 1 · 140–190 words'],['Article','Part 2 · 140–190 words'],['Report','Part 2 · 140–190 words'],['Review','Part 2 · 140–190 words'],['Email','Part 2 · 140–190 words']].forEach(([kind,desc])=>{
+      html+=`<div class="part-row" data-home-key="part-w-${kind.toLowerCase()}">
+        <span class="part-row-num tnum">✍</span>
+        <div class="part-row-main">
+          <div class="part-row-title">${kind}</div>
+          <div class="part-row-desc">${desc}</div>
+        </div>
+        <button type="button" class="btn sm ok" onclick="openSoloModal('w','${kind}')">${t('today_start')}</button>
+      </div>`;
+    });
+  }
   el.innerHTML=html;
 }
 function savePart(i){

@@ -26,7 +26,7 @@ MARKERS = [
     "todaySessions", "weekSummary",
     # Practise
     "practiceNow", "partsList", "practiceLibrary", "practiceBooks",
-    "examPacing", "gUeChips", "examSelectGrid", "examSources",
+    "examPacing", "gUeChips", "examSelectGrid",
     # Writing
     "iaCard",
     # Progress
