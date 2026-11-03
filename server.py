@@ -4902,6 +4902,25 @@ class H(BaseHTTPRequestHandler):
             self._send_json(200, {"live": _spk_live_available(), "turn": True})
             return
 
+        # --- Phase 50: the partner's line ----------------------------------
+        # A GET is a capability probe (no model call); a POST asks for one
+        # sentence for Alex. Both run on the same provider client as the
+        # Writing Corrector: the user's key when the BYO headers are present,
+        # otherwise the owner's configured text model.
+        if path == "/api/speaking/partner":
+            if self.command == "GET":
+                uid, auth_err = self._auth()
+                if not uid:
+                    self._send_json(401, {"error": auth_err or "invalid session"})
+                    return
+                byo, byo_err = _byo_from_headers(self.headers)
+                if byo_err:
+                    self._send_json(400, {"error": byo_err})
+                    return
+                available = bool(byo) or bool((os.environ.get("B2_AI_KEY") or "").strip())
+                self._send_json(200, {"available": available})
+                return
+
         # --- S3: Gemini Live examiner — ephemeral token + minute ledger -------
         # The browser connects straight to Google with a single-use token, so no
         # audio ever reaches this process. The key only signs the mint request.
@@ -5313,6 +5332,81 @@ class H(BaseHTTPRequestHandler):
                 "plan_remaining_s": max(0, int(plan_limits["minutes"] * 60
                                            - plan_used["seconds"])),
             })
+            return
+
+        # --- Phase 50: the partner's line ----------------------------------
+        if path == "/api/speaking/partner":
+            if self.command != "POST":
+                self._send_json(405, {"error": "method not allowed"})
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._drain()
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            if self._clen() > 4000:
+                self._drain()
+                self._send_json(413, {"error": "payload too large"})
+                return
+            if self._rate_limited("spk_partner:" + uid, 30, 60):
+                return
+            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b"{}"
+            try:
+                req = json.loads(raw.decode("utf-8"))
+                if not isinstance(req, dict):
+                    raise ValueError("not dict")
+            except (ValueError, UnicodeDecodeError):
+                self._send_json(400, {"error": "invalid_json"})
+                return
+            question = req.get("question")
+            topic = req.get("topic")
+            if not isinstance(question, str) or not question.strip():
+                self._send_json(422, {"error": "invalid_question"})
+                return
+            question = question.strip()[:300]
+            topic = topic.strip()[:120] if isinstance(topic, str) else ""
+            system = (
+                "You are Alex, a B2 First (Cambridge English) speaking candidate. "
+                "Answer the examiner's question in character as a friendly 17-year-old "
+                "student. Use one sentence only, natural spoken English, no lists, no "
+                "quotation marks. Return JSON with exactly one key: {\"line\": \"...\"}."
+            )
+            user_block = (
+                "Topic: " + (topic or "the Speaking exam") + "\n"
+                "Examiner's question to Alex: " + question + "\n"
+                "Alex's one-sentence answer:"
+            )
+            byo, byo_err = _byo_from_headers(self.headers)
+            if byo_err:
+                self._send_json(400, {"error": byo_err})
+                return
+            if not byo and not (os.environ.get("B2_AI_KEY") or "").strip():
+                self._send_json(503, {"error": "ai_not_configured"})
+                return
+            content, err = _ai_text_complete(system, user_block, byo)
+            if err:
+                self._send_json(502, {"error": err})
+                return
+            line = ""
+            try:
+                obj = json.loads(content)
+                if isinstance(obj, dict):
+                    for key in ("line", "reply", "sentence"):
+                        value = obj.get(key)
+                        if isinstance(value, str) and value.strip():
+                            line = value
+                            break
+            except (ValueError, TypeError):
+                pass
+            if not line:
+                line = str(content or "")
+            line = re.sub(r"\s+", " ", line).strip().strip('"').strip()
+            if len(line) > 240:
+                line = line[:240].rsplit(" ", 1)[0]
+            if not line:
+                self._send_json(502, {"error": "empty_reply"})
+                return
+            self._send_json(200, {"line": line})
             return
 
         # --- S5: four-scale speaking report ------------------------------------
