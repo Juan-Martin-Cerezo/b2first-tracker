@@ -3,27 +3,14 @@ from playwright.sync_api import sync_playwright
 from helpers import isolated_server, login_owner
 
 URL = isolated_server() + "/"
-# Views hidden behind the "More" button in the mobile bottom nav (5 + More)
-HIDDEN_VIEWS = {"graf", "err", "libros", "ia", "diag"}
-# "libros" is gone: u4 merged Books into Practice, so that nav entry now opens
-# Practice. The diagnostic has no tab either but still opens through showView.
+# Four top-level tabs; every old view name still opens its section through
+# showView()/go(). "libros" is an alias for the Practice sub-tab.
 ALL_VIEWS = ["hoy", "practice", "exam", "partes", "prog", "graf", "plan", "err", "ia", "diag"]
 
 
 def goto_view(pg, name):
-    """Open a view the way the app does.
-
-    Some views have no nav entry any more (the diagnostic moved into the plan and
-    the onboarding), so the test falls back to showView() instead of failing on a
-    button that is deliberately gone.
-    """
-    if name in HIDDEN_VIEWS:
-        pg.evaluate("document.getElementById('navMoreBtn').click()")
-        pg.wait_for_timeout(80)
-    if pg.evaluate(f"!!document.querySelector(\"nav button[data-view='{name}']\")"):
-        pg.click(f"nav button[data-view='{name}']")
-    else:
-        pg.evaluate(f"showView('{name}')")
+    """Open a view through its public name (showView also powers the tabs)."""
+    pg.evaluate(f"showView('{name}')")
     pg.wait_for_timeout(250)
 
 
@@ -198,7 +185,13 @@ with sync_playwright() as p:
     visited = []
     for v in ALL_VIEWS:
         goto_view(pg, v)
-        active = pg.evaluate("document.querySelector('.view.active')?.id")
+        active = pg.evaluate(
+            """() => {
+            const visible = [...document.querySelectorAll('.view.active')]
+                .filter(el => el.offsetParent !== null);
+            return visible.length ? visible[visible.length - 1].id : null;
+        }"""
+        )
         visited.append(active)
     out["6_views_visited"] = visited
     assert all(a in ("v-" + v, "view-" + v) for a, v in zip(visited, ALL_VIEWS)), f"View activation failed: {visited}"

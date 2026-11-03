@@ -197,8 +197,8 @@ def main():
         )
         assert res4["n"] == 1, f"expected one Thursday session: {res4}"
         items = sorted((it["type"], it["part"]) for it in res4["items"])
-        assert items == [("l", 2), ("ue", 4)], f"Thursday parts are not exactly UoE 4 + L 2: {res4}"
-        assert "UoE" in res4["title"] and "Listening" in res4["title"], f"title missing a paper: {res4}"
+        assert items == [("l", 2), ("ue", 4)], f"Thursday parts are not exactly Reading 4 + Listening 2: {res4}"
+        assert "Reading" in res4["title"] and "Listening" in res4["title"], f"title missing a paper: {res4}"
         out["4_jueves_partes"] = f"OK: {items}"
 
         # 5. Tuesday ue_l: one session covering both papers at the day's min.

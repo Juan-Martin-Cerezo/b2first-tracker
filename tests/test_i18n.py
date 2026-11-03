@@ -18,11 +18,11 @@ URL = isolated_server() + "/"
 NAME = "i18n-suite"
 PASS = "i18n-suite-pass-9"
 
-# The DIAG tab is gone on purpose (the diagnostic runs from the plan and the
-# onboarding, not as a section); Practice replaced it in the main navigation.
+# Four top-level tabs; the other keys label the segmented sub-tabs.
 NAV_KEYS = [
-    "nav_today", "nav_practice", "nav_exam", "nav_parts", "nav_progress",
-    "nav_plan", "nav_charts", "nav_errors", "nav_ai", "nav_more",
+    "nav_today", "nav_practise", "nav_progress", "nav_plan",
+    "nav_practice", "nav_exam", "nav_parts", "nav_ai",
+    "sub_overview", "nav_charts", "nav_errors",
 ]
 
 

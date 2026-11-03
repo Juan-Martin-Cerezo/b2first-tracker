@@ -305,15 +305,42 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 #sideNav button[data-view]:active{transform:scale(0.96)}
 #sideNav button[data-view].active{background:var(--acc);color:var(--on-primary)}
 .nav-ico{width:18px;height:18px;flex:none;display:block}
-#navMoreBtn{
-  display:none;align-items:center;gap:6px;
-  min-height:44px;padding:8px 12px;border:none;border-radius:var(--r-ctl);
-  background:transparent;color:var(--txt-2);font-size:var(--fs-xs);font-weight:600;
-  text-transform:uppercase;letter-spacing:.02em;cursor:pointer;
-  transition:background-color 150ms ease, color 150ms ease;
+/* ---------- SEGMENTED SUB-TABS (one line under the header) ---------- */
+.subnav{
+  display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;
+  position:sticky;top:120px;z-index:28;
+  background:var(--bg);padding:8px 0;margin:0 0 16px;
+  scrollbar-width:none;
 }
-#navMoreBtn:hover{background:var(--surface-2);color:var(--txt)}
-#navMoreBtn .nav-ico{width:16px;height:16px}
+.subnav::-webkit-scrollbar{display:none}
+.subnav button[role="tab"]{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:9px 16px;border-radius:var(--r-ctl);
+  border:1px solid var(--line);background:var(--surface);color:var(--txt-2);
+  font-family:var(--font);font-size:var(--fs-xs);font-weight:600;
+  white-space:nowrap;cursor:pointer;
+  transition:background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.subnav button[role="tab"]:hover{background:var(--surface-2);color:var(--txt);border-color:var(--acc)}
+.subnav button[role="tab"][aria-selected="true"]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
+.subnav button[role="tab"]:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* ---------- TODAY (one line, one card, one summary) ---------- */
+.today-greeting{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin:4px 0 18px}
+.today-greeting #todayDateLine{font-size:var(--fs-xl);font-weight:600;letter-spacing:-.02em;color:var(--txt)}
+.today-greeting #todayStreakLine{font-size:var(--fs-sm);color:var(--txt-2)}
+.today-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--line)}
+.today-row:last-child{border-bottom:none}
+.today-row-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.today-row-day{font-weight:600;color:var(--txt)}
+.today-row-title{color:var(--txt)}
+.today-row-meta{color:var(--txt-2);font-size:var(--fs-sm)}
+.today-rest{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.today-rest p{margin:0;color:var(--txt-2)}
+#todayLegacy[hidden]{display:none}
+.week-summary{margin-top:16px}
+.week-summary > summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--txt-2);font-size:var(--fs-sm)}
+.week-summary[open] > summary{margin-bottom:12px}
 
 /* ---------- PAGE HEADERS ---------- */
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
@@ -1329,7 +1356,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .theme-toggle{width:40px;height:40px}
   .topbar .user-chip .avatar{width:28px;height:28px}
 
-  /* bottom nav: 5 items max + More */
+  /* bottom nav: the four top-level tabs only */
   #sideNav{
     position:fixed;left:0;right:0;bottom:0;top:auto;z-index:90;
     flex-wrap:nowrap;justify-content:space-around;align-items:center;
@@ -1338,20 +1365,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     overflow:visible;
   }
   #sideNav button[data-view]{
-    flex:1 0 auto;min-width:44px;
+    flex:1 1 0;min-width:0;max-width:25%;
     flex-direction:column;gap:2px;
     padding:6px 2px;min-height:48px;
     font-size:var(--fs-xs);text-align:center;justify-content:center;
   }
   #sideNav button[data-view] .nav-label{font-size:var(--fs-xs)}
-  #sideNav button[data-view].extra{display:none}
-  #sideNav.more-open{flex-wrap:wrap}
-  #sideNav.more-open button[data-view].extra{display:flex;flex:1 0 18%;min-width:60px}
-  #navMoreBtn{
-    display:flex;flex:1 0 auto;flex-direction:column;gap:2px;min-height:48px;
-    min-width:44px;text-align:center;justify-content:center;
-  }
-  #navMoreBtn .nav-ico{width:18px;height:18px}
+  .subnav{top:64px;margin-bottom:12px}
 
   /* page headers */
   .page-head{margin-bottom:18px;gap:10px;flex-direction:column;align-items:flex-start}
@@ -1959,18 +1979,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
   </div>
 
-  <!-- ============ NAV: top row on desktop, bottom bar (5 + More) on mobile ============ -->
+  <!-- ============ NAV: top row on desktop, four-tab bottom bar on mobile ============ -->
   <nav id="sideNav" aria-label="Main navigation" data-i18n-aria-label="nav_aria">
     <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
-    <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
-    <button data-view="partes"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_parts">Parts</span></button>
+    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practise">Practise</span></button>
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
-    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
-    <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
-    <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
-    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
-    <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
   </nav>
 
   <!-- ============ CONTENT ============ -->
@@ -1980,27 +1994,27 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <main>
       <!-- ============ TODAY ============ -->
       <section id="v-hoy" class="view active">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" id="userTitle">Today</h1>
-            <p class="page-sub" id="userSub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="openSoloModal()" data-i18n="today_log_single">Log single part</button>
-            <button class="btn" onclick="document.getElementById('sessionNav').scrollIntoView({behavior:'smooth'})" data-i18n="today_start_session">Start session</button>
-          </div>
+        <div class="today-greeting">
+          <span id="todayDateLine">Today</span>
+          <span id="todayStreakLine"></span>
         </div>
 
-        <div class="grid-12">
+        <div class="card" id="todaySessions"></div>
+
+        <details class="week-summary" id="weekSummary">
+          <summary id="weekSummaryLine"></summary>
+          <div class="card" id="todayPlan" style="display:none"></div>
+        </details>
+
+        <div class="grid-12" id="todayLegacy" hidden>
           <!-- Main column -->
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
             <div class="card practice-now" id="practiceNow"></div>
-            <div class="card" id="todayPlan" style="display:none"></div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
-              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: Full R&amp;UoE</span> <span class="pill-tag">50 min</span></button>
+              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: Full Reading</span> <span class="pill-tag">50 min</span></button>
               <button class="session-nav-btn" data-ses="fri-a" id="navBtnFriA" onclick="selectSessionStudio('fri-a')">🎧 <span id="navLblFriA">Fri A: Full Listening</span> <span class="pill-tag">40 min</span></button>
               <button class="session-nav-btn" data-ses="mon-b" id="navBtnMonB" onclick="selectSessionStudio('mon-b')">✍️ <span id="navLblMonB">Mon B: Full Writing</span> <span class="pill-tag" id="navWTag">Auto</span></button>
               <button class="session-nav-btn" data-ses="fri-b" id="navBtnFriB" onclick="selectSessionStudio('fri-b')">🗣️ <span id="navLblFriB">Fri B: Full Speaking</span> <span class="pill-tag">60 min</span></button>
@@ -2026,12 +2040,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="uePhaseStepper">
                   <div class="phase-step active" data-phase="sprint" onclick="switchUePhase('sprint')">
-                    <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">⚡ 50' Speed Sprint</div>
+                    <div class="ps-num" data-i18n="step_1">Step 1</div>
+                    <div class="ps-title">⚡ 50 min Speed Sprint</div>
                     <div class="ps-time">50:00 · 52 questions</div>
                   </div>
                   <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
-                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-num" data-i18n="step_2">Step 2</div>
                     <div class="ps-title">📊 Score &amp; Diagnosis</div>
                     <div class="ps-time">10:00 · Full test logging</div>
                   </div>
@@ -2050,15 +2064,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" onclick="ueTimer.start()">▶ / ⏸</button>
                       </div>
                     </div>
-                    <div class="guide">
-                      📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
-                      <div class="chips" id="gUeChips" style="margin-top:6px"></div>
-                      • <b>Pacing guide:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
-                      • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
-                    </div>
                     <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">Full Sprint (Parts 1–7)</b></p>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchUePhase('score')">Proceed to Phase 2: Log Score →</button>
+                      <button class="btn" data-i18n="session_save_score" onclick="switchUePhase('score')">Save score</button>
                     </div>
                   </div>
                 </div>
@@ -2103,7 +2111,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="50"></div>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" onclick="saveUE()">✔ Save R&amp;UoE Session</button>
+                      <button class="btn ok" onclick="saveUE()">✔ Save Reading session</button>
                       <button class="btn gray" onclick="openSoloModal('ue')">⚡ Log Single Part Instead</button>
                     </div>
                   </div>
@@ -2116,7 +2124,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div>
                     <span class="badge mon" id="st2WkBadge">Week B · Monday</span>
                     <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
-                    <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
+                    <div class="sesion-sub">Each session gets one dedicated text type with a deep C1 check.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Studio Time</span>
@@ -2127,17 +2135,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="wPhaseStepper">
                   <div class="phase-step active" data-phase="plan" onclick="switchWritingPhase('plan')">
-                    <div class="ps-num">Phase 1</div>
+                    <div class="ps-num" data-i18n="step_1">Step 1</div>
                     <div class="ps-title">💡 Planning</div>
                     <div class="ps-time">05:00 · 4-paragraph outline</div>
                   </div>
                   <div class="phase-step" data-phase="write" onclick="switchWritingPhase('write')">
-                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-num" data-i18n="step_2">Step 2</div>
                     <div class="ps-title">✍️ Live Writing</div>
                     <div class="ps-time">35:00 · 140–190 words</div>
                   </div>
                   <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
-                    <div class="ps-num">Phase 3</div>
+                    <div class="ps-num" data-i18n="step_3">Step 3</div>
                     <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
                     <div class="ps-time">20:00 · 7-point rubric + Writing Corrector</div>
                   </div>
@@ -2149,7 +2157,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Phase 1: Structural Planning <span class="t">5 min · Target: 4 paragraphs</span></div>
+                        <div class="task-title">Step 1: Plan the text <span class="t">5 min · Target: 4 paragraphs</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Plan Timer</span><span class="timer" id="wPlanTimer">05:00</span></div>
@@ -2179,7 +2187,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('write')">Proceed to Phase 2: Live Writing →</button>
+                      <button class="btn" data-i18n="session_start_writing" onclick="switchWritingPhase('write')">Start writing</button>
                     </div>
                   </div>
                 </div>
@@ -2190,7 +2198,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Phase 2: Live Writing <span class="t">35 min · 140–190 words</span></div>
+                        <div class="task-title">Step 2: Write <span class="t">35 min · 140–190 words</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="wTimer">—</span></div>
@@ -2210,7 +2218,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="60"></div>
                     </div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('audit')">Proceed to Phase 3: Audit &amp; Rubric →</button>
+                      <button class="btn" data-i18n="session_check_writing" onclick="switchWritingPhase('audit')">Check your writing</button>
                     </div>
                   </div>
                 </div>
@@ -2221,7 +2229,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">3</div>
                       <div>
-                        <div class="task-title">Phase 3: Algorithmic C1 Audit &amp; Rubric <span class="t">20 min</span></div>
+                        <div class="task-title">Step 3: Check it against the rubric <span class="t">20 min</span></div>
                       </div>
                       <div class="task-meta">
                         <button class="btn sm gray" onclick="wRev.start()">▶ 20:00</button>
@@ -2276,7 +2284,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div>
                     <span class="badge fri" id="st3WkBadge">Week A · Friday</span>
                     <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
-                    <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
+                    <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20 min deep post-mortem.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Studio Time</span>
@@ -2287,12 +2295,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="lPhaseStepper">
                   <div class="phase-step active" data-phase="play" onclick="switchListeningPhase('play')">
-                    <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">🎧 40' Continuous Audio</div>
+                    <div class="ps-num" data-i18n="step_1">Step 1</div>
+                    <div class="ps-title">🎧 40 min Continuous Audio</div>
                     <div class="ps-time">40:00 · 30 questions</div>
                   </div>
                   <div class="phase-step" data-phase="pm" onclick="switchListeningPhase('pm')">
-                    <div class="ps-num">Phase 2</div>
+                    <div class="ps-num" data-i18n="step_2">Step 2</div>
                     <div class="ps-title">🕵️ Auditory Post-Mortem</div>
                     <div class="ps-time">20:00 · Trap Hunter</div>
                   </div>
@@ -2335,7 +2343,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveL()">✔ Save Listening</button>
-                      <button class="btn" onclick="switchListeningPhase('pm')">Proceed to Phase 2: Post-Mortem →</button>
+                      <button class="btn" data-i18n="session_review_mistakes" onclick="switchListeningPhase('pm')">Review mistakes</button>
                     </div>
                   </div>
                 </div>
@@ -2373,13 +2381,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="spPhaseStepper">
                   <div class="phase-step active" data-phase="mock" onclick="switchSpPhase('mock')">
-                    <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">🎙️ 15' Full Simulation</div>
+                    <div class="ps-num" data-i18n="step_1">Step 1</div>
+                    <div class="ps-title">🎙️ 15 min Full Simulation</div>
                     <div class="ps-time">15:00 · Parts 1, 2, 3, 4</div>
                   </div>
                   <div class="phase-step" data-phase="upgrade" onclick="switchSpPhase('upgrade')">
-                    <div class="ps-num">Phase 2</div>
-                    <div class="ps-title">🚀 45' C1 Polish &amp; Retake</div>
+                    <div class="ps-num" data-i18n="step_2">Step 2</div>
+                    <div class="ps-title">🚀 45 min C1 Polish &amp; Retake</div>
                     <div class="ps-time">45:00 · Connectors &amp; Fluency</div>
                   </div>
                 </div>
@@ -2516,7 +2524,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
-                      <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
+                      <button class="btn" data-i18n="session_improve_speaking" onclick="switchSpPhase('upgrade')">Improve answers</button>
                       <button class="btn" id="liveOpenBtn" onclick="liveOpen()">🎧 Live studio</button>
                       <button class="btn ok" id="spxOpenBtn" onclick="SP_EXAM.open()" data-i18n="spx_open">🎓 Speaking exam</button>
                       <button class="btn" id="spkOpenBtn" onclick="spkStart()">🗣 Live examiner</button>
@@ -2687,7 +2695,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div><label>Total questions</label><input type="number" id="rueTotal" min="1" value="52"></div>
                     <div><label>Minutes used</label><input type="number" id="rueMin" min="0" value="75"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save Paper 1 (R&amp;UoE)</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save Paper 1 (Reading)</button></div>
                 </div>
 
                 <!-- Paper 2: Writing (80 min, 2 texts) -->
@@ -2699,7 +2707,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                   </div>
                   <div class="guide">
-                    📍 <b>Structure:</b> Part 1 Compulsory Essay (5' plan + 35' write) + Part 2 Choice text: Article, Report, Review or Email (5' plan + 30' write) + 5' final audit.
+                    📍 <b>Structure:</b> Part 1 Compulsory Essay (5 min plan + 35 min write) + Part 2 Choice text: Article, Report, Review or Email (5 min plan + 30 min write) + 5 min final check.
                   </div>
                   <div class="row">
                     <div><label>Text 1 score /20 (Essay)</label><input type="number" id="fw1" min="0" max="20" step="0.5"></div>
@@ -2748,7 +2756,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                   </div>
                   <div class="guide">
-                    🎙 <b>All 4 Parts:</b> Part 1 (Interview, 2') · Part 2 (Long turn photos, 4') · Part 3 (Collaborative spider diagram, 4') · Part 4 (Discussion, 4').
+                    🎙 <b>All 4 Parts:</b> Part 1 (Interview, 2 min) · Part 2 (Long turn photos, 4 min) · Part 3 (Collaborative spider diagram, 4 min) · Part 4 (Discussion, 4 min).
                   </div>
                   <div class="row">
                     <div><label>Validated at C1 / Completed?</label>
@@ -2783,11 +2791,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card rot-card-v2">
               <div class="rot-v2-header">
                 <div class="rot-v2-badge-row">
-                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> <span data-i18n="rot_automated">AUTOMATED CYCLE</span></span>
-                  <span class="rot-week-pill" id="rotDay">WEEK A</span>
+                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> <span data-i18n="rot_automated">AUTOMATIC</span></span>
+                  <span class="rot-week-pill" id="rotDay">This week</span>
                 </div>
-                <h3 class="rot-v2-title" data-i18n="rot_title">Fortnightly Rotation Matrix</h3>
-                <p class="rot-v2-desc" data-i18n="rot_desc">Systematic alternating schedule ensuring comprehensive coverage of all exam components.</p>
+                <h3 class="rot-v2-title" data-i18n="rot_title">Your two-week schedule</h3>
+                <p class="rot-v2-desc" data-i18n="rot_desc">Alternating weeks so every exam skill gets covered.</p>
               </div>
 
               <!-- Active 2-Week Plan Overview -->
@@ -2795,21 +2803,21 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Week A Box -->
                 <div class="rot-week-card" id="rotCardWkA">
                   <div class="rot-wk-head">
-                    <span class="rot-wk-name">WEEK A</span>
+                    <span class="rot-wk-name">This week</span>
                     <span class="rot-wk-status" id="rotWkAStatus">ACTIVE</span>
                   </div>
                   <div class="rot-session-row">
                     <div class="rot-ses-dot mon"></div>
                     <div class="rot-ses-info">
                       <span class="rot-ses-day" id="rotWkASesADay">Monday 15:30</span>
-                      <span class="rot-ses-name">Full Reading &amp; Use of English (50' Sprint)</span>
+                      <span class="rot-ses-name">Full Reading &amp; Use of English (50 min)</span>
                     </div>
                   </div>
                   <div class="rot-session-row">
                     <div class="rot-ses-dot fri"></div>
                     <div class="rot-ses-info">
                       <span class="rot-ses-day" id="rotWkASesBDay">Friday 13:00</span>
-                      <span class="rot-ses-name">Full Listening Test (40' audio + 20' analysis)</span>
+                      <span class="rot-ses-name">Full Listening Test (40 min audio + 20 min analysis)</span>
                     </div>
                   </div>
                 </div>
@@ -2817,7 +2825,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <!-- Week B Box -->
                 <div class="rot-week-card" id="rotCardWkB">
                   <div class="rot-wk-head">
-                    <span class="rot-wk-name">WEEK B</span>
+                    <span class="rot-wk-name">Next week</span>
                     <span class="rot-wk-status" id="rotWkBStatus">UPCOMING</span>
                   </div>
                   <div class="rot-session-row">
@@ -2840,7 +2848,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <!-- Writing Auto-Queue Visual Track -->
               <div class="rot-queue-section">
                 <div class="rot-queue-head">
-                  <span class="rot-queue-label" data-i18n="rot_writing_queue">AUTOMATIC WRITING QUEUE (WEEK B)</span>
+                  <span class="rot-queue-label" data-i18n="rot_writing_queue">WRITING QUEUE (NEXT WEEK)</span>
                   <span class="rot-queue-sub" id="rotQueueSub">Active genre: Article</span>
                 </div>
                 <div class="rot-queue-track" id="rotTimeline"></div>
@@ -2854,7 +2862,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="rot-meta-bar">
                 <div>
                   <span class="rot-meta-lbl" data-i18n="rot_cycle_focus">CYCLE FOCUS</span>
-                  <span class="rot-meta-val" id="rotVal">Week A: Full R&amp;UoE + Full Listening</span>
+                  <span class="rot-meta-val" id="rotVal">This week: Full Reading + Full Listening</span>
                 </div>
                 <div style="text-align:right">
                   <span class="rot-meta-lbl" data-i18n="rot_next_switch">NEXT SWITCH</span>
@@ -2868,6 +2876,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </section>
 
       <!-- ============ EXAM ============ -->
+      <!-- ============ PRACTISE (segmented: Practice · Exam · Parts · Writing) ============ -->
+      <section id="v-practise" class="view">
+        <nav class="subnav" id="subnav-practise" role="tablist" aria-label="Practise sections" data-i18n-aria-label="sub_practise_aria">
+          <button type="button" role="tab" data-view="practice" aria-selected="true" aria-controls="v-practice" data-i18n="nav_practice">Practice</button>
+          <button type="button" role="tab" data-view="exam" aria-selected="false" aria-controls="v-exam" data-i18n="nav_exam">Exam</button>
+          <button type="button" role="tab" data-view="partes" aria-selected="false" aria-controls="v-partes" data-i18n="nav_parts">Parts</button>
+          <button type="button" role="tab" data-view="ia" aria-selected="false" aria-controls="v-ia" data-i18n="nav_ai">Writing</button>
+        </nav>
+      </section>
+
+      <!-- ============ PROGRESS (segmented: Overview · Charts · Errors) ============ -->
+      <section id="v-progress" class="view">
+        <nav class="subnav" id="subnav-progress" role="tablist" aria-label="Progress sections" data-i18n-aria-label="sub_progress_aria">
+          <button type="button" role="tab" data-view="prog" aria-selected="true" aria-controls="v-prog" data-i18n="sub_overview">Overview</button>
+          <button type="button" role="tab" data-view="graf" aria-selected="false" aria-controls="v-graf" data-i18n="nav_charts">Charts</button>
+          <button type="button" role="tab" data-view="err" aria-selected="false" aria-controls="v-err" data-i18n="nav_errors">Errors</button>
+        </nav>
+      </section>
+
       <section id="v-exam" class="view">
         <div class="page-head">
           <div>
@@ -2875,6 +2902,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <p class="page-sub" data-i18n="exam_sub">Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.</p>
           </div>
         </div>
+
+        <details class="card" id="examPacing" style="margin-bottom:16px">
+          <summary data-i18n="exam_pacing" style="cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600">How the full test is paced</summary>
+          <div style="margin-top:10px">
+            📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
+            <div class="chips" id="gUeChips" style="margin-top:6px"></div>
+            • <b>Pacing:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
+            • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
+          </div>
+        </details>
 
         <!-- U4: Real mocks. The four papers, one click each, with the same
              countdown; the full mock chains the written papers and ends in
@@ -2921,7 +2958,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
             </button>
           </div>
-          <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
+          <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs Reading 75 min → Writing 80 min → Listening 40 min → Speaking 14 min. The timer moves on by itself.</p>
         </div>
 
         <!-- U4: short official source list, built from PRACTICE_SOURCES -->
@@ -3023,7 +3060,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h4 class="metrics-title" data-i18n="metric_title">Weekly Metrics</h4>
               <div class="metric-row"><span data-i18n="metric_hours">Total hours</span><span class="metric-val" id="mHoras">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
+              <div class="metric-row"><span data-i18n="metric_uoe">Reading accuracy</span><span class="metric-val" id="mUoe">—</span></div>
               <div class="metric-divider"></div>
               <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
               <div class="metric-divider"></div>
@@ -3107,7 +3144,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
-              <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
+              <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · Reading %). Each point is a log entry.</div>
               <div id="gEvol"></div>
             </div>
           </div>
@@ -3234,7 +3271,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <legend data-i18n="plan_exam_timers">🧪 Exam Timers</legend>
               <div class="sub" data-i18n="plan_official_durations">Official durations for each paper.</div>
               <div class="plan-grid">
-                <div><label data-i18n="plan_uoe_focus">UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
+                <div><label data-i18n="plan_uoe_focus">Reading focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
                 <div><label data-i18n="plan_listening_min">Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
                 <div><label data-i18n="plan_plan_writing">Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
                 <div><label data-i18n="plan_write_min">Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
@@ -3256,33 +3293,33 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </fieldset>
 
             <fieldset class="plan-fieldset">
-              <legend data-i18n="plan_thresholds">🎯 Thresholds (Gates)</legend>
-              <div class="sub" data-i18n="plan_thresholds_sub">Numerical criteria per stage.</div>
-              <div class="sub plan-subhead" data-i18n="plan_stage0">Stage 0</div>
+              <legend data-i18n="plan_thresholds">🎯 When to move on</legend>
+              <div class="sub" data-i18n="plan_thresholds_sub">What you need to reach before the next stage.</div>
+              <div class="sub plan-subhead" data-i18n="plan_stage0">Stage 1</div>
               <div class="plan-grid">
                 <div><label data-i18n="plan_g_e0w">Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
-                <div><label data-i18n="plan_g_e0u">UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
-                <div><label data-i18n="plan_g_e0l">L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
+                <div><label data-i18n="plan_g_e0u">Reading Part 4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
+                <div><label data-i18n="plan_g_e0l">Listening Part 2 errors ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
               </div>
-              <div class="sub plan-subhead" data-i18n="plan_stage1">Stage 1</div>
+              <div class="sub plan-subhead" data-i18n="plan_stage1">Stage 2</div>
               <div class="plan-grid">
                 <div><label data-i18n="plan_g_e1w">Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
-                <div><label data-i18n="plan_g_e1u">UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
-                <div><label data-i18n="plan_g_e1l">L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
+                <div><label data-i18n="plan_g_e1u">Reading overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
+                <div><label data-i18n="plan_g_e1l">Listening score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
               </div>
-              <div class="sub plan-subhead" data-i18n="plan_stage2">Stage 2</div>
+              <div class="sub plan-subhead" data-i18n="plan_stage2">Stage 3</div>
               <div class="plan-grid">
-                <div><label data-i18n="plan_g_e2r">R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
-                <div><label data-i18n="plan_g_e2w">Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
-                <div><label data-i18n="plan_g_e2l">L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
+                <div><label data-i18n="plan_g_e2r">Reading % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
+                <div><label data-i18n="plan_g_e2w">Full Writing score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
+                <div><label data-i18n="plan_g_e2l">Listening ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
               </div>
             </fieldset>
 
             <fieldset class="plan-fieldset">
               <legend data-i18n="plan_cycles">Cycles</legend>
-              <div class="sub" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
+              <div class="sub" data-i18n="plan_rotation_order">The order of exercises, part by part:</div>
               <div class="plan-grid">
-                <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
+                <div><label data-i18n="plan_rue_cycle">Reading parts, in order</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
                 <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
                 <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
                 <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
@@ -3290,20 +3327,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </fieldset>
 
             <fieldset class="plan-fieldset">
-              <legend data-i18n="plan_rotation">🔁 Continuous Rotation &amp; Upcoming Slots</legend>
-              <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
+              <legend data-i18n="plan_rotation">🔁 What comes next</legend>
+              <div class="sub" data-i18n="plan_upcoming_sub">The next sessions, mapped to your study days:</div>
               <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
               <div class="plan-grid">
                 <div>
-                  <label data-i18n="plan_week_a_odd">Week A (Odd)</label>
-                  <div class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</div>
-                  <label data-i18n="plan_uoe_focus">UoE Focus</label>
+                  <label data-i18n="plan_week_a_odd">This week (odd)</label>
+                  <div class="cycle-val" id="rotWkASummary">Full Reading + Full Listening</div>
+                  <label data-i18n="plan_uoe_focus">Reading focus</label>
                   <select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                 </div>
                 <div>
-                  <label data-i18n="plan_week_b_even">Week B (Even)</label>
-                  <div class="cycle-val" id="rotWkBSummary">Full W + Full Sp</div>
-                  <label data-i18n="plan_uoe_alt">UoE Alternative</label>
+                  <label data-i18n="plan_week_b_even">Next week (even)</label>
+                  <div class="cycle-val" id="rotWkBSummary">Full Writing + Full Speaking</div>
+                  <label data-i18n="plan_uoe_alt">Reading alternative</label>
                   <select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                 </div>
               </div>
@@ -3433,7 +3470,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="practice-toolbar">
             <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
               <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
-              <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+              <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading</button>
               <button type="button" class="chip" data-skill="w" onclick="setPracticeFilter('w')" data-i18n="practice_filter_w">Writing</button>
               <button type="button" class="chip" data-skill="l" onclick="setPracticeFilter('l')" data-i18n="practice_filter_l">Listening</button>
               <button type="button" class="chip" data-skill="sp" onclick="setPracticeFilter('sp')" data-i18n="practice_filter_sp">Speaking</button>
@@ -3680,11 +3717,31 @@ const I18N={
     nav_ai:'Writing',
     nav_more:'More',
     nav_more_aria:'More sections',
+    nav_practise:'Practise',
+    sub_overview:'Overview',
+    sub_practise_aria:'Practise sections',
+    sub_progress_aria:'Progress sections',
+    today_greeting:'Today · {date}',
+    today_streak:'Streak {n}',
+    today_start:'Start',
+    today_continue:'Continue',
+    today_rest:'Rest day — nothing scheduled',
+    today_practise_something:'Practise something',
+    today_week_summary:'This week: {sessions} sessions · {minutes} min',
+    exam_pacing:'How the full test is paced',
+    session_save_score:'Save score',
+    session_start_writing:'Start writing',
+    session_check_writing:'Check your writing',
+    session_review_mistakes:'Review mistakes',
+    session_improve_speaking:'Improve answers',
+    step_1:'Step 1',
+    step_2:'Step 2',
+    step_3:'Step 3',
     practice_title:'Practice sources',
     practice_sub:'Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.',
     practice_filter_aria:'Filter practice sources by skill',
     practice_filter_all:'All',
-    practice_filter_rue:'Reading & UoE',
+    practice_filter_rue:'Reading',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
     practice_filter_sp:'Speaking',
@@ -3695,7 +3752,7 @@ const I18N={
     practice_kind_free:'Free',
     practice_kind_freemium:'Freemium',
     practice_kind_paid:'Paid',
-    practice_skill_rue:'Reading & UoE',
+    practice_skill_rue:'Reading',
     practice_skill_w:'Writing',
     practice_skill_l:'Listening',
     practice_skill_sp:'Speaking',
@@ -3773,19 +3830,19 @@ const I18N={
     today_start_session:'Start session',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
-    rot_title:'Fortnightly Rotation Matrix',
-    rot_desc:'Systematic alternating schedule ensuring comprehensive coverage of all exam components.',
-    rot_automated:'AUTOMATED CYCLE',
-    rot_week_a:'WEEK A',
-    rot_week_b:'WEEK B',
+    rot_title:'Your two-week schedule',
+    rot_desc:'Alternating weeks so every exam skill gets covered.',
+    rot_automated:'AUTOMATIC',
+    rot_week_a:'This week',
+    rot_week_b:'Next week',
     rot_active_now:'ACTIVE NOW',
     rot_active:'ACTIVE',
     rot_upcoming:'UPCOMING',
     rot_today:'TODAY',
-    rot_writing_queue:'AUTOMATIC WRITING QUEUE (WEEK B)',
-    rot_override_genre:'Override writing genre:',
-    rot_cycle_focus:'CYCLE FOCUS',
-    rot_next_switch:'NEXT SWITCH',
+    rot_writing_queue:'WRITING QUEUE (NEXT WEEK)',
+    rot_override_genre:'Writing genre:',
+    rot_cycle_focus:'NOW',
+    rot_next_switch:'CHANGES ON',
     rot_active_genre:'Active genre: {genre}',
     rot_no_session_today:'No session scheduled today',
     rot_no_session:'No session scheduled',
@@ -3804,15 +3861,15 @@ const I18N={
     rot_cycle:'Cycle:',
     rot_active_writing:'Active Writing genre:',
     rot_switch_sessions:'You can switch sessions above.',
-    rot_ses_a_rue:"Session A (Full Reading & UoE 50')",
-    rot_ses_b_l:"Session B (Full Listening 40')",
+    rot_ses_a_rue:'Session A (Full Reading, 50 min)',
+    rot_ses_b_l:'Session B (Full Listening, 40 min)',
     rot_ses_a_w:'Session A (Full Writing — {genre})',
-    rot_ses_b_sp:"Session B (Full Speaking 60')",
-    rot_val_a:'{week}: Full R&UoE + Full Listening',
+    rot_ses_b_sp:'Session B (Full Speaking, 60 min)',
+    rot_val_a:'{week}: Full Reading + Full Listening',
     rot_val_b:'{week}: Full Writing ({genre}) + Full Speaking',
     metric_title:'Weekly Metrics',
     metric_hours:'Total hours',
-    metric_uoe:'UoE accuracy',
+    metric_uoe:'Reading accuracy',
     metric_streak:'Daily streak',
     metric_logs:'Logs',
     recent_empty:'Nothing logged yet. Your first session takes 15 seconds.',
@@ -3836,19 +3893,19 @@ const I18N={
     today_sub_fmt:'Personalized study plan for {name} · {stage} · Schedule: {sched}.',
     today_plan_title:'This week at a glance',
     today_plan_sub:'The sessions in your weekly plan. Start any of them from Plan or from the studios below.',
-    stage_0:'Stage 0 — Foundations',
-    stage_1:'Stage 1 — Precision',
-    stage_2:'Stage 2 — Mastery',
+    stage_0:'Stage 1 — Foundations',
+    stage_1:'Stage 2 — Precision',
+    stage_2:'Stage 3 — Mastery',
     stage_n:'Stage {n}',
-    stage_name_0:'Stage 0 — Foundations (Structural Acquisition)',
-    stage_name_1:'Stage 1 — Precision & Cohesion (Pattern Mastery)',
-    stage_name_2:'Stage 2 — Mastery (Target Grade A / C1) · Release Candidate',
+    stage_name_0:'Stage 1 of 3 — Foundations',
+    stage_name_1:'Stage 2 of 3 — Precision',
+    stage_name_2:'Stage 3 of 3 — Mastery',
     stage_focus_0:'Trap recognition and basic architecture.',
     stage_focus_1:'Optimal solving times and interactive fluency.',
     stage_focus_2:'Execution under fatigue. If you pass this, you take the official exam.',
     advance_stage:'⬆ Advance to {stage}',
     advance_done:'🎓 YOU COMPLETED EVERYTHING',
-    advance_wait:'⬆ Complete all gates to advance',
+    advance_wait:'⬆ Complete every step to advance',
     completed:'🎓 COMPLETED',
     demo_banner:'Demo mode · your progress is saved only in this browser and is erased if you clear site data',
     ob_language:'Language',
@@ -3892,8 +3949,8 @@ const I18N={
     ob_type_sp:'Speaking',
     ob_day_note:'The sessions appear in Today on the days you pick.',
     ob_error_day:'Pick at least one study day.',
-    week_a:'Week A',
-    week_b:'Week B',
+    week_a:'This week',
+    week_b:'Next week',
     day_sunday:'Sunday',
     day_monday:'Monday',
     day_tuesday:'Tuesday',
@@ -3901,7 +3958,7 @@ const I18N={
     day_thursday:'Thursday',
     day_friday:'Friday',
     day_saturday:'Saturday',
-    today_nav_rue:'Full R&UoE',
+    today_nav_rue:'Full Reading',
     today_nav_listening:'Full Listening',
     today_nav_writing:'Full Writing',
     today_nav_speaking:'Full Speaking',
@@ -3923,7 +3980,7 @@ const I18N={
     exam_real_mocks:'Real mocks',
     exam_real_mocks_sub:'All four papers in one place. One click starts a real timed mock with the official duration.',
     exam_start_full:'Start full mock',
-    exam_full_hint:'Full mock runs R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.',
+    exam_full_hint:'Full mock runs Reading 75 min → Writing 80 min → Listening 40 min → Speaking 14 min. The timer moves on by itself.',
     exam_desc_sp:'4 parts with the AI examiner: interview, long turn, collaborative task and discussion.',
     exam_sources_title:'Official sources, one click',
     exam_sources_sub:'Hand-checked official resources to practise each paper without leaving the exam.',
@@ -3967,7 +4024,7 @@ const I18N={
     charts_streak:'Study Streak',
     charts_streak_sub:'consecutive days',
     charts_evolution:'📈 Temporal Evolution',
-    charts_evolution_sub:'Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.',
+    charts_evolution_sub:'Your % over the weeks (Writing /20 · Listening /30 · Reading %). Each point is a log entry.',
     charts_by_part:'📊 By Part & Exercise',
     charts_by_part_sub:'Average % of each exam part — red bars are your weakest.',
     charts_errors:'🧩 Errors by type',
@@ -3999,13 +4056,13 @@ const I18N={
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
     plan_regen_done:'Plan rebuilt · {count} sessions',
-    plan_regen_rotated:'Plan rebuilt · {count} sessions (rotated for week {n})',
+    plan_regen_rotated:'Plan rebuilt · {count} sessions (adjusted for week {n})',
     plan_regen_nothing:'Nothing to rebuild yet',
     plan_week_mine:'Your week',
     plan_week_mine_sub:'On Mondays, do these parts — or the whole paper — for this long.',
     plan_opt_auto:'Follow the suggestion',
     plan_opt_off:'rest day',
-    plan_opt_ue_full:'Use of English — whole paper',
+    plan_opt_ue_full:'Reading — whole paper',
     plan_opt_l_full:'Listening — whole paper',
     plan_opt_w_full:'Writing — one task',
     plan_opt_sp_full:'Speaking — full',
@@ -4023,14 +4080,14 @@ const I18N={
     plan_week_day_label:'{day} plan',
     plan_day_min_label:'{day} minutes',
     plan_day_time_label:'{day} start time (optional)',
-    plan_parts_ue:'UoE',
+    plan_parts_ue:'Reading',
     plan_parts_l:'Listening',
     plan_parts_sp:'Speaking',
     plan_parts_w:'Writing',
     plan_tuning:'Fine-tuning',
     plan_account:'Account & provider',
     plan_cycles:'Cycles',
-    plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no model calls).',
+    plan_week_sub:'Sessions built with fixed rules from your diagnostic and your errors (no model calls).',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
@@ -4041,7 +4098,7 @@ const I18N={
     plan_exam_timers:'🧪 Exam Timers',
     plan_fce_format:'FCE Format',
     plan_official_durations:'Official durations for each paper.',
-    plan_uoe_focus:'UoE Focus (min)',
+    plan_uoe_focus:'Reading focus (min)',
     plan_listening_min:'Listening (min)',
     plan_plan_writing:'Plan writing (min)',
     plan_write_min:'Write (min)',
@@ -4088,48 +4145,48 @@ const I18N={
     plan_sessions_week:'Sessions per week',
     plan_ignore_intake:'Ignore the intake estimate',
     plan_ignore_intake_short:'intake estimate ignored',
-    plan_rotate:'Rotate parts week by week',
+    plan_rotate:'Change parts week by week',
     plan_week_rhythm:'Weekly rhythm',
     plan_week_rhythm_sub:'Optional start times, one per day. They show in the plan but never block a session.',
     plan_preview:'Week preview',
     plan_reset_auto:'Back to automatic',
     plan_planned_for:'Planned for {time}',
-    plan_rotated:'Rotated for this week',
-    plan_rotated_week:'rotated for week {n}',
-    rotated:'· rot.',
+    plan_rotated:'Adjusted for this week',
+    plan_rotated_week:'adjusted for week {n}',
+    rotated:'· adjusted',
     plan_custom_empty:'Your custom plan is empty, using the automatic one.',
     plan_custom_reason:'your custom plan',
-    plan_custom_reason_rotated:'your custom plan, rotated for week {n}',
+    plan_custom_reason_rotated:'your custom plan, adjusted for week {n}',
     plan_why_fallback:'fell back to all parts for {keys}',
-    plan_thresholds:'🎯 Thresholds (Gates)',
-    plan_thresholds_sub:'Numerical criteria per stage.',
-    plan_stage0:'Stage 0',
-    plan_stage1:'Stage 1',
-    plan_stage2:'Stage 2',
+    plan_thresholds:'🎯 When to move on',
+    plan_thresholds_sub:'What you need to reach before the next stage.',
+    plan_stage0:'Stage 1',
+    plan_stage1:'Stage 2',
+    plan_stage2:'Stage 3',
     plan_g_e0w:'Essays score ≥',
-    plan_g_e0u:'UoE P4 % ≥',
-    plan_g_e0l:'L P2 err ≤',
+    plan_g_e0u:'Reading Part 4 % ≥',
+    plan_g_e0l:'Listening Part 2 errors ≤',
     plan_g_e1w:'Texts score ≥',
-    plan_g_e1u:'UoE overall % ≥',
-    plan_g_e1l:'L score ≥',
-    plan_g_e2r:'R&UoE % ≥',
-    plan_g_e2w:'Full W score ≥',
-    plan_g_e2l:'L ≥ (N tests)',
-    plan_sessions:'🗓 Session Schedules & Frequency',
-    plan_add_day:'+ Add Session Day',
-    plan_sessions_sub:'Configure as many session days and times as you want. The 4-step core cycle (R&UoE → Listening → Writing → Speaking) adapts automatically.',
+    plan_g_e1u:'Reading overall % ≥',
+    plan_g_e1l:'Listening score ≥',
+    plan_g_e2r:'Reading % ≥',
+    plan_g_e2w:'Full Writing score ≥',
+    plan_g_e2l:'Listening ≥ (N tests)',
+    plan_sessions:'🗓 Session days and times',
+    plan_add_day:'+ Add session day',
+    plan_sessions_sub:'Set the days and times you want to study. The four-step cycle (Reading → Listening → Writing → Speaking) adapts automatically.',
     plan_shift:'Session Shift / Fast-Forward',
-    plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
+    plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates move forward by one session.',
     plan_advance1:'⚡ +1 Advance',
     plan_reset0:'↩ Reset (0)',
-    plan_rotation:'🔁 Continuous Rotation & Upcoming Slots',
-    plan_rotation_chip:'4-Session Loop',
-    plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
-    plan_week_a_odd:'Week A (Odd)',
-    plan_week_b_even:'Week B (Even)',
-    plan_uoe_alt:'UoE Alternative',
-    plan_rotation_order:'The order you rotate exercises component by component:',
-    plan_rue_cycle:'R&UoE (parts 1-7, in order)',
+    plan_rotation:'🔁 What comes next',
+    plan_rotation_chip:'Four-session cycle',
+    plan_upcoming_sub:'The next sessions, mapped to your study days:',
+    plan_week_a_odd:'This week (odd)',
+    plan_week_b_even:'Next week (even)',
+    plan_uoe_alt:'Reading alternative',
+    plan_rotation_order:'The order of exercises, part by part:',
+    plan_rue_cycle:'Reading parts, in order',
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
@@ -4463,11 +4520,31 @@ const I18N={
     nav_ai:'Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
+    nav_practise:'Practicar',
+    sub_overview:'Resumen',
+    sub_practise_aria:'Secciones de práctica',
+    sub_progress_aria:'Secciones de progreso',
+    today_greeting:'Hoy · {date}',
+    today_streak:'Racha {n}',
+    today_start:'Empezar',
+    today_continue:'Continuar',
+    today_rest:'Día libre — nada programado',
+    today_practise_something:'Practicá algo',
+    today_week_summary:'Esta semana: {sessions} sesiones · {minutes} min',
+    exam_pacing:'Cómo se reparte el examen completo',
+    session_save_score:'Guardar puntaje',
+    session_start_writing:'Empezar a escribir',
+    session_check_writing:'Revisar tu writing',
+    session_review_mistakes:'Revisar errores',
+    session_improve_speaking:'Mejorar respuestas',
+    step_1:'Paso 1',
+    step_2:'Paso 2',
+    step_3:'Paso 3',
     practice_title:'Fuentes de práctica',
     practice_sub:'Lugares legales y verificados para practicar cada examen. Primero los recursos gratuitos; las herramientas pagas o freemium están marcadas.',
     practice_filter_aria:'Filtrar fuentes de práctica por destreza',
     practice_filter_all:'Todas',
-    practice_filter_rue:'Reading y UoE',
+    practice_filter_rue:'Reading',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
     practice_filter_sp:'Speaking',
@@ -4478,7 +4555,7 @@ const I18N={
     practice_kind_free:'Gratis',
     practice_kind_freemium:'Freemium',
     practice_kind_paid:'Pago',
-    practice_skill_rue:'Reading y UoE',
+    practice_skill_rue:'Reading',
     practice_skill_w:'Writing',
     practice_skill_l:'Listening',
     practice_skill_sp:'Speaking',
@@ -4556,19 +4633,19 @@ const I18N={
     today_start_session:'Empezar sesión',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
-    rot_title:'Matriz de rotación quincenal',
-    rot_desc:'Calendario alternado sistemático que cubre todos los componentes del examen.',
-    rot_automated:'CICLO AUTOMÁTICO',
-    rot_week_a:'SEMANA A',
-    rot_week_b:'SEMANA B',
+    rot_title:'Tu calendario de dos semanas',
+    rot_desc:'Semanas alternas para cubrir cada destreza del examen.',
+    rot_automated:'AUTOMÁTICO',
+    rot_week_a:'Esta semana',
+    rot_week_b:'Próxima semana',
     rot_active_now:'ACTIVA AHORA',
     rot_active:'ACTIVA',
     rot_upcoming:'PRÓXIMA',
     rot_today:'HOY',
-    rot_writing_queue:'COLA AUTOMÁTICA DE WRITING (SEMANA B)',
-    rot_override_genre:'Cambiar género de writing:',
-    rot_cycle_focus:'FOCO DEL CICLO',
-    rot_next_switch:'PRÓXIMO CAMBIO',
+    rot_writing_queue:'COLA DE WRITING (PRÓXIMA SEMANA)',
+    rot_override_genre:'Género de writing:',
+    rot_cycle_focus:'AHORA',
+    rot_next_switch:'CAMBIA EL',
     rot_active_genre:'Género activo: {genre}',
     rot_no_session_today:'Hoy no hay sesión programada',
     rot_no_session:'No hay sesión programada',
@@ -4587,15 +4664,15 @@ const I18N={
     rot_cycle:'Ciclo:',
     rot_active_writing:'Género de writing activo:',
     rot_switch_sessions:'Podés cambiar de sesión arriba.',
-    rot_ses_a_rue:"Sesión A (Reading & UoE completo 50')",
-    rot_ses_b_l:"Sesión B (Listening completo 40')",
+    rot_ses_a_rue:'Sesión A (Reading completo, 50 min)',
+    rot_ses_b_l:'Sesión B (Listening completo, 40 min)',
     rot_ses_a_w:'Sesión A (Writing completo — {genre})',
-    rot_ses_b_sp:"Sesión B (Speaking completo 60')",
-    rot_val_a:'{week}: R&UoE completo + Listening completo',
+    rot_ses_b_sp:'Sesión B (Speaking completo, 60 min)',
+    rot_val_a:'{week}: Reading completo + Listening completo',
     rot_val_b:'{week}: Writing completo ({genre}) + Speaking completo',
     metric_title:'Métricas semanales',
     metric_hours:'Horas totales',
-    metric_uoe:'Precisión UoE',
+    metric_uoe:'Precisión de Reading',
     metric_streak:'Racha diaria',
     metric_logs:'Registros',
     recent_empty:'Todavía no registraste nada. Tu primera sesión dura 15 segundos.',
@@ -4619,19 +4696,19 @@ const I18N={
     today_sub_fmt:'Plan de estudio personalizado para {name} · {stage} · Horario: {sched}.',
     today_plan_title:'Tu semana de un vistazo',
     today_plan_sub:'Las sesiones de tu plan semanal. Empezá cualquiera desde Plan o desde los estudios de abajo.',
-    stage_0:'Etapa 0 — Cimientos',
-    stage_1:'Etapa 1 — Precisión',
-    stage_2:'Etapa 2 — Maestría',
+    stage_0:'Etapa 1 — Cimientos',
+    stage_1:'Etapa 2 — Precisión',
+    stage_2:'Etapa 3 — Maestría',
     stage_n:'Etapa {n}',
-    stage_name_0:'Etapa 0 — Cimientos (Adquisición estructural)',
-    stage_name_1:'Etapa 1 — Precisión y cohesión (Dominio de patrones)',
-    stage_name_2:'Etapa 2 — Maestría (Meta: Grado A / C1) · Candidato a examen',
+    stage_name_0:'Etapa 1 de 3 — Cimientos',
+    stage_name_1:'Etapa 2 de 3 — Precisión',
+    stage_name_2:'Etapa 3 de 3 — Maestría',
     stage_focus_0:'Reconocimiento de trampas y arquitectura básica.',
     stage_focus_1:'Tiempos de resolución óptimos y fluidez interactiva.',
     stage_focus_2:'Ejecución bajo fatiga. Si superás esto, vas al examen oficial.',
     advance_stage:'⬆ Avanzar a {stage}',
     advance_done:'🎓 COMPLETASTE TODO',
-    advance_wait:'⬆ Completá todas las puertas para avanzar',
+    advance_wait:'⬆ Completá todos los pasos para avanzar',
     completed:'🎓 COMPLETADO',
     demo_banner:'Modo demo · tu progreso se guarda solo en este navegador y se borra si limpiás los datos del sitio',
     ob_language:'Idioma',
@@ -4675,8 +4752,8 @@ const I18N={
     ob_type_sp:'Speaking',
     ob_day_note:'Las sesiones aparecen en Today los días que elijas.',
     ob_error_day:'Elegí al menos un día de estudio.',
-    week_a:'Semana A',
-    week_b:'Semana B',
+    week_a:'Esta semana',
+    week_b:'Próxima semana',
     day_sunday:'Domingo',
     day_monday:'Lunes',
     day_tuesday:'Martes',
@@ -4684,7 +4761,7 @@ const I18N={
     day_thursday:'Jueves',
     day_friday:'Viernes',
     day_saturday:'Sábado',
-    today_nav_rue:'R&UoE completo',
+    today_nav_rue:'Reading completo',
     today_nav_listening:'Listening completo',
     today_nav_writing:'Writing completo',
     today_nav_speaking:'Speaking completo',
@@ -4706,7 +4783,7 @@ const I18N={
     exam_real_mocks:'Mocks reales',
     exam_real_mocks_sub:'Las cuatro pruebas en un solo lugar. Un clic arranca un mock real cronometrado con la duración oficial.',
     exam_start_full:'Empezar mock completo',
-    exam_full_hint:'El mock completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
+    exam_full_hint:'El mock completo corre Reading 75 min → Writing 80 min → Listening 40 min → Speaking 14 min. El cronómetro avanza solo.',
     exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
     exam_sources_title:'Fuentes oficiales a un clic',
     exam_sources_sub:'Recursos oficiales verificados para practicar cada prueba sin salir del examen.',
@@ -4750,7 +4827,7 @@ const I18N={
     charts_streak:'Racha de estudio',
     charts_streak_sub:'días consecutivos',
     charts_evolution:'📈 Evolución temporal',
-    charts_evolution_sub:'Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.',
+    charts_evolution_sub:'Tu % a lo largo de las semanas (Writing /20 · Listening /30 · Reading %). Cada punto es un registro.',
     charts_by_part:'📊 Por parte y ejercicio',
     charts_by_part_sub:'Porcentaje promedio de cada parte — las barras rojas son tus puntos más débiles.',
     charts_errors:'🧩 Errores por tipo',
@@ -4782,13 +4859,13 @@ const I18N={
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
     plan_regen_done:'Plan reconstruido · {count} sesiones',
-    plan_regen_rotated:'Plan reconstruido · {count} sesiones (rotado para la semana {n})',
+    plan_regen_rotated:'Plan reconstruido · {count} sesiones (ajustado para la semana {n})',
     plan_regen_nothing:'Nada que reconstruir todavía',
     plan_week_mine:'Tu semana',
     plan_week_mine_sub:'Los lunes, hacé estas partes — o el examen completo — durante este tiempo.',
     plan_opt_auto:'Seguir la sugerencia',
     plan_opt_off:'día de descanso',
-    plan_opt_ue_full:'Use of English — examen completo',
+    plan_opt_ue_full:'Reading — examen completo',
     plan_opt_l_full:'Listening — examen completo',
     plan_opt_w_full:'Writing — una tarea',
     plan_opt_sp_full:'Speaking — completo',
@@ -4806,14 +4883,14 @@ const I18N={
     plan_week_day_label:'Plan del {day}',
     plan_day_min_label:'Minutos del {day}',
     plan_day_time_label:'Hora de inicio del {day} (opcional)',
-    plan_parts_ue:'UoE',
+    plan_parts_ue:'Reading',
     plan_parts_l:'Listening',
     plan_parts_sp:'Speaking',
     plan_parts_w:'Writing',
     plan_tuning:'Ajustes finos',
     plan_account:'Cuenta y proveedor',
     plan_cycles:'Ciclos',
-    plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
+    plan_week_sub:'Sesiones armadas con reglas fijas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
@@ -4824,7 +4901,7 @@ const I18N={
     plan_exam_timers:'🧪 Cronómetros del examen',
     plan_fce_format:'Formato FCE',
     plan_official_durations:'Duraciones oficiales de cada prueba.',
-    plan_uoe_focus:'Foco UoE (min)',
+    plan_uoe_focus:'Enfoque de Reading (min)',
     plan_listening_min:'Listening (min)',
     plan_plan_writing:'Planificar writing (min)',
     plan_write_min:'Escribir (min)',
@@ -4877,42 +4954,42 @@ const I18N={
     plan_preview:'Vista previa de la semana',
     plan_reset_auto:'Volver a automático',
     plan_planned_for:'Previsto para {time}',
-    plan_rotated:'Rotado para esta semana',
-    plan_rotated_week:'rotado para la semana {n}',
-    rotated:'· rot.',
+    plan_rotated:'Ajustado para esta semana',
+    plan_rotated_week:'ajustado para la semana {n}',
+    rotated:'· ajustado',
     plan_custom_empty:'Tu plan personalizado está vacío; usamos el automático.',
     plan_custom_reason:'tu plan personalizado',
-    plan_custom_reason_rotated:'tu plan personalizado, rotado para la semana {n}',
+    plan_custom_reason_rotated:'tu plan personalizado, ajustado para la semana {n}',
     plan_why_fallback:'volvimos a todas las partes para {keys}',
-    plan_thresholds:'🎯 Umbrales (gates)',
-    plan_thresholds_sub:'Criterios numéricos por etapa.',
-    plan_stage0:'Etapa 0',
-    plan_stage1:'Etapa 1',
-    plan_stage2:'Etapa 2',
+    plan_thresholds:'🎯 Cuándo avanzar',
+    plan_thresholds_sub:'Lo que necesitás alcanzar antes de la próxima etapa.',
+    plan_stage0:'Etapa 1',
+    plan_stage1:'Etapa 2',
+    plan_stage2:'Etapa 3',
     plan_g_e0w:'Nota de essays ≥',
-    plan_g_e0u:'UoE P4 % ≥',
-    plan_g_e0l:'Errores L P2 ≤',
+    plan_g_e0u:'Reading Parte 4 % ≥',
+    plan_g_e0l:'Errores Listening Parte 2 ≤',
     plan_g_e1w:'Nota de textos ≥',
-    plan_g_e1u:'UoE total % ≥',
-    plan_g_e1l:'Nota L ≥',
-    plan_g_e2r:'R&UoE % ≥',
-    plan_g_e2w:'Nota W completa ≥',
-    plan_g_e2l:'L ≥ (N pruebas)',
-    plan_sessions:'🗓 Horarios y frecuencia de sesiones',
+    plan_g_e1u:'Reading total % ≥',
+    plan_g_e1l:'Nota Listening ≥',
+    plan_g_e2r:'Reading % ≥',
+    plan_g_e2w:'Nota Writing completa ≥',
+    plan_g_e2l:'Listening ≥ (N pruebas)',
+    plan_sessions:'🗓 Días y horarios de sesión',
     plan_add_day:'+ Agregar día de sesión',
-    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. El ciclo base de 4 pasos (R&UoE → Listening → Writing → Speaking) se adapta solo.',
+    plan_sessions_sub:'Elegí los días y horarios en que querés estudiar. El ciclo de cuatro pasos (Reading → Listening → Writing → Speaking) se adapta solo.',
     plan_shift:'Desplazamiento de sesiones / adelantar',
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
     plan_advance1:'⚡ +1 Adelantar',
     plan_reset0:'↩ Reiniciar (0)',
-    plan_rotation:'🔁 Rotación continua y próximos turnos',
-    plan_rotation_chip:'Ciclo de 4 sesiones',
-    plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
-    plan_week_a_odd:'Semana A (impar)',
-    plan_week_b_even:'Semana B (par)',
-    plan_uoe_alt:'UoE alternativo',
-    plan_rotation_order:'El orden en que rotás los ejercicios componente por componente:',
-    plan_rue_cycle:'R&UoE (partes 1-7, en orden)',
+    plan_rotation:'🔁 Lo que viene',
+    plan_rotation_chip:'Ciclo de cuatro sesiones',
+    plan_upcoming_sub:'Las próximas sesiones, ubicadas en tus días de estudio:',
+    plan_week_a_odd:'Esta semana (impar)',
+    plan_week_b_even:'Próxima semana (par)',
+    plan_uoe_alt:'Alternativa de Reading',
+    plan_rotation_order:'El orden de los ejercicios, parte por parte:',
+    plan_rue_cycle:'Partes de Reading, en orden',
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
@@ -6448,12 +6525,12 @@ document.addEventListener('focusin',e=>{
    resize/scroll. Escape closes the tour (unlike the onboarding itself),
    and the same tour can be replayed from Plan. */
 const TOUR_STEPS=[
-  {sel:'nav button[data-view="hoy"]',view:'hoy',title:'tour_1_title',body:'tour_1_body'},
-  {sel:'#nextBox',view:'hoy',title:'tour_2_title',body:'tour_2_body'},
+  {sel:'#sideNav button[data-view="hoy"]',view:'hoy',title:'tour_1_title',body:'tour_1_body'},
+  {sel:'#todaySessions',view:'hoy',title:'tour_2_title',body:'tour_2_body'},
   {sel:'#weeklyPlanCard',view:'plan',title:'tour_3_title',body:'tour_3_body'},
-  {sel:'nav button[data-view="practice"]',view:'practice',title:'tour_4_title',body:'tour_4_body'},
-  {sel:'nav button[data-view="exam"]',view:'exam',title:'tour_5_title',body:'tour_5_body'},
-  {sel:'nav button[data-view="prog"]',view:'prog',title:'tour_6_title',body:'tour_6_body'},
+  {sel:'#subnav-practise button[data-view="practice"]',view:'practice',title:'tour_4_title',body:'tour_4_body'},
+  {sel:'#subnav-practise button[data-view="exam"]',view:'exam',title:'tour_5_title',body:'tour_5_body'},
+  {sel:'#sideNav button[data-view="prog"]',view:'prog',title:'tour_6_title',body:'tour_6_body'},
   {sel:'#streakTopPill',view:'hoy',title:'tour_7_title',body:'tour_7_body'}
 ];
 var TOUR={i:0,active:false,opener:null,timer:null};
@@ -10681,7 +10758,7 @@ function saveSoloPractice(){
 
   if(skill==='ue'){
     if(partVal==='all'){
-      log({type:'rue',book,ref:ref||'Solo Full R&UoE',correct:ok,total:tot||52,min});
+      log({type:'rue',book,ref:ref||'Solo Full Reading',correct:ok,total:tot||52,min});
     }else{
       log({type:'ue',part:+partVal,book,ref:ref||'Solo Practice',correct:ok,total:tot||8,min});
     }
@@ -10718,6 +10795,7 @@ function saveSoloPractice(){
 /* ---------- SAVE HANDLERS ---------- */
 function log(e){
   const entry = Object.assign({date:today(), created_at:Date.now()}, e);
+  D.activeSession=null;
   D.log.push(entry);
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
   save();
@@ -10926,17 +11004,17 @@ function calcGates(){
 
   const gates=[
     {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:g0_w_ok,val:Math.min(bestEssayStreak/4,1),txt:`best streak: ${bestEssayStreak}/4 (current: ${curEssayStreak})`},
-    {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:g0_u_ok,val:ue4.length<5?(ue4.length/5):Math.min((ue4a||0)/s.e0.u,1),txt:ue4.length>=5?`last 5 avg: ${Math.round(ue4a)}% (req ≥${s.e0.u}%)`:`${ue4.length}/5 rounds logged`},
+    {name:'Reading Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:g0_u_ok,val:ue4.length<5?(ue4.length/5):Math.min((ue4a||0)/s.e0.u,1),txt:ue4.length>=5?`last 5 avg: ${Math.round(ue4a)}% (req ≥${s.e0.u}%)`:`${ue4.length}/5 rounds logged`},
     {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 consecutive tests',ok:g0_l_ok,val:Math.min(bestLP2Streak/3,1),txt:`best streak: ${bestLP2Streak}/3 (current: ${curLP2Streak})`},
     
     {name:'6 texts ≤'+s.e1.wm+' min, score ≥'+s.e1.w+'/20 + Lexical Injection (4 pv + 3 collocations)',ok:g1_w_ok,val:Math.min(wE1.length/6,1),txt:`qualifying: ${wE1.length}/6`},
-    {name:'UoE (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:g1_u_ok,val:Math.min(ueFullMocks.length/4,1),txt:`mocks passed: ${ueFullMocks.length}/4`},
+    {name:'Reading (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:g1_u_ok,val:Math.min(ueFullMocks.length/4,1),txt:`mocks passed: ${ueFullMocks.length}/4`},
     {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:g1_l_ok,val:Math.min(bestL3Streak/3,1),txt:`best streak: ${bestL3Streak}/3 (current: ${curL3Streak})`},
     {name:'Speaking Part 2 — 1 min continuous, no silences >3s',ok:g1_sp2_ok,val:Math.min(sp2.length/1,1),txt:`clean runs: ${sp2.length}`},
     {name:'Reading Part 6 (Gapped Text) ≥4/6 in 3 consecutive mocks',ok:g1_r6_ok,val:Math.min(bestR6Streak/3,1),txt:`best streak: ${bestR6Streak}/3 (current: ${curR6Streak})`},
     {name:'Speaking Parts 3-4 — 4 mocks with ≥3 negotiation structures',ok:g1_sp34_ok,val:Math.min(sp34.length/4,1),txt:`mocks passed: ${sp34.length}/4`},
     
-    {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:g2_rue_ok,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
+    {name:'Full Reading ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:g2_rue_ok,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
     {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:g2_fw_ok,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
     {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:g2_l_ok,val:Math.min(bestL4Streak/s.e2.ln,1),txt:`best streak: ${bestL4Streak}/${s.e2.ln} (current: ${curL4Streak})`},
     {name:'Speaking final (14 min) validated by teacher at C1',ok:g2_sf_ok,val:Math.min(sf.length/1,1),txt:`validated: ${sf.length}`}
@@ -10954,7 +11032,7 @@ function renderGates(){
   const viewGates=calc.groups[viewSt];
   el.innerHTML=`
     <div class="gates-tabs">
-      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Stage '+i}</button>`).join('')}
+      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Stage '+(i+1)}</button>`).join('')}
     </div>
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
       <b style="color:var(--primary);font-size:14px">${t(STAGE_NAMES[viewSt])}</b>
@@ -11768,7 +11846,7 @@ function planItemLabel(it){
   if(type==='w')return 'Writing'+((it&&it.kind)?' ('+it.kind+')':'');
   if(type==='l')return (it.part==null)?t('plan_opt_l_full'):('Listening '+lpName(it.part).toLowerCase());
   if(type==='sp')return (it.part==null)?t('plan_opt_sp_full'):('Speaking part '+it.part);
-  return (it.part==null)?t('plan_opt_ue_full'):('UoE '+partName(it.part).toLowerCase());
+  return (it.part==null)?t('plan_opt_ue_full'):('Reading — '+partName(it.part).toLowerCase());
 }
 function planSlotLabel(sl){
   const items=(sl&&Array.isArray(sl.items))?sl.items:[];
@@ -11944,15 +12022,15 @@ function renderEx(){
   exReset();
   const g=document.getElementById('exGuide');
   const L=(t,h)=>`<a href="${h}" target="_blank">${t}</a>`;
-  if(exPaper==='rue')g.innerHTML=`<b>📖 Open the exam papers:</b><div class="chips" style="margin-top:6px">${chips([['R&UoE Sample 1','rueS1'],['Sample 2','rueS2'],['For Schools 1','rueFS1'],['For Schools 2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Online UoE','https://test-english.com/use-of-english/b2/']])}</div><br><b>⏱ Time distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions.`;
+  if(exPaper==='rue')g.innerHTML=`<b>📖 Open the exam papers:</b><div class="chips" style="margin-top:6px">${chips([['Reading sample 1','rueS1'],['Reading sample 2','rueS2'],['Reading for Schools 1','rueFS1'],['Reading for Schools 2','rueFS2'],['Answer key 1','keyS1'],['Answer key 2','keyS2'],['Answer key FS1','keyFS1'],['Answer key FS2','keyFS2'],['Online Reading','https://test-english.com/use-of-english/b2/']])}</div><br><b>⏱ Time distribution:</b> Parts 1-4 (Use of English) ~40-45 min · Parts 5-7 (Reading) ~30-35 min. 52 questions.`;
   else if(exPaper==='w')g.innerHTML=`<b>✍️ Open the writing paper:</b><div class="chips" style="margin-top:6px">${chips([['Writing Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson W1','lpW1'],['Lesson W2','lpW2'],['Lesson FS W1','fW1'],['Lesson FS W2','fW2'],['Online','https://www.examenglish.com/FCE/fce_writing.html']])}</div><br><b>⏱ Exam Strategy:</b> Part 1 Essay (5' plan + 35' write) → Part 2 of your choice (5' + 30') → 5' review. 140-190 words per text.`;
   else if(exPaper==='l')g.innerHTML=`<b>🎧 Open the listening test (questions + audio):</b><div class="chips" style="margin-top:6px">${chips([['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 Audio S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 Audio FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']])}</div><br><b>⏱ Pace:</b> 30 questions, ~40 min with preview reading. NEVER pause the audio.`;
-  else g.innerHTML=`<b>🕒 Official Exam Sequence (195 min):</b><br>1️⃣ R&UoE 75' → 2' pause<br>2️⃣ Writing 80' → 5' pause<br>3️⃣ Listening 40'<br><b>Material:</b> the links above in that order (R&UoE → Writing → Listening). Close all other tabs.`;
+  else g.innerHTML=`<b>🕒 Official Exam Sequence (195 min):</b><br>1️⃣ Reading 75 min → 2 min pause<br>2️⃣ Writing 80 min → 5 min pause<br>3️⃣ Listening 40 min<br><b>Material:</b> the links above in that order (Reading → Writing → Listening). Close all other tabs.`;
   const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
-  if(exPaper==='rue')f.innerHTML=`<div><label>R&UoE correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
+  if(exPaper==='rue')f.innerHTML=`<div><label>Reading correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
   else if(exPaper==='w')f.innerHTML=`<div><label>Text 1 score /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
   else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
-  else f.innerHTML=`<div><label>R&UoE correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
+  else f.innerHTML=`<div><label>Reading correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
   renderExamSources();
 }
@@ -12009,7 +12087,7 @@ const PARTS=[
  {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:20,type:'ue',note:''},
  {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:20,type:'ue',note:''},
  {g:'Listening',n:1,t:'Short extracts (3 options)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
- {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
+ {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the first-stage check looks at your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
  {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the Writing Corrector or your teacher'},
@@ -12034,7 +12112,7 @@ function renderParts(){
     const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
     const fType=fObj?PARTS_FILTER.type:'ue';
     const fNum=fObj?PARTS_FILTER.part:PARTS_FILTER;
-    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':'Reading &amp; UoE';
+    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':'Reading';
     html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span class="badge fri">Active filter: ${fLabel} Part ${fNum}</span>
       <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all 15 parts</button>
@@ -12047,7 +12125,7 @@ function renderParts(){
       if(!ok)return;
     }
     if(p.g!==last){html+=`<h3 class="folder">${p.g}</h3>`;last=p.g}
-    const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
+    const ue=[['Reading sample 1','rueS1'],['Reading sample 2','rueS2'],['Reading for Schools 1','rueFS1'],['Reading for Schools 2','rueFS2'],['Answer key 1','keyS1'],['Answer key 2','keyS2'],['Answer key FS1','keyFS1'],['Answer key FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
     if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
     ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
     const lp=[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
@@ -12084,12 +12162,12 @@ function savePart(i){
    best and last — for UoE P1-7, Listening P1-4, Writing per kind,
    full R&UoE and full Listening (only exercises with data). */
 const MOD={
-  ue:e=>`UoE P${e.part}`,
+  ue:e=>`Reading P${e.part}`,
   w:e=>`Writing ${e.kind}`,
   l:e=>`Listening ${e.ref||''}`,
   lp:e=>`Listening P${e.part}`,
   sp:e=>`Speaking P${e.part||''}`,
-  rue:e=>`Full R&UoE`,
+  rue:e=>`Full Reading`,
   fw:e=>`Full Writing`,
   r6:e=>`Reading P6 (Gapped)`,
   sf:e=>`Speaking Final`,
@@ -12141,10 +12219,10 @@ function renderStats(){
     const vals=es.map(e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.correct/e.total*100);
     rows.push(`<tr><td>${name}</td><td>${es.length}</td><td>${Math.round(vals.reduce((a,b)=>a+b,0)/vals.length)}%</td><td>${Math.round(Math.max(...vals))}%</td><td>${Math.round(vals[0])}%</td></tr>`);
   };
-  for(let i=1;i<=7;i++)row('UoE P'+i+' — '+partName(i),D.log.filter(e=>e.type==='ue'&&e.part===i));
+  for(let i=1;i<=7;i++)row('Reading P'+i+' — '+partName(i),D.log.filter(e=>e.type==='ue'&&e.part===i));
   for(let i=1;i<=4;i++)row('Listening P'+i,D.log.filter(e=>e.type==='lp'&&e.part===i));
   ['Essay','Article','Report','Review','Email'].forEach(k=>row('Writing '+k,D.log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('Full R&UoE',rue);
+  const rue=D.log.filter(e=>e.type==='rue');if(rue.length)row('Full Reading',rue);
   const l=D.log.filter(e=>e.type==='l');if(l.length)row('Full Listening',l);
   const r6=D.log.filter(e=>e.type==='r6');if(r6.length)row('Reading P6 (Gapped)',r6);
   const sf=D.log.filter(e=>e.type==='sf');if(sf.length)rows.push(`<tr><td>Speaking Final</td><td>${sf.length}</td><td colspan="3" style="color:var(--ok-text)">${sf.filter(e=>e.ok).length} validated at C1</td></tr>`);
@@ -12223,7 +12301,7 @@ const ONLINE=[
   {n:'ExamEnglish — FCE Reading Practice',u:'https://www.examenglish.com/FCE/fce_reading.html'}
  ]},
  {g:'✍️ Use of English',l:[
-  {n:'Flo-Joe — FCE UoE (Open Cloze, Word Formation, KWT)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
+  {n:'Flo-Joe — FCE Reading (Open Cloze, Word Formation, KWT)',u:'https://www.flo-joe.co.uk/fce/students/tests/'},
   {n:'ExamEnglish — FCE Use of English',u:'https://www.examenglish.com/FCE/fce_use_of_english.html'},
   {n:'Test-English — B2 Use of English (with answers)',u:'https://test-english.com/use-of-english/b2/'}
  ]},
@@ -12427,9 +12505,9 @@ function renderGuides(){
   const set=(id,items)=>{const el=document.getElementById(id);if(el)el.innerHTML=chips(items)};
   const uePart=document.getElementById('uePart')?document.getElementById('uePart').value:'1';
   const spPart=document.getElementById('spPart')?document.getElementById('spPart').value:'2';
-  const ue=[['R&UoE S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+uePart,'lpR'+uePart],['Lesson FS P'+uePart,'fR'+uePart]];
+  const ue=[['Reading sample 1','rueS1'],['Reading sample 2','rueS2'],['Reading for Schools 1','rueFS1'],['Reading for Schools 2','rueFS2'],['Answer key 1','keyS1'],['Answer key 2','keyS2'],['Answer key FS1','keyFS1'],['Answer key FS2','keyFS2'],['Lesson plan P'+uePart,'lpR'+uePart],['Lesson FS P'+uePart,'fR'+uePart]];
   if(uePart>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
-  ue.push(['Online UoE','https://www.flo-joe.co.uk/fce/students/tests/']);
+  ue.push(['Online Reading','https://www.flo-joe.co.uk/fce/students/tests/']);
   set('gUeChips',ue);
   set('gWChips',[['Writing S1','wS1'],['S2','wS2'],['FS1','wFS1'],['FS2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson W1','lpW1'],['Lesson W2','lpW2'],['Lesson FS W1','fW1'],['Lesson FS W2','fW2'],['Online','https://www.examenglish.com/FCE/fce_writing.html']]);
   set('gLChips',[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P1','auS2p1'],['🎧 S2-P2','auS2p2'],['🎧 S2-P3','auS2p3'],['🎧 S2-P4','auS2p4'],['🎧 FS1-P1','auFS1p1'],['🎧 FS1-P2','auFS1p2'],['🎧 FS1-P3','auFS1p3'],['🎧 FS1-P4','auFS1p4'],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']]);
@@ -12501,7 +12579,7 @@ function renderGrafEvol(){
   const series=[
     {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
     {name:'Listening',color:'var(--ok-text)',es:log.filter(e=>e.type==='l')},
-    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')},
+    {name:'Reading',color:'var(--fri)',es:log.filter(e=>e.type==='ue')},
     {name:'Speaking',color:'var(--warn-text)',es:log.filter(e=>e.type==='sp'&&typeof e.score==='number')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
@@ -12536,10 +12614,10 @@ function renderGrafPart(){
     const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
     rows.push({label,pct:avg,min:MIN});
   };
-  for(let i=1;i<=7;i++)push('UoE P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
+  for(let i=1;i<=7;i++)push('Reading P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
   for(let i=1;i<=4;i++)push('Listening P'+i,log.filter(e=>e.type==='lp'&&e.part===i));
   ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
+  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full Reading',rue);
   const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
   if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
   rows.sort((a,b)=>a.pct-b.pct);
@@ -12591,9 +12669,9 @@ function renderGrafCons(){
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const CORE_SESSIONS=[
   {id:'rue',studio:'mon-a',name:'Full Reading & Use of English',fullTitle:'Session A — Full Reading & Use of English Sprint (50 min)',icon:'📚',dur:'50 min',badgeClass:'mon',desc:'52 questions in 50 min. Studio is open below.'},
-  {id:'l',studio:'fri-a',name:'Full Listening',fullTitle:'Session B — Full Listening Test (40 min)',icon:'🎧',dur:'40 min',badgeClass:'fri',desc:'30 questions uninterrupted + 20\' post-mortem. Studio is open below.'},
-  {id:'w',studio:'mon-b',name:'Full Writing',fullTitle:'Session A — Full Writing Studio',icon:'✍️',dur:'60 min',badgeClass:'mon',desc:'5\' plan + 35\' write + 20\' audit. Studio is open below.'},
-  {id:'sp',studio:'fri-b',name:'Full Speaking',fullTitle:'Session B — Full Speaking Simulation (60 min)',icon:'🗣️',dur:'60 min',badgeClass:'fri',desc:'15\' simulation (Parts 1-4) + 45\' C1 upgrade. Studio is open below.'}
+  {id:'l',studio:'fri-a',name:'Full Listening',fullTitle:'Session B — Full Listening Test (40 min)',icon:'🎧',dur:'40 min',badgeClass:'fri',desc:'30 questions uninterrupted + 20 min post-mortem. Studio is open below.'},
+  {id:'w',studio:'mon-b',name:'Full Writing',fullTitle:'Session A — Full Writing Studio',icon:'✍️',dur:'60 min',badgeClass:'mon',desc:'5 min plan + 35 min write + 20 min check. Studio is open below.'},
+  {id:'sp',studio:'fri-b',name:'Full Speaking',fullTitle:'Session B — Full Speaking Simulation (60 min)',icon:'🗣️',dur:'60 min',badgeClass:'fri',desc:'15 min simulation (Parts 1-4) + 45 min C1 upgrade. Studio is open below.'}
 ];
 
 function getSchedule(){
@@ -12705,11 +12783,11 @@ function updatePersonalizedUI(){
   const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
   const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
 
-  // Dynamic Header
-  const titleEl=document.getElementById('userTitle');
-  if(titleEl)titleEl.textContent=t('today_title_fmt',{name:userName});
-  const subEl=document.getElementById('userSub');
-  if(subEl)subEl.textContent=t('today_sub_fmt',{name:userName,stage:curStageTxt,sched:schedSummary});
+  // One-line greeting: Today · date + streak.
+  const dateEl=document.getElementById('todayDateLine');
+  if(dateEl)dateEl.textContent=t('today_greeting',{date:fmtDate(today())});
+  const stEl=document.getElementById('todayStreakLine');
+  if(stEl)stEl.textContent=t('today_streak',{n:calcStreak().current});
 
   const now=new Date();
   const rueOccur=getSkillNextOccurrence('rue',now);
@@ -12919,7 +12997,75 @@ function renderToday(){
 
   const plan=buildWeeklyPlan(D);
   WEEK_PLAN=plan;
+  renderTodaySessions(plan);
+  renderWeekSummary(plan);
   renderTodayPlan(plan);
+}
+function planSlotKey(sl){
+  if(!sl)return '';
+  const items=(sl.items||[]).map(x=>[x.type||'',x.part==null?'':x.part,x.kind||''].join(':')).join(',');
+  return [sl.dayKey||'',sl.type||'',sl.part==null?'':sl.part,items,sl.time||''].join('|');
+}
+const SLOT_STUDIO={ue:'mon-a',w:'mon-b',l:'fri-a',sp:'fri-b'};
+function slotType(sl){
+  if(!sl)return 'ue';
+  if(sl.type)return sl.type;
+  const it=(sl.items&&sl.items[0])||{};
+  return it.type||'ue';
+}
+function renderTodaySessions(plan){
+  const el=document.getElementById('todaySessions');
+  if(!el)return;
+  const todayKey=dayKey(new Date());
+  const todayWeekKey=PLAN_WEEK_BY_JS[new Date().getDay()];
+  const slots=((plan&&plan.slots)||[]).filter(sl=>sl.dayKey===todayWeekKey).slice(0,3);
+  if(!slots.length){
+    el.innerHTML=`<div class="today-rest"><p>${esc(t('today_rest'))}</p><button type="button" class="btn gray" onclick="showView('practice')">${esc(t('today_practise_something'))}</button></div>`;
+    return;
+  }
+  const active=(D.activeSession&&D.activeSession.date===todayKey)?D.activeSession.key:'';
+  el.innerHTML=slots.map((sl,i)=>{
+    const isActive=active===planSlotKey(sl);
+    const label=isActive?t('today_continue'):t('today_start');
+    const cls=isActive?'btn sm ok':'btn sm gray';
+    return `<div class="today-row">
+      <div class="today-row-main">
+        <span class="today-row-day">${esc(planDayLabel(sl.dayKey))}</span>
+        <span class="today-row-title">${esc(planSlotLabel(sl))}</span>
+        <span class="today-row-meta">${sl.min} min</span>
+        ${planBadgeHtml(sl)}
+      </div>
+      <button type="button" class="${cls}" onclick="startTodaySession(${i})">${esc(label)}</button>
+    </div>`;
+  }).join('');
+}
+function startTodaySession(index){
+  const todayWeekKey=PLAN_WEEK_BY_JS[new Date().getDay()];
+  const slots=((WEEK_PLAN&&WEEK_PLAN.slots)||[]).filter(sl=>sl.dayKey===todayWeekKey).slice(0,3);
+  const sl=slots[index];
+  if(sl)startPlanSession(planSlotKey(sl));
+}
+function renderWeekSummary(plan){
+  const el=document.getElementById('weekSummaryLine');
+  if(!el)return;
+  const slots=(plan&&plan.slots)||[];
+  const minutes=slots.reduce((sum,sl)=>sum+(Number(sl.min)||0),0);
+  el.textContent=t('today_week_summary',{sessions:slots.length,minutes:minutes});
+}
+function startPlanSession(key){
+  const slots=(WEEK_PLAN&&WEEK_PLAN.slots)||[];
+  const sl=slots.find(x=>planSlotKey(x)===key);
+  if(!sl)return;
+  D.activeSession={date:dayKey(new Date()),key:key};
+  save();
+  const studio=SLOT_STUDIO[slotType(sl)]||'mon-a';
+  const legacy=document.getElementById('todayLegacy');
+  if(legacy)legacy.hidden=false;
+  selectSessionStudio(studio);
+  const targets={ 'mon-a':'studioMonA','mon-b':'studioMonB','fri-a':'studioFriA','fri-b':'studioFriB' };
+  const target=document.getElementById(targets[studio]||'studioMonA');
+  if(target&&target.scrollIntoView)target.scrollIntoView({behavior:'smooth',block:'start'});
+  renderTodaySessions(WEEK_PLAN);
 }
 
 /* Exam countdown card. It shows the real countdown when a date exists and
@@ -13285,6 +13431,7 @@ function qlSave(){
   }else if(type==='sp'){
     entry.score=correct;
   }
+  D.activeSession=null;
   D.log.push(entry);
   save();
   refreshAll();
@@ -13347,7 +13494,7 @@ function renderMetrics(){
   // Best part
   const parts={};
   log.forEach(e=>{
-    const key=e.type==='w'?('Writing '+e.kind):(e.type==='ue'?('UoE P'+e.part):(e.type==='lp'?('Listening P'+e.part):null));
+    const key=e.type==='w'?('Writing '+e.kind):(e.type==='ue'?('Reading P'+e.part):(e.type==='lp'?('Listening P'+e.part):null));
     if(!key)return;
     const v=pctOf(e);if(v===null)return;
     parts[key]=parts[key]?Math.max(parts[key],v):v;
@@ -13880,55 +14027,127 @@ function renderDiag(){
    loadMaterial() fetches the file catalogue from the server and on
    failure (e.g. opened as file:// with no server) uses a minimal local
    list. init: wires listeners, applies PLAN timers and refreshes all. */
+/* Four top-level tabs. The old view names are mapped to their parent group and
+   sub-tab so every existing go()/showView()/link keeps landing somewhere visible. */
+const VIEW_MAP={
+  hoy:{parent:'hoy',sub:null,nav:'hoy'},
+  practice:{parent:'practise',sub:'practice',nav:'practice'},
+  exam:{parent:'practise',sub:'exam',nav:'practice'},
+  partes:{parent:'practise',sub:'partes',nav:'practice'},
+  ia:{parent:'practise',sub:'ia',nav:'practice'},
+  prog:{parent:'progress',sub:'prog',nav:'prog'},
+  graf:{parent:'progress',sub:'graf',nav:'prog'},
+  err:{parent:'progress',sub:'err',nav:'prog'},
+  plan:{parent:'plan',sub:null,nav:'plan'}
+};
+function setupViewGroups(){
+  [['v-practise',['v-practice','v-exam','v-partes','v-ia']],
+   ['v-progress',['v-prog','v-graf','v-err']]].forEach(pair=>{
+    const host=document.getElementById(pair[0]);
+    if(!host)return;
+    pair[1].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)host.appendChild(el);
+    });
+  });
+  // These blocks used to live in Today; they belong to Progress/Practice now.
+  const prog=document.getElementById('v-progress');
+  const nextBox=document.getElementById('nextBox');
+  const rotCard=document.querySelector('.rot-card-v2');
+  if(prog){
+    if(rotCard)prog.insertBefore(rotCard,prog.firstChild);
+    if(nextBox)prog.insertBefore(nextBox,prog.firstChild);
+  }
+  const practice=document.getElementById('v-practice');
+  const practiceNow=document.getElementById('practiceNow');
+  if(practice&&practiceNow)practice.insertBefore(practiceNow,practice.firstChild);
+}
+function syncSubnav(viewId){
+  const cfg=VIEW_MAP[viewId]||{};
+  document.querySelectorAll('.subnav').forEach(nav=>{
+    let any=false;
+    nav.querySelectorAll('button[data-view]').forEach(b=>{
+      const bc=VIEW_MAP[b.dataset.view];
+      const on=!!(cfg.sub&&bc&&bc.nav===cfg.nav&&b.dataset.view===viewId);
+      b.setAttribute('aria-selected',on?'true':'false');
+      b.tabIndex=on?0:-1;
+      if(on)any=true;
+    });
+    if(!any){
+      const first=nav.querySelector('button[data-view]');
+      const fc=first?VIEW_MAP[first.dataset.view]:null;
+      if(fc&&fc.nav===cfg.nav){first.setAttribute('aria-selected','true');first.tabIndex=0}
+    }
+  });
+}
 function showView(viewId){
   /* U4 one-door decision: Books has no door of its own any more. Old links
      and calls keep working, but they land on Practice, where the library
      (PDFs, audio, online practice) now lives. */
   if(viewId==='libros')viewId='practice';
-  const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
-  if(btn){btn.click();return}
+  const _tevT0=Date.now();
   // Views without a nav entry (the diagnostic) still open when the plan
   // or the onboarding links to them.
-  const sec=document.getElementById('v-'+viewId)||document.getElementById('view-'+viewId);
-  if(!sec)return;
-  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  sec.classList.add('active');
-  if(viewId==='diag')renderDiag();
+  if(viewId==='diag'){
+    const diag=document.getElementById('view-diag')||document.getElementById('v-diag');
+    if(!diag)return;
+    document.querySelectorAll('#sideNav button[data-view]').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('main > .view').forEach(v=>v.classList.remove('active'));
+    diag.classList.add('active');
+    renderDiag();
+    TEV_VIEW=viewId;
+    track('view_change',{view:viewId,ms:Date.now()-_tevT0});
+    return;
+  }
+  const cfg=VIEW_MAP[viewId];
+  if(!cfg)return;
+  document.querySelectorAll('#sideNav button[data-view]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.view===cfg.nav);
+  });
+  document.querySelectorAll('main > .view').forEach(v=>v.classList.remove('active'));
+  const parent=document.getElementById('v-'+cfg.parent);
+  if(parent)parent.classList.add('active');
+  if(cfg.sub&&parent){
+    parent.querySelectorAll(':scope > .view').forEach(v=>v.classList.remove('active'));
+    const sub=document.getElementById('v-'+cfg.sub);
+    if(sub)sub.classList.add('active');
+  }
+  syncSubnav(viewId);
   if(viewId==='practice')renderPractice();
-  const nav=document.getElementById('sideNav');
-  if(nav)nav.classList.remove('more-open');
   TEV_VIEW=viewId;
-  track('view_change',{view:viewId,ms:0});
+  track('view_change',{view:viewId,ms:Date.now()-_tevT0});
 }
-document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
-  const _tevT0=Date.now();
-  /* U4: the legacy Books tab is a redirect to Practice, never a second view. */
-  if(b.dataset.view==='libros'){
-    const practiceBtn=document.querySelector("nav button[data-view='practice']");
-    if(practiceBtn){practiceBtn.click();return}
-  }
-  if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
-    PARTS_FILTER=null;
-    renderParts();
-  }
-  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const sec=document.getElementById('v-'+b.dataset.view)||document.getElementById('view-'+b.dataset.view);
-  if(sec)sec.classList.add('active');
-  if(b.dataset.view==='diag')renderDiag();
-  if(b.dataset.view==='practice')renderPractice();
-  const nav=document.getElementById('sideNav');
-  if(nav)nav.classList.remove('more-open');
-  TEV_VIEW=b.dataset.view;
-  track('view_change',{view:b.dataset.view,ms:Date.now()-_tevT0});
-});
-(function(){
-  const more=document.getElementById('navMoreBtn');
-  const nav=document.getElementById('sideNav');
-  if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
-})();
+/* Spec alias: go('exam') and the old view names keep working. */
+function go(viewId){return showView(viewId);}
+function bindViewButtons(){
+  document.querySelectorAll('#sideNav button[data-view], .subnav button[data-view]').forEach(b=>{
+    b.onclick=()=>{
+      if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
+        PARTS_FILTER=null;
+        renderParts();
+      }
+      showView(b.dataset.view);
+    };
+  });
+  document.querySelectorAll('.subnav').forEach(nav=>{
+    nav.addEventListener('keydown',e=>{
+      const tabs=Array.from(nav.querySelectorAll('button[data-view]'));
+      const i=tabs.indexOf(document.activeElement);
+      if(i<0)return;
+      let j=null;
+      if(e.key==='ArrowRight')j=(i+1)%tabs.length;
+      else if(e.key==='ArrowLeft')j=(i-1+tabs.length)%tabs.length;
+      else if(e.key==='Home')j=0;
+      else if(e.key==='End')j=tabs.length-1;
+      if(j==null)return;
+      e.preventDefault();
+      tabs[j].focus();
+      tabs[j].click();
+    });
+  });
+}
+setupViewGroups();
+bindViewButtons();
 
 function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
