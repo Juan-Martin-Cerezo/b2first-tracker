@@ -669,7 +669,28 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 @media (max-width:640px){.spx-photos{grid-template-columns:1fr}}
 .spx-photo{min-width:0;margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden}
 .spx-photo img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;background:var(--line)}
+.spx-photo-holder{display:block}
+.spx-photo-missing{display:flex;align-items:center;justify-content:center;aspect-ratio:3/2;padding:16px;text-align:center;border:2px dashed var(--line);border-radius:var(--r-ctl);background:var(--surface-2);color:var(--txt-2);font-size:var(--fs-sm);line-height:1.4}
 .spx-photo figcaption{font-size:var(--fs-xs);color:var(--txt-2);padding:4px 8px}
+.spx-full{display:block;width:100%;text-align:left;background:var(--acc-soft);border:1px solid var(--acc);border-radius:var(--r-ctl);padding:14px;margin:8px 0 12px;cursor:pointer;font:inherit;color:var(--txt);min-height:66px}
+.spx-full.on,.spx-full[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc-soft);border-color:var(--acc-text)}
+.spx-full:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.spx-full .n{display:block;font-size:var(--fs-sm);font-weight:700}
+.spx-full .d{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px;line-height:1.4}
+.spx-full .m{display:block;font-size:var(--fs-xs);color:var(--acc-text);margin-top:6px;font-weight:600}
+.spx-roles{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 2px;font-size:var(--fs-xs);color:var(--txt-2)}
+.spx-role{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);line-height:1.3}
+.spx-role+.spx-role::before{content:"·";margin-right:2px;color:var(--txt-2)}
+.spx-role[data-on="1"]{background:var(--ok-soft);border-color:var(--ok-border);color:var(--ok-text);font-weight:700}
+.spx-role[data-role="examiner"][data-on="1"]{background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text)}
+.spx-role[data-role="partner"][data-on="1"]{background:var(--warn-soft);border-color:var(--warn-border);color:var(--warn-text)}
+.spx-role-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.spx-part-comments{display:grid;gap:6px;margin-top:12px}
+.spx-part-comment{font-size:var(--fs-sm);color:var(--txt);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:8px 10px;line-height:1.45}
+.spx-part-comment .pc-n{font-weight:700;color:var(--acc-text)}
+.spx-turns{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px;font-variant-numeric:tabular-nums}
+.spx-tip{margin-top:12px;background:var(--ok-soft);border:1px solid var(--ok-border);border-radius:var(--r-ctl);padding:10px 12px}
+.spx-tip p{margin:4px 0 0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
 .spx-credit{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px}
 .spx-credit a{color:var(--acc-text);font-weight:600}
 .spx-tx{max-height:150px;overflow-y:auto;font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;display:grid;gap:3px;margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r-ctl);border:1px solid var(--line)}
@@ -2257,6 +2278,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                     <section class="spx-screen" data-spx-screen="choose">
                       <p class="spx-sentence" id="spxChooseSentence"></p>
+                      <button type="button" class="spx-full" id="spxFullBtn" onclick="SP_EXAM.startFull()" aria-pressed="false">
+                        <span class="n" data-i18n="spx_full_exam">Full exam · Parts 1–4</span>
+                        <span class="d" data-i18n="spx_full_desc">Examiner, partner and you, in the official order and timing.</span>
+                        <span class="m" data-i18n="spx_full_meta">14 min · 4 parts</span>
+                      </button>
                       <div class="spx-parts" id="spxParts" role="radiogroup" aria-labelledby="spxChooseSentence"></div>
                       <div class="spk-report-err" id="spxChooseErr" role="alert"></div>
                       <div class="spx-actions">
@@ -2291,6 +2317,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                           <span class="spx-clock" id="spxClock" role="timer">00:00</span>
                         </div>
                       </div>
+                      <div class="spx-roles" id="spxRoles" aria-live="polite">
+                        <span class="spx-role" id="spxRoleExaminer" data-role="examiner"></span>
+                        <span class="spx-role" id="spxRolePartner" data-role="partner"></span>
+                        <span class="spx-role" id="spxRoleYou" data-role="you"></span>
+                        <span class="spx-role-sr" id="spxPartnerName" hidden>Alex</span>
+                      </div>
                       <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
                       <div class="spx-gap" id="spxGap" aria-live="polite" title="Average milliseconds from you stopping to the examiner's first sound">turn gap —</div>
                       <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
@@ -2306,6 +2338,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <section class="spx-screen" data-spx-screen="feedback">
                       <p class="spx-sentence" id="spxFbSentence"></p>
                       <div class="spk-scales" id="spxFbScales"></div>
+                      <div class="spx-part-comments" id="spxFbParts"></div>
+                      <div class="spx-turns" id="spxFbTurns"></div>
+                      <div class="spx-tip">
+                        <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
+                        <p id="spxFbTip"></p>
+                      </div>
                       <div class="spx-next">
                         <span class="spx-next-lbl" data-i18n="spx_feedback_next">One thing to work on next time</span>
                         <p id="spxFbNext"></p>
@@ -2322,6 +2360,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <p class="spx-sentence" id="spxRpSentence"></p>
                       <div class="spx-saved" id="spxRpSaved"></div>
                       <div class="spx-saved" id="spxRpLatency"></div>
+                      <div class="spx-part-comments" id="spxRpParts"></div>
+                      <div class="spx-turns" id="spxRpTurns"></div>
+                      <div class="spx-tip">
+                        <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
+                        <p id="spxRpTip"></p>
+                      </div>
                       <div class="spx-actions">
                         <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again">Practise another part</button>
                         <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
@@ -4210,6 +4254,21 @@ const I18N={
     spx_part_desc_2:'Compare two photographs for a minute, answer a question about them, then listen to your partner.',
     spx_part_desc_3:'Talk with your partner about a task card and reach a decision together.',
     spx_part_desc_4:'Discussion questions that follow the Part 3 topic.',
+    spx_full_exam:'Full exam · Parts 1–4',
+    spx_full_desc:'Examiner, partner and you, in the official order and timing.',
+    spx_full_meta:'14 min · 4 parts',
+    spx_full_brief:'This is the full exam: four parts, one after another, with an examiner and a partner.',
+    spx_full_time:'Full exam · 4 parts · {min} min · the examiner keeps the official timing.',
+    spx_brief_full:'All four parts. The examiner leads; your partner answers when asked.',
+    spx_brief_partner:'Examiner and partner: {name}.',
+    spx_role_examiner:'Examiner',
+    spx_role_partner:'Partner: {name}',
+    spx_role_you:'You',
+    spx_you_tag:'You',
+    spx_part_n:'Part {n}:',
+    spx_turns_line:'Turns — you: {you} · partner: {partner} · examiner: {examiner}',
+    spx_tip_label:'One concrete tip',
+    spx_report_sentence_full:'The full exam is saved to your log.',
     spx_start:'Start',
     spx_brief_sentence:'Here is what will happen in Part {n}.',
     spx_brief_b1:'The examiner asks the questions and you answer in English.',
@@ -4979,6 +5038,21 @@ const I18N={
     spx_part_desc_2:'Compará dos fotografías durante un minuto, respondé una pregunta sobre ellas y escuchá a tu compañero.',
     spx_part_desc_3:'Hablá con tu compañero sobre una tarjeta y lleguen juntos a una decisión.',
     spx_part_desc_4:'Preguntas de debate que siguen el tema de la Parte 3.',
+    spx_full_exam:'Examen completo · Partes 1–4',
+    spx_full_desc:'Examinador, compañero y vos, en el orden y los tiempos oficiales.',
+    spx_full_meta:'14 min · 4 partes',
+    spx_full_brief:'Este es el examen completo: cuatro partes, una tras otra, con un examinador y un compañero.',
+    spx_full_time:'Examen completo · 4 partes · {min} min · el examinador marca los tiempos oficiales.',
+    spx_brief_full:'Las cuatro partes. El examinador guía; tu compañero responde cuando le preguntan.',
+    spx_brief_partner:'Examinador y compañero: {name}.',
+    spx_role_examiner:'Examinador',
+    spx_role_partner:'Compañero: {name}',
+    spx_role_you:'Vos',
+    spx_you_tag:'Vos',
+    spx_part_n:'Parte {n}:',
+    spx_turns_line:'Turnos — vos: {you} · compañero: {partner} · examinador: {examiner}',
+    spx_tip_label:'Un consejo concreto',
+    spx_report_sentence_full:'El examen completo quedó guardado en tu registro.',
     spx_start:'Empezar',
     spx_brief_sentence:'Esto es lo que va a pasar en la Parte {n}.',
     spx_brief_b1:'El examinador hace las preguntas y vos respondés en inglés.',
@@ -6315,12 +6389,17 @@ function load(){
       mat: d.mat||{},
       diag: d.diag||null,
       profile: (d.profile&&typeof d.profile==='object') ? d.profile : null,
+      speaking: (d.speaking&&typeof d.speaking==='object')
+        ? {seen:(d.speaking.seen&&typeof d.speaking.seen==='object')?d.speaking.seen:{},
+           last:(d.speaking.last&&typeof d.speaking.last==='object')?d.speaking.last:{},
+           partnerRot:typeof d.speaking.partnerRot==='number'?d.speaking.partnerRot:0}
+        : {seen:{},last:{},partnerRot:0},
       onboarded: !!d.onboarded,
       onboardStep: typeof d.onboardStep==='number' ? d.onboardStep : 1,
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,onboarded:false,onboardStep:1,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -7812,14 +7891,25 @@ function spkSpeakText(who,text){
   let u=null;
   try{u=new SpeechSynthesisUtterance(text)}catch(e){return false}
   u.lang='en-GB';
-  u.rate=0.95;
+  /* Two roles, two voices. The examiner keeps the exam's measured pace; the
+     partner is a second candidate and speaks at a normal rate. A device with
+     one voice only cannot give two voice objects, so the partner takes the
+     same voice at a different pitch instead of sounding like the examiner. */
+  u.rate=(who==='partner')?1.0:0.95;
+  u.pitch=1.0;
+  /* The tests (and the transcript) need to know who an utterance belongs to
+     without guessing from the text. */
+  u.__spxWho=who;
   const voice=spkBrowserVoice(who);
   /* A device can list a voice it refuses to accept; the default still speaks. */
   if(voice){try{u.voice=voice}catch(e){}}
-  /* One en voice on the whole device: the partner keeps the same voice but a
-     lower pitch, so the candidate can still tell the two speakers apart. */
-  if(who==='partner'&&SPK_BROWSER_PARTNER_NAME===SPK_BROWSER_VOICE_NAME){
-    try{u.pitch=0.85}catch(e){}
+  /* Recorded separately: a stubbed device voice can reject `u.voice`, and the
+     test still needs to see which speaker was selected. */
+  try{u.__spxVoice=voice?String(voice.name||''):''}catch(e){}
+  /* The partner is always a little higher: a two-voice device already gives a
+     different voice object, and a one-voice device still gets two speakers. */
+  if(who==='partner'){
+    try{u.pitch=1.15}catch(e){}
   }
   v.browserBusy=true;
   v.since=performance.now();
@@ -8680,8 +8770,10 @@ async function spkStart(){
     }
     const part=SPK.part||1;
     /* Part 1 is examiner-only on purpose: a partner token there is money for
-       nothing. Parts 2-4 open the second session. */
-    const roles=part===1?['examiner']:['examiner','partner'];
+       nothing. A full exam is the exception: it starts in Part 1 and needs the
+       partner from Part 2 onwards, so both voices open now. */
+    const fullExam=!!(window.SP_EXAM&&SP_EXAM.full);
+    const roles=(part===1&&!fullExam)?['examiner']:['examiner','partner'];
     const sim=spkSimMode();
     /* Ask the server what it can actually run: real-time Live needs a key with
        bidiGenerateContent. Without it the examiner speaks turn by turn. */
@@ -8785,7 +8877,7 @@ async function spkStop(limitHit){
   /* Freeze the session length for the report. The payload is rebuilt here so
      it carries the final metrics; a retry after a failure reuses it as-is
      (same request_id), which is what makes the endpoint idempotent. */
-  SPK.reportDuration=Math.max(1,Math.round(SPK.elapsed));
+  SPK.reportDuration=Math.max(1,Math.round(SPK.elapsed*spxReportScale()));
   SPK.reportPayload=null;
   SPK.turnState='';SPK.turnError='';
   spxShowVoiceRetry(false);
@@ -8860,6 +8952,7 @@ function spkBuildPayload(){
   const longest=silences.reduce(function(m,s){return Math.max(m,s.dur)},0);
   return {
     part:SPK.part||1,
+    full:SPK.reportFull===true,
     duration_s:dur,
     transcript:turns,
     metrics:{
@@ -9067,53 +9160,55 @@ SPK.queueEmpty=function(){
   return v.sources.length===0&&v.nextTime<=SPK.ctx.currentTime+0.02;
 };
 
-/* ---------- PHASE 35: SP_EXAM — one part of the Cambridge Speaking test ----------
-   The live panel used to be a free conversation with a director. This is the
-   exam instead: five screens (choose → brief → exam → feedback → report), the
-   task from material/speaking.json on screen, one clock per turn, and one
-   examiner voice that follows the task word for word.
+/* ---------- PHASE 50: THE SPEAKING EXAM ROOM ----------
+   The exam used to be one part at a time: an examiner read the task and the
+   candidate answered. This is the whole exam, in the official order, with the
+   two roles a B2 First candidate actually meets:
+     - Examiner (E): asks, times, moves the exam on. en-GB, rate ~0.95.
+     - Partner (P): a second candidate. en-GB, a different device voice (or a
+       different pitch when the device has only one), rate ~1.0.
+     - You (Y): the microphone, exactly as before.
 
-   Nothing about the audio path changed: makeLiveTransport (real) and the exam
-   variant of makeSimTransport (`?spk=sim`) still feed the same playback queue,
-   the same spkVad and the same director. What is new is who decides:
-     - SP_EXAM owns the clock and the floor (phase → who should speak);
-     - the examiner prompt owns the questions (the server builds it from the
-       same task, see speaking_prompts.py);
-     - the report owns the honesty (pronunciation stays "not measured" without
-       Azure, and Interactive Communication is only a band when the session had
-       an interlocutor).
-
-   Sim mode is a demo: the candidate's lines below are canned so the flow can be
-   watched with no key. They are labelled as simulated in the badge and they are
-   never presented as the user's own words outside the exam transcript. */
+   Nothing about the audio path is new: the same speechSynthesis helpers
+   (spkSpeakText/spkPrimeSpeech), the same VAD, the same per-turn clock and the
+   same silence rule. What is new is who owns the script:
+     - spxPhasesFor() encodes Parts 1-4 in official durations and turn order;
+     - the task bank rotates through material/speaking.json without repeats;
+     - the partner's lines come from the task, not from the model.
+   With no device voices every line is still printed in the transcript, and the
+   exam runs to the end: the text is the fallback, never a silent failure. */
 const SPX_SCREENS=['choose','brief','exam','feedback','report'];
 const SPX_TICK_MS=250;
 const SPX_SILENCE_PROMPT_S=5;     // one prompt, never a loop
 const SPX_SILENCE_MOVE_S=10;      // then the phase moves on
 const SPX_LOW_SECONDS=15;         // the clock turns red here
 const SPX_ANSWER_DELAY_MS=2600;   // candidate starts after the examiner stops
+const SPX_LOCKED_SECONDS=20;      // the partner never holds the floor longer
 
+/* Official structure: the durations are the exam's, not a practice setting. */
 const SPX_PART_META={
   1:{minutes:2,mode:'spx_part_mode_1',desc:'spx_part_desc_1'},
   2:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_2'},
   3:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_3'},
   4:{minutes:4,mode:'spx_part_mode_2',desc:'spx_part_desc_4'}
 };
+const SPX_PARTNER_NAMES=['Alex','Marta','Sam','Leo','Nina'];
 
 /* Spoken by the examiner/partner, so always English: this is the exam, not the
    interface. The UI chrome around them is translated. */
 const SPX_LINES={
   closing:'Thank you, that is the end of Part {n}.',
-  handoff:'Thank you. Now your partner will answer.',
-  followUp:'Thank you. Now …',
+  handoff:'Thank you. Now, your partner will answer.',
+  thanks:'Thank you.',
   silence:'Take your time. Can you tell me a little more?',
   early:'Thank you. We will stop this part here.',
-  partner2:'Thanks. I liked the photo with the bicycle, because the man looks much'+
-           ' happier than the people on the train. What about you?',
-  partner3:'Shall I start? I think the most important thing is the price.'+
-           ' What do you think?',
-  partner3b:'That\'s a good point. So shall we go with that idea?',
-  partner4:'I agree with you, actually. Do you think that will change in the future?'
+  part2:'In this part of the test, I\'m going to show you two photographs. Here they are.',
+  part3:'Now, I\'d like you to talk about something together for about two minutes. Here is a card with some ideas.',
+  part3decide:'Thank you. Now, {decision} You have about a minute.',
+  part4:'Now, let\'s talk about the topic of the task you have just done.',
+  toPartner:'What about you, {name}? ',
+  partDone:'Thank you. That is the end of Part {n}.',
+  nextPart:'Now we will move on to Part {n}.'
 };
 
 /* Canned candidate lines for ?spk=sim. Demo material only: they exist so the
@@ -9125,9 +9220,7 @@ const SPX_SIM_ANSWERS={
     'I\'m a student. I\'m in my last year of secondary school.',
     'I like the computing classes most, because we build small projects.',
     'At the weekend I usually play football with my friends and then study a bit.',
-    'I prefer outdoors, definitely. I spend too much time indoors during the week.',
-    'Yes, I love travelling. I prefer city breaks because there is always something to do.',
-    'I use my phone for everything: messages, music, and a lot of study apps.'
+    'I prefer outdoors, definitely. I spend too much time indoors during the week.'
   ],
   2:[
     'Well, the first photograph shows a very crowded metro at rush hour, and the'+
@@ -9150,8 +9243,7 @@ const SPX_SIM_ANSWERS={
     'I would say the school should pay most of it, because not every family can afford a trip.',
     'They learn how to organise themselves and how to get on with people for a week.',
     'With friends, definitely. It is more fun, although you argue more about what to do.',
-    'People travel much more now, and much more cheaply, so it is normal for students to go abroad.',
-    'Maybe not in travel, but I would like a job where I can travel sometimes.'
+    'People travel much more now, and much more cheaply, so it is normal for students to go abroad.'
   ]
 };
 
@@ -9165,9 +9257,31 @@ const SP_EXAM={
   askedOnce:0,lastAsked:'',answered:false,pendingLine:null,
   micMuted:false,txShown:0,answerTimer:null,
   reportData:null,saved:false,entry:null,
-  busy:false,error:'',startedAt:0
+  busy:false,error:'',startedAt:0,
+  /* Phase 50: one session (a single part or the full exam), its plan, the
+     partner's name, the per-part turn ledger and the part bridge timer. */
+  session:null,full:false,seed:0,partner:'Alex',partnerRot:0,
+  selectedFull:false,partTimer:null,turnCounted:false,partnerIdx:0
 };
 window.SP_EXAM=SP_EXAM;
+
+/* --- Test hooks: ?spx_test=1 (or localStorage.spx_test) -------------------
+   Production never sees this object. It exposes the plan, the phase model,
+   the selection used by the rotation and a time scale so a four-minute part
+   can run in twelve seconds. */
+function spxTestMode(){
+  try{
+    if(new URLSearchParams(location.search).get('spx_test')==='1')return true;
+    return localStorage.getItem('spx_test')==='1';
+  }catch(e){return false}
+}
+let SPX_TEST_SELF=null;
+function spxTimeScale(){
+  const s=SPX_TEST_SELF&&Number(SPX_TEST_SELF.timeScale);
+  return (isFinite(s)&&s>0)?s:1;
+}
+function spxScaleSec(sec){return Math.max(0.35,(Number(sec)||0)*spxTimeScale())}
+function spxReportScale(){return SPX_TEST_SELF?(1/spxTimeScale()):1}
 
 function spx$(id){return document.getElementById(id)}
 function spxSetError(msg){
@@ -9175,6 +9289,21 @@ function spxSetError(msg){
   if(!el)return;
   el.textContent=msg||'';
   el.style.display=msg?'block':'none';
+}
+
+/* --- Per-session speaking state (rotation + last used task) ------------- */
+function spxSpeakingState(){
+  if(!D||typeof D!=='object')return {seen:{},last:{},partnerRot:0};
+  if(!D.speaking||typeof D.speaking!=='object')D.speaking={};
+  const st=D.speaking;
+  if(!st.seen||typeof st.seen!=='object')st.seen={};
+  if(!st.last||typeof st.last!=='object')st.last={};
+  if(typeof st.partnerRot!=='number')st.partnerRot=0;
+  return st;
+}
+function spxPartnerName(){
+  const s=SP_EXAM.session;
+  return (s&&s.partner)||SP_EXAM.partner||'Alex';
 }
 
 /* --- Task bank (pure data, fetched on demand and cached) ------------------ */
@@ -9190,14 +9319,217 @@ async function spxLoadBank(force){
 function spxPartData(bank,part){
   return (bank.parts||[]).find(function(p){return Number(p.part)===Number(part)})||null;
 }
-function spxTaskFor(bank,part){
+function spxPartMinutes(bank,part){
+  const data=spxPartData(bank||SP_EXAM.bank,part);
+  if(data&&isFinite(Number(data.minutes))&&Number(data.minutes)>0)return Number(data.minutes);
+  return (SPX_PART_META[part]||{}).minutes||4;
+}
+function spxPool(bank,part){
+  const data=spxPartData(bank,part);
+  if(!data)return [];
+  const list=Number(part)===1?(data.sets||[]):(data.tasks||[]);
+  return list.map(function(item){return String(item&&item.id||'')}).filter(Boolean);
+}
+function spxTaskById(bank,part,id){
   const data=spxPartData(bank,part);
   if(!data)return null;
-  if(Number(part)===1){
-    const set=(data.sets||[])[0];
-    return set?{id:set.id,questions:(set.questions||[]).slice(0,8)}:null;
+  const list=Number(part)===1?(data.sets||[]):(data.tasks||[]);
+  return list.find(function(item){return String(item&&item.id||'')===String(id)})||null;
+}
+function spxDefaultTask(part){
+  if(Number(part)===1)return {id:'p1-default',topic:'Interview',
+    questions:['Where are you from?','What do you do?','Do you enjoy studying English?',
+      'What do you do at the weekend?','Do you prefer the city or the countryside?',
+      'What are your plans for next year?'],
+    partnerLines:['I live near the city centre.','I usually study in the evenings.']};
+  if(Number(part)===2)return {id:'p2-default',topic:'Two photographs',
+    question:'Compare these two photographs and say why people might choose each one.',
+    prompts:['Compare these two photographs and say why people might choose each one.',
+      'Which of the two would you prefer? Why?'],
+    photos:[],photoAlt:['first photograph','second photograph'],
+    partnerLines:['I prefer the first photo, because it looks calmer.',
+      'The second one seems more practical to me.']};
+  if(Number(part)===3)return {id:'p3-default',topic:'A class project',
+    situation:'Talk together about a class project and decide which two ideas are best.',
+    options:['where to go','what to do','when to meet','how much to spend','who to invite'],
+    prompts:['where to go','what to do','when to meet','how much to spend','who to invite'],
+    decision:'Decide which two ideas are best.',
+    partnerLines:['Shall I start? I think where to go matters most.',
+      'That sounds good to me.','So shall we agree on those two?']};
+  return {id:'p4-default',topic:'Discussion',
+    questions:['What do you think about this topic?','How has it changed?',
+      'What should schools do about it?','Is it the same for young people?',
+      'What will happen in the future?'],
+    partnerLines:['I think it is important, because it affects everybody.',
+      'It has changed a lot, actually.','I agree with that.']};
+}
+
+/* --- Seeded selection and rotation --------------------------------------- */
+function spxSeedNumber(seed){
+  if(typeof seed==='number'&&isFinite(seed))return Math.abs(Math.floor(seed))>>>0;
+  const text=String(seed==null?'':seed);
+  let h=2166136261;
+  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}
+  return h>>>0;
+}
+function spxRng(seed){
+  let a=(seed>>>0)||1;
+  return function(){
+    a^=a<<13;a>>>=0;a^=a>>17;a^=a<<5;a>>>=0;
+    return a/4294967296;
+  };
+}
+function spxShuffled(list,seed){
+  const a=list.slice();
+  const rnd=spxRng(spxSeedNumber(seed));
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(rnd()*(i+1));
+    const tmp=a[i];a[i]=a[j];a[j]=tmp;
   }
-  return (data.tasks||[])[0]||null;
+  return a;
+}
+function spxCloneSeen(seen){
+  const out={};
+  [1,2,3,4].forEach(function(part){
+    out[part]=Array.isArray(seen&&seen[part])?seen[part].slice():[];
+  });
+  return out;
+}
+/* Pick one task per part. A task is not reused until its whole pool has been
+   used; then that pool resets and reshuffles. `seen` is the caller's object,
+   so a session mutates it while a pure call can pass its own copy. */
+function spxSelectTasksSync(bank,seed,seenIn){
+  const seen=spxCloneSeen(seenIn);
+  const ids={},last={},reset=[];
+  [1,2,3,4].forEach(function(part){
+    const pool=spxPool(bank,part);
+    if(!pool.length){ids[part]=null;return}
+    let used=seen[part].filter(function(id){return pool.indexOf(id)>=0});
+    const lastUsed=used.length?used[used.length-1]:null;
+    if(used.length>=pool.length){used=[];reset.push(part)}
+    let remaining=pool.filter(function(id){return used.indexOf(id)<0});
+    /* A fresh pool must not open with the task the previous pool closed on:
+       "two consecutive sessions never present the same Part 2 task" holds
+       across the reshuffle too. */
+    if(!used.length&&lastUsed&&remaining.length>1){
+      remaining=remaining.filter(function(id){return id!==lastUsed});
+    }
+    const order=spxShuffled(remaining,spxSeedNumber(seed)+part*7919);
+    const pick=order[0];
+    used.push(pick);
+    seen[part]=used;
+    ids[part]=pick;
+    last[part]=pick;
+  });
+  return {ids:ids,seen:seen,last:last,reset:reset};
+}
+async function spxPlanSession(seed){
+  const bank=await spxLoadBank();
+  const st=spxSpeakingState();
+  const picked=spxSelectTasksSync(bank,seed,st.seen);
+  st.seen=picked.seen;
+  st.last=picked.last;
+  st.partnerRot=(st.partnerRot||0)+1;
+  save();
+  const name=SPX_PARTNER_NAMES[spxSeedNumber(seed)%SPX_PARTNER_NAMES.length];
+  const parts=[1,2,3,4].map(function(part){
+    const task=spxTaskById(bank,part,picked.ids[part])||spxDefaultTask(part);
+    const phases=spxPhasesFor(part,task,seed,picked.ids[part]);
+    return {part:part,minutes:spxPartMinutes(bank,part),taskId:picked.ids[part],
+      task:task,turns:phases.length,
+      seconds:phases.reduce(function(total,ph){return total+(Number(ph.sec)||0)},0)};
+  });
+  return {seed:seed,partner:name,parts:parts,ids:picked.ids,seen:picked.seen,last:picked.last};
+}
+
+/* --- The official phase model ------------------------------------------- */
+function spxPartnerLine(task,index){
+  const lines=(task&&Array.isArray(task.partnerLines))?task.partnerLines:[];
+  if(!lines.length)return '';
+  const rot=(SP_EXAM.session&&typeof SP_EXAM.session.partnerRot==='number')
+    ?SP_EXAM.session.partnerRot:(SP_EXAM.partnerRot||0);
+  return String(lines[(rot+index)%lines.length]||'');
+}
+function spxPhasesPart1(task,seed){
+  const all=(task&&Array.isArray(task.questions)&&task.questions.length)
+    ?task.questions:spxDefaultTask(1).questions;
+  const n=Math.min(all.length,5+(spxSeedNumber(seed)%2));
+  const out=[];
+  /* Two minutes for five or six questions: the pair of turns is the budget,
+     not a fixed answer length. */
+  const pair=Math.max(16,Math.round(120/Math.max(1,n)));
+  for(let i=0;i<n;i++){
+    const q=all[i];
+    out.push({key:'spx_listen',who:'examiner',sec:8,qi:i,prompt:q,
+      line:(i===0?'Good morning. ':'')+q});
+    out.push({key:'spx_response',who:'candidate',sec:pair-8,qi:i,prompt:q});
+  }
+  return out;
+}
+function spxPhasesPart2(task){
+  const t=task||spxDefaultTask(2);
+  const question=t.question||(t.prompts&&t.prompts[0])||
+    'Compare these two photographs and say why people might choose each one.';
+  const follow=(t.prompts&&t.prompts[1])||'Which of the two would you prefer? Why?';
+  return [
+    {key:'spx_listen',who:'examiner',sec:15,qi:0,
+      line:SPX_LINES.part2+' '+question},
+    {key:'spx_long_turn',who:'candidate',sec:60,qi:0,prompt:question},
+    {key:'spx_listen',who:'examiner',sec:10,line:SPX_LINES.thanks},
+    {key:'spx_response',who:'partner',sec:30,qi:1,prompt:follow,
+      line:spxPartnerLine(t,0)}
+  ];
+}
+function spxPhasesPart3(task){
+  const t=task||spxDefaultTask(3);
+  const situation=t.situation||t.topic||'';
+  const decision=t.decision||'Decide which two ideas are the best.';
+  return [
+    {key:'spx_listen',who:'examiner',sec:15,
+      line:SPX_LINES.part3+' '+situation},
+    {key:'spx_discuss',who:'both',sec:120,prompt:situation,events:[
+      {at:8,who:'partner',text:spxPartnerLine(t,0)},
+      {at:58,who:'partner',text:spxPartnerLine(t,1)}
+    ]},
+    {key:'spx_decide',who:'examiner',sec:15,
+      line:SPX_LINES.part3decide.replace('{decision}',decision)},
+    {key:'spx_decide',who:'both',sec:60,events:[
+      {at:26,who:'partner',text:spxPartnerLine(t,2)}
+    ]}
+  ];
+}
+function spxPhasesPart4(task){
+  const t=task||spxDefaultTask(4);
+  const qs=(Array.isArray(t.questions)&&t.questions.length)?t.questions:
+    spxDefaultTask(4).questions;
+  const name=spxPartnerName();
+  const out=[];
+  const cycles=Math.max(4,Math.min(qs.length,4));
+  for(let i=0;i<cycles;i++){
+    const forYou=qs[i]||qs[qs.length-1];
+    const forPartner=qs[i+1]||qs[i]||forYou;
+    out.push({key:'spx_listen',who:'examiner',sec:8,qi:i,prompt:forYou,
+      to:'candidate',
+      line:(i===0?SPX_LINES.part4+' ':'')+forYou});
+    out.push({key:'spx_response',who:'candidate',sec:30,qi:i,prompt:forYou});
+    out.push({key:'spx_listen',who:'examiner',sec:8,qi:i,prompt:forPartner,
+      to:'partner',line:SPX_LINES.toPartner.replace('{name}',name)+forPartner});
+    out.push({key:'spx_follow_up',who:'partner',sec:15,qi:i,prompt:forPartner,
+      line:spxPartnerLine(t,i)});
+  }
+  return out;
+}
+function spxPhasesFor(part,task,seed,id){
+  const t=task||spxDefaultTask(part);
+  if(id&&!t.id)t.id=String(id);
+  if(Number(part)===1)return spxPhasesPart1(t,seed);
+  if(Number(part)===2)return spxPhasesPart2(t);
+  if(Number(part)===3)return spxPhasesPart3(t);
+  return spxPhasesPart4(t);
+}
+function spxPhases(){
+  return spxPhasesFor(SP_EXAM.part,SP_EXAM.task||spxDefaultTask(SP_EXAM.part),
+    SP_EXAM.seed);
 }
 
 /* --- Screens and dots ---------------------------------------------------- */
@@ -9244,7 +9576,7 @@ function spxRenderChoose(){
     b.type='button';
     b.className='spx-part';
     b.setAttribute('role','radio');
-    b.setAttribute('aria-checked',SP_EXAM.part===n?'true':'false');
+    b.setAttribute('aria-checked',(!SP_EXAM.selectedFull&&SP_EXAM.part===n)?'true':'false');
     b.dataset.part=String(n);
     b.innerHTML='<span class="n">'+esc(t('spx_part_title',{n:n,min:meta.minutes}))+'</span>'
       +'<span class="d">'+esc(t(meta.desc))+'</span>'
@@ -9262,105 +9594,58 @@ function spxRenderChoose(){
     };
     box.appendChild(b);
   });
+  const full=spx$('spxFullBtn');
+  if(full){
+    full.setAttribute('aria-pressed',SP_EXAM.selectedFull?'true':'false');
+    full.classList.toggle('on',!!SP_EXAM.selectedFull);
+  }
   const err=spx$('spxChooseErr');
   if(err){err.textContent=SP_EXAM.error||'';err.style.display=SP_EXAM.error?'block':'none'}
 }
 
 function spxRenderBrief(){
   const meta=SPX_PART_META[SP_EXAM.part];
-  spx$('spxBriefSentence').textContent=t('spx_brief_sentence',{n:SP_EXAM.part});
-  spx$('spxBriefPartner').textContent=t('spx_brief_part'+SP_EXAM.part);
-  spx$('spxBriefTime').textContent=t('spx_brief_time',{
-    n:SP_EXAM.part,min:meta.minutes,turns:spxPhases().length});
+  const full=!!SP_EXAM.full;
+  spx$('spxBriefSentence').textContent=full
+    ?t('spx_full_brief')
+    :t('spx_brief_sentence',{n:SP_EXAM.part});
+  spx$('spxBriefPartner').textContent=(!full&&SP_EXAM.part===1)
+    ?t('spx_brief_part1')
+    :t('spx_brief_partner',{name:spxPartnerName()});
+  spx$('spxBriefTime').textContent=full
+    ?t('spx_full_time',{min:14})
+    :t('spx_brief_time',{n:SP_EXAM.part,min:meta.minutes,turns:spxPhases().length});
+  const mode=spx$('spxBriefMode');
+  if(mode)mode.textContent=full?t('spx_brief_full'):t('spx_brief_part'+SP_EXAM.part);
 }
 
 /* --- The exam clock ------------------------------------------------------ */
-function spxPhases(){
-  const part=SP_EXAM.part,task=SP_EXAM.task||{};
-  function close(sec){return {key:'spx_closing',who:'examiner',sec:sec,untilQuiet:true,
-    line:SPX_LINES.closing.replace('{n}',String(part))}}
-  if(part===1){
-    const qs=(task.questions||[]).slice(0,8);
-    if(!qs.length)qs.push('Where are you from?');
-    const answers=SPX_SIM_ANSWERS[1];
-    const events=qs.slice(1).map(function(q,i){
-      return {at:Math.round((i+1)*90/Math.max(1,qs.length-1)),who:'examiner',
-        text:q,qi:i+1,answer:answers[(i+1)%answers.length]};
-    });
-    return [
-      {key:'spx_listen',who:'examiner',sec:24,untilQuiet:true,
-       line:'Good morning. '+qs[0],qi:0,answer:answers[0]}
-    ].concat([{key:'spx_long_turn',who:'candidate',sec:96,events:events}]);
-  }
-  if(part===2){
-    const prompts=(task.prompts||[]).slice(0,2);
-    const p1=prompts[0]||'Compare the photographs.';
-    const p2=prompts[1]||p1;
-    return [
-      {key:'spx_listen',who:'examiner',sec:28,untilQuiet:true,qi:0,
-       line:'In this part of the test, I\'m going to show you two photographs.'+
-        ' Here they are. '+p1},
-      {key:'spx_long_turn',who:'candidate',sec:60,qi:0,events:[
-        {at:0,who:'candidate',text:SPX_SIM_ANSWERS[2][0],ms:18000},
-        {at:19,who:'candidate',text:SPX_SIM_ANSWERS[2][1],ms:18000},
-        {at:38,who:'candidate',text:SPX_SIM_ANSWERS[2][2],ms:18000}
-      ]},
-      {key:'spx_listen',who:'examiner',sec:10,untilQuiet:true,qi:0,
-       line:SPX_LINES.handoff},
-      {key:'spx_response',who:'partner',sec:30,qi:0,line:SPX_LINES.partner2},
-      {key:'spx_follow_up',who:'examiner',sec:10,untilQuiet:true,qi:1,
-       line:SPX_LINES.followUp+' '+p2},
-      {key:'spx_follow_up',who:'candidate',sec:30,qi:1,events:[
-        {at:1,who:'candidate',text:SPX_SIM_ANSWERS[2][1],ms:26000}
-      ]},
-      close(15)
-    ];
-  }
-  if(part===3){
-    const prompts=(task.prompts||[]).slice(0,5);
-    const answers=SPX_SIM_ANSWERS[3];
-    const events=[];
-    prompts.forEach(function(item,i){
-      events.push({at:8+i*19,who:'examiner',text:'What about '+item+'?',
-        answer:answers[i%answers.length]});
-      if(i===1||i===3){
-        events.push({at:15+i*19,who:'partner',
-          text:i===1?SPX_LINES.partner3:SPX_LINES.partner3b});
-      }
-    });
-    return [
-      {key:'spx_listen',who:'examiner',sec:24,untilQuiet:true,
-       line:'Now I\'d like you to talk about something together for about two'+
-         ' minutes. Here is a card with some ideas for a task. '+(task.topic||'')},
-      {key:'spx_discuss',who:'candidate',sec:110,events:events},
-      {key:'spx_decide',who:'examiner',sec:10,untilQuiet:true,
-       line:'Thank you. Now, '+(task.decision||'which two ideas would be best?')},
-      {key:'spx_decide',who:'candidate',sec:60,events:[
-        {at:30,who:'partner',text:SPX_LINES.partner3b}]},
-      close(15)
-    ];
-  }
-  const qs=(task.questions||[]).slice(0,6);
-  const answers=SPX_SIM_ANSWERS[4];
-  const events=qs.map(function(q,i){
-    return {at:Math.round(4+i*36),who:'examiner',text:q,qi:i,
-      answer:answers[i%answers.length]};
-  });
-  /* The backend never sends partner lines in live mode, so Part 4 would leave
-     the candidate answering alone. These turns are client-side scripted lines
-     spoken by spxSay('partner'), using Part 3's discussion prompts. */
-  [[22,0],[58,1],[130,3]].forEach(function(slot){
-    const line=SPK_SIM_PARTNER_SCRIPT[slot[1]];
-    if(line&&line.q)events.push({at:slot[0],who:'partner',text:line.q});
-  });
-  return [
-    {key:'spx_listen',who:'examiner',sec:14,untilQuiet:true,
-     line:'Now we are going to talk about the task you have just done.'},
-    {key:'spx_discuss',who:'candidate',sec:226,events:events},
-    close(15)
-  ];
+function spxQueueQuiet(){
+  /* Test mode has no real voice to wait for: the stub is synchronous and a
+     headless device may never fire onend. The phase cap still applies. */
+  if(SPX_TEST_SELF)return true;
+  if(SPK.mode==='turn'&&SPK.turnState==='thinking')return false;
+  const ex=SPK.voices&&SPK.voices.examiner;
+  const pa=SPK.voices&&SPK.voices.partner;
+  return !(ex&&ex.speaking)&&!(pa&&pa.speaking)&&
+    !spkBrowserBusy('examiner')&&!spkBrowserBusy('partner');
+}
+function spxRenderVoiceMode(){
+  const note=document.getElementById('spxTurnNote');
+  if(note)note.style.display=(SPK.mode==='turn')?'block':'none';
+}
+function spxVoiceBusy(who){
+  const v=SPK.voices&&SPK.voices[who];
+  return !!(v&&(v.speaking||v.browserBusy))||spkBrowserBusy(who);
 }
 
+function spxSpeechMs(text){
+  /* A real voice takes time: ~2.5 words a second, capped both ways. This is
+     what makes the examiner turn last as long as it sounds, instead of ending
+     the phase on a fixed 200 ms tone. */
+  const words=String(text||'').split(/\s+/).filter(Boolean).length;
+  return Math.min(24000,Math.max(1200,Math.round(words*380)));
+}
 /* The examiner's stage lines for this part, exactly as the director will say
    them. Sent once when the brief opens so the server can cache their TTS and
    the opening question plays immediately. */
@@ -9381,8 +9666,6 @@ function spkWarmPart(){
   if(spkSimMode())return;
   /* Fast mode has nothing to pre-generate: the device voice needs no audio. */
   if(spkTtsMode()==='none')return;
-  /* Both voices are warmed: the partner's scripted lines are client-side, so
-     without this its first turn pays the full TTS round trip. */
   ['examiner','partner'].forEach(function(who){
     const lines=spxWarmLines(who);
     if(!lines.length)return;
@@ -9392,10 +9675,7 @@ function spkWarmPart(){
       .catch(function(){});
   });
 }
-/* U8 prefetch: the ordered stage script (examiner + partner) for this part.
-   When a scripted line starts, the entry after it is exactly what the next
-   turn will ask the TTS for, so its WAV can be generated while the current
-   line is still playing. */
+/* U8 prefetch: the ordered stage script (examiner + partner) for this part. */
 function spxScriptQueue(){
   const out=[];
   const phases=(SP_EXAM.phases&&SP_EXAM.phases.length)?SP_EXAM.phases:spxPhases();
@@ -9414,8 +9694,6 @@ function spkNoteTts(ms){
   if(ms.cached)SPK.ttsCacheHits++;else SPK.ttsCacheMisses++;
 }
 function spkPrefetchNext(who,text){
-  /* A live-model reply is not in any script: there is nothing to pre-generate.
-     Sim (and fast voice) need no server WAV at all. */
   if(SPK.mode==='live'||SPK.mode==='sim')return;
   if(spkSimMode()||spkTtsMode()!=='gemini')return;
   if(typeof text!=='string'||!text)return;
@@ -9443,48 +9721,12 @@ function spkPrefetchNext(who,text){
       role:next.who==='partner'?'partner':'examiner',
       part:SPK.part,session_id:spkTurnSessionId(),tts:'gemini'})})
     .then(function(r){
-      /* The WAV itself is not wanted: only the data/tts entry it leaves. Read
-         nothing, just release the body. */
       if(r&&r.body&&r.body.cancel)r.body.cancel().catch(function(){});
     })
     .catch(function(){});
 }
-
-function spxQueueQuiet(){
-  /* A turn in flight (transcript + TTS) has not produced audio yet: the floor
-     stays with the examiner instead of moving on during the wait. */
-  if(SPK.mode==='turn'&&SPK.turnState==='thinking')return false;
-  const ex=SPK.voices&&SPK.voices.examiner;
-  const pa=SPK.voices&&SPK.voices.partner;
-  return !(ex&&ex.speaking)&&!(pa&&pa.speaking);
-}
-/* The turn note only makes sense when audio is uploaded: it states the privacy
-   model ("sent when you stop speaking"), so it is shown for turn mode only. */
-function spxRenderVoiceMode(){
-  const note=document.getElementById('spxTurnNote');
-  if(note)note.style.display=(SPK.mode==='turn')?'block':'none';
-}
-function spxVoiceBusy(who){
-  const v=SPK.voices&&SPK.voices[who];
-  return !!(v&&v.speaking);
-}
-
-function spxSpeechMs(text){
-  /* A real voice takes time: ~2.5 words a second, capped both ways. This is
-     what makes the examiner turn last as long as it sounds, instead of ending
-     the phase on a fixed 200 ms tone. */
-  const words=String(text||'').split(/\s+/).filter(Boolean).length;
-  return Math.min(24000,Math.max(1200,Math.round(words*380)));
-}
-/* The Live partner socket is not a script reader: sending it controller text
-   makes it improvise, and in the exam it may never answer at all (the backend
-   has no partner script). This helper uses the same TTS-only call the examiner
-   uses in turn mode, with role "partner" — the server answers in the partner
-   voice (Kore) — and falls back to the device voice, which spkSpeakText now
-   renders in a different voice than the examiner. */
 function spxPartnerTts(text){
   if(typeof text!=='string'||!text.trim())return;
-  /* Show the line now: this path never waits for a model transcript. */
   spkAddLine('out',text,'partner');
   const body={say:text,role:'partner',part:SP_EXAM.part||SPK.part||1,tts:'gemini'};
   try{body.session_id=spkTurnSessionId()}catch(e){}
@@ -9497,37 +9739,43 @@ function spxPartnerTts(text){
     .then(function(j){
       if(j&&j.audio_b64){
         return spkPlayWav(j.audio_b64,'partner').then(function(played){
-          /* The WAV could not reach the queue (dead voice): still say it. */
           if(!played)spkSpeakText('partner',text);
           return played;
         });
       }
-      /* TTS refused: the device voice still says the line. */
       spkSpeakText('partner',text);
       return false;
     })
     .catch(function(){spkSpeakText('partner',text)});
 }
+/* One voice for each role. In fast mode the scripted lines never touch the
+   network: the device speaks them, which is also what makes the exam usable
+   with no key. Sim demo (?spk=sim) keeps the simulated transport so the rest
+   of the existing audio tests still see a real playback queue. */
 function spxSay(who,text,ms){
+  if(typeof text!=='string'||!text.trim())return;
+  who=who==='partner'?'partner':'examiner';
+  spxCountTurn(who);
+  if(ms>SPX_LOCKED_SECONDS*1000)ms=SPX_LOCKED_SECONDS*1000;
   const v=SPK.voices&&SPK.voices[who];
-  if(!v||!v.transport||v.offline||typeof text!=='string'||!text)return;
-  const duration=ms||spxSpeechMs(text);
-  /* Sim and turn-based both have say(): the line is spoken as written (turn
-     mode asks the server for TTS only, no model call). */
-  if(v.transport.say){
-    v.transport.say(text,duration);
-    /* U8: while this line plays, make sure the next one is already cached. */
+  const demo=spkSimMode()&&SPK.mode==='sim'&&
+    !(SPX_TEST_SELF&&SPX_TEST_SELF.deviceVoice);
+  if(!demo&&(spkTtsMode()==='none'||!v||!v.transport||v.offline)){
+    spkAddLine('out',text,who);
+    spkSpeakText(who,text);
+    return;
+  }
+  if(v&&v.transport&&v.transport.say){
+    /* Test mode compresses the clock, so the simulated line is compressed too;
+       otherwise an 8 s tone would outlive three scaled phases. */
+    v.transport.say(text,(ms||spxSpeechMs(text))*spxTimeScale());
     spkPrefetchNext(who,text);
     return;
   }
-  /* Live examiner: the model owns the words, the controller owns the stage.
-     U7: the partner is TTS only, never the live model's turn. */
-  if(who!=='partner'&&v.transport.sendText){
+  if(who==='partner'){spxPartnerTts(text);return}
+  if(v&&v.transport&&v.transport.sendText){
     v.transport.sendText('EXAM CONTROLLER: say exactly this and nothing else: "'+text+'"');
-    return;
   }
-  /* Live partner: never leave the line as text. Speak it on the partner voice. */
-  if(who==='partner')spxPartnerTts(text);
 }
 function spxHear(text){
   const v=SPK.voices&&SPK.voices.examiner;
@@ -9542,11 +9790,14 @@ function spxCandidateLine(text,ms){
   spxHear(text);
   const words=String(text).split(/\s+/).filter(Boolean).length;
   const now=performance.now();
-  SPK.simSpeechUntil=now+(ms||Math.min(18000,Math.max(2000,words*420)));
+  const dur=(ms||Math.min(18000,Math.max(2000,words*420)))*spxTimeScale();
+  SPK.simSpeechUntil=now+Math.max(120,dur);
   SP_EXAM.awaitSince=0;
-  /* The turn is answered: a new question may follow. The question counter is
-     left alone, so a pause later cannot re-arm the repeat. */
   SP_EXAM.answered=true;
+  if(!SP_EXAM.turnCounted){
+    SP_EXAM.turnCounted=true;
+    spxCountTurn('candidate');
+  }
 }
 function spxScriptAnswer(text,delay){
   if(SPK.mode!=='sim')return;
@@ -9554,7 +9805,12 @@ function spxScriptAnswer(text,delay){
   SP_EXAM.answerTimer=setTimeout(function(){
     if(SP_EXAM.screen!=='exam'||SP_EXAM.micMuted||!SPK.running)return;
     spxCandidateLine(text);
-  },delay||SPX_ANSWER_DELAY_MS);
+  },Math.max(200,delay||SPX_ANSWER_DELAY_MS));
+}
+function spxSimAnswer(part,qi){
+  const list=SPX_SIM_ANSWERS[part]||SPX_SIM_ANSWERS[1];
+  const i=Math.abs(Number(qi)||0)%list.length;
+  return list[i];
 }
 
 function spxHighlight(qi){
@@ -9564,16 +9820,114 @@ function spxHighlight(qi){
   });
 }
 
+/* --- Turn ledger (feeds the report's comments and counts) --------------- */
+function spxOpenPartStat(part){
+  const s=SP_EXAM.session;
+  if(!s)return null;
+  if(!s.partStats)s.partStats={};
+  const planned=(SP_EXAM.phases||[]).reduce(function(total,ph){
+    return total+(Number(ph.sec)||0)},0);
+  s.currentPart=Number(part);
+  s.partStats[part]={part:Number(part),planned:planned,start:performance.now(),
+    seconds:0,turns:{examiner:0,partner:0,candidate:0}};
+  return s.partStats[part];
+}
+function spxCountTurn(who){
+  const s=SP_EXAM.session;
+  if(!s)return;
+  if(!s.turns)s.turns={examiner:0,partner:0,candidate:0};
+  s.turns[who]=(s.turns[who]||0)+1;
+  const st=s.partStats&&s.partStats[s.currentPart];
+  if(st&&st.turns)st.turns[who]=(st.turns[who]||0)+1;
+}
+function spxClosePartStat(){
+  const s=SP_EXAM.session;
+  if(!s)return;
+  const st=s.partStats&&s.partStats[s.currentPart];
+  if(!st)return;
+  const wall=(performance.now()-st.start)/1000;
+  st.wall=Math.max(0,Math.round(wall*10)/10);
+  st.seconds=Math.round(wall/spxTimeScale());
+}
+
+/* --- Partner: scripted, or one sentence from a configured provider ------ */
+function spxPartnerProviderWanted(){
+  if(spkSimMode()&&SPK.mode==='sim')return false;
+  if(SPX_TEST_SELF&&typeof SPX_TEST_SELF.partnerProvider==='function')return true;
+  if(byoHeaders()['X-Provider-Key'])return true;
+  return !!SPK.partnerAI;
+}
+function spxPartnerFromProvider(question){
+  const hook=SPX_TEST_SELF&&SPX_TEST_SELF.partnerProvider;
+  const timeout=new Promise(function(resolve){setTimeout(function(){resolve('')},4000)});
+  let call=null;
+  if(typeof hook==='function'){
+    call=Promise.resolve().then(function(){return hook(question)}).then(function(v){
+      return typeof v==='string'?v:'';
+    }).catch(function(){return ''});
+  }else{
+    const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    const timer=setTimeout(function(){if(ctrl)ctrl.abort()},4000);
+    call=fetch(apiUrl('/api/speaking/partner'),{
+      method:'POST',
+      headers:Object.assign({},authHeaders(),byoHeaders()),
+      body:JSON.stringify({
+        question:String(question||'').slice(0,300),
+        topic:String((SP_EXAM.task&&(SP_EXAM.task.topic||SP_EXAM.task.title))||'').slice(0,120)
+      }),
+      signal:ctrl?ctrl.signal:undefined
+    }).then(function(r){
+      if(!r.ok)throw new Error('partner '+r.status);
+      return r.json();
+    }).then(function(j){return j&&typeof j.line==='string'?j.line:''})
+      .catch(function(){return ''})
+      .then(function(line){clearTimeout(timer);return line});
+  }
+  return Promise.race([call,timeout]).then(function(line){
+    return String(line||'').replace(/\s+/g,' ').trim().slice(0,220);
+  }).catch(function(){return ''});
+}
+function spxProbePartnerAi(){
+  if(spkSimMode())return;
+  try{
+    fetch(apiUrl('/api/speaking/partner'),{headers:authHeaders()})
+      .then(function(r){return r.ok?r.json():null})
+      .then(function(j){SPK.partnerAI=!!(j&&j.available)})
+      .catch(function(){});
+  }catch(e){}
+}
+function spxPartnerTurn(ev){
+  const question=ev.prompt||ev.text||'';
+  const fallback=ev.text||spxPartnerLine(SP_EXAM.task,SP_EXAM.partnerIdx++);
+  const phaseAt=SP_EXAM.phase;
+  if(!spxPartnerProviderWanted()){
+    spxSay('partner',fallback,spxSpeechMs(fallback));
+    return;
+  }
+  spxPartnerFromProvider(question).then(function(line){
+    if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
+    spxSay('partner',line||fallback,spxSpeechMs(line||fallback));
+  });
+}
+
 function spxFireEvent(ev){
   if(!ev)return;
-  if(ev.who==='candidate'){spxCandidateLine(ev.text,ev.ms);return}
+  if(ev.who==='candidate'){
+    spxCandidateLine(ev.text,ev.ms);
+    return;
+  }
   if(!ev.text)return;
+  if(ev.who==='partner'){
+    spxPartnerTurn(ev);
+    if(ev.qi!==undefined)spxHighlight(ev.qi);
+    return;
+  }
   const ms=ev.ms||spxSpeechMs(ev.text);
-  spxSay(ev.who==='partner'?'partner':'examiner',ev.text,ms);
+  spxSay('examiner',ev.text,ms);
   if(ev.qi!==undefined)spxHighlight(ev.qi);
   /* A question opens the candidate's turn. `askedOnce` starts at 1 and the
      silence repeat below may take it to 2, never further. */
-  if(ev.who!=='partner'&&(ev.qi!==undefined||ev.answer)){
+  if(ev.to!=='partner'&&(ev.qi!==undefined||ev.answer||ev.to==='candidate')){
     SP_EXAM.askedOnce=1;
     SP_EXAM.lastAsked=ev.text;
     SP_EXAM.answered=false;
@@ -9581,8 +9935,6 @@ function spxFireEvent(ev){
     SP_EXAM.awaitSince=performance.now();
   }
   if(ev.answer&&!SP_EXAM.micMuted){
-    /* The scripted answer waits for the examiner to finish, so it can never
-       barge in. */
     spxScriptAnswer(ev.answer,ev.delay||(ms+900));
   }
 }
@@ -9594,24 +9946,84 @@ function spxEnterPhase(i){
   SP_EXAM.phaseStart=performance.now();
   SP_EXAM.promptUsed=false;
   SP_EXAM.pendingLine=null;
+  SP_EXAM.turnCounted=false;
+  SP_EXAM.partnerIdx=0;
   SP_EXAM.awaitSince=ph.who==='candidate'?SP_EXAM.phaseStart:0;
   (ph.events||[]).forEach(function(ev){ev.done=false});
   spxPhaseHeader();
+  spxRenderRoles();
   if(ph.line){
     const ev={who:ph.who==='partner'?'partner':'examiner',
-      text:ph.line,qi:ph.qi,answer:ph.answer};
+      text:ph.line,qi:ph.qi,answer:ph.answer,to:ph.to,prompt:ph.prompt};
     /* The examiner never starts over the candidate: if the floor is not free,
        the line waits in spxTickLoop for SPK_FLOOR_SILENCE_MS of silence. */
     if(ev.who==='examiner'&&!spkExaminerMaySpeak())SP_EXAM.pendingLine=ev;
     else spxFireEvent(ev);
   }else spxHighlight(ph.qi);
-  spxTickRender(ph.sec);
+  if(SPK.mode==='sim'&&!SP_EXAM.micMuted){
+    const niche=spxScaleSec(ph.sec);
+    if(ph.who==='candidate'){
+      spxScriptAnswer(spxSimAnswer(SP_EXAM.part,ph.qi),Math.min(SPX_ANSWER_DELAY_MS,niche*420));
+    }else if(ph.who==='both'){
+      spxScriptAnswer(spxSimAnswer(SP_EXAM.part===3?3:4,0),Math.min(SPX_ANSWER_DELAY_MS,niche*260));
+    }
+  }
+  spxTickRender(spxScaleSec(ph.sec));
 }
 
 function spxNextPhase(){
   SP_EXAM.phase++;
-  if(SP_EXAM.phase>=SP_EXAM.phases.length){spxEndExam();return}
+  if(SP_EXAM.phase>=SP_EXAM.phases.length){spxPartFinished();return}
   spxEnterPhase(SP_EXAM.phase);
+}
+
+function spxPartFinished(){
+  spxClosePartStat();
+  const s=SP_EXAM.session;
+  if(s&&s.full&&s.plan&&s.partIndex<s.plan.parts.length-1){
+    const next=s.partIndex+1;
+    const entry=s.plan.parts[next];
+    const bridge=SPX_LINES.partDone.replace('{n}',String(SP_EXAM.part))+' '+
+      SPX_LINES.nextPart.replace('{n}',String(entry.part));
+    spxSay('examiner',bridge);
+    spxStopTimer();
+    s.pendingPart=next;
+    SP_EXAM.partTimer=setTimeout(function(){
+      if(SP_EXAM.screen!=='exam')return;
+      SP_EXAM.partTimer=null;
+      spxEnterSessionPart(next);
+    },Math.max(350,1800*spxTimeScale()));
+    return;
+  }
+  spxEndExam();
+}
+
+function spxEnterSessionPart(index){
+  const s=SP_EXAM.session;
+  if(!s||!s.plan)return;
+  const entry=s.plan.parts[index];
+  if(!entry)return;
+  s.partIndex=index;
+  SP_EXAM.part=entry.part;
+  SP_EXAM.task=entry.task;
+  SPK.part=entry.part;
+  SP_EXAM.phases=spxPhasesFor(entry.part,entry.task,SP_EXAM.seed,entry.taskId);
+  SP_EXAM.phase=0;
+  SP_EXAM.askedOnce=0;
+  SP_EXAM.lastAsked='';
+  SP_EXAM.answered=false;
+  SP_EXAM.pendingLine=null;
+  SP_EXAM.promptUsed=false;
+  SP_EXAM.awaitSince=0;
+  SP_EXAM.partnerIdx=0;
+  spxOpenPartStat(entry.part);
+  spxRenderTask();
+  spxRenderPartnerHeader();
+  spxRenderRoles();
+  spxPhaseHeader();
+  spxEnterPhase(0);
+  spxStopTimer();
+  SP_EXAM.timer=setInterval(spxTickLoop,SPX_TICK_MS);
 }
 
 function spxRenderClock(left){
@@ -9622,6 +10034,36 @@ function spxRenderClock(left){
   el.setAttribute('data-low',secs<=SPX_LOW_SECONDS?'1':'0');
 }
 
+function spxRenderRoles(){
+  const box=spx$('spxRoles');
+  if(!box)return;
+  const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
+  let who='';
+  /* A joint turn belongs to both candidates at once, even while the last
+     examiner syllable is still draining. */
+  if(ph&&ph.who==='both')who='both';
+  else if(spxVoiceBusy('examiner')||(ph&&ph.who==='examiner'))who='examiner';
+  else if(spxVoiceBusy('partner')||(ph&&ph.who==='partner'))who='partner';
+  else if(ph&&ph.who==='candidate')who='candidate';
+  box.querySelectorAll('[data-role]').forEach(function(el){
+    const role=el.getAttribute('data-role');
+    const on=who==='both'?(role==='partner'||role==='you'):(role===who);
+    if(on)el.setAttribute('data-on','1');else el.removeAttribute('data-on');
+    el.setAttribute('aria-current',on?'true':'false');
+  });
+}
+function spxRenderPartnerHeader(){
+  const name=spxPartnerName();
+  const ex=spx$('spxRoleExaminer');
+  if(ex)ex.textContent=t('spx_role_examiner');
+  const pa=spx$('spxRolePartner');
+  if(pa)pa.textContent=t('spx_role_partner',{name:name});
+  const you=spx$('spxRoleYou');
+  if(you)you.textContent=t('spx_role_you');
+  const nameEl=spx$('spxPartnerName');
+  if(nameEl)nameEl.textContent=name;
+  spxRenderRoles();
+}
 function spxRenderWho(){
   const el=spx$('spxWho');
   if(!el)return;
@@ -9633,9 +10075,11 @@ function spxRenderWho(){
   else if(SPK.mode==='turn'&&SPK.turnState==='listening'){who='candidate';key='spx_listening'}
   else if(ph&&ph.who==='examiner'){who='examiner';key='spx_examiner'}
   else if(ph&&ph.who==='partner'){who='partner';key='spx_partner'}
-  el.setAttribute('data-who',who);
-  const text=t(key);
+  else if(ph&&ph.who==='both'){who='both';key='spx_discuss'}
+  el.setAttribute('data-who',who==='both'?'candidate':who);
+  const text=(who==='both')?(t('spx_your_turn')+' + '+spxPartnerName()):t(key);
   if(el.textContent!==text)el.textContent=text;
+  spxRenderRoles();
 }
 
 function spxRenderTx(){
@@ -9648,8 +10092,8 @@ function spxRenderTx(){
     if(!line||typeof line.text!=='string')continue;
     const row=document.createElement('div');
     row.className='spx-tx-line spx-tx-'+line.who;
-    if(line.who==='partner')row.textContent=t('spx_partner_tag')+': '+line.text;
-    else if(line.who==='candidate')row.textContent=line.text;
+    if(line.who==='partner')row.textContent=spxPartnerName()+': '+line.text;
+    else if(line.who==='candidate')row.textContent=t('spx_you_tag')+': '+line.text;
     else row.textContent=t('spx_examiner_tag')+': '+line.text;
     box.appendChild(row);
   }
@@ -9673,11 +10117,16 @@ function spxSilence(now){
   }
   if(!spkExaminerMaySpeak(now))return;      // same floor rule as the audio path
   const quiet=(now-SP_EXAM.awaitSince)/1000;
-  if(quiet>=SPX_SILENCE_MOVE_S){spxNextPhase();return}
-  if(quiet>=SPX_SILENCE_PROMPT_S&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
+  const move=SPX_SILENCE_MOVE_S*spxTimeScale();
+  const promptAt=SPX_SILENCE_PROMPT_S*spxTimeScale();
+  if(quiet>=move){spxNextPhase();return}
+  if(quiet>=promptAt&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
     SP_EXAM.promptUsed=true;
     SP_EXAM.askedOnce++;
     SP_EXAM.silencePrompts++;
+    const st=SP_EXAM.session&&SP_EXAM.session.partStats&&
+      SP_EXAM.session.partStats[SP_EXAM.session.currentPart];
+    if(st)st.silences=(st.silences||0)+1;
     /* A slow start gets the same question once (never a second one). If the
        candidate did answer and then went quiet, the nudge is the generic line,
        not the question again. */
@@ -9691,20 +10140,28 @@ function spxTickLoop(){
   const ph=SP_EXAM.phases[SP_EXAM.phase];
   if(!ph)return;
   const now=performance.now();
+  const scale=spxTimeScale();
   const elapsed=(now-SP_EXAM.phaseStart)/1000;
+  const duration=spxScaleSec(ph.sec);
   /* The candidate may answer while the examiner's phase is still draining; that
      answer counts for the next question too, so the flag is set in any phase. */
-  if(SPK.micSpeaking)SP_EXAM.answered=true;
+  if(SPK.micSpeaking){
+    SP_EXAM.answered=true;
+    if((ph.who==='candidate'||ph.who==='both')&&!SP_EXAM.turnCounted){
+      SP_EXAM.turnCounted=true;
+      spxCountTurn('candidate');
+    }
+  }
   const maySpeak=spkExaminerMaySpeak(now);
   if(SP_EXAM.pendingLine){
     if(maySpeak){
       const ev=SP_EXAM.pendingLine;
       SP_EXAM.pendingLine=null;
       spxFireEvent(ev);
-    }else if(elapsed<ph.sec+8){
+    }else if(elapsed<duration+Math.max(1,8*scale)){
       /* A stage line the candidate talked over has not been said yet: keep the
-         turn open instead of advancing past it. */
-      spxTickRender(ph.sec-elapsed);
+       turn open instead of advancing past it. */
+      spxTickRender(Math.max(0,duration-elapsed));
       spxRenderTx();
       return;
     }else{
@@ -9712,7 +10169,7 @@ function spxTickLoop(){
     }
   }
   (ph.events||[]).forEach(function(ev){
-    if(ev.done||elapsed<ev.at)return;
+    if(ev.done||elapsed<(Number(ev.at)||0)*scale)return;
     /* Turn mode: the model hears the answer and asks the next question. The
        scripted examiner questions stay untouched as the silence fallback
        (spxSilence), never as the normal path. */
@@ -9726,26 +10183,67 @@ function spxTickLoop(){
     }
     ev.done=true;spxFireEvent(ev);
   });
-  spxTickRender(ph.sec-elapsed);
+  spxTickRender(Math.max(0,duration-elapsed));
   spxRenderTx();
   const quiet=spxQueueQuiet();
-  if(elapsed>=ph.sec){
+  if(elapsed>=duration){
     /* An examiner turn lasts as long as the voice: the cap is a safety net,
        not the length of the turn. */
-    if(ph.untilQuiet&&!quiet&&elapsed<ph.sec+8)return;
+    if(ph.untilQuiet&&!quiet&&elapsed<duration+Math.max(1,8*scale))return;
     spxNextPhase();
     return;
   }
-  if(ph.untilQuiet&&elapsed>=1.2&&quiet){spxNextPhase();return}
+  const quietGate=Math.min(1.2,duration*0.5);
+  if(ph.untilQuiet&&elapsed>=quietGate&&quiet){spxNextPhase();return}
   if(ph.who==='candidate')spxSilence(now);
 }
 
 function spxStopTimer(){
   if(SP_EXAM.timer){clearInterval(SP_EXAM.timer);SP_EXAM.timer=null}
   if(SP_EXAM.answerTimer){clearTimeout(SP_EXAM.answerTimer);SP_EXAM.answerTimer=null}
+  if(SP_EXAM.partTimer){clearTimeout(SP_EXAM.partTimer);SP_EXAM.partTimer=null}
 }
 
 /* --- Task card ----------------------------------------------------------- */
+function spxPhotoMissing(alt){
+  const d=document.createElement('div');
+  d.className='spx-photo-missing';
+  d.setAttribute('role','img');
+  d.setAttribute('aria-label',alt);
+  const s=document.createElement('span');
+  s.textContent=alt;
+  d.appendChild(s);
+  return d;
+}
+function spxPhotoFigure(src,alt){
+  const fig=document.createElement('figure');
+  fig.className='spx-photo';
+  const holder=document.createElement('div');
+  holder.className='spx-photo-holder';
+  const safeAlt=String(alt||t('spx_photo_1'));
+  if(src){
+    const img=document.createElement('img');
+    img.src='/'+String(src).replace(/^\/+/,'');
+    img.alt=safeAlt;
+    img.width=960;
+    img.height=640;
+    img.loading='lazy';
+    img.decoding='async';
+    /* The files arrive separately: a missing photo must be a readable card,
+       never a broken-image icon. */
+    img.onerror=function(){
+      if(img.parentNode===holder)holder.replaceChildren(spxPhotoMissing(safeAlt));
+    };
+    holder.appendChild(img);
+  }else{
+    holder.appendChild(spxPhotoMissing(safeAlt));
+  }
+  fig.appendChild(holder);
+  const cap=document.createElement('figcaption');
+  cap.textContent=safeAlt;
+  fig.appendChild(cap);
+  return fig;
+}
 function spxRenderTask(){
   const box=spx$('spxTask');
   if(!box)return;
@@ -9762,46 +10260,32 @@ function spxRenderTask(){
     });
     return ul;
   }
+  const h=document.createElement('h4');
+  h.textContent=task.topic||task.title||t('spx_phase_part',{n:part});
+  box.appendChild(h);
   if(part===2){
-    const h=document.createElement('h4');
-    h.textContent=task.title||'';
-    box.appendChild(h);
+    if(task.question){
+      const q=document.createElement('p');
+      q.className='spx-task-q';
+      q.textContent=task.question;
+      box.appendChild(q);
+    }
     const wrap=document.createElement('div');
     wrap.className='spx-photos';
-    (task.photos||[]).slice(0,2).forEach(function(src,i){
-      const fig=document.createElement('figure');
-      fig.className='spx-photo';
-      const img=document.createElement('img');
-      img.src='/'+String(src).replace(/^\/+/,'');
-      img.alt=t(i===0?'spx_photo_1':'spx_photo_2');
-      img.width=960;
-      img.height=640;
-      img.loading='lazy';
-      img.decoding='async';
-      const cap=document.createElement('figcaption');
-      cap.textContent=img.alt;
-      fig.appendChild(img);
-      fig.appendChild(cap);
-      wrap.appendChild(fig);
-    });
+    const photos=Array.isArray(task.photos)?task.photos:[];
+    const alts=Array.isArray(task.photoAlt)?task.photoAlt:[];
+    for(let i=0;i<2;i++){
+      wrap.appendChild(spxPhotoFigure(photos[i]||'',alts[i]||t(i===0?'spx_photo_1':'spx_photo_2')));
+    }
     box.appendChild(wrap);
-    box.appendChild(list(task.prompts||[]));
-    const credit=document.createElement('p');
-    credit.className='spx-credit';
-    const a=document.createElement('a');
-    a.href='/img/spk/CREDITS.md';
-    a.target='_blank';
-    a.rel='noopener';
-    a.textContent=t('spx_credit');
-    credit.appendChild(a);
-    box.appendChild(credit);
+    box.appendChild(list(task.prompts||[task.question||''].filter(Boolean)));
   }else if(part===3){
-    const h=document.createElement('h4');
-    h.textContent=t('spx_topic',{q:task.topic||''});
-    box.appendChild(h);
-    const ul=list(task.prompts||[]);
-    ul.removeAttribute('data-q');
-    ul.querySelectorAll('[data-q]').forEach(function(li){li.removeAttribute('data-q')});
+    if(task.situation){
+      const sit=document.createElement('p');
+      sit.textContent=task.situation;
+      box.appendChild(sit);
+    }
+    const ul=list(task.options||task.prompts||[]);
     box.appendChild(ul);
     const dec=document.createElement('p');
     dec.className='spx-decision';
@@ -9834,6 +10318,7 @@ SP_EXAM.open=async function(){
 SP_EXAM.select=function(part){
   const n=Math.max(1,Math.min(4,parseInt(part,10)||1));
   SP_EXAM.part=n;
+  SP_EXAM.selectedFull=false;
   SPK.part=n;
   const box=spx$('spxParts');
   if(box){
@@ -9841,25 +10326,66 @@ SP_EXAM.select=function(part){
       el.setAttribute('aria-checked',Number(el.dataset.part)===n?'true':'false');
     });
   }
+  const full=spx$('spxFullBtn');
+  if(full){full.setAttribute('aria-pressed','false');full.classList.remove('on')}
 };
 
 SP_EXAM.start=async function(){
   SP_EXAM.error='';
+  SP_EXAM.selectedFull=false;
   try{await spxLoadBank()}catch(e){
     SP_EXAM.error=t('spx_no_task');
     spxRenderChoose();
     return;
   }
-  SP_EXAM.task=spxTaskFor(SP_EXAM.bank,SP_EXAM.part);
+  const plan=await spxPlanSession(Math.floor(Math.random()*1e9));
+  const entry=plan.parts[SP_EXAM.part-1];
+  SP_EXAM.full=false;
+  SP_EXAM.seed=plan.seed;
+  SP_EXAM.partner=plan.partner;
+  SP_EXAM.task=entry.task;
+  SP_EXAM.session={full:false,seed:plan.seed,partner:plan.partner,
+    partnerRot:spxSpeakingState().partnerRot,
+    plan:{parts:[entry]},partIndex:0,turns:{examiner:0,partner:0,candidate:0},
+    partStats:{},currentPart:entry.part};
   if(!SP_EXAM.task){
     SP_EXAM.error=t('spx_no_bank',{n:SP_EXAM.part});
     spxRenderChoose();
     return;
   }
   spxRenderBrief();
+  spxRenderPartnerHeader();
   spxSetScreen('brief');
-  /* Warm the scripted TTS while the candidate reads the brief: by the time
-     they press "I'm ready", the first question is already a cache hit. */
+  spkWarmPart();
+  const btn=spx$('spxReadyBtn');
+  if(btn)btn.focus();
+};
+
+SP_EXAM.startFull=async function(seed){
+  SP_EXAM.error='';
+  SP_EXAM.selectedFull=true;
+  try{await spxLoadBank()}catch(e){
+    SP_EXAM.error=t('spx_no_task');
+    spxRenderChoose();
+    return;
+  }
+  const useSeed=(seed===undefined||seed===null)
+    ?Math.floor(Math.random()*1e9):seed;
+  const plan=await spxPlanSession(useSeed);
+  SP_EXAM.full=true;
+  SP_EXAM.seed=plan.seed;
+  SP_EXAM.partner=plan.partner;
+  SP_EXAM.part=1;
+  SP_EXAM.task=plan.parts[0].task;
+  SPK.part=1;
+  SP_EXAM.session={full:true,seed:plan.seed,partner:plan.partner,
+    partnerRot:spxSpeakingState().partnerRot,
+    plan:plan,partIndex:0,turns:{examiner:0,partner:0,candidate:0},
+    partStats:{},currentPart:1};
+  SP_EXAM.phases=spxPhasesFor(1,SP_EXAM.task,plan.seed,plan.parts[0].taskId);
+  spxRenderBrief();
+  spxRenderPartnerHeader();
+  spxSetScreen('brief');
   spkWarmPart();
   const btn=spx$('spxReadyBtn');
   if(btn)btn.focus();
@@ -9888,7 +10414,17 @@ SP_EXAM.ready=async function(){
   spxSetError('');
   const briefErr=spx$('spxBriefErr');
   if(briefErr){briefErr.textContent='';briefErr.style.display='none'}
-  SP_EXAM.phases=spxPhases();
+  /* A session started directly (test hook) may have no plan yet: build one. */
+  if(!SP_EXAM.session){
+    if(SP_EXAM.full)await SP_EXAM.startFull(SP_EXAM.seed);
+    else await SP_EXAM.start();
+  }
+  if(!SP_EXAM.session){SP_EXAM.busy=false;return}
+  const first=SP_EXAM.session.plan.parts[0];
+  SP_EXAM.part=first.part;
+  SP_EXAM.task=first.task;
+  SPK.part=first.part;
+  SP_EXAM.phases=spxPhasesFor(first.part,first.task,SP_EXAM.seed,first.taskId);
   SP_EXAM.phase=0;
   SP_EXAM.silencePrompts=0;
   /* U1: fresh turn counters for every exam run. */
@@ -9901,17 +10437,20 @@ SP_EXAM.ready=async function(){
   SP_EXAM.saved=false;
   SP_EXAM.entry=null;
   SP_EXAM.txShown=0;
+  SP_EXAM.turnCounted=false;
+  SP_EXAM.partnerIdx=0;
   SPK.simSpeechUntil=0;
   SPK.reportData=null;
   SPK.reportPayload=null;
   SPK.reportId='';
+  SPK.reportFull=!!SP_EXAM.full;
   spx$('spxTx').replaceChildren();
+  spxRenderPartnerHeader();
   spxRenderTask();
   spxSetScreen('exam');
   SPK.examMode=true;
   SPK.examDriven=true;
   SPK.interactive=true;
-  SPK.part=SP_EXAM.part;
   await spkStart();
   SP_EXAM.busy=false;
   if(!SPK.running){
@@ -9926,10 +10465,9 @@ SP_EXAM.ready=async function(){
   SPK.prefetchLines=spxScriptQueue();
   SPK.prefetchSeen={};
   SPK.prefetchIdx=-1;
+  spxProbePartnerAi();
   SP_EXAM.startedAt=performance.now();
-  spxEnterPhase(0);
-  spxStopTimer();
-  SP_EXAM.timer=setInterval(spxTickLoop,SPX_TICK_MS);
+  spxEnterSessionPart(0);
 };
 
 SP_EXAM.muteMic=function(muted){
@@ -9948,6 +10486,7 @@ SP_EXAM.stopEarly=function(){
 
 async function spxEndExam(){
   if(SP_EXAM.screen!=='exam')return;
+  spxClosePartStat();
   spxStopTimer();
   spxSetScreen('feedback');
   spxRenderFeedbackPending();
@@ -9958,8 +10497,78 @@ async function spxEndExam(){
   SPK.examDriven=false;
   SPK.examMode=false;
   const ok=await spkReport();
-  if(ok)spxRenderFeedback();
-  else spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
+  if(ok){
+    spxFinalizeReport(SPK.reportData);
+    spxRenderFeedback();
+  }else{
+    spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
+  }
+}
+
+/* --- Report additions: per-part comments, turns, one tip ----------------- */
+function spxPartComments(){
+  const s=SP_EXAM.session;
+  const out=[];
+  if(!s||!s.partStats)return out;
+  const name=spxPartnerName();
+  (s.plan&&s.plan.parts||[]).forEach(function(entry){
+    const st=s.partStats[entry.part];
+    if(!st)return;
+    const planned=Math.round(st.planned||0);
+    const seconds=Math.round(st.seconds||st.wall||0);
+    const you=st.turns.candidate||0;
+    const partner=st.turns.partner||0;
+    const examiner=st.turns.examiner||0;
+    let comment='';
+    if(entry.part===1){
+      comment='Part 1 lasted '+seconds+' s: '+examiner+' questions and '+
+        you+' answers. '+(you>=5
+          ?'You answered every question and kept the exchange moving.'
+          :'Some questions were left without a full answer.');
+    }else if(entry.part===2){
+      comment='Part 2 lasted '+seconds+' s: your long turn, then '+
+        partner+' turn from '+name+'. '+(you>=1
+          ?'You filled the minute; keep comparing rather than describing.'
+          :'The minute was over before your long turn started.');
+    }else if(entry.part===3){
+      comment='Part 3 lasted '+seconds+' s: '+you+' turns from you and '+
+        partner+' from '+name+'. '+(you>=2
+          ?'You kept the collaboration going.'
+          :'The discussion needed more from you.');
+    }else{
+      comment='Part 4 lasted '+seconds+' s: '+you+' answers from you and '+
+        partner+' from '+name+'. '+(you>=2
+          ?'You handled the follow-up questions.'
+          :'Your answers were short for a discussion.');
+    }
+    out.push({part:entry.part,seconds:seconds,planned:planned,comment:comment,
+      turns:{you:you,partner:partner,examiner:examiner}});
+  });
+  return out;
+}
+function spxTipFor(part){
+  return {
+    1:'Part 1: answer each question in 30-40 seconds, with one reason and one example.',
+    2:'Part 2: compare the two photos first, then speculate about why people chose them, and keep talking for the full minute.',
+    3:'Part 3: bring your partner in with "What do you think?" and agree on two options before the minute ends.',
+    4:'Part 4: give a general answer first, then a personal example, and do not wait for your partner to fill the silence.'
+  }[part]||'Keep each answer to one main idea plus one example.';
+}
+function spxFinalizeReport(data){
+  if(!data||typeof data!=='object')return data;
+  const parts=spxPartComments();
+  data.parts=parts;
+  data.turns=(SP_EXAM.session&&SP_EXAM.session.turns)||{};
+  /* The server response never carries the session shape: it is added here so
+     saveSP() writes one full-exam row instead of a single-part one. */
+  data.full=!!(SP_EXAM.full||SPK.reportFull);
+  data.part=SP_EXAM.part;
+  const weakest=parts.slice().sort(function(a,b){
+    if(a.turns.you!==b.turns.you)return a.turns.you-b.turns.you;
+    return a.seconds-b.seconds;
+  })[0];
+  data.tip=weakest?spxTipFor(weakest.part):'';
+  return data;
 }
 
 /* --- Feedback ------------------------------------------------------------ */
@@ -9974,12 +10583,29 @@ function spxRenderFeedbackPending(){
   spx$('spxFbSentence').textContent=t('spx_report_working');
   spx$('spxFbScales').innerHTML='';
   spx$('spxFbNext').textContent='';
+  const parts=spx$('spxFbParts');if(parts)parts.innerHTML='';
+  const turns=spx$('spxFbTurns');if(turns)turns.textContent='';
+  const tip=spx$('spxFbTip');if(tip)tip.textContent='';
   const err=spx$('spxFbErr');
   if(err){err.textContent='';err.style.display='none'}
   const save=spx$('spxFbSave');
   if(save)save.disabled=true;
   const retry=spx$('spxFbRetry');
   if(retry)retry.style.display='none';
+}
+
+function spxRenderPartsList(target,parts){
+  if(!target)return;
+  target.innerHTML=(parts||[]).map(function(p){
+    return '<div class="spx-part-comment"><span class="pc-n">'+
+      esc(t('spx_part_n',{n:p.part}))+'</span> '+esc(p.comment)+'</div>';
+  }).join('');
+}
+function spxRenderTurnsLine(target,turns){
+  if(!target)return;
+  const tt=turns||{};
+  target.textContent=t('spx_turns_line',{you:tt.candidate||0,
+    partner:tt.partner||0,examiner:tt.examiner||0});
 }
 
 function spxRenderFeedback(){
@@ -10010,6 +10636,10 @@ function spxRenderFeedback(){
     return spxScaleCard(t(pair[1]),b[key],extra);
   }).join('');
   spx$('spxFbNext').textContent=(r.fixes||[])[0]||'';
+  spxRenderPartsList(spx$('spxFbParts'),r.parts);
+  spxRenderTurnsLine(spx$('spxFbTurns'),r.turns);
+  const tip=spx$('spxFbTip');
+  if(tip)tip.textContent=r.tip||'';
   const err=spx$('spxFbErr');
   if(err){err.textContent='';err.style.display='none'}
   const save=spx$('spxFbSave');
@@ -10038,7 +10668,10 @@ SP_EXAM.retry=async function(){
   if(SP_EXAM.screen!=='feedback'||!SPK.reportPayload)return;
   spxRenderFeedbackPending();
   const ok=await spkReport();
-  if(ok)spxRenderFeedback();else spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
+  if(ok){
+    spxFinalizeReport(SPK.reportData);
+    spxRenderFeedback();
+  }else spxRenderFeedbackError(SPK.lastReportError||t('spx_report_failed'));
 };
 
 function spxRenderReportScreen(){
@@ -10049,13 +10682,13 @@ function spxRenderReportScreen(){
     ['pr',bands.pronunciation],['ic',bands.interactive_communication]
   ].filter(function(p){return typeof p[1]==='number'})
    .map(function(p){return p[0].toUpperCase()+' '+p[1]});
-  spx$('spxRpSentence').textContent=t('spx_report_sentence',{n:SP_EXAM.part});
+  spx$('spxRpSentence').textContent=SP_EXAM.full
+    ?t('spx_report_sentence_full')
+    :t('spx_report_sentence',{n:SP_EXAM.part});
   spx$('spxRpSaved').textContent=t('spx_report_saved',{
     min:SP_EXAM.entry?SP_EXAM.entry.min:Math.ceil((data.duration_s||0)/60),
     bands:parts.join(' · ')||t('spx_not_measured'),
     silences:SP_EXAM.entry?SP_EXAM.entry.silence_prompts:SP_EXAM.silencePrompts});
-  /* The measured stop-talking → reply latency of the last turn, printed so the
-     number is visible instead of claimed. Hidden when no turn was measured. */
   const latEl=spx$('spxRpLatency');
   if(latEl){
     const lat=SPK.turnLatencyMs;
@@ -10064,6 +10697,10 @@ function spxRenderReportScreen(){
           voice:t(spkVoiceMode()==='fast'?'spx_voice_fast':'spx_voice_natural')})
       :'';
   }
+  spxRenderPartsList(spx$('spxRpParts'),data.parts);
+  spxRenderTurnsLine(spx$('spxRpTurns'),data.turns);
+  const tip=spx$('spxRpTip');
+  if(tip)tip.textContent=data.tip||'';
 }
 
 SP_EXAM.saveReport=function(){
@@ -10080,13 +10717,14 @@ function spxRerender(){
   const screen=SP_EXAM.screen;
   if(!screen)return;
   if(screen==='choose'){spxRenderChoose();return}
-  if(screen==='brief'){spxRenderBrief();return}
+  if(screen==='brief'){spxRenderBrief();spxRenderPartnerHeader();return}
   if(screen==='exam'){
     const ph=SP_EXAM.phases[SP_EXAM.phase];
     spxRenderTask();
+    spxRenderPartnerHeader();
     if(ph)spxHighlight(ph.qi);
     spxPhaseHeader();
-    if(ph)spxTickRender(ph.sec-(performance.now()-SP_EXAM.phaseStart)/1000);
+    if(ph)spxTickRender(Math.max(0,spxScaleSec(ph.sec)-(performance.now()-SP_EXAM.phaseStart)/1000));
     return;
   }
   if(screen==='feedback'){
@@ -10113,6 +10751,51 @@ SP_EXAM.close=function(){
   const panel=spx$('spxPanel');
   if(panel)panel.style.display='none';
 };
+
+/* --- Test surface (only when ?spx_test=1 / localStorage.spx_test) ------- */
+if(spxTestMode()){
+  SPX_TEST_SELF={timeScale:1,partnerProvider:null};
+  SPX_TEST_SELF.ensure=async function(){
+    await spxLoadBank();
+    return true;
+  };
+  SPX_TEST_SELF.planSession=async function(seed){
+    return spxPlanSession(seed);
+  };
+  SPX_TEST_SELF.selectTasks=async function(seed,seen){
+    const bank=await spxLoadBank();
+    return spxSelectTasksSync(bank,seed,seen);
+  };
+  SPX_TEST_SELF.phases=function(part){
+    const n=Number(part)||SP_EXAM.part||1;
+    const task=SP_EXAM.bank
+      ?(spxTaskById(SP_EXAM.bank,n,spxPool(SP_EXAM.bank,n)[0])||spxDefaultTask(n))
+      :spxDefaultTask(n);
+    return spxPhasesFor(n,task,SP_EXAM.seed);
+  };
+  SPX_TEST_SELF.state=function(){
+    const s=SP_EXAM.session;
+    return {
+      screen:SP_EXAM.screen,part:SP_EXAM.part,phase:SP_EXAM.phase,
+      phases:SP_EXAM.phases.length,full:!!SP_EXAM.full,seed:SP_EXAM.seed,
+      partner:spxPartnerName(),timeScale:spxTimeScale(),
+      turns:(s&&s.turns)||{examiner:0,partner:0,candidate:0},
+      partStats:(s&&s.partStats)||{},
+      plan:s&&s.plan?(s.plan.parts||[]).map(function(p){
+        return {part:p.part,minutes:p.minutes,taskId:p.taskId,turns:p.turns,
+          seconds:p.seconds};
+      }):[],
+      report:SPK.reportData||null
+    };
+  };
+  SPX_TEST_SELF.startFull=async function(seed){
+    await SP_EXAM.startFull(seed);
+    await SP_EXAM.ready();
+    return SPX_TEST_SELF.state();
+  };
+  SPX_TEST_SELF.speakingState=function(){return spxSpeakingState()};
+  window.SPX_TEST=SPX_TEST_SELF;
+}
 
 /* One definition of "word" for the whole app: a whitespace-separated token
    that carries at least one letter or digit. An em dash or a lone "&" is not a
@@ -10382,6 +11065,17 @@ function saveSP(report){
       }
     };
     if(score!==null)entry.score=score;
+    /* Phase 50: a full exam is one session and one entry, not four. The part
+       comments, the turn counts and the tip travel with the row so the report
+       screen can explain the session without inventing a score. */
+    if(report.full){
+      entry.part=0;
+      entry.full=true;
+      entry.parts=[1,2,3,4];
+    }
+    entry.turns=report.turns||null;
+    entry.tip=report.tip||'';
+    entry.comments=(report.parts||[]).map(function(p){return p.comment});
     log(entry);
     return entry;
   }
