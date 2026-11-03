@@ -1851,7 +1851,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <h1 class="page-title" id="userTitle">Today</h1>
-            <p class="page-sub" id="userSub">Your high-performance study plan. Alternating 2-week rotation and automated writing cycle.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn gray" onclick="openSoloModal()" data-i18n="today_log_single">Log single part</button>
@@ -3658,7 +3657,6 @@ const I18N={
     full_simulation:'Full Simulation',
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
-    today_sub_fmt:'Personalized study plan for {name} · {stage} · Schedule: {sched}.',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
@@ -4381,7 +4379,6 @@ const I18N={
     full_simulation:'Simulación completa',
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
-    today_sub_fmt:'Plan de estudio personalizado para {name} · {stage} · Horario: {sched}.',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
@@ -12199,15 +12196,10 @@ function updatePersonalizedUI(){
   const s=D.settings||SETTINGS_DEFAULT;
   const sched=getSchedule();
   const userName=(USER&&USER.name)?USER.name:'Student';
-  const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
-  const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
-  const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
 
   // Dynamic Header
   const titleEl=document.getElementById('userTitle');
   if(titleEl)titleEl.textContent=t('today_title_fmt',{name:userName});
-  const subEl=document.getElementById('userSub');
-  if(subEl)subEl.textContent=t('today_sub_fmt',{name:userName,stage:curStageTxt,sched:schedSummary});
 
   const now=new Date();
   const rueOccur=getSkillNextOccurrence('rue',now);
