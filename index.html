@@ -11387,7 +11387,7 @@ function renderParts(){
     const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':fType==='w'?'Writing':'Reading &amp; UoE';
     html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span class="badge fri">Active filter: ${fLabel} Part ${fNum}</span>
-      <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all 15 parts</button>
+      <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all parts</button>
     </div>`;
   }
   PARTS.forEach((p,i)=>{
