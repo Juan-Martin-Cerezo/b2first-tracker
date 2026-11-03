@@ -3621,25 +3621,25 @@ const I18N={
     today_start_session:'Start session',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
-    rot_today:'TODAY',
-    rot_no_session_today:'No session scheduled today',
-    rot_no_session:'No session scheduled',
-    rot_configure_days:'Please configure your study days in PLAN.',
-    rot_open_studio:'Open studio',
-    rot_fast_forward:'Fast-forward (+1)',
-    rot_shift:'Shift (+1)',
-    rot_do_next:'Do next session now',
-    rot_schedule:'Schedule:',
-    rot_studio_open:'Studio is open below.',
-    rot_next:'Next:',
-    rot_in_days:'in {days}d',
-    rot_cycle:'Cycle:',
-    rot_active_writing:'Active Writing genre:',
-    rot_switch_sessions:'You can switch sessions above.',
-    rot_ses_a_rue:"Session A (Full Reading & UoE 50')",
-    rot_ses_b_l:"Session B (Full Listening 40')",
-    rot_ses_a_w:'Session A (Full Writing — {genre})',
-    rot_ses_b_sp:"Session B (Full Speaking 60')",
+    next_today:'TODAY',
+    next_no_session_today:'No session scheduled today',
+    next_no_session:'No session scheduled',
+    next_configure_days:'Please configure your study days in PLAN.',
+    next_open_studio:'Open studio',
+    next_fast_forward:'Fast-forward (+1)',
+    next_shift:'Shift (+1)',
+    next_do_now:'Do next session now',
+    next_schedule:'Schedule:',
+    next_studio_open:'Studio is open below.',
+    next_label:'Next:',
+    next_in_days:'in {days}d',
+    next_cycle:'Cycle:',
+    next_active_writing:'Active Writing genre:',
+    next_switch_sessions:'You can switch sessions above.',
+    next_ses_a_rue:"Session A (Full Reading & UoE 50')",
+    next_ses_b_l:"Session B (Full Listening 40')",
+    next_ses_a_w:'Session A (Full Writing — {genre})',
+    next_ses_b_sp:"Session B (Full Speaking 60')",
     metric_title:'Weekly Metrics',
     metric_hours:'Total hours',
     metric_uoe:'UoE accuracy',
@@ -4344,25 +4344,25 @@ const I18N={
     today_start_session:'Empezar sesión',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
-    rot_today:'HOY',
-    rot_no_session_today:'Hoy no hay sesión programada',
-    rot_no_session:'No hay sesión programada',
-    rot_configure_days:'Configurá tus días de estudio en PLAN.',
-    rot_open_studio:'Abrir estudio',
-    rot_fast_forward:'Adelantar (+1)',
-    rot_shift:'Desplazar (+1)',
-    rot_do_next:'Hacer la próxima sesión ahora',
-    rot_schedule:'Horario:',
-    rot_studio_open:'El estudio está abierto abajo.',
-    rot_next:'Próximo:',
-    rot_in_days:'en {days}d',
-    rot_cycle:'Ciclo:',
-    rot_active_writing:'Género de writing activo:',
-    rot_switch_sessions:'Podés cambiar de sesión arriba.',
-    rot_ses_a_rue:"Sesión A (Reading & UoE completo 50')",
-    rot_ses_b_l:"Sesión B (Listening completo 40')",
-    rot_ses_a_w:'Sesión A (Writing completo — {genre})',
-    rot_ses_b_sp:"Sesión B (Speaking completo 60')",
+    next_today:'HOY',
+    next_no_session_today:'Hoy no hay sesión programada',
+    next_no_session:'No hay sesión programada',
+    next_configure_days:'Configurá tus días de estudio en PLAN.',
+    next_open_studio:'Abrir estudio',
+    next_fast_forward:'Adelantar (+1)',
+    next_shift:'Desplazar (+1)',
+    next_do_now:'Hacer la próxima sesión ahora',
+    next_schedule:'Horario:',
+    next_studio_open:'El estudio está abierto abajo.',
+    next_label:'Próximo:',
+    next_in_days:'en {days}d',
+    next_cycle:'Ciclo:',
+    next_active_writing:'Género de writing activo:',
+    next_switch_sessions:'Podés cambiar de sesión arriba.',
+    next_ses_a_rue:"Sesión A (Reading & UoE completo 50')",
+    next_ses_b_l:"Sesión B (Listening completo 40')",
+    next_ses_a_w:'Sesión A (Writing completo — {genre})',
+    next_ses_b_sp:"Sesión B (Speaking completo 60')",
     metric_title:'Métricas semanales',
     metric_hours:'Horas totales',
     metric_uoe:'Precisión UoE',
@@ -12278,15 +12278,15 @@ function renderToday(){
   if(todaySlotIdx!==-1){
     const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
     defaultStudio=slotInfo.session.studio;
-    nb.innerHTML=`<div class="next-copy"><div class="big">${t('rot_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('rot_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('rot_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('rot_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_fast_forward')}">${t('rot_fast_forward')}</button></div>`;
+    nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('next_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('next_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('next_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button></div>`;
   }else{
     const nextSlot=getNextScheduledSession(d);
     if(nextSlot){
       defaultStudio=nextSlot.session.studio;
-      const nextTitle=nextSlot.sessionIdx===0?t('rot_ses_a_rue'):nextSlot.sessionIdx===1?t('rot_ses_b_l'):nextSlot.sessionIdx===2?t('rot_ses_a_w',{genre:nextSlot.activeWritingGenre}):t('rot_ses_b_sp');
-      nb.innerHTML=`<div class="next-copy"><div class="big">${t('rot_no_session_today')}</div><div class="when">${t('rot_next')} <b>${dayFull(nextSlot.day)} (${t('rot_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('rot_cycle')} <b>${weekLabel}</b> · ${t('rot_active_writing')} <b>${wT}</b>. ${t('rot_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="doNextSessionNow()">${t('rot_do_next')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('rot_shift')}">${t('rot_shift')}</button></div>`;
+      const nextTitle=nextSlot.sessionIdx===0?t('next_ses_a_rue'):nextSlot.sessionIdx===1?t('next_ses_b_l'):nextSlot.sessionIdx===2?t('next_ses_a_w',{genre:nextSlot.activeWritingGenre}):t('next_ses_b_sp');
+      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${dayFull(nextSlot.day)} (${t('next_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('next_cycle')} <b>${weekLabel}</b> · ${t('next_active_writing')} <b>${wT}</b>. ${t('next_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="doNextSessionNow()">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
     }else{
-      nb.innerHTML=`<div class="big">${t('rot_no_session')}</div><div class="when">${t('rot_configure_days')}</div>`;
+      nb.innerHTML=`<div class="big">${t('next_no_session')}</div><div class="when">${t('next_configure_days')}</div>`;
     }
   }
   
