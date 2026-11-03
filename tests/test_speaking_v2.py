@@ -519,8 +519,12 @@ def test_screenshots(p, out):
     pg.evaluate("SP_EXAM.ready()")
     assert wait_until(pg, "SP_EXAM.screen==='exam'", 15)
     assert wait_until(pg, "document.querySelectorAll('#spxTask .spx-photo').length===2", 10)
-    assert wait_until(pg, "document.querySelectorAll('#spxTask .spx-photo-missing').length===2", 15), \
-        "missing photos did not render their placeholder card"
+    # A slot is either a real photo or a placeholder card with the alt text; both are valid,
+    # the explorer must never leave an empty box. Photos land in assets/speaking/ over time.
+    assert wait_until(
+        pg,
+        "document.querySelectorAll('#spxTask .spx-photo-missing, #spxTask .spx-photo img').length===2",
+        15), "a photo slot rendered neither an image nor a placeholder card"
     pg.wait_for_timeout(400)
     pg.screenshot(path=os.path.join(OUT_DIR, "spx50_part2.png"), full_page=True)
     part2 = {
