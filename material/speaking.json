@@ -1,21 +1,169 @@
 {
   "version": 1,
+  "notes": "Original tasks written for this app in the B2 First Speaking format. They are not past papers.",
   "parts": [
     {
       "part": 1,
       "minutes": 2,
       "sets": [
         {
-          "id": "p1-a",
+          "id": "p1-work",
+          "topic": "Work and study",
           "questions": [
-            "Where are you from?",
-            "What do you enjoy about studying English?",
             "Do you work, or are you a student?",
-            "What do you like most about your school or your job?",
-            "What do you usually do at the weekend?",
-            "Do you prefer spending your free time indoors or outdoors? Why?",
-            "Do you enjoy travelling? What kind of holidays do you like?",
-            "How do you use technology in your daily life?"
+            "What do you like most about your work or your studies?",
+            "What would you like to do in the future?",
+            "Is there anything you would change about your job or your school?",
+            "How do you usually travel to work or to school?",
+            "Do you prefer working or studying alone, or with other people? Why?"
+          ],
+          "partnerLines": [
+            "I'm a student too, and I like the practical subjects best.",
+            "I'd like to work with computers, because I enjoy solving problems."
+          ]
+        },
+        {
+          "id": "p1-home",
+          "topic": "Your home",
+          "questions": [
+            "Where do you live at the moment?",
+            "What do you like about your home?",
+            "Is there anything you would like to change about your home?",
+            "Who do you live with?",
+            "What is your favourite room? Why?",
+            "Do you prefer living in a city or in the countryside? Why?"
+          ],
+          "partnerLines": [
+            "I live in a flat near the centre, and my favourite room is the kitchen.",
+            "I'd change my room, actually. It needs more light and a bigger desk."
+          ]
+        },
+        {
+          "id": "p1-free-time",
+          "topic": "Free time",
+          "questions": [
+            "What do you usually do in your free time?",
+            "Do you prefer relaxing at home or going out? Why?",
+            "How much free time do you have during the week?",
+            "Have you started any new hobby recently?",
+            "Do you spend your free time with friends or alone?",
+            "What would you like to do more of at the weekend?"
+          ],
+          "partnerLines": [
+            "I usually meet friends or play football, depending on the weather.",
+            "I'd like to have more time for reading, but school keeps me busy."
+          ]
+        },
+        {
+          "id": "p1-travel",
+          "topic": "Travel",
+          "questions": [
+            "Do you enjoy travelling?",
+            "What kind of holidays do you prefer?",
+            "Where would you like to go next? Why?",
+            "Do you prefer travelling by plane or by train?",
+            "What do you always take with you when you travel?",
+            "Have you ever had a journey that did not go well?"
+          ],
+          "partnerLines": [
+            "I love travelling, especially when I can stay somewhere for a week.",
+            "A train journey is more relaxing, but planes are cheaper sometimes."
+          ]
+        },
+        {
+          "id": "p1-technology",
+          "topic": "Technology",
+          "questions": [
+            "How often do you use a computer or a phone?",
+            "What do you use technology for most?",
+            "Is there an app you could not live without?",
+            "Do you think people spend too much time on their phones?",
+            "How do you use technology for studying English?",
+            "Would you like to work with technology in the future?"
+          ],
+          "partnerLines": [
+            "I use my phone for messages and music, and a laptop for schoolwork.",
+            "Maps, probably. I get lost without an app on my phone."
+          ]
+        },
+        {
+          "id": "p1-food",
+          "topic": "Food",
+          "questions": [
+            "What kind of food do you enjoy?",
+            "Do you prefer cooking at home or eating out? Why?",
+            "Is there a food from your country that visitors should try?",
+            "How often do you eat with your family?",
+            "Have your eating habits changed in recent years?",
+            "Do you think it is important to eat healthily?"
+          ],
+          "partnerLines": [
+            "I like simple food, and I cook pasta at home quite often.",
+            "Visitors should try our bread, but it takes a long time to make."
+          ]
+        },
+        {
+          "id": "p1-sport",
+          "topic": "Sport",
+          "questions": [
+            "Do you play any sports?",
+            "How often do you exercise?",
+            "Do you prefer watching sport or taking part?",
+            "Is there a sport you would like to learn?",
+            "Do people in your country do enough exercise?",
+            "What do you do to keep fit?"
+          ],
+          "partnerLines": [
+            "I play basketball twice a week, and I walk everywhere else.",
+            "I'd like to learn to swim properly, because I'm not very confident in water."
+          ]
+        },
+        {
+          "id": "p1-music",
+          "topic": "Music",
+          "questions": [
+            "What kind of music do you like?",
+            "When do you usually listen to music?",
+            "Can you play a musical instrument?",
+            "Have you ever been to a live concert?",
+            "Do you listen to music while you study or work?",
+            "Is music important in your family?"
+          ],
+          "partnerLines": [
+            "I listen to pop and a bit of rock, mostly while I'm travelling.",
+            "I play the guitar badly, but I enjoy it, and my brother plays too."
+          ]
+        },
+        {
+          "id": "p1-future",
+          "topic": "Future plans",
+          "questions": [
+            "What are you planning to do next year?",
+            "Would you like to live in another country?",
+            "What job would you like to have in ten years?",
+            "Are you studying anything new at the moment?",
+            "Do you make plans, or do you decide things at the last minute?",
+            "What is one thing you would like to achieve?"
+          ],
+          "partnerLines": [
+            "Next year I hope to start a course, probably in another city.",
+            "I'd like to live abroad for a year, just to see how it feels."
+          ]
+        },
+        {
+          "id": "p1-english",
+          "topic": "Learning English",
+          "questions": [
+            "How long have you been learning English?",
+            "What do you find easiest about English?",
+            "What is the most difficult part for you?",
+            "Do you use English outside the classroom?",
+            "How do you practise your speaking?",
+            "Why do you want to improve your English?"
+          ],
+          "partnerLines": [
+            "I've been learning for about six years, mostly at school.",
+            "I watch series without subtitles, and that helps with listening."
           ]
         }
       ]
@@ -25,30 +173,279 @@
       "minutes": 4,
       "tasks": [
         {
-          "id": "p2-1",
-          "photos": ["img/spk/p2-1-a.jpg", "img/spk/p2-1-b.jpg"],
-          "title": "Two ways of travelling to work",
+          "id": "p2-01",
+          "topic": "Getting to work",
+          "title": "Getting to work",
+          "question": "Compare these two photographs and say why people might choose each way of getting to work.",
           "prompts": [
-            "Compare the photographs and say why the people might have chosen these ways of travelling.",
-            "Which of these two ways of travelling do you think is more enjoyable? Why?"
+            "Compare these two photographs and say why people might choose each way of getting to work.",
+            "Which of these two ways of getting to work would you prefer? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-01-a.webp",
+            "assets/speaking/p2-01-b.webp"
+          ],
+          "photoAlt": [
+            "a crowded metro carriage at rush hour",
+            "a man cycling along a busy city road"
+          ],
+          "partnerLines": [
+            "Well, the first photo shows a very full metro, and the second one shows a man on a bike. The people on the train probably chose it because it is fast and cheap, while the cyclist may want to keep fit and avoid the traffic.",
+            "The first picture looks stressful, but the second one could be dangerous in the rain. I suppose people choose whichever is easier for their journey.",
+            "I think the metro is chosen for speed and the bicycle for freedom. Cycling is healthier, but not everybody lives close enough to work."
           ]
         },
         {
-          "id": "p2-2",
-          "photos": ["img/spk/p2-2-a.jpg", "img/spk/p2-2-b.jpg"],
-          "title": "Two places to study",
+          "id": "p2-02",
+          "topic": "Where people study",
+          "title": "Where people study",
+          "question": "Compare these two photographs and say why people might choose these places to study.",
           "prompts": [
-            "Compare the photographs and say why the people might have chosen these places to study.",
+            "Compare these two photographs and say why people might choose these places to study.",
             "Which of these two places would you prefer to study in? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-02-a.webp",
+            "assets/speaking/p2-02-b.webp"
+          ],
+          "photoAlt": [
+            "students working at long tables in a library",
+            "a young woman studying at a table in a cafe"
+          ],
+          "partnerLines": [
+            "The library looks quiet and serious, and the cafe looks busier and more relaxed. Some people need silence, while others concentrate better with a bit of noise around them.",
+            "I'd choose the cafe myself, because I like having a drink next to me. On the other hand, the library has everything you need and nobody disturbs you.",
+            "The library is probably better for exams, and the cafe is nicer for reading. It depends on what you are studying, I think."
           ]
         },
         {
-          "id": "p2-3",
-          "photos": ["img/spk/p2-3-a.jpg", "img/spk/p2-3-b.jpg"],
-          "title": "Two ways of shopping",
+          "id": "p2-03",
+          "topic": "Ways of shopping",
+          "title": "Ways of shopping",
+          "question": "Compare these two photographs and say why people might choose to shop in these ways.",
           "prompts": [
-            "Compare the photographs and say why the people might have chosen to shop in these ways.",
+            "Compare these two photographs and say why people might choose to shop in these ways.",
             "Which of these two ways of shopping do you think is better? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-03-a.webp",
+            "assets/speaking/p2-03-b.webp"
+          ],
+          "photoAlt": [
+            "people buying vegetables at an outdoor street market",
+            "a person shopping for clothes on a laptop at home"
+          ],
+          "partnerLines": [
+            "The market is full of people choosing fresh food, and the second photo shows someone shopping online. The market is social and you can see the products, but shopping online saves time and is often cheaper.",
+            "I prefer the market, because you can ask questions and try things. Online shopping is convenient, but you never know exactly what will arrive.",
+            "For food I'd choose the market, and for clothes I'd choose the internet. Each one works better for a different kind of shopping."
+          ]
+        },
+        {
+          "id": "p2-04",
+          "topic": "Celebrations",
+          "title": "Celebrations",
+          "question": "Compare these two photographs and say why people might celebrate in these different ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might celebrate in these different ways.",
+            "Which of these celebrations would you enjoy more? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-04-a.webp",
+            "assets/speaking/p2-04-b.webp"
+          ],
+          "photoAlt": [
+            "a family birthday party around a table at home",
+            "a large street festival with music and flags"
+          ],
+          "partnerLines": [
+            "The first photo is a small family birthday, and the second is a big street festival. A family party is more personal, while a festival is exciting because there are so many people and things to see.",
+            "I'd enjoy the street festival more, because I like music and crowds. A family meal is nice too, but it is much quieter.",
+            "The family party probably means more to the people there, and the festival is more about the whole town. They are different kinds of celebration."
+          ]
+        },
+        {
+          "id": "p2-05",
+          "topic": "Keeping fit",
+          "title": "Keeping fit",
+          "question": "Compare these two photographs and say why people might choose these ways of keeping fit.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose these ways of keeping fit.",
+            "Which of these two ways of keeping fit is easier to continue? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-05-a.webp",
+            "assets/speaking/p2-05-b.webp"
+          ],
+          "photoAlt": [
+            "people lifting weights in a modern gym",
+            "a group of runners in a park on a sunny morning"
+          ],
+          "partnerLines": [
+            "In the first photo people are training in a gym, and in the second they are running together in a park. The gym has equipment and a routine, while running outside is free and you can do it anywhere.",
+            "Running in the park seems easier to continue, because you don't need to pay or travel. The gym is better if you want somebody to tell you what to do.",
+            "I think the gym is easier in winter and the park is easier in summer. Most people probably do both at different times of the year."
+          ]
+        },
+        {
+          "id": "p2-06",
+          "topic": "Holiday accommodation",
+          "title": "Holiday accommodation",
+          "question": "Compare these two photographs and say why people might choose these kinds of accommodation.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose these kinds of accommodation.",
+            "Which of these two places would suit a family with children? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-06-a.webp",
+            "assets/speaking/p2-06-b.webp"
+          ],
+          "photoAlt": [
+            "a small tent beside a lake with mountains behind",
+            "a comfortable hotel room with a sea view"
+          ],
+          "partnerLines": [
+            "The tent is cheap and close to nature, and the hotel is comfortable and has everything prepared. Camping appeals to people who want adventure, while a hotel is better if you want to relax.",
+            "A family with small children would probably choose the hotel, because it is safer and easier. Older children might enjoy the tent more.",
+            "The tent gives you more freedom, but the hotel gives you more time to rest. It depends on the kind of holiday you want."
+          ]
+        },
+        {
+          "id": "p2-07",
+          "topic": "Where people work",
+          "title": "Where people work",
+          "question": "Compare these two photographs and say why people might choose to work in these places.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose to work in these places.",
+            "Which of these two places would be better for a new job? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-07-a.webp",
+            "assets/speaking/p2-07-b.webp"
+          ],
+          "photoAlt": [
+            "a busy open-plan office with several desks",
+            "a person working alone at a desk at home"
+          ],
+          "partnerLines": [
+            "One photo shows a busy office and the other shows someone working from home. The office is good for asking questions and meeting people, while home is quieter and saves the journey.",
+            "For a new job I'd choose the office, because you learn much faster when you can talk to colleagues. Working from home is better once you already know the work.",
+            "The office helps with teamwork, and home helps with concentration. Many companies now offer both, which seems sensible."
+          ]
+        },
+        {
+          "id": "p2-08",
+          "topic": "Eating out or at home",
+          "title": "Eating out or at home",
+          "question": "Compare these two photographs and say why people might choose to eat in these ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose to eat in these ways.",
+            "Which of these two meals do you think is healthier? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-08-a.webp",
+            "assets/speaking/p2-08-b.webp"
+          ],
+          "photoAlt": [
+            "a family cooking a meal together in a kitchen",
+            "friends eating burgers and chips in a fast-food restaurant"
+          ],
+          "partnerLines": [
+            "The first photo shows a family cooking at home and the second shows friends in a fast-food restaurant. Cooking at home is usually cheaper and you know what is in the food, while fast food is quick and social.",
+            "The home-cooked meal is probably healthier, because you can control the salt and the oil. Fast food is fine sometimes, but not every day.",
+            "People choose fast food when they are busy, and they cook at home when they have time. Both can be healthy if you are careful."
+          ]
+        },
+        {
+          "id": "p2-09",
+          "topic": "A free weekend",
+          "title": "A free weekend",
+          "question": "Compare these two photographs and say why people might choose to spend a weekend in these ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose to spend a weekend in these ways.",
+            "Which of these two weekends would you choose? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-09-a.webp",
+            "assets/speaking/p2-09-b.webp"
+          ],
+          "photoAlt": [
+            "people walking through a busy city street with shops",
+            "two walkers on a quiet mountain path"
+          ],
+          "partnerLines": [
+            "The city weekend is full of shops and people, and the mountain weekend is quiet and empty. Some people want entertainment and restaurants, while others want fresh air and exercise.",
+            "I'd choose the mountains, because I spend enough time in the city during the week. A quiet walk would help me relax.",
+            "The city is easier if the weather is bad, and the mountains are better when it is sunny. I'd probably decide at the last minute."
+          ]
+        },
+        {
+          "id": "p2-10",
+          "topic": "Listening to music",
+          "title": "Listening to music",
+          "question": "Compare these two photographs and say why people might listen to music in these ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might listen to music in these ways.",
+            "Which of these two ways of listening to music gives a better experience? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-10-a.webp",
+            "assets/speaking/p2-10-b.webp"
+          ],
+          "photoAlt": [
+            "a band playing to a large crowd at an outdoor concert",
+            "a person listening to headphones on a train"
+          ],
+          "partnerLines": [
+            "The concert is loud and shared, and the headphones are private and quiet. At a concert you feel the music and the crowd, but on a train you can choose exactly what you want.",
+            "I think the concert is a better experience, even if it is expensive. Headphones are more convenient, but you remember a live show for years.",
+            "A concert is special because it happens once, and headphones are for everyday life. I use both, but for different reasons."
+          ]
+        },
+        {
+          "id": "p2-11",
+          "topic": "Learning something new",
+          "title": "Learning something new",
+          "question": "Compare these two photographs and say why people might choose to learn in these ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose to learn in these ways.",
+            "Which of these two ways of learning would suit you better? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-11-a.webp",
+            "assets/speaking/p2-11-b.webp"
+          ],
+          "photoAlt": [
+            "students in a classroom with a teacher at the board",
+            "a person following an online lesson on a laptop"
+          ],
+          "partnerLines": [
+            "One photo shows a normal classroom and the other shows someone learning online. In a class you can ask the teacher immediately, while online lessons let you study when and where you want.",
+            "Online learning suits me better, because I can pause the video and repeat the difficult parts. In a classroom I sometimes miss what the teacher says.",
+            "The classroom is better for speaking practice, and online is better for grammar. I think a mixture of both is ideal."
+          ]
+        },
+        {
+          "id": "p2-12",
+          "topic": "Helping others",
+          "title": "Helping others",
+          "question": "Compare these two photographs and say why people might choose to help in these ways.",
+          "prompts": [
+            "Compare these two photographs and say why people might choose to help in these ways.",
+            "Which of these two kinds of help is more useful to the community? Why?"
+          ],
+          "photos": [
+            "assets/speaking/p2-12-a.webp",
+            "assets/speaking/p2-12-b.webp"
+          ],
+          "photoAlt": [
+            "a volunteer walking dogs at an animal shelter",
+            "people planting vegetables in a community garden"
+          ],
+          "partnerLines": [
+            "The first photo shows someone helping at an animal shelter, and the second shows people working in a community garden. The shelter helps animals directly, while the garden gives food and a place for neighbours to meet.",
+            "The community garden is probably more useful, because many people can enjoy it. The animal shelter is important too, but it helps a smaller group.",
+            "Both are valuable, but in different ways. The garden changes the neighbourhood, and the shelter saves individual animals."
           ]
         }
       ]
@@ -58,20 +455,41 @@
       "minutes": 4,
       "tasks": [
         {
-          "id": "p3-1",
+          "id": "p3-01",
           "topic": "A school trip abroad",
+          "situation": "Your class has won some money for a school trip abroad. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "where to go",
+            "how to travel",
+            "where to stay",
+            "what to do in the evenings",
+            "how to raise extra money"
+          ],
           "prompts": [
             "where to go",
             "how to travel",
             "where to stay",
             "what to do in the evenings",
-            "how to raise the money"
+            "how to raise extra money"
           ],
-          "decision": "Which two ideas would be best?"
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "Shall I start? I think the most important thing is where to go, because everything else depends on that.",
+            "That's a good point, but if we choose an expensive city we won't have enough money for the hotel.",
+            "So shall we agree on a cheaper country and a coach instead of a plane? That would leave more for the activities."
+          ]
         },
         {
-          "id": "p3-2",
+          "id": "p3-02",
           "topic": "A new community centre",
+          "situation": "Your town is planning a new community centre. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "a sports hall",
+            "a cafe",
+            "a library corner",
+            "a music room",
+            "a garden"
+          ],
           "prompts": [
             "a sports hall",
             "a cafe",
@@ -79,7 +497,212 @@
             "a music room",
             "a garden"
           ],
-          "decision": "Which two ideas would be best?"
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "Let's begin with the sports hall, because young people need somewhere to play when it rains.",
+            "I agree, but a cafe would bring in money, and the centre needs that to stay open.",
+            "Maybe we could have the sports hall and a small cafe next to it. Would that work for you?"
+          ]
+        },
+        {
+          "id": "p3-03",
+          "topic": "An end-of-year celebration",
+          "situation": "Your class wants to organise an end-of-year celebration. Talk together about the ideas below and decide which two would be best.",
+          "options": [
+            "a party in the school hall",
+            "a trip to the coast",
+            "a talent show",
+            "a picnic in the park",
+            "a meal in a restaurant"
+          ],
+          "prompts": [
+            "a party in the school hall",
+            "a trip to the coast",
+            "a talent show",
+            "a picnic in the park",
+            "a meal in a restaurant"
+          ],
+          "decision": "Decide which two ideas are the best.",
+          "partnerLines": [
+            "I think a party in the school hall is the easiest, because we already have the space.",
+            "That's true, but a talent show would be more memorable, and everybody could take part.",
+            "Why don't we do the talent show in the hall? Then we get both ideas at the same time."
+          ]
+        },
+        {
+          "id": "p3-04",
+          "topic": "Improving the local park",
+          "situation": "Your local council has money to improve the park. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "more trees",
+            "a children's playground",
+            "outdoor gym equipment",
+            "a small cafe",
+            "better lighting"
+          ],
+          "prompts": [
+            "more trees",
+            "a children's playground",
+            "outdoor gym equipment",
+            "a small cafe",
+            "better lighting"
+          ],
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "The playground seems important, because families with children use the park most.",
+            "I see your point, but better lighting would make it safer in the evening, and more people would go.",
+            "So maybe the playground for the daytime and better lighting for the evening. Shall we go with those two?"
+          ]
+        },
+        {
+          "id": "p3-05",
+          "topic": "A school food festival",
+          "situation": "Your school is planning a food festival. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "healthy snacks",
+            "dishes from different countries",
+            "a cooking competition",
+            "live music",
+            "a poster campaign"
+          ],
+          "prompts": [
+            "healthy snacks",
+            "dishes from different countries",
+            "a cooking competition",
+            "live music",
+            "a poster campaign"
+          ],
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "I'd start with dishes from different countries, because that teaches us about other cultures.",
+            "That's a good point, but a cooking competition would get more students involved.",
+            "What if the competition is about dishes from different countries? Then we only need one idea."
+          ]
+        },
+        {
+          "id": "p3-06",
+          "topic": "A student advice website",
+          "situation": "Your school wants to create a website with advice for students. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "exam tips",
+            "money advice",
+            "health information",
+            "local events",
+            "a question-and-answer forum"
+          ],
+          "prompts": [
+            "exam tips",
+            "money advice",
+            "health information",
+            "local events",
+            "a question-and-answer forum"
+          ],
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "Exam tips are the obvious choice, because everybody worries about exams.",
+            "Maybe, but a question-and-answer forum would help with everything else. People could ask about money or health there.",
+            "That's true. Let's choose exam tips and the forum, and the forum can cover the other topics."
+          ]
+        },
+        {
+          "id": "p3-07",
+          "topic": "A weekend sports event",
+          "situation": "Your club is organising a sports event for the weekend. Talk together about the ideas below and decide which two would attract the most people.",
+          "options": [
+            "a football tournament",
+            "a fun run",
+            "a cycling race",
+            "a swimming gala",
+            "a dance workshop"
+          ],
+          "prompts": [
+            "a football tournament",
+            "a fun run",
+            "a cycling race",
+            "a swimming gala",
+            "a dance workshop"
+          ],
+          "decision": "Decide which two ideas would attract the most people.",
+          "partnerLines": [
+            "A fun run is a good idea because anyone can take part, even people who are not very sporty.",
+            "I agree, but a football tournament would bring in bigger crowds to watch.",
+            "So we could have the fun run in the morning and the football in the afternoon. That covers both groups."
+          ]
+        },
+        {
+          "id": "p3-08",
+          "topic": "Renovating the town library",
+          "situation": "The town library is going to be renovated. Talk together about the ideas below and decide which two would be most useful.",
+          "options": [
+            "more computers",
+            "a quiet study room",
+            "a cafe",
+            "longer opening hours",
+            "a children's area"
+          ],
+          "prompts": [
+            "more computers",
+            "a quiet study room",
+            "a cafe",
+            "longer opening hours",
+            "a children's area"
+          ],
+          "decision": "Decide which two ideas are the most useful.",
+          "partnerLines": [
+            "Longer opening hours would help students, because many of us finish school late.",
+            "That's a good point, but more computers would help people who don't have one at home.",
+            "Let's choose longer hours and more computers. They solve the biggest problems."
+          ]
+        },
+        {
+          "id": "p3-09",
+          "topic": "A family visit to a big city",
+          "situation": "A family is visiting a big city for two days. Talk together about the ideas below and decide which two would be best for them.",
+          "options": [
+            "a famous museum",
+            "a boat tour",
+            "a market",
+            "a theatre show",
+            "a day in a park"
+          ],
+          "prompts": [
+            "a famous museum",
+            "a boat tour",
+            "a market",
+            "a theatre show",
+            "a day in a park"
+          ],
+          "decision": "Decide which two ideas would be best for the family.",
+          "partnerLines": [
+            "I'd suggest the boat tour first, because you see the whole city in a short time.",
+            "That's true, but it could be expensive for a whole family. A market is cheaper and more interesting for children.",
+            "Why don't we choose the market and the park? They are cheap, and the children can run around."
+          ]
+        },
+        {
+          "id": "p3-10",
+          "topic": "A charity fundraiser",
+          "situation": "Your class wants to raise money for charity. Talk together about the ideas below and decide which two would raise the most money.",
+          "options": [
+            "a sponsored walk",
+            "a bake sale",
+            "a quiz night",
+            "a second-hand sale",
+            "a concert"
+          ],
+          "prompts": [
+            "a sponsored walk",
+            "a bake sale",
+            "a quiz night",
+            "a second-hand sale",
+            "a concert"
+          ],
+          "decision": "Decide which two ideas would raise the most money.",
+          "partnerLines": [
+            "A quiz night sounds fun, and people would pay to enter a team.",
+            "I agree, but a sponsored walk could raise more, because everybody can ask their family for money.",
+            "So shall we do the walk and the quiz? One is outdoors and one is indoors, so the weather can't ruin both."
+          ]
         }
       ]
     },
@@ -88,27 +711,173 @@
       "minutes": 4,
       "tasks": [
         {
-          "id": "p4-1",
-          "linkedTo": "p3-1",
+          "id": "p4-01",
+          "topic": "School trips",
+          "linkedTo": "p3-01",
           "questions": [
             "Why do you think school trips are useful for students?",
             "Should parents pay for school trips, or should the school pay?",
             "What can students learn from travelling with their class?",
-            "Is it better to travel with friends or with family? Why?",
             "How has the way people travel changed in your country?",
-            "Would you like to work in the travel industry? Why or why not?"
+            "Would you like to work in the travel industry? Why?"
+          ],
+          "partnerLines": [
+            "I think school trips are useful because you remember what you see much better than what you read. When we visited a museum, I understood the history lesson for the first time.",
+            "I'd say the school should pay most of it, because not every family can afford a trip. Otherwise some students would always stay at home.",
+            "Students learn how to organise themselves and how to get on with people for a whole week. They also learn to be more independent."
           ]
         },
         {
-          "id": "p4-2",
-          "linkedTo": "p3-2",
+          "id": "p4-02",
+          "topic": "Community centres",
+          "linkedTo": "p3-02",
           "questions": [
             "Why do people need places like community centres?",
             "What activities are popular with young people in your area?",
             "Should the government pay for community centres?",
             "How can a community centre bring people together?",
-            "Do you think online activities will replace places like this?",
-            "Would you use a community centre? Why or why not?"
+            "Do you think online activities will replace places like this?"
+          ],
+          "partnerLines": [
+            "Community centres give people somewhere to go that is not a shop or a home. They are especially important for older people who live alone.",
+            "In my area, football and dance classes are the most popular. Young people also use the centre to study together.",
+            "I don't think online activities will replace them, because people still want to meet face to face. A screen cannot give you a cup of tea or a conversation."
+          ]
+        },
+        {
+          "id": "p4-03",
+          "topic": "Celebrations",
+          "linkedTo": "p3-03",
+          "questions": [
+            "Why are celebrations important for a community?",
+            "Who should organise public celebrations, the government or local people?",
+            "What makes a celebration memorable?",
+            "Have celebrations changed since your parents were young?",
+            "Should schools celebrate national days? Why?"
+          ],
+          "partnerLines": [
+            "Celebrations bring people together and give them a reason to talk to neighbours they do not usually meet.",
+            "I think local people should organise them, because they know what the town needs. The government can help with money, but not with the ideas.",
+            "A celebration is memorable when everybody takes part, not when it is just a show on a stage."
+          ]
+        },
+        {
+          "id": "p4-04",
+          "topic": "Parks and public spaces",
+          "linkedTo": "p3-04",
+          "questions": [
+            "Why are parks important in a city?",
+            "Who uses parks most, and why?",
+            "Should councils spend money on parks when there are other problems?",
+            "How can parks be made safer?",
+            "Do you think people spend enough time outdoors?"
+          ],
+          "partnerLines": [
+            "Parks give people fresh air and somewhere to exercise without paying. In a big city, they are the only quiet place for many families.",
+            "I think children and older people use them most, but office workers use them at lunchtime too.",
+            "People do not spend enough time outdoors, because phones and computers keep them inside. Parks make it easier to change that."
+          ]
+        },
+        {
+          "id": "p4-05",
+          "topic": "Food and eating habits",
+          "linkedTo": "p3-05",
+          "questions": [
+            "Why are food festivals popular?",
+            "Should schools teach students how to cook?",
+            "Is healthy food too expensive for some families?",
+            "How have eating habits changed in your country?",
+            "Should advertising for fast food be restricted?"
+          ],
+          "partnerLines": [
+            "Food festivals are popular because people enjoy trying new things, and food is easy to share with friends.",
+            "Schools should definitely teach cooking, because some students leave home without knowing how to make a simple meal.",
+            "I think fast-food advertising should be restricted, especially on television when children are watching. It makes unhealthy food look normal."
+          ]
+        },
+        {
+          "id": "p4-06",
+          "topic": "Advice and information",
+          "linkedTo": "p3-06",
+          "questions": [
+            "Where do young people usually get advice?",
+            "How can you tell if advice online is reliable?",
+            "Should schools teach students about money?",
+            "Do people talk less face to face than before?",
+            "Is it safe to ask strangers for advice on the internet?"
+          ],
+          "partnerLines": [
+            "Young people get advice from friends, family and social media, in that order, I think. The internet is fast, but not always correct.",
+            "You can check the same information on several websites, and look for a name or an organisation behind it.",
+            "Schools should teach money skills, because many students do not understand loans or taxes when they leave."
+          ]
+        },
+        {
+          "id": "p4-07",
+          "topic": "Sporting events",
+          "linkedTo": "p3-07",
+          "questions": [
+            "Why do sporting events bring people together?",
+            "Should schools organise more competitions?",
+            "Are big international events worth the cost?",
+            "How can we encourage people to exercise more?",
+            "Do people spend too much time watching sport instead of playing it?"
+          ],
+          "partnerLines": [
+            "Sporting events give people something to support together, and that creates a strong feeling of belonging.",
+            "Schools should organise more competitions, because they teach students to lose as well as to win.",
+            "I think people watch too much sport, but watching can also inspire them to start playing. It depends on the person."
+          ]
+        },
+        {
+          "id": "p4-08",
+          "topic": "Libraries",
+          "linkedTo": "p3-08",
+          "questions": [
+            "Are libraries still necessary today?",
+            "What should a modern library offer?",
+            "Should libraries be free for everybody?",
+            "Do young people read enough?",
+            "Do you think printed books will disappear?"
+          ],
+          "partnerLines": [
+            "Libraries are still necessary, because not everybody has a computer or a quiet place to study at home.",
+            "A modern library should offer books, computers and a space to meet. It is more than a building full of paper.",
+            "I don't think printed books will disappear completely. Many people prefer the feeling of a real book, especially for reading in bed."
+          ]
+        },
+        {
+          "id": "p4-09",
+          "topic": "Cities and tourism",
+          "linkedTo": "p3-09",
+          "questions": [
+            "Why do people visit big cities?",
+            "What problems can tourism cause?",
+            "Should tourists pay to enter famous attractions?",
+            "How has tourism changed in your country?",
+            "Is it better to travel alone or with other people?"
+          ],
+          "partnerLines": [
+            "People visit big cities for the museums, the food and the atmosphere. There is always something happening, so nobody gets bored.",
+            "Tourism can make housing expensive and fill the streets with crowds. Local people sometimes stop using their own city centre.",
+            "I'd rather travel with one or two friends, because you can share the experience and still do what you want."
+          ]
+        },
+        {
+          "id": "p4-10",
+          "topic": "Charity and volunteering",
+          "linkedTo": "p3-10",
+          "questions": [
+            "Why do people give money to charity?",
+            "Should schools teach students about charity?",
+            "Is volunteering good for young people?",
+            "How should people choose which charity to support?",
+            "Do celebrities help charities, or do they just want publicity?"
+          ],
+          "partnerLines": [
+            "People give money because they want to help, and because it makes them feel useful. Sometimes it is also because a friend is collecting.",
+            "Volunteering is very good for young people, because they learn skills and meet people outside school.",
+            "Celebrities do help, because they bring attention and money. Some of them also want publicity, but the charity still benefits."
           ]
         }
       ]
