@@ -1563,10 +1563,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div class="row">
         <div><label data-i18n="solo_err_code">Error Code</label>
           <select id="soloErrCode">
-            <option value="L-GAP" data-i18n="err_code_lgap">L-GAP (Lexical gap)</option>
-            <option value="G-ERR" data-i18n="err_code_gerr">G-ERR (Misapplied rule)</option>
-            <option value="T-MIS" data-i18n="err_code_tmis">T-MIS (Textual distractor)</option>
-            <option value="T-LIM" data-i18n="err_code_tlim">T-LIM (Time pressure)</option>
+            <option value="L-GAP" data-i18n="err_code_lgap">L-GAP — vocabulary gap</option>
+            <option value="G-ERR" data-i18n="err_code_gerr">G-ERR — grammar error</option>
+            <option value="T-MIS" data-i18n="err_code_tmis">T-MIS — distractor trap</option>
+            <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
           </select>
         </div>
         <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
@@ -2115,10 +2115,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="row" style="margin-top:10px">
                       <div><label>Error Code (if any)</label>
                         <select id="errCode">
-                          <option value="L-GAP">L-GAP — vocabulary gap</option>
-                          <option value="G-ERR">G-ERR — grammar error</option>
-                          <option value="T-MIS">T-MIS — distractor trap</option>
-                          <option value="T-LIM">T-LIM — time pressure</option>
+                          <option value="L-GAP" data-i18n="err_code_lgap">L-GAP — vocabulary gap</option>
+                          <option value="G-ERR" data-i18n="err_code_gerr">G-ERR — grammar error</option>
+                          <option value="T-MIS" data-i18n="err_code_tmis">T-MIS — distractor trap</option>
+                          <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
                         </select>
                       </div>
                       <div><label>What went wrong?</label><input type="text" id="errDesc" placeholder="e.g. didn't use inversion"></div>
@@ -2897,6 +2897,46 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <p class="page-sub" data-i18n="err_sub">Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.</p>
           </div>
         </div>
+        <div class="card" id="errLegend">
+          <h2 data-i18n="err_legend_title">What each code means</h2>
+          <div class="sub" data-i18n="err_legend_sub">One line per code, with an example, so a log entry always says what went wrong.</div>
+          <div class="table-wrap">
+            <table class="err-legend-table">
+              <thead><tr>
+                <th data-i18n="err_legend_code">Code</th>
+                <th data-i18n="err_legend_name">Name</th>
+                <th data-i18n="err_legend_means">What it means</th>
+                <th data-i18n="err_legend_example">Example</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="pill L-GAP">L-GAP</span></td>
+                  <td data-i18n="err_legend_lgap_name">Vocabulary gap</td>
+                  <td data-i18n="err_legend_lgap_means">You did not know the word or collocation that the answer needed</td>
+                  <td data-i18n="err_legend_lgap_example">“out of the blue” — did not know the phrase</td>
+                </tr>
+                <tr>
+                  <td><span class="pill G-ERR">G-ERR</span></td>
+                  <td data-i18n="err_legend_gerr_name">Grammar error</td>
+                  <td data-i18n="err_legend_gerr_means">You knew the words but the structure was wrong</td>
+                  <td data-i18n="err_legend_gerr_example">“I have seen him yesterday”</td>
+                </tr>
+                <tr>
+                  <td><span class="pill T-MIS">T-MIS</span></td>
+                  <td data-i18n="err_legend_tmis_name">Distractor trap</td>
+                  <td data-i18n="err_legend_tmis_means">The answer was in the text but a wrong option looked right</td>
+                  <td data-i18n="err_legend_tmis_example">two dates mentioned, picked the wrong one</td>
+                </tr>
+                <tr>
+                  <td><span class="pill T-LIM">T-LIM</span></td>
+                  <td data-i18n="err_legend_tlim_name">Time limit</td>
+                  <td data-i18n="err_legend_tlim_means">You ran out of time rather than getting it wrong</td>
+                  <td data-i18n="err_legend_tlim_example">Part 5 unfinished at 0:00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         <div class="grid-12">
           <div class="col-8">
             <div class="card">
@@ -2917,10 +2957,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="row">
                 <div><label data-i18n="err_code">Code</label>
                   <select id="errCode2">
-                    <option value="L-GAP" data-i18n="err_code_lgap">L-GAP (Lexical gap)</option>
-                    <option value="G-ERR" data-i18n="err_code_gerr">G-ERR (Misapplied rule)</option>
-                    <option value="T-MIS" data-i18n="err_code_tmis">T-MIS (Textual distractor)</option>
-                    <option value="T-LIM" data-i18n="err_code_tlim">T-LIM (Rush / attention)</option>
+                    <option value="L-GAP" data-i18n="err_code_lgap">L-GAP — vocabulary gap</option>
+                    <option value="G-ERR" data-i18n="err_code_gerr">G-ERR — grammar error</option>
+                    <option value="T-MIS" data-i18n="err_code_tmis">T-MIS — distractor trap</option>
+                    <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
                   </select>
                 </div>
               </div>
@@ -3791,10 +3831,28 @@ const I18N={
     err_fix:'Correction / Notes',
     err_fix_ph:'e.g. review inversion rule',
     err_save:'💾 Save error',
-    err_code_lgap:'L-GAP (Lexical gap)',
-    err_code_gerr:'G-ERR (Misapplied rule)',
-    err_code_tmis:'T-MIS (Textual distractor)',
-    err_code_tlim:'T-LIM (Rush / attention)',
+    err_code_lgap:'L-GAP — vocabulary gap',
+    err_code_gerr:'G-ERR — grammar error',
+    err_code_tmis:'T-MIS — distractor trap',
+    err_code_tlim:'T-LIM — time limit',
+    err_legend_title:'What each code means',
+    err_legend_sub:'One line per code, with an example, so a log entry always says what went wrong.',
+    err_legend_code:'Code',
+    err_legend_name:'Name',
+    err_legend_means:'What it means',
+    err_legend_example:'Example',
+    err_legend_lgap_name:'Vocabulary gap',
+    err_legend_lgap_means:'You did not know the word or collocation that the answer needed',
+    err_legend_lgap_example:'“out of the blue” — did not know the phrase',
+    err_legend_gerr_name:'Grammar error',
+    err_legend_gerr_means:'You knew the words but the structure was wrong',
+    err_legend_gerr_example:'“I have seen him yesterday”',
+    err_legend_tmis_name:'Distractor trap',
+    err_legend_tmis_means:'The answer was in the text but a wrong option looked right',
+    err_legend_tmis_example:'two dates mentioned, picked the wrong one',
+    err_legend_tlim_name:'Time limit',
+    err_legend_tlim_means:'You ran out of time rather than getting it wrong',
+    err_legend_tlim_example:'Part 5 unfinished at 0:00',
     plan_title:'Plan Configuration',
     plan_sub:'Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.',
     plan_edit_intake:'✏️ Edit my intake',
@@ -4495,10 +4553,28 @@ const I18N={
     err_fix:'Corrección / Notas',
     err_fix_ph:'ej. repasar la regla de inversión',
     err_save:'💾 Guardar error',
-    err_code_lgap:'L-GAP (laguna léxica)',
-    err_code_gerr:'G-ERR (regla mal aplicada)',
-    err_code_tmis:'T-MIS (distractor textual)',
-    err_code_tlim:'T-LIM (apuro / atención)',
+    err_code_lgap:'L-GAP — laguna de vocabulario',
+    err_code_gerr:'G-ERR — error de gramática',
+    err_code_tmis:'T-MIS — trampa de distractor',
+    err_code_tlim:'T-LIM — límite de tiempo',
+    err_legend_title:'Qué significa cada código',
+    err_legend_sub:'Una línea por código, con un ejemplo, para que cada registro diga qué falló.',
+    err_legend_code:'Código',
+    err_legend_name:'Nombre',
+    err_legend_means:'Qué significa',
+    err_legend_example:'Ejemplo',
+    err_legend_lgap_name:'Laguna de vocabulario',
+    err_legend_lgap_means:'No conocías la palabra o colocación que pedía la respuesta',
+    err_legend_lgap_example:'“out of the blue” — no conocías la frase',
+    err_legend_gerr_name:'Error de gramática',
+    err_legend_gerr_means:'Conocías las palabras pero la estructura estaba mal',
+    err_legend_gerr_example:'“I have seen him yesterday”',
+    err_legend_tmis_name:'Trampa de distractor',
+    err_legend_tmis_means:'La respuesta estaba en el texto pero una opción incorrecta parecía correcta',
+    err_legend_tmis_example:'había dos fechas y elegiste la incorrecta',
+    err_legend_tlim_name:'Límite de tiempo',
+    err_legend_tlim_means:'Se te acabó el tiempo en lugar de equivocarte',
+    err_legend_tlim_example:'Parte 5 sin terminar a las 0:00',
     plan_title:'Configuración del plan',
     plan_sub:'Ajustá los parámetros del sistema, los tiempos de simulación y los umbrales de rendimiento para personalizar tu ciclo de estudio. Todo se aplica al tracker al instante.',
     plan_edit_intake:'✏️ Editar mi perfil inicial',
@@ -11451,19 +11527,27 @@ function renderStats(){
 }
 
 /* ---------- ERRORS ----------
-   Error log with root-cause taxonomy (L-GAP lexical gap,
-   G-ERR misapplied rule, T-MIS textual distractor, T-LIM rushed/
-   attention slip). renderErrs() lists + per-item delete + clear. */
+   Error log with root-cause taxonomy (L-GAP vocabulary gap,
+   G-ERR grammar error, T-MIS distractor trap, T-LIM time limit).
+   renderErrs() lists + per-item delete + clear. */
+const ERR_CODE_INFO={
+  'L-GAP':{name:'err_legend_lgap_name',means:'err_legend_lgap_means'},
+  'G-ERR':{name:'err_legend_gerr_name',means:'err_legend_gerr_means'},
+  'T-MIS':{name:'err_legend_tmis_name',means:'err_legend_tmis_means'},
+  'T-LIM':{name:'err_legend_tlim_name',means:'err_legend_tlim_means'}
+};
 function renderErrs(){
   const el=document.getElementById('errList');
   if(!D.errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
   const diagRunning=(typeof DIAG_STATE==='object'&&DIAG_STATE.status==='running');
   el.innerHTML=D.errs.map((e,i)=>{
     const tax=e.code||e.tax||'G-ERR';
+    const info=ERR_CODE_INFO[tax]||ERR_CODE_INFO['G-ERR'];
+    const title=`${tax} — ${t(info.name)}: ${t(info.means)}`;
     const desc=diagRunning&&e.src==='diag'?`Diagnostic item Part ${e.part||''}`:(e.desc||e.note||'');
     return `<div class="card" style="padding:13px 14px">
     <div class="err-head">
-      <span class="pill ${tax}">${tax}</span> <span class="t-xs muted">${fmtDate(e.date)}</span>
+      <span class="pill ${tax}" title="${esc(title)}">${tax}</span> <span class="t-xs muted">${fmtDate(e.date)}</span>
       <button class="del" onclick="delErr(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
     </div>
     <div style="margin-top:7px;font-size:14px">${esc(desc)}</div>
@@ -11477,14 +11561,13 @@ function renderErrPills(){
   const errs=D.errs||[];
   if(!errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const names={'L-GAP':'Lexical gap','G-ERR':'Misapplied rule','T-MIS':'Textual distractor','T-LIM':'Rush / attention'};
   const total=errs.length;
   el.innerHTML=codes.map(c=>{
     const n=errs.filter(e=>(e.code||e.tax)===c).length;
     const pct=Math.round(n/total*100);
     return `<div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-        <span style="font-family:var(--mono);font-weight:600;color:var(--acc2)">${c} · ${names[c]}</span>
+        <span style="font-family:var(--mono);font-weight:600;color:var(--acc2)">${c} · ${t(ERR_CODE_INFO[c].name)}</span>
         <span style="font-family:var(--mono);color:var(--dim)">${n} (${pct}%)</span>
       </div>
       <div style="height:8px;background:var(--surface-container);border-radius:2px;overflow:hidden">
