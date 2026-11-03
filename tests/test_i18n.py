@@ -19,10 +19,11 @@ NAME = "i18n-suite"
 PASS = "i18n-suite-pass-9"
 
 # The DIAG tab is gone on purpose (the diagnostic runs from the plan and the
-# onboarding, not as a section); Practice replaced it in the main navigation.
+# onboarding, not as a section); Practice replaced it. Parts and Charts were
+# merged into Practice and Progress.
 NAV_KEYS = [
-    "nav_today", "nav_practice", "nav_exam", "nav_parts", "nav_progress",
-    "nav_plan", "nav_charts", "nav_errors", "nav_ai", "nav_more",
+    "nav_today", "nav_practice", "nav_exam", "nav_progress",
+    "nav_plan", "nav_errors", "nav_ai", "nav_more",
 ]
 
 

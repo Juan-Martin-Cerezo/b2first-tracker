@@ -229,7 +229,7 @@ with sync_playwright() as p:
         stepsCount: document.querySelectorAll('#partsList .step').length
     })"""
     )
-    assert parts_filtered["activeView"] == "v-partes"
+    assert parts_filtered["activeView"] == "v-practice"
     assert parts_filtered["filterVal"] == first_weak_part
     assert parts_filtered["stepsCount"] == 1
 

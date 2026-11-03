@@ -190,10 +190,10 @@ async def main():
             "() => ({view: document.querySelector('.view.active')?.id,"
             " filter: PARTS_FILTER, steps: document.querySelectorAll('#partsList .step').length})"
         )
-        assert nav_state["view"] == "v-partes", f"Start did not navigate to PARTS: {nav_state}"
+        assert nav_state["view"] == "v-practice", f"Start did not navigate to PRACTICE: {nav_state}"
         assert nav_state["filter"] == ue_part, f"Filter not applied: {nav_state}"
         assert nav_state["steps"] == 1, f"Filter did not leave 1 part: {nav_state}"
-        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> PARTS part {ue_part}"
+        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> PRACTICE part {ue_part}"
 
         # Clean up the test user's localStorage
         await page.evaluate(

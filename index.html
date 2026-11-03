@@ -1878,7 +1878,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioMonA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon" id="st1WkBadge">Week A · Monday</span>
+                    <span class="badge mon" id="st1WkBadge">Monday</span>
                     <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri" id="st1TimeBadge">MON 15:30</span></div>
                     <div class="sesion-sub">Speed Training: complete all 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
                   </div>
@@ -1979,7 +1979,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioMonB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon" id="st2WkBadge">Week B · Monday</span>
+                    <span class="badge mon" id="st2WkBadge">Monday</span>
                     <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
                     <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
                   </div>
@@ -2139,7 +2139,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioFriA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri" id="st3WkBadge">Week A · Friday</span>
+                    <span class="badge fri" id="st3WkBadge">Friday</span>
                     <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
                     <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
                   </div>
@@ -2225,7 +2225,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioFriB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri" id="st4WkBadge">Week B · Friday</span>
+                    <span class="badge fri" id="st4WkBadge">Friday</span>
                     <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri" id="st4TimeBadge">FRI 13:00</span></div>
                     <div class="sesion-sub">15 min continuous simulation (Parts 1–4) + 45 min C1 deep upgrade and second recording.</div>
                   </div>
@@ -12225,22 +12225,22 @@ function updatePersonalizedUI(){
 
   // Dynamic Studio Card Badges
   const st1W=document.getElementById('st1WkBadge');
-  if(st1W)st1W.textContent=sched.length===2?`${t('week_a')} · ${aDayName}`:`${localizeWeekLabel(rueOccur.weekLabel)} · ${localizeDayName(rueOccur.dayName)}`;
+  if(st1W)st1W.textContent=sched.length===2?aDayName:localizeDayName(rueOccur.dayName);
   const st1T=document.getElementById('st1TimeBadge');
   if(st1T)st1T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${rueOccur.dayShort.toUpperCase()} ${rueOccur.time}`;
 
   const st2W=document.getElementById('st2WkBadge');
-  if(st2W)st2W.textContent=sched.length===2?`${t('week_b')} · ${aDayName}`:`${localizeWeekLabel(wOccur.weekLabel)} · ${localizeDayName(wOccur.dayName)}`;
+  if(st2W)st2W.textContent=sched.length===2?aDayName:localizeDayName(wOccur.dayName);
   const st2T=document.getElementById('st2TimeBadge');
   if(st2T)st2T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${wOccur.dayShort.toUpperCase()} ${wOccur.time}`;
 
   const st3W=document.getElementById('st3WkBadge');
-  if(st3W)st3W.textContent=sched.length===2?`${t('week_a')} · ${bDayName}`:`${localizeWeekLabel(lOccur.weekLabel)} · ${localizeDayName(lOccur.dayName)}`;
+  if(st3W)st3W.textContent=sched.length===2?bDayName:localizeDayName(lOccur.dayName);
   const st3T=document.getElementById('st3TimeBadge');
   if(st3T)st3T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${lOccur.dayShort.toUpperCase()} ${lOccur.time}`;
 
   const st4W=document.getElementById('st4WkBadge');
-  if(st4W)st4W.textContent=sched.length===2?`${t('week_b')} · ${bDayName}`:`${localizeWeekLabel(spOccur.weekLabel)} · ${localizeDayName(spOccur.dayName)}`;
+  if(st4W)st4W.textContent=sched.length===2?bDayName:localizeDayName(spOccur.dayName);
   const st4T=document.getElementById('st4TimeBadge');
   if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }

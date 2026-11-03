@@ -4,10 +4,10 @@ from helpers import isolated_server, login_owner
 
 URL = isolated_server() + "/"
 # Views hidden behind the "More" button in the mobile bottom nav (5 + More)
-HIDDEN_VIEWS = {"graf", "err", "libros", "ia", "diag"}
-# "libros" is gone: u4 merged Books into Practice, so that nav entry now opens
-# Practice. The diagnostic has no tab either but still opens through showView.
-ALL_VIEWS = ["hoy", "practice", "exam", "partes", "prog", "graf", "plan", "err", "ia", "diag"]
+HIDDEN_VIEWS = {"err", "libros", "ia", "diag"}
+# Charts and Parts no longer have tabs: charts live in Progress and the parts
+# catalogue lives inside Practice.
+ALL_VIEWS = ["hoy", "practice", "exam", "prog", "plan", "err", "ia", "diag"]
 
 
 def goto_view(pg, name):
@@ -99,9 +99,10 @@ with sync_playwright() as p:
     goto_view(pg, "exam")
     out["ex_timer"] = pg.evaluate("document.getElementById('exTimer').textContent")
 
-    # PARTS: 15 exercises
-    goto_view(pg, "partes")
+    # PRACTICE: the parts catalogue lives here, in paper order
+    goto_view(pg, "practice")
     out["partes"] = pg.eval_on_selector_all("#partsList .step", "els => els.length")
+    out["practice_parts_box"] = pg.evaluate("!!document.querySelector('#v-practice #partsList')")
 
     # PROGRESS: gates + stats + export
     goto_view(pg, "prog")

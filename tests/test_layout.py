@@ -220,7 +220,7 @@ SPEAKING_JS = """
 
 
 def goto_view(pg, name):
-    hidden = {"graf", "err", "libros", "ia", "diag"}
+    hidden = {"err", "libros", "ia", "diag"}
     if name in hidden:
         if pg.evaluate("getComputedStyle(document.getElementById('navMoreBtn')).display") != "none":
             pg.evaluate("document.getElementById('navMoreBtn').click()")

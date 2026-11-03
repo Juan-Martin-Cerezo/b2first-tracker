@@ -34,8 +34,8 @@ with sync_playwright() as p:
     pg.evaluate("exLeft = 590; exTick()")  # simular <10min -> rojo
     out["ex_color_warn"] = pg.evaluate("document.getElementById('exTimer').style.color")
 
-    # PARTES tab
-    pg.click("nav button[data-view='partes']")
+    # PRACTICE: the 15-part catalogue (plus Writing) now lives here
+    pg.click("nav button[data-view='practice']")
     pg.wait_for_timeout(300)
     out["partes_total"] = pg.eval_on_selector_all("#partsList .step", "els => els.length")
     out["partes_grupos"] = pg.eval_on_selector_all("#partsList .folder", "els => els.length")
