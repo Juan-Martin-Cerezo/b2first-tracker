@@ -9265,6 +9265,25 @@ const SP_EXAM={
 };
 window.SP_EXAM=SP_EXAM;
 
+/* The speaking exam is a whole activity, not a card: it used to render inside the
+   Friday studio panel, which is `display:none` unless that session is open, so
+   opening it from Today showed nothing. Move it into an overlay once, at load. */
+(function spxMountOverlay(){
+  const panel=document.getElementById('spxPanel');
+  if(!panel||document.getElementById('spxOverlay'))return;
+  const ov=document.createElement('div');
+  ov.id='spxOverlay';ov.className='overlay';ov.style.display='none';
+  ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-label','Speaking exam');
+  ov.addEventListener('click',e=>{if(e.target===ov)SP_EXAM.close()});
+  const box=document.createElement('div');
+  box.className='card';
+  box.style.cssText='width:min(920px,100%);max-height:92vh;overflow:auto;padding:16px';
+  box.appendChild(panel);
+  ov.appendChild(box);
+  document.body.appendChild(ov);
+})();
+
 /* --- Test hooks: ?spx_test=1 (or localStorage.spx_test) -------------------
    Production never sees this object. It exposes the plan, the phase model,
    the selection used by the rotation and a time scale so a four-minute part
@@ -10095,6 +10114,9 @@ function spxRenderTx(){
     if(line.who==='partner')row.textContent=spxPartnerName()+': '+line.text;
     else if(line.who==='candidate')row.textContent=t('spx_you_tag')+': '+line.text;
     else row.textContent=t('spx_examiner_tag')+': '+line.text;
+    /* the same line can be pushed twice (instruction + ready callback);
+       never print the same speaker+text twice in a row */
+    if(box.lastElementChild&&box.lastElementChild.textContent===row.textContent)continue;
     box.appendChild(row);
   }
   SP_EXAM.txShown=lines.length;
@@ -10299,6 +10321,8 @@ function spxRenderTask(){
 /* --- Exam lifecycle ------------------------------------------------------ */
 SP_EXAM.open=async function(){
   const panel=spx$('spxPanel');
+  const ov=document.getElementById('spxOverlay');
+  if(ov)ov.style.display='flex';
   if(panel)panel.style.display='block';
   SP_EXAM.error='';
   SP_EXAM.micMuted=false;
@@ -10750,6 +10774,8 @@ SP_EXAM.close=function(){
   SP_EXAM.screen='';
   const panel=spx$('spxPanel');
   if(panel)panel.style.display='none';
+  const ov=document.getElementById('spxOverlay');
+  if(ov)ov.style.display='none';
 };
 
 /* --- Test surface (only when ?spx_test=1 / localStorage.spx_test) ------- */
