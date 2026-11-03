@@ -23,6 +23,11 @@ from datetime import date, datetime, timedelta
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 
+# Statuses that mean "the client asked for something it cannot have", not "the app broke":
+# auth/plan/method/size/rate limits are expected and would drown the real failures.
+EXPECTED_STATUS = {400, 401, 402, 403, 404, 405, 409, 413, 429, 451, 503}
+EXPECTED_ENDPOINTS = ("/api/speaking/token",)
+
 
 def iter_jsonl(path):
     try:
@@ -55,6 +60,11 @@ def collect(days):
             if ev.get("n") not in ("js_error", "fetch_error"):
                 continue
             props = ev.get("p") or {}
+            if props.get("status") in EXPECTED_STATUS:
+                continue
+            endpoint = str(props.get("endpoint") or "")
+            if any(endpoint.startswith(e) for e in EXPECTED_ENDPOINTS):
+                continue
             key = props.get("stack_hash") or (props.get("message_trunc") or "")[:40] or "unknown"
             g = groups[("client", key)]
             g["kind"] = ev.get("n")

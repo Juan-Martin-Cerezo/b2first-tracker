@@ -103,8 +103,15 @@ def main():
             title: (document.getElementById('spxTask') || {}).innerText?.slice(0, 60),
         })""")
         page.screenshot(path=os.path.join(OUT, "sp4_part2.png"))
-        print("B. part 2:", part2["photos"], "placeholders", part2["placeholders"])
+        print("B. part 2:", part2["photos"], "placeholders", part2["placeholders"],
+              "| overlay", page.evaluate("() => getComputedStyle(document.getElementById('spxOverlay')).display"))
         assert part2["placeholders"] == 0, "Part 2 showed a text placeholder"
+        visible = page.evaluate("""() => ({
+            overlay: getComputedStyle(document.getElementById('spxOverlay')).display,
+            panel: document.getElementById('spxPanel').offsetHeight,
+        })""")
+        assert visible["overlay"] == "flex" and visible["panel"] > 200, \
+            "the exam panel is not on screen: %s" % visible
         assert len(part2["photos"]) == 2, "Part 2 did not render two photographs"
         for photo in part2["photos"]:
             assert photo["w"] > 200, "%s did not decode" % photo["src"]
