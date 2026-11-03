@@ -3831,7 +3831,7 @@ const I18N={
     prog_total_time:'Total Study Time',
     prog_logged_min:'logged minutes',
     prog_matrix:'🧗 Progression Matrix',
-    prog_matrix_sub:'Complete all criteria within a stage to advance. Edit a threshold and it saves to your plan at once.',
+    prog_matrix_sub:'Complete all criteria within a stage to advance.',
     prog_advance:'⬆ Advance to the next stage',
     prog_stage_down:'⬇ Go back a stage',
     prog_export:'💾 Export data',
@@ -4603,7 +4603,7 @@ const I18N={
     prog_total_time:'Tiempo total de estudio',
     prog_logged_min:'minutos registrados',
     prog_matrix:'🧗 Matriz de progresión',
-    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar. Editá un umbral y se guarda en tu plan al instante.',
+    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar.',
     prog_advance:'⬆ Avanzar a la siguiente etapa',
     prog_stage_down:'⬇ Volver una etapa',
     prog_export:'💾 Exportar datos',
@@ -10579,30 +10579,6 @@ function calcGates(){
 const STAGE_NAMES=['stage_name_0','stage_name_1','stage_name_2'];
 const STAGE_FOCUS=['stage_focus_0','stage_focus_1','stage_focus_2'];
 const STAGE_UNLOCK=['stage_unlock_0','stage_unlock_1','stage_unlock_2'];
-const GATE_FIELDS=[
-  [[['e0.w']],[['e0.u']],[['e0.l']]],
-  [[['e1.w'],['e1.wm']],[['e1.u']],[['e1.l']],[],[],[]],
-  [[['e2.r'],['e2.rm']],[['e2.w']],[['e2.l'],['e2.ln']],[]]
-];
-const GATE_FIELD_LABELS={
-  'e0.w':'mx_e0_w','e0.u':'mx_e0_u','e0.l':'mx_e0_l',
-  'e1.w':'mx_e1_w','e1.wm':'mx_e1_wm','e1.u':'mx_e1_u','e1.l':'mx_e1_l',
-  'e2.r':'mx_e2_r','e2.rm':'mx_e2_rm','e2.w':'mx_e2_w','e2.l':'mx_e2_l','e2.ln':'mx_e2_ln'
-};
-function gateInputId(key){
-  const parts=key.split('.');
-  return 'mx'+parts[0][0].toUpperCase()+parts[0].slice(1)+parts[1];
-}
-function setGateSetting(key,value){
-  const n=Number(value);
-  if(!Number.isFinite(n))return;
-  const parts=key.split('.');
-  D.settings[parts[0]][parts[1]]=n;
-  save();
-  renderGates();
-  renderPlan();
-}
-
 function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
   const gates=calc.groups[st];
@@ -10620,13 +10596,8 @@ function renderGates(){
     </div>`+
     viewGates.map((x,i)=>{
       const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
-      const fields=(GATE_FIELDS[viewSt][i]||[]).map(f=>{
-        const k=f[0],parts=k.split('.'),val=D.settings[parts[0]][parts[1]];
-        return `<label class="gate-field"><span>${t(GATE_FIELD_LABELS[k])}</span><input type="number" id="${gateInputId(k)}" value="${val}" onchange="setGateSetting('${k}',this.value)"></label>`;
-      }).join('');
       return `<div class="gate ${ok?'pass':'fail'}">
       <h4><span>${x.name}</span><span style="color:${ok?'var(--ok-text)':'var(--on-surface-variant)'};font-size:12px">${x.txt}</span></h4>
-      ${fields?`<div class="gate-fields">${fields}</div>`:''}
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
