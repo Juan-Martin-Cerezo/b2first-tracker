@@ -91,12 +91,12 @@ with sync_playwright() as p:
           'hbFSp1','hbFSp2','hbFSp3','hbFSp4','hbFS2','hb','hbFS','lGuide'];
         MAT = {};
         keys.forEach(k => { MAT[k] = '/files/test-' + k + '.pdf'; });
-        renderParts();
+        renderParts(); renderResources();
     }"""
     )
     pg.wait_for_timeout(200)
     cards = pg.eval_on_selector_all(
-        ".listen-test",
+        "#resourcesList .res-paper[data-res-type='lp'] .listen-test",
         """els => els.map(e => ({
             title: e.querySelector('.lt-head').textContent.trim(),
             links: [...e.querySelectorAll('a')].map(a => a.textContent.trim())
@@ -116,7 +116,7 @@ with sync_playwright() as p:
         assert opaque not in {label for card in cards for label in card["links"]}, (
             f"internal code shown as a chip: {opaque}"
         )
-    pg.locator("#practiceParts").screenshot(path=os.path.join(OUT, "practice_listening.png"))
+    pg.locator("#practiceResources").screenshot(path=os.path.join(OUT, "practice_listening.png"))
     out["4_listening_cards"] = [c["title"] for c in cards]
 
     # 5. One Progress screen with the four charts inside it.
@@ -132,20 +132,24 @@ with sync_playwright() as p:
         )
     out["5_one_progress"] = True
 
-    # 6. The matrix threshold is editable and shares D.settings with PLAN.
-    pg.wait_for_selector("#mxE0w")
-    pg.fill("#mxE0w", "17")
-    pg.dispatch_event("#mxE0w", "change")
-    pg.wait_for_timeout(1600)
-    assert pg.evaluate("D.settings.e0.w") == 17, "matrix input did not write D.settings.e0.w"
-    pg.locator("#gates").screenshot(path=os.path.join(OUT, "progress_matrix.png"))
-    pg.reload(wait_until="networkidle")
-    pg.wait_for_timeout(900)
-    assert pg.evaluate("D.settings.e0.w") == 17, "matrix threshold did not persist across reload"
+    # 6. The matrix is read-only; thresholds stay editable in PLAN.
+    pg.wait_for_timeout(400)
+    assert pg.eval_on_selector_all("#gates input[type=number]", "els => els.length") == 0, (
+        "the matrix still has number inputs"
+    )
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(300)
-    assert pg.input_value("#pE0w") == "17", "PLAN field does not reflect the matrix threshold"
-    out["6_matrix_editable"] = pg.evaluate("D.settings.e0.w")
+    pg.fill("#pE0w", "17")
+    pg.click("button[onclick='savePlan()']")
+    pg.wait_for_timeout(1600)
+    assert pg.evaluate("D.settings.e0.w") == 17, "PLAN did not write D.settings.e0.w"
+    pg.reload(wait_until="networkidle")
+    pg.wait_for_timeout(900)
+    assert pg.evaluate("D.settings.e0.w") == 17, "PLAN threshold did not persist across reload"
+    pg.click("nav button[data-view='prog']")
+    pg.wait_for_timeout(300)
+    pg.locator("#gates").screenshot(path=os.path.join(OUT, "progress_matrix.png"))
+    out["6_matrix_read_only"] = pg.evaluate("D.settings.e0.w")
 
     # 7. Errors legend: every code explained, every log pill titled.
     pg.evaluate(
