@@ -3293,7 +3293,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="card" id="practiceParts">
           <h2 data-i18n="parts_exercises">Exercises by part</h2>
-          <div class="sub" data-i18n="parts_exercises_sub">The 15 exercises of the 4 papers, in exam order. Each with its target time, where to practise and result logging.</div>
+          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, where to practise and result logging.</div>
           <div id="partsList"></div>
         </div>
 
@@ -3766,7 +3766,7 @@ const I18N={
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
-    parts_exercises_sub:'The 15 exercises of the 4 papers, in exam order. Each with its target time, where to practise and result logging.',
+    parts_exercises_sub:'Every exercise of the 4 papers, in exam order. Each with its target time, where to practise and result logging.',
     parts_listen_hint:'The audio, questions, tapescripts and keys for this paper are grouped in the test cards above.',
     lt_test_1:'Listening test 1',
     lt_test_2_part:'Listening test 2 · part {n}',
@@ -4489,7 +4489,7 @@ const I18N={
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
-    parts_exercises_sub:'Los 15 ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, dónde practicarlo y registro de resultados.',
+    parts_exercises_sub:'Todos los ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, dónde practicarlo y registro de resultados.',
     parts_listen_hint:'El audio, las preguntas, las transcripciones y las respuestas de esta prueba están agrupados en las tarjetas de test de arriba.',
     lt_test_1:'Test de listening 1',
     lt_test_2_part:'Test de listening 2 · parte {n}',
@@ -11323,6 +11323,10 @@ let PARTS_FILTER=null;
 function setPartsFilter(partNum){
   PARTS_FILTER=partNum||null;
   renderParts();
+  if(partNum){
+    const target=document.querySelector('#partsList .step');
+    if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+  }
 }
 function goToPartFilter(partNum, type){
   PARTS_FILTER=(type&&type!=='ue')?{type:type,part:partNum||null}:(partNum||null);
