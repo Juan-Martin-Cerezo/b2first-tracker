@@ -3292,8 +3292,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="card" id="practiceParts">
           <h2 data-i18n="parts_exercises">Exercises by part</h2>
-          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, where to practise and result logging.</div>
+          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
           <div id="partsList"></div>
+        </div>
+
+        <div class="card" id="practiceResources">
+          <h2 data-i18n="resources_title">Resources</h2>
+          <div class="sub" data-i18n="resources_sub">Each test in one card: questions, audio, tapescript, answer key and lesson plan.</div>
+          <div id="resourcesList"></div>
         </div>
 
         <!-- U4: Books merged into Practice. Same #onlineList / #matList /
@@ -3764,7 +3770,7 @@ const I18N={
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
-    parts_exercises_sub:'Every exercise of the 4 papers, in exam order. Each with its target time, where to practise and result logging.',
+    parts_exercises_sub:'Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.',
     parts_listen_hint:'The audio, questions, tapescripts and keys for this paper are grouped in the test cards above.',
     lt_test_1:'Listening test 1',
     lt_test_2_part:'Listening test 2 · part {n}',
@@ -3780,6 +3786,40 @@ const I18N={
     res_teacher_guide:'Teacher guide',
     res_tapescript_key:'Tapescript and key',
     res_online_practice:'Online practice',
+    resources_title:'Resources',
+    resources_sub:'Each test in one card: questions, audio, tapescript, answer key and lesson plan.',
+    resources_filter_active:'Showing {paper}',
+    resources_filter_clear:'Show all papers',
+    part_start:'Start',
+    part_resources:'Resources',
+    paper_reading:'Reading & Use of English',
+    paper_listening:'Listening',
+    paper_speaking:'Speaking',
+    paper_writing:'Writing',
+    rt_test_1:'Reading test 1',
+    rt_test_2:'Reading test 2',
+    rt_fs_1:'Reading · For Schools 1',
+    rt_fs_2:'Reading · For Schools 2',
+    spt_test_1:'Speaking test 1',
+    spt_test_2:'Speaking test 2',
+    spt_fs_1:'Speaking · For Schools 1',
+    spt_fs_2:'Speaking · For Schools 2',
+    wt_test_1:'Writing test 1',
+    wt_test_2:'Writing test 2',
+    wt_fs_1:'Writing · For Schools 1',
+    wt_fs_2:'Writing · For Schools 2',
+    res_lesson_plans:'Lesson plans',
+    res_self_study:'Self-study',
+    res_online:'Online',
+    res_reading_activities_1:'Reading activities 1',
+    res_reading_activities_2:'Reading activities 2',
+    res_further_reading:'Further reading',
+    res_reading_guide:'Reading guide',
+    res_visuals:'Visuals',
+    res_examiner_comments:'Examiner comments',
+    res_writing_task:'Writing task',
+    res_checklist:'Checklist',
+    res_writing_guides:'Writing guides',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     prog_global_avg:'Global Average',
@@ -4486,7 +4526,7 @@ const I18N={
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
-    parts_exercises_sub:'Todos los ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, dónde practicarlo y registro de resultados.',
+    parts_exercises_sub:'Todos los ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, un botón para empezar y registro de resultados.',
     parts_listen_hint:'El audio, las preguntas, las transcripciones y las respuestas de esta prueba están agrupados en las tarjetas de test de arriba.',
     lt_test_1:'Test de listening 1',
     lt_test_2_part:'Test de listening 2 · parte {n}',
@@ -4502,6 +4542,40 @@ const I18N={
     res_teacher_guide:'Guía del docente',
     res_tapescript_key:'Transcripción y respuestas',
     res_online_practice:'Práctica en línea',
+    resources_title:'Recursos',
+    resources_sub:'Cada test en una tarjeta: preguntas, audio, transcripción, respuestas y plan de clase.',
+    resources_filter_active:'Mostrando {paper}',
+    resources_filter_clear:'Ver todas las pruebas',
+    part_start:'Empezar',
+    part_resources:'Recursos',
+    paper_reading:'Reading y UoE',
+    paper_listening:'Listening',
+    paper_speaking:'Speaking',
+    paper_writing:'Writing',
+    rt_test_1:'Test de reading 1',
+    rt_test_2:'Test de reading 2',
+    rt_fs_1:'Reading · For Schools 1',
+    rt_fs_2:'Reading · For Schools 2',
+    spt_test_1:'Test de speaking 1',
+    spt_test_2:'Test de speaking 2',
+    spt_fs_1:'Speaking · For Schools 1',
+    spt_fs_2:'Speaking · For Schools 2',
+    wt_test_1:'Test de writing 1',
+    wt_test_2:'Test de writing 2',
+    wt_fs_1:'Writing · For Schools 1',
+    wt_fs_2:'Writing · For Schools 2',
+    res_lesson_plans:'Planes de clase',
+    res_self_study:'Autoestudio',
+    res_online:'En línea',
+    res_reading_activities_1:'Actividades de reading 1',
+    res_reading_activities_2:'Actividades de reading 2',
+    res_further_reading:'Lectura extra',
+    res_reading_guide:'Guía de reading',
+    res_visuals:'Imágenes',
+    res_examiner_comments:'Comentarios del examinador',
+    res_writing_task:'Consigna de writing',
+    res_checklist:'Checklist',
+    res_writing_guides:'Guías de writing',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     prog_global_avg:'Promedio global',
@@ -11164,10 +11238,10 @@ function regenWeeklyPlan(){renderWeeklyPlan()}
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
   if(!sl)return;
-  if(sl.type==='w')goToPartFilter(null);
+  if(sl.type==='w')goToPartFilter(sl.part,'w');
   else if(sl.type==='l')goToPartFilter(sl.part,'lp');
   else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
-  else goToPartFilter(sl.part);
+  else goToPartFilter(sl.part,'ue');
 }
 
 /* ---------- EXAM + PARTS ----------
@@ -11316,30 +11390,36 @@ const PARTS=[
   {g:'Writing',n:1,t:'Essay',q:0,min:40,type:'w',kind:'Essay',note:''},
   {g:'Writing',n:2,t:'Article / Report / Review / Email',q:0,min:35,type:'w',kind:'Article',note:''}
 ];
-let PARTS_FILTER=null;
-function setPartsFilter(partNum){
-  PARTS_FILTER=partNum||null;
-  renderParts();
-  if(partNum){
-    const target=document.querySelector('#partsList .step');
-    if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
-  }
+let RES_FILTER=null;
+const RES_PAPERS=[
+  {type:'ue',key:'paper_reading'},
+  {type:'lp',key:'paper_listening'},
+  {type:'sp',key:'paper_speaking'},
+  {type:'w',key:'paper_writing'}
+];
+function resourceCardHtml(c){
+  const parts=(c.parts&&c.parts.length)?` data-res-parts="${c.parts.join(' ')}"`:'';
+  return `<div class="listen-test" data-listen-test="${esc(c.title)}"${parts}><div class="lt-head">${esc(c.title)}</div><div class="chips">${c.items.filter(Boolean).join('')}</div></div>`;
 }
+function resourceGrid(cards){
+  return `<div class="lt-grid">${cards.map(resourceCardHtml).join('')}</div>`;
+}
+function setResourcesFilter(type,part){
+  RES_FILTER=type?{type:type,part:part||null}:null;
+  renderResources();
+  const el=document.getElementById('practiceResources');
+  if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function clearResourcesFilter(){RES_FILTER=null;renderResources()}
 function goToPartFilter(partNum, type){
-  PARTS_FILTER=(type&&type!=='ue')?{type:type,part:partNum||null}:(partNum||null);
-  showView('practice');
-  renderParts();
-  if(partNum){
-    const target=document.querySelector('#partsList .step');
-    if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
-  }
+  setResourcesFilter(type||'ue', partNum||null);
 }
 function listeningRes(labelKey,key,title){
   const href=/^https?:/.test(key)?key:MAT[key];
   if(!href)return '';
   return `<a class="chip" href="${href}" target="_blank" rel="noopener"${title?` title="${esc(title)}"`:''}>${t(labelKey)}</a>`;
 }
-function listeningTestCards(){
+function listeningCardsArray(){
   const res=listeningRes;
   const plan=(key,title)=>res('res_lesson_plan',key,title);
   const cards=[];
@@ -11350,7 +11430,7 @@ function listeningTestCards(){
     res('res_teacher_guide','lGuide')
   ]});
   for(let n=1;n<=4;n++){
-    cards.push({title:t('lt_test_2_part',{n}),items:[
+    cards.push({title:t('lt_test_2_part',{n}),parts:[n],items:[
       res('res_questions','lS2'),res('res_audio','auS2p'+n),
       plan('lpL'+n,'Part '+n)
     ]});
@@ -11379,44 +11459,116 @@ function listeningTestCards(){
   handbook.push(res('res_tapescript_key','hbFS','For Schools handbook: tapescripts and answer keys'));
   handbook.push(res('res_online_practice','https://www.examenglish.com/FCE/fce_listening.html'));
   cards.push({title:t('lt_handbook'),items:handbook});
-
-  return `<div class="lt-grid">${cards.map(c=>`<div class="listen-test" data-listen-test="${esc(c.title)}"><div class="lt-head">${esc(c.title)}</div><div class="chips">${c.items.filter(Boolean).join('')}</div></div>`).join('')}</div>`;
+  return cards;
+}
+function listeningTestCards(){return resourceGrid(listeningCardsArray())}
+function readingCardsArray(){
+  const res=listeningRes;
+  const plan=(key,title)=>res('res_lesson_plan',key,title);
+  const cards=[
+    {title:t('rt_test_1'),items:[res('res_questions','rueS1'),res('res_answer_key','keyS1')]},
+    {title:t('rt_test_2'),items:[res('res_questions','rueS2'),res('res_answer_key','keyS2')]},
+    {title:t('rt_fs_1'),items:[res('res_questions','rueFS1'),res('res_answer_key','keyFS1')]},
+    {title:t('rt_fs_2'),items:[res('res_questions','rueFS2'),res('res_answer_key','keyFS2')]}
+  ];
+  const plans=[];
+  for(let n=1;n<=7;n++)plans.push(plan('lpR'+n,'Part '+n));
+  for(let n=1;n<=7;n++)plans.push(plan('fR'+n,'For Schools · part '+n));
+  cards.push({title:t('res_lesson_plans'),items:plans});
+  cards.push({title:t('res_self_study'),items:[
+    res('res_reading_activities_1','rAct1'),
+    res('res_reading_activities_2','rAct1b'),
+    res('res_further_reading','rAct2'),
+    res('res_reading_guide','rGuide')
+  ]});
+  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.flo-joe.co.uk/fce/students/tests/')]});
+  return cards;
+}
+function speakingCardsArray(){
+  const res=listeningRes;
+  const plan=(key,title)=>res('res_lesson_plan',key,title);
+  const cards=[
+    {title:t('spt_test_1'),items:[res('res_visuals','spS1')]},
+    {title:t('spt_test_2'),items:[res('res_visuals','spS2')]},
+    {title:t('spt_fs_1'),items:[res('res_visuals','spFS1')]},
+    {title:t('spt_fs_2'),items:[res('res_visuals','spFS2')]}
+  ];
+  const plans=[];
+  for(let n=1;n<=4;n++)plans.push(plan('lpSp'+n,'Part '+n));
+  for(let n=1;n<=4;n++)plans.push(plan('fSp'+n,'For Schools · part '+n));
+  cards.push({title:t('res_lesson_plans'),items:plans});
+  const examiners=[];
+  for(let n=0;n<6;n++)examiners.push(res('res_examiner_comments','exC'+n,'Examiner '+(n+1)));
+  cards.push({title:t('res_examiner_comments'),items:examiners});
+  cards.push({title:t('res_self_study'),items:[
+    res('res_self_study','spAct'),
+    res('res_teacher_guide','spGuide')
+  ]});
+  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_speaking.html')]});
+  return cards;
+}
+function writingCardsArray(){
+  const res=listeningRes;
+  const plan=(key,title)=>res('res_lesson_plan',key,title);
+  const cards=[
+    {title:t('wt_test_1'),items:[res('res_writing_task','wS1')]},
+    {title:t('wt_test_2'),items:[res('res_writing_task','wS2')]},
+    {title:t('wt_fs_1'),items:[res('res_writing_task','wFS1')]},
+    {title:t('wt_fs_2'),items:[res('res_writing_task','wFS2')]}
+  ];
+  cards.push({title:t('res_writing_guides'),items:[
+    res('res_checklist','wCheck'),
+    res('res_self_study','wAct1','Text 1'),
+    res('res_self_study','wAct2','Text 2'),
+    res('res_teacher_guide','wGuide')
+  ]});
+  cards.push({title:t('res_lesson_plans'),items:[
+    plan('lpW1','Part 1'),plan('lpW2','Part 2'),
+    plan('fW1','For Schools · part 1'),plan('fW2','For Schools · part 2')
+  ]});
+  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_writing.html')]});
+  return cards;
+}
+function paperCards(type){
+  return type==='lp'?listeningCardsArray():type==='sp'?speakingCardsArray():type==='w'?writingCardsArray():readingCardsArray();
+}
+function renderResources(){
+  const el=document.getElementById('resourcesList');
+  if(!el)return;
+  const f=RES_FILTER;
+  const papers=f?RES_PAPERS.filter(p=>p.type===f.type):RES_PAPERS;
+  const head=f?`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="badge fri">${esc(t('resources_filter_active',{paper:t(RES_PAPERS.filter(p=>p.type===f.type)[0].key)}))}${f.part?` · Part ${f.part}`:''}</span>
+      <button type="button" class="btn sm gray" onclick="clearResourcesFilter()">${esc(t('resources_filter_clear'))}</button>
+    </div>`:'';
+  el.innerHTML=head+papers.map(function(p){
+    let cards=paperCards(p.type);
+    if(f&&f.part)cards=cards.filter(function(c){return !c.parts||c.parts.indexOf(f.part)>=0});
+    return `<div class="res-paper" data-res-type="${p.type}"><h3 class="folder">${esc(t(p.key))}</h3>${resourceGrid(cards)}</div>`;
+  }).join('');
+}
+function startPart(i){
+  const p=PARTS[i];
+  if(p.type==='sp'){openSpeakingExam();return}
+  if(p.type==='w'){showView('hoy');switchWritingPhase('write');return}
+  showView('exam');
+  startRealMock(p.type==='lp'?'l':'rue');
 }
 function renderParts(){
   const el=document.getElementById('partsList');
   let html='',last='';
-  if(PARTS_FILTER){
-    const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
-    const fType=fObj?PARTS_FILTER.type:'ue';
-    const fNum=fObj?PARTS_FILTER.part:PARTS_FILTER;
-    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':fType==='w'?'Writing':'Reading &amp; UoE';
-    html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="badge fri">Active filter: ${fLabel} Part ${fNum}</span>
-      <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all parts</button>
-    </div>`;
-  }
   PARTS.forEach((p,i)=>{
-    if(PARTS_FILTER){
-      const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
-      const ok=fObj?(p.type===PARTS_FILTER.type&&p.n===PARTS_FILTER.part):(p.type==='ue'&&p.n===PARTS_FILTER);
-      if(!ok)return;
-    }
     if(p.g!==last){
       html+=`<h3 class="folder">${p.g}</h3>`;
-      if(p.g==='Listening')html+=listeningTestCards();
       last=p.g;
     }
-    const ue=[['S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+p.n,'lpR'+p.n],['Lesson FS P'+p.n,'fR'+p.n]];
-    if(p.n>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
-    ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
-    const sp=[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
-    const wr=[['Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson P'+p.n,'lpW'+p.n],['Lesson FS P'+p.n,'fW'+p.n],['Online','https://www.examenglish.com/FCE/fce_writing.html']];
-    const donde=p.type==='ue'?chips(ue):p.type==='sp'?chips(sp):p.type==='w'?chips(wr):'';
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--ok-text)">${p.note}</p>`:''}
-      ${p.type==='lp'?`<div style="font-size:12px;color:var(--dim);margin:6px 0">${t('parts_listen_hint')}</div>`:`<div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
-      <div class="chips">${donde}</div>`}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn sm" onclick="startPart(${i})">${esc(t('part_start'))}</button>
+        <button class="btn sm gray" onclick="setResourcesFilter('${p.type}',${p.n})">${esc(t('part_resources'))}</button>
+      </div>
       ${p.type==='sp'?`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`:p.type==='w'?`<div class="row" style="margin-top:8px">
         <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
@@ -13260,7 +13412,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -13272,7 +13424,7 @@ function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderS
 })();
 function loadMaterial(){
   fetch('/libros.json').then(r=>r.json()).then(data=>{
-    MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();
+    MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();renderResources();
   }).catch(()=>{ /* local file mode: no dynamic material */ });
 }
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
