@@ -1800,6 +1800,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <div style="display:flex;gap:8px;flex-direction:column">
       <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')" data-i18n="user_edit_plan">⚙️ Edit My Study Plan &amp; Schedule</button>
+      <button class="btn gray" style="width:100%" id="tourReplayBtn" onclick="closeUserModal();startTour()" data-i18n="tour_replay">🎬 Show the walkthrough again</button>
       <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()" data-i18n="user_logout">⇄ Switch User / Log Out</button>
     </div>
   </div>
@@ -1838,7 +1839,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </div>
 
 <!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
-<button id="qlFab" type="button" onclick="openQuickLog()" title="Quick-log (3 taps)" aria-label="Quick-log"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg></button>
+<button id="qlFab" type="button" hidden onclick="openQuickLog()" title="Quick-log (3 taps)" aria-label="Quick-log"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span data-i18n="ql_open">Quick log</span></button>
 
 <!-- ============ FEATURE TOUR (7 anchored steps) ============ -->
 <div id="tourSpot" class="tour-spot" aria-hidden="true" style="display:none"></div>
@@ -1972,7 +1973,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <span>B2 FIRST</span>
     </div>
     <div class="top-actions">
-      <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
+      <span class="top-streak" id="streakTopPill" data-home-key="streak" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
+      <button type="button" class="btn sm gray top-quicklog" onclick="openQuickLog()" data-i18n="ql_open">Quick log</button>
       <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
       <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="stage-badge" id="stageBadge">Stage 0</span><span class="avatar">A</span></div>
       <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
@@ -1996,21 +1998,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <section id="v-hoy" class="view active">
         <div class="today-greeting">
           <span id="todayDateLine">Today</span>
-          <span id="todayStreakLine"></span>
         </div>
 
-        <div class="card" id="todaySessions"></div>
+        <div class="card" id="todaySessions" data-home-key="sessions"></div>
 
-        <details class="week-summary" id="weekSummary">
+        <details class="week-summary" id="weekSummary" data-home-key="week-summary">
           <summary id="weekSummaryLine"></summary>
-          <div class="card" id="todayPlan" style="display:none"></div>
+          <div id="todayPlan" class="today-plan-badges"></div>
         </details>
 
         <div class="grid-12" id="todayLegacy" hidden>
           <!-- Main column -->
           <div class="col-8">
-            <div class="next-session" id="nextBox"></div>
-            <div class="card practice-now" id="practiceNow"></div>
+            <div class="next-session" id="nextBox" data-home-key="next-session"></div>
+            <div class="card practice-now" id="practiceNow" data-home-key="practice-now"></div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
@@ -2788,7 +2789,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
           <!-- Right sidebar (TODAY) -->
           <div class="col-4">
-            <div class="card rot-card-v2">
+            <div class="card rot-card-v2" data-home-key="rotation">
               <div class="rot-v2-header">
                 <div class="rot-v2-badge-row">
                   <span class="rot-live-pill"><span class="rot-pulse-dot"></span> <span data-i18n="rot_automated">AUTOMATIC</span></span>
@@ -3062,8 +3063,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="metric-divider"></div>
               <div class="metric-row"><span data-i18n="metric_uoe">Reading accuracy</span><span class="metric-val" id="mUoe">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
-              <div class="metric-divider"></div>
               <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
             </div>
           </div>
@@ -3071,7 +3070,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card">
               <h2 data-i18n="today_recent">Recent sessions</h2>
               <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
-              <div id="recentList"></div>
+              <div id="recentList" data-home-key="recent-sessions"></div>
             </div>
           </div>
         </div>
@@ -3079,7 +3078,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card">
           <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
           <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance.</div>
-          <div id="gates"></div>
+          <div id="gates" data-home-key="gates"></div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
             <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
@@ -3097,14 +3096,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card">
               <h2 data-i18n="prog_history">History</h2>
               <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
-              <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
+              <div class="table-wrap"><table id="logTable" data-home-key="history"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="prog_stats">📈 Stats by exercise</h2>
               <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
-              <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
+              <div class="table-wrap"><table id="statsTable" data-home-key="stats-by-exercise"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
         </div>
@@ -3132,12 +3131,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <span class="stat-card-val" id="gMocks">0</span>
             <span class="stat-card-sub" data-i18n="charts_mocks_sub">mocks logged</span>
           </div>
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-today"/></svg>
-            <span class="stat-card-label" data-i18n="charts_streak">Study Streak</span>
-            <span class="stat-card-val" id="gRacha">0</span>
-            <span class="stat-card-sub" data-i18n="charts_streak_sub">consecutive days</span>
-          </div>
         </div>
 
         <div class="grid-12">
@@ -3145,28 +3138,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card">
               <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
               <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · Reading %). Each point is a log entry.</div>
-              <div id="gEvol"></div>
+              <div id="gEvol" data-home-key="chart-evolution"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
               <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
-              <div id="gPart"></div>
+              <div id="gPart" data-home-key="chart-by-part"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_errors">🧩 Errors by type</h2>
               <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy.</div>
-              <div id="gErr"></div>
+              <div id="gErr" data-home-key="chart-errors"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
-              <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
-              <div id="gCons"></div>
+              <div class="sub">Logs per week (last 12)</div>
+              <div id="gCons" data-home-key="weekly-consistency"></div>
             </div>
           </div>
         </div>
@@ -3185,14 +3178,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card">
               <h2 data-i18n="err_root_log">🔖 Root-Cause Log</h2>
               <div class="sub" data-i18n="err_root_sub">Every logged mistake gets you closer to Grade A.</div>
-              <div id="errList"></div>
+              <div id="errList" data-home-key="error-log"></div>
             </div>
           </div>
           <div class="col-4">
             <div class="card">
               <h2 data-i18n="err_patterns">🧩 Failure Patterns</h2>
               <div class="sub" data-i18n="err_patterns_sub">Accumulated distribution of your taxonomy.</div>
-              <div id="errPills"></div>
+              <div id="errPills" data-home-key="error-patterns"></div>
             </div>
             <div class="card">
               <h2 data-i18n="err_log">➕ Log Error</h2>
@@ -3224,16 +3217,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake">✏️ Edit my intake</button>
-            <button class="btn gray" id="tourReplayBtn" onclick="startTour()" data-i18n="tour_replay">🎬 Replay the app tour</button>
             <button class="btn gray" onclick="exportData()" data-i18n="plan_export_json">💾 Export JSON</button>
             <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup">📥 Import Backup</button>
           </div>
         </div>
 
-        <div class="card" id="examCountdown" style="margin-bottom:16px"></div>
+        <div class="card" id="examCountdown" data-home-key="exam-date" style="margin-bottom:16px"></div>
 
         <!-- Week plan (derived from the diagnostic + error taxonomy) -->
-        <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
+        <div class="card" id="weeklyPlanCard" data-home-key="week-plan" style="margin-bottom:16px">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_plan">Week plan</h2>
             <div class="wp-regen">
@@ -3253,7 +3245,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
              sentence in the student's words; the automatic rules fill the
              days left on "Follow the suggestion". The onboarding renders the
              same rows inline in step 4. -->
-        <div class="card" id="planCustom" style="margin-bottom:16px">
+        <div class="card" id="planCustom" data-home-key="week-days" style="margin-bottom:16px">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_mine">Your week</h2>
           </div>
@@ -3264,7 +3256,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <!-- Everything that is not the week itself lives in two collapsed
              blocks: fine-tuning (timers, gates, cycles, rotation, schedule)
              and account/provider. Both are plain <details> cards. -->
-        <details class="card" id="planTuning" style="margin-bottom:16px">
+        <details class="card" id="planTuning" data-home-key="fine-tuning" style="margin-bottom:16px">
           <summary data-i18n="plan_tuning">Fine-tuning</summary>
           <div class="plan-details-body">
             <fieldset class="plan-fieldset">
@@ -3361,7 +3353,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </details>
 
-        <details class="card" id="planAccount" style="margin-bottom:16px">
+        <details class="card" id="planAccount" data-home-key="account" style="margin-bottom:16px">
           <summary data-i18n="plan_account">Account &amp; provider</summary>
           <div class="plan-details-body">
             <fieldset class="plan-fieldset" id="languageCard">
@@ -3518,7 +3510,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <div class="card" id="iaCard" data-state="idle">
+          <div class="card" id="iaCard" data-home-key="writing-corrector" data-state="idle">
             <h2 data-i18n="ai_title">Writing Corrector</h2>
             <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
@@ -3727,7 +3719,9 @@ const I18N={
     today_continue:'Continue',
     today_rest:'Rest day — nothing scheduled',
     today_practise_something:'Practise something',
-    today_week_summary:'This week: {sessions} sessions · {minutes} min',
+    session_one:'1 session',
+    session_many:'{n} sessions',
+    today_week_summary:'This week: {sessions} · {minutes} min',
     exam_pacing:'How the full test is paced',
     session_save_score:'Save score',
     session_start_writing:'Start writing',
@@ -4055,8 +4049,8 @@ const I18N={
     plan_import_backup:'📥 Import Backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
-    plan_regen_done:'Plan rebuilt · {count} sessions',
-    plan_regen_rotated:'Plan rebuilt · {count} sessions (adjusted for week {n})',
+    plan_regen_done:'Plan rebuilt · {sessions}',
+    plan_regen_rotated:'Plan rebuilt · {sessions} (adjusted for week {n})',
     plan_regen_nothing:'Nothing to rebuild yet',
     plan_week_mine:'Your week',
     plan_week_mine_sub:'On Mondays, do these parts — or the whole paper — for this long.',
@@ -4394,7 +4388,7 @@ const I18N={
     tour_skip:'Close',
     tour_next:'Next',
     tour_done:'Done',
-    tour_replay:'🎬 Replay the app tour',
+    tour_replay:'🎬 Show the walkthrough again',
     tour_1_title:'Today is your home',
     tour_1_body:'Every time you open the app, start here. Today shows what to do next.',
     tour_2_title:'Your session for today',
@@ -4530,7 +4524,9 @@ const I18N={
     today_continue:'Continuar',
     today_rest:'Día libre — nada programado',
     today_practise_something:'Practicá algo',
-    today_week_summary:'Esta semana: {sessions} sesiones · {minutes} min',
+    session_one:'1 sesión',
+    session_many:'{n} sesiones',
+    today_week_summary:'Esta semana: {sessions} · {minutes} min',
     exam_pacing:'Cómo se reparte el examen completo',
     session_save_score:'Guardar puntaje',
     session_start_writing:'Empezar a escribir',
@@ -4858,8 +4854,8 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
-    plan_regen_done:'Plan reconstruido · {count} sesiones',
-    plan_regen_rotated:'Plan reconstruido · {count} sesiones (ajustado para la semana {n})',
+    plan_regen_done:'Plan reconstruido · {sessions}',
+    plan_regen_rotated:'Plan reconstruido · {sessions} (ajustado para la semana {n})',
     plan_regen_nothing:'Nada que reconstruir todavía',
     plan_week_mine:'Tu semana',
     plan_week_mine_sub:'Los lunes, hacé estas partes — o el examen completo — durante este tiempo.',
@@ -5197,7 +5193,7 @@ const I18N={
     tour_skip:'Cerrar',
     tour_next:'Siguiente',
     tour_done:'Listo',
-    tour_replay:'🎬 Volver a ver el recorrido',
+    tour_replay:'🎬 Ver el recorrido de nuevo',
     tour_1_title:'Today es tu casa',
     tour_1_body:'Cada vez que abrís la app, empezá acá. Today te dice qué hacer ahora.',
     tour_2_title:'Tu sesión de hoy',
@@ -5327,6 +5323,10 @@ function t(key,vars){
   s=String(s);
   if(vars)for(const k in vars)s=s.split('{'+k+'}').join(vars[k]);
   return s;
+}
+function sessionCount(n){
+  const v=Number(n)||0;
+  return v===1?t('session_one'):t('session_many',{n:v});
 }
 function applyI18n(){
   const html=document.documentElement;
@@ -11932,7 +11932,7 @@ function regenWeeklyPlan(){
       };
     }
     save();
-    show(t('plan_regen_done',{count:plan.slots.length}));
+    show(t('plan_regen_done',{sessions:sessionCount(plan.slots.length)}));
     renderWeeklyPlan();
     renderTodayPlan(plan);
   }catch(e){
@@ -12659,10 +12659,7 @@ function renderGrafCons(){
     g+=`<rect x="${x+2}" y="${H-padB-h}" width="${bw-4}" height="${h}" rx="3" fill="var(--acc)"/>`;
     g+=svgTxt(x+bw/2,H-5,'W'+w,'var(--dim)',9,'middle');
   });
-  // Streak: consecutive weeks (backwards from the current one) with >= 1 log
-  let streak=0,wCur=isoWeek(new Date());
-  while(byWeek[wCur]){streak++;wCur--}
-  document.getElementById('gStreak').textContent='Current streak: '+streak+' week'+(streak===1?'':'s');
+  // Consecutive weeks with at least one log; the header owns the streak count.
   el.innerHTML=svgChart(W,H,g);
 }
 /* ---------- TODAY VIEW & SESSION ENGINE ---------- */
@@ -12783,11 +12780,9 @@ function updatePersonalizedUI(){
   const curStageTxt=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
   const schedSummary=sched.map(slot=>`${dayFull(slot.day)} (${slot.time})`).join(' & ');
 
-  // One-line greeting: Today · date + streak.
+  // One-line greeting: Today · date. The streak lives in the header only.
   const dateEl=document.getElementById('todayDateLine');
   if(dateEl)dateEl.textContent=t('today_greeting',{date:fmtDate(today())});
-  const stEl=document.getElementById('todayStreakLine');
-  if(stEl)stEl.textContent=t('today_streak',{n:calcStreak().current});
 
   const now=new Date();
   const rueOccur=getSkillNextOccurrence('rue',now);
@@ -12839,24 +12834,8 @@ function renderTodayPlan(plan){
   const el=document.getElementById('todayPlan');
   if(!el)return;
   const slots=(plan&&plan.slots)||[];
-  if(!slots.length){el.style.display='none';el.innerHTML='';return}
-  el.style.display='';
-  const sub=t('today_plan_sub');
-  el.innerHTML=`<div class="plan-card-head">
-      <h2>${t('today_plan_title')}</h2>
-      ${plan.rotated?`<span class="t-xs muted">${t('plan_rotated')}</span>`:''}
-    </div>
-    <div class="sub">${esc(sub)}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-      ${slots.map(sl=>{
-        const time=sl.time?`<span class="badge">${esc(t('plan_planned_for',{time:sl.time}))}</span> `:'';
-        return `<div class="today-plan-row">
-          <div><div class="t">${esc(planDayLabel(sl.day))} · ${esc(planSlotTitle(sl))} ${planBadgeHtml(sl)}</div>
-          <div class="wp-reason">${esc(sl.reason||'')}</div></div>
-          <div class="m">${time}${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  if(!slots.length){el.innerHTML='';return}
+  el.innerHTML=slots.map(sl=>planBadgeHtml(sl)).join(' ');
 }
 function renderToday(){
   updatePersonalizedUI();
@@ -13050,7 +13029,7 @@ function renderWeekSummary(plan){
   if(!el)return;
   const slots=(plan&&plan.slots)||[];
   const minutes=slots.reduce((sum,sl)=>sum+(Number(sl.min)||0),0);
-  el.textContent=t('today_week_summary',{sessions:slots.length,minutes:minutes});
+  el.textContent=t('today_week_summary',{sessions:sessionCount(slots.length),minutes:minutes});
 }
 function startPlanSession(key){
   const slots=(WEEK_PLAN&&WEEK_PLAN.slots)||[];
@@ -13061,6 +13040,7 @@ function startPlanSession(key){
   const studio=SLOT_STUDIO[slotType(sl)]||'mon-a';
   const legacy=document.getElementById('todayLegacy');
   if(legacy)legacy.hidden=false;
+  if(typeof showView==='function')showView('exam');
   selectSessionStudio(studio);
   const targets={ 'mon-a':'studioMonA','mon-b':'studioMonB','fri-a':'studioFriA','fri-b':'studioFriB' };
   const target=document.getElementById(targets[studio]||'studioMonA');
@@ -13890,12 +13870,6 @@ function finishDiag(timedOut=false){
   save();
   refreshAll();
   track('diag_finish',{ok:!timedOut,count:correct});
-  // The diagnostic is step 3 of the mandatory setup: reopen the overlay
-  // at the plan step as soon as it finishes.
-  if(!D.onboarded&&(OB.awaitDiag||Number(D.onboardStep)===3)){
-    OB.awaitDiag=false;
-    obAfterDiagnostic();
-  }
 }
 async function repeatDiag(){
   delete D.diag;
@@ -14060,7 +14034,15 @@ function setupViewGroups(){
   }
   const practice=document.getElementById('v-practice');
   const practiceNow=document.getElementById('practiceNow');
-  if(practice&&practiceNow)practice.insertBefore(practiceNow,practice.firstChild);
+  if(practice&&practiceNow){
+    const head=practice.querySelector('.page-head');
+    practice.insertBefore(practiceNow,head?head.nextSibling:practice.firstChild);
+  }
+  /* The session studios and their rotation sidebar are Practise content.
+     Today keeps only its own lines. */
+  const exam=document.getElementById('v-exam');
+  const legacy=document.getElementById('todayLegacy');
+  if(exam&&legacy)exam.appendChild(legacy);
 }
 function syncSubnav(viewId){
   const cfg=VIEW_MAP[viewId]||{};
@@ -14114,6 +14096,8 @@ function showView(viewId){
   }
   syncSubnav(viewId);
   if(viewId==='practice')renderPractice();
+  const fab=document.getElementById('qlFab');
+  if(fab)fab.hidden=(viewId==='hoy');
   TEV_VIEW=viewId;
   track('view_change',{view:viewId,ms:Date.now()-_tevT0});
 }

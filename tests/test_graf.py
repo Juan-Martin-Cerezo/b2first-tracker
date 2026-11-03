@@ -58,7 +58,6 @@ with sync_playwright() as p:
     out["part_svg"] = pg.eval_on_selector_all("#gPart [style*='flex']", "els => els.length")
     out["err_svg"] = pg.eval_on_selector_all("#gErr svg", "els => els.length")
     out["cons_svg"] = pg.eval_on_selector_all("#gCons svg", "els => els.length")
-    out["streak"] = pg.evaluate("document.getElementById('gStreak').textContent")
     out["bars_ue"] = pg.evaluate("[...document.querySelectorAll('#gPart span')].filter(s=>s.textContent.includes('UoE P5')).length")
 
     # no overflow on mobile with the charts
