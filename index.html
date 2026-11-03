@@ -821,89 +821,6 @@ tbody tr:hover{background:var(--surface-2)}
 .next-session .next-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none}
 .card.diag-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .card.diag-banner>div:first-child{flex:1;min-width:180px}
-.rot-card-v2{
-  background:var(--surface);border-radius:var(--r-card);padding:20px;color:var(--txt);
-  box-shadow:var(--shadow-1);position:relative;overflow:hidden;
-}
-.rot-card-v2::before{
-  content:"";position:absolute;top:-40px;right:-40px;width:130px;height:130px;
-  background:radial-gradient(circle, color-mix(in oklch, var(--acc) 10%, transparent), transparent 70%);
-  pointer-events:none;border-radius:50%;
-}
-.rot-v2-header{margin-bottom:14px}
-.rot-v2-badge-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.rot-live-pill{
-  display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);
-  font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-text);
-  background:var(--acc-soft);padding:3px 8px;border-radius:999px;
-}
-.rot-pulse-dot{
-  width:6px;height:6px;border-radius:50%;background:var(--acc);
-  animation:pulseDot 2s infinite ease-in-out;
-}
-@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-.rot-week-pill{
-  font-size:var(--fs-xs);font-weight:600;letter-spacing:.04em;
-  padding:3px 10px;border-radius:999px;background:var(--acc);color:var(--on-primary);
-}
-.rot-v2-title{font-size:var(--fs-md);font-weight:600;color:var(--txt);margin-bottom:3px;letter-spacing:-.01em}
-.rot-v2-desc{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.45}
-.rot-schedule-grid{display:flex;flex-direction:column;gap:9px;margin:14px 0}
-.rot-week-card{
-  background:var(--surface-2);border-radius:var(--r-panel);padding:10px 12px;
-  border-left:3px solid transparent;
-  transition:background-color 150ms ease, border-color 150ms ease;
-}
-.rot-week-card.active-week{background:var(--acc-soft);border-left-color:var(--acc)}
-.rot-wk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.rot-wk-name{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;color:var(--txt)}
-.rot-wk-status{
-  font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;
-  text-transform:uppercase;padding:2px 8px;border-radius:999px;
-}
-.rot-week-card.active-week .rot-wk-status{background:var(--ok-strong);color:var(--on-ok)}
-.rot-week-card:not(.active-week) .rot-wk-status{background:var(--line);color:var(--txt-2)}
-.rot-session-row{display:flex;align-items:flex-start;gap:8px;margin-top:5px;padding:4px 6px;border-radius:var(--r-ctl)}
-.rot-session-row.is-today{background:var(--acc-soft)}
-.rot-ses-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex:none}
-.rot-ses-dot.mon{background:var(--ok)}
-.rot-ses-dot.fri{background:var(--acc)}
-.rot-ses-info{display:flex;flex-direction:column;font-size:var(--fs-xs);line-height:1.35}
-.rot-ses-day{font-size:var(--fs-xs);color:var(--txt-2);text-transform:uppercase;letter-spacing:.02em}
-.rot-ses-name{color:var(--txt);font-weight:600}
-.rot-queue-section{
-  background:var(--surface-2);border-radius:var(--r-panel);padding:10px 12px;margin-top:12px;
-}
-.rot-queue-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;flex-wrap:wrap;gap:4px}
-.rot-queue-label{font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2)}
-.rot-queue-sub{font-size:var(--fs-xs);color:var(--acc-text);font-weight:600}
-.rot-queue-track{display:flex;flex-wrap:wrap;gap:5px;overflow-x:visible;padding-bottom:4px}
-.rot-queue-track::-webkit-scrollbar{height:4px}
-.rot-q-item{
-  display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;
-  background:var(--surface);border:1px solid var(--line);
-  font-size:var(--fs-xs);color:var(--txt-2);white-space:nowrap;
-}
-.rot-q-item.active{
-  background:var(--acc);color:var(--on-primary);border-color:var(--acc);font-weight:600;
-}
-.rot-q-item .q-badge{
-  font-size:var(--fs-xs);padding:1px 6px;border-radius:999px;
-  background:color-mix(in oklch, var(--on-primary) 25%, transparent);color:inherit;
-}
-.rot-meta-bar{
-  display:flex;justify-content:space-between;align-items:center;gap:12px;
-  border-top:1px solid var(--line);padding-top:10px;margin-top:12px;font-size:var(--fs-xs);
-}
-.rot-meta-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);margin-bottom:2px}
-.rot-meta-val{font-weight:600;color:var(--txt);font-size:var(--fs-xs)}
-.rot-override-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
-.rot-override-grid label{font-size:var(--fs-xs);color:var(--txt-2);display:flex;flex-direction:column;gap:3px;text-transform:uppercase}
-.rot-override-grid select{
-  background-color:var(--surface);border:1px solid var(--line);color:var(--txt);
-  font-size:var(--fs-xs);padding:8px;border-radius:var(--r-ctl);
-}
-
 /* ---------- SESSION NAV / PHASE STEPPER ---------- */
 .session-nav{display:flex;flex-wrap:wrap;gap:8px;overflow-x:visible;padding-bottom:6px;margin-bottom:18px}
 .session-nav-btn{
@@ -966,7 +883,7 @@ tbody tr:hover{background:var(--surface-2)}
 .plan-green-card .sub{color:var(--txt-2)}
 .plan-green-card label{color:var(--txt-2)}
 .plan-green-card select,.plan-green-card input{background:var(--surface);border:1px solid var(--line);color:var(--txt)}
-.rot-cycles{display:flex;align-items:stretch;gap:10px;margin:6px 0 4px}
+.plan-cycles{display:flex;align-items:stretch;gap:10px;margin:6px 0 4px}
 .cycle-box{flex:1;background:var(--surface-2);border-radius:var(--r-panel);padding:12px;display:flex;flex-direction:column}
 .cycle-lbl{font-size:var(--fs-xs);letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);margin-bottom:3px}
 .cycle-val{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
@@ -1333,12 +1250,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .stat-grid{gap:10px}
   .stat-card{padding:14px}
 
-  .rot-cycles{flex-direction:column;gap:8px}
+  .plan-cycles{flex-direction:column;gap:8px}
   footer{text-align:center;padding:12px clamp(16px,4vw,32px)}
 
   /* no sideways scrolling inside cards: let these rows wrap instead */
   .session-nav{flex-wrap:wrap;overflow-x:visible}
-  .rot-queue-track{flex-wrap:wrap;overflow-x:visible}
   .gates-tabs{flex-wrap:wrap;overflow-x:visible}
 
   /* session header: duration no longer floats to the left when it wraps */
@@ -1398,8 +1314,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .card,.tile,.panel{min-width:0;max-width:100%;overflow-wrap:anywhere}
 .card img,.card svg{max-width:100%}
 .grid-12,.grid-12>*,.practice-grid,.stat-grid,.phase-stepper,
-.ia-bands-grid,.spx-parts,.spx-photos,.rot-override-grid{min-width:0}
-.rot-override-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.ia-bands-grid,.spx-parts,.spx-photos{min-width:0}
 .book{flex-wrap:wrap}
 .book>div,.book-main,.spx-task,.spx-part{min-width:0;overflow-wrap:anywhere}
 @media (max-width:768px){
@@ -2719,92 +2634,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <!-- Right sidebar (TODAY) -->
-          <div class="col-4">
-            <div class="card rot-card-v2">
-              <div class="rot-v2-header">
-                <div class="rot-v2-badge-row">
-                  <span class="rot-live-pill"><span class="rot-pulse-dot"></span> <span data-i18n="rot_automated">AUTOMATED CYCLE</span></span>
-                  <span class="rot-week-pill" id="rotDay">WEEK A</span>
-                </div>
-                <h3 class="rot-v2-title" data-i18n="rot_title">Fortnightly Rotation Matrix</h3>
-                <p class="rot-v2-desc" data-i18n="rot_desc">Systematic alternating schedule ensuring comprehensive coverage of all exam components.</p>
-              </div>
-
-              <!-- Active 2-Week Plan Overview -->
-              <div class="rot-schedule-grid">
-                <!-- Week A Box -->
-                <div class="rot-week-card" id="rotCardWkA">
-                  <div class="rot-wk-head">
-                    <span class="rot-wk-name">WEEK A</span>
-                    <span class="rot-wk-status" id="rotWkAStatus">ACTIVE</span>
-                  </div>
-                  <div class="rot-session-row">
-                    <div class="rot-ses-dot mon"></div>
-                    <div class="rot-ses-info">
-                      <span class="rot-ses-day" id="rotWkASesADay">Monday 15:30</span>
-                      <span class="rot-ses-name">Full Reading &amp; Use of English (50' Sprint)</span>
-                    </div>
-                  </div>
-                  <div class="rot-session-row">
-                    <div class="rot-ses-dot fri"></div>
-                    <div class="rot-ses-info">
-                      <span class="rot-ses-day" id="rotWkASesBDay">Friday 13:00</span>
-                      <span class="rot-ses-name">Full Listening Test (40' audio + 20' analysis)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Week B Box -->
-                <div class="rot-week-card" id="rotCardWkB">
-                  <div class="rot-wk-head">
-                    <span class="rot-wk-name">WEEK B</span>
-                    <span class="rot-wk-status" id="rotWkBStatus">UPCOMING</span>
-                  </div>
-                  <div class="rot-session-row">
-                    <div class="rot-ses-dot mon"></div>
-                    <div class="rot-ses-info">
-                      <span class="rot-ses-day" id="rotWkBSesADay">Monday 15:30</span>
-                      <span class="rot-ses-name">Full Writing (<span id="rotWkBWName">Essay</span>)</span>
-                    </div>
-                  </div>
-                  <div class="rot-session-row">
-                    <div class="rot-ses-dot fri"></div>
-                    <div class="rot-ses-info">
-                      <span class="rot-ses-day" id="rotWkBSesBDay">Friday 13:00</span>
-                      <span class="rot-ses-name">Full Speaking Simulation (60 min)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Writing Auto-Queue Visual Track -->
-              <div class="rot-queue-section">
-                <div class="rot-queue-head">
-                  <span class="rot-queue-label" data-i18n="rot_writing_queue">AUTOMATIC WRITING QUEUE (WEEK B)</span>
-                  <span class="rot-queue-sub" id="rotQueueSub">Active genre: Article</span>
-                </div>
-                <div class="rot-queue-track" id="rotTimeline"></div>
-                <div style="margin-top:9px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:7px">
-                  <label for="ovW" style="font-family:var(--mono);font-size:12px;color:var(--on-hero-sub2);text-transform:uppercase;margin:0" data-i18n="rot_override_genre">Override writing genre:</label>
-                  <select id="ovW" onchange="setOv('w',this.value)" style="background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.20);color:var(--on-hero);font-size:12px;padding:3px 8px;border-radius:4px"></select>
-                </div>
-              </div>
-
-              <!-- Schedule countdown info -->
-              <div class="rot-meta-bar">
-                <div>
-                  <span class="rot-meta-lbl" data-i18n="rot_cycle_focus">CYCLE FOCUS</span>
-                  <span class="rot-meta-val" id="rotVal">Week A: Full R&amp;UoE + Full Listening</span>
-                </div>
-                <div style="text-align:right">
-                  <span class="rot-meta-lbl" data-i18n="rot_next_switch">NEXT SWITCH</span>
-                  <span class="rot-meta-val" id="rotDayNext">Monday</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
         </div>
       </section>
 
@@ -3316,17 +3145,24 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-6">
             <div class="card plan-green-card">
               <div class="plan-card-head">
-                <h2 data-i18n="plan_rotation">🔁 Continuous Rotation &amp; Upcoming Slots</h2>
+                <h2 data-i18n="plan_rotation">What comes next</h2>
                 <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_rotation_chip">4-Session Loop</span></span>
               </div>
               <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
 
               <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
 
-              <div class="rot-cycles" style="display:none">
+              <div class="row" style="align-items:flex-end;margin:12px 0">
+                <div>
+                  <label for="ovW" data-i18n="plan_override_genre">Override writing genre</label>
+                  <select id="ovW" onchange="setOv('w',this.value)"></select>
+                </div>
+              </div>
+
+              <div class="plan-cycles">
                 <div class="cycle-box">
                   <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
-                  <span class="cycle-val" id="rotWkASummary">Full R&amp;UoE + Full L</span>
+                  <span class="cycle-val" id="planWkASummary">Full R&amp;UoE + Full L</span>
                   <div style="margin-top:8px">
                     <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
@@ -3334,7 +3170,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
                 <div class="cycle-box">
                   <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
-                  <span class="cycle-val" id="rotWkBSummary">Full W + Full Sp</span>
+                  <span class="cycle-val" id="planWkBSummary">Full W + Full Sp</span>
                   <div style="margin-top:8px">
                     <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
                   </div>
@@ -3755,20 +3591,7 @@ const I18N={
     today_start_session:'Start session',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
-    rot_title:'Fortnightly Rotation Matrix',
-    rot_desc:'Systematic alternating schedule ensuring comprehensive coverage of all exam components.',
-    rot_automated:'AUTOMATED CYCLE',
-    rot_week_a:'WEEK A',
-    rot_week_b:'WEEK B',
-    rot_active_now:'ACTIVE NOW',
-    rot_active:'ACTIVE',
-    rot_upcoming:'UPCOMING',
     rot_today:'TODAY',
-    rot_writing_queue:'AUTOMATIC WRITING QUEUE (WEEK B)',
-    rot_override_genre:'Override writing genre:',
-    rot_cycle_focus:'CYCLE FOCUS',
-    rot_next_switch:'NEXT SWITCH',
-    rot_active_genre:'Active genre: {genre}',
     rot_no_session_today:'No session scheduled today',
     rot_no_session:'No session scheduled',
     rot_configure_days:'Please configure your study days in PLAN.',
@@ -3776,9 +3599,6 @@ const I18N={
     rot_fast_forward:'Fast-forward (+1)',
     rot_shift:'Shift (+1)',
     rot_do_next:'Do next session now',
-    rot_active_today:'Active today',
-    rot_monday_in:'Monday (in {days} days)',
-    rot_monday_in_one:'Monday (in 1 day)',
     rot_schedule:'Schedule:',
     rot_studio_open:'Studio is open below.',
     rot_next:'Next:',
@@ -3790,8 +3610,6 @@ const I18N={
     rot_ses_b_l:"Session B (Full Listening 40')",
     rot_ses_a_w:'Session A (Full Writing — {genre})',
     rot_ses_b_sp:"Session B (Full Speaking 60')",
-    rot_val_a:'{week}: Full R&UoE + Full Listening',
-    rot_val_b:'{week}: Full Writing ({genre}) + Full Speaking',
     metric_title:'Weekly Metrics',
     metric_hours:'Total hours',
     metric_uoe:'UoE accuracy',
@@ -4017,8 +3835,9 @@ const I18N={
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
     plan_advance1:'⚡ +1 Advance',
     plan_reset0:'↩ Reset (0)',
-    plan_rotation:'🔁 Continuous Rotation & Upcoming Slots',
+    plan_rotation:'What comes next',
     plan_rotation_chip:'4-Session Loop',
+    plan_override_genre:'Override writing genre',
     plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
     plan_week_a_odd:'Week A (Odd)',
     plan_week_b_even:'Week B (Even)',
@@ -4452,20 +4271,7 @@ const I18N={
     today_start_session:'Empezar sesión',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
-    rot_title:'Matriz de rotación quincenal',
-    rot_desc:'Calendario alternado sistemático que cubre todos los componentes del examen.',
-    rot_automated:'CICLO AUTOMÁTICO',
-    rot_week_a:'SEMANA A',
-    rot_week_b:'SEMANA B',
-    rot_active_now:'ACTIVA AHORA',
-    rot_active:'ACTIVA',
-    rot_upcoming:'PRÓXIMA',
     rot_today:'HOY',
-    rot_writing_queue:'COLA AUTOMÁTICA DE WRITING (SEMANA B)',
-    rot_override_genre:'Cambiar género de writing:',
-    rot_cycle_focus:'FOCO DEL CICLO',
-    rot_next_switch:'PRÓXIMO CAMBIO',
-    rot_active_genre:'Género activo: {genre}',
     rot_no_session_today:'Hoy no hay sesión programada',
     rot_no_session:'No hay sesión programada',
     rot_configure_days:'Configurá tus días de estudio en PLAN.',
@@ -4473,9 +4279,6 @@ const I18N={
     rot_fast_forward:'Adelantar (+1)',
     rot_shift:'Desplazar (+1)',
     rot_do_next:'Hacer la próxima sesión ahora',
-    rot_active_today:'Activa hoy',
-    rot_monday_in:'Lunes (en {days} días)',
-    rot_monday_in_one:'Lunes (en 1 día)',
     rot_schedule:'Horario:',
     rot_studio_open:'El estudio está abierto abajo.',
     rot_next:'Próximo:',
@@ -4487,8 +4290,6 @@ const I18N={
     rot_ses_b_l:"Sesión B (Listening completo 40')",
     rot_ses_a_w:'Sesión A (Writing completo — {genre})',
     rot_ses_b_sp:"Sesión B (Speaking completo 60')",
-    rot_val_a:'{week}: R&UoE completo + Listening completo',
-    rot_val_b:'{week}: Writing completo ({genre}) + Speaking completo',
     metric_title:'Métricas semanales',
     metric_hours:'Horas totales',
     metric_uoe:'Precisión UoE',
@@ -4714,8 +4515,9 @@ const I18N={
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
     plan_advance1:'⚡ +1 Adelantar',
     plan_reset0:'↩ Reiniciar (0)',
-    plan_rotation:'🔁 Rotación continua y próximos turnos',
+    plan_rotation:'Qué viene ahora',
     plan_rotation_chip:'Ciclo de 4 sesiones',
+    plan_override_genre:'Cambiar género de writing',
     plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
     plan_week_a_odd:'Semana A (impar)',
     plan_week_b_even:'Semana B (par)',
@@ -12245,81 +12047,6 @@ function renderToday(){
     document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
   }
   
-  // Writing queue visual widget
-  const rotTimelineEl=document.getElementById('rotTimeline');
-  if(rotTimelineEl){
-    rotTimelineEl.innerHTML=s.wCycle.map((g,i)=>{
-      const isCur=(g===wT);
-      return `<div class="rot-q-item ${isCur?'active':''}">
-        <span>${i+1}. ${g}</span>
-        ${isCur?`<span class="q-badge">${t('rot_active')}</span>`:''}
-      </div>`;
-    }).join('');
-  }
-
-  // Dynamic Sidebar 2-Week Rotation Schedule Cards
-  const rotCardWkA=document.getElementById('rotCardWkA');
-  const rotCardWkB=document.getElementById('rotCardWkB');
-
-  if(rotCardWkA){
-    const rowsA=sched.map((slot,idx)=>{
-      const slotInfo=getSlotSession(week,idx,sched.length);
-      const dayName=dayFull(slot.day);
-      const isToday=(slot.day===wd);
-      const idAttr=(idx===0)?'id="rotWkASesADay"':(idx===1)?'id="rotWkASesBDay"':'';
-      const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
-      return `
-        <div class="rot-session-row${isToday?' is-today':''}">
-          <div class="rot-ses-dot ${dotColor}"></div>
-          <div class="rot-ses-info">
-            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time} ${isToday?`<span class="badge ok">${t('rot_today')}</span>`:''}</span>
-            <span class="rot-ses-name">${slotInfo.title}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-    rotCardWkA.innerHTML=`
-      <div class="rot-wk-head">
-        <span class="rot-wk-name">${t('rot_week_a')}</span>
-        <span class="rot-wk-status" id="rotWkAStatus">${isWeekA?t('rot_active_now'):t('rot_upcoming')}</span>
-      </div>
-      ${rowsA}
-    `;
-    rotCardWkA.classList.toggle('active-week',isWeekA);
-  }
-
-  if(rotCardWkB){
-    const nextWeek=week+1;
-    const rowsB=sched.map((slot,idx)=>{
-      const slotInfo=getSlotSession(nextWeek,idx,sched.length);
-      const dayName=dayFull(slot.day);
-      const idAttr=(idx===0)?'id="rotWkBSesADay"':(idx===1)?'id="rotWkBSesBDay"':'';
-      const dotColor=(slotInfo.session.id==='rue'||slotInfo.session.id==='w')?'mon':'fri';
-      return `
-        <div class="rot-session-row">
-          <div class="rot-ses-dot ${dotColor}"></div>
-          <div class="rot-ses-info">
-            <span class="rot-ses-day" ${idAttr}>${dayName} ${slot.time}</span>
-            <span class="rot-ses-name">${slotInfo.title}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-    rotCardWkB.innerHTML=`
-      <div class="rot-wk-head">
-        <span class="rot-wk-name">${t('rot_week_b')}</span>
-        <span class="rot-wk-status" id="rotWkBStatus">${!isWeekA?t('rot_active_now'):t('rot_upcoming')}</span>
-      </div>
-      ${rowsB}
-    `;
-    rotCardWkB.classList.toggle('active-week',!isWeekA);
-  }
-
-  const rotWkBWName=document.getElementById('rotWkBWName');
-  const rotQueueSub=document.getElementById('rotQueueSub');
-  if(rotWkBWName)rotWkBWName.textContent=wT;
-  if(rotQueueSub)rotQueueSub.textContent=t('rot_active_genre',{genre:wT});
-
   const nb=document.getElementById('nextBox');
   const weekLabel=isWeekA?t('week_a'):t('week_b');
   let defaultStudio='mon-a';
@@ -12344,22 +12071,6 @@ function renderToday(){
   // Set initial studio if none selected yet
   if(!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a'){
     selectSessionStudio(defaultStudio);
-  }
-
-  const rd=document.getElementById('rotDay'),rdn=document.getElementById('rotDayNext');
-  if(rd){
-    const daysToMon=(8-wd)%7||7;
-    rd.textContent=isWeekA?t('rot_week_a'):t('rot_week_b');
-    if(rdn){
-      rdn.textContent=wd===1
-        ?t('rot_active_today')
-        :(daysToMon===1?t('rot_monday_in_one'):t('rot_monday_in',{days:daysToMon}));
-    }
-  }
-  const curEl=document.getElementById('rotVal');
-  if(curEl){
-    const currentWeekSlots=sched.map((slot,idx)=>getSlotSession(week,idx,sched.length).title).join(' + ');
-    curEl.textContent=`${isWeekA?t('week_a'):t('week_b')}: ${currentWeekSlots}`;
   }
 
 }
@@ -12735,16 +12446,6 @@ function renderMetrics(){
   const streak=calcStreak().current;
   set('mRacha',streak);
   set('mRegs',log.length);
-  // Current exercise of the rotation card (TODAY sidebar)
-  const curEl=document.getElementById('rotVal');
-  if(curEl){
-    const weekN=isoWeek(new Date());
-    const s=D.settings;
-    const isWkA=(weekN%2!==0);
-    const wIdx=Math.floor(weekN/2)%s.wCycle.length;
-    const wT=s.wCycle[wIdx];
-    curEl.textContent=(isWkA?t('rot_val_a',{week:t('week_a')}):t('rot_val_b',{week:t('week_b'),genre:wT}));
-  }
   // --- Progress (stat cards) ---
   const pctOf=e=>{
     let v;
