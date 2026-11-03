@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* A visitor with a session skips the pitch and lands in the app. Runs before
+   first paint so the landing never flashes for a logged-in user. */
+(function(){
+  try{
+    var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
+    if(u&&u.token)location.replace('/app');
+  }catch(e){}
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>B2 First Tracker — writing marked, a plan for today</title>

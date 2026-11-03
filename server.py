@@ -3824,7 +3824,16 @@ class H(BaseHTTPRequestHandler):
         # Landing page at the root; the tracker keeps its own stable URL so an
         # installed PWA (manifest start_url="/app") opens the app, not the pitch.
         if path in ("/", "/home"):
-            self._serve_cached_static(LANDING, "text/html; charset=utf-8")
+            # The landing decides in an inline script whether to send a
+            # logged-in visitor to /app, so it must never be cached.
+            try:
+                with open(LANDING, "rb") as f:
+                    body = f.read()
+            except OSError:
+                self._send(404, b"not found", "text/plain")
+                return
+            self._send(200, body, "text/html; charset=utf-8",
+                       {"Cache-Control": "no-store"})
             return
 
         # Tracker (index.html) — cached, revalidated by ETag so a redeploy is
