@@ -3593,6 +3593,8 @@ const I18N={
     sync_ok:'Progress saved to the server',
     sync_local:'Saving…',
     sync_off:'Offline — changes stay on this device',
+    sync_invalid:'Not synced — the server rejected the document',
+    sync_invalid_field:'Not synced — rejected field: {field}',
     auth_login:'Log in',
     auth_register:'Create account',
     auth_closed:'Registration is closed. This instance is private.',
@@ -4377,6 +4379,8 @@ const I18N={
     sync_ok:'Progreso guardado en el servidor',
     sync_local:'Guardando…',
     sync_off:'Sin conexión — los cambios quedan en este dispositivo',
+    sync_invalid:'Sin sincronizar — el servidor rechazó el documento',
+    sync_invalid_field:'Sin sincronizar — campo rechazado: {field}',
     auth_login:'Iniciar sesión',
     auth_register:'Crear cuenta',
     auth_closed:'El registro está cerrado. Esta instancia es privada.',
@@ -6409,16 +6413,25 @@ function save(){
 /* ---------- SERVER SYNC ----------
    Every save() uploads the full progress to the server (PUT /api/progress?user=<id>)
    with the session token. On load, the user's data is downloaded and merged. */
-let SYNC_STATE='off'; // 'off' = no server, 'local' = pending, 'ok' = saved on the server
+let SYNC_STATE='off'; // 'off' = no server, 'local' = pending, 'ok' = saved on the server,
+                      // 'invalid' = the server rejected the document (see SYNC_INVALID_FIELD)
+let SYNC_INVALID_FIELD=''; // which field the server refused, when SYNC_STATE==='invalid'
 let syncT=null;
 const SYNC_LABEL={
   ok:'Progress saved to the server',
   local:'Saving…',
-  off:'Offline — changes stay on this device'
+  off:'Offline — changes stay on this device',
+  invalid:'Not synced — the server rejected the document'
 };
-function syncStatus(s){
+function syncStatus(s,field){
   SYNC_STATE=s;
-  const label=t('sync_'+s)||SYNC_LABEL[s]||SYNC_LABEL.off;
+  SYNC_INVALID_FIELD=(s==='invalid'&&field)?String(field):'';
+  let label=t('sync_'+s)||SYNC_LABEL[s]||SYNC_LABEL.off;
+  if(SYNC_INVALID_FIELD){
+    /* Say which field broke the save: "invalid" alone tells the user nothing. */
+    label=(t('sync_invalid_field')||'Not synced — rejected field: {field}')
+      .replace('{field}',SYNC_INVALID_FIELD);
+  }
   const cls='sync-badge '+(s==='ok'?'state-ok':s==='local'?'state-local':'state-off');
   const el=document.getElementById('syncBadge');
   if(el){
@@ -6442,8 +6455,20 @@ function syncPush(){
       headers:authHeaders(),
       body:JSON.stringify(payload)
     })
-      .then(r=>{if(r.status===401){sessionExpired();throw 0}if(!r.ok)throw 0;syncStatus('ok')})
-      .catch(()=>syncStatus('off'));
+      .then(async r=>{
+        if(r.status===401){sessionExpired();throw 0}
+        if(r.status===422){
+          /* The server rejected the document: say which field, once, and stop
+             pretending the sync is merely "off". Nothing loops here. */
+          let field='';
+          try{const j=await r.json();field=String(j&&j.field||'').slice(0,40)}catch(e){}
+          try{track('fetch_error',{status:422,endpoint:'/api/progress',code:field||'unknown'})}catch(e){}
+          syncStatus('invalid',field);
+          throw 0;
+        }
+        if(!r.ok)throw 0;syncStatus('ok')
+      })
+      .catch(()=>{if(SYNC_STATE!=='invalid')syncStatus('off')});
   },300);
 }
 function syncPull(){

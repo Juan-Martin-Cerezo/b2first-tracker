@@ -453,6 +453,62 @@ def _sanitize_event(ev):
     return n, p
 
 
+def _note_invalid_progress(handler, user_id, field, size):
+    """Record a rejected progress document so the offending field stops being a mystery.
+
+    Only the field path, the byte size and a hash of the user id: no payload, no values.
+    """
+    try:
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        rec = {"ts": ts, "kind": "invalid_progress", "field": str(field)[:120],
+               "bytes": int(size), "uid_hash": hashlib.sha256(str(user_id).encode()).hexdigest()[:16],
+               "rid": getattr(handler, "_rid", "")}
+        d = os.path.join(DATA_DIR, "errors")
+        os.makedirs(d, mode=0o700, exist_ok=True)
+        path = os.path.join(d, time.strftime("%Y-%m-%d") + ".jsonl")
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            os.write(fd, (json.dumps(rec) + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+    except Exception:
+        pass
+
+
+def _append_server_error(handler):
+    """Persist an unhandled server exception to data/errors/YYYY-MM-DD.jsonl (0600).
+
+    The access log keeps `rid` and the status; this file keeps the traceback, so a
+    500 can be triaged later with tools/errors.py. No request body, no PII.
+    """
+    try:
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        day = time.strftime("%Y-%m-%d")
+        tb = traceback.format_exc()
+        rec = {
+            "ts": ts,
+            "kind": "server",
+            "rid": getattr(handler, "_rid", ""),
+            "method": getattr(handler, "command", ""),
+            "path": getattr(handler, "path", "")[:200],
+            "ip_hash": _ip_hash(_real_ip(handler)),
+            "tb": tb[-4000:],
+            "tb_hash": hashlib.sha256(
+                (tb.strip().splitlines() or [""])[-1].encode("utf-8", "replace")
+            ).hexdigest()[:16],
+        }
+        d = os.path.join(DATA_DIR, "errors")
+        os.makedirs(d, mode=0o700, exist_ok=True)
+        path = os.path.join(d, day + ".jsonl")
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            os.write(fd, (json.dumps(rec, ensure_ascii=False) + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+    except Exception:
+        pass  # never let the error logger mask the original failure
+
+
 def _prune_events(events_dir):
     """Delete event files older than the retention window (best-effort)."""
     cutoff = (date.today() - timedelta(days=EVENTS_RETENTION_DAYS)).isoformat()
@@ -3468,6 +3524,7 @@ class H(BaseHTTPRequestHandler):
             self._safe_json(504, {"error": "timeout", "rid": self._rid})
         except Exception:
             traceback.print_exc()
+            _append_server_error(self)
             self._safe_json(500, {"error": "internal", "rid": self._rid})
         finally:
             self._log_line()
@@ -4860,6 +4917,7 @@ class H(BaseHTTPRequestHandler):
                     return
                 field = _validate_progress(data)
                 if field is not None:
+                    _note_invalid_progress(self, user_id, field, len(raw))
                     self._send_json(422, {"error": "invalid progress", "field": field})
                     return
                 if "log" not in data:
