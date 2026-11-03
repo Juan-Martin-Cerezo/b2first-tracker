@@ -700,6 +700,13 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px;display:flex;align-items:center;gap:6px;
   text-transform:none;cursor:pointer;
 }
+.gate-stage-note{font-size:var(--fs-xs);color:var(--txt-2);margin-top:5px;line-height:1.4}
+.gate-fields{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.gate-field{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-xs);color:var(--txt-2);min-width:120px;flex:1 1 120px}
+.gate-field input{
+  min-height:44px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
+  color:var(--txt);padding:8px 10px;font:inherit;
+}
 
 /* ---------- STAT CARDS ---------- */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
@@ -1827,7 +1834,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
     <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
-    <button data-view="graf" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-charts"/></svg><span class="nav-label" data-i18n="nav_charts">Charts</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
     <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
@@ -2797,49 +2803,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <div class="card">
-          <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
-          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance.</div>
-          <div id="gates"></div>
-          <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
-            <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
-          </div>
-          <div style="margin-top:16px;border-top:1px solid var(--outline-variant);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="exportData()" data-i18n="prog_export">💾 Export data</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="prog_import">📥 Import data</button>
-            <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
-          </div>
-          <p style="font-size:12px;color:var(--on-surface-variant);margin-top:10px" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
-        </div>
-
-        <div class="grid-12">
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="prog_history">History</h2>
-              <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
-              <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="prog_stats">📈 Stats by exercise</h2>
-              <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
-              <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ CHARTS ============ -->
-      <section id="v-graf" class="view">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" data-i18n="charts_title">Performance Analytics</h1>
-            <p class="page-sub" data-i18n="charts_sub">Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.</p>
-          </div>
-        </div>
-
         <div class="stat-grid">
           <div class="stat-card">
             <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-charts"/></svg>
@@ -2888,6 +2851,39 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
               <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
               <div id="gCons"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
+          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance. Edit a threshold and it saves to your plan at once.</div>
+          <div id="gates"></div>
+          <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
+            <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
+          </div>
+          <div style="margin-top:16px;border-top:1px solid var(--outline-variant);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn gray" onclick="exportData()" data-i18n="prog_export">💾 Export data</button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="prog_import">📥 Import data</button>
+            <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
+          </div>
+          <p style="font-size:12px;color:var(--on-surface-variant);margin-top:10px" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
+        </div>
+
+        <div class="grid-12">
+          <div class="col-6">
+            <div class="card">
+              <h2 data-i18n="prog_history">History</h2>
+              <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
+              <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card">
+              <h2 data-i18n="prog_stats">📈 Stats by exercise</h2>
+              <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
+              <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
             </div>
           </div>
         </div>
@@ -3485,7 +3481,6 @@ const I18N={
     nav_progress:'Progress',
     nav_plan:'Plan',
     nav_practice:'Practice',
-    nav_charts:'Charts',
     nav_errors:'Errors',
     nav_books:'Books',
     nav_ai:'Writing',
@@ -3632,6 +3627,21 @@ const I18N={
     stage_focus_0:'Trap recognition and basic architecture.',
     stage_focus_1:'Optimal solving times and interactive fluency.',
     stage_focus_2:'Execution under fatigue. If you pass this, you take the official exam.',
+    stage_unlock_0:'Stage 0 — these thresholds unlock your first full Reading & Use of English mock.',
+    stage_unlock_1:'Stage 1 — these thresholds unlock timed full papers at exam accuracy.',
+    stage_unlock_2:'Stage 2 — these thresholds unlock the final mock and the C1 speaking check.',
+    mx_e0_w:'Essay score ≥ /20',
+    mx_e0_u:'UoE Part 4 ≥ %',
+    mx_e0_l:'Listening Part 2 errors ≤',
+    mx_e1_w:'Writing score ≥ /20',
+    mx_e1_wm:'Writing time ≤ min',
+    mx_e1_u:'UoE ≥ %',
+    mx_e1_l:'Listening ≥ /30',
+    mx_e2_r:'R&UoE ≥ %',
+    mx_e2_rm:'R&UoE time ≤ min',
+    mx_e2_w:'Writing ≥ /20',
+    mx_e2_l:'Listening ≥ /30',
+    mx_e2_ln:'Consecutive exams',
     advance_stage:'⬆ Advance to {stage}',
     advance_done:'🎓 YOU COMPLETED EVERYTHING',
     advance_wait:'⬆ Complete all gates to advance',
@@ -3755,8 +3765,6 @@ const I18N={
     th_average:'Average',
     th_best:'Best',
     th_last:'Last',
-    charts_title:'Performance Analytics',
-    charts_sub:'Detailed breakdown of your preparation metrics. Track your evolution, spot weak areas and monitor consistency.',
     charts_readiness:'Overall Readiness',
     charts_mocks:'Mock Exams Taken',
     charts_mocks_sub:'mocks logged',
@@ -4177,7 +4185,6 @@ const I18N={
     nav_progress:'Progreso',
     nav_plan:'Plan',
     nav_practice:'Práctica',
-    nav_charts:'Gráficos',
     nav_errors:'Errores',
     nav_books:'Libros',
     nav_ai:'Corrector',
@@ -4324,6 +4331,21 @@ const I18N={
     stage_focus_0:'Reconocimiento de trampas y arquitectura básica.',
     stage_focus_1:'Tiempos de resolución óptimos y fluidez interactiva.',
     stage_focus_2:'Ejecución bajo fatiga. Si superás esto, vas al examen oficial.',
+    stage_unlock_0:'Etapa 0 — estos umbrales desbloquean tu primer simulacro completo de Reading & Use of English.',
+    stage_unlock_1:'Etapa 1 — estos umbrales desbloquean pruebas completas cronometradas con precisión de examen.',
+    stage_unlock_2:'Etapa 2 — estos umbrales desbloquean el simulacro final y la prueba oral C1.',
+    mx_e0_w:'Puntaje del essay ≥ /20',
+    mx_e0_u:'UoE Parte 4 ≥ %',
+    mx_e0_l:'Errores Listening Parte 2 ≤',
+    mx_e1_w:'Puntaje de writing ≥ /20',
+    mx_e1_wm:'Tiempo de writing ≤ min',
+    mx_e1_u:'UoE ≥ %',
+    mx_e1_l:'Listening ≥ /30',
+    mx_e2_r:'R&UoE ≥ %',
+    mx_e2_rm:'Tiempo R&UoE ≤ min',
+    mx_e2_w:'Writing ≥ /20',
+    mx_e2_l:'Listening ≥ /30',
+    mx_e2_ln:'Exámenes consecutivos',
     advance_stage:'⬆ Avanzar a {stage}',
     advance_done:'🎓 COMPLETASTE TODO',
     advance_wait:'⬆ Completá todas las puertas para avanzar',
@@ -4447,8 +4469,6 @@ const I18N={
     th_average:'Promedio',
     th_best:'Mejor',
     th_last:'Último',
-    charts_title:'Analítica de rendimiento',
-    charts_sub:'Desglose detallado de tus métricas de preparación. Seguí tu evolución, detectá áreas débiles y controlá la constancia.',
     charts_readiness:'Preparación general',
     charts_mocks:'Simulacros realizados',
     charts_mocks_sub:'simulacros registrados',
@@ -10371,6 +10391,30 @@ function calcGates(){
 }
 const STAGE_NAMES=['stage_name_0','stage_name_1','stage_name_2'];
 const STAGE_FOCUS=['stage_focus_0','stage_focus_1','stage_focus_2'];
+const STAGE_UNLOCK=['stage_unlock_0','stage_unlock_1','stage_unlock_2'];
+const GATE_FIELDS=[
+  [[['e0.w']],[['e0.u']],[['e0.l']]],
+  [[['e1.w'],['e1.wm']],[['e1.u']],[['e1.l']],[],[],[]],
+  [[['e2.r'],['e2.rm']],[['e2.w']],[['e2.l'],['e2.ln']],[]]
+];
+const GATE_FIELD_LABELS={
+  'e0.w':'mx_e0_w','e0.u':'mx_e0_u','e0.l':'mx_e0_l',
+  'e1.w':'mx_e1_w','e1.wm':'mx_e1_wm','e1.u':'mx_e1_u','e1.l':'mx_e1_l',
+  'e2.r':'mx_e2_r','e2.rm':'mx_e2_rm','e2.w':'mx_e2_w','e2.l':'mx_e2_l','e2.ln':'mx_e2_ln'
+};
+function gateInputId(key){
+  const parts=key.split('.');
+  return 'mx'+parts[0][0].toUpperCase()+parts[0].slice(1)+parts[1];
+}
+function setGateSetting(key,value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return;
+  const parts=key.split('.');
+  D.settings[parts[0]][parts[1]]=n;
+  save();
+  renderGates();
+  renderPlan();
+}
 
 function renderGates(){
   const calc=calcGates(),st=Math.min(D.stage,2);
@@ -10385,11 +10429,17 @@ function renderGates(){
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
       <b style="color:var(--primary);font-size:14px">${t(STAGE_NAMES[viewSt])}</b>
       <div style="font-size:12px;color:var(--on-surface-variant);margin-top:2px">${t(STAGE_FOCUS[viewSt])}</div>
+      <div class="gate-stage-note">${t(STAGE_UNLOCK[viewSt])}</div>
     </div>`+
     viewGates.map((x,i)=>{
       const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
+      const fields=(GATE_FIELDS[viewSt][i]||[]).map(f=>{
+        const k=f[0],parts=k.split('.'),val=D.settings[parts[0]][parts[1]];
+        return `<label class="gate-field"><span>${t(GATE_FIELD_LABELS[k])}</span><input type="number" id="${gateInputId(k)}" value="${val}" onchange="setGateSetting('${k}',this.value)"></label>`;
+      }).join('');
       return `<div class="gate ${ok?'pass':'fail'}">
       <h4><span>${x.name}</span><span style="color:${ok?'var(--ok-text)':'var(--on-surface-variant)'};font-size:12px">${x.txt}</span></h4>
+      ${fields?`<div class="gate-fields">${fields}</div>`:''}
       <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
       <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
     </div>`}).join('');
