@@ -20,6 +20,7 @@ ALLOWED_RESOURCE_NAMES = {
     "Tapescript",
     "Answer key",
     "Lesson plan",
+    "Lesson plan audio",
     "Teacher guide",
     "Tapescript and key",
     "Online practice",

@@ -707,6 +707,8 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   min-height:44px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
   color:var(--txt);padding:8px 10px;font:inherit;
 }
+#errLegend .err-legend-table td:first-child{white-space:nowrap}
+#errLegend .pill{white-space:nowrap}
 
 /* ---------- STAT CARDS ---------- */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
@@ -3776,6 +3778,7 @@ const I18N={
     res_tapescript:'Tapescript',
     res_answer_key:'Answer key',
     res_lesson_plan:'Lesson plan',
+    res_lesson_plan_audio:'Lesson plan audio',
     res_teacher_guide:'Teacher guide',
     res_tapescript_key:'Tapescript and key',
     res_online_practice:'Online practice',
@@ -4498,6 +4501,7 @@ const I18N={
     res_tapescript:'Transcripción',
     res_answer_key:'Respuestas',
     res_lesson_plan:'Plan de clase',
+    res_lesson_plan_audio:'Audio del plan de clase',
     res_teacher_guide:'Guía del docente',
     res_tapescript_key:'Transcripción y respuestas',
     res_online_practice:'Práctica en línea',
@@ -11356,7 +11360,7 @@ function listeningTestCards(){
   for(let n=1;n<=4;n++)full1.push(res('res_audio','auFS1p'+n,'Part '+n));
   full1.push(res('res_tapescript','tsFS1'),res('res_answer_key','lkFS1'));
   for(let n=1;n<=4;n++)full1.push(plan('fL'+n,'Part '+n));
-  for(let n=1;n<=4;n++)full1.push(res('res_lesson_plan','fL'+n+'a','Part '+n+' audio'));
+  for(let n=1;n<=4;n++)full1.push(res('res_lesson_plan_audio','fL'+n+'a','Part '+n+' audio'));
   full1.push(res('res_teacher_guide','lGuide'));
   cards.push({title:t('lt_full_1'),items:full1});
 
