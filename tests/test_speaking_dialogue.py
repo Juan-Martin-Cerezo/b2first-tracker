@@ -1,0 +1,322 @@
+"""Phase 51: the partner and the examiner hear the candidate.
+
+Four checks, in order:
+
+  1. Recognition. A stubbed Web Speech emits one sentence; the transcript shows
+     it as the faded draft while the turn is open and as a normal `You:` line
+     once the turn closes.
+  2. Reactive partner. The same sentence reaches the provider request body,
+     together with `mode: 'partner'`.
+  3. Server. The follow-up prompt carries the candidate's words and asks for a
+     question; the partner prompt names Alex. With no key there is no call at
+     all (503).
+  4. No support. With SpeechRecognition removed, the whole exam still reaches
+     the report and the page raises nothing.
+
+Run:  uv run --with playwright python test_speaking_dialogue.py
+"""
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+
+TESTS = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(TESTS)
+sys.path.insert(0, REPO)
+sys.path.insert(0, TESTS)
+
+os.environ.pop("B2_AI_KEY", None)
+
+import helpers  # noqa: E402
+from playwright.sync_api import sync_playwright  # noqa: E402
+
+URL = helpers.isolated_server() + "/"
+PHRASE = "I think living in a big city is exciting but too noisy"
+
+SPEECH_STUB = r"""
+window.__srLog = [];
+const __PHRASE = "I think living in a big city is exciting but too noisy";
+function FakeRecognition() {
+  this.lang = '';
+  this.continuous = false;
+  this.interimResults = false;
+  this.maxAlternatives = 1;
+  this.onstart = null;
+  this.onresult = null;
+  this.onerror = null;
+  this.onend = null;
+  this.started = false;
+}
+FakeRecognition.prototype.start = function () {
+  this.started = true;
+  window.__srLog.push('start');
+  if (this.onstart) this.onstart();
+  const result = {isFinal: true, 0: {transcript: __PHRASE, confidence: 0.9}, length: 1};
+  const results = [result];
+  results.length = 1;
+  if (this.onresult) this.onresult({resultIndex: 0, results: results});
+};
+FakeRecognition.prototype.stop = function () {
+  this.started = false;
+  window.__srLog.push('stop');
+  if (this.onend) this.onend();
+};
+FakeRecognition.prototype.abort = FakeRecognition.prototype.stop;
+try {
+  Object.defineProperty(window, 'webkitSpeechRecognition', {
+    configurable: true, get: function () { return FakeRecognition; }
+  });
+} catch (e) { window.webkitSpeechRecognition = FakeRecognition; }
+try {
+  Object.defineProperty(window, 'SpeechRecognition', {
+    configurable: true, get: function () { return FakeRecognition; }
+  });
+} catch (e) { window.SpeechRecognition = FakeRecognition; }
+"""
+
+NO_SPEECH_STUB = r"""
+try {
+  Object.defineProperty(window, 'webkitSpeechRecognition', {
+    configurable: true, value: undefined
+  });
+} catch (e) { window.webkitSpeechRecognition = undefined; }
+try {
+  Object.defineProperty(window, 'SpeechRecognition', {
+    configurable: true, value: undefined
+  });
+} catch (e) { window.SpeechRecognition = undefined; }
+"""
+
+SILENT_SPEECH_SYNTH = r"""
+window.__utts = [];
+const __stub = {
+  speak: function (u) {
+    window.__utts.push(u.text);
+    try { if (u.onstart) u.onstart(); } catch (e) {}
+    try { if (u.onend) u.onend(); } catch (e) {}
+  },
+  cancel: function () {},
+  getVoices: function () { return []; },
+  pause: function () {}, resume: function () {},
+  speaking: false, pending: false
+};
+try {
+  Object.defineProperty(window, 'speechSynthesis', {
+    configurable: true, get: function () { return __stub; }
+  });
+} catch (e) { window.speechSynthesis = __stub; }
+"""
+
+
+def wait_until(pg, expression, timeout_s, step=100):
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        if pg.evaluate(expression):
+            return True
+        pg.wait_for_timeout(step)
+    return False
+
+
+def open_app(p, query, init_script):
+    browser = p.chromium.launch(args=[
+        "--use-fake-device-for-media-stream",
+        "--use-fake-ui-for-media-stream",
+        "--autoplay-policy=no-user-gesture-required",
+    ])
+    context = browser.new_context(viewport={"width": 1200, "height": 900},
+                                  permissions=["microphone"])
+    context.add_init_script(init_script)
+    context.add_init_script(SILENT_SPEECH_SYNTH)
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.goto(URL + "app" + query, wait_until="networkidle")
+    helpers.login_owner(page, URL)
+    page.evaluate("localStorage.setItem('spx_test','1')")
+    page.goto(URL + "app" + query, wait_until="networkidle")
+    page.wait_for_timeout(350)
+    helpers.dismiss_onboarding(page)
+    assert page.evaluate("!!window.SPX_TEST"), "SPX_TEST was not exposed"
+    return browser, page, errors
+
+
+# ---------------------------------------------------------------------------
+# 3. The server side (no browser): prompt selection and the no-key contract.
+# ---------------------------------------------------------------------------
+def test_server_prompts():
+    import server as S
+
+    calls = []
+
+    def fake_complete(system, user_block, byo=None):
+        calls.append((system, user_block))
+        if "examiner" in system.lower():
+            return json.dumps({"line": "Why do you think that is?"}), None
+        return json.dumps({"line": "I agree, but I prefer the countryside."}), None
+
+    S._ai_text_complete = fake_complete
+    token = S.new_token("dialogue-test")
+
+    def post(payload):
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            URL + "api/speaking/partner", data=data,
+            headers={"Content-Type": "application/json"}, method="POST")
+        req.add_header("Authorization", "Bearer " + token)
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status, json.loads(resp.read().decode() or "{}")
+        except urllib.error.HTTPError as exc:
+            raw = exc.read()
+            try:
+                return exc.code, json.loads(raw.decode() or "{}")
+            except (ValueError, UnicodeDecodeError):
+                return exc.code, {}
+
+    base = {
+        "question": "Do you like living in a big city?",
+        "topic": "Cities",
+        "candidate_said": PHRASE,
+    }
+
+    os.environ["B2_AI_KEY"] = "dialogue-test-key"
+
+    status, body = post(dict(base, mode="examiner"))
+    assert status == 200, (status, body)
+    assert str(body.get("line", "")).endswith("?"), body
+    system, block = calls[-1]
+    assert "examiner" in system.lower(), system
+    assert PHRASE in block, block
+
+    status, body = post(dict(base, mode="partner"))
+    assert status == 200, (status, body)
+    system, block = calls[-1]
+    assert "Alex" in system, system
+    assert PHRASE in block, block
+
+    # Sanitising: newlines and control bytes never survive into the prompt.
+    status, body = post({
+        "question": "Do you like living in a big city?",
+        "topic": "Cities",
+        "candidate_said": "I think living in a big city\n\tis exciting\x00 but too noisy",
+        "mode": "examiner",
+    })
+    assert status == 200, (status, body)
+    _system, block = calls[-1]
+    said_line = block.split("The candidate said:", 1)[1].split("One follow-up", 1)[0]
+    assert "\n" not in said_line.strip(), block
+    assert "\x00" not in block and "\t" not in said_line, block
+
+    # No key, no BYO: refuse before touching the provider.
+    os.environ.pop("B2_AI_KEY", None)
+    before = len(calls)
+    status, body = post(dict(base, mode="examiner"))
+    assert status == 503, (status, body)
+    assert len(calls) == before, calls[before:]
+    print("3. server prompts: OK (examiner/partner/503)")
+
+
+# ---------------------------------------------------------------------------
+# 1-2. The browser: recognition, draft line, and the reactive partner.
+# ---------------------------------------------------------------------------
+def test_recognition_and_partner(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+
+    # A deterministic candidate turn: the exam screen is open, the floor is
+    # the candidate's and the turn lasts long enough to inspect the draft.
+    page.evaluate("""() => {
+        spxSetScreen('exam');
+        SP_EXAM.part = 1;
+        SP_EXAM.phases = [{key: 'spx_response', who: 'candidate', sec: 60,
+                           qi: 0, prompt: 'Tell me about your city.'}];
+        SP_EXAM.phase = 0;
+        SP_EXAM.txShown = 0;
+        document.getElementById('spxTx').replaceChildren();
+        spxEnterPhase(0);
+    }""")
+
+    assert page.evaluate("SPK.heard.supported") is True, "the stub was not seen as support"
+    assert wait_until(page, "SPK.heard.final.indexOf(%r)>=0" % PHRASE, 10), \
+        page.evaluate("SPK.heard")
+    assert page.evaluate("SPK.heard.active") is True, page.evaluate("SPK.heard")
+
+    draft = page.evaluate("""() => {
+        const el = document.querySelector('#spxTx .spx-tx-draft');
+        return el ? el.textContent : '';
+    }""")
+    assert PHRASE in draft, draft
+
+    page.evaluate("spxSpeechStop()")
+    assert page.evaluate("SPK.heard.active") is False
+    assert page.evaluate("document.querySelectorAll('#spxTx .spx-tx-draft').length") == 0
+
+    shown = page.evaluate("document.getElementById('spxTx').textContent")
+    assert ("You: " + PHRASE) in shown, (
+        shown, page.evaluate("SPK.lines"), page.evaluate("SP_EXAM.txShown"),
+        page.evaluate("SPK.heard"),
+        page.evaluate("document.getElementById('spxTx').innerHTML"))
+    assert shown.count(PHRASE) == 1, shown
+
+    # 2. The partner request carries what was heard and its mode.
+    page.evaluate("""() => {
+        window.__partnerPayload = null;
+        window.__partnerLine = 'That sounds exciting, but I prefer the quiet.';
+        SPX_TEST.partnerProvider = function (question, body) {
+            window.__partnerPayload = body;
+            return window.__partnerLine;
+        };
+        SP_EXAM.part = 3;
+        spxSetScreen('exam');
+        SP_EXAM.phases = [{key: 'spx_discuss', who: 'both', sec: 60, qi: 0}];
+        SP_EXAM.phase = 0;
+        spxPartnerTurn({prompt: 'Where would you like to live?',
+                        text: 'I like the city.'});
+    }""")
+    assert wait_until(page, "!!window.__partnerPayload", 10), "the provider was never called"
+    payload = page.evaluate("window.__partnerPayload")
+    assert payload.get("mode") == "partner", payload
+    assert PHRASE in (payload.get("candidate_said") or ""), payload
+    assert wait_until(
+        page,
+        "SPK.lines.some(l=>l.who==='partner'&&l.text.indexOf('That sounds exciting')===0)",
+        10), page.evaluate("SPK.lines")
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("1-2. recognition + reactive partner: OK")
+    browser.close()
+
+
+# ---------------------------------------------------------------------------
+# 4. No Web Speech: the exam still runs to the report.
+# ---------------------------------------------------------------------------
+def test_no_support(p):
+    browser, page, errors = open_app(p, "?spx_test=1&spk=sim", NO_SPEECH_STUB)
+
+    assert page.evaluate("SPK.heard.supported") is False, \
+        "SpeechRecognition was not actually removed"
+
+    page.evaluate("async () => { SPX_TEST.timeScale = 0.05; await SPX_TEST.startFull(51) }")
+    assert wait_until(
+        page,
+        "SP_EXAM.screen==='feedback' || SP_EXAM.screen==='report'", 180, step=300), \
+        page.evaluate("SPX_TEST.state()")
+    assert errors == [], errors
+    print("4. no Web Speech: exam completed")
+    browser.close()
+
+
+def main():
+    test_server_prompts()
+    with sync_playwright() as p:
+        test_recognition_and_partner(p)
+        test_no_support(p)
+    print("OK: the partner reacts, the examiner follows up, and no support is safe")
+
+
+if __name__ == "__main__":
+    main()

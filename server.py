@@ -5402,7 +5402,7 @@ class H(BaseHTTPRequestHandler):
                 self._drain()
                 self._send_json(401, {"error": auth_err or "invalid session"})
                 return
-            if self._clen() > 4000:
+            if self._clen() > 8000:
                 self._drain()
                 self._send_json(413, {"error": "payload too large"})
                 return
@@ -5423,23 +5423,57 @@ class H(BaseHTTPRequestHandler):
                 return
             question = question.strip()[:300]
             topic = topic.strip()[:120] if isinstance(topic, str) else ""
-            system = (
-                "You are Alex, a B2 First (Cambridge English) speaking candidate. "
-                "Answer the examiner's question in character as a friendly 17-year-old "
-                "student. Use one sentence only, natural spoken English, no lists, no "
-                "quotation marks. Return JSON with exactly one key: {\"line\": \"...\"}."
-            )
-            user_block = (
-                "Topic: " + (topic or "the Speaking exam") + "\n"
-                "Examiner's question to Alex: " + question + "\n"
-                "Alex's one-sentence answer:"
-            )
+            # Phase 51: what the candidate said is data, not instructions. It is
+            # flattened to one line, stripped of control characters and capped.
+            said = req.get("candidate_said")
+            if isinstance(said, str):
+                said = re.sub(r"[\x00-\x1f\x7f]", " ", said)
+                said = re.sub(r"\s+", " ", said).strip()[:600]
+            else:
+                said = ""
+            mode = "examiner" if req.get("mode") == "examiner" else "partner"
+            if mode == "examiner":
+                system = (
+                    "You are the Cambridge B2 First speaking examiner. From what the "
+                    "candidate just said, ask exactly one short follow-up question "
+                    "(maximum 20 words) that explores the content. It must end with a "
+                    "question mark. No comments, no praise, no quotation marks. "
+                    "Return JSON with exactly one key: {\"line\": \"...\"}."
+                )
+                user_block = (
+                    "Topic: " + (topic or "the Speaking exam") + "\n"
+                    "Examiner's question: " + question + "\n"
+                    "The candidate said: " + (said or "(nothing heard)") + "\n"
+                    "One follow-up question:"
+                )
+            else:
+                system = (
+                    "You are Alex, a B2 First (Cambridge English) speaking candidate, "
+                    "a friendly 17-year-old student. React to what the other candidate "
+                    "just said: agree, disagree politely, add an example or ask them a "
+                    "question back. Never repeat their words with different wording. "
+                    "Use one sentence only, natural spoken British English, no lists, "
+                    "no quotation marks. Return JSON with exactly one key: "
+                    "{\"line\": \"...\"}."
+                )
+                user_block = (
+                    "Topic: " + (topic or "the Speaking exam") + "\n"
+                    "Examiner's question to Alex: " + question + "\n"
+                    "What the other candidate just said: "
+                    + (said or "(nothing heard)") + "\n"
+                    "Alex's one-sentence reaction:"
+                )
             byo, byo_err = _byo_from_headers(self.headers)
             if byo_err:
                 self._send_json(400, {"error": byo_err})
                 return
             if not byo and not (os.environ.get("B2_AI_KEY") or "").strip():
                 self._send_json(503, {"error": "ai_not_configured"})
+                return
+            if mode == "examiner" and not said:
+                # Nothing was heard: the client keeps its written script. Do not
+                # spend a model call on a generic question.
+                self._send_json(200, {"line": ""})
                 return
             content, err = _ai_text_complete(system, user_block, byo)
             if err:
@@ -5459,10 +5493,19 @@ class H(BaseHTTPRequestHandler):
             if not line:
                 line = str(content or "")
             line = re.sub(r"\s+", " ", line).strip().strip('"').strip()
+            if mode == "examiner" and line:
+                words = line.split()
+                if len(words) > 20:
+                    line = " ".join(words[:20])
+                if not line.endswith("?"):
+                    line = line.rstrip(".! ,;:") + "?"
             if len(line) > 240:
                 line = line[:240].rsplit(" ", 1)[0]
             if not line:
-                self._send_json(502, {"error": "empty_reply"})
+                if mode == "examiner":
+                    self._send_json(200, {"line": ""})
+                else:
+                    self._send_json(502, {"error": "empty_reply"})
                 return
             self._send_json(200, {"line": line})
             return

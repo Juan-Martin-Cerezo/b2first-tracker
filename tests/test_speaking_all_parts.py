@@ -90,7 +90,7 @@ def main():
 
         # --- B. Part 2 on its own: the photographs must decode
         page.evaluate("async () => { SPX_TEST.timeScale = 0.05; await SPX_TEST.ensure() }")
-        page.evaluate("async () => { SP_EXAM.select(2); await SP_EXAM.start(); await SP_EXAM.ready() }")
+        page.evaluate("async () => { await SP_EXAM.open(); SP_EXAM.select(2); await SP_EXAM.start(); await SP_EXAM.ready() }")
         page.wait_for_function(
             """() => {
                 const imgs = Array.from(document.querySelectorAll('#spxTask .spx-photo img'));
