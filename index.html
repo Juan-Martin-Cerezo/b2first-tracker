@@ -1820,7 +1820,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   <nav id="sideNav" aria-label="Main navigation" data-i18n-aria-label="nav_aria">
     <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
     <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
-    <button data-view="partes"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_parts">Parts</span></button>
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
     <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
@@ -2742,21 +2741,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ PARTS ============ -->
-      <section id="v-partes" class="view">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" data-i18n="parts_title">Practice by Part</h1>
-            <p class="page-sub" data-i18n="parts_sub">The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.</p>
-          </div>
-          <div class="page-stat">
-            <span class="stat-label" data-i18n="parts_total">Total Parts</span>
-            <span class="stat-val">15</span>
-          </div>
-        </div>
-        <div id="partsList"></div>
-      </section>
-
       <!-- ============ PROGRESS ============ -->
       <section id="v-prog" class="view">
         <div class="page-head">
@@ -3265,6 +3249,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
         </div>
 
+        <div class="card" id="practiceParts">
+          <h2 data-i18n="parts_exercises">Exercises by part</h2>
+          <div class="sub" data-i18n="parts_exercises_sub">The 15 exercises of the 4 papers, in exam order. Each with its target time, where to practise and result logging.</div>
+          <div id="partsList"></div>
+        </div>
+
         <!-- U4: Books merged into Practice. Same #onlineList / #matList /
              #matFilter ids so renderOnline() and renderMaterial() keep working. -->
         <div class="card u4-practice-books" id="practiceBooks">
@@ -3488,7 +3478,6 @@ const I18N={
     nav_aria:'Main navigation',
     nav_today:'Today',
     nav_exam:'Exam',
-    nav_parts:'Parts',
     nav_progress:'Progress',
     nav_plan:'Plan',
     nav_practice:'Practice',
@@ -3720,9 +3709,8 @@ const I18N={
     exam_sources_all:'Open the full source library',
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
-    parts_title:'Practice by Part',
-    parts_sub:'The 15 exercises of the 4 papers. Each with its target time, where to find it, and result logging. The ones already in Session A/B are marked.',
-    parts_total:'Total Parts',
+    parts_exercises:'Exercises by part',
+    parts_exercises_sub:'The 15 exercises of the 4 papers, in exam order. Each with its target time, where to practise and result logging.',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     prog_global_avg:'Global Average',
@@ -4168,7 +4156,6 @@ const I18N={
     nav_aria:'Navegación principal',
     nav_today:'Hoy',
     nav_exam:'Examen',
-    nav_parts:'Partes',
     nav_progress:'Progreso',
     nav_plan:'Plan',
     nav_practice:'Práctica',
@@ -4400,9 +4387,8 @@ const I18N={
     exam_sources_all:'Abrir la biblioteca completa',
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
-    parts_title:'Practicar por parte',
-    parts_sub:'Los 15 ejercicios de las 4 pruebas. Cada uno con su tiempo objetivo, dónde encontrarlo y registro de resultados. Los que ya están en la Sesión A/B aparecen marcados.',
-    parts_total:'Partes totales',
+    parts_exercises:'Ejercicios por parte',
+    parts_exercises_sub:'Los 15 ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, dónde practicarlo y registro de resultados.',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     prog_global_avg:'Promedio global',
@@ -11164,10 +11150,12 @@ const PARTS=[
  {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
  {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
- {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the Writing Corrector or your teacher'},
- {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
- {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
- {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'}
+  {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the Writing Corrector or your teacher'},
+  {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
+  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
+  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'},
+  {g:'Writing',n:1,t:'Essay',q:0,min:40,type:'w',kind:'Essay',note:''},
+  {g:'Writing',n:2,t:'Article / Report / Review / Email',q:0,min:35,type:'w',kind:'Article',note:''}
 ];
 let PARTS_FILTER=null;
 function setPartsFilter(partNum){
@@ -11175,9 +11163,13 @@ function setPartsFilter(partNum){
   renderParts();
 }
 function goToPartFilter(partNum, type){
-  showView('partes');
   PARTS_FILTER=(type&&type!=='ue')?{type:type,part:partNum||null}:(partNum||null);
+  showView('practice');
   renderParts();
+  if(partNum){
+    const target=document.querySelector('#partsList .step');
+    if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+  }
 }
 function renderParts(){
   const el=document.getElementById('partsList');
@@ -11186,7 +11178,7 @@ function renderParts(){
     const fObj=(typeof PARTS_FILTER==='object'&&PARTS_FILTER!==null);
     const fType=fObj?PARTS_FILTER.type:'ue';
     const fNum=fObj?PARTS_FILTER.part:PARTS_FILTER;
-    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':'Reading &amp; UoE';
+    const fLabel=fType==='lp'?'Listening':fType==='sp'?'Speaking':fType==='w'?'Writing':'Reading &amp; UoE';
     html+=`<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span class="badge fri">Active filter: ${fLabel} Part ${fNum}</span>
       <button type="button" class="btn sm gray" onclick="setPartsFilter(null)">Show all 15 parts</button>
@@ -11204,18 +11196,23 @@ function renderParts(){
     ue.push(['Online','https://www.flo-joe.co.uk/fce/students/tests/']);
     const lp=[['Questions S1','lS1'],['Questions S2','lS2'],['Questions FS1','lFS1'],['Questions FS2','lFS2'],['🎧 S1','auS1'],['🎧 S2-P'+p.n,'auS2p'+p.n],['🎧 FS1-P'+p.n,'auFS1p'+p.n],['🎧 FS2','auFS2'],['🎧 Hand S1','hbA1'],['🎧 Hand S2-P1','hbA2p1'],['🎧 Hand S2-P2','hbA2p2'],['🎧 Hand S2-P3','hbA2p3'],['🎧 Hand S2-P4','hbA2p4'],['🎧 Hand FS-P1','hbFSp1'],['🎧 Hand FS-P2','hbFSp2'],['🎧 Hand FS-P3','hbFSp3'],['🎧 Hand FS-P4','hbFSp4'],['🎧 Hand FS-S2','hbFS2'],['Tapescript S1','tsS1'],['Tapescript FS1','tsFS1'],['Key S1','lkS1'],['Key FS1','lkFS1'],['Lesson P'+p.n,'lpL'+p.n],['Lesson FS P'+p.n,'fL'+p.n],['Audio LP FS','fL'+p.n+'a'],['Teacher guide','lGuide'],['Online','https://www.examenglish.com/FCE/fce_listening.html']];
     const sp=[['Visuals S1','spS1'],['S2','spS2'],['FS1','spFS1'],['FS2','spFS2'],['Lesson P'+p.n,'lpSp'+p.n],['Lesson FS P'+p.n,'fSp'+p.n],['Self-study','spAct'],['Teacher guide','spGuide'],['Examiner 1','exC0'],['Examiner 2','exC1'],['Examiner 3','exC2'],['Examiner FS 1','exC3'],['Examiner FS 2','exC4'],['Examiner FS 3','exC5'],['Online','https://www.examenglish.com/FCE/fce_speaking.html']];
-    const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):chips(sp);
+    const wr=[['Sample 1','wS1'],['Sample 2','wS2'],['For Schools 1','wFS1'],['For Schools 2','wFS2'],['Checklist','wCheck'],['Self-study W1','wAct1'],['Self-study W2','wAct2'],['Teacher guide','wGuide'],['Lesson P'+p.n,'lpW'+p.n],['Lesson FS P'+p.n,'fW'+p.n],['Online','https://www.examenglish.com/FCE/fce_writing.html']];
+    const donde=p.type==='ue'?chips(ue):p.type==='lp'?chips(lp):p.type==='sp'?chips(sp):chips(wr);
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p style="font-size:12px;color:var(--ok-text)">${p.note}</p>`:''}
       <div style="font-size:12px;color:var(--dim);margin:6px 0">📍 Where to practice:</div>
       <div class="chips">${donde}</div>
-      ${p.type!=='sp'?`<div class="row" style="margin-top:8px">
+      ${p.type==='sp'?`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`:p.type==='w'?`<div class="row" style="margin-top:8px">
+        <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
+        <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
+        <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Save</button></div>
+      </div>`:`<div class="row" style="margin-top:8px">
         <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
         <div style="align-self:flex-end"><button class="btn ok sm" onclick="savePart(${i})">✔ Save</button></div>
-      </div>`:`<div style="margin-top:8px"><button class="btn ok sm" onclick="savePart(${i})">✔ I practiced it</button></div>`}
+      </div>`}
     </div>`;
   });
   el.innerHTML=html;
@@ -11223,6 +11220,11 @@ function renderParts(){
 function savePart(i){
   const p=PARTS[i];
   if(p.type==='sp'){log({type:'sp',part:p.n,note:p.t});return}
+  if(p.type==='w'){
+    const score=+document.getElementById('ptOk'+i).value,min=+document.getElementById('ptMin'+i).value;
+    log({type:'w',kind:p.kind,score,min});
+    return;
+  }
   const ok=+document.getElementById('ptOk'+i).value,tot=+document.getElementById('ptTot'+i).value,min=+document.getElementById('ptMin'+i).value;
   if(!tot){alert(t('alert_set_total'));return}
   log({type:p.type,part:p.n,correct:ok,total:tot,min,note:p.t});
@@ -13022,10 +13024,6 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(b.dataset.view==='libros'){
     const practiceBtn=document.querySelector("nav button[data-view='practice']");
     if(practiceBtn){practiceBtn.click();return}
-  }
-  if(b.dataset.view==='partes'&&PARTS_FILTER!==null){
-    PARTS_FILTER=null;
-    renderParts();
   }
   document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
