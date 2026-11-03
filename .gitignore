@@ -17,6 +17,8 @@ data/
 
 # Capturas que generan las suites (test_speaking_exam, test_layout)
 tests/out/
+# Audio de captura falsa que genera la suite de speaking
+tests/fixtures/
 
 # Material de referencia de Stitch (descargas crudas: HTML + screenshots)
 stitch_assets/*.html
