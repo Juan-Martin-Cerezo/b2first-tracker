@@ -4036,7 +4036,7 @@ class H(BaseHTTPRequestHandler):
                 payload["token"] = token
                 ticket = _new_google_ticket({"kind": "login", "user": payload})
                 _audit("google_login", user["id"], _real_ip(self), self._rid)
-                self._redirect("/?google_login=" + quote(ticket, safe=""))
+                self._redirect("/app?google_login=" + quote(ticket, safe=""))
                 return
             verified = (claims.get("email_verified") is True
                         or claims.get("email_verified") == "true")
@@ -4048,7 +4048,7 @@ class H(BaseHTTPRequestHandler):
                 "email": email if isinstance(email, str) else "",
                 "email_verified": bool(verified),
             })
-            self._redirect("/?google_link=" + quote(ticket, safe=""))
+            self._redirect("/app?google_link=" + quote(ticket, safe=""))
             return
 
         if path == "/api/auth/google/session":
