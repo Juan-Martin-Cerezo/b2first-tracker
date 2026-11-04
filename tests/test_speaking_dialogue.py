@@ -51,6 +51,9 @@ Five checks, in order:
        (you, the partner and the examiner) and its Copy button writes that
        same plain text to the clipboard, in both languages, with no request
        to the server.
+  16. Saved measurements. The `sp` row written to D.log carries the words and
+       hesitation markers recognised in the session and the seconds and turns
+       of every part in the plan, with no score when no band was measured.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -972,6 +975,88 @@ def test_report_transcript(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 16. The saved `sp` row keeps the session's own measurements.
+# ---------------------------------------------------------------------------
+LOG_TURNS = [
+    {"who": "examiner", "text": "Where do you live?"},
+    {"who": "candidate", "text": "Um, I live in Buenos Aires, you know, near the park."},
+    {"who": "partner", "text": "Uh, I know, like, a quiet place."},
+    {"who": "candidate", "text": "Like, the transport is cheap and it works."},
+]
+LOG_SPEECH = {
+    "words": 19,
+    "fillers": 3,
+    "breakdown": {"um": 1, "uh": 0, "like": 1, "you know": 1},
+}
+LOG_PARTS = [
+    {"part": 1, "seconds": 47,
+     "turns": {"examiner": 2, "partner": 0, "candidate": 1}},
+    {"part": 3, "seconds": 92,
+     "turns": {"examiner": 1, "partner": 2, "candidate": 2}},
+]
+
+
+def test_saved_measurements(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB,
+                                     reuse_login=True)
+    page.evaluate("setLang('en')")
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+
+    # A session with two parts already measured. The bands are all null: this
+    # row must not invent a score out of unmeasured scales.
+    page.evaluate("""(turns) => {
+        SPK.part = 1;
+        SPK.lines = turns.map(function (t, i) {
+            return {side: 'out', who: t.who, t: i + 1, text: t.text};
+        });
+        SP_EXAM.full = false;
+        SP_EXAM.part = 3;
+        SP_EXAM.session = {
+            full: false, seed: 1, partner: 'Alex',
+            plan: {parts: [{part: 1}, {part: 3}]},
+            turns: {examiner: 3, partner: 2, candidate: 3},
+            partStats: {
+                1: {part: 1, planned: 120, seconds: 47, wall: 47,
+                    turns: {examiner: 2, partner: 0, candidate: 1}},
+                3: {part: 3, planned: 240, seconds: 92, wall: 92,
+                    turns: {examiner: 1, partner: 2, candidate: 2}}
+            }
+        };
+        SPK.reportData = {
+            bands: {grammar_vocabulary: null, discourse_management: null,
+                    pronunciation: null, interactive_communication: null},
+            metrics: {wpm: 0, fillers: 0, longest_silence: 0, overlap_ms: 0},
+            evidence: [], fixes: []
+        };
+        spxFinalizeReport(SPK.reportData);
+        SP_EXAM.saved = false;
+        SP_EXAM.entry = null;
+        SP_EXAM.saveReport();
+    }""", LOG_TURNS)
+
+    saved = page.evaluate("""() => {
+        const doc = JSON.parse(localStorage.getItem(userKey()));
+        const rows = doc.log.filter(e => e.type === 'sp');
+        return rows.length ? rows[rows.length - 1] : null;
+    }""")
+    assert saved is not None, "no sp row reached D.log"
+
+    assert saved["speech"] == LOG_SPEECH, saved.get("speech")
+    assert saved["part_stats"] == LOG_PARTS, saved.get("part_stats")
+    assert saved["turns"] == {"examiner": 3, "partner": 2, "candidate": 3}, \
+        saved.get("turns")
+    assert "score" not in saved, "a score was invented from unmeasured bands"
+    assert all(v is None for v in saved["bands"].values()), saved["bands"]
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("16. saved measurements: %d words, %d fillers, %d parts, no score"
+          % (saved["speech"]["words"], saved["speech"]["fillers"],
+             len(saved["part_stats"])))
+    browser.close()
+
+
 def test_keyboard_overlay(p):
     browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
 
@@ -1220,7 +1305,14 @@ def test_mobile_overlay(p):
     errors = []
     page.on("pageerror", lambda exc: errors.append(str(exc)))
     page.goto(URL + "app?spx_test=1", wait_until="networkidle")
-    helpers.login_owner(page, URL)
+    # The suite has already spent the server's 10 logins per 10 minutes, so
+    # this late test adopts the session the first one opened.
+    if OWNER_SESSION:
+        page.evaluate("localStorage.setItem('b2first_user', %s)"
+                      % json.dumps(json.dumps(OWNER_SESSION)))
+        page.reload(wait_until="networkidle")
+    else:
+        helpers.login_owner(page, URL)
     page.evaluate("localStorage.setItem('spx_test','1')")
     page.goto(URL + "app?spx_test=1", wait_until="networkidle")
     page.wait_for_timeout(350)
@@ -1439,6 +1531,7 @@ def main():
         test_mic_denied(p)
         test_speech_counts(p)
         test_report_transcript(p)
+        test_saved_measurements(p)
         test_keyboard_overlay(p)
         test_overlay_accessibility(p)
         test_mobile_overlay(p)

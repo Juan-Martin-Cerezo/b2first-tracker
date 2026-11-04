@@ -11698,6 +11698,35 @@ function saveSP(report){
     entry.turns=report.turns||null;
     entry.tip=report.tip||'';
     entry.comments=(report.parts||[]).map(function(p){return p.comment});
+    /* Phase 53: the row keeps the session's own measurements, so TODAY can
+       read them later without recomputing anything from the transcript. Only
+       counts observed in the session travel here: the words and hesitation
+       markers the recognition produced, and the seconds and turns of each
+       part in the plan. No score is derived from them. */
+    if(report.speech){
+      const sp=report.speech;
+      const bd=sp.breakdown||{};
+      entry.speech={
+        words:Math.max(0,Math.round(+sp.words||0)),
+        fillers:Math.max(0,Math.round(+sp.fillers||0)),
+        breakdown:SPX_FILLERS.reduce(function(out,k){
+          out[k]=Math.max(0,Math.round(+bd[k]||0));
+          return out;
+        },{})
+      };
+    }
+    entry.part_stats=(report.parts||[]).map(function(p){
+      const t=p.turns||{};
+      return {
+        part:+p.part,
+        seconds:Math.max(0,Math.round(+p.seconds||0)),
+        turns:{
+          examiner:Math.max(0,Math.round(+t.examiner||0)),
+          partner:Math.max(0,Math.round(+t.partner||0)),
+          candidate:Math.max(0,Math.round(+t.you||0))
+        }
+      };
+    });
     log(entry);
     return entry;
   }
