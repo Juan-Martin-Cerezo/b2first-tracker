@@ -9278,6 +9278,7 @@ SPK.queueEmpty=function(){
 const SPX_SCREENS=['choose','brief','exam','feedback','report'];
 const SPX_TICK_MS=250;
 const SPX_SILENCE_PROMPT_S=5;     // one prompt, never a loop
+const SPX_PART1_REPHRASE_S=15;    // Part 1: the same question once, then the script moves on
 const SPX_SILENCE_MOVE_S=10;      // then the phase moves on
 const SPX_LOW_SECONDS=15;         // the clock turns red here
 const SPX_ANSWER_DELAY_MS=2600;   // candidate starts after the examiner stops
@@ -9299,6 +9300,7 @@ const SPX_LINES={
   handoff:'Thank you. Now, your partner will answer.',
   thanks:'Thank you.',
   silence:'Take your time. Can you tell me a little more?',
+  rephrase:'Let me ask that again. ',
   early:'Thank you. We will stop this part here.',
   part2:'In this part of the test, I\'m going to show you two photographs. Here they are.',
   part3:'Now, I\'d like you to talk about something together for about two minutes. Here is a card with some ideas.',
@@ -9353,6 +9355,9 @@ const SP_EXAM={
      (1 = asked) and caps the silence repeat at 2, so a slow start can never
      produce two questions or the same question twice in a row. */
   askedOnce:0,lastAsked:'',answered:false,pendingLine:null,
+  /* Phase 53: `rephraseQi` is the Part 1 question that already got its one
+     repeat, so a long silence can never repeat a question twice. */
+  rephraseQi:-1,
   micMuted:false,txShown:0,answerTimer:null,
   reportData:null,saved:false,entry:null,
   busy:false,error:'',startedAt:0,
@@ -10469,6 +10474,7 @@ function spxEnterSessionPart(index){
   SP_EXAM.phases=spxPhasesFor(entry.part,entry.task,SP_EXAM.seed,entry.taskId);
   SP_EXAM.phase=0;
   SP_EXAM.askedOnce=0;
+  SP_EXAM.rephraseQi=-1;
   SP_EXAM.lastAsked='';
   SP_EXAM.answered=false;
   SP_EXAM.pendingLine=null;
@@ -10628,6 +10634,45 @@ function spxTickRender(left){
   spxRenderTurn();
 }
 
+function spxNoteSilence(){
+  SP_EXAM.silencePrompts++;
+  const st=SP_EXAM.session&&SP_EXAM.session.partStats&&
+    SP_EXAM.session.partStats[SP_EXAM.session.currentPart];
+  if(st)st.silences=(st.silences||0)+1;
+}
+/* Phase 53: Part 1 only. A candidate who never starts keeps the question: the
+   turn stays open past its planned length and, once the silence passes 15 s,
+   the examiner says the same written question again (the bank line) instead of
+   moving on to the next one. The repeat happens once per question; after it the
+   script gets the usual move window. */
+function spxPart1Silence(ph,now){
+  if(Number(SP_EXAM.part)!==1||!ph||ph.who!=='candidate')return false;
+  if(SP_EXAM.answered)return false;          // they answered: the normal move rule applies
+  const qi=Number(ph.qi)||0;
+  const quiet=(now-SP_EXAM.awaitSince)/1000;
+  const scale=spxTimeScale();
+  if(quiet>=SPX_SILENCE_PROMPT_S*scale&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
+    SP_EXAM.promptUsed=true;
+    SP_EXAM.askedOnce++;
+    spxNoteSilence();
+    spxSay('examiner',SPX_LINES.silence);
+    return true;
+  }
+  const rephraseAt=SPX_PART1_REPHRASE_S*scale;
+  if(SP_EXAM.rephraseQi!==qi){
+    if(quiet<rephraseAt)return true;          // hold the question open
+    SP_EXAM.rephraseQi=qi;
+    spxNoteSilence();
+    const question=ph.prompt||SP_EXAM.lastAsked||'';
+    if(question)spxSay('examiner',SPX_LINES.rephrase+question);
+    return true;
+  }
+  if(quiet>=rephraseAt+SPX_SILENCE_MOVE_S*scale){spxNextPhase();return true}
+  return true;
+}
+function spxPart1Holds(ph){
+  return Number(SP_EXAM.part)===1&&!!ph&&ph.who==='candidate'&&!SP_EXAM.answered;
+}
 function spxSilence(now){
   if(!SP_EXAM.awaitSince)return;            // nobody is waiting for an answer
   if(SPK.micSpeaking){
@@ -10638,6 +10683,8 @@ function spxSilence(now){
     return;
   }
   if(!spkExaminerMaySpeak(now))return;      // same floor rule as the audio path
+  const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
+  if(spxPart1Silence(ph,now))return;
   const quiet=(now-SP_EXAM.awaitSince)/1000;
   const move=SPX_SILENCE_MOVE_S*spxTimeScale();
   const promptAt=SPX_SILENCE_PROMPT_S*spxTimeScale();
@@ -10645,10 +10692,7 @@ function spxSilence(now){
   if(quiet>=promptAt&&!SP_EXAM.promptUsed&&SP_EXAM.askedOnce<2){
     SP_EXAM.promptUsed=true;
     SP_EXAM.askedOnce++;
-    SP_EXAM.silencePrompts++;
-    const st=SP_EXAM.session&&SP_EXAM.session.partStats&&
-      SP_EXAM.session.partStats[SP_EXAM.session.currentPart];
-    if(st)st.silences=(st.silences||0)+1;
+    spxNoteSilence();
     /* A slow start gets the same question once (never a second one). If the
        candidate did answer and then went quiet, the nudge is the generic line,
        not the question again. */
@@ -10709,6 +10753,16 @@ function spxTickLoop(){
   spxTickRender(Math.max(0,duration-elapsed));
   spxRenderTx();
   const quiet=spxQueueQuiet();
+  if(elapsed>=duration&&spxPart1Holds(ph)){
+    /* Phase 53: Part 1 never loses a question to the clock. A silent candidate
+       keeps the turn open until the examiner has repeated the written question
+       once; only then does the script move on to the next one. */
+    spxSilence(now);
+    if(SP_EXAM.phases[SP_EXAM.phase]!==ph)return;
+    spxTickRender(0);
+    spxRenderTx();
+    return;
+  }
   if(elapsed>=duration){
     /* An examiner turn lasts as long as the voice: the cap is a safety net,
        not the length of the turn. */
@@ -11010,6 +11064,7 @@ SP_EXAM.ready=async function(){
   SP_EXAM.silencePrompts=0;
   /* U1: fresh turn counters for every exam run. */
   SP_EXAM.askedOnce=0;
+  SP_EXAM.rephraseQi=-1;
   SP_EXAM.lastAsked='';
   SP_EXAM.answered=false;
   SP_EXAM.pendingLine=null;

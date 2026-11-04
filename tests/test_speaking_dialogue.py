@@ -52,8 +52,11 @@ Five checks, in order:
        same plain text to the clipboard, in both languages, with no request
        to the server.
   16. Saved measurements. The `sp` row written to D.log carries the words and
-       hesitation markers recognised in the session and the seconds and turns
-       of every part in the plan, with no score when no band was measured.
+        hesitation markers recognised in the session and the seconds and turns
+        of every part in the plan, with no score when no band was measured.
+  17. Part 1 silence. A candidate who never starts keeps the question open:
+        past 15 s the examiner repeats the same written bank question once
+        (never twice) and only then does the script move to the next one.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -1520,6 +1523,62 @@ def test_turn_state_coherent(p):
     browser.close()
 
 
+def test_part1_long_silence(p):
+    browser, page, errors = open_app(p, "?spx_test=1&spk=sim", NO_SPEECH_STUB,
+                                     reuse_login=True)
+    page.evaluate("setLang('en')")
+    # A muted part runs the real clock but never produces a candidate turn: from
+    # the exam's point of view the candidate simply says nothing.
+    page.evaluate("""async () => {
+        SPX_TEST.timeScale = 0.05;
+        SP_EXAM.select(1);
+        await SP_EXAM.start();
+        SP_EXAM.muteMic(true);
+        await SP_EXAM.ready();
+    }""")
+    assert wait_until(page, "SP_EXAM.screen==='exam' && SP_EXAM.phase>=1", 20), \
+        page.evaluate("SPX_TEST.state()")
+
+    prefix = page.evaluate("SPX_LINES.rephrase")
+    assert prefix, prefix
+    first_q = page.evaluate("SP_EXAM.phases[1].prompt")
+    second_q = page.evaluate("SP_EXAM.phases[3].prompt")
+    assert first_q and second_q and first_q != second_q, (first_q, second_q)
+    assert page.evaluate("(SP_EXAM.task.questions||[]).includes(%r)" % first_q), \
+        "the repeated line is not the written bank question: %r" % first_q
+
+    # The scaled clock would end this turn long before the repeat; the question
+    # stays open and the examiner asks the same one again, verbatim.
+    assert wait_until(
+        page,
+        "SPK.lines.some(l=>l.who==='examiner'&&l.text===SPX_LINES.rephrase+%r)"
+        % first_q, 20), page.evaluate("SPK.lines")
+    assert page.evaluate("SP_EXAM.rephraseQi") == 0, \
+        page.evaluate("SP_EXAM.rephraseQi")
+
+    # Only after the repeat does the next question arrive, so the candidate has
+    # not lost the turn to the clock.
+    assert wait_until(page, "SP_EXAM.phase>=2", 10), page.evaluate("SPX_TEST.state()")
+    examiner = page.evaluate("SPK.lines.filter(l=>l.who==='examiner').map(l=>l.text)")
+    q2_line = page.evaluate("SP_EXAM.phases[2].line")
+    assert q2_line in examiner, examiner
+    assert examiner.count(prefix + first_q) == 1, examiner
+    assert examiner.index(prefix + first_q) < examiner.index(q2_line), examiner
+
+    # The repeat budget is per question, not per part: question 2 gets its own
+    # one, and question 1 is still not repeated a second time.
+    assert wait_until(page, "SP_EXAM.rephraseQi===1", 20), \
+        page.evaluate("SPX_TEST.state()")
+    examiner = page.evaluate("SPK.lines.filter(l=>l.who==='examiner').map(l=>l.text)")
+    assert examiner.count(prefix + first_q) == 1, examiner
+    assert examiner.count(prefix + second_q) == 1, examiner
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("17. Part 1 silence: the same written question once, before moving on")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -1536,6 +1595,7 @@ def main():
         test_overlay_accessibility(p)
         test_mobile_overlay(p)
         test_turn_state_coherent(p)
+        test_part1_long_silence(p)
     print("OK: the partner reacts twice, never repeats a line, and no support is safe")
 
 
