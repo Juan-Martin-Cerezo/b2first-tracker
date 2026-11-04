@@ -10,6 +10,7 @@ Usage:
   tools/errors.py --days 1        today only
   tools/errors.py --new           only groups first seen in the last 24 h
   tools/errors.py --json          machine-readable (used by the alert cron)
+  tools/errors.py --summary       top 5 groups: count, endpoint, first seen
 
 Exit code is 1 when --new finds anything, so a cron can alert on it.
 """
@@ -21,7 +22,8 @@ from collections import defaultdict
 from datetime import date, datetime, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA = os.path.join(ROOT, "data")
+DATA = os.environ.get("B2_DATA_DIR") or os.path.join(ROOT, "data")
+SUMMARY_TOP = 5
 
 # Statuses that mean "the client asked for something it cannot have", not "the app broke":
 # auth/plan/method/size/rate limits are expected and would drown the real failures.
@@ -105,11 +107,20 @@ def mark(g, ts):
         g["last"] = ts
 
 
+def print_summary(rows, top=SUMMARY_TOP):
+    print("%-6s %-44s %s" % ("COUNT", "ENDPOINT", "FIRST SEEN"))
+    for r in rows[:top]:
+        endpoint = r["paths"][0] if r["paths"] else "-"
+        print("%-6d %-44s %s" % (r["count"], endpoint[:44], r["first"] or "?"))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Group client and server errors")
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--new", action="store_true", help="only first seen in the last 24 h")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--summary", action="store_true",
+                    help="top 5 groups by count, with endpoint and first seen")
     args = ap.parse_args()
 
     rows = collect(max(args.days, 1))
@@ -120,6 +131,11 @@ def main():
     if args.json:
         json.dump(rows, sys.stdout, indent=1)
         sys.stdout.write("\n")
+    elif args.summary:
+        if not rows:
+            print("No errors in the last %d day(s)." % args.days)
+        else:
+            print_summary(rows)
     elif not rows:
         print("No errors in the last %d day(s)." % args.days)
     else:
