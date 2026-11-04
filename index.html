@@ -201,7 +201,9 @@ html{
   -webkit-text-size-adjust:100%;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  scroll-padding-top:140px;
+  /* Runtime value: syncNavOffset() measures the sticky header stack and
+     writes --nav-offset so anchored cards never hide under the nav. */
+  scroll-padding-top:0;
 }
 body{
   background:var(--bg);
@@ -996,6 +998,10 @@ footer{
 /* ---------- VIEWS & ANIMATION ---------- */
 .view{display:none}
 .view.active{display:block;animation:fadeUp 200ms ease}
+/* Anchored scrolls land below the sticky topbar + nav (height measured in
+   syncNavOffset, not hard-coded). */
+.view,.view .card,.view #onlineList,.view #matList,
+.view table,.view .panel{scroll-margin-top:var(--nav-offset,0px)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ---------- OVERLAYS / MODALS ---------- */
@@ -1211,7 +1217,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .grid-12{gap:16px}
 }
 @media (max-width:768px){
-  html{scroll-padding-top:76px}
   body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))}
   .content main{padding:16px clamp(16px,4vw,32px) 40px}
 
@@ -3348,28 +3353,32 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
         </div>
 
-        <!-- Online practice first, then one card per official sample, then downloads. -->
-        <div class="card" id="resourcesOnline">
-          <h2 data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h2>
-          <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
-          <div id="onlineList"></div>
-        </div>
+        <!-- The library: online practice, then one card per official sample,
+             then the downloads. All three live inside #practiceBooks so the
+             online block precedes the downloads in DOM order, not only on
+             screen. Same #onlineList / #matList / #matFilter ids so
+             renderOnline() and renderMaterial() keep working. -->
+        <div id="practiceBooks">
+          <div class="card" id="resourcesOnline">
+            <h2 data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h2>
+            <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
+            <div id="onlineList"></div>
+          </div>
 
-        <div class="card" id="practiceResources">
-          <h2 data-i18n="resources_samples_title">Sample papers</h2>
-          <div class="sub" data-i18n="resources_sub">One card per sample: questions, audio, tapescript, answer key and lesson plan.</div>
-          <div id="resourcesList"></div>
-        </div>
+          <div class="card" id="practiceResources">
+            <h2 data-i18n="resources_samples_title">Sample papers</h2>
+            <div class="sub" data-i18n="resources_sub">One card per sample: questions, audio, tapescript, answer key and lesson plan.</div>
+            <div id="resourcesList"></div>
+          </div>
 
-        <!-- Same #onlineList / #matList / #matFilter ids so renderOnline()
-             and renderMaterial() keep working. -->
-        <div class="card u4-practice-books" id="practiceBooks">
-          <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
-          <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
-          <h3 class="folder" data-i18n="books_material">📥 Downloaded Material (PDFs &amp; Audio)</h3>
-          <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
-          <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
-          <div id="matList"></div>
+          <div class="card u4-practice-books" id="practiceBooksCard">
+            <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
+            <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
+            <h3 class="folder" data-i18n="books_material">📥 Downloaded Material (PDFs &amp; Audio)</h3>
+            <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
+            <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
+            <div id="matList"></div>
+          </div>
         </div>
       </section>
 
@@ -5259,6 +5268,7 @@ function setLang(code){
   if(typeof spxRerender==='function')spxRerender();
   save();
   refreshAll();
+  syncNavOffset();
   if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
 }
 function syncLangFromD(){LANG=normalizeLang(D&&D.settings&&D.settings.lang)}
@@ -12990,8 +13000,8 @@ function listeningCardsArray(){
   handbook.push(res('res_audio','hbFS2','For Schools · sample 2'));
   handbook.push(res('res_tapescript_key','hb','B2 First handbook: tapescripts and answer keys'));
   handbook.push(res('res_tapescript_key','hbFS','For Schools handbook: tapescripts and answer keys'));
-  handbook.push(res('res_online_practice','https://www.examenglish.com/FCE/fce_listening.html'));
   cards.push({title:t('lt_handbook'),items:handbook});
+  cards.unshift({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_listening.html')]});
   return cards;
 }
 function listeningTestCards(){return resourceGrid(listeningCardsArray())}
@@ -13018,7 +13028,7 @@ function readingCardsArray(){
     res('res_further_reading','rAct2'),
     res('res_reading_guide','rGuide')
   ]});
-  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.flo-joe.co.uk/fce/students/tests/')]});
+  cards.unshift({title:t('res_online'),items:[res('res_online_practice','https://www.flo-joe.co.uk/fce/students/tests/')]});
   return cards;
 }
 function speakingCardsArray(){
@@ -13041,7 +13051,7 @@ function speakingCardsArray(){
     res('res_self_study','spAct'),
     res('res_teacher_guide','spGuide')
   ]});
-  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_speaking.html')]});
+  cards.unshift({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_speaking.html')]});
   return cards;
 }
 function writingCardsArray(){
@@ -13061,7 +13071,7 @@ function writingCardsArray(){
     res('res_self_study','wAct2','Text 2'),
     res('res_teacher_guide','wGuide')
   ]});
-  cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_writing.html')]});
+  cards.unshift({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_writing.html')]});
   return cards;
 }
 function paperCards(type){
@@ -15051,6 +15061,27 @@ function renderDiag(){
    loadMaterial() fetches the file catalogue from the server and on
    failure (e.g. opened as file:// with no server) uses a minimal local
    list. init: wires listeners, applies PLAN timers and refreshes all. */
+/* syncNavOffset(): measure the sticky header stack (topbar + top nav) and
+   publish its bottom edge as --nav-offset. Anchored scrolls use it through
+   scroll-margin-top, so a card never lands under the nav whatever its
+   height at the current width or language. On phones the nav is fixed to
+   the bottom, so only the topbar counts. */
+function syncNavOffset(){
+  const topbar=document.querySelector('.topbar');
+  const nav=document.getElementById('sideNav');
+  let bottom=0;
+  if(topbar)bottom=Math.max(bottom,topbar.getBoundingClientRect().bottom);
+  if(nav){
+    const cs=getComputedStyle(nav);
+    const fixedBottom=cs.position==='fixed'&&cs.top==='auto';
+    if(!fixedBottom){
+      const r=nav.getBoundingClientRect();
+      if(r.height>0)bottom=Math.max(bottom,r.bottom);
+    }
+  }
+  document.documentElement.style.setProperty('--nav-offset',Math.ceil(bottom)+'px');
+}
+window.addEventListener('resize',syncNavOffset);
 function showView(viewId){
   /* U4 one-door decision: Books has no door of its own any more. Old links
      and calls keep working, but they land on Resources, where the library
@@ -15125,6 +15156,7 @@ if('requestIdleCallback' in window){requestIdleCallback(function(){loadMaterial(
 else{setTimeout(loadMaterial,1200);}
 applyTimers();
 refreshAll();
+syncNavOffset();
 
 /* ---------- DARK MODE (toggle + persistence) ----------
    The default is ALWAYS light mode. The user switches with the toggle
@@ -15155,6 +15187,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   applyTheme(saved==='dark'?'dark':'light');
   const btn=document.getElementById('themeToggle');
   if(btn)btn.onclick=toggleTheme;
+  syncNavOffset();
 });
 
 /* ---------- SESSION START / DEMO MODE ---------- */
