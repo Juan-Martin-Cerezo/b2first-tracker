@@ -3174,6 +3174,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
           <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no model calls).</div>
+          <div id="wpSummary" class="sub" style="margin-top:6px;font-weight:600;display:none"></div>
           <div id="wpRotationControls" style="margin-top:12px">
             <div class="wp-rotation-row">
               <label for="wpRotationMode"><b>Rotation</b></label>
@@ -4025,6 +4026,9 @@ const I18N={
     plan_custom_parts:'Parts for {day}',
     plan_custom_min:'Minutes for {day}',
     plan_custom_parts_error:'Parts must be between 1 and {max}.',
+    plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
+    plan_week_summary_item:'{skill} {min} min',
+    plan_skill_mock:'Mock exam',
     plan_rotation:'What comes next',
     plan_override_genre:'Override writing genre',
     plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
@@ -4809,6 +4813,9 @@ const I18N={
     plan_custom_parts:'Partes para {day}',
     plan_custom_min:'Minutos para {day}',
     plan_custom_parts_error:'Las partes deben estar entre 1 y {max}.',
+    plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
+    plan_week_summary_item:'{skill} {min} min',
+    plan_skill_mock:'Simulacro completo',
     plan_rotation:'Qué viene ahora',
     plan_override_genre:'Cambiar género de writing',
     plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
@@ -13079,11 +13086,41 @@ function onCustomPlanField(){
   D.settings.customPlan=validateCustomPlan(out);
   commitPlanningEdit();
 }
+/* The summary line is derived from the slots buildWeeklyPlan already produced:
+   total minutes and the minutes per skill, nothing estimated. */
+function planSkillMinutes(plan){
+  const slots=(plan&&plan.slots)||[];
+  const bySkill={};
+  let total=0;
+  slots.forEach(sl=>{
+    const skill=sl.type==='ue'?'rue':sl.type;
+    const min=Number(sl.min)||0;
+    total+=min;
+    bySkill[skill]=(bySkill[skill]||0)+min;
+  });
+  return {total:total,count:slots.length,bySkill:bySkill};
+}
+function planSkillLabel(skill){
+  if(skill==='mock')return t('plan_skill_mock');
+  const key={rue:'practice_skill_rue',w:'practice_skill_w',l:'practice_skill_l',sp:'practice_skill_sp'}[skill];
+  return key?t(key):skill;
+}
+function renderPlanSummary(plan){
+  const el=document.getElementById('wpSummary');
+  if(!el)return;
+  const sum=planSkillMinutes(plan);
+  if(!sum.count||!sum.total){el.textContent='';el.style.display='none';return}
+  const breakdown=['rue','l','w','sp','mock'].filter(k=>sum.bySkill[k]).map(k=>
+    t('plan_week_summary_item',{skill:planSkillLabel(k),min:sum.bySkill[k]})).join(' · ');
+  el.textContent=t('plan_week_summary',{total:sum.total,n:sum.count,breakdown:breakdown});
+  el.style.display='';
+}
 function renderWeeklyPlan(){
   const el=document.getElementById('weeklyPlanCard');
   if(!el)return;
   const plan=buildWeeklyPlan(D);
   WEEK_PLAN=plan;
+  renderPlanSummary(plan);
   const rows=document.getElementById('wpRows');
   const whyBox=document.getElementById('wpWhy');
   const why=document.getElementById('wpWhyBody');
