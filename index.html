@@ -2329,7 +2329,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
-                      <div class="spx-tx" id="spxTx" aria-label="Transcript" data-exam-task data-i18n-aria-label="spx_transcript"></div>
+                      <div class="spx-tx" id="spxTx" aria-label="Transcript" aria-live="polite" data-exam-task data-i18n-aria-label="spx_transcript"></div>
                       <div class="spx-note spx-mic-note" id="spxMicNotice" role="status" style="display:none" data-i18n="spx_mic_denied">Microphone access was denied. The exam continues without speech recognition.</div>
                       <div class="spx-actions">
                         <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry">Retry the voice</button>
@@ -4290,6 +4290,7 @@ const I18N={
     spx_clock_label:'Time left in this turn',
     spx_transcript:'Transcript',
     spx_mic_denied:'Microphone access was denied. The exam continues without speech recognition.',
+    spx_confirm_quit:'Leave the exam? What you said in this part will not be saved.',
     spx_examiner:'Examiner speaking',
     spx_your_turn:'Your turn',
     spx_partner:'Partner speaking',
@@ -5078,6 +5079,7 @@ const I18N={
     spx_clock_label:'Tiempo restante de este turno',
     spx_transcript:'Transcripción',
     spx_mic_denied:'Se denegó el acceso al micrófono. El examen sigue sin reconocimiento de voz.',
+    spx_confirm_quit:'¿Salir del examen? Lo que dijiste en esta parte no se guarda.',
     spx_examiner:'Habla el examinador',
     spx_your_turn:'Tu turno',
     spx_partner:'Habla tu compañero',
@@ -9340,6 +9342,27 @@ SP_EXAM.whoTurn=function(){
   ov.appendChild(box);
   document.body.appendChild(ov);
 })();
+
+/* Phase 52: keyboard while the exam overlay is open. Space mutes and unmutes
+   the microphone; Escape leaves, and during a live part it asks first so a
+   stray key never throws away the session. Typing in a field is left alone. */
+document.addEventListener('keydown',function(e){
+  const ov=document.getElementById('spxOverlay');
+  if(!ov||ov.style.display==='none')return;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    if(SP_EXAM.screen==='exam'&&!window.confirm(t('spx_confirm_quit')))return;
+    SP_EXAM.close();
+    return;
+  }
+  if(e.key!==' '&&e.code!=='Space')return;
+  const tgt=e.target;
+  if(tgt&&(tgt.isContentEditable||tgt.closest('input,textarea,select')))return;
+  if(e.repeat)return;
+  e.preventDefault();
+  if(SP_EXAM.screen!=='exam')return;
+  SP_EXAM.muteMic(!SP_EXAM.micMuted);
+});
 
 /* --- Test hooks: ?spx_test=1 (or localStorage.spx_test) -------------------
    Production never sees this object. It exposes the plan, the phase model,

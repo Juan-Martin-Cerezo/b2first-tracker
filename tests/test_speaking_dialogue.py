@@ -26,6 +26,10 @@ Five checks, in order:
   8. Real speech counts. The exam report prints the words and the hesitation
      markers (um, uh, like, you know) found in the recognised candidate text,
      with the per-marker breakdown, and never counts examiner or partner turns.
+  9. Keyboard. The transcript is a polite live region, Space mutes and unmutes
+     the microphone with real key presses, and Escape asks before leaving a
+     part that is in progress (dismiss keeps the exam, accept closes it).
+     Outside a part, Escape closes without asking.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -712,6 +716,82 @@ def test_speech_counts(p):
     browser.close()
 
 
+def test_keyboard_overlay(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+
+    # The transcript announces new lines instead of staying silent to a reader.
+    assert page.evaluate(
+        "document.getElementById('spxTx').getAttribute('aria-live')") == "polite"
+
+    # A part in progress: the phase model owns the floor, so mute/unmute is
+    # the only thing Space does.
+    page.evaluate("""() => {
+        SP_EXAM.part = 1;
+        SP_EXAM.phases = [{key: 'spx_response', who: 'candidate', sec: 60,
+                           qi: 0, prompt: 'Tell me about your city.'}];
+        SP_EXAM.phase = 0;
+        spxSetScreen('exam');
+    }""")
+    assert page.evaluate("SP_EXAM.screen") == "exam"
+    # Move the focus off the Start button so the key press reaches the page
+    # with no button activation in the way.
+    page.evaluate("document.activeElement && document.activeElement.blur()")
+    assert page.evaluate("SP_EXAM.micMuted") is False
+
+    page.keyboard.press("Space")
+    assert page.evaluate("SP_EXAM.micMuted") is True, "Space did not mute the mic"
+    page.keyboard.press("Space")
+    assert page.evaluate("SP_EXAM.micMuted") is False, "Space did not unmute the mic"
+
+    dialogs = []
+    accept = {"value": False}
+
+    def on_dialog(dialog):
+        dialogs.append(dialog.message)
+        if accept["value"]:
+            dialog.accept()
+        else:
+            dialog.dismiss()
+
+    page.on("dialog", on_dialog)
+
+    # Escape during a part asks first. Dismissing keeps the exam on screen.
+    page.keyboard.press("Escape")
+    assert len(dialogs) == 1, dialogs
+    assert dialogs[0] == page.evaluate("t('spx_confirm_quit')"), dialogs
+    assert page.evaluate("SP_EXAM.screen") == "exam", "dismiss must not leave the part"
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxOverlay')).display") != "none"
+
+    # Accepting the same question does close the overlay.
+    accept["value"] = True
+    page.keyboard.press("Escape")
+    assert page.evaluate("SP_EXAM.screen") == ""
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxOverlay')).display") == "none"
+
+    # With no part running, Escape just closes: no question to answer.
+    dialogs.clear()
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("document.activeElement && document.activeElement.blur()")
+    page.keyboard.press("Escape")
+    assert dialogs == [], dialogs
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxOverlay')).display") == "none"
+
+    # The key works in both dictionaries and each says it in its own language.
+    keys = page.evaluate(
+        "({en: I18N.en.spx_confirm_quit, es: I18N.es.spx_confirm_quit})")
+    assert keys["en"] and keys["es"], keys
+    assert keys["en"] != keys["es"], keys
+
+    assert errors == [], errors
+    print("9. keyboard: aria-live transcript, Space mute, Escape confirms")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -721,6 +801,7 @@ def main():
         test_no_support(p)
         test_mic_denied(p)
         test_speech_counts(p)
+        test_keyboard_overlay(p)
     print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 
 
