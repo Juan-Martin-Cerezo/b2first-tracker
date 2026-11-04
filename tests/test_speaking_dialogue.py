@@ -1,6 +1,6 @@
-"""Phase 51: the partner and the examiner hear the candidate.
+"""Phase 51-52: the partner and the examiner hear the candidate.
 
-Four checks, in order:
+Five checks, in order:
 
   1. Recognition. A stubbed Web Speech emits one sentence; the transcript shows
      it as the faded draft while the turn is open and as a normal `You:` line
@@ -8,10 +8,13 @@ Four checks, in order:
      partner's answer) is saved to `tests/out/dy_part3.png`.
   2. Reactive partner. The same sentence reaches the provider request body,
      together with `mode: 'partner'`.
-  3. Server. The follow-up prompt carries the candidate's words and asks for a
+  3. Two Part 3 exchanges. Both partner events ask the provider and both carry
+     `candidate_said`; when the model returns the same line twice, the second
+     reaction is a different line from the task bank, never a repeat.
+  4. Server. The follow-up prompt carries the candidate's words and asks for a
      question; the partner prompt names Alex. With no key there is no call at
      all (503).
-  4. No support. With SpeechRecognition removed, the whole exam still reaches
+  5. No support. With SpeechRecognition removed, the whole exam still reaches
      the report and the page raises nothing.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
@@ -37,6 +40,11 @@ OUT_DIR = os.path.join(TESTS, "out")
 URL = helpers.isolated_server() + "/"
 PHRASE = "I think living in a big city is exciting but too noisy"
 PARTNER_LINE = "That sounds exciting, but I prefer the quiet."
+SAME_REACTION = "That's true, cities are expensive."
+P3_BANK = [
+    "I would start with where to go.",
+    "Maybe we should travel by coach instead.",
+]
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 SPEECH_STUB = r"""
@@ -316,7 +324,84 @@ def test_recognition_and_partner(p):
 
 
 # ---------------------------------------------------------------------------
-# 4. No Web Speech: the exam still runs to the report.
+# 3. Part 3: two exchanges, both conditioned on what the candidate said.
+# ---------------------------------------------------------------------------
+def test_part3_two_reactions(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    # One recognised candidate turn, so both reactions have something to answer.
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("""() => {
+        spxSetScreen('exam');
+        SP_EXAM.part = 1;
+        SP_EXAM.phases = [{key: 'spx_response', who: 'candidate', sec: 60,
+                           qi: 0, prompt: 'Tell me about your city.'}];
+        SP_EXAM.phase = 0;
+        SP_EXAM.txShown = 0;
+        document.getElementById('spxTx').replaceChildren();
+        spxEnterPhase(0);
+    }""")
+    assert wait_until(page, "SPK.heard.final.indexOf(%s)>=0" % json.dumps(PHRASE), 10), \
+        page.evaluate("SPK.heard")
+    page.evaluate("spxSpeechStop()")
+
+    # The real Part 3 phase model, with a hook that always answers the same line.
+    page.evaluate("""() => {
+        window.__p3 = [];
+        SPX_TEST.partnerProvider = function (question, body) {
+            window.__p3.push(body);
+            return %s;
+        };
+        SP_EXAM.part = 3;
+        SP_EXAM.task = {partnerLines: %s};
+        SP_EXAM.phases = spxPhasesFor(3, SP_EXAM.task, 1, 'p3-two-reactions');
+        SP_EXAM.phase = 1;
+        SP_EXAM.partnerSaid = [];
+        spxSetScreen('exam');
+        window.__p3events = SP_EXAM.phases[1].events.map(function (ev) {
+            return ev.who;
+        });
+        SP_EXAM.phases[1].events.forEach(function (ev) { spxFireEvent(ev); });
+    }""" % (json.dumps(SAME_REACTION), json.dumps(P3_BANK)))
+
+    assert page.evaluate("window.__p3events.length") == 2, \
+        page.evaluate("window.__p3events")
+    assert page.evaluate(
+        "window.__p3events.every(function (who) { return who === 'partner'; })"), \
+        page.evaluate("window.__p3events")
+
+    assert wait_until(page, "window.__p3.length===2", 10), page.evaluate("window.__p3")
+    payloads = page.evaluate("window.__p3")
+    assert len(payloads) == 2, payloads
+    for payload in payloads:
+        assert payload.get("mode") == "partner", payload
+        assert payload.get("candidate_said") == PHRASE, payload
+
+    assert wait_until(
+        page,
+        "SPK.lines.filter(function (l) { return l.who === 'partner'; }).length >= 2",
+        10), page.evaluate("SPK.lines")
+    lines = page.evaluate(
+        "SPK.lines.filter(function (l) { return l.who === 'partner'; })"
+        ".map(function (l) { return l.text; })")
+    assert lines[0] == SAME_REACTION, lines
+    assert lines[1] != lines[0], lines
+    assert lines[1] == P3_BANK[1], lines
+
+    page.evaluate("spxRenderTx()")
+    shown = page.evaluate("document.getElementById('spxTx').textContent")
+    assert SAME_REACTION in shown, shown
+    assert P3_BANK[1] in shown, shown
+    assert shown.count(SAME_REACTION) == 1, shown
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("3. Part 3: two exchanges, both conditioned, no repeat")
+    browser.close()
+
+
+# ---------------------------------------------------------------------------
+# 5. No Web Speech: the exam still runs to the report.
 # ---------------------------------------------------------------------------
 def test_no_support(p):
     browser, page, errors = open_app(p, "?spx_test=1&spk=sim", NO_SPEECH_STUB)
@@ -338,8 +423,9 @@ def main():
     test_server_prompts()
     with sync_playwright() as p:
         test_recognition_and_partner(p)
+        test_part3_two_reactions(p)
         test_no_support(p)
-    print("OK: the partner reacts, the examiner follows up, and no support is safe")
+    print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 
 
 if __name__ == "__main__":

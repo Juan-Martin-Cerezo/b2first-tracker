@@ -9296,7 +9296,7 @@ const SP_EXAM={
      partner's name, the per-part turn ledger and the part bridge timer. */
   session:null,full:false,seed:0,partner:'Alex',partnerRot:0,
   selectedFull:false,partTimer:null,turnCounted:false,partnerIdx:0,
-  followUpBusy:false
+  partnerSaid:[],followUpBusy:false
 };
 window.SP_EXAM=SP_EXAM;
 
@@ -10077,17 +10077,53 @@ function spxProbePartnerAi(){
       .catch(function(){});
   }catch(e){}
 }
+/* Phase 52: Part 3 has two exchanges with the same partner, so the second
+   reaction must not repeat the first. The model is free to repeat itself (and
+   the bank may hold a repeated line); when it does, the next unused line from
+   the task bank takes its place. Compared on words, not punctuation, so
+   "I agree." and "I agree" count as the same line. */
+function spxLineKey(text){
+  return String(text||'').toLowerCase().replace(/[^a-z0-9']+/g,' ').trim();
+}
+function spxPartnerRepeated(text){
+  const key=spxLineKey(text);
+  if(!key)return false;
+  const said=Array.isArray(SP_EXAM.partnerSaid)?SP_EXAM.partnerSaid:[];
+  return said.some(function(line){return spxLineKey(line)===key});
+}
+function spxPartnerAlternative(fallback){
+  if(fallback&&!spxPartnerRepeated(fallback))return String(fallback);
+  const bank=(SP_EXAM.task&&Array.isArray(SP_EXAM.task.partnerLines))
+    ?SP_EXAM.task.partnerLines:[];
+  for(let i=0;i<bank.length;i++){
+    const line=String(bank[i]||'');
+    if(line&&!spxPartnerRepeated(line))return line;
+  }
+  return '';
+}
+function spxPartnerSay(text,fallback){
+  let line=String(text||'');
+  if(Number(SP_EXAM.part)===3&&spxPartnerRepeated(line)){
+    line=spxPartnerAlternative(fallback);
+  }
+  if(!line)return '';
+  if(!Array.isArray(SP_EXAM.partnerSaid))SP_EXAM.partnerSaid=[];
+  SP_EXAM.partnerSaid.push(line);
+  return line;
+}
 function spxPartnerTurn(ev){
   const question=ev.prompt||ev.text||'';
   const fallback=ev.text||spxPartnerLine(SP_EXAM.task,SP_EXAM.partnerIdx++);
   const phaseAt=SP_EXAM.phase;
   if(!spxPartnerProviderWanted()){
-    spxSay('partner',fallback,spxSpeechMs(fallback));
+    const line=spxPartnerSay(fallback,fallback);
+    if(line)spxSay('partner',line,spxSpeechMs(line));
     return;
   }
   spxPartnerFromProvider(question,'partner').then(function(line){
     if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
-    spxSay('partner',line||fallback,spxSpeechMs(line||fallback));
+    const say=spxPartnerSay(line||fallback,fallback);
+    if(say)spxSay('partner',say,spxSpeechMs(say));
   });
 }
 /* Phase 51: after a candidate answer in Parts 1 and 4 the examiner may ask one
@@ -10231,6 +10267,7 @@ function spxEnterSessionPart(index){
   SP_EXAM.promptUsed=false;
   SP_EXAM.awaitSince=0;
   SP_EXAM.partnerIdx=0;
+  SP_EXAM.partnerSaid=[];
   SP_EXAM.followUpBusy=false;
   spxOpenPartStat(entry.part);
   spxRenderTask();
@@ -10679,6 +10716,7 @@ SP_EXAM.ready=async function(){
   SP_EXAM.txShown=0;
   SP_EXAM.turnCounted=false;
   SP_EXAM.partnerIdx=0;
+  SP_EXAM.partnerSaid=[];
   SPK.simSpeechUntil=0;
   SPK.reportData=null;
   SPK.reportPayload=null;
