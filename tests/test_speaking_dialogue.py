@@ -20,6 +20,9 @@ Five checks, in order:
      resumes. A new part gets a fresh budget.
   6. No support. With SpeechRecognition removed, the whole exam still reaches
      the report and the page raises nothing.
+  7. Denied microphone. A recogniser that reports `not-allowed` shows one
+     quiet note in the transcript area (both languages have the key) and the
+     exam moves on to the next phase without asking for permission again.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -90,6 +93,44 @@ try {
     configurable: true, get: function () { return FakeRecognition; }
   });
 } catch (e) { window.SpeechRecognition = FakeRecognition; }
+"""
+
+DENIED_SPEECH_STUB = r"""
+window.__srLog = [];
+function DeniedRecognition() {
+  this.lang = '';
+  this.continuous = false;
+  this.interimResults = false;
+  this.maxAlternatives = 1;
+  this.onstart = null;
+  this.onresult = null;
+  this.onerror = null;
+  this.onend = null;
+}
+DeniedRecognition.prototype.start = function () {
+  const self = this;
+  window.__srLog.push('start');
+  setTimeout(function () {
+    if (self.onstart) self.onstart();
+    if (self.onerror) self.onerror({error: 'not-allowed'});
+    if (self.onend) self.onend();
+  }, 0);
+};
+DeniedRecognition.prototype.stop = function () {
+  window.__srLog.push('stop');
+  if (this.onend) this.onend();
+};
+DeniedRecognition.prototype.abort = DeniedRecognition.prototype.stop;
+try {
+  Object.defineProperty(window, 'webkitSpeechRecognition', {
+    configurable: true, get: function () { return DeniedRecognition; }
+  });
+} catch (e) { window.webkitSpeechRecognition = DeniedRecognition; }
+try {
+  Object.defineProperty(window, 'SpeechRecognition', {
+    configurable: true, get: function () { return DeniedRecognition; }
+  });
+} catch (e) { window.SpeechRecognition = DeniedRecognition; }
 """
 
 NO_SPEECH_STUB = r"""
@@ -533,6 +574,73 @@ def test_no_support(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 7. Denied microphone: one quiet note, and the exam keeps going.
+# ---------------------------------------------------------------------------
+def test_mic_denied(p):
+    browser, page, errors = open_app(p, "?spx_test=1", DENIED_SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("""() => {
+        spxSetScreen('exam');
+        SP_EXAM.part = 1;
+        SP_EXAM.phases = [
+          {key: 'spx_response', who: 'candidate', sec: 60, qi: 0,
+           prompt: 'Tell me about your city.'},
+          {key: 'spx_close', who: 'examiner', sec: 5, line: 'Thank you.'}
+        ];
+        SP_EXAM.phase = 0;
+        SP_EXAM.txShown = 0;
+        document.getElementById('spxTx').replaceChildren();
+        spxEnterPhase(0);
+    }""")
+
+    assert wait_until(page, "SPK.heard.error === 'not-allowed'", 10), \
+        page.evaluate("SPK.heard")
+    assert page.evaluate("SPK.heard.denied") is True, page.evaluate("SPK.heard")
+
+    assert wait_until(
+        page,
+        "getComputedStyle(document.getElementById('spxMicNotice')).display !== 'none'",
+        10), "the denied-mic notice never appeared"
+    notice = page.evaluate("""() => {
+        const el = document.getElementById('spxMicNotice');
+        const tx = document.getElementById('spxTx');
+        return {
+          text: el.textContent,
+          expected: t('spx_mic_denied'),
+          sameSection: el.closest('[data-spx-screen="exam"]') ===
+            tx.closest('[data-spx-screen="exam"]'),
+          display: getComputedStyle(el).display
+        };
+    }""")
+    assert notice["display"] == "block", notice
+    assert notice["sameSection"] is True, notice
+    assert notice["text"] == notice["expected"], notice
+    assert "Microphone access was denied" in notice["text"], notice
+
+    # The key exists in both dictionaries and each says it in its own language.
+    keys = page.evaluate("({en: I18N.en.spx_mic_denied, es: I18N.es.spx_mic_denied})")
+    assert keys["en"] and keys["es"], keys
+    assert keys["en"] != keys["es"], keys
+
+    # The exam continues on its script: the next phase runs and the page does
+    # not retry the refused permission.
+    assert page.evaluate("SPK.heard.active") is False, page.evaluate("SPK.heard")
+    page.evaluate("spxNextPhase()")
+    assert page.evaluate("SP_EXAM.phase") == 1, page.evaluate("SP_EXAM.phase")
+    assert page.evaluate("SP_EXAM.screen") == "exam", page.evaluate("SP_EXAM.screen")
+    page.wait_for_timeout(300)
+    starts = page.evaluate("window.__srLog.filter(function (x) { return x === 'start'; }).length")
+    assert starts == 1, page.evaluate("window.__srLog")
+    assert page.evaluate("getComputedStyle(document.getElementById('spxMicNotice')).display") == "block"
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("7. denied microphone: quiet note, exam continues")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -540,6 +648,7 @@ def main():
         test_part3_two_reactions(p)
         test_followup_capped(p)
         test_no_support(p)
+        test_mic_denied(p)
     print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 
 

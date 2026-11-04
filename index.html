@@ -2330,6 +2330,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
                       <div class="spx-tx" id="spxTx" aria-label="Transcript" data-exam-task data-i18n-aria-label="spx_transcript"></div>
+                      <div class="spx-note spx-mic-note" id="spxMicNotice" role="status" style="display:none" data-i18n="spx_mic_denied">Microphone access was denied. The exam continues without speech recognition.</div>
                       <div class="spx-actions">
                         <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry">Retry the voice</button>
                         <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early">End this part</button>
@@ -4285,6 +4286,7 @@ const I18N={
     spx_ready:'I\'m ready',
     spx_clock_label:'Time left in this turn',
     spx_transcript:'Transcript',
+    spx_mic_denied:'Microphone access was denied. The exam continues without speech recognition.',
     spx_examiner:'Examiner speaking',
     spx_your_turn:'Your turn',
     spx_partner:'Partner speaking',
@@ -5071,6 +5073,7 @@ const I18N={
     spx_ready:'Estoy listo',
     spx_clock_label:'Tiempo restante de este turno',
     spx_transcript:'Transcripción',
+    spx_mic_denied:'Se denegó el acceso al micrófono. El examen sigue sin reconocimiento de voz.',
     spx_examiner:'Habla el examinador',
     spx_your_turn:'Tu turno',
     spx_partner:'Habla tu compañero',
@@ -8233,7 +8236,8 @@ const SPK={
      keeps the last committed turn for the partner/examiner; `interim` only
      feeds the faded draft line in the transcript. Nothing here is persisted. */
   heard:{supported:!!(window.SpeechRecognition||window.webkitSpeechRecognition),
-    active:false,want:false,interim:'',final:'',error:'',restarts:0,committed:''},
+    active:false,want:false,interim:'',final:'',error:'',restarts:0,committed:'',
+    denied:false},
   /* Phase 52: the examiner may add one follow-up per part, never more. The
      counter starts at 0 for each part; once it reaches 1 the written script
      takes over, so the exam cannot turn into an interview. */
@@ -9930,7 +9934,20 @@ function spxHeardReset(){
   if(!h)return;
   h.supported=!!(window.SpeechRecognition||window.webkitSpeechRecognition);
   h.active=false;h.want=false;h.interim='';h.final='';h.error='';
-  h.restarts=0;h.committed='';
+  h.restarts=0;h.committed='';h.denied=false;
+  spxMicNotice(false);
+}
+/* Permission refused: a quiet, non-blocking note next to the transcript. The
+   exam keeps its script, because the recogniser is optional. */
+function spxMicNotice(show){
+  const el=spx$('spxMicNotice');
+  if(!el)return;
+  if(show){
+    el.textContent=t('spx_mic_denied');
+    el.style.display='block';
+  }else{
+    el.style.display='none';
+  }
 }
 function spxCandidateSaid(){
   const h=SPK.heard||{};
@@ -9978,7 +9995,14 @@ function spxSpeechStart(){
         spxRenderTx();
       };
       SPX_REC.onerror=function(ev){
-        SPK.heard.error=String((ev&&ev.error)||'speech_error');
+        const heard=SPK.heard;
+        if(!heard)return;
+        const err=String((ev&&ev.error)||'speech_error');
+        heard.error=err;
+        if(err==='not-allowed'||err==='service-not-allowed'){
+          heard.denied=true;
+          spxMicNotice(true);
+        }
       };
       /* The browser stops on its own after a pause. Restart while it is still
          the candidate's turn, but never more than three times: a microphone
@@ -9986,6 +10010,9 @@ function spxSpeechStart(){
       SPX_REC.onend=function(){
         const heard=SPK.heard;
         if(!heard||!heard.want)return;
+        /* A denied permission will not turn into a grant: stop asking and let
+           the exam run on its written lines. */
+        if(heard.denied){spxSpeechStop();return}
         if(spxCandidateTurnNow()&&heard.restarts<3){
           heard.restarts++;
           try{SPX_REC.start();return}catch(e){heard.error='speech_restart'}
