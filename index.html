@@ -2342,6 +2342,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spk-scales" id="spxFbScales"></div>
                       <div class="spx-part-comments" id="spxFbParts"></div>
                       <div class="spx-turns" id="spxFbTurns"></div>
+                      <div class="spx-turns" id="spxFbSpeech"></div>
                       <div class="spx-tip">
                         <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
                         <p id="spxFbTip"></p>
@@ -2364,6 +2365,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-saved" id="spxRpLatency"></div>
                       <div class="spx-part-comments" id="spxRpParts"></div>
                       <div class="spx-turns" id="spxRpTurns"></div>
+                      <div class="spx-turns" id="spxRpSpeech"></div>
                       <div class="spx-tip">
                         <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
                         <p id="spxRpTip"></p>
@@ -4271,6 +4273,7 @@ const I18N={
     spx_you_tag:'You',
     spx_part_n:'Part {n}:',
     spx_turns_line:'Turns — you: {you} · partner: {partner} · examiner: {examiner}',
+    spx_speech_counts:'Words you said: {words} · fillers: {fillers} ({detail})',
     spx_tip_label:'One concrete tip',
     spx_report_sentence_full:'The full exam is saved to your log.',
     spx_start:'Start',
@@ -5058,6 +5061,7 @@ const I18N={
     spx_you_tag:'Vos',
     spx_part_n:'Parte {n}:',
     spx_turns_line:'Turnos — vos: {you} · compañero: {partner} · examinador: {examiner}',
+    spx_speech_counts:'Palabras que dijiste: {words} · muletillas: {fillers} ({detail})',
     spx_tip_label:'Un consejo concreto',
     spx_report_sentence_full:'El examen completo quedó guardado en tu registro.',
     spx_start:'Empezar',
@@ -10868,10 +10872,47 @@ function spxTipFor(part){
     4:'Part 4: give a general answer first, then a personal example, and do not wait for your partner to fill the silence.'
   }[part]||'Keep each answer to one main idea plus one example.';
 }
+/* Raw counts over the recognised candidate text: words spoken and the four
+   hesitation markers this report names. No score, no estimate — only what the
+   transcript actually contains. Examiner and partner turns are never counted. */
+const SPX_FILLERS=['um','uh','like','you know'];
+function spxSpeechCounts(turns){
+  const words=[];
+  (turns||[]).forEach(function(turn){
+    if(!turn||turn.who!=='candidate'||typeof turn.text!=='string')return;
+    (turn.text.match(/[A-Za-z][A-Za-z'-]*/g)||[]).forEach(function(w){words.push(w)});
+  });
+  const lower=words.map(function(w){return w.toLowerCase()});
+  const breakdown={um:0,uh:0,like:0,'you know':0};
+  for(let i=0;i<lower.length;i++){
+    const w=lower[i];
+    if(/^um+$/.test(w))breakdown.um++;
+    else if(/^uh+$/.test(w))breakdown.uh++;
+    else if(w==='like')breakdown.like++;
+    else if(w==='you'&&lower[i+1]==='know'){breakdown['you know']++;i++}
+  }
+  const fillers=SPX_FILLERS.reduce(function(n,k){return n+breakdown[k]},0);
+  return {words:words.length,fillers:fillers,breakdown:breakdown};
+}
+
+function spxRenderSpeechCounts(target,speech){
+  if(!target)return;
+  if(!speech){target.textContent='';return}
+  const bd=speech.breakdown||{};
+  const detail=SPX_FILLERS.map(function(k){return k+' '+(bd[k]||0)}).join(' · ');
+  target.textContent=t('spx_speech_counts',{words:speech.words||0,
+    fillers:speech.fillers||0,detail:detail});
+}
+
 function spxFinalizeReport(data){
   if(!data||typeof data!=='object')return data;
   const parts=spxPartComments();
   data.parts=parts;
+  const candidateTurns=(SPK.reportPayload&&SPK.reportPayload.transcript)||
+    (SPK.lines||[]).map(function(l){
+      return {who:l.who==='examiner'||l.who==='partner'?l.who:'candidate',text:l.text};
+    });
+  data.speech=spxSpeechCounts(candidateTurns);
   data.turns=(SP_EXAM.session&&SP_EXAM.session.turns)||{};
   /* The server response never carries the session shape: it is added here so
      saveSP() writes one full-exam row instead of a single-part one. */
@@ -10899,6 +10940,7 @@ function spxRenderFeedbackPending(){
   spx$('spxFbNext').textContent='';
   const parts=spx$('spxFbParts');if(parts)parts.innerHTML='';
   const turns=spx$('spxFbTurns');if(turns)turns.textContent='';
+  const speech=spx$('spxFbSpeech');if(speech)speech.textContent='';
   const tip=spx$('spxFbTip');if(tip)tip.textContent='';
   const err=spx$('spxFbErr');
   if(err){err.textContent='';err.style.display='none'}
@@ -10952,6 +10994,7 @@ function spxRenderFeedback(){
   spx$('spxFbNext').textContent=(r.fixes||[])[0]||'';
   spxRenderPartsList(spx$('spxFbParts'),r.parts);
   spxRenderTurnsLine(spx$('spxFbTurns'),r.turns);
+  spxRenderSpeechCounts(spx$('spxFbSpeech'),r.speech);
   const tip=spx$('spxFbTip');
   if(tip)tip.textContent=r.tip||'';
   const err=spx$('spxFbErr');
@@ -10970,6 +11013,7 @@ function spxRenderFeedbackError(msg){
     .map(function(key){return spxScaleCard(t(key),null,
       '<span class="spx-scale-q">'+esc(t('spx_no_evidence'))+'</span>')}).join('');
   spx$('spxFbNext').textContent='';
+  const speech=spx$('spxFbSpeech');if(speech)speech.textContent='';
   const err=spx$('spxFbErr');
   if(err){err.textContent=msg||t('spx_report_failed');err.style.display='block'}
   const save=spx$('spxFbSave');
@@ -11013,6 +11057,7 @@ function spxRenderReportScreen(){
   }
   spxRenderPartsList(spx$('spxRpParts'),data.parts);
   spxRenderTurnsLine(spx$('spxRpTurns'),data.turns);
+  spxRenderSpeechCounts(spx$('spxRpSpeech'),data.speech);
   const tip=spx$('spxRpTip');
   if(tip)tip.textContent=data.tip||'';
 }

@@ -23,6 +23,9 @@ Five checks, in order:
   7. Denied microphone. A recogniser that reports `not-allowed` shows one
      quiet note in the transcript area (both languages have the key) and the
      exam moves on to the next phase without asking for permission again.
+  8. Real speech counts. The exam report prints the words and the hesitation
+     markers (um, uh, like, you know) found in the recognised candidate text,
+     with the per-marker breakdown, and never counts examiner or partner turns.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -641,6 +644,74 @@ def test_mic_denied(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 8. The report counts what was said: words and the four hesitation markers.
+# ---------------------------------------------------------------------------
+COUNT_TURNS = [
+    {"who": "candidate",
+     "text": "Um, I like living here, you know, because it is close to work."},
+    {"who": "examiner",
+     "text": "Um, do you like it, you know, like the city?"},
+    {"who": "partner", "text": "Uh, I know, like, it is noisy."},
+    {"who": "candidate", "text": "Uh, the transport is cheap but it gets crowded."},
+]
+COUNT_WORDS = 22
+COUNT_FILLERS = 4
+COUNT_LINE = "Words you said: 22 · fillers: 4 (um 1 · uh 1 · like 1 · you know 1)"
+
+
+def test_speech_counts(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("""(turns) => {
+        SPK.part = 1;
+        SPK.lines = turns.map(function (t, i) {
+            return {side: 'in', who: t.who, t: i + 1, text: t.text};
+        });
+        SPK.reportDuration = 120;
+        SPK.reportPayload = spkBuildPayload();
+        SPK.reportData = {
+            bands: {grammar_vocabulary: 3, discourse_management: 3,
+                    pronunciation: null, interactive_communication: null},
+            metrics: SPK.reportPayload.metrics, evidence: [], fixes: []
+        };
+        spxFinalizeReport(SPK.reportData);
+        SP_EXAM.part = 1;
+        spxSetScreen('feedback');
+        spxRenderFeedback();
+    }""", COUNT_TURNS)
+
+    speech = page.evaluate("SPK.reportData.speech")
+    assert speech["words"] == COUNT_WORDS, speech
+    assert speech["fillers"] == COUNT_FILLERS, speech
+    assert speech["breakdown"] == {"um": 1, "uh": 1, "like": 1, "you know": 1}, speech
+
+    shown = page.evaluate("document.getElementById('spxFbSpeech').textContent")
+    assert shown == COUNT_LINE, shown
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxFbSpeech')).display") != "none"
+
+    # The saved-report screen reads the same counts, not a second computation.
+    page.evaluate("""() => {
+        SP_EXAM.entry = {min: 2, silence_prompts: 0};
+        SP_EXAM.full = false;
+        spxRenderReportScreen();
+    }""")
+    saved = page.evaluate("document.getElementById('spxRpSpeech').textContent")
+    assert saved == COUNT_LINE, saved
+
+    # Nothing said, nothing invented.
+    zero = page.evaluate("spxSpeechCounts([{who: 'candidate', text: ''}])")
+    assert zero["words"] == 0 and zero["fillers"] == 0, zero
+    assert zero["breakdown"] == {"um": 0, "uh": 0, "like": 0, "you know": 0}, zero
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("8. report counts: 22 words, 4 fillers, candidate turns only")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -649,6 +720,7 @@ def main():
         test_followup_capped(p)
         test_no_support(p)
         test_mic_denied(p)
+        test_speech_counts(p)
     print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 
 
