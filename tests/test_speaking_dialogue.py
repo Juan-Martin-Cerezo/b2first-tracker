@@ -47,6 +47,10 @@ Five checks, in order:
        turn badge name the same speaker in every frame; a phase that carries a
        key belonging to someone else falls back to the floor's own label
        instead of printing a contradictory title.
+  15. Report transcript. The saved report prints every line of the session
+       (you, the partner and the examiner) and its Copy button writes that
+       same plain text to the clipboard, in both languages, with no request
+       to the server.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -875,6 +879,99 @@ def test_speech_counts(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 15. The saved report keeps the whole session transcript and copies it.
+# ---------------------------------------------------------------------------
+REPORT_TURNS = [
+    {"who": "examiner", "text": "How do you get to school?"},
+    {"who": "candidate", "text": "I usually walk, because it is only ten minutes."},
+    {"who": "partner", "text": "I take the bus when it rains."},
+]
+REPORT_TEXT = (
+    "Examiner: How do you get to school?\n"
+    "You: I usually walk, because it is only ten minutes.\n"
+    "Alex: I take the bus when it rains."
+)
+
+
+def test_report_transcript(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+    page.evaluate("setLang('en')")
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("""(turns) => {
+        SPK.part = 1;
+        SPK.lines = turns.map(function (t, i) {
+            return {side: 'out', who: t.who, t: i + 1, text: t.text};
+        });
+        SP_EXAM.part = 1;
+        SP_EXAM.full = false;
+        SP_EXAM.entry = {min: 2, silence_prompts: 0};
+        SPK.reportData = {bands: {}, evidence: [], fixes: []};
+        spxSetScreen('report');
+        spxRenderReportScreen();
+    }""", REPORT_TURNS)
+
+    # Every line of the session is printed with its speaker's label.
+    shown = page.eval_on_selector_all(
+        "#spxRpTx .spx-tx-line", "els => els.map(e => e.textContent)")
+    assert shown == REPORT_TEXT.split("\n"), shown
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxRpTxWrap')).display") \
+        != "none"
+    assert page.is_visible("#spxRpCopy")
+
+    # Copy puts exactly that text on the clipboard and calls no endpoint.
+    page.evaluate("""() => {
+        window.__copied = null;
+        Object.defineProperty(navigator, 'clipboard', {
+            configurable: true,
+            value: {writeText: function (text) {
+                window.__copied = text;
+                return Promise.resolve();
+            }}
+        });
+    }""")
+    requests = []
+    # Let any save the page scheduled before the click reach the server first,
+    # then watch the copy on its own.
+    page.wait_for_timeout(900)
+    page.on("request", lambda req: requests.append(req.url))
+    page.click("#spxRpCopy")
+    assert wait_until(page, "window.__copied !== null", 3), "Copy wrote nothing"
+    assert page.evaluate("window.__copied") == REPORT_TEXT, \
+        page.evaluate("window.__copied")
+    page.wait_for_timeout(250)
+    api_calls = [u for u in requests if "/api/" in u]
+    assert api_calls == [], api_calls
+
+    # The language switch repaints the labels and the copied text with them.
+    page.evaluate("setLang('es')")
+    page.wait_for_timeout(120)
+    es_shown = page.evaluate("document.getElementById('spxRpTx').textContent")
+    assert "Vos: " in es_shown and "Examinador: " in es_shown, es_shown
+    page.evaluate("window.__copied = null")
+    page.click("#spxRpCopy")
+    assert wait_until(page, "window.__copied !== null", 3)
+    es_copied = page.evaluate("window.__copied")
+    assert es_copied.startswith("Examinador: "), es_copied
+    assert "Vos: " in es_copied, es_copied
+
+    # Nothing said, nothing to show and nothing to copy.
+    page.evaluate("""() => {
+        SPK.lines = [];
+        spxRenderReportScreen();
+    }""")
+    assert page.evaluate(
+        "getComputedStyle(document.getElementById('spxRpTxWrap')).display") \
+        == "none"
+    assert page.evaluate("SP_EXAM.copyTranscript()") == ""
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("15. report transcript: every line shown and copied, no server call")
+    browser.close()
+
+
 def test_keyboard_overlay(p):
     browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
 
@@ -1341,6 +1438,7 @@ def main():
         test_no_support(p)
         test_mic_denied(p)
         test_speech_counts(p)
+        test_report_transcript(p)
         test_keyboard_overlay(p)
         test_overlay_accessibility(p)
         test_mobile_overlay(p)

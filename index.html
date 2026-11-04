@@ -698,6 +698,10 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spx-tx-line{overflow-wrap:anywhere}
 .spx-tx-candidate{color:var(--txt)}
 .spx-tx-draft{opacity:.55;font-style:italic}
+.spx-rp-tx{margin-top:14px}
+.spx-rp-tx-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.spx-rp-tx .spk-report-h{margin-top:0}
+.spx-rp-tx .spx-tx{max-height:240px}
 .spx-next{margin-top:12px}
 .spx-next-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
 .spx-next p{margin:4px 0 0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
@@ -2367,6 +2371,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-part-comments" id="spxRpParts"></div>
                       <div class="spx-turns" id="spxRpTurns"></div>
                       <div class="spx-turns" id="spxRpSpeech"></div>
+                      <div class="spx-rp-tx" id="spxRpTxWrap" style="display:none">
+                        <div class="spx-rp-tx-head">
+                          <div class="spk-report-h" data-i18n="spx_rp_transcript">Full transcript</div>
+                          <button class="btn gray" id="spxRpCopy" onclick="SP_EXAM.copyTranscript()" data-i18n="spx_copy" aria-label="Copy the full transcript" data-i18n-aria-label="spx_aria_copy">Copy</button>
+                        </div>
+                        <div class="spx-tx spx-rp-tx-lines" id="spxRpTx" role="region" aria-label="Full transcript" data-i18n-aria-label="spx_rp_transcript"></div>
+                      </div>
                       <div class="spx-tip">
                         <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
                         <p id="spxRpTip"></p>
@@ -4275,6 +4286,8 @@ const I18N={
     spx_part_n:'Part {n}:',
     spx_turns_line:'Turns — you: {you} · partner: {partner} · examiner: {examiner}',
     spx_speech_counts:'Words you said: {words} · fillers: {fillers} ({detail})',
+    spx_rp_transcript:'Full transcript',
+    spx_copy:'Copy',
     spx_tip_label:'One concrete tip',
     spx_report_sentence_full:'The full exam is saved to your log.',
     spx_start:'Start',
@@ -4352,6 +4365,7 @@ const I18N={
     spx_aria_save:'Save the report',
     spx_aria_retry_report:'Ask for the report again',
     spx_aria_again:'Choose another part',
+    spx_aria_copy:'Copy the full transcript',
     spx_aria_part:'Part {n}, {min} minutes'
   },
   es:{
@@ -5075,6 +5089,8 @@ const I18N={
     spx_part_n:'Parte {n}:',
     spx_turns_line:'Turnos — vos: {you} · compañero: {partner} · examinador: {examiner}',
     spx_speech_counts:'Palabras que dijiste: {words} · muletillas: {fillers} ({detail})',
+    spx_rp_transcript:'Transcripción completa',
+    spx_copy:'Copiar',
     spx_tip_label:'Un consejo concreto',
     spx_report_sentence_full:'El examen completo quedó guardado en tu registro.',
     spx_start:'Empezar',
@@ -5152,6 +5168,7 @@ const I18N={
     spx_aria_save:'Guardar el informe',
     spx_aria_retry_report:'Pedir el informe otra vez',
     spx_aria_again:'Elegir otra parte',
+    spx_aria_copy:'Copiar la transcripción completa',
     spx_aria_part:'Parte {n}, {min} minutos'
   }
 };
@@ -10549,6 +10566,12 @@ function spxRenderPartnerHeader(){
   spxRenderRoles();
 }
 
+function spxTxLabel(who){
+  if(who==='partner')return spxPartnerName();
+  if(who==='candidate')return t('spx_you_tag');
+  return t('spx_examiner_tag');
+}
+
 function spxRenderTx(){
   const box=spx$('spxTx');
   if(!box)return;
@@ -10562,9 +10585,7 @@ function spxRenderTx(){
     if(!line||typeof line.text!=='string')continue;
     const row=document.createElement('div');
     row.className='spx-tx-line spx-tx-'+line.who;
-    if(line.who==='partner')row.textContent=spxPartnerName()+': '+line.text;
-    else if(line.who==='candidate')row.textContent=t('spx_you_tag')+': '+line.text;
-    else row.textContent=t('spx_examiner_tag')+': '+line.text;
+    row.textContent=spxTxLabel(line.who)+': '+line.text;
     /* the same line can be pushed twice (instruction + ready callback);
        never print the same speaker+text twice in a row */
     if(box.lastElementChild&&box.lastElementChild.textContent===row.textContent)continue;
@@ -11087,6 +11108,61 @@ function spxRenderSpeechCounts(target,speech){
     fillers:speech.fillers||0,detail:detail});
 }
 
+/* --- Saved report: the whole session transcript, copied as plain text ----
+   The report screen prints every committed line (candidate, partner and
+   examiner) and the Copy button puts the same lines on the clipboard. Both
+   read `SPK.lines`, the session's own record: nothing is re-requested from
+   the server and nothing is reconstructed from the model's answer. */
+function spxTranscriptLines(){
+  return (SPK.lines||[]).filter(function(line){
+    return line&&typeof line.text==='string'&&line.text.trim();
+  });
+}
+function spxTranscriptText(){
+  return spxTranscriptLines().map(function(line){
+    return spxTxLabel(line.who)+': '+String(line.text).replace(/\s+/g,' ').trim();
+  }).join('\n');
+}
+function spxCopyPlain(text){
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text);
+    }
+  }catch(e){}
+  return new Promise(function(resolve){
+    const area=document.createElement('textarea');
+    area.value=text;
+    area.setAttribute('readonly','');
+    area.style.position='fixed';
+    area.style.opacity='0';
+    document.body.appendChild(area);
+    area.select();
+    try{document.execCommand('copy')}catch(e){}
+    document.body.removeChild(area);
+    resolve();
+  });
+}
+function spxRenderReportTranscript(){
+  const wrap=spx$('spxRpTxWrap');
+  const box=spx$('spxRpTx');
+  if(!wrap||!box)return;
+  const lines=spxTranscriptLines();
+  wrap.style.display=lines.length?'block':'none';
+  box.replaceChildren();
+  lines.forEach(function(line){
+    const row=document.createElement('div');
+    row.className='spx-tx-line spx-tx-'+(line.who||'examiner');
+    row.textContent=spxTxLabel(line.who)+': '+line.text;
+    box.appendChild(row);
+  });
+}
+SP_EXAM.copyTranscript=function(){
+  const text=spxTranscriptText();
+  if(!text)return '';
+  spxCopyPlain(text).catch(function(){});
+  return text;
+};
+
 function spxFinalizeReport(data){
   if(!data||typeof data!=='object')return data;
   const parts=spxPartComments();
@@ -11241,6 +11317,7 @@ function spxRenderReportScreen(){
   spxRenderPartsList(spx$('spxRpParts'),data.parts);
   spxRenderTurnsLine(spx$('spxRpTurns'),data.turns);
   spxRenderSpeechCounts(spx$('spxRpSpeech'),data.speech);
+  spxRenderReportTranscript();
   const tip=spx$('spxRpTip');
   if(tip)tip.textContent=data.tip||'';
 }
