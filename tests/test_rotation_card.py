@@ -44,6 +44,17 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(300)
 
+    # 0. The default rotation mode is the part-by-part behaviour this card
+    #    explains; the selector is the only place that decides it.
+    mode = pg.evaluate(
+        "() => ({mode: D.settings.rotationMode,"
+        " select: document.getElementById('wpRotationMode').value})"
+    )
+    assert mode == {"mode": "by-part", "select": "by-part"}, (
+        f"the card is not on the default mode: {mode}"
+    )
+    out["0_default_mode"] = mode
+
     # Seed a known history: two R&UE parts in a four-item cycle.
     pg.evaluate(
         """() => {
@@ -96,7 +107,9 @@ with sync_playwright() as p:
     assert changed["rue"]["current"].strip() == "Part 1 · Multiple-choice cloze", (
         f"the current item did not follow the new cycle: {changed['rue']}"
     )
-    out["3_cycle_change"] = changed["rue"]
+    stored = pg.evaluate("D.settings.rueCycle")
+    assert stored == [4, 1, 2, 3], f"the new cycle was not saved: {stored}"
+    out["3_cycle_change"] = {"card": changed["rue"], "stored": stored}
 
     # 4. A manual writing override is named in the explanation.
     pg.evaluate("D.weekOverrides.w = 'Report'; save(); renderRotationCard();")
@@ -108,7 +121,10 @@ with sync_playwright() as p:
     out["4_override"] = hinted["hint"]
 
     # 5. Without matching history the card is honest about the start.
-    pg.evaluate("D.log = []; delete D.weekOverrides.w; save(); renderPlan();")
+    pg.evaluate(
+        "D.log = []; D.settings.rueCycle = [1,2,3,4];"
+        " delete D.weekOverrides.w; save(); renderPlan();"
+    )
     pg.wait_for_timeout(250)
     empty = pg.evaluate(STATE_JS)
     assert "starting at the first item" in empty["rue"]["text"], (

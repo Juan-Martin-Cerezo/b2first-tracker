@@ -87,6 +87,17 @@ with sync_playwright() as p:
     out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
     out["rot_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
     out["nextBox"] = pg.evaluate("document.getElementById('nextBox').textContent.slice(0,70)")
+    # The rotation mode is explicit now (by-part is the default) and TODAY has
+    # its own plan-derived session block next to the next-session banner.
+    rotation = pg.evaluate(
+        "() => ({mode: normalizeRotationMode(D.settings.rotationMode),"
+        " select: (document.getElementById('wpRotationMode') || {}).value,"
+        " block: !!document.getElementById('todaySession')})"
+    )
+    assert rotation["mode"] == "by-part", f"default rotation mode is not by-part: {rotation}"
+    assert rotation["select"] == "by-part", f"mode selector is not on the default: {rotation}"
+    assert rotation["block"], "TODAY lost its plan-derived session block"
+    out["rotation_mode"] = rotation
 
     # BOOKS: material + books
     goto_view(pg, "libros")

@@ -942,6 +942,20 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-row .wp-main{flex:1;min-width:220px}
 .wp-row .wp-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.wp-rotation-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wp-rotation-row select{max-width:260px}
+.wp-custom-rows{display:flex;flex-direction:column;gap:6px}
+.wp-custom-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;border-radius:var(--r-panel);background:var(--surface-2)}
+.wp-custom-row .wp-custom-day{font-weight:600;min-width:38px}
+.wp-custom-row .wp-custom-parts{max-width:120px}
+.wp-custom-row .wp-custom-min{max-width:80px}
+
+/* today session block (same data as the PLAN row) */
+.ts-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2)}
+.ts-row .ts-main{flex:1;min-width:220px}
+.ts-row .ts-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
+.ts-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
+.ts-rest{font-size:var(--fs-sm);color:var(--txt-2)}
 
 /* ---------- ERROR TAXONOMY ---------- */
 .err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1953,6 +1967,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <!-- Main column -->
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
+            <div class="card" id="todaySession"></div>
             <div class="card practice-now" id="practiceNow"></div>
             <div class="card" id="lastSpeaking" style="display:none"></div>
 
@@ -3128,6 +3143,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
           <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no model calls).</div>
+          <div id="wpRotationControls" style="margin-top:12px">
+            <div class="wp-rotation-row">
+              <label for="wpRotationMode"><b>Rotation</b></label>
+              <select id="wpRotationMode" onchange="onRotationModeChange(this.value)">
+                <option value="by-part">By part</option>
+                <option value="full-section">Full paper each session</option>
+                <option value="custom">Custom</option>
+              </select>
+              <button type="button" class="btn sm gray" id="wpResetBtn" onclick="resetPlanningDefaults()">Reset to defaults</button>
+              <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none">Undo</button>
+            </div>
+            <div class="sub" id="wpRotationHelp"></div>
+          </div>
+          <div id="wpCustomEditor" style="margin-top:10px"></div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
           <details id="wpWhy" style="margin-top:12px">
             <summary data-i18n="plan_why">Why this?</summary>
@@ -3257,10 +3286,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
           <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
-          <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7" oninput="onCycleInput()"></div>
-          <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email" oninput="onCycleInput()"></div>
-          <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4" oninput="onCycleInput()"></div>
-          <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4" oninput="onCycleInput()"></div>
+          <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
+          <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
+          <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
+          <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
           <div style="margin-top:12px">
             <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
             <select id="pVoice">
@@ -5146,6 +5175,8 @@ const SETTINGS_DEFAULT={
   wCycle:['Essay','Article','Report','Review','Email'],
   lCycle:[1,2,3,4],
   spCycle:[1,2,3,4],
+  rotationMode:'by-part',
+  customPlan:{},
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
 /* =====================================================================
@@ -6365,7 +6396,15 @@ function load(){
 }
 function save(){
   D.updated_at=Date.now();
-  localStorage.setItem(userKey(),JSON.stringify(D));
+  // The undo snapshot is a one-step, in-memory convenience: it must never
+  // reach localStorage or the server, so it is stripped just for the write.
+  const undo=D.settingsUndo;
+  if(undo!==undefined)delete D.settingsUndo;
+  try{
+    localStorage.setItem(userKey(),JSON.stringify(D));
+  }finally{
+    if(undo!==undefined)D.settingsUndo=undo;
+  }
   syncPush();
 }
 /* ---------- SERVER SYNC ----------
@@ -6408,6 +6447,7 @@ function syncPush(){
     // It lives under b2first_byo_<userId> and is sent only as request headers.
     delete payload.settings.aiKey;
     delete payload.settings.byo;
+    delete payload.settingsUndo;
     fetch(apiUrl('/api/progress'),{
       method:'PUT',
       headers:authHeaders(),
@@ -12390,6 +12430,8 @@ function savePlan(){
 function resetPlan(){
   if(!confirm(t('alert_restore_plan')))return;
   D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
+  SETTINGS_UNDO=null;
+  delete D.settingsUndo;
   D.sessionOffset=0;
   save();renderPlan();applyTimers();refreshAll();
 }
@@ -12413,6 +12455,111 @@ function resetPlan(){
       same day. Without D.profile and without a diagnostic the plan is
       empty with needDiag (previous behaviour).
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
+const PLAN_DAY_MAP={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
+const PLAN_DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
+const ROTATION_MODES=['by-part','full-section','custom'];
+const FULL_SECTION=[['ue',75],['l',40],['w',80],['sp',60]];
+const FULL_SECTION_LABEL={ue:'Full R&UE',l:'Full Listening',w:'Full Writing',sp:'Full Speaking'};
+const CUSTOM_SKILLS=['rue','l','w','sp','mock'];
+const CUSTOM_SKILL_DEFAULT_MIN={rue:45,l:40,w:80,sp:60,mock:180};
+function normalizeRotationMode(v){
+  return ROTATION_MODES.indexOf(v)>=0?v:'by-part';
+}
+function planDayLabel(key){
+  return PLAN_DAY_MAP[String(key||'').toLowerCase()]||null;
+}
+function customSkillPartsMax(skill){
+  return skill==='rue'?7:(skill==='l'||skill==='sp')?4:0;
+}
+function parseCustomParts(raw,max){
+  const out=[];
+  if(max<=0||raw==null)return out;
+  const add=n=>{if(Number.isInteger(n)&&n>=1&&n<=max&&out.indexOf(n)<0)out.push(n)};
+  if(Array.isArray(raw)){
+    raw.forEach(v=>add(Number(v)));
+  }else{
+    String(raw).split(',').forEach(chunk=>{
+      const range=String(chunk).trim().match(/^(\d+)\s*-\s*(\d+)$/);
+      if(range){
+        let a=Number(range[1]),b=Number(range[2]);
+        if(a>b){const t=a;a=b;b=t}
+        for(let n=a;n<=b;n++)add(n);
+      }else{
+        add(Number(String(chunk).trim()));
+      }
+    });
+  }
+  return out.sort((a,b)=>a-b);
+}
+/* D.settings.customPlan is user input: only well-formed entries survive.
+   A bad day, skill, duration or parts list is ignored, and that day then
+   falls back to the plan buildWeeklyPlan would have produced anyway. */
+function validateCustomPlan(raw){
+  const out={};
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
+  Object.keys(raw).forEach(key=>{
+    const day=planDayLabel(key);
+    if(!day)return;
+    const v=raw[key];
+    if(!v||typeof v!=='object'||Array.isArray(v))return;
+    const skill=String(v.skill||'').toLowerCase();
+    if(CUSTOM_SKILLS.indexOf(skill)<0)return;
+    const min=Math.round(Number(v.min));
+    if(!isFinite(min)||min<5||min>180)return;
+    const max=customSkillPartsMax(skill);
+    const parts=parseCustomParts(v.parts,max);
+    // A parts list that was given but has nothing inside the paper's range
+    // makes the whole entry invalid, so the day falls back to its default.
+    if(max>0&&v.parts!=null&&String(v.parts).trim()!==''&&!parts.length)return;
+    out[day]={skill:skill,parts:parts,min:min};
+  });
+  return out;
+}
+function rotateByOffset(arr,offset){
+  const n=arr.length;
+  if(!n)return arr;
+  const k=((Math.trunc(offset)%n)+n)%n;
+  return k?arr.slice(k).concat(arr.slice(0,k)):arr.slice();
+}
+function slotParts(sl){
+  if(Array.isArray(sl&&sl.parts))return sl.parts.slice();
+  return (sl&&sl.part!=null)?[sl.part]:[];
+}
+function slotPartText(sl){
+  const parts=slotParts(sl);
+  if(!parts.length)return '';
+  return parts.length===1?`Part ${parts[0]} · `:`Parts ${parts.join(', ')} · `;
+}
+function slotLabel(sl){
+  if(!sl)return '';
+  const parts=slotParts(sl);
+  if(sl.type==='mock')return 'Mock exam';
+  if(sl.type==='w')return 'Writing';
+  if(sl.type==='l'){
+    if(!parts.length)return 'Full Listening';
+    return parts.length===1?'Listening '+lpName(parts[0]).toLowerCase():'Listening parts '+parts.join(', ');
+  }
+  if(sl.type==='sp'){
+    if(!parts.length)return 'Full Speaking';
+    return parts.length===1?'Speaking part '+parts[0]:'Speaking parts '+parts.join(', ');
+  }
+  if(!parts.length)return 'Full R&UE';
+  return parts.length===1?'UoE '+partName(parts[0]).toLowerCase():'UoE parts '+parts.join(', ');
+}
+/* One canonical title used by BOTH the PLAN row and the TODAY session block,
+   so the two screens can never drift apart. */
+function slotTitleText(sl){
+  if(!sl)return '';
+  if(sl.section)return (FULL_SECTION_LABEL[sl.type]||slotLabel(sl))+' ('+sl.min+' min)';
+  return slotPartText(sl)+slotLabel(sl)+' · '+sl.min+' min'+(sl.timed?' · timed (exam mode)':'');
+}
+function customSlotFor(day,c){
+  const type=c.skill==='rue'?'ue':c.skill;
+  const parts=c.parts.slice();
+  return {part:parts.length===1?parts[0]:null,parts:parts,type:type,min:c.min,timed:false,
+    full:parts.length===0&&type!=='mock',
+    reason:`custom plan for ${day}: ${parts.length?'parts '+parts.join(', '):'full paper'}`};
+}
 function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
@@ -12546,14 +12693,189 @@ function buildWeeklyPlan(D){
         reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
     });
   }
-  const slots=ordered;
+  /* The by-part engine above is the default plan. The rotation modes below
+     reuse it as their fallback and only change the shape of the session list,
+     so TODAY always renders whatever this function returned. */
+  const rotationMode=normalizeRotationMode(s.rotationMode);
+  const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
+  let slots;
+  if(rotationMode==='full-section'){
+    // One whole paper per chosen day, cycling the four official papers.
+    slots=DAYS.map((day,i)=>{
+      const sec=FULL_SECTION[i%FULL_SECTION.length];
+      return {part:null,parts:[],type:sec[0],min:sec[1],timed:false,section:true,full:true,
+        reason:`full-section rotation: ${FULL_SECTION_LABEL[sec[0]]} in one session (official ${sec[1]} min)`};
+    });
+    slots=rotateByOffset(slots,offset);
+  }else if(rotationMode==='custom'){
+    const cp=validateCustomPlan(s.customPlan);
+    const base=DAYS.map((day,i)=>ordered.length?ordered[i%ordered.length]:null);
+    slots=DAYS.map((day,i)=>{
+      const c=cp[day];
+      if(c)return customSlotFor(day,c);
+      const b=base[i];
+      if(b)return {part:b.part,parts:Array.isArray(b.parts)?b.parts.slice():(b.part!=null?[b.part]:[]),
+        type:b.type,min:b.min,timed:!!b.timed,reason:b.reason};
+      return {part:null,parts:[],type:'ue',min:slotMin,timed:false,
+        reason:`custom plan default for ${day}`};
+    });
+    slots=rotateByOffset(slots,offset);
+  }else{
+    slots=rotateByOffset(ordered,offset);
+  }
   slots.forEach((sl,i)=>{sl.day=DAYS[i%dayN]});
   const reason={};
   slots.forEach((sl,i)=>{reason[i]=sl.reason});
-  return {slots:slots,reason:reason,source:source};
+  return {slots:slots,reason:reason,source:source,rotationMode:rotationMode};
 }
 let WEEK_PLAN=null;
+let SETTINGS_UNDO=null;
+let PLANNING_EDIT_BASE=null;
 function lpName(p){return {1:'Short extracts',2:'Sentence completion',3:'Multiple matching',4:'Multiple choice (long)'}[p]||'general'}
+function planningSnapshot(){
+  const s=D.settings||{};
+  return {
+    rotationMode:normalizeRotationMode(s.rotationMode),
+    rueCycle:(s.rueCycle||SETTINGS_DEFAULT.rueCycle).slice(),
+    wCycle:(s.wCycle||SETTINGS_DEFAULT.wCycle).slice(),
+    lCycle:(s.lCycle||SETTINGS_DEFAULT.lCycle).slice(),
+    spCycle:(s.spCycle||SETTINGS_DEFAULT.spCycle).slice(),
+    customPlan:JSON.parse(JSON.stringify(s.customPlan||{}))
+  };
+}
+function planningSnapshotChanged(a,b){
+  return !!a&&JSON.stringify(a)!==JSON.stringify(b);
+}
+function beginPlanningEdit(){
+  PLANNING_EDIT_BASE=planningSnapshot();
+}
+function commitPlanningEdit(){
+  const base=PLANNING_EDIT_BASE;
+  PLANNING_EDIT_BASE=null;
+  if(base&&planningSnapshotChanged(base,planningSnapshot())){
+    SETTINGS_UNDO=base;
+    D.settingsUndo=base;
+  }
+  save();
+  refreshAll();
+}
+function applyPlanningSnapshot(snap){
+  if(!snap)return;
+  const s=D.settings;
+  s.rotationMode=normalizeRotationMode(snap.rotationMode);
+  s.rueCycle=(snap.rueCycle||SETTINGS_DEFAULT.rueCycle).slice();
+  s.wCycle=(snap.wCycle||SETTINGS_DEFAULT.wCycle).slice();
+  s.lCycle=(snap.lCycle||SETTINGS_DEFAULT.lCycle).slice();
+  s.spCycle=(snap.spCycle||SETTINGS_DEFAULT.spCycle).slice();
+  s.customPlan=validateCustomPlan(snap.customPlan||{});
+}
+function undoPlanningChange(){
+  if(!SETTINGS_UNDO)return;
+  applyPlanningSnapshot(SETTINGS_UNDO);
+  SETTINGS_UNDO=null;
+  delete D.settingsUndo;
+  save();
+  refreshAll();
+}
+function resetPlanningDefaults(){
+  const msg='Reset rotationMode, rueCycle, wCycle, lCycle, spCycle and customPlan to their defaults? Your custom rotation settings will be discarded.';
+  if(typeof confirm==='function'&&!confirm(msg))return;
+  beginPlanningEdit();
+  const s=D.settings;
+  s.rotationMode=SETTINGS_DEFAULT.rotationMode;
+  s.rueCycle=SETTINGS_DEFAULT.rueCycle.slice();
+  s.wCycle=SETTINGS_DEFAULT.wCycle.slice();
+  s.lCycle=SETTINGS_DEFAULT.lCycle.slice();
+  s.spCycle=SETTINGS_DEFAULT.spCycle.slice();
+  s.customPlan={};
+  commitPlanningEdit();
+}
+function onRotationModeChange(mode){
+  beginPlanningEdit();
+  D.settings.rotationMode=normalizeRotationMode(mode);
+  commitPlanningEdit();
+}
+function applyCycleInputs(){
+  const s=D.settings,g=id=>{const el=document.getElementById(id);return el?String(el.value):''};
+  const rue=g('pRueCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);
+  if(rue.length)s.rueCycle=rue;
+  const w=g('pWCycle').split(',').map(x=>x.trim()).filter(x=>SETTINGS_DEFAULT.wCycle.indexOf(x)>=0);
+  if(w.length)s.wCycle=w;
+  const l=g('pLCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);
+  if(l.length)s.lCycle=l;
+  const sp=g('pSpCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);
+  if(sp.length)s.spCycle=sp;
+}
+function onCycleCommit(){
+  // The pre-edit snapshot comes from onfocus; only create one when the input
+  // was reached without focus (e.g. a scripted change).
+  if(!PLANNING_EDIT_BASE)beginPlanningEdit();
+  applyCycleInputs();
+  commitPlanningEdit();
+}
+function renderRotationControls(plan){
+  // The controls are static in the markup: only their state changes. Replacing
+  // them on every repaint would destroy a button between mousedown and click
+  // (and steal focus while a cycle is being edited).
+  const mode=normalizeRotationMode(D.settings.rotationMode);
+  const sel=document.getElementById('wpRotationMode');
+  if(sel)sel.value=mode;
+  const help=document.getElementById('wpRotationHelp');
+  if(help)help.textContent=mode==='full-section'
+    ?'Each session is one whole paper with its official exam time.'
+    :mode==='custom'
+      ?'You choose the skill, parts and duration of every day below.'
+      :'Exercises and loose parts rotate between sessions (default).';
+  const undo=document.getElementById('wpUndoBtn');
+  if(undo)undo.style.display=SETTINGS_UNDO?'':'none';
+}
+function customSkillOfSlot(sl){
+  if(!sl)return 'rue';
+  return sl.type==='ue'?'rue':sl.type==='mock'?'mock':sl.type;
+}
+function renderCustomPlanEditor(plan){
+  const box=document.getElementById('wpCustomEditor');
+  if(!box)return;
+  if(normalizeRotationMode(D.settings.rotationMode)!=='custom'||!plan||!plan.slots||!plan.slots.length){
+    box.innerHTML='';
+    return;
+  }
+  const cp=validateCustomPlan(D.settings.customPlan);
+  const days=[];
+  plan.slots.forEach(sl=>{if(days.indexOf(sl.day)<0)days.push(sl.day)});
+  const skills=[['rue','R&UE'],['l','Listening'],['w','Writing'],['sp','Speaking'],['mock','Mock']];
+  box.innerHTML=`<div class="sub" style="margin-bottom:6px"><b>Custom plan</b> — one row per chosen day.</div>
+    <div class="wp-custom-rows">${days.map(day=>{
+      const sl=plan.slots.filter(x=>x.day===day)[0]||null;
+      const c=cp[day]||{skill:customSkillOfSlot(sl),parts:slotParts(sl),min:sl?sl.min:CUSTOM_SKILL_DEFAULT_MIN.rue};
+      const max=customSkillPartsMax(c.skill);
+      const partsTxt=Array.isArray(c.parts)?c.parts.join(','):String(c.parts||'');
+      return `<div class="wp-custom-row" data-day="${day}">
+        <span class="wp-custom-day">${day}</span>
+        <select class="wp-custom-skill" onchange="onCustomPlanField()">${skills.map(([v,l])=>`<option value="${v}" ${c.skill===v?'selected':''}>${l}</option>`).join('')}</select>
+        <input type="text" class="wp-custom-parts" value="${esc(partsTxt)}" placeholder="${max===7?'1,3 or 1-7':max?'1-4':'—'}" ${max?'':'disabled'} onchange="onCustomPlanField()">
+        <input type="number" class="wp-custom-min" min="5" max="180" value="${c.min}" onchange="onCustomPlanField()">
+        <span class="muted t-xs">min</span>
+      </div>`;
+    }).join('')}</div>`;
+}
+function onCustomPlanField(){
+  beginPlanningEdit();
+  const out={};
+  document.querySelectorAll('#wpCustomEditor .wp-custom-row').forEach(row=>{
+    const day=row.dataset.day;
+    const skillEl=row.querySelector('.wp-custom-skill');
+    const partsEl=row.querySelector('.wp-custom-parts');
+    const minEl=row.querySelector('.wp-custom-min');
+    out[day]={
+      skill:skillEl?skillEl.value:'rue',
+      parts:partsEl?partsEl.value:'',
+      min:minEl?Number(minEl.value):0
+    };
+  });
+  D.settings.customPlan=validateCustomPlan(out);
+  commitPlanningEdit();
+}
 function renderWeeklyPlan(){
   const el=document.getElementById('weeklyPlanCard');
   if(!el)return;
@@ -12562,6 +12884,8 @@ function renderWeeklyPlan(){
   const rows=document.getElementById('wpRows');
   const whyBox=document.getElementById('wpWhy');
   const why=document.getElementById('wpWhyBody');
+  renderRotationControls(plan);
+  renderCustomPlanEditor(plan);
   if(plan.needDiag){
     rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t('plan_need_diag')}</div>
       <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">${t('plan_go_diag')}</button></div>`;
@@ -12570,11 +12894,9 @@ function renderWeeklyPlan(){
   }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    const label=sl.type==='w'?'Writing':sl.type==='l'?('Listening '+lpName(sl.part).toLowerCase()):sl.type==='sp'?('Speaking part '+sl.part):('UoE '+partName(sl.part).toLowerCase());
-    const partTxt=sl.part!=null?`Part ${sl.part} · `:'';
-    return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}">
+    return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
       <div class="wp-main">
-        <div class="wp-title tnum">${sl.day} · ${partTxt}${label} · ${sl.min} min${sl.timed?' · timed (exam mode)':''}</div>
+        <div class="wp-title tnum">${sl.day} · ${slotTitleText(sl)}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
       <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
@@ -13756,7 +14078,7 @@ function renderRotationCard(){
     hint.textContent=t('plan_rotation_hint',{week:isWeekA?'A':'B'})+(override?t('plan_rotation_override',{genre:override}):'');
   }
 }
-function onCycleInput(){renderRotationCard()}
+function onCycleInput(){applyCycleInputs();renderRotationCard()}
 
 function getSkillNextOccurrence(skillId,baseDate=new Date()){
   const sched=getSchedule();
@@ -13835,12 +14157,69 @@ function updatePersonalizedUI(){
   if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
 
+let TODAY_PLAN=null;
+function planTodayLabel(){
+  return PLAN_DAY_MAP[PLAN_DAY_ORDER[(new Date().getDay()+6)%7]];
+}
+function studioForSlot(sl){
+  if(!sl)return 'mon-a';
+  if(sl.type==='l')return 'fri-a';
+  if(sl.type==='w')return 'mon-b';
+  if(sl.type==='sp')return 'fri-b';
+  if(sl.type==='mock')return 'mock';
+  return 'mon-a';
+}
+function nextTitleForSlot(sl){
+  if(sl&&sl.section&&sl.type==='l')return t('next_ses_b_l');
+  if(sl&&sl.section&&sl.type==='sp')return t('next_ses_b_sp');
+  if(sl&&sl.type==='w')return t('next_ses_a_w',{genre:slotLabel(sl)});
+  if(sl&&sl.section&&sl.type==='ue')return t('next_ses_a_rue');
+  return slotTitleText(sl);
+}
+function nextPlanOccurrence(plan,baseDate){
+  if(!plan||!plan.slots||!plan.slots.length)return null;
+  for(let step=1;step<=7;step++){
+    const dt=new Date(baseDate.getTime()+step*86400000);
+    const label=PLAN_DAY_MAP[PLAN_DAY_ORDER[(dt.getDay()+6)%7]];
+    const index=plan.slots.findIndex(sl=>sl.day===label);
+    if(index>=0)return {slot:plan.slots[index],index:index,dayIndex:dt.getDay(),daysAhead:step};
+  }
+  return null;
+}
+/* TODAY is not allowed to pick sessions on its own: it renders the rows of
+   buildWeeklyPlan(D) that belong to today, with the same title, parts and
+   duration the PLAN card shows. No match means an honest rest day. */
+function renderTodaySession(plan,todaySlots){
+  const box=document.getElementById('todaySession');
+  if(!box)return;
+  TODAY_PLAN=plan;
+  if(!todaySlots||!todaySlots.length){
+    box.innerHTML=`<h2>Today's session</h2><div class="ts-rest" data-rest="1">Rest day — no session planned today.</div>`;
+    return;
+  }
+  box.innerHTML=`<h2>Today's session</h2><div style="display:flex;flex-direction:column;gap:10px">`+
+    todaySlots.map(sl=>{
+      const idx=plan.slots.indexOf(sl);
+      return `<div class="ts-row" data-day="${sl.day}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-min="${sl.min}">
+        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
+        <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
+      </div>`;
+    }).join('')+`</div>`;
+}
+function todayStart(i){
+  const sl=(TODAY_PLAN&&TODAY_PLAN.slots&&TODAY_PLAN.slots[i])||null;
+  if(!sl)return;
+  if(sl.type==='w')goToPartFilter(sl.part,'w');
+  else if(sl.type==='l')goToPartFilter(sl.part,'lp');
+  else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
+  else if(sl.type==='mock')showView('exam');
+  else goToPartFilter(sl.part,'ue');
+}
 function renderToday(){
   updatePersonalizedUI();
-  const d=new Date(),wd=d.getDay();
+  const d=new Date();
   const week=isoWeek(d);
   const s=D.settings||SETTINGS_DEFAULT;
-  const sched=getSchedule();
   const isWeekA=(week%2!==0);
   const wIdx=Math.floor(week/2)%s.wCycle.length;
   const autoW=s.wCycle[wIdx];
@@ -13854,28 +14233,31 @@ function renderToday(){
     document.getElementById('wWords').min=s.wMin;document.getElementById('wWords').max=s.wMax;
     document.getElementById('wWords').value=Math.round((s.wMin+s.wMax)/2);
   }
-  
+
+  // One source of truth for both screens.
+  const plan=buildWeeklyPlan(D);
+  const todayLabel=planTodayLabel();
+  const todaySlots=plan.slots.filter(sl=>sl.day===todayLabel);
+  renderTodaySession(plan,todaySlots);
+
   const nb=document.getElementById('nextBox');
   const weekLabel=isWeekA?t('week_a'):t('week_b');
   let defaultStudio='mon-a';
 
-  const todaySlotIdx=sched.findIndex(slot=>slot.day===wd);
-
-  if(todaySlotIdx!==-1){
-    const slotInfo=getSlotSession(week,todaySlotIdx,sched.length);
-    defaultStudio=slotInfo.session.studio;
-    nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_today')} (${dayFull(wd)}): <b style="color:var(--ok-text)">${slotInfo.title}</b> <span class="badge ${slotInfo.session.badgeClass}">${sched[todaySlotIdx].time}</span></div><div class="when">${t('next_schedule')} <b>${slotInfo.session.name}</b> (${slotInfo.session.dur}) · ${t('next_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${slotInfo.session.studio}')">${t('next_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button></div>`;
+  if(todaySlots.length){
+    defaultStudio=studioForSlot(todaySlots[0]);
+    const titles=todaySlots.map(sl=>slotTitleText(sl)).join(' · ');
+    nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_today')} (${todayLabel}): <b style="color:var(--ok-text)">${titles}</b></div><div class="when">${t('next_schedule')} <b>${slotLabel(todaySlots[0])}</b> (${todaySlots[0].min} min) · ${t('next_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${defaultStudio}')">${t('next_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button></div>`;
   }else{
-    const nextSlot=getNextScheduledSession(d);
-    if(nextSlot){
-      defaultStudio=nextSlot.session.studio;
-      const nextTitle=nextSlot.sessionIdx===0?t('next_ses_a_rue'):nextSlot.sessionIdx===1?t('next_ses_b_l'):nextSlot.sessionIdx===2?t('next_ses_a_w',{genre:nextSlot.activeWritingGenre}):t('next_ses_b_sp');
-      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${dayFull(nextSlot.day)} (${t('next_in_days',{days:nextSlot.daysAhead})}) — ${nextTitle}</b>. ${t('next_cycle')} <b>${weekLabel}</b> · ${t('next_active_writing')} <b>${wT}</b>. ${t('next_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="doNextSessionNow()">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
+    const next=nextPlanOccurrence(plan,d);
+    if(next){
+      defaultStudio=studioForSlot(next.slot);
+      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${dayFull(next.dayIndex)} (${t('next_in_days',{days:next.daysAhead})}) — ${nextTitleForSlot(next.slot)}</b>. ${t('next_cycle')} <b>${weekLabel}</b> · ${t('next_active_writing')} <b>${wT}</b>. ${t('next_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="todayStart(${next.index})">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
     }else{
       nb.innerHTML=`<div class="big">${t('next_no_session')}</div><div class="when">${t('next_configure_days')}</div>`;
     }
   }
-  
+
   // Set initial studio if none selected yet
   if(!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a'){
     selectSessionStudio(defaultStudio);

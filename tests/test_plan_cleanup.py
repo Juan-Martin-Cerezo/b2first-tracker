@@ -145,6 +145,34 @@ with sync_playwright() as p:
     )
     out["6_order"] = order
 
+    # 7. The Week plan card now owns the rotation mode: a selector above the
+    #    day rows, the one-line help and both escape hatches.
+    rotation = pg.evaluate(
+        """() => {
+        const card = document.getElementById('weeklyPlanCard');
+        const mode = document.getElementById('wpRotationMode');
+        const rows = document.getElementById('wpRows');
+        const children = [...card.children];
+        return {
+            mode: mode ? mode.value : null,
+            options: mode ? [...mode.options].map(o => o.value) : [],
+            help: (document.getElementById('wpRotationHelp') || {}).textContent || '',
+            reset: !!document.getElementById('wpResetBtn'),
+            undo: !!document.getElementById('wpUndoBtn'),
+            above_rows: children.indexOf(document.getElementById('wpRotationControls')) <
+                children.indexOf(rows),
+        };
+        }"""
+    )
+    assert rotation["mode"] == "by-part", f"default rotation mode is not by-part: {rotation}"
+    assert rotation["options"] == ["by-part", "full-section", "custom"], (
+        f"rotation modes are wrong: {rotation}"
+    )
+    assert rotation["help"].strip(), f"the mode has no one-line help: {rotation}"
+    assert rotation["reset"] and rotation["undo"], f"escape hatches missing: {rotation}"
+    assert rotation["above_rows"], f"the mode selector is not above the day rows: {rotation}"
+    out["7_rotation_mode"] = rotation
+
     assert page_errors == [], f"page errors: {page_errors}"
     out["errors"] = page_errors
     browser.close()
