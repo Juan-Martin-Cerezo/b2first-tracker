@@ -995,6 +995,33 @@ footer{
 .gates-tab:hover{color:var(--txt)}
 .gates-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 
+/* ---------- PROGRESSION MATRIX ---------- */
+.gate-matrix{width:100%;border-collapse:collapse;font-size:var(--fs-xs)}
+.gate-matrix th,.gate-matrix td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+.gate-matrix thead th{background:var(--surface-2);color:var(--txt-2);font-weight:600}
+.gate-matrix tbody th{white-space:nowrap;background:var(--surface-2);color:var(--txt)}
+.gate-matrix tbody tr.current{background:var(--acc-soft)}
+.gate-matrix td.gate{margin:0;padding:9px 10px;border-left:4px solid var(--bad);border-radius:0;background:transparent}
+.gate-matrix td.gate.pass{border-left-color:var(--ok);background:transparent}
+.gate-matrix .gate-name{color:var(--txt);font-weight:600;line-height:1.35}
+.gate-matrix .gate-txt{margin-top:5px;color:var(--txt-2)}
+.gate-matrix .gate-status{display:inline-block;margin-top:5px;font-weight:700}
+.gate-matrix .gate-status.pass{color:var(--ok-text)}
+.gate-matrix .gate-status.fail{color:var(--bad-text)}
+
+/* ---------- ROTATION CARD ---------- */
+.rot-skill{border:1px solid var(--line);border-radius:var(--r-panel);padding:10px 12px;background:var(--surface-2)}
+.rot-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;color:var(--txt);font-size:var(--fs-sm)}
+.rot-head b{font-weight:700}
+.rot-pos{font-size:var(--fs-xs);color:var(--txt-2)}
+.rot-now,.rot-next{font-size:var(--fs-xs);margin-top:4px;color:var(--txt)}
+.rot-now.muted{color:var(--txt-2)}
+.rot-next{font-weight:600;color:var(--acc-text)}
+.rot-cycle{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.rot-chip{font-size:var(--fs-xs);padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--txt-2);white-space:nowrap}
+.rot-chip.rot-cur{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text);font-weight:700}
+.rot-chip.rot-upcoming{border-color:var(--ok);color:var(--ok-text);font-weight:700}
+
 /* ---------- VIEWS & ANIMATION ---------- */
 .view{display:none}
 .view.active{display:block;animation:fadeUp 200ms ease}
@@ -1663,6 +1690,60 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   </div>
 </div>
 
+<!-- ============ SETTINGS PANEL ============ -->
+<div id="settingsModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="auth-card" style="max-width:680px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 id="settingsTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="settings_title">Settings</h3>
+      <button class="del" type="button" onclick="closeSettingsModal()" style="font-size:20px;padding:4px 8px" aria-label="Close" data-i18n-aria-label="settings_close">✕</button>
+    </div>
+    <section id="aiProviderSection">
+      <h3 style="font-size:13px;font-weight:600;color:var(--on-surface);margin:0 0 8px" data-i18n="settings_ai_provider">AI provider</h3>
+      <div class="card" id="byoCard">
+        <div class="plan-card-head">
+          <h2 data-i18n="byo_title">✨ Writing Corrector provider</h2>
+        </div>
+        <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
+        <div class="row">
+          <div>
+            <label for="byoProvider" data-i18n="byo_provider">Provider</label>
+            <select id="byoProvider" onchange="onByoProviderChange()">
+              <option value="deepseek">DeepSeek</option>
+              <option value="openai">OpenAI</option>
+              <option value="groq">Groq</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="custom" data-i18n="byo_provider_custom">Custom</option>
+            </select>
+          </div>
+          <div>
+            <label for="byoKey" data-i18n="byo_key">API key</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="password" id="byoKey" placeholder="sk-..." autocomplete="off" oninput="onByoKeyInput(this.value)" style="flex:1">
+              <button type="button" class="btn sm gray" id="byoKeyToggle" onclick="toggleByoKeyVisibility()" data-i18n="byo_show">Show</button>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="byoBase" data-i18n="byo_base">Base URL (optional)</label>
+            <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" oninput="onByoConfigInput()">
+          </div>
+          <div>
+            <label for="byoModel" data-i18n="byo_model">Model (optional)</label>
+            <input type="text" id="byoModel" placeholder="deepseek-chat" autocomplete="off" oninput="onByoConfigInput()">
+          </div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button type="button" class="btn" onclick="testByoConnection()" data-i18n="byo_test">Test connection</button>
+          <button type="button" class="btn gray" onclick="clearByoKey()" data-i18n="byo_clear">Clear key</button>
+          <span id="byoTestStatus" class="t-xs muted" role="status"></span>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
+      </div>
+    </section>
+  </div>
+</div>
+
 <!-- ============ PLAN LIMIT MODAL (phase 31) ============
      Shown when a request answers 429 + error:"plan_limit". It always offers the
      three ways forward, so a limit never ends in a dead-end toast. -->
@@ -1832,6 +1913,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <div class="top-actions">
       <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
       <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
+      <button class="btn sm gray" id="settingsBtn" type="button" onclick="openSettingsModal()" title="Settings" aria-label="Settings" data-i18n-title="settings_title" data-i18n-aria-label="settings_title">⚙</button>
       <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="avatar">A</span></div>
       <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
     </div>
@@ -2907,7 +2989,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="card">
           <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
-          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance. Edit a threshold and it saves to your plan at once.</div>
+          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance. Each cell is the requirement for every part of that skill.</div>
           <div id="gates"></div>
           <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
@@ -3027,7 +3109,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="plan_title">Plan Configuration</h1>
-            <p class="page-sub" data-i18n="plan_sub">Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.</p>
+            <p class="page-sub" data-i18n="plan_sub">Adjust your session schedules, language and subscription. Everything applies to the tracker instantly.</p>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake">✏️ Edit my intake</button>
@@ -3053,6 +3135,41 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </details>
         </div>
 
+        <!-- Session Schedules (immediately after the week plan) -->
+        <div class="card" id="schedulesCard" style="margin-bottom:16px">
+          <div class="plan-card-head">
+            <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
+            <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
+          </div>
+          <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
+
+          <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
+
+          <!-- Fallback inputs for test compatibility -->
+          <input type="hidden" id="pADay">
+          <input type="hidden" id="pATime">
+          <input type="hidden" id="pBDay">
+          <input type="hidden" id="pBTime">
+
+          <!-- Advance / Shift Session Controls -->
+          <div style="margin-top:16px;padding:12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
+                  <span data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</span>
+                  <span class="badge mon" id="planOffsetBadge">Offset: +0</span>
+                </div>
+                <div class="sub" style="margin-top:2px;font-size:12px" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
+                <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
+                <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Language (English by default, Spanish available) -->
         <div class="card" id="languageCard" style="margin-bottom:16px">
           <div class="plan-card-head">
@@ -3070,7 +3187,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="plan-card-head">
             <h2 data-i18n="license_title">Subscription</h2>
           </div>
-          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
+          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.</div>
           <div class="plan-usage">
             <div class="plan-usage-row">
               <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
@@ -3101,210 +3218,62 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
           <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
           <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-          <div class="t-xs muted" style="margin-top:2px">
-            <span data-i18n="license_own_key">Using your own API key? This app is unlimited for you.</span>
-            <button type="button" class="btn sm gray" style="margin-left:6px" onclick="focusByoCard()" data-i18n="license_own_key_link">Set it up</button>
+        </div>
+
+        <!-- Rotation Cycles & Schedule Roadmap -->
+        <div class="card plan-green-card" id="rotationCard" style="margin-bottom:16px">
+          <div class="plan-card-head">
+            <h2 data-i18n="plan_rotation">What comes next</h2>
+          </div>
+          <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
+
+          <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
+
+          <div id="rotationCardBody" style="display:flex;flex-direction:column;gap:10px;margin:12px 0"></div>
+          <div class="sub" id="rotationHint" style="margin:6px 0 14px"></div>
+
+          <div class="row" style="align-items:flex-end;margin:12px 0">
+            <div>
+              <label for="ovW" data-i18n="plan_override_genre">Override writing genre</label>
+              <select id="ovW" onchange="setOv('w',this.value)"></select>
+            </div>
+          </div>
+
+          <div class="plan-cycles">
+            <div class="cycle-box">
+              <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
+              <span class="cycle-val" id="planWkASummary">Full R&amp;UoE + Full L</span>
+              <div style="margin-top:8px">
+                <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+              </div>
+            </div>
+            <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
+            <div class="cycle-box">
+              <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
+              <span class="cycle-val" id="planWkBSummary">Full W + Full Sp</span>
+              <div style="margin-top:8px">
+                <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
+              </div>
+            </div>
+          </div>
+          <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
+          <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7" oninput="onCycleInput()"></div>
+          <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email" oninput="onCycleInput()"></div>
+          <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4" oninput="onCycleInput()"></div>
+          <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4" oninput="onCycleInput()"></div>
+          <div style="margin-top:12px">
+            <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
+            <select id="pVoice">
+              <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
+              <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
+            </select>
+            <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
           </div>
         </div>
 
-        <div class="grid-12">
-          <!-- Exam Timers (white, like Stitch) -->
-          <div class="col-7">
-            <div class="card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_exam_timers">🧪 Exam Timers</h2>
-              </div>
-              <div class="sub" data-i18n="plan_official_durations">Official durations for each paper.</div>
-              <div class="row">
-                <div><label data-i18n="plan_uoe_focus">UoE Focus (min)</label><input type="number" id="pUeMin" min="1" max="60"></div>
-                <div><label data-i18n="plan_listening_min">Listening (min)</label><input type="number" id="pListenMin" min="1" max="60"></div>
-              </div>
-              <div class="row">
-                <div><label data-i18n="plan_plan_writing">Plan writing (min)</label><input type="number" id="pPlanMin" min="1" max="30"></div>
-                <div><label data-i18n="plan_write_min">Write (min)</label><input type="number" id="pWriteMin" min="1" max="60"></div>
-                <div><label data-i18n="plan_review_min">Review (min)</label><input type="number" id="pRevMin" min="0" max="15"></div>
-              </div>
-              <div class="row">
-                <div><label data-i18n="plan_speaking_p2">Speaking Part 2 (sec)</label><input type="number" id="pSp1Sec" min="30" max="180"></div>
-                <div><label data-i18n="plan_speaking_p34">Speaking Parts 3-4 (sec)</label><input type="number" id="pSp2Sec" min="60" max="600"></div>
-              </div>
-              <div class="row">
-                <div>
-                  <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
-                  <select id="pVoice">
-                    <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
-                    <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
-                  </select>
-                  <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
-                </div>
-              </div>
-              <div class="row">
-                <div><label data-i18n="plan_wmin">Writing — min words</label><input type="number" id="pWMin" min="80" max="200"></div>
-                <div><label data-i18n="plan_wmax">Writing — max words</label><input type="number" id="pWMax" min="100" max="260"></div>
-              </div>
-              <div class="row">
-                <div><label data-i18n="plan_streak_freeze">Streak freeze / week (🛡)</label><input type="number" id="pStreakFreeze" min="0" max="7" value="1"></div>
-                <div><label data-i18n="plan_week_goal">Weekly goal (days/week)</label><input type="number" id="pWeekGoal" min="1" max="7" value="5"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Thresholds (Gates) navy, like Stitch -->
-          <div class="col-5">
-            <div class="card plan-dark-card">
-              <h2 data-i18n="plan_thresholds">🎯 Thresholds (Gates)</h2>
-              <div class="sub" data-i18n="plan_thresholds_sub">Numerical criteria per stage.</div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage0">Stage 0</div>
-              <div class="row">
-                <div><label data-i18n="plan_g_e0w">Essays score ≥</label><input type="number" id="pE0w" min="10" max="20" step="0.5"></div>
-                <div><label data-i18n="plan_g_e0u">UoE P4 % ≥</label><input type="number" id="pE0u" min="0" max="100"></div>
-                <div><label data-i18n="plan_g_e0l">L P2 err ≤</label><input type="number" id="pE0l" min="0" max="10"></div>
-              </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage1">Stage 1</div>
-              <div class="row">
-                <div><label data-i18n="plan_g_e1w">Texts score ≥</label><input type="number" id="pE1w" min="10" max="20" step="0.5"><input type="number" id="pE1wm" min="20" max="60" style="margin-top:4px"></div>
-                <div><label data-i18n="plan_g_e1u">UoE overall % ≥</label><input type="number" id="pE1u" min="0" max="100"></div>
-                <div><label data-i18n="plan_g_e1l">L score ≥</label><input type="number" id="pE1l" min="0" max="30"></div>
-              </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_stage2">Stage 2</div>
-              <div class="row">
-                <div><label data-i18n="plan_g_e2r">R&amp;UoE % ≥</label><input type="number" id="pE2r" min="0" max="100"><input type="number" id="pE2rm" min="30" max="120" style="margin-top:4px"></div>
-                <div><label data-i18n="plan_g_e2w">Full W score ≥</label><input type="number" id="pE2w" min="10" max="20" step="0.5"></div>
-                <div><label data-i18n="plan_g_e2l">L ≥ (N tests)</label><input type="number" id="pE2l" min="0" max="30"><input type="number" id="pE2ln" min="1" max="10" style="margin-top:4px"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Session Schedules -->
-          <div class="col-6">
-            <div class="card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
-                <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
-              </div>
-              <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
-              
-              <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
-
-              <!-- Fallback inputs for test compatibility -->
-              <input type="hidden" id="pADay">
-              <input type="hidden" id="pATime">
-              <input type="hidden" id="pBDay">
-              <input type="hidden" id="pBTime">
-
-              <!-- Advance / Shift Session Controls -->
-              <div style="margin-top:16px;padding:12px;border:1px solid var(--outline-variant);border-radius:var(--radius);background:var(--surface-container-low)">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-                  <div>
-                    <div style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px">
-                      <span data-i18n="plan_shift">⚡ Session Shift / Fast-Forward</span>
-                      <span class="badge mon" id="planOffsetBadge">Offset: +0</span>
-                    </div>
-                    <div class="sub" style="margin-top:2px;font-size:12px" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
-                  </div>
-                  <div style="display:flex;gap:6px;align-items:center">
-                    <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
-                    <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
-                    <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Rotation Cycles & Schedule Roadmap -->
-          <div class="col-6">
-            <div class="card plan-green-card">
-              <div class="plan-card-head">
-                <h2 data-i18n="plan_rotation">What comes next</h2>
-              </div>
-              <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
-
-              <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
-
-              <div class="row" style="align-items:flex-end;margin:12px 0">
-                <div>
-                  <label for="ovW" data-i18n="plan_override_genre">Override writing genre</label>
-                  <select id="ovW" onchange="setOv('w',this.value)"></select>
-                </div>
-              </div>
-
-              <div class="plan-cycles">
-                <div class="cycle-box">
-                  <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
-                  <span class="cycle-val" id="planWkASummary">Full R&amp;UoE + Full L</span>
-                  <div style="margin-top:8px">
-                    <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-                  </div>
-                </div>
-                <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
-                <div class="cycle-box">
-                  <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
-                  <span class="cycle-val" id="planWkBSummary">Full W + Full Sp</span>
-                  <div style="margin-top:8px">
-                    <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-                  </div>
-                </div>
-              </div>
-              <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
-              <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7"></div>
-              <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email"></div>
-              <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4"></div>
-              <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4"></div>
-            </div>
-          </div>
-
-          <!-- AI provider (bring your own key) -->
-          <div class="col-12">
-            <div class="card" id="byoCard">
-              <div class="plan-card-head">
-                <h2 data-i18n="byo_title">✨ Writing Corrector provider</h2>
-              </div>
-              <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
-              <div class="row">
-                <div>
-                  <label for="byoProvider" data-i18n="byo_provider">Provider</label>
-                  <select id="byoProvider" onchange="onByoProviderChange()">
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="openai">OpenAI</option>
-                    <option value="groq">Groq</option>
-                    <option value="openrouter">OpenRouter</option>
-                    <option value="custom" data-i18n="byo_provider_custom">Custom</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="byoKey" data-i18n="byo_key">API key</label>
-                  <div style="display:flex;gap:8px;align-items:center">
-                    <input type="password" id="byoKey" placeholder="sk-..." autocomplete="off" oninput="onByoKeyInput(this.value)" style="flex:1">
-                    <button type="button" class="btn sm gray" id="byoKeyToggle" onclick="toggleByoKeyVisibility()" data-i18n="byo_show">Show</button>
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div>
-                  <label for="byoBase" data-i18n="byo_base">Base URL (optional)</label>
-                  <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" oninput="onByoConfigInput()">
-                </div>
-                <div>
-                  <label for="byoModel" data-i18n="byo_model">Model (optional)</label>
-                  <input type="text" id="byoModel" placeholder="deepseek-chat" autocomplete="off" oninput="onByoConfigInput()">
-                </div>
-              </div>
-              <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <button type="button" class="btn" onclick="testByoConnection()" data-i18n="byo_test">Test connection</button>
-                <button type="button" class="btn gray" onclick="clearByoKey()" data-i18n="byo_clear">Clear key</button>
-                <span id="byoTestStatus" class="t-xs muted" role="status"></span>
-              </div>
-              <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn ok" onclick="savePlan()" data-i18n="plan_save">💾 Save plan</button>
-              <button class="btn gray" onclick="resetPlan()" data-i18n="plan_restore">↩ Restore original plan</button>
-            </div>
-          </div>
+        <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ok" onclick="savePlan()" data-i18n="plan_save">💾 Save plan</button>
+          <button class="btn gray" onclick="resetPlan()" data-i18n="plan_restore">↩ Restore original plan</button>
         </div>
       </section>
 
@@ -3906,7 +3875,20 @@ const I18N={
     prog_total_time:'Total Study Time',
     prog_logged_min:'logged minutes',
     prog_matrix:'🧗 Progression Matrix',
-    prog_matrix_sub:'Complete all criteria within a stage to advance.',
+    prog_matrix_sub:'Complete all criteria within a stage to advance. Each cell is the requirement for every part of that skill.',
+    prog_stage_row:'Stage {n}',
+    prog_stage_col:'Stage',
+    prog_col_rue:'R&UE',
+    prog_col_listening:'Listening',
+    prog_col_writing:'Writing',
+    prog_col_speaking:'Speaking',
+    prog_achieved:'achieved',
+    prog_pending:'pending',
+    prog_cell_rue:'all parts 1–7 at ≥ {pct}%',
+    prog_cell_listening:'each part 1–4 at ≥ {score}/30',
+    prog_cell_writing:'each part (Essay, Article, Report, Review, Email) at ≥ {score}/20',
+    prog_cell_speaking:'each part 1–4 at ≥ {score}/5',
+    prog_cell_speaking_full:'each part 1–4 at ≥ {score}/5 in one full mock',
     prog_advance:'⬆ Advance to the next stage',
     prog_stage_down:'⬇ Go back a stage',
     prog_export:'💾 Export data',
@@ -3974,7 +3956,7 @@ const I18N={
     err_legend_tlim_means:'You ran out of time rather than getting it wrong',
     err_legend_tlim_example:'Part 5 unfinished at 0:00',
     plan_title:'Plan Configuration',
-    plan_sub:'Adjust system parameters, simulation times and performance thresholds to personalise your study cycle. Everything applies to the tracker instantly.',
+    plan_sub:'Adjust your session schedules, language and subscription. Everything applies to the tracker instantly.',
     plan_edit_intake:'✏️ Edit my intake',
     plan_export_json:'💾 Export JSON',
     plan_import_backup:'📥 Import Backup',
@@ -4037,6 +4019,15 @@ const I18N={
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
+    plan_rotation_current:'current: {item}',
+    plan_rotation_next:'next: {item}',
+    plan_rotation_start:'starting at the first item',
+    plan_rotation_position:'{n} sessions logged',
+    plan_rotation_hint:'The rotation advances one item per session, in order, and starts again from the first after the last. The next item comes from Week {week}; a manual override wins when it is set.',
+    plan_rotation_override:' Manual override: {genre}.',
+    settings_title:'Settings',
+    settings_ai_provider:'AI provider',
+    settings_close:'Close',
     byo_title:'✨ Writing Corrector provider',
     byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
     byo_provider:'Provider',
@@ -4054,7 +4045,7 @@ const I18N={
     byo_test_ok:'Connected · {model}',
     byo_test_fail:'Failed · {code}',
     license_title:'Subscription',
-    license_sub:'Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.',
+    license_sub:'Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.',
     license_write:'Writing Corrector & reports',
     license_speak:'Speaking mocks',
     license_usage:'{n} of {limit} · {window}',
@@ -4722,7 +4713,20 @@ const I18N={
     prog_total_time:'Tiempo total de estudio',
     prog_logged_min:'minutos registrados',
     prog_matrix:'🧗 Matriz de progresión',
-    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar.',
+    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar. Cada celda es el requisito para todas las partes de esa destreza.',
+    prog_stage_row:'Etapa {n}',
+    prog_stage_col:'Etapa',
+    prog_col_rue:'R&UE',
+    prog_col_listening:'Listening',
+    prog_col_writing:'Writing',
+    prog_col_speaking:'Speaking',
+    prog_achieved:'alcanzada',
+    prog_pending:'pendiente',
+    prog_cell_rue:'todas las partes 1–7 en ≥ {pct} %',
+    prog_cell_listening:'cada parte 1–4 con ≥ {score}/30',
+    prog_cell_writing:'cada parte (Essay, Article, Report, Review, Email) con ≥ {score}/20',
+    prog_cell_speaking:'cada parte 1–4 con ≥ {score}/5',
+    prog_cell_speaking_full:'cada parte 1–4 con ≥ {score}/5 en un mock completo',
     prog_advance:'⬆ Avanzar a la siguiente etapa',
     prog_stage_down:'⬇ Volver una etapa',
     prog_export:'💾 Exportar datos',
@@ -4790,7 +4794,7 @@ const I18N={
     err_legend_tlim_means:'Se te acabó el tiempo en lugar de equivocarte',
     err_legend_tlim_example:'Parte 5 sin terminar a las 0:00',
     plan_title:'Configuración del plan',
-    plan_sub:'Ajustá los parámetros del sistema, los tiempos de simulación y los umbrales de rendimiento para personalizar tu ciclo de estudio. Todo se aplica al tracker al instante.',
+    plan_sub:'Ajustá tus horarios de sesión, el idioma y la suscripción. Todo se aplica al tracker al instante.',
     plan_edit_intake:'✏️ Editar mi perfil inicial',
     plan_export_json:'💾 Exportar JSON',
     plan_import_backup:'📥 Importar copia',
@@ -4853,6 +4857,15 @@ const I18N={
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
+    plan_rotation_current:'actual: {item}',
+    plan_rotation_next:'próximo: {item}',
+    plan_rotation_start:'empieza por el primer ítem',
+    plan_rotation_position:'{n} sesiones registradas',
+    plan_rotation_hint:'La rotación avanza un ítem por sesión, en orden, y vuelve al primero después del último. El próximo sale de la semana {week}; si hay un override manual, gana ese.',
+    plan_rotation_override:' Override manual: {genre}.',
+    settings_title:'Ajustes',
+    settings_ai_provider:'Proveedor de IA',
+    settings_close:'Cerrar',
     byo_title:'✨ Proveedor del Writing Corrector',
     byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
     byo_provider:'Proveedor',
@@ -4870,7 +4883,7 @@ const I18N={
     byo_test_ok:'Conectado · {model}',
     byo_test_fail:'Falló · {code}',
     license_title:'Suscripción',
-    license_sub:'Tu plan define cuánto podés usar el Writing Corrector. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
+    license_sub:'Tu plan define cuánto podés usar el Writing Corrector. El gratis sirve para probar el circuito; un código lo amplía.',
     license_write:'Writing Corrector y reportes',
     license_speak:'Simulacros de speaking',
     license_usage:'{n} de {limit} · {window}',
@@ -6627,9 +6640,8 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
    - set(m) resets to m minutes (in internal seconds)
    - start() runs it, toggling pause/resume
    - on reaching 0 it stops by itself and the button goes back to "Start"
-   Session timers (UoE, plan/write/review, listening, speaking) are
-   created with default durations but always read D.settings on start
-   (applyTimers) → they respect the PLAN configuration. */
+   Session timers (UoE, plan/write/review, listening, speaking) always use
+   SETTINGS_DEFAULT: the PLAN screen no longer edits them. */
 function makeTimer(elId,dur){
   let left=dur*60,iv=null,el=document.getElementById(elId);
   function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
@@ -6649,13 +6661,13 @@ let wTimerEl,wMode='plan',wPlan,wWrite,wRev;
     const elP=document.getElementById('wPlanTimer');
     if(elP){elP.textContent=fmtMin(left);elP.classList.toggle('running',iv!==null)}
   }
-  wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.planMin*60;render()}};
-  wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.writeMin*60;render()}};
-  wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=D.settings.revMin*60;render()}};
+  wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.planMin*60;render()}};
+  wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.writeMin*60;render()}};
+  wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.revMin*60;render()}};
   function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}
 })();
-let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(D.settings.sp1Sec)}};sp2={start(){run(D.settings.sp2Sec)}}})();
-function applyTimers(){ueTimer.set(D.settings.ueMin||50);lTimer.set(D.settings.listenMin||40);}
+let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(SETTINGS_DEFAULT.sp1Sec)}};sp2={start(){run(SETTINGS_DEFAULT.sp2Sec)}}})();
+function applyTimers(){ueTimer.set(SETTINGS_DEFAULT.ueMin);lTimer.set(SETTINGS_DEFAULT.listenMin);}
 
 /* ---------- INTERACTIVE SESSION STUDIO & STEPPERS ---------- */
 let CURRENT_STUDIO='mon-a';
@@ -12003,149 +12015,115 @@ function saveErr2(){
   document.getElementById('errDesc2').value='';document.getElementById('errFix2').value='';
 }
 
-/* ---------- GATES ----------
-   calcGates() evaluates the 3 stages against D.log using the criteria
-   in D.settings (e0/e1/e2). Returns {stage, done, pct, groups[]} where
-   groups[stage] lists each stage's gates: every gate is
-   {label, ok, info} — ok = criterion met.
-   renderGates() paints the current stage + progress bar, the "advance"
-   button (only when ALL are ok) and manual override checkboxes that
-   persist in D.overrides. advanceStage()/stageDown() move the stage. */
-function avg(es){if(!es.length)return null;return es.reduce((s,e)=>s+e.correct/e.total,0)/es.length*100}
-function lastN(type,n){return D.log.filter(e=>e.type===type).slice(0,n)}
-function gate(cond){return cond?{pass:true,val:1}:{pass:false,val:0}}
+/* ---------- GATES (Progression Matrix) ----------
+   The matrix is the only place where the stage criteria live. Each row is a
+   stage and each column a skill; the requirement in every cell covers all the
+   parts of that skill. The thresholds are code constants (the defaults the app
+   used before PLAN stopped editing them), so there is one source of truth:
+   D.log. advanceStage()/stageDown() still move the manual stage pointer. */
+const GATE_STAGES=[
+  {rue:60,l:20,w:14,sp:3},
+  {rue:75,l:24,w:16,sp:4},
+  {rue:80,l:26,w:16,sp:4}
+];
+const GATE_SKILLS=['rue','l','w','sp'];
+const SP_PART_NAMES={1:'Interview',2:'Long turn',3:'Collaborative task',4:'Discussion'};
+function gateLog(){return Array.isArray(D.log)?D.log:[]}
+function gateBestByPart(entries,partOf,valueOf){
+  const best={};
+  entries.forEach(e=>{
+    const p=partOf(e);if(p==null)return;
+    const v=valueOf(e);if(v==null)return;
+    if(best[p]===undefined||v>best[p])best[p]=v;
+  });
+  return best;
+}
+function gateSkillState(skill,th){
+  const log=gateLog();
+  if(skill==='rue'){
+    const best=gateBestByPart(log.filter(e=>e.type==='ue'&&e.part>=1&&e.part<=7),
+      e=>+e.part,e=>e.total?e.correct/e.total*100:null);
+    let covered=0;for(let p=1;p<=7;p++)if(best[p]!==undefined&&best[p]>=th.rue)covered++;
+    return {ok:covered===7,covered,total:7};
+  }
+  if(skill==='l'){
+    const need=th.l/30*100;
+    const best={};
+    log.filter(e=>e.type==='lp'&&e.part>=1&&e.part<=4).forEach(e=>{
+      const v=e.total?e.correct/e.total*100:null;
+      if(v!==null&&(best[e.part]===undefined||v>best[e.part]))best[e.part]=v;
+    });
+    log.filter(e=>e.type==='l').forEach(e=>{
+      const v=e.total?e.correct/e.total*100:null;
+      if(v===null)return;
+      for(let p=1;p<=4;p++)if(best[p]===undefined||v>best[p])best[p]=v;
+    });
+    let covered=0;for(let p=1;p<=4;p++)if(best[p]!==undefined&&best[p]>=need)covered++;
+    return {ok:covered===4,covered,total:4};
+  }
+  if(skill==='w'){
+    const kinds=SETTINGS_DEFAULT.wCycle;
+    const best=gateBestByPart(log.filter(e=>e.type==='w'&&kinds.includes(e.kind)),
+      e=>e.kind,e=>typeof e.score==='number'?e.score:null);
+    let covered=0;kinds.forEach(k=>{if(best[k]!==undefined&&best[k]>=th.w)covered++});
+    return {ok:covered===kinds.length,covered,total:kinds.length};
+  }
+  const best={};
+  const add=(p,score)=>{if(p>=1&&p<=4&&typeof score==='number'&&(best[p]===undefined||score>best[p]))best[p]=score};
+  log.filter(e=>e.type==='sp'&&typeof e.score==='number').forEach(e=>{
+    if(e.full||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0)))[1,2,3,4].forEach(p=>add(p,e.score));
+    else add(+e.part,e.score);
+  });
+  let covered=0;for(let p=1;p<=4;p++)if(best[p]!==undefined&&best[p]>=th.sp)covered++;
+  const full=log.some(e=>e.type==='sp'&&e.full===true);
+  return {ok:covered===4,covered,total:4,full};
+}
+function gateCellText(skill,th,stageIdx){
+  if(skill==='rue')return t('prog_cell_rue',{pct:th.rue});
+  if(skill==='l')return t('prog_cell_listening',{score:th.l});
+  if(skill==='w')return t('prog_cell_writing',{score:th.w});
+  return t(stageIdx===2?'prog_cell_speaking_full':'prog_cell_speaking',{score:th.sp});
+}
 function calcGates(){
-  const s=D.settings;
-  // Chronological order helper (oldest to newest)
-  const getChrono = (type) => D.log.filter(e=>e.type===type).slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || ((a.created_at||0)-(b.created_at||0)));
-  
-  // Gate 0.1: 4 consecutive Essays with score >= e0.w
-  const chronoEssays = D.log.filter(e=>e.type==='w'&&e.kind==='Essay').slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'') || ((a.created_at||0)-(b.created_at||0)));
-  let curEssayStreak=0, bestEssayStreak=0;
-  for(const e of chronoEssays){
-    if(e.score>=s.e0.w){curEssayStreak++;bestEssayStreak=Math.max(bestEssayStreak,curEssayStreak);}
-    else{curEssayStreak=0;}
-  }
-  const g0_w_ok = bestEssayStreak >= 4;
-
-  // Gate 0.2: UoE Part 4 avg >= e0.u% in 5 rounds
-  const ue4 = D.log.filter(e=>e.type==='ue'&&e.part===4).slice(0,5);
-  const ue4a = ue4.length>=5 ? avg(ue4) : (ue4.length?avg(ue4):null);
-  const g0_u_ok = ue4.length>=5 && ue4a!==null && ue4a>=s.e0.u;
-
-  // Gate 0.3: Listening Part 2 <= e0.l errors in 3 consecutive tests
-  const chronoL = getChrono('l');
-  let curLP2Streak=0, bestLP2Streak=0;
-  for(const e of chronoL){
-    if(e.p2!==undefined && e.p2!==null && e.p2<=s.e0.l){curLP2Streak++;bestLP2Streak=Math.max(bestLP2Streak,curLP2Streak);}
-    else{curLP2Streak=0;}
-  }
-  const g0_l_ok = bestLP2Streak >= 3;
-
-  // Gate 1.1: 6 texts <= e1.wm min, score >= e1.w/20 + Lexical Injection (pv>=4, col>=3)
-  const wE1 = D.log.filter(e=>e.type==='w'&&e.score>=s.e1.w&&e.min<=s.e1.wm&&e.lex&&e.lex.pv>=4&&e.lex.col>=3);
-  const g1_w_ok = wE1.length >= 6;
-
-  // Gate 1.2: UoE (Parts 1-4 or full R&UoE) >= e1.u% in 4 full mocks
-  const ueFullMocks = D.log.filter(e=>(e.type==='rue'||(e.type==='ue'&&(e.part===undefined||e.part===null||e.part==='all'||e.total>=28))) && (e.correct/e.total*100>=s.e1.u));
-  const g1_u_ok = ueFullMocks.length >= 4;
-
-  // Gate 1.3: Full Listening >= e1.l/30 in 3 consecutive tests
-  let curL3Streak=0, bestL3Streak=0;
-  for(const e of chronoL){
-    if(e.correct>=s.e1.l){curL3Streak++;bestL3Streak=Math.max(bestL3Streak,curL3Streak);}
-    else{curL3Streak=0;}
-  }
-  const g1_l_ok = bestL3Streak >= 3;
-
-  // Gate 1.4: Speaking Part 2 - 1 min continuous, no silences >3s (sp with part=2 and sil='no')
-  const sp2 = D.log.filter(e=>e.type==='sp'&&e.part===2&&e.sil==='no');
-  const g1_sp2_ok = sp2.length >= 1;
-
-  // Gate 1.5: Reading Part 6 >= 4/6 in 3 consecutive mocks
-  const chronoR6 = getChrono('r6');
-  let curR6Streak=0, bestR6Streak=0;
-  for(const e of chronoR6){
-    if(e.correct>=4 && (e.total===6 || e.total===undefined)){curR6Streak++;bestR6Streak=Math.max(bestR6Streak,curR6Streak);}
-    else{curR6Streak=0;}
-  }
-  const g1_r6_ok = bestR6Streak >= 3;
-
-  // Gate 1.6: Speaking Parts 3-4 - 4 mocks with >= 3 negotiation structures
-  const sp34 = D.log.filter(e=>e.type==='sp'&&(e.part===3||e.part===4)&&e.neg>=3);
-  const g1_sp34_ok = sp34.length >= 4;
-
-  // Gate 2.1: Full R&UoE <= e2.rm min with >= e2.r%
-  const rue = D.log.filter(e=>e.type==='rue'&&e.correct/e.total*100>=s.e2.r&&e.min<=s.e2.rm);
-  const g2_rue_ok = rue.length >= 1;
-
-  // Gate 2.2: Full Writing (1h20m) both texts >= e2.w/20
-  const fw = D.log.filter(e=>e.type==='fw'&&e.min<=80&&e.s1>=s.e2.w&&e.s2>=s.e2.w);
-  const g2_fw_ok = fw.length >= 1;
-
-  // Gate 2.3: Listening >= e2.l/30 in e2.ln consecutive exams
-  let curL4Streak=0, bestL4Streak=0;
-  for(const e of chronoL){
-    if(e.correct>=s.e2.l){curL4Streak++;bestL4Streak=Math.max(bestL4Streak,curL4Streak);}
-    else{curL4Streak=0;}
-  }
-  const g2_l_ok = bestL4Streak >= s.e2.ln;
-
-  // Gate 2.4: Speaking final (14 min) validated by teacher at C1
-  const sf = D.log.filter(e=>e.type==='sf'&&e.ok===true);
-  const g2_sf_ok = sf.length >= 1;
-
-  const gates=[
-    {name:'4 consecutive Essays ≥ '+s.e0.w+'/20',ok:g0_w_ok,val:Math.min(bestEssayStreak/4,1),txt:`best streak: ${bestEssayStreak}/4 (current: ${curEssayStreak})`},
-    {name:'UoE Part 4 ≥ '+s.e0.u+'% in 5 rounds',ok:g0_u_ok,val:ue4.length<5?(ue4.length/5):Math.min((ue4a||0)/s.e0.u,1),txt:ue4.length>=5?`last 5 avg: ${Math.round(ue4a)}% (req ≥${s.e0.u}%)`:`${ue4.length}/5 rounds logged`},
-    {name:'Listening Part 2 ≤ '+s.e0.l+' errors in 3 consecutive tests',ok:g0_l_ok,val:Math.min(bestLP2Streak/3,1),txt:`best streak: ${bestLP2Streak}/3 (current: ${curLP2Streak})`},
-    
-    {name:'6 texts ≤'+s.e1.wm+' min, score ≥'+s.e1.w+'/20 + Lexical Injection (4 pv + 3 collocations)',ok:g1_w_ok,val:Math.min(wE1.length/6,1),txt:`qualifying: ${wE1.length}/6`},
-    {name:'UoE (Parts 1-4) ≥ '+s.e1.u+'% in 4 full mocks',ok:g1_u_ok,val:Math.min(ueFullMocks.length/4,1),txt:`mocks passed: ${ueFullMocks.length}/4`},
-    {name:'Full Listening ≥'+s.e1.l+'/30 in 3 consecutive tests',ok:g1_l_ok,val:Math.min(bestL3Streak/3,1),txt:`best streak: ${bestL3Streak}/3 (current: ${curL3Streak})`},
-    {name:'Speaking Part 2 — 1 min continuous, no silences >3s',ok:g1_sp2_ok,val:Math.min(sp2.length/1,1),txt:`clean runs: ${sp2.length}`},
-    {name:'Reading Part 6 (Gapped Text) ≥4/6 in 3 consecutive mocks',ok:g1_r6_ok,val:Math.min(bestR6Streak/3,1),txt:`best streak: ${bestR6Streak}/3 (current: ${curR6Streak})`},
-    {name:'Speaking Parts 3-4 — 4 mocks with ≥3 negotiation structures',ok:g1_sp34_ok,val:Math.min(sp34.length/4,1),txt:`mocks passed: ${sp34.length}/4`},
-    
-    {name:'Full R&UoE ≤'+s.e2.rm+' min with ≥'+s.e2.r+'%',ok:g2_rue_ok,val:Math.min(rue.length/1,1),txt:`passed: ${rue.length}`},
-    {name:'Full Writing (1h20m) both texts ≥'+s.e2.w+'/20',ok:g2_fw_ok,val:Math.min(fw.length/1,1),txt:`passed: ${fw.length}`},
-    {name:'Listening ≥'+s.e2.l+'/30 in '+s.e2.ln+' consecutive exams',ok:g2_l_ok,val:Math.min(bestL4Streak/s.e2.ln,1),txt:`best streak: ${bestL4Streak}/${s.e2.ln} (current: ${curL4Streak})`},
-    {name:'Speaking final (14 min) validated by teacher at C1',ok:g2_sf_ok,val:Math.min(sf.length/1,1),txt:`validated: ${sf.length}`}
-  ];
-  return {groups:[[gates[0],gates[1],gates[2]],[gates[3],gates[4],gates[5],gates[6],gates[7],gates[8]],[gates[9],gates[10],gates[11],gates[12]]]};
+  const stages=GATE_STAGES.map((th,i)=>{
+    const cells={};
+    let ok=true;
+    GATE_SKILLS.forEach(sk=>{
+      const st=gateSkillState(sk,th);
+      cells[sk]=Object.assign({},st,{text:gateCellText(sk,th,i)});
+      if(!st.ok)ok=false;
+    });
+    if(i===2&&!cells.sp.full)cells.sp.ok=false;
+    ok=GATE_SKILLS.every(sk=>cells[sk].ok);
+    return {n:i+1,cells,ok};
+  });
+  return {stages};
 }
 const STAGE_NAMES=['stage_name_0','stage_name_1','stage_name_2'];
-const STAGE_FOCUS=['stage_focus_0','stage_focus_1','stage_focus_2'];
-const STAGE_UNLOCK=['stage_unlock_0','stage_unlock_1','stage_unlock_2'];
 function renderGates(){
-  const calc=calcGates(),st=Math.min(D.stage,2);
-  const gates=calc.groups[st];
+  const calc=calcGates(),st=Math.min(D.stage||0,2);
   const el=document.getElementById('gates');
-  const viewSt=typeof window.__gatesTab==='number'?Math.min(window.__gatesTab,2):st;
-  const viewGates=calc.groups[viewSt];
-  el.innerHTML=`
-    <div class="gates-tabs">
-      ${STAGE_NAMES.map((n,i)=>`<button class="gates-tab ${i===viewSt?'active':''}" onclick="showGatesTab(${i})">${'Stage '+i}</button>`).join('')}
-    </div>
-    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:13px 15px;margin:12px 0">
-      <b style="color:var(--primary);font-size:14px">${t(STAGE_NAMES[viewSt])}</b>
-      <div style="font-size:12px;color:var(--on-surface-variant);margin-top:2px">${t(STAGE_FOCUS[viewSt])}</div>
-      <div class="gate-stage-note">${t(STAGE_UNLOCK[viewSt])}</div>
-    </div>`+
-    viewGates.map((x,i)=>{
-      const ovs=D.overrides||{},key=viewSt+'-'+i,ov=!!ovs[key],ok=ov||x.ok;
-      return `<div class="gate ${ok?'pass':'fail'}">
-      <h4><span>${x.name}</span><span style="color:${ok?'var(--ok-text)':'var(--on-surface-variant)'};font-size:12px">${x.txt}</span></h4>
-      <div class="bar"><div class="fill" style="width:${Math.round(x.val*100)}%"></div></div>
-      <label class="ov-label"><input type="checkbox" style="width:auto" onchange="toggleOverride('${key}',this.checked)" ${ov?'checked':''}> mark as manually achieved</label>
-    </div>`}).join('');
-  const ovs=D.overrides||{};
-  const allOk=gates.every(x=>ovs[st+'-'+gates.indexOf(x)]||x.ok);
-  document.getElementById('advanceBtn').disabled=!allOk;
-  document.getElementById('advanceBtn').textContent=allOk?(st<2?t('advance_stage',{stage:t(STAGE_NAMES[st+1])}):t('advance_done')):t('advance_wait');
+  if(!el)return;
+  const cols=[['rue','prog_col_rue'],['l','prog_col_listening'],['w','prog_col_writing'],['sp','prog_col_speaking']];
+  el.innerHTML=`<div class="table-wrap"><table class="gate-matrix">
+    <thead><tr><th>${t('prog_stage_col')}</th>${cols.map(c=>`<th>${t(c[1])}</th>`).join('')}</tr></thead>
+    <tbody>${calc.stages.map((s,i)=>`<tr class="${i===st?'current':''}">
+      <th>${t('prog_stage_row',{n:s.n})}<div class="gate-status ${s.ok?'pass':'fail'}">${t(s.ok?'prog_achieved':'prog_pending')}</div></th>
+      ${cols.map(c=>{
+        const cell=s.cells[c[0]];
+        return `<td class="gate ${cell.ok?'pass':'fail'}">
+          <div class="gate-name">${esc(cell.text)}</div>
+          <div class="gate-txt">${cell.covered}/${cell.total} · ${t(cell.ok?'prog_achieved':'prog_pending')}</div>
+        </td>`;
+      }).join('')}
+    </tr>`).join('')}</tbody></table></div>`;
+  const cur=calc.stages[st];
+  const btn=document.getElementById('advanceBtn');
+  if(btn){
+    btn.disabled=!cur.ok;
+    btn.textContent=cur.ok?(st<2?t('advance_stage',{stage:t(STAGE_NAMES[st+1])}):t('advance_done')):t('advance_wait');
+  }
 }
-function showGatesTab(i){window.__gatesTab=i;renderGates()}
-function toggleOverride(key,on){if(on)D.overrides[key]=true;else delete D.overrides[key];save();renderGates()}
 function advanceStage(){
   if(D.stage<2)D.stage++;
   save();refreshAll();
@@ -12179,25 +12157,18 @@ document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCoun
                    durations (called on save and on load). */
 function renderPlan(){
   const s=D.settings;
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
   renderScheduleRows();
-  document.getElementById('pUeMin').value=s.ueMin||50;document.getElementById('pPlanMin').value=s.planMin||5;
-  document.getElementById('pWriteMin').value=s.writeMin||35;document.getElementById('pRevMin').value=s.revMin||20;
-  document.getElementById('pListenMin').value=s.listenMin||40;document.getElementById('pSp1Sec').value=s.sp1Sec||60;document.getElementById('pSp2Sec').value=s.sp2Sec||180;
   const pv=document.getElementById('pVoice');
   if(pv)pv.value=spkVoiceMode();
-  document.getElementById('pWMin').value=s.wMin;document.getElementById('pWMax').value=s.wMax;
-  if(document.getElementById('pStreakFreeze'))document.getElementById('pStreakFreeze').value=s.streakFreeze??1;
-  if(document.getElementById('pWeekGoal'))document.getElementById('pWeekGoal').value=s.weekGoal??5;
   if(document.getElementById('pEven'))document.getElementById('pEven').value=s.even||3;
   if(document.getElementById('pOdd'))document.getElementById('pOdd').value=s.odd||4;
-  document.getElementById('pRueCycle').value=(s.rueCycle||[1,2,3,4,5,6,7]).join(',');
-  document.getElementById('pWCycle').value=(s.wCycle||['Essay','Article','Report','Review','Email']).join(',');
-  document.getElementById('pLCycle').value=(s.lCycle||[1,2,3,4]).join(',');
-  document.getElementById('pSpCycle').value=(s.spCycle||[1,2,3,4]).join(',');
-  document.getElementById('pE0w').value=s.e0.w;document.getElementById('pE0u').value=s.e0.u;document.getElementById('pE0l').value=s.e0.l;
-  document.getElementById('pE1w').value=s.e1.w;document.getElementById('pE1wm').value=s.e1.wm;document.getElementById('pE1u').value=s.e1.u;document.getElementById('pE1l').value=s.e1.l;
-  document.getElementById('pE2r').value=s.e2.r;document.getElementById('pE2rm').value=s.e2.rm;document.getElementById('pE2w').value=s.e2.w;document.getElementById('pE2l').value=s.e2.l;document.getElementById('pE2ln').value=s.e2.ln;
+  setVal('pRueCycle',(s.rueCycle||[1,2,3,4,5,6,7]).join(','));
+  setVal('pWCycle',(s.wCycle||['Essay','Article','Report','Review','Email']).join(','));
+  setVal('pLCycle',(s.lCycle||[1,2,3,4]).join(','));
+  setVal('pSpCycle',(s.spCycle||[1,2,3,4]).join(','));
   renderByoSettings();
+  renderRotationCard();
   renderPlanCard();
   renderExamCountdown();
 }
@@ -12528,9 +12499,18 @@ function closePlanLimit(){
   const ov=document.getElementById('planLimitModal');
   if(ov)ov.style.display='none';
 }
+function openSettingsModal(){
+  const ov=document.getElementById('settingsModal');
+  if(ov)ov.style.display='flex';
+  renderByoSettings();
+}
+function closeSettingsModal(){
+  const ov=document.getElementById('settingsModal');
+  if(ov)ov.style.display='none';
+}
 function focusByoCard(){
   closePlanLimit();
-  showView('plan');
+  openSettingsModal();
   const card=document.getElementById('byoCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
   const key=document.getElementById('byoKey');
@@ -12547,22 +12527,14 @@ function planLimitHaveCode(){
 }
 function savePlan(){
   updateScheduleFromUI();
-  const s=D.settings,g=id=>document.getElementById(id)?document.getElementById(id).value:'';
-  s.ueMin=+g('pUeMin')||50;s.planMin=+g('pPlanMin')||5;s.writeMin=+g('pWriteMin')||35;s.revMin=+g('pRevMin')||20;
-  s.listenMin=+g('pListenMin')||40;s.sp1Sec=+g('pSp1Sec')||60;s.sp2Sec=+g('pSp2Sec')||180;
+  const s=D.settings,g=id=>{const el=document.getElementById(id);return el?el.value:''};
   const pv=g('pVoice');
   if(pv==='fast'||pv==='natural')s.voice=pv;
-  s.wMin=+g('pWMin')||140;s.wMax=+g('pWMax')||190;
-  if(g('pStreakFreeze')!=='')s.streakFreeze=Math.max(0,+g('pStreakFreeze'));
-  if(g('pWeekGoal')!=='')s.weekGoal=Math.max(1,+g('pWeekGoal'));
   if(g('pEven'))s.even=+g('pEven')||3;if(g('pOdd'))s.odd=+g('pOdd')||4;
-  s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];
-  s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];
-  s.lCycle=String(g('pLCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.lCycle.length)s.lCycle=[1,2,3,4];
-  s.spCycle=String(g('pSpCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.spCycle.length)s.spCycle=[1,2,3,4];
-  s.e0.w=+g('pE0w')||14;s.e0.u=+g('pE0u')||60;s.e0.l=+g('pE0l')||3;
-  s.e1.w=+g('pE1w')||16;s.e1.wm=+g('pE1wm')||45;s.e1.u=+g('pE1u')||75;s.e1.l=+g('pE1l')||24;
-  s.e2.r=+g('pE2r')||80;s.e2.rm=+g('pE2rm')||50;s.e2.w=+g('pE2w')||16;s.e2.l=+g('pE2l')||26;s.e2.ln=+g('pE2ln')||4;
+  if(g('pRueCycle')!==''){s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];}
+  if(g('pWCycle')!==''){s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];}
+  if(g('pLCycle')!==''){s.lCycle=String(g('pLCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.lCycle.length)s.lCycle=[1,2,3,4];}
+  if(g('pSpCycle')!==''){s.spCycle=String(g('pSpCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.spCycle.length)s.spCycle=[1,2,3,4];}
   save();applyTimers();refreshAll();
   track('plan_generate',{count:(getSchedule()||[]).length});
   alert(t('alert_plan_saved'));
@@ -13866,6 +13838,77 @@ function renderSchedulePreview(){
 }
 
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
+
+/* ---------- ROTATION CARD ----------
+   The card reads the cycles exactly as they are in the inputs (so changing one
+   repaints it at once) and derives the position from the user's log: one item
+   is consumed per logged session, in the cycle order. With no matching history
+   it says so instead of inventing a position. */
+const ROTATION_DEFS=[
+  {key:'rue',settingsKey:'rueCycle',cycleId:'pRueCycle',colKey:'prog_col_rue',
+   def:SETTINGS_DEFAULT.rueCycle,parse:v=>{const n=+v;return n>=1&&n<=7?n:null},
+   value:e=>e.type==='ue'&&e.part>=1&&e.part<=7?+e.part:null,
+   label:n=>`Part ${n} · ${partName(n)}`},
+  {key:'l',settingsKey:'lCycle',cycleId:'pLCycle',colKey:'prog_col_listening',
+   def:SETTINGS_DEFAULT.lCycle,parse:v=>{const n=+v;return n>=1&&n<=4?n:null},
+   value:e=>e.type==='lp'&&e.part>=1&&e.part<=4?+e.part:null,
+   label:n=>`Part ${n} · ${lpName(n)}`},
+  {key:'w',settingsKey:'wCycle',cycleId:'pWCycle',colKey:'prog_col_writing',
+   def:SETTINGS_DEFAULT.wCycle,parse:v=>SETTINGS_DEFAULT.wCycle.includes(v)?v:null,
+   value:e=>e.type==='w'&&SETTINGS_DEFAULT.wCycle.includes(e.kind)?e.kind:null,
+   label:v=>v},
+  {key:'sp',settingsKey:'spCycle',cycleId:'pSpCycle',colKey:'prog_col_speaking',
+   def:SETTINGS_DEFAULT.spCycle,parse:v=>{const n=+v;return n>=1&&n<=4?n:null},
+   value:e=>e.type==='sp'&&e.part>=1&&e.part<=4?+e.part:null,
+   label:n=>`Part ${n} · ${SP_PART_NAMES[n]}`}
+];
+function rotationCycle(def){
+  const el=document.getElementById(def.cycleId);
+  const stored=(D.settings&&D.settings[def.settingsKey])||def.def;
+  const raw=(el&&typeof el.value==='string'&&el.value.trim()!=='')?el.value:stored.join(',');
+  const cycle=String(raw).split(',').map(x=>def.parse(x.trim())).filter(x=>x!==null);
+  return cycle.length?cycle:def.def.slice();
+}
+function rotationPosition(def,cycle){
+  const log=Array.isArray(D.log)?D.log:[];
+  const allowed=cycle.map(String);
+  const count=log.filter(e=>{
+    const v=def.value(e);
+    return v!==null&&allowed.indexOf(String(v))>=0;
+  }).length;
+  if(!count)return {count:0,currentIdx:-1,nextIdx:0};
+  return {count,currentIdx:(count-1)%cycle.length,nextIdx:count%cycle.length};
+}
+function renderRotationCard(){
+  const box=document.getElementById('rotationCardBody');
+  if(!box)return;
+  box.innerHTML=ROTATION_DEFS.map(def=>{
+    const cycle=rotationCycle(def);
+    const pos=rotationPosition(def,cycle);
+    const next=cycle[pos.nextIdx];
+    const current=pos.currentIdx>=0?cycle[pos.currentIdx]:null;
+    const currentLine=current!==null
+      ?`<div class="rot-now">${t('plan_rotation_current',{item:def.label(current)})}</div>`
+      :`<div class="rot-now muted">${t('plan_rotation_start')}</div>`;
+    const chips=cycle.map((v,i)=>{
+      const cls=i===pos.currentIdx?'rot-cur':(i===pos.nextIdx?'rot-upcoming':'');
+      return `<span class="rot-chip ${cls}">${esc(def.label(v))}</span>`;
+    }).join('');
+    return `<div class="rot-skill" data-skill="${def.key}">
+      <div class="rot-head"><b>${t(def.colKey)}</b><span class="rot-pos">${t('plan_rotation_position',{n:pos.count})}</span></div>
+      ${currentLine}
+      <div class="rot-next">${t('plan_rotation_next',{item:def.label(next)})}</div>
+      <div class="rot-cycle">${chips}</div>
+    </div>`;
+  }).join('');
+  const hint=document.getElementById('rotationHint');
+  if(hint){
+    const isWeekA=isoWeek(new Date())%2!==0;
+    const override=D.weekOverrides&&D.weekOverrides.w;
+    hint.textContent=t('plan_rotation_hint',{week:isWeekA?'A':'B'})+(override?t('plan_rotation_override',{genre:override}):'');
+  }
+}
+function onCycleInput(){renderRotationCard()}
 
 function getSkillNextOccurrence(skillId,baseDate=new Date()){
   const sched=getSchedule();

@@ -184,14 +184,17 @@ with sync_playwright() as p:
     out["5_ai_rubric"] = {"endpoint": seen.get("url"), "checked": checked, "status": pg.inner_text("#rubAiStatus")}
     pg.unroute("**/api/ai/writing")
 
-    # 6. The matrix is read-only again; thresholds live in PLAN.
+    # 6. The matrix is read-only and is the only source of truth for the gates.
     pg.click("nav button[data-view='prog']")
     pg.wait_for_timeout(400)
-    assert pg.eval_on_selector_all("#gates input[type=number]", "els => els.length") == 0, (
-        "the matrix still has number inputs"
+    assert pg.eval_on_selector_all("#gates input", "els => els.length") == 0, (
+        "the matrix still has inputs"
     )
-    assert pg.eval_on_selector_all("#gates .ov-label input[type=checkbox]", "els => els.length") > 0, (
-        "the manual override checkboxes disappeared"
+    assert pg.eval_on_selector_all("#gates .ov-label", "els => els.length") == 0, (
+        "manual overrides are a second source of truth"
+    )
+    assert pg.eval_on_selector_all("#gates tbody tr", "els => els.length") == 3, (
+        "the matrix does not have one row per stage"
     )
     assert "Complete all criteria within a stage to advance." in pg.evaluate(
         "document.querySelector('#gates').parentElement.innerText"

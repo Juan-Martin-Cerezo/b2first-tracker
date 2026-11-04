@@ -134,24 +134,35 @@ with sync_playwright() as p:
         )
     out["5_one_progress"] = True
 
-    # 6. The matrix is read-only; thresholds stay editable in PLAN.
+    # 6. The matrix is read-only and is the only place for the stage gates.
     pg.wait_for_timeout(400)
-    assert pg.eval_on_selector_all("#gates input[type=number]", "els => els.length") == 0, (
-        "the matrix still has number inputs"
+    assert pg.eval_on_selector_all("#gates input", "els => els.length") == 0, (
+        "the matrix still has inputs"
+    )
+    assert pg.eval_on_selector_all("#gates tbody tr", "els => els.length") == 3, (
+        "the matrix does not have one row per stage"
     )
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(300)
-    pg.fill("#pE0w", "17")
-    pg.click("button[onclick='savePlan()']")
-    pg.wait_for_timeout(1600)
-    assert pg.evaluate("D.settings.e0.w") == 17, "PLAN did not write D.settings.e0.w"
-    pg.reload(wait_until="networkidle")
-    pg.wait_for_timeout(900)
-    assert pg.evaluate("D.settings.e0.w") == 17, "PLAN threshold did not persist across reload"
+    assert not pg.evaluate("!!document.getElementById('pE0w')"), (
+        "PLAN still exposes the threshold input"
+    )
+    plan_text = pg.evaluate("document.getElementById('v-plan').innerText")
+    assert "Thresholds" not in plan_text, "PLAN still shows the thresholds card"
+    assert "Exam Timers" not in plan_text, "PLAN still shows the exam timers card"
     pg.click("nav button[data-view='prog']")
     pg.wait_for_timeout(300)
+    matrix_cells = pg.eval_on_selector_all(
+        "#gates tbody tr",
+        "rows => rows.map(r => [...r.querySelectorAll('td')].map(td => td.innerText))",
+    )
+    assert all(len(row) == 4 for row in matrix_cells), f"matrix is not stage x skill: {matrix_cells}"
+    assert all(
+        ("1–7" in cell) or ("each part" in cell)
+        for row in matrix_cells for cell in row
+    ), f"a cell does not cover all parts: {matrix_cells}"
     pg.locator("#gates").screenshot(path=os.path.join(OUT, "progress_matrix.png"))
-    out["6_matrix_read_only"] = pg.evaluate("D.settings.e0.w")
+    out["6_matrix_read_only"] = matrix_cells
 
     # 7. Errors legend: every code explained, every log pill titled.
     pg.evaluate(
