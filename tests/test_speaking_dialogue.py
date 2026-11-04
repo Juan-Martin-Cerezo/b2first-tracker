@@ -62,6 +62,10 @@ Five checks, in order:
         to an AI provider, or AI-generated lines that send the task question
         and what you say to the provider. Both statements exist in English and
         Spanish, and the probe's real answer repaints an open brief.
+  19. A question in Part 3. With a provider that only states things, the last
+        partner turn of the part asks a question from the written pool; when
+        the provider asks one itself, that line is kept and no other turn is
+        replaced.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -595,6 +599,114 @@ def test_partner_no_repeat(p):
     page.evaluate("SP_EXAM.close()")
     assert errors == [], errors
     print("4b. no repeated partner line, not even across parts")
+    browser.close()
+
+
+# ---------------------------------------------------------------------------
+# 4c. Part 3 always hears at least one question from the partner.
+# ---------------------------------------------------------------------------
+P3_STATEMENTS = [
+    "I would start with where to go, because everything else depends on it.",
+    "The coach is cheaper, so we would have more for the activities.",
+    "Then the two ideas can go side by side before we choose.",
+]
+
+
+def test_part3_partner_question(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB,
+                                     reuse_login=True)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+
+    # A partner that only ever states things: the last turn of the part has to
+    # come back with a question of its own, taken from the written pool.
+    page.evaluate("""async () => {
+        await spxLoadBank();
+        window.__q = [];
+        const statements = %s;
+        SPX_TEST.partnerProvider = function (question, body) {
+            window.__q.push(body);
+            return statements[window.__q.length - 1] || statements[0];
+        };
+        spxSetScreen('exam');
+        SP_EXAM.part = 3;
+        SP_EXAM.task = {partnerLines: statements};
+        SP_EXAM.phases = spxPhasesFor(3, SP_EXAM.task, 1, 'p3-question');
+        SP_EXAM.partnerSaid = [];
+        SP_EXAM.partnerAsked = 0;
+        SP_EXAM.phase = 1;
+        SP_EXAM.phases[1].events.forEach(function (ev) { spxFireEvent(ev); });
+    }""" % json.dumps(P3_STATEMENTS))
+    assert wait_until(page, "window.__q.length === 2", 10), page.evaluate("window.__q")
+
+    page.evaluate("""() => {
+        SP_EXAM.phase = 3;
+        SP_EXAM.phases[3].events.forEach(function (ev) { spxFireEvent(ev); });
+    }""")
+    assert wait_until(page, "window.__q.length === 3", 10), page.evaluate("window.__q")
+    assert wait_until(
+        page,
+        "SPK.lines.filter(function (l) { return l.who === 'partner'; }).length === 3",
+        10), page.evaluate("SPK.lines")
+
+    first = page.evaluate("""() => {
+        return {
+            lines: SPK.lines.filter(function (l) { return l.who === 'partner'; })
+                .map(function (l) { return l.text; }),
+            asked: SP_EXAM.partnerAsked,
+            questions: spxPartnerQuestionPool(SP_EXAM.task)
+        };
+    }""")
+    lines = first["lines"]
+    assert lines[:2] == P3_STATEMENTS[:2], first
+    assert sum(1 for line in lines if "?" in line) >= 1, \
+        "the partner only affirmed in Part 3: %s" % first
+    assert lines[2] in first["questions"], first
+    assert first["asked"] == 1, first
+
+    # When the provider asks a question itself, the script keeps it and the
+    # last turn is not forced into a different question.
+    page.evaluate("""async () => {
+        window.__q2 = [];
+        SPX_TEST.partnerProvider = function (question, body) {
+            window.__q2.push(body);
+            if (window.__q2.length === 2) return 'Shall we choose the coach, then?';
+            return window.__q2.length === 1
+                ? 'A first plain statement from the model.'
+                : 'A closing plain statement from the model.';
+        };
+        SP_EXAM.task = {partnerLines: %s};
+        SP_EXAM.phases = spxPhasesFor(3, SP_EXAM.task, 1, 'p3-question-2');
+        SP_EXAM.partnerSaid = [];
+        SP_EXAM.partnerAsked = 0;
+        SP_EXAM.phase = 1;
+        SP_EXAM.phases[1].events.forEach(function (ev) { spxFireEvent(ev); });
+    }""" % json.dumps(P3_STATEMENTS))
+    assert wait_until(page, "window.__q2.length === 2", 10), page.evaluate("window.__q2")
+    page.evaluate("""() => {
+        SP_EXAM.phase = 3;
+        SP_EXAM.phases[3].events.forEach(function (ev) { spxFireEvent(ev); });
+    }""")
+    assert wait_until(page, "window.__q2.length === 3", 10), page.evaluate("window.__q2")
+    assert wait_until(
+        page,
+        "SPK.lines.filter(function (l) { return l.who === 'partner'; }).length === 6",
+        10), page.evaluate("SPK.lines")
+
+    second = page.evaluate("""() => {
+        return {
+            lines: SPK.lines.filter(function (l) { return l.who === 'partner'; })
+                .map(function (l) { return l.text; }).slice(3),
+            asked: SP_EXAM.partnerAsked
+        };
+    }""")
+    assert second["lines"][1] == "Shall we choose the coach, then?", second
+    assert second["lines"][2] == "A closing plain statement from the model.", second
+    assert second["asked"] == 1, second
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("4c. Part 3: the partner asks at least one question")
     browser.close()
 
 
@@ -1701,6 +1813,7 @@ def main():
         test_recognition_and_partner(p)
         test_part3_two_reactions(p)
         test_partner_no_repeat(p)
+        test_part3_partner_question(p)
         test_followup_capped(p)
         test_no_support(p)
         test_mic_denied(p)

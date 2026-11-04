@@ -9376,7 +9376,7 @@ const SP_EXAM={
      partner's name, the per-part turn ledger and the part bridge timer. */
   session:null,full:false,seed:0,partner:'Alex',partnerRot:0,
   selectedFull:false,partTimer:null,turnCounted:false,partnerIdx:0,
-  partnerSaid:[],followUpBusy:false
+  partnerSaid:[],partnerAsked:0,followUpBusy:false
 };
 window.SP_EXAM=SP_EXAM;
 
@@ -10331,12 +10331,36 @@ function spxPartnerAlternative(fallback){
   }
   return '';
 }
+/* Phase 54: in Part 3 the partner has to come back with at least one question
+   per session, not only statements. The last partner turn of the part is the
+   deadline: if nothing asked a question by then, that turn takes an unused
+   question from the party's written pool instead of another statement. */
+function spxPartnerQuestion(text){
+  return /\?/.test(String(text||''));
+}
+function spxPartnerQuestionPool(task){
+  return spxPartnerPool(task).filter(spxPartnerQuestion);
+}
+function spxPartnerEnsureQuestion(line){
+  if(Number(SP_EXAM.part)!==3)return line;
+  if(Number(SP_EXAM.partnerAsked)>0)return line;
+  if(spxPartnerQuestion(line))return line;
+  const ph=(SP_EXAM.phases||[])[SP_EXAM.phase];
+  if(!ph||ph.key!=='spx_decide')return line;
+  const pool=spxPartnerQuestionPool(SP_EXAM.task);
+  for(let i=0;i<pool.length;i++){
+    if(!spxPartnerRepeated(pool[i]))return pool[i];
+  }
+  return line;
+}
 function spxPartnerSay(text,fallback){
   let line=String(text||'');
   if(spxPartnerRepeated(line))line=spxPartnerAlternative(fallback);
+  line=spxPartnerEnsureQuestion(line);
   if(!line)return '';
   if(!Array.isArray(SP_EXAM.partnerSaid))SP_EXAM.partnerSaid=[];
   SP_EXAM.partnerSaid.push(line);
+  if(spxPartnerQuestion(line))SP_EXAM.partnerAsked=(Number(SP_EXAM.partnerAsked)||0)+1;
   return line;
 }
 function spxPartnerTurn(ev){
@@ -10502,6 +10526,7 @@ function spxEnterSessionPart(index){
   SP_EXAM.promptUsed=false;
   SP_EXAM.awaitSince=0;
   SP_EXAM.partnerIdx=0;
+  SP_EXAM.partnerAsked=0;
   /* The partner's memory of what it already said is per session, not per part:
      a full run must not repeat a line it used in an earlier part. */
   if(!Array.isArray(SP_EXAM.partnerSaid))SP_EXAM.partnerSaid=[];
@@ -11100,6 +11125,7 @@ SP_EXAM.ready=async function(){
   SP_EXAM.turnCounted=false;
   SP_EXAM.partnerIdx=0;
   SP_EXAM.partnerSaid=[];
+  SP_EXAM.partnerAsked=0;
   SPK.simSpeechUntil=0;
   SPK.reportData=null;
   SPK.reportPayload=null;
