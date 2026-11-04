@@ -3761,6 +3761,8 @@ const I18N={
     full_simulation:'Full Simulation',
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
+    today_extra_session:'Extra session',
+    today_extra_note:'Off-plan practice: it does not move the rotation or the shift.',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
@@ -4548,6 +4550,8 @@ const I18N={
     full_simulation:'Simulación completa',
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
+    today_extra_session:'Sesión extra',
+    today_extra_note:'Práctica fuera del plan: no mueve la rotación ni el corrimiento.',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
@@ -11737,6 +11741,7 @@ function openSoloModal(defaultSkill,defaultPart){
   onSoloSkillChange(defaultPart);
 }
 function closeSoloModal(){
+  EXTRA_SESSION=false;
   const el=document.getElementById('soloModal');
   if(el)el.style.display='none';
 }
@@ -11834,6 +11839,7 @@ function saveSoloPractice(){
 /* ---------- SAVE HANDLERS ---------- */
 function log(e){
   const entry = Object.assign({date:today(), created_at:Date.now()}, e);
+  if(EXTRA_SESSION){entry.extra=true;EXTRA_SESSION=false}
   D.log.push(entry);
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
   save();
@@ -14283,6 +14289,7 @@ function rotationPosition(def,cycle){
   const log=Array.isArray(D.log)?D.log:[];
   const allowed=cycle.map(String);
   const count=log.filter(e=>{
+    if(!e||e.extra===true)return false;
     const v=def.value(e);
     return v!==null&&allowed.indexOf(String(v))>=0;
   }).length;
@@ -14434,7 +14441,11 @@ function renderTodaySession(plan,todaySlots){
   if(!box)return;
   TODAY_PLAN=plan;
   if(!todaySlots||!todaySlots.length){
-    box.innerHTML=`<h2>Today's session</h2><div class="ts-rest" data-rest="1">Rest day — no session planned today.</div>`;
+    box.innerHTML=`<h2>Today's session</h2><div class="ts-rest" data-rest="1">Rest day — no session planned today.</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;align-items:flex-start">
+        <button type="button" class="btn sm ok" id="todayExtraBtn" data-extra="1" onclick="startExtraSession()">${t('today_extra_session')}</button>
+        <div class="ts-reason">${t('today_extra_note')}</div>
+      </div>`;
     return;
   }
   box.innerHTML=`<h2>Today's session</h2><div style="display:flex;flex-direction:column;gap:10px">`+
@@ -14445,6 +14456,14 @@ function renderTodaySession(plan,todaySlots){
         <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
       </div>`;
     }).join('')+`</div>`;
+}
+/* A rest day still allows practice: the extra session opens the solo logger and
+   tags whatever it saves with `extra`. The rotation counts only planned rows,
+   and nothing here touches D.sessionOffset, so the week stays where it was. */
+let EXTRA_SESSION=false;
+function startExtraSession(){
+  EXTRA_SESSION=true;
+  openSoloModal();
 }
 /* A full-section slot is one whole paper: open its own session with the
    official timer instead of the loose-part filter. The written papers run in
