@@ -95,6 +95,8 @@ with sync_playwright() as p:
     }"""
     )
     pg.wait_for_timeout(200)
+    pg.evaluate("showView('resources')")
+    pg.wait_for_timeout(300)
     cards = pg.eval_on_selector_all(
         "#resourcesList .res-paper[data-res-type='lp'] .listen-test",
         """els => els.map(e => ({

@@ -22,7 +22,7 @@ PASS = "i18n-suite-pass-9"
 # onboarding, not as a section); Practice replaced it. Parts and Charts were
 # merged into Practice and Progress.
 NAV_KEYS = [
-    "nav_today", "nav_practice", "nav_exam", "nav_progress",
+    "nav_today", "nav_practice", "nav_resources", "nav_exam", "nav_progress",
     "nav_plan", "nav_errors", "nav_ai", "nav_more",
 ]
 

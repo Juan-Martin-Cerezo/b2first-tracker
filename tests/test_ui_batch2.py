@@ -121,7 +121,7 @@ with sync_playwright() as p:
     out["3_study_plan"] = "gone"
 
     # 4. Part rows have no chips; Resources filters the resources section.
-    pg.evaluate("showView('practice'); clearResourcesFilter()")
+    pg.evaluate("showView('practice'); clearResourcesFilter(); showView('practice')")
     pg.wait_for_timeout(300)
     assert pg.eval_on_selector_all("#partsList .step .chip", "els => els.length") == 0, (
         "part rows still carry resource chips"
