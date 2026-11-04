@@ -210,6 +210,7 @@ SPK_MIN_DAILY_TOTAL_DEFAULT = 120    # minutes per instance per day
 SPK_MINUTE_MAX_BODY = 4096           # POST /api/speaking/minute body cap
 SPK_MINUTE_MAX_CALL_S = 300          # max seconds accepted in one report
 SPK_PARTNER_MAX_BODY = 8000          # POST /api/speaking/partner body cap
+SPK_PARTNER_RATE_PER_MIN = 30        # partner lines per minute per user
 DEFAULT_SPK_MODEL = "gemini-3.8-live"
 DEFAULT_SPK_TOKEN_URL = "https://generativelanguage.googleapis.com/v1beta/auth_tokens"
 DEFAULT_SPK_WS_URL = ("wss://generativelanguage.googleapis.com/ws/"
@@ -5428,7 +5429,8 @@ class H(BaseHTTPRequestHandler):
                 self._drain()
                 self._send_json(413, {"error": "payload too large"})
                 return
-            if self._rate_limited("spk_partner:" + uid, 30, 60):
+            if self._rate_limited("spk_partner:" + uid,
+                                  SPK_PARTNER_RATE_PER_MIN, 60):
                 return
             raw = self.rfile.read(self._clen()) if self._clen() > 0 else b"{}"
             try:
