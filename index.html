@@ -9476,6 +9476,12 @@ function spxTimeScale(){
 }
 function spxScaleSec(sec){return Math.max(0.35,(Number(sec)||0)*spxTimeScale())}
 function spxReportScale(){return SPX_TEST_SELF?(1/spxTimeScale()):1}
+/* The timer keeps its resolution in exam time. A fixed 250 ms tick is one
+   exam second at full speed but five at timeScale 0.05, so every phase would
+   overrun by that much. Production (scale 1) keeps the 250 ms tick. */
+function spxTickMs(){
+  return Math.max(25,Math.round(SPX_TICK_MS*spxTimeScale()));
+}
 
 function spx$(id){return document.getElementById(id)}
 function spxSetError(msg){
@@ -10431,11 +10437,11 @@ function spxFireEvent(ev){
   }
 }
 
-function spxEnterPhase(i){
+function spxEnterPhase(i,startAt){
   const ph=SP_EXAM.phases[i];
   if(!ph)return;
   SP_EXAM.phase=i;
-  SP_EXAM.phaseStart=performance.now();
+  SP_EXAM.phaseStart=(typeof startAt==='number')?startAt:performance.now();
   spxSpeechSync();                 // listen only while the floor is the candidate's
   SP_EXAM.promptUsed=false;
   SP_EXAM.pendingLine=null;
@@ -10482,9 +10488,17 @@ function spxNextPhase(){
     });
     return;
   }
+  /* A phase that used its whole clock hands over at its scheduled boundary,
+     not at the tick that noticed it: the timer's few milliseconds of lateness
+     never add up across a part. A phase that ends early (silence, barge-in)
+     or a provider that took longer than a tick starts the next one now. */
+  const now=performance.now();
+  const boundary=SP_EXAM.phaseStart+spxScaleSec(ph.sec)*1000;
+  const late=now-boundary;
+  const nextStart=(late>0&&late<=Math.max(120,spxTickMs()*3))?boundary:now;
   SP_EXAM.phase++;
   if(SP_EXAM.phase>=SP_EXAM.phases.length){spxPartFinished();return}
-  spxEnterPhase(SP_EXAM.phase);
+  spxEnterPhase(SP_EXAM.phase,nextStart);
 }
 
 function spxPartFinished(){
@@ -10544,7 +10558,7 @@ function spxEnterSessionPart(index){
   spxPhaseHeader();
   spxEnterPhase(0);
   spxStopTimer();
-  SP_EXAM.timer=setInterval(spxTickLoop,SPX_TICK_MS);
+  SP_EXAM.timer=setInterval(spxTickLoop,spxTickMs());
 }
 
 function spxRenderClock(left){
