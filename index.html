@@ -10462,6 +10462,10 @@ function spxEnterSessionPart(index){
   SP_EXAM.part=entry.part;
   SP_EXAM.task=entry.task;
   SPK.part=entry.part;
+  /* Warm this task and the next one: the change of part then paints from the
+     cache instead of opening on a blank photo card. */
+  spxPreloadTaskPhotos(entry.task);
+  spxPreloadTaskPhotos(s.plan.parts[index+1]&&s.plan.parts[index+1].task);
   SP_EXAM.phases=spxPhasesFor(entry.part,entry.task,SP_EXAM.seed,entry.taskId);
   SP_EXAM.phase=0;
   SP_EXAM.askedOnce=0;
@@ -10742,6 +10746,43 @@ function spxPhotoAltFor(src,index,alts){
   if(alts&&alts[index])return String(alts[index]);
   return t(index===0?'spx_photo_1':'spx_photo_2');
 }
+/* The brief is the natural place to fetch the photographs: the task is known
+   there and the candidate spends a while reading it, so the Part 2 card never
+   opens on an empty frame. The cache keeps the Image element itself, not just
+   the URL, and the figure reuses it, so a task change paints at once. */
+function spxPhotoPath(src){
+  const rel=String(src||'').replace(/^\/+/,'');
+  return rel?'/'+rel:'';
+}
+function spxPhotoCache(){
+  if(!SP_EXAM.photoCache||typeof SP_EXAM.photoCache!=='object')SP_EXAM.photoCache={};
+  return SP_EXAM.photoCache;
+}
+function spxPreloadPhoto(src){
+  const path=spxPhotoPath(src);
+  if(!path)return null;
+  const cache=spxPhotoCache();
+  if(cache[path])return cache[path];
+  const img=new Image();
+  img.decoding='async';
+  img.src=path;
+  if(typeof img.decode==='function')img.decode().catch(function(){});
+  cache[path]=img;
+  return img;
+}
+function spxPreloadTaskPhotos(task){
+  const photos=(task&&Array.isArray(task.photos))?task.photos:[];
+  photos.forEach(function(src){spxPreloadPhoto(src)});
+}
+function spxTaskPhotosReady(task){
+  const photos=(task&&Array.isArray(task.photos))?task.photos:[];
+  if(!photos.length)return true;
+  const cache=spxPhotoCache();
+  return photos.every(function(src){
+    const img=cache[spxPhotoPath(src)];
+    return !!img&&img.complete&&img.naturalWidth>0;
+  });
+}
 function spxPhotoFigure(src,alt){
   const fig=document.createElement('figure');
   fig.className='spx-photo';
@@ -10749,19 +10790,25 @@ function spxPhotoFigure(src,alt){
   holder.className='spx-photo-holder';
   const safeAlt=String(alt||t('spx_photo_1'));
   if(src){
-    const img=document.createElement('img');
-    img.src='/'+String(src).replace(/^\/+/,'');
+    const path=spxPhotoPath(src);
+    const img=spxPreloadPhoto(src)||document.createElement('img');
+    if(img.getAttribute('src')!==path)img.src=path;
     img.alt=safeAlt;
     img.width=960;
     img.height=640;
     img.loading='lazy';
     img.decoding='async';
     /* The files arrive separately: a missing photo must be a readable card,
-       never a broken-image icon. */
-    img.onerror=function(){
-      if(img.parentNode===holder)holder.replaceChildren(spxPhotoMissing(safeAlt));
-    };
-    holder.appendChild(img);
+       never a broken-image icon. A preloaded image that already failed has no
+       second error event. */
+    if(img.complete&&!img.naturalWidth){
+      holder.appendChild(spxPhotoMissing(safeAlt));
+    }else{
+      img.onerror=function(){
+        if(img.parentNode===holder)holder.replaceChildren(spxPhotoMissing(safeAlt));
+      };
+      holder.appendChild(img);
+    }
   }else{
     holder.appendChild(spxPhotoMissing(safeAlt));
   }
@@ -10835,6 +10882,9 @@ SP_EXAM.open=async function(){
   spxRenderChoose();
   try{
     await spxLoadBank();
+    /* Opening the exam warms the first Part 2 task: by the time the candidate
+       picks a part, its two photographs are already on the device. */
+    spxPreloadTaskPhotos(spxTaskById(SP_EXAM.bank,2,spxPool(SP_EXAM.bank,2)[0]));
     spxRenderChoose();
   }catch(e){
     SP_EXAM.error=t('spx_no_task');
@@ -10873,6 +10923,7 @@ SP_EXAM.start=async function(){
   SP_EXAM.seed=plan.seed;
   SP_EXAM.partner=plan.partner;
   SP_EXAM.task=entry.task;
+  spxPreloadTaskPhotos(entry.task);
   SP_EXAM.session={full:false,seed:plan.seed,partner:plan.partner,
     partnerRot:spxSpeakingState().partnerRot,
     plan:{parts:[entry]},partIndex:0,turns:{examiner:0,partner:0,candidate:0},
@@ -10907,6 +10958,7 @@ SP_EXAM.startFull=async function(seed){
   SP_EXAM.part=1;
   SP_EXAM.task=plan.parts[0].task;
   SPK.part=1;
+  spxPreloadTaskPhotos(SP_EXAM.task);
   SP_EXAM.session={full:true,seed:plan.seed,partner:plan.partner,
     partnerRot:spxSpeakingState().partnerRot,
     plan:plan,partIndex:0,turns:{examiner:0,partner:0,candidate:0},
@@ -10975,6 +11027,8 @@ SP_EXAM.ready=async function(){
   SPK.reportId='';
   SPK.reportFull=!!SP_EXAM.full;
   spx$('spxTx').replaceChildren();
+  spxPreloadTaskPhotos(first.task);
+  spxPreloadTaskPhotos(SP_EXAM.session.plan.parts[1]&&SP_EXAM.session.plan.parts[1].task);
   spxRenderPartnerHeader();
   spxRenderTask();
   spxSetScreen('exam');
