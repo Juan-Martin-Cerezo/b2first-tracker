@@ -1871,6 +1871,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="col-8">
             <div class="next-session" id="nextBox"></div>
             <div class="card practice-now" id="practiceNow"></div>
+            <div class="card" id="lastSpeaking" style="display:none"></div>
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
@@ -3673,6 +3674,10 @@ const I18N={
     today_start_session:'Start session',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
+    last_sp_title:'Last speaking exam',
+    last_sp_when:'Took place on {date}',
+    last_sp_parts:'{n} parts done',
+    last_sp_parts_one:'1 part done',
     next_today:'TODAY',
     next_no_session_today:'No session scheduled today',
     next_no_session:'No session scheduled',
@@ -4476,6 +4481,10 @@ const I18N={
     today_start_session:'Empezar sesión',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
+    last_sp_title:'Último examen de Speaking',
+    last_sp_when:'Se hizo el {date}',
+    last_sp_parts:'{n} partes hechas',
+    last_sp_parts_one:'1 parte hecha',
     next_today:'HOY',
     next_no_session_today:'Hoy no hay sesión programada',
     next_no_session:'No hay sesión programada',
@@ -13762,6 +13771,38 @@ function renderToday(){
     selectSessionStudio(defaultStudio);
   }
 
+  renderLastSpeaking();
+}
+
+/* Last speaking exam card (TODAY): the newest `sp` row in D.log, nothing is
+   recomputed. A full exam is one row with `parts:[1,2,3,4]` (Phase 50); a
+   single-part row carries `part:N`, so it counts as one. */
+function spxLastExamEntry(){
+  let best=null;
+  (D.log||[]).forEach(function(e){
+    if(!e||e.type!=='sp')return;
+    if(!best)return void(best=e);
+    const date=String(e.date||''),bestDate=String(best.date||'');
+    if(date>bestDate||(date===bestDate&&(+e.created_at||0)>(+best.created_at||0)))best=e;
+  });
+  return best;
+}
+function spxExamPartCount(e){
+  if(!e)return 0;
+  if(Array.isArray(e.parts)&&e.parts.length)return e.parts.length;
+  if(Array.isArray(e.part_stats)&&e.part_stats.length)return e.part_stats.length;
+  return (typeof e.part==='number'&&e.part>0)?1:0;
+}
+function renderLastSpeaking(){
+  const el=document.getElementById('lastSpeaking');
+  if(!el)return;
+  const e=spxLastExamEntry();
+  if(!e){el.style.display='none';el.innerHTML='';return}
+  const n=spxExamPartCount(e);
+  const parts=n===1?t('last_sp_parts_one'):n>1?t('last_sp_parts',{n:n}):'';
+  el.style.display='';
+  el.innerHTML=`<h2>${t('last_sp_title')}</h2>
+    <div class="sub">${t('last_sp_when',{date:fmtDate(e.date)})}${parts?' · '+parts:''}</div>`;
 }
 
 /* Exam countdown card: PLAN only, one-time setup. It is visible while no
