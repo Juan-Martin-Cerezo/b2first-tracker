@@ -8,9 +8,12 @@ twelve seconds) and checks the measured part durations against that budget:
   1. The plan and the part ledger agree on the budget of every part.
   2. Every part lasts its budget within two seconds. The timer keeps its
      resolution in exam time and every phase hands over at its scheduled
-     boundary, so the lateness of a tick never accumulates.
-  3. The four parts together are within two seconds of the four budgets: the
-     error of one part is not inherited by the next one.
+     boundary, so the lateness of a tick never accumulates. The reported
+     seconds are checked against the part's own wall clock, so a part that
+     simply echoed its budget would not pass.
+  3. The four parts together are within two seconds of the four budgets, and
+     the running error stays inside the tolerance after every part: the error
+     of one part is not inherited (or cancelled) by the next one.
 
 The candidate is kept talking through their own turn (the sim voice stays
 "active" while the floor is theirs), because a candidate who falls silent
@@ -101,6 +104,7 @@ with sync_playwright() as p:
     measured = []
     total_planned = 0
     total_measured = 0
+    running = 0
     for part in PARTS:
         st = stats[str(part)]
         says = plan[part]["seconds"]
@@ -112,11 +116,24 @@ with sync_playwright() as p:
         assert abs(delta) <= TOLERANCE_S, \
             "part %d lasted %r s against a budget of %r s (%+d s)" % (
                 part, st["seconds"], says, delta)
+        # The ledger rounds the wall clock to 0.1 s, so the exam-time seconds
+        # have to land on the wall the part really took. A part that echoed
+        # its budget instead of measuring would drift away from this.
+        wall_s = st["seconds"] * TIME_SCALE
+        assert abs(st["wall"] - wall_s) <= 0.1, \
+            "part %d reports %r s of exam time but wall says %r s (%.2f s " \
+            "expected)" % (part, st["seconds"], st["wall"], wall_s)
         measured.append({"part": part, "planned": says,
                          "seconds": st["seconds"], "wall": st["wall"],
                          "delta": delta})
         total_planned += says
         total_measured += st["seconds"]
+        # Checked after every part, not only at the end: a part that runs long
+        # and a later one that runs short must not cancel each other out.
+        running += delta
+        assert abs(running) <= TOLERANCE_S, \
+            "after part %d the clock had drifted %+d s from its budget: %r" % (
+                part, running, measured)
 
     drift = total_measured - total_planned
     assert abs(drift) <= TOLERANCE_S, \
