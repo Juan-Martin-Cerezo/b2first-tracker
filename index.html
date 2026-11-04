@@ -3571,6 +3571,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
        {`${stage}-${idx}`: true}
    D.weekOverrides → weekly rotation picked by hand
        {rue: part, w: kind, l: part, sp: part}
+       (Reset to defaults clears it along with the rotation settings)
    D.settings      → everything configurable (SETTINGS_DEFAULT below):
        sesA/sesB schedules · timer durations · word range · rotation
        cycles (rueCycle/wCycle/lCycle/spCycle) · numeric gate criteria
@@ -4022,6 +4023,7 @@ const I18N={
     plan_reset_field_lCycle:'Listening cycle (parts)',
     plan_reset_field_spCycle:'Speaking cycle (parts)',
     plan_reset_field_customPlan:'Custom plan',
+    plan_reset_field_weekOverrides:'Manual overrides this week',
     plan_rotation_by_part:'By part',
     plan_rotation_full_section:'Full paper each session',
     plan_rotation_custom:'Custom',
@@ -4812,6 +4814,7 @@ const I18N={
     plan_reset_field_lCycle:'Ciclo de Listening (partes)',
     plan_reset_field_spCycle:'Ciclo de Speaking (partes)',
     plan_reset_field_customPlan:'Plan personalizado',
+    plan_reset_field_weekOverrides:'Ajustes manuales de esta semana',
     plan_rotation_by_part:'Por parte',
     plan_rotation_full_section:'Paper completo por sesión',
     plan_rotation_custom:'Personalizado',
@@ -12862,7 +12865,8 @@ function planningSnapshot(){
     wCycle:(s.wCycle||SETTINGS_DEFAULT.wCycle).slice(),
     lCycle:(s.lCycle||SETTINGS_DEFAULT.lCycle).slice(),
     spCycle:(s.spCycle||SETTINGS_DEFAULT.spCycle).slice(),
-    customPlan:JSON.parse(JSON.stringify(s.customPlan||{}))
+    customPlan:JSON.parse(JSON.stringify(s.customPlan||{})),
+    weekOverrides:JSON.parse(JSON.stringify(D.weekOverrides||{}))
   };
 }
 function planningSnapshotChanged(a,b){
@@ -12891,6 +12895,7 @@ function applyPlanningSnapshot(snap){
   s.lCycle=(snap.lCycle||SETTINGS_DEFAULT.lCycle).slice();
   s.spCycle=(snap.spCycle||SETTINGS_DEFAULT.spCycle).slice();
   s.customPlan=validateCustomPlan(snap.customPlan||{});
+  D.weekOverrides=JSON.parse(JSON.stringify(snap.weekOverrides||{}));
 }
 function undoPlanningChange(){
   if(!SETTINGS_UNDO)return;
@@ -12914,16 +12919,20 @@ function planResetValueText(field,v){
     const n=Object.keys(validateCustomPlan(v||{})).length;
     return n?t('plan_reset_days',{n:n}):t('plan_reset_none_value');
   }
+  if(field==='weekOverrides'){
+    const list=Object.keys(v||{}).map(k=>v[k]).filter(x=>x!==undefined&&x!==null&&x!=='');
+    return list.length?list.join(', '):t('plan_reset_none_value');
+  }
   const list=Array.isArray(v)?v:[];
   return list.length?list.join(', '):t('plan_reset_none_value');
 }
 function planResetChanges(){
   const s=D.settings||{};
-  const fields=['rotationMode','rueCycle','wCycle','lCycle','spCycle','customPlan'];
+  const fields=['rotationMode','rueCycle','wCycle','lCycle','spCycle','customPlan','weekOverrides'];
   const out=[];
   fields.forEach(field=>{
     const cur=planningSnapshot()[field];
-    const def=field==='customPlan'?{}:(Array.isArray(SETTINGS_DEFAULT[field])?SETTINGS_DEFAULT[field].slice():SETTINGS_DEFAULT[field]);
+    const def=(field==='customPlan'||field==='weekOverrides')?{}:(Array.isArray(SETTINGS_DEFAULT[field])?SETTINGS_DEFAULT[field].slice():SETTINGS_DEFAULT[field]);
     if(JSON.stringify(cur)===JSON.stringify(def))return;
     out.push({field:field,label:t('plan_reset_field_'+field),
       from:planResetValueText(field,cur),to:planResetValueText(field,def)});
@@ -12975,6 +12984,7 @@ function applyPlanningReset(){
   s.lCycle=SETTINGS_DEFAULT.lCycle.slice();
   s.spCycle=SETTINGS_DEFAULT.spCycle.slice();
   s.customPlan={};
+  D.weekOverrides={};
   commitPlanningEdit();
 }
 document.addEventListener('keydown',function(e){
