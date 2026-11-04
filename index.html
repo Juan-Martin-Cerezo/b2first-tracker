@@ -2385,7 +2385,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <p id="spxRpTip"></p>
                       </div>
                       <div class="spx-actions">
-                        <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again" aria-label="Choose another part" data-i18n-aria-label="spx_aria_again">Practise another part</button>
+                        <button class="btn ok" id="spxRepeatBtn" onclick="SP_EXAM.repeatPart()" data-i18n="spx_repeat_part" aria-label="Repeat this part" data-i18n-aria-label="spx_aria_repeat_part">Repeat this part</button>
+                        <button class="btn gray" onclick="SP_EXAM.restart()" data-i18n="spx_again" aria-label="Choose another part" data-i18n-aria-label="spx_aria_again">Practise another part</button>
                         <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
                       </div>
                     </section>
@@ -4361,6 +4362,7 @@ const I18N={
     spx_voice_fast:'instant, device voice',
     spx_voice_natural:'natural, Gemini voice',
     spx_again:'Practise another part',
+    spx_repeat_part:'Repeat this part',
     spx_no_task:'The task bank could not be loaded. Check your connection and try again.',
     spx_no_bank:'No task found for Part {n}.',
     spx_report_failed:'The report could not be produced, so nothing was logged.',
@@ -4376,6 +4378,7 @@ const I18N={
     spx_aria_save:'Save the report',
     spx_aria_retry_report:'Ask for the report again',
     spx_aria_again:'Choose another part',
+    spx_aria_repeat_part:'Repeat this part',
     spx_aria_copy:'Copy the full transcript',
     spx_aria_part:'Part {n}, {min} minutes'
   },
@@ -5173,6 +5176,7 @@ const I18N={
     spx_voice_fast:'voz instantánea del dispositivo',
     spx_voice_natural:'voz natural de Gemini',
     spx_again:'Practicar otra parte',
+    spx_repeat_part:'Repetir esta parte',
     spx_no_task:'No se pudo cargar el banco de tareas. Revisá la conexión y probá de nuevo.',
     spx_no_bank:'No hay tarea para la Parte {n}.',
     spx_report_failed:'No se pudo generar el informe, así que no se guardó nada.',
@@ -5188,6 +5192,7 @@ const I18N={
     spx_aria_save:'Guardar el informe',
     spx_aria_retry_report:'Pedir el informe otra vez',
     spx_aria_again:'Elegir otra parte',
+    spx_aria_repeat_part:'Repetir esta parte',
     spx_aria_copy:'Copiar la transcripción completa',
     spx_aria_part:'Parte {n}, {min} minutos'
   }
@@ -11350,6 +11355,8 @@ function spxFinalizeReport(data){
     return a.seconds-b.seconds;
   })[0];
   data.tip=weakest?spxTipFor(weakest.part):'';
+  /* The tip names a part: "Repeat this part" re-runs that one, never the four. */
+  data.tipPart=weakest?weakest.part:null;
   return data;
 }
 
@@ -11496,6 +11503,24 @@ SP_EXAM.saveReport=function(){
   SP_EXAM.saved=true;
   spxRenderReportScreen();
   spxSetScreen('report');
+};
+
+/* Repeat the part the report is about as a one-part run. A full exam is never
+   replayed: the report names the part it wants worked on (tipPart, the weakest
+   one) and that part starts on its own, leaving the saved full-exam row as it
+   is. The old report data is dropped so it can never be saved twice. */
+SP_EXAM.repeatPart=async function(){
+  if(SP_EXAM.screen!=='report')return;
+  const seen=SPK.reportData||{};
+  const part=Math.max(1,Math.min(4,
+    parseInt(seen.tipPart,10)||parseInt(SP_EXAM.part,10)||1));
+  SP_EXAM.entry=null;
+  SP_EXAM.saved=false;
+  SPK.reportData=null;
+  SPK.reportPayload=null;
+  SPK.reportFull=false;
+  SP_EXAM.select(part);
+  await SP_EXAM.start();
 };
 
 /* Re-render the live screen after a language switch: every string on the exam
