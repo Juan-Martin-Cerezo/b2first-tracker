@@ -9741,11 +9741,9 @@ function spxSetScreen(name){
   spxRenderDots();
 }
 function spxPhaseHeader(){
-  const ph=SP_EXAM.phases[SP_EXAM.phase];
-  const name=spx$('spxPhaseName');
-  if(name)name.textContent=t(ph?(ph.key||'spx_long_turn'):'spx_long_turn');
   const partEl=spx$('spxPhasePart');
   if(partEl)partEl.textContent=t('spx_phase_part',{n:SP_EXAM.part});
+  spxRenderTurn();
 }
 
 function spxRenderChoose(){
@@ -10470,17 +10468,67 @@ function spxRenderClock(left){
   el.setAttribute('data-low',secs<=SPX_LOW_SECONDS?'1':'0');
 }
 
-function spxRenderRoles(){
-  const box=spx$('spxRoles');
-  if(!box)return;
+/* --- Whose turn it is: one source of truth -------------------------------- */
+/* The phase title, the green turn badge and the role chips all read
+   spxTurnState(), so they cannot say different things in the same frame. A
+   phase key is only allowed as the title when it names the same owner as the
+   floor: a mislabelled phase falls back to the owner's own label. */
+const SPX_TURN_KEYS={
+  spx_your_turn:['candidate'],
+  spx_long_turn:['candidate'],
+  spx_follow_up:['candidate'],
+  spx_response:['partner'],
+  spx_listen:['examiner'],
+  spx_closing:['examiner'],
+  spx_discuss:['both'],
+  spx_decide:['both']
+};
+function spxTurnState(){
   const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
-  let who='';
   /* A joint turn belongs to both candidates at once, even while the last
      examiner syllable is still draining. */
-  if(ph&&ph.who==='both')who='both';
-  else if(spxVoiceBusy('examiner')||(ph&&ph.who==='examiner'))who='examiner';
-  else if(spxVoiceBusy('partner')||(ph&&ph.who==='partner'))who='partner';
-  else if(ph&&ph.who==='candidate')who='candidate';
+  if(ph&&ph.who==='both')return {who:'both',badge:'spx_discuss'};
+  if(spxVoiceBusy('examiner'))return {who:'examiner',badge:'spx_examiner'};
+  if(spxVoiceBusy('partner'))return {who:'partner',badge:'spx_partner'};
+  if(SPK.mode==='turn'&&SPK.turnState==='thinking')
+    return {who:'examiner',badge:'spx_thinking'};
+  if(SPK.mode==='turn'&&SPK.turnState==='listening')
+    return {who:'candidate',badge:'spx_listening'};
+  if(ph&&ph.who==='examiner')return {who:'examiner',badge:'spx_examiner'};
+  if(ph&&ph.who==='partner')return {who:'partner',badge:'spx_partner'};
+  return {who:'candidate',badge:'spx_your_turn'};
+}
+function spxTurnTitleKey(who){
+  const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
+  const owners=SPX_TURN_KEYS[ph&&ph.key];
+  if(owners&&owners.indexOf(who)>=0)return ph.key;
+  if(who==='both')return 'spx_discuss';
+  if(who==='examiner')return 'spx_listen';
+  if(who==='partner')return 'spx_response';
+  return 'spx_your_turn';
+}
+function spxRenderTurn(){
+  const st=spxTurnState();
+  const name=spx$('spxPhaseName');
+  if(name){
+    const title=t(spxTurnTitleKey(st.who));
+    if(name.textContent!==title)name.textContent=title;
+  }
+  const el=spx$('spxWho');
+  if(el){
+    el.setAttribute('data-who',st.who==='both'?'candidate':st.who);
+    const text=(st.who==='both')
+      ?t('spx_your_turn')+' + '+spxPartnerName()
+      :t(st.badge);
+    if(el.textContent!==text)el.textContent=text;
+  }
+  spxRenderRoles(st);
+}
+function spxRenderRoles(st){
+  const box=spx$('spxRoles');
+  if(!box)return;
+  st=st||spxTurnState();
+  const who=st.who;
   box.querySelectorAll('[data-role]').forEach(function(el){
     const role=el.getAttribute('data-role');
     const on=who==='both'?(role==='partner'||role==='you'):(role===who);
@@ -10498,23 +10546,6 @@ function spxRenderPartnerHeader(){
   if(you)you.textContent=t('spx_role_you');
   const nameEl=spx$('spxPartnerName');
   if(nameEl)nameEl.textContent=name;
-  spxRenderRoles();
-}
-function spxRenderWho(){
-  const el=spx$('spxWho');
-  if(!el)return;
-  const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
-  let who='candidate',key='spx_your_turn';
-  if(spxVoiceBusy('examiner')){who='examiner';key='spx_examiner'}
-  else if(spxVoiceBusy('partner')){who='partner';key='spx_partner'}
-  else if(SPK.mode==='turn'&&SPK.turnState==='thinking'){who='examiner';key='spx_thinking'}
-  else if(SPK.mode==='turn'&&SPK.turnState==='listening'){who='candidate';key='spx_listening'}
-  else if(ph&&ph.who==='examiner'){who='examiner';key='spx_examiner'}
-  else if(ph&&ph.who==='partner'){who='partner';key='spx_partner'}
-  else if(ph&&ph.who==='both'){who='both';key='spx_discuss'}
-  el.setAttribute('data-who',who==='both'?'candidate':who);
-  const text=(who==='both')?(t('spx_your_turn')+' + '+spxPartnerName()):t(key);
-  if(el.textContent!==text)el.textContent=text;
   spxRenderRoles();
 }
 
@@ -10560,7 +10591,7 @@ function spxRenderTx(){
 
 function spxTickRender(left){
   spxRenderClock(left);
-  spxRenderWho();
+  spxRenderTurn();
 }
 
 function spxSilence(now){

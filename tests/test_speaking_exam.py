@@ -1076,7 +1076,7 @@ def main():
             "SPK.mode='turn';spxRenderVoiceMode();"
             "SP_EXAM.phases=spxPhases();SP_EXAM.phase=0;"
             "spxRenderTask();spxSetScreen('exam');spxRenderClock(30);"
-            "spxRenderWho();spxRenderTx();")
+            "spxRenderTurn();spxRenderTx();")
         found, _ = scan_current("exam")
         offenders += found
         # The honest wording: turn-based and upload-on-stop, never "real-time".

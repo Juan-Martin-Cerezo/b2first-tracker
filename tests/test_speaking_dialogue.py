@@ -43,6 +43,10 @@ Five checks, in order:
   13. Part 4 context. The examiner's follow-up carries the last three answers
        the candidate already gave, oldest first, never the fourth-oldest; a new
        answer pushes the window forward. Checked inside the follow-up test.
+  14. One turn, one story. Across a whole Part 3 the phase title and the green
+       turn badge name the same speaker in every frame; a phase that carries a
+       key belonging to someone else falls back to the floor's own label
+       instead of printing a contradictory title.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -74,6 +78,7 @@ P3_BANK = [
     "Maybe we should travel by coach instead.",
 ]
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+OWNER_SESSION = {}
 
 SPEECH_STUB = r"""
 window.__srLog = [];
@@ -197,7 +202,7 @@ def wait_until(pg, expression, timeout_s, step=100):
     return False
 
 
-def open_app(p, query, init_script):
+def open_app(p, query, init_script, reuse_login=False):
     browser = p.chromium.launch(args=[
         "--use-fake-device-for-media-stream",
         "--use-fake-ui-for-media-stream",
@@ -211,7 +216,16 @@ def open_app(p, query, init_script):
     errors = []
     page.on("pageerror", lambda exc: errors.append(str(exc)))
     page.goto(URL + "app" + query, wait_until="networkidle")
-    helpers.login_owner(page, URL)
+    # The server allows 10 logins per 10 minutes per IP and this suite already
+    # uses all of them, so a later test can adopt the session an earlier one
+    # opened instead of asking for another. A standalone run logs in normally.
+    if reuse_login and OWNER_SESSION:
+        page.evaluate("localStorage.setItem('b2first_user', %s)"
+                      % json.dumps(json.dumps(OWNER_SESSION)))
+        page.reload(wait_until="networkidle")
+    else:
+        OWNER_SESSION.clear()
+        OWNER_SESSION.update(helpers.login_owner(page, URL))
     page.evaluate("localStorage.setItem('spx_test','1')")
     page.goto(URL + "app" + query, wait_until="networkidle")
     page.wait_for_timeout(350)
@@ -1195,6 +1209,128 @@ def test_mobile_overlay(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 14. The phase title and the green turn badge name the same speaker.
+# ---------------------------------------------------------------------------
+# The speaker each title can name, read off the English UI. The badge is
+# classified the same way, and a frame is wrong when the badge names a speaker
+# the title does not. Both sides are spelled out here, never imported from the
+# page, so the check cannot agree with the app by construction.
+TURN_TITLES = {
+    "Your turn": ["candidate"],
+    "Your long turn": ["candidate"],
+    "Your follow-up question": ["candidate"],
+    "Your partner's turn": ["partner"],
+    "Listen to the examiner": ["examiner"],
+    "Examiner speaking": ["examiner"],
+    "Closing": ["examiner"],
+    "Talk together": ["both"],
+    "Reach a decision": ["both"],
+}
+
+TURN_RECORDER = r"""
+window.__turnFrames = 0;
+window.__turnPairs = [];
+window.__turnBad = [];
+(function () {
+  const TITLES = %s;
+  function badgeOwner(text) {
+    if (text.indexOf('Your turn + ') === 0) return 'both';
+    if (text === 'Your turn') return 'candidate';
+    if (text === 'Examiner speaking') return 'examiner';
+    if (text === 'Partner speaking') return 'partner';
+    if (text.indexOf('Thinking') === 0) return 'examiner';
+    if (text.indexOf('Listening') === 0) return 'candidate';
+    return '';
+  }
+  function frame() {
+    if (window.SP_EXAM && SP_EXAM.screen === 'exam') {
+      const nameEl = document.getElementById('spxPhaseName');
+      const badgeEl = document.getElementById('spxWho');
+      const title = nameEl ? nameEl.textContent.trim() : '';
+      const badge = badgeEl ? badgeEl.textContent.trim() : '';
+      if (title && badge) {
+        window.__turnFrames++;
+        const pair = title + ' || ' + badge;
+        if (window.__turnPairs.indexOf(pair) < 0) window.__turnPairs.push(pair);
+        const owners = TITLES[title];
+        const who = badgeOwner(badge);
+        if (!owners || owners.indexOf(who) < 0) {
+          if (window.__turnBad.indexOf(pair) < 0) window.__turnBad.push(pair);
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+"""
+
+
+def test_turn_state_coherent(p):
+    browser, page, errors = open_app(p, "?spx_test=1&spk=sim", SPEECH_STUB,
+                                     reuse_login=True)
+    page.evaluate("setLang('en')")
+    page.evaluate("async () => { await SPX_TEST.ensure(); await SP_EXAM.open(); }")
+
+    # The exact frame the screenshot showed: a candidate turn whose phase
+    # carries the partner's key. The title must not claim it is the partner's
+    # turn while the badge says the floor is yours.
+    mismatch = page.evaluate("""() => {
+        SP_EXAM.part = 3;
+        SP_EXAM.phases = [{key: 'spx_response', who: 'candidate', sec: 60,
+                           qi: 0, prompt: 'Tell me about your city.'}];
+        SP_EXAM.phase = 0;
+        spxSetScreen('exam');
+        spxRenderTurn();
+        return {
+            title: document.getElementById('spxPhaseName').textContent.trim(),
+            badge: document.getElementById('spxWho').textContent.trim(),
+            key: spxTurnTitleKey('candidate')
+        };
+    }""")
+    assert mismatch["key"] == "spx_your_turn", mismatch
+    assert mismatch["title"] == "Your turn", mismatch
+    assert mismatch["badge"] == "Your turn", mismatch
+
+    # A whole Part 3 through the real engine, fast clock, sampled on every
+    # animation frame.
+    page.evaluate(TURN_RECORDER % json.dumps(TURN_TITLES))
+    page.evaluate("""async () => {
+        SPX_TEST.timeScale = 0.02;
+        SP_EXAM.select(3);
+        await SP_EXAM.start();
+        await SP_EXAM.ready();
+    }""")
+    assert wait_until(page, "SP_EXAM.screen==='exam'", 20), \
+        page.evaluate("SPX_TEST.state()")
+    assert wait_until(
+        page, "SP_EXAM.screen==='feedback' || SP_EXAM.screen==='report'", 90,
+        step=250), page.evaluate("SPX_TEST.state()")
+
+    bad = page.evaluate("window.__turnBad")
+    pairs = page.evaluate("window.__turnPairs")
+    frames = page.evaluate("window.__turnFrames")
+    assert bad == [], "the title and the badge contradicted each other: %s" % bad
+    assert frames >= 30, frames
+    assert any(p.startswith("Listen to the examiner || ") for p in pairs), pairs
+    assert any(p.startswith("Talk together || ") or
+               p.startswith("Reach a decision || ") for p in pairs), pairs
+    # The joint turn names both candidates in the badge, never only one.
+    assert any("|| Your turn + " in p for p in pairs), pairs
+    # Every title we saw is one the checker knows: an unknown label would be
+    # skipped instead of checked.
+    unknown = [p.split(" || ")[0] for p in pairs
+               if p.split(" || ")[0] not in TURN_TITLES]
+    assert unknown == [], unknown
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("14. turn state: %d frames of Part 3, no title/badge contradiction"
+          % frames)
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -1208,6 +1344,7 @@ def main():
         test_keyboard_overlay(p)
         test_overlay_accessibility(p)
         test_mobile_overlay(p)
+        test_turn_state_coherent(p)
     print("OK: the partner reacts twice, never repeats a line, and no support is safe")
 
 
