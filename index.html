@@ -1030,6 +1030,7 @@ footer{
 .rot-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;color:var(--txt);font-size:var(--fs-sm)}
 .rot-head b{font-weight:700}
 .rot-pos{font-size:var(--fs-xs);color:var(--txt-2)}
+.rot-lap{font-size:var(--fs-xs);margin-top:2px;color:var(--txt-2)}
 .rot-now,.rot-next{font-size:var(--fs-xs);margin-top:4px;color:var(--txt)}
 .rot-now.muted{color:var(--txt-2)}
 .rot-next{font-weight:600;color:var(--acc-text)}
@@ -4046,6 +4047,7 @@ const I18N={
     plan_rotation_next:'next: {item}',
     plan_rotation_start:'starting at the first item',
     plan_rotation_position:'{n} sessions logged',
+    plan_rotation_lap:'lap {lap} · {left} to close it',
     plan_rotation_hint:'The rotation advances one item per session, in order, and starts again from the first after the last. The next item comes from Week {week}; a manual override wins when it is set.',
     plan_rotation_override:' Manual override: {genre}.',
     settings_title:'Settings',
@@ -4835,6 +4837,7 @@ const I18N={
     plan_rotation_next:'próximo: {item}',
     plan_rotation_start:'empieza por el primer ítem',
     plan_rotation_position:'{n} sesiones registradas',
+    plan_rotation_lap:'vuelta {lap} · {left} para cerrarla',
     plan_rotation_hint:'La rotación avanza un ítem por sesión, en orden, y vuelve al primero después del último. El próximo sale de la semana {week}; si hay un override manual, gana ese.',
     plan_rotation_override:' Override manual: {genre}.',
     settings_title:'Ajustes',
@@ -14296,12 +14299,22 @@ function rotationPosition(def,cycle){
   if(!count)return {count:0,currentIdx:-1,nextIdx:0};
   return {count,currentIdx:(count-1)%cycle.length,nextIdx:count%cycle.length};
 }
+/* Which lap of the cycle the logged sessions put the user on, and how many
+   sessions are left before that lap closes. Count 0 is the first lap, not a
+   completed one; exactly one full lap moves on to the next. */
+function rotationLap(count,len){
+  const lap=Math.floor(count/len)+1;
+  const done=count%len;
+  const left=done===0?len:len-done;
+  return {lap,left};
+}
 function renderRotationCard(){
   const box=document.getElementById('rotationCardBody');
   if(!box)return;
   box.innerHTML=ROTATION_DEFS.map(def=>{
     const cycle=rotationCycle(def);
     const pos=rotationPosition(def,cycle);
+    const lap=rotationLap(pos.count,cycle.length);
     const next=cycle[pos.nextIdx];
     const current=pos.currentIdx>=0?cycle[pos.currentIdx]:null;
     const currentLine=current!==null
@@ -14313,6 +14326,7 @@ function renderRotationCard(){
     }).join('');
     return `<div class="rot-skill" data-skill="${def.key}">
       <div class="rot-head"><b>${t(def.colKey)}</b><span class="rot-pos">${t('plan_rotation_position',{n:pos.count})}</span></div>
+      <div class="rot-lap">${t('plan_rotation_lap',{lap:lap.lap,left:lap.left})}</div>
       ${currentLine}
       <div class="rot-next">${t('plan_rotation_next',{item:def.label(next)})}</div>
       <div class="rot-cycle">${chips}</div>
