@@ -126,6 +126,25 @@ voice, and the transcript with its timings when you ask for the report. No audio
 by the server. Nothing is added to your log until you press **Save report**; the exam does not
 store the transcript, and saving writes only the report row into `progress.json`.
 
+## What it does not do
+
+This is a practice tool, not an exam board. The Writing and Speaking bands are estimates against
+the published Cambridge scales: useful for finding the next thing to fix, but not an official
+result, not a certificate and not a claim about the grade you will be given. The app is not
+affiliated with or endorsed by Cambridge, and the tasks under `material/speaking.json` are original
+ones written in the exam format, not past papers.
+
+- **No pronunciation feedback without Azure.** Pronunciation is graded only by Azure Pronunciation
+  Assessment (`POST /api/speaking/pa`, `B2_SPK_AZURE_KEY`). With no Azure key the endpoint answers
+  `503 speech_not_configured`; the report card says *not measured* and lists no mispronounced
+  words. The text model is told never to grade pronunciation, and any band it writes is discarded.
+- **The live transcript depends on the browser.** It is written by the browser's Web Speech API
+  (`SpeechRecognition` / `webkitSpeechRecognition`, `en-GB`); the app has no recogniser of its own.
+  A browser without that API runs the whole exam with no transcript, and if you deny the
+  microphone the note under the transcript says so while the examiner keeps the written script.
+  The server receives audio only for the optional turn-based voice and the Azure clip, and stores
+  neither.
+
 ## Quick start
 
 ### Docker
