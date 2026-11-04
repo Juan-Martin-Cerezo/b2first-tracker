@@ -69,6 +69,63 @@ countdown in view.
 | **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress under `data/users/<id>/`. Recovery works through Google, a passkey, or a manual operator reset. |
 | **Privacy** | Progress is JSON on your server. No analytics SDK, no ads, no external database. |
 
+## The Speaking exam
+
+The Speaking exam runs in the browser, one part at a time or as the full fourteen minutes of
+Parts 1–4, with the timings of the real test:
+
+| Part | Time | What happens |
+| --- | --- | --- |
+| **Part 1** | 2 min | The examiner asks personal questions and you answer; no partner. |
+| **Part 2** | 4 min | You compare two photographs for a minute, answer a question about them, then your partner answers for thirty seconds. |
+| **Part 3** | 4 min | You and your partner discuss a task card and reach a decision together. |
+| **Part 4** | 4 min | The examiner asks discussion questions that follow the Part 3 topic. |
+
+Two roles run the room. The **examiner** asks the task questions in order and keeps the clock; it
+never teaches, corrects, praises or grades. The **partner** is a second candidate, from Part 2 on:
+it takes its turn, answers about your photographs, asks one question back and returns the ball.
+Its lines come from the task bank; with a text model configured it can also react to what you
+actually said.
+
+**How a session is built.** `material/speaking.json` is the task bank: original tasks written for
+this app in the B2 First format — not past papers. Each part has its own task list, and selection
+is seeded and rotates, so a task is not presented again until that part's pool has been used. The
+chosen task and a countdown stay on screen while the exam runs; every turn has its own clock, and
+after five seconds of silence the examiner asks one short question from the task instead of
+waiting. The Part 2 photographs are from Wikimedia Commons, with their credits recorded in
+`assets/speaking/CREDITS.json`.
+
+**Optional AI.** With no provider key the exam still runs: the browser's own speech synthesis
+reads the examiner and partner lines, and the browser's speech recogniser (en-GB) writes your
+turns into the transcript. Keys add three things, independently:
+
+- **Live voice** — `POST /api/speaking/token` mints a single-use token and the browser talks to
+  the provider directly, so the audio never passes through this server.
+- **Turn-based voice** — `POST /api/speaking/turn` takes one recorded turn and returns the
+  examiner's reply as text and audio. The audio is forwarded to the provider and dropped: it is
+  never written to `data/` and never logged.
+- **A partner that listens** — `POST /api/speaking/partner` turns the last recognised line into
+  one sentence. Without a key (the server's or your own), the written partner lines are used.
+
+The text model is `B2_AI_KEY` or your own provider key from the app; the voices use
+`B2_SPK_GOOGLE_KEY`. The full list, with defaults, is in the Speaking table under
+[Configuration](#configuration).
+
+**The report.** `POST /api/speaking/report` grades only the candidate's turns after a part.
+Grammar & Vocabulary and Discourse Management come from the text model. Pronunciation comes only
+from Azure Pronunciation Assessment (`POST /api/speaking/pa`), mapped to the Cambridge 0–5 scale;
+when Azure did not score the session the band says *not measured* instead of guessing. Interactive
+Communication is graded only when the session had a partner. Word and filler counts (`um`, `uh`,
+`like`, `you know`) are counted on the recognised text, with no score attached. The report needs a
+text model; the exam itself does not.
+
+**What is sent, and what is not.** The exam content never leaves your server: the task bank is a
+static file and the voices come from the browser. When a text or voice key is configured, the
+browser sends the recognised candidate line for a partner reaction, one turn's audio in turn-based
+voice, and the transcript with its timings when you ask for the report. No audio is ever written
+by the server. Nothing is added to your log until you press **Save report**; the exam does not
+store the transcript, and saving writes only the report row into `progress.json`.
+
 ## Quick start
 
 ### Docker
