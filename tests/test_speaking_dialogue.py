@@ -4,7 +4,8 @@ Four checks, in order:
 
   1. Recognition. A stubbed Web Speech emits one sentence; the transcript shows
      it as the faded draft while the turn is open and as a normal `You:` line
-     once the turn closes.
+     once the turn closes. The closed Part 3 dialogue (your line plus the
+     partner's answer) is saved to `tests/out/dy_part3.png`.
   2. Reactive partner. The same sentence reaches the provider request body,
      together with `mode: 'partner'`.
   3. Server. The follow-up prompt carries the candidate's words and asks for a
@@ -32,8 +33,11 @@ os.environ.pop("B2_AI_KEY", None)
 import helpers  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
+OUT_DIR = os.path.join(TESTS, "out")
 URL = helpers.isolated_server() + "/"
 PHRASE = "I think living in a big city is exciting but too noisy"
+PARTNER_LINE = "That sounds exciting, but I prefer the quiet."
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 SPEECH_STUB = r"""
 window.__srLog = [];
@@ -244,6 +248,8 @@ def test_recognition_and_partner(p):
         page.evaluate("SPK.heard")
     assert page.evaluate("SPK.heard.active") is True, page.evaluate("SPK.heard")
 
+    assert page.evaluate("document.querySelectorAll('#spxTx .spx-tx-draft').length") == 1, \
+        "the open turn should show exactly one faded draft row"
     draft = page.evaluate("""() => {
         const el = document.querySelector('#spxTx .spx-tx-draft');
         return el ? el.textContent : '';
@@ -252,7 +258,8 @@ def test_recognition_and_partner(p):
 
     page.evaluate("spxSpeechStop()")
     assert page.evaluate("SPK.heard.active") is False
-    assert page.evaluate("document.querySelectorAll('#spxTx .spx-tx-draft').length") == 0
+    assert page.evaluate("document.querySelectorAll('#spxTx .spx-tx-draft').length") == 0, \
+        "the draft must disappear once the turn closes"
 
     shown = page.evaluate("document.getElementById('spxTx').textContent")
     assert ("You: " + PHRASE) in shown, (
@@ -264,7 +271,7 @@ def test_recognition_and_partner(p):
     # 2. The partner request carries what was heard and its mode.
     page.evaluate("""() => {
         window.__partnerPayload = null;
-        window.__partnerLine = 'That sounds exciting, but I prefer the quiet.';
+        window.__partnerLine = %r;
         SPX_TEST.partnerProvider = function (question, body) {
             window.__partnerPayload = body;
             return window.__partnerLine;
@@ -275,7 +282,7 @@ def test_recognition_and_partner(p):
         SP_EXAM.phase = 0;
         spxPartnerTurn({prompt: 'Where would you like to live?',
                         text: 'I like the city.'});
-    }""")
+    }""" % PARTNER_LINE)
     assert wait_until(page, "!!window.__partnerPayload", 10), "the provider was never called"
     payload = page.evaluate("window.__partnerPayload")
     assert payload.get("mode") == "partner", payload
@@ -284,6 +291,23 @@ def test_recognition_and_partner(p):
         page,
         "SPK.lines.some(l=>l.who==='partner'&&l.text.indexOf('That sounds exciting')===0)",
         10), page.evaluate("SPK.lines")
+
+    # The closed Part 3 dialogue, on screen: your committed line and the
+    # partner's answer, with no faded draft left behind.
+    page.evaluate("spxRenderTx()")
+    part3 = page.evaluate("document.getElementById('spxTx').textContent")
+    assert ("You: " + PHRASE) in part3, part3
+    assert ("Alex: " + PARTNER_LINE) in part3, part3
+    assert page.evaluate("document.querySelectorAll('#spxTx .spx-tx-draft').length") == 0, \
+        "the closed dialogue must not keep a draft row"
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    shot = os.path.join(OUT_DIR, "dy_part3.png")
+    page.locator("#spxOverlay").screenshot(path=shot)
+    with open(shot, "rb") as fh:
+        head = fh.read(8)
+    assert head == PNG_SIGNATURE, head
+    assert os.path.getsize(shot) > 10000, os.path.getsize(shot)
 
     page.evaluate("SP_EXAM.close()")
     assert errors == [], errors
