@@ -60,12 +60,42 @@ def photo_gate():
     return missing
 
 
+def credit_key(rel):
+    return os.path.splitext(os.path.basename(rel))[0]
+
+
+def credits_alt_register():
+    """Every Part 2 photo has a real alt in the credits register.
+
+    The card must never fall back to "Photograph 1": the register is the
+    source of truth, so its alt is what the page has to render.
+    """
+    bank = json.load(open(os.path.join(ROOT, "material", "speaking.json")))
+    credits = json.load(open(os.path.join(ROOT, "assets", "speaking", "CREDITS.json")))
+    part2 = [p for p in bank["parts"] if p["part"] == 2][0]
+    placeholders = {"Photograph 1", "Photograph 2", "Fotografía 1", "Fotografía 2"}
+    register = {}
+    for task in part2["tasks"]:
+        for rel in task["photos"]:
+            key = credit_key(rel)
+            entry = credits.get(key)
+            assert entry, "%s has no credits entry" % key
+            alt = (entry.get("alt") or "").strip()
+            assert alt, "%s has no alt in CREDITS.json" % key
+            assert alt not in placeholders, "%s still uses the placeholder alt" % key
+            register[os.path.basename(rel)] = alt
+    return register
+
+
 def main():
     missing = photo_gate()
     print("A. photo gate:", "all 24 present" if not missing else "%d MISSING" % len(missing))
     for m in missing:
         print("   missing", m)
     assert not missing, "Part 2 tasks without photographs: %s" % missing[:6]
+
+    register = credits_alt_register()
+    print("A. credits:", len(register), "photographs with a real alt")
 
     wav = make_wav(os.path.join(ROOT, "tests", "fixtures", "speech.wav"))
     # A private server over an empty data dir: no shared accounts, no per-IP rate
@@ -98,7 +128,10 @@ def main():
             }""", timeout=20000)
         part2 = page.evaluate("""() => ({
             photos: Array.from(document.querySelectorAll('#spxTask .spx-photo img'))
-                .map(i => ({w: i.naturalWidth, src: (i.currentSrc || i.src).split('/').pop()})),
+                .map(i => ({w: i.naturalWidth, src: (i.currentSrc || i.src).split('/').pop(),
+                            alt: i.alt})),
+            captions: Array.from(document.querySelectorAll('#spxTask .spx-photo figcaption'))
+                .map(c => c.textContent),
             placeholders: document.querySelectorAll('#spxTask .spx-photo-missing').length,
             title: (document.getElementById('spxTask') || {}).innerText?.slice(0, 60),
         })""")
@@ -106,6 +139,22 @@ def main():
         print("B. part 2:", part2["photos"], "placeholders", part2["placeholders"],
               "| overlay", page.evaluate("() => getComputedStyle(document.getElementById('spxOverlay')).display"))
         assert part2["placeholders"] == 0, "Part 2 showed a text placeholder"
+
+        # The alt is the credits register's, and the caption repeats it.
+        for photo in part2["photos"]:
+            expected = register[photo["src"]]
+            assert photo["alt"] == expected, (photo, expected)
+        assert part2["captions"] == [p["alt"] for p in part2["photos"]], part2["captions"]
+
+        # The bank's own photoAlt is not the source of truth: clear it and
+        # re-render. A card that fell back to the placeholder would turn red.
+        page.evaluate("""() => { SP_EXAM.task.photoAlt = []; spxRenderTask(); }""")
+        rerendered = page.evaluate("""() => Array.from(
+            document.querySelectorAll('#spxTask .spx-photo img'))
+            .map(i => (i.currentSrc || i.src).split('/').pop() + '|' + i.alt)""")
+        expected_pairs = {name + "|" + alt for name, alt in register.items()}
+        assert set(rerendered) <= expected_pairs, (rerendered, expected_pairs)
+        assert len(rerendered) == 2, rerendered
         visible = page.evaluate("""() => ({
             overlay: getComputedStyle(document.getElementById('spxOverlay')).display,
             panel: document.getElementById('spxPanel').offsetHeight,

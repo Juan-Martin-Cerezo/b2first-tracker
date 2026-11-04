@@ -9320,7 +9320,7 @@ const SPX_SIM_ANSWERS={
 };
 
 const SP_EXAM={
-  screen:'',part:2,bank:null,task:null,
+  screen:'',part:2,bank:null,credits:null,task:null,
   phases:[],phase:0,phaseStart:0,
   timer:null,silencePrompts:0,awaitSince:0,promptUsed:false,
   /* U1: one counter per candidate turn. It counts the current question
@@ -9454,12 +9454,48 @@ function spxPartnerName(){
 }
 
 /* --- Task bank (pure data, fetched on demand and cached) ------------------ */
+async function spxLoadCredits(){
+  if(SP_EXAM.credits)return SP_EXAM.credits;
+  const r=await fetch('/assets/speaking/CREDITS.json',{cache:'no-cache'});
+  if(!r.ok)throw new Error('credits '+r.status);
+  const credits=await r.json();
+  if(!credits||typeof credits!=='object')throw new Error('credits shape');
+  SP_EXAM.credits=credits;
+  return credits;
+}
+/* The photograph's key is its file name without the extension: the same key
+   the credits register uses. */
+function spxCreditKey(src){
+  return String(src||'').split('/').pop().replace(/\.[a-z0-9]+$/i,'');
+}
+function spxCreditAlt(credits,src){
+  const entry=credits&&credits[spxCreditKey(src)];
+  if(!entry)return '';
+  const alt=String(entry.alt||'').trim();
+  if(alt)return alt;
+  /* The register always has a real Commons title; strip the wiki prefix and
+     extension rather than fall back to "Photograph 1". */
+  return String(entry.title||'').replace(/^File:/,'').replace(/\.[a-z0-9]+$/i,'').trim();
+}
+function spxApplyCreditsAlts(bank,credits){
+  if(!credits)return;
+  const p2=spxPartData(bank,2);
+  if(!p2)return;
+  (p2.tasks||[]).forEach(function(task){
+    if(!Array.isArray(task.photos))return;
+    task.photoAlt=task.photos.map(function(src){
+      return spxCreditAlt(credits,src)||String(src||'');
+    });
+  });
+}
 async function spxLoadBank(force){
   if(SP_EXAM.bank&&!force)return SP_EXAM.bank;
   const r=await fetch('/material/speaking.json',{cache:'no-cache'});
   if(!r.ok)throw new Error('bank '+r.status);
   const bank=await r.json();
   if(!bank||!Array.isArray(bank.parts)||!bank.parts.length)throw new Error('bank shape');
+  try{spxApplyCreditsAlts(bank,await spxLoadCredits())}
+  catch(e){/* a missing register must not block the exam */}
   SP_EXAM.bank=bank;
   return bank;
 }
@@ -10601,6 +10637,14 @@ function spxPhotoMissing(alt){
   d.appendChild(s);
   return d;
 }
+/* The credits register is the source of truth for a photograph's alt text. The
+   placeholder keys only remain for a card with no file at all. */
+function spxPhotoAltFor(src,index,alts){
+  const fromCredits=spxCreditAlt(SP_EXAM.credits,src);
+  if(fromCredits)return fromCredits;
+  if(alts&&alts[index])return String(alts[index]);
+  return t(index===0?'spx_photo_1':'spx_photo_2');
+}
 function spxPhotoFigure(src,alt){
   const fig=document.createElement('figure');
   fig.className='spx-photo';
@@ -10661,7 +10705,7 @@ function spxRenderTask(){
     const photos=Array.isArray(task.photos)?task.photos:[];
     const alts=Array.isArray(task.photoAlt)?task.photoAlt:[];
     for(let i=0;i<2;i++){
-      wrap.appendChild(spxPhotoFigure(photos[i]||'',alts[i]||t(i===0?'spx_photo_1':'spx_photo_2')));
+      wrap.appendChild(spxPhotoFigure(photos[i]||'',spxPhotoAltFor(photos[i]||'',i,alts)));
     }
     box.appendChild(wrap);
     box.appendChild(list(task.prompts||[task.question||''].filter(Boolean)));
