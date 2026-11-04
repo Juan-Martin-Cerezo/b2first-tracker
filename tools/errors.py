@@ -8,9 +8,26 @@ Reads the same files the app already writes:
 Usage:
   tools/errors.py                 last 7 days, grouped, most frequent first
   tools/errors.py --days 1        today only
+  tools/errors.py --since 10:30   only what happened today at or after 10:30
   tools/errors.py --new           only groups first seen in the last 24 h
   tools/errors.py --json          machine-readable (used by the alert cron)
   tools/errors.py --summary       top 5 groups: count, endpoint, first seen
+
+--json prints an array of group objects, one per error group:
+  side      "client" or "server"
+  hash      stack_hash / tb_hash, or a message prefix when there is no hash
+  kind      the client event name ("js_error" / "fetch_error") or "server 500"
+  count     events in the group inside the window (--since applied)
+  first     earliest timestamp seen, as written to the JSONL file
+  last      latest timestamp seen
+  days      number of distinct days the group appeared on
+  sample    one message, or the last line of the traceback
+  paths     up to three endpoints (client) or "METHOD /path" (server)
+
+--since reads a clock time, not a date: only today's events at or after
+HH:MM are counted, which is the useful window right after a deploy. HH:MM is
+the machine's local clock (the same one --days uses); the files stamp UTC, so
+the cutoff is converted before comparing.
 
 Exit code is 1 when --new finds anything, so a cron can alert on it.
 """
@@ -19,7 +36,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.environ.get("B2_DATA_DIR") or os.path.join(ROOT, "data")
@@ -53,12 +70,29 @@ def day_files(name, days):
         yield os.path.join(d, (today - timedelta(days=i)).isoformat() + ".jsonl")
 
 
-def collect(days):
+def parse_hhmm(value):
+    """`--since` takes a clock time (HH:MM, 24 h); return it normalised."""
+    try:
+        return datetime.strptime(value, "%H:%M").strftime("%H:%M")
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "expected HH:MM on the 24-hour clock, got %r" % value)
+
+
+def since_cutoff(hhmm):
+    """UTC timestamp string for today at `hhmm` local, matching the file stamps."""
+    local = datetime.combine(date.today(), datetime.strptime(hhmm, "%H:%M").time())
+    return local.astimezone().astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def collect(days, cutoff=None):
     groups = defaultdict(lambda: {"count": 0, "first": None, "last": None,
                                   "days": set(), "kind": "", "sample": "",
                                   "paths": set()})
     for path in day_files("events", days):
         for ev in iter_jsonl(path):
+            if cutoff is not None and (ev.get("ts") or "") < cutoff:
+                continue
             if ev.get("n") not in ("js_error", "fetch_error"):
                 continue
             props = ev.get("p") or {}
@@ -77,6 +111,8 @@ def collect(days):
             mark(g, ev.get("ts"))
     for path in day_files("errors", days):
         for ev in iter_jsonl(path):
+            if cutoff is not None and (ev.get("ts") or "") < cutoff:
+                continue
             key = ev.get("tb_hash") or "unknown"
             g = groups[("server", key)]
             g["kind"] = "server 500"
@@ -117,27 +153,35 @@ def print_summary(rows, top=SUMMARY_TOP):
 def main():
     ap = argparse.ArgumentParser(description="Group client and server errors")
     ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--since", metavar="HH:MM", type=parse_hhmm, default=None,
+                    help="only events at or after this local clock time today "
+                         "(e.g. --since 10:30)")
     ap.add_argument("--new", action="store_true", help="only first seen in the last 24 h")
-    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--json", action="store_true",
+                    help="print every group as a JSON array: side, hash, kind, count, "
+                         "first, last, days, sample, paths")
     ap.add_argument("--summary", action="store_true",
                     help="top 5 groups by count, with endpoint and first seen")
     args = ap.parse_args()
 
-    rows = collect(max(args.days, 1))
+    cutoff = since_cutoff(args.since) if args.since else None
+    rows = collect(max(args.days, 1), cutoff)
     if args.new:
-        cutoff = (datetime.utcnow() - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
-        rows = [r for r in rows if (r["first"] or "") >= cutoff]
+        new_cutoff = (datetime.utcnow() - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+        rows = [r for r in rows if (r["first"] or "") >= new_cutoff]
+    empty = ("No errors since %s today." % args.since if args.since
+             else "No errors in the last %d day(s)." % args.days)
 
     if args.json:
         json.dump(rows, sys.stdout, indent=1)
         sys.stdout.write("\n")
     elif args.summary:
         if not rows:
-            print("No errors in the last %d day(s)." % args.days)
+            print(empty)
         else:
             print_summary(rows)
     elif not rows:
-        print("No errors in the last %d day(s)." % args.days)
+        print(empty)
     else:
         print("%-6s %-7s %-8s %-20s %-19s %s" % ("SIDE", "COUNT", "DAYS", "FIRST SEEN", "HASH", "SAMPLE"))
         for r in rows:
