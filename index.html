@@ -14206,9 +14206,26 @@ function renderTodaySession(plan,todaySlots){
       </div>`;
     }).join('')+`</div>`;
 }
+/* A full-section slot is one whole paper: open its own session with the
+   official timer instead of the loose-part filter. The written papers run in
+   the exam countdown (exSave logs `rue`/`fw`/`l`); Speaking starts its
+   four-part session, which saves as `sp`. */
+function startFullPaperSession(type){
+  if(type==='sp'){
+    const ov=document.getElementById('spxOverlay');
+    const panel=document.getElementById('spxPanel');
+    if(ov)ov.style.display='flex';
+    if(panel)panel.style.display='block';
+    if(window.SP_EXAM&&typeof SP_EXAM.startFull==='function')SP_EXAM.startFull();
+    return;
+  }
+  showView('exam');
+  startRealMock(type==='ue'?'rue':type);
+}
 function todayStart(i){
   const sl=(TODAY_PLAN&&TODAY_PLAN.slots&&TODAY_PLAN.slots[i])||null;
   if(!sl)return;
+  if(sl.section){startFullPaperSession(sl.type);return}
   if(sl.type==='w')goToPartFilter(sl.part,'w');
   else if(sl.type==='l')goToPartFilter(sl.part,'lp');
   else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
