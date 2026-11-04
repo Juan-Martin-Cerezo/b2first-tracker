@@ -1377,7 +1377,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ob-card{max-width:600px}
 .ob-card:focus{outline:none}
 .ob-lang{display:flex;justify-content:flex-end;gap:4px;margin:-6px 0 10px}
-.ob-lang button{border:1px solid var(--line);background:var(--surface-2);color:var(--txt-2);border-radius:999px;padding:4px 10px;min-height:28px;font-family:var(--font);font-size:var(--fs-xs);font-weight:700;cursor:pointer}
+.ob-lang button{border:1px solid var(--line);background:var(--surface-2);color:var(--txt-2);border-radius:999px;padding:4px 10px;min-height:40px;min-width:40px;font-family:var(--font);font-size:var(--fs-xs);font-weight:700;cursor:pointer}
 .ob-lang button[aria-pressed=true]{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
 .ob-progress{margin-bottom:12px}
 .ob-step-count{margin-bottom:12px;letter-spacing:.02em}
@@ -2332,7 +2332,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <span class="spx-role-sr" id="spxPartnerName" hidden>Alex</span>
                       </div>
                       <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
-                      <div class="spx-gap" id="spxGap" aria-live="polite" title="Average milliseconds from you stopping to the examiner's first sound">turn gap —</div>
+                      <div class="spx-gap" id="spxGap" aria-live="polite" title="Average milliseconds from you stopping to the examiner's first sound" data-i18n-title="spx_turn_gap_title">turn gap —</div>
                       <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
@@ -2378,7 +2378,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                           <div class="spk-report-h" data-i18n="spx_rp_transcript">Full transcript</div>
                           <button class="btn gray" id="spxRpCopy" onclick="SP_EXAM.copyTranscript()" data-i18n="spx_copy" aria-label="Copy the full transcript" data-i18n-aria-label="spx_aria_copy">Copy</button>
                         </div>
-                        <div class="spx-tx spx-rp-tx-lines" id="spxRpTx" role="region" aria-label="Full transcript" data-i18n-aria-label="spx_rp_transcript"></div>
+                        <div class="spx-tx spx-rp-tx-lines" id="spxRpTx" role="region" aria-label="Full transcript" data-exam-task data-i18n-aria-label="spx_rp_transcript"></div>
                       </div>
                       <div class="spx-tip">
                         <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
@@ -4310,6 +4310,9 @@ const I18N={
     spx_rule:'Speak in English. If you go quiet for 5 seconds I will ask you a question.',
     spx_ready:'I\'m ready',
     spx_clock_label:'Time left in this turn',
+    spx_turn_gap:'turn gap —',
+    spx_turn_gap_ms:'turn gap {n} ms',
+    spx_turn_gap_title:"Average milliseconds from you stopping to the examiner's first sound",
     spx_transcript:'Transcript',
     spx_mic_denied:'Microphone access was denied. The exam continues without speech recognition.',
     spx_confirm_quit:'Leave the exam? What you said in this part will not be saved.',
@@ -5119,6 +5122,9 @@ const I18N={
     spx_rule:'Hablá en inglés. Si te quedás en silencio 5 segundos, te voy a hacer una pregunta.',
     spx_ready:'Estoy listo',
     spx_clock_label:'Tiempo restante de este turno',
+    spx_turn_gap:'pausa de turno —',
+    spx_turn_gap_ms:'pausa de turno {n} ms',
+    spx_turn_gap_title:'Milisegundos promedio entre que dejás de hablar y el primer sonido del examinador',
     spx_transcript:'Transcripción',
     spx_mic_denied:'Se denegó el acceso al micrófono. El examen sigue sin reconocimiento de voz.',
     spx_confirm_quit:'¿Salir del examen? Lo que dijiste en esta parte no se guarda.',
@@ -7674,7 +7680,7 @@ function spkRenderGap(){
   const el=document.getElementById('spxGap');
   if(!el)return;
   const avg=spkGapAverage();
-  el.textContent=avg===null?'turn gap —':'turn gap '+avg+' ms';
+  el.textContent=avg===null?t('spx_turn_gap'):t('spx_turn_gap_ms',{n:avg});
   el.setAttribute('data-gap',avg===null?'':'1');
 }
 function spkNoteFirstAudioAt(perfTime){
@@ -10574,6 +10580,7 @@ function spxRenderTurn(){
     if(el.textContent!==text)el.textContent=text;
   }
   spxRenderRoles(st);
+  spkRenderGap();
 }
 function spxRenderRoles(st){
   const box=spx$('spxRoles');
@@ -12863,6 +12870,7 @@ function setResourcesFilter(type,part){
 }
 function clearResourcesFilter(){RES_FILTER=null;renderResources()}
 function goToPartFilter(partNum, type){
+  showView('practice');
   setResourcesFilter(type||'ue', partNum||null);
 }
 function listeningRes(labelKey,key,title){
@@ -15014,7 +15022,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;

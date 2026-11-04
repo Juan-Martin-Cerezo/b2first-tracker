@@ -12,21 +12,21 @@ with sync_playwright() as p:
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
     out["titulo"] = pg.title()
-    # ir a LIBROS
-    pg.click("nav button[data-view='libros']")
+    # ir a PRACTICE (Books merged into it)
+    pg.click("nav button[data-view='practice']")
     pg.wait_for_timeout(800)
-    # material (fetch /libros.json -> render)
+    # online practice (static list) + material (fetch /libros.json -> render)
+    out["online_cards"] = pg.eval_on_selector_all("#onlineList .book", "els => els.length")
     out["material_cards"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
     out["material_groups"] = pg.eval_on_selector_all("#matList .folder", "els => els.length")
-    out["libros_comprables"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
-    # filtro de libros
-    pg.fill("#bookFilter", "grammar")
+    # filtro de material
+    pg.fill("#matFilter", "grammar")
     pg.wait_for_timeout(200)
-    out["filtro_grammar"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
-    pg.fill("#bookFilter", "")
+    out["filtro_grammar"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
+    pg.fill("#matFilter", "")
     pg.wait_for_timeout(200)
-    # primer libro: link?
-    out["primer_link"] = pg.eval_on_selector("#bookList .book a", "a => a ? a.href.slice(0,60) : null")
+    # primer enlace online
+    out["primer_link"] = pg.eval_on_selector("#onlineList .book a", "a => a ? a.href.slice(0,60) : null")
     # primer pdf material: href?
     out["primer_pdf"] = pg.eval_on_selector("#matList .book a[target='_blank']", "a => a ? a.href.slice(0,70) : null")
     # audio player?

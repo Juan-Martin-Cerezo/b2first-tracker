@@ -38,7 +38,7 @@ async def main():
         }"""
         )
 
-        # (a) Empty log -> No streak
+        # (a) Empty log -> No streak (the top-bar pill is the remaining surface)
         res_a = await page.evaluate(
             """() => {
             D.log = [];
@@ -48,14 +48,15 @@ async def main():
             save(); refreshAll();
             return {
                 st: calcStreak(),
-                text: document.getElementById('streakCard').textContent.trim(),
-                pill: document.getElementById('streakFootPill').textContent.trim()
+                text: document.getElementById('streakTopNum').textContent.trim(),
+                title: document.getElementById('streakTopPill').getAttribute('title') || ''
             };
         }"""
         )
         assert res_a["st"]["current"] == 0, f"Expected 0, got {res_a}"
-        assert "No streak" in res_a["text"], f"Expected 'No streak' in {res_a['text']}"
-        out["a_empty"] = "OK: " + res_a["text"].splitlines()[0].strip()
+        assert res_a["text"] == "0", f"Expected the pill to read 0, got {res_a['text']!r}"
+        assert res_a["title"], f"Pill lost its label: {res_a}"
+        out["a_empty"] = "OK: pill reads 0"
 
         # (b) Today + yesterday -> 2
         res_b = await page.evaluate(
@@ -69,15 +70,14 @@ async def main():
             save(); refreshAll();
             return {
                 st: calcStreak(),
-                text: document.getElementById('streakCurrent').textContent.trim(),
-                pill: document.getElementById('streakFootPill').textContent.trim()
+                text: document.getElementById('streakTopNum').textContent.trim()
             };
         }"""
         )
         assert res_b["st"]["current"] == 2, f"Expected current=2, got {res_b}"
         assert res_b["st"]["todayDone"] is True
         assert res_b["st"]["atRisk"] is False
-        assert "2" in res_b["text"] and "2" in res_b["pill"]
+        assert res_b["text"] == "2", f"Expected the pill to read 2, got {res_b['text']!r}"
         out["b_today_yesterday"] = f"OK: current={res_b['st']['current']} ({res_b['text']})"
 
         # (c) 1-day gap with a shield available -> streak alive and 🛡
@@ -95,14 +95,14 @@ async def main():
             save(); refreshAll();
             return {
                 st: calcStreak(),
-                cardText: document.getElementById('streakCard').textContent
+                pill: document.getElementById('streakTopNum').textContent.trim()
             };
         }"""
         )
         assert res_c["st"]["current"] == 3, f"Expected current=3 with shield, got {res_c}"
         assert res_c["st"]["freezeUsed"] == 1, f"Expected freezeUsed=1, got {res_c}"
-        assert "🛡" in res_c["cardText"], f"Expected 🛡 in {res_c['cardText']}"
-        out["c_freeze_1day"] = f"OK: current={res_c['st']['current']}, freezeUsed={res_c['st']['freezeUsed']} (🛡 visible)"
+        assert res_c["pill"] == "3", f"Pill disagrees with the shield count: {res_c}"
+        out["c_freeze_1day"] = f"OK: current={res_c['st']['current']}, freezeUsed={res_c['st']['freezeUsed']}"
 
         # (d) 2-day gap -> broken
         res_d = await page.evaluate(
@@ -164,13 +164,11 @@ async def main():
             ];
             save(); refreshAll();
             return {
-                st: calcStreak(),
-                recText: document.getElementById('streakLongest').textContent.trim()
+                st: calcStreak()
             };
         }"""
         )
         assert res_f["st"]["current"] == 2 and res_f["st"]["longest"] == 5, f"Expected 2/5, got {res_f}"
-        assert "record 5" in res_f["recText"]
         out["f_longest_record"] = f"OK: current={res_f['st']['current']}, longest={res_f['st']['longest']}"
 
         # (g) Correct weekCount + 3-tap Quick-Log at 360px
@@ -194,12 +192,13 @@ async def main():
             qlSave();
             const after = calcStreak().weekCount;
             const expectedAfter = (mon === t0) ? 1 : 2;
-            return {before, after, expectedAfter, weekText: document.getElementById('streakWeek').textContent.trim()};
+            return {before, after, expectedAfter, pill: document.getElementById('streakTopNum').textContent.trim()};
         }"""
         )
         assert res_g["before"] == 1, f"Expected weekCount=1 before quicklog, got {res_g}"
         assert res_g["after"] == res_g["expectedAfter"], f"Expected weekCount={res_g['expectedAfter']}, got {res_g}"
-        out["g_week_count"] = f"OK: weekCount={res_g['after']} ({res_g['weekText']})"
+        assert res_g["pill"] == str(res_g["after"]), f"Pill out of date: {res_g}"
+        out["g_week_count"] = f"OK: weekCount={res_g['after']}"
 
         # Clean up the test user's localStorage
         await page.evaluate("localStorage.removeItem('b2first_tracker_v1_test_streak_ci'); localStorage.removeItem('b2first_user');")

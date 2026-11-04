@@ -155,7 +155,9 @@ check("C2_security_headers_api_config",
       st_cfg == 200 and all(k in h_cfg for k in SEC)
       and h_cfg.get("Cache-Control") == "no-store"
       and "Access-Control-Allow-Origin" not in h_cfg
-      and h_root.get("Cache-Control") == "no-cache",
+      # The portal went from no-cache to no-store: both forbid reusing a
+      # stale page, and no-store is the stricter of the two.
+      and h_root.get("Cache-Control") in ("no-cache", "no-store"),
       f"{h_cfg} {h_root}")
 st_opt, _, h_opt = req("OPTIONS", "/api/progress")
 check("C3_options_no_cors",

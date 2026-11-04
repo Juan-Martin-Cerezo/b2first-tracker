@@ -1,11 +1,11 @@
-"""Tests of the onboarding intake wizard (6 steps) and its outputs:
+"""Tests of the onboarding intake wizard (4 steps) and its outputs:
 
 - the wizard (dialog, focus trap, Back/Continue, Esc) and D.profile
 - the profile-driven weekly plan (hoursWeek -> slots, profile.days,
   skills ratings, struggles reinforcement slots, real reasons)
 - Today's exam countdown using profile.examDate
-- "Edit my intake" / "Show the walkthrough again" in Plan -> Settings
-- the 3-step feature tour, skipping invisible targets
+- "Edit my intake" / "Replay the app tour" in Plan -> Settings
+- the 7-step feature tour, skipping invisible targets
 - empty states; errores_js empty across the whole run
 
 It boots its own server with DATA_DIR in a temporary directory (pattern
@@ -70,7 +70,7 @@ with sync_playwright() as p:
     pg.evaluate("u => localStorage.setItem('b2first_user', JSON.stringify(u))", user)
     pg.reload(wait_until="networkidle")
 
-    # 1. First visit -> wizard visible at step 1/6
+    # 1. First visit -> wizard visible at step 1/4
     pg.wait_for_selector("#onboardingOverlay", state="visible", timeout=5000)
     res1 = pg.evaluate(
         """() => ({
@@ -79,7 +79,7 @@ with sync_playwright() as p:
     })"""
     )
     assert res1["visible"] is True, f"Wizard not visible on first visit: {res1}"
-    assert res1["step"] == "1/6", f"Expected step 1/6, got {res1}"
+    assert res1["step"] == "1/4", f"Expected step 1/4, got {res1}"
     out["1_primera_visita"] = f"OK: wizard visible, step {res1['step']}"
 
     # 2. Initial focus is inside the dialog
@@ -89,32 +89,59 @@ with sync_playwright() as p:
     assert res2 is True, "Initial focus is not inside #obDialog"
     out["2_foco_inicial"] = "OK: focus inside #obDialog"
 
-    # 3. Continue advances to 2/6; Back returns to 1/6
+    # 3. Continue advances to 2/4; Back returns to 1/4 (step 1 requires a date)
+    pg.fill("#obExamDate", "2027-06-12")
     pg.click("#obNextBtn")
+    pg.wait_for_timeout(100)
     step_a = pg.text_content("#obStepCount").strip()
     pg.click("#obBackBtn")
+    pg.wait_for_timeout(100)
     step_b = pg.text_content("#obStepCount").strip()
-    assert step_a == "2/6", f"Continue did not advance: {step_a}"
-    assert step_b == "1/6", f"Back did not return: {step_b}"
-    out["3_continue_back"] = "OK: Continue -> 2/6, Back -> 1/6"
+    assert step_a == "2/4", f"Continue did not advance: {step_a}"
+    assert step_b == "1/4", f"Back did not return: {step_b}"
+    out["3_continue_back"] = "OK: Continue -> 2/4, Back -> 1/4"
 
-    # 4. Complete the 6 steps -> D.profile with all the fields + onboarded
-    pg.click("#obNextBtn")  # 1 -> 2 (exam date & target grade)
+    # 4. Complete the 4 steps -> D.profile with all the fields + onboarded
     pg.fill("#obExamDate", "2027-06-12")
     pg.click("input[name='obGrade'][value='A']")
-    pg.click("#obNextBtn")  # 2 -> 3 (skills)
+    pg.click("#obNextBtn")  # 1 -> 2 (skills)
     pg.click(".ob-rate-btn[data-skill='w'][data-val='2']")
-    pg.click("#obNextBtn")  # 3 -> 4 (time)
+    pg.click("#obNextBtn")  # 2 -> 3 (diagnostic step)
+    # The diagnostic is not part of this test; seed a result and continue.
+    pg.evaluate(
+        """() => {
+        D.diag = {date: today(), correct: 8, total: 12,
+                  byPart: {1:{ok:2,n:2},2:{ok:1,n:2},3:{ok:2,n:2},4:{ok:1,n:2},
+                           5:{ok:1,n:1},6:{ok:0,n:1},7:{ok:1,n:2}},
+                  weakest: [6, 4, 7]};
+        obRender();
+    }"""
+    )
+    pg.click("#obStepBody .btn.ok")  # -> plan step
+    pg.wait_for_timeout(150)
+    assert pg.text_content("#obStepCount").strip() == "4/4", "Did not reach the plan step"
+    # Choose 6 h/week and mon/wed/sat with the real chips.
     pg.click(".chip-btn[data-hours='6']")
-    pg.click("#obNextBtn")  # 4 -> 5 (struggles)
-    pg.click(".chip-btn[data-str='1']")  # Grammar accuracy -> G-ERR
-    pg.click("#obNextBtn")  # 5 -> 6 (plan preview)
+    pg.evaluate(
+        """() => {
+        const target = ['mon','wed','sat'];
+        document.querySelectorAll('.chip-btn[data-day]').forEach(b => {
+            const want = target.includes(b.dataset.day);
+            if ((b.getAttribute('aria-pressed') === 'true') !== want) b.click();
+        });
+    }"""
+    )
     preview_rows = pg.eval_on_selector_all(
         "#obPlanPreview .ob-preview-row", "els => els.length"
     )
     assert preview_rows >= 5, f"Plan preview has {preview_rows} rows, expected >=5"
-    pg.click("#obStepBody button:has-text('Go to Today')")
-    pg.wait_for_timeout(150)
+    pg.click("#obAcceptBtn")
+    pg.wait_for_timeout(350)
+    # Accepting starts the guided tour; finishing it is what marks the intake done.
+    assert pg.evaluate("TOUR.active === true"), "Accepting the plan did not start the tour"
+    pg.evaluate("endTour()")
+    # Let the save that carries onboarded=true reach the server before reload.
+    pg.wait_for_timeout(900)
     res4 = pg.evaluate(
         """() => {
         const p = D.profile || {};
@@ -131,8 +158,8 @@ with sync_playwright() as p:
     assert res4["targetGrade"] == "A", f"Bad targetGrade: {res4}"
     assert res4["skills"] == {"rue": 3, "w": 2, "l": 3, "sp": 3}, f"Bad skills: {res4}"
     assert res4["hoursWeek"] == 6, f"Bad hoursWeek: {res4}"
-    assert res4["days"] == ["mon", "wed", "sat"], f"Bad days: {res4}"
-    assert res4["struggles"] == ["G-ERR"], f"Bad struggles: {res4}"
+    assert sorted(res4["days"]) == sorted(["mon", "wed", "sat"]), f"Bad days: {res4}"
+    assert res4["struggles"] == [], f"Bad struggles: {res4}"
     assert res4["declaredAt"] is True, f"Bad declaredAt: {res4}"
     out["4_perfil_completo"] = f"OK: D.profile={res4}"
 
@@ -149,15 +176,17 @@ with sync_playwright() as p:
     assert res5["onboarded"] is True and res5["profile"] is True, f"Lost state: {res5}"
     out["5_reload_sin_wizard"] = "OK: wizard hidden after reload"
 
-    # 6. Esc closes and marks onboarded without creating an empty profile
+    # 6. Esc does not cancel the mandatory setup
     pg.evaluate(
         """() => {
         delete D.profile;
         D.onboarded = false;
+        D.onboardStep = 1;
         save();
         showOnboarding();
     }"""
     )
+    pg.wait_for_timeout(100)
     pg.keyboard.press("Escape")
     res6 = pg.evaluate(
         """() => ({
@@ -166,10 +195,11 @@ with sync_playwright() as p:
         profile: D.profile || null
     })"""
     )
-    assert res6["open"] is False, f"Esc did not close: {res6}"
-    assert res6["onboarded"] is True, f"Esc did not mark onboarded: {res6}"
+    assert res6["open"] is True, f"Esc closed the mandatory wizard: {res6}"
+    assert res6["onboarded"] is False, f"Esc marked the intake done: {res6}"
     assert res6["profile"] is None, f"Esc created an incoherent profile: {res6}"
-    out["6_esc"] = "OK: closed + onboarded + no empty profile"
+    pg.evaluate("obClose()")
+    out["6_esc"] = "OK: Esc ignored, intake still pending"
 
     # 7. hoursWeek 2 -> 3 slots; 10+ -> 6 slots (no diagnostic)
     res7 = pg.evaluate(
@@ -240,8 +270,13 @@ with sync_playwright() as p:
         save(); refreshAll();
     }"""
     )
-    res11 = pg.evaluate("() => document.getElementById('examCountdown').textContent")
-    assert "12/06/2027" in res11, f"Countdown not using profile.examDate: {res11}"
+    res11 = pg.evaluate(
+        """() => ({
+        display: document.getElementById('examCountdown').style.display,
+        text: document.getElementById('examCountdown').textContent
+    })"""
+    )
+    assert res11["display"] == "none", f"Countdown did not accept profile.examDate: {res11}"
     res11b = pg.evaluate(
         """() => {
         D.profile.examDate = null; D.examDates = [];
@@ -250,7 +285,7 @@ with sync_playwright() as p:
     }"""
     )
     assert "Set your exam date" in res11b, f"Missing chip: {res11b}"
-    out["11_countdown_perfil"] = "OK: countdown from profile.examDate + 'Set your exam date' chip"
+    out["11_countdown_perfil"] = "OK: card hides with profile.examDate + shows 'Set your exam date' without one"
 
     # 12. "Edit my intake" reopens with the current values prefilled (2 inputs)
     pg.evaluate(
@@ -275,24 +310,31 @@ with sync_playwright() as p:
     assert res12["grade"] == "A", f"Target grade not prefilled: {res12}"
     out["12_edit_my_intake"] = f"OK: prefilled date={res12['date']} grade={res12['grade']} (step {res12['step']})"
 
-    # 13. "Show the walkthrough again" relaunches the coach marks (no reload)
-    pg.keyboard.press("Escape")
-    pg.click("button:has-text('Show the walkthrough again')")
-    pg.wait_for_timeout(150)
+    # 13. "Replay the app tour" relaunches the coach marks (no reload)
+    pg.evaluate("obClose()")
+    pg.click("#tourReplayBtn")
+    pg.wait_for_timeout(250)
     res13 = pg.evaluate(
         """() => ({
         visible: document.getElementById('tourCard').style.display === 'block',
-        title: document.getElementById('tourTitle').textContent
+        title: document.getElementById('tourTitle').textContent,
+        count: document.getElementById('tourCount').textContent.trim()
     })"""
     )
     assert res13["visible"] is True, f"Tour did not relaunch: {res13}"
     assert res13["title"].strip(), f"Coach mark without title: {res13}"
+    assert res13["count"] == "1/7", f"Tour did not start at 1/7: {res13}"
     out["13_walkthrough_again"] = f"OK: tour relaunched ({res13['title']})"
 
-    # 14. A coach mark whose target is not visible is skipped (diag banner hidden)
-    pg.evaluate("() => { document.getElementById('diagBanner').style.display = 'none'; }")
-    pg.click("#tourNext")  # nav -> quick-log FAB
-    pg.click("#tourNext")  # FAB -> diag button (hidden -> skipped -> tour ends)
+    # 14. A coach mark whose target is not visible is skipped
+    pg.evaluate(
+        """() => {
+        document.getElementById('streakTopPill').style.display = 'none';
+        TOUR.i = TOUR_STEPS.length - 1;
+        tourShow();
+    }"""
+    )
+    pg.wait_for_timeout(300)
     res14 = pg.evaluate(
         """() => ({
         card: document.getElementById('tourCard').style.display,
@@ -300,6 +342,7 @@ with sync_playwright() as p:
     })"""
     )
     assert res14["card"] == "none" and res14["active"] is False, f"Invisible step not skipped: {res14}"
+    pg.evaluate("document.getElementById('streakTopPill').style.display = ''")
     out["14_saltea_invisible"] = "OK: hidden target skipped, tour ended"
 
     # Empty states travel intact (Today / Charts / Errors)

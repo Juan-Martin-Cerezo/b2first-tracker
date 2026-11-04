@@ -95,15 +95,25 @@ def get(path, headers=None):
         return e.code, e.read().decode("utf-8", "replace"), dict(e.headers)
 
 
-def tree(root):
-    out = []
-    for dirpath, dirs, files in os.walk(root):
-        out += [os.path.join(dirpath, d) for d in dirs]
-        out += [os.path.join(dirpath, f) for f in files]
-    return sorted(out)
+def user_data(root):
+    """Files a hostile request must never create: accounts, tokens, progress.
+
+    The server does write its own operational files under DATA_DIR
+    (`.events_salt`, `errors/YYYY-MM-DD.jsonl`) when it logs a rejected
+    request, so those are not user data and are excluded here.
+    """
+    keep = []
+    for dirpath, _dirs, files in os.walk(root):
+        if os.path.basename(dirpath) == "errors":
+            continue
+        for name in files:
+            if name == ".events_salt":
+                continue
+            keep.append(os.path.join(dirpath, name))
+    return sorted(keep)
 
 
-before = tree(_tmp)
+before = user_data(_tmp)
 
 # 1. URI longer than 2048 chars -> 414
 st, _h, _b = raw_req("GET", "/" + "a" * 3000)
@@ -191,8 +201,8 @@ check("13_internal_error_no_leak",
       and json.loads(body).get("rid") == h500.get("X-Request-Id"),
       f"{st} {body[:120]}")
 
-# 14. None of the hostile requests created files under DATA_DIR
-check("14_no_data_writes", tree(_tmp) == before, f"{tree(_tmp)} != {before}")
+# 14. None of the hostile requests created user data under DATA_DIR
+check("14_no_user_data_writes", user_data(_tmp) == before, f"{user_data(_tmp)} != {before}")
 
 # 15. The bind address defaults to loopback
 check("15_bind_default_loopback", S.B2_HOST == "127.0.0.1", f"{S.B2_HOST!r}")

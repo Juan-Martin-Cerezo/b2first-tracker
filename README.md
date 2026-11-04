@@ -283,6 +283,10 @@ and every suite that boots its own server sets `B2_DATA_DIR` (and a free port) b
 cd tests
 uv run --with playwright python test_final.py
 uv run --with httpx python test_capacity.py
+
+# every suite, one exit code (per-test logs in tests/out/run_all/)
+./run_all.sh
+./run_all.sh speaking     # only suites whose file name matches
 ```
 
 | Suite | Covers |

@@ -279,14 +279,17 @@ with sync_playwright() as p:
     pg.goto(URL + "/app", wait_until="networkidle")
     pg.evaluate("localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(session)))
     pg.evaluate("localStorage.setItem('ob_%s', '1');" % session["id"])
-    pg.reload(wait_until="networkidle")
+    # The app keeps flushing telemetry after load, so networkidle is not a
+    # stable signal here; wait for the session UI instead.
+    pg.reload(wait_until="load")
+    pg.wait_for_selector("#authOverlay", state="hidden", timeout=15000)
     pg.wait_for_timeout(500)
     state = pg.evaluate(
         """() => ({
         hasUser: !!(window.USER && window.USER.token),
         authHidden: getComputedStyle(document.getElementById('authOverlay')).display === 'none',
         footBadge: (() => {
-            const el = document.getElementById('syncBadgeFoot');
+            const el = document.getElementById('syncBadge');
             return el ? {text: (el.textContent || '').trim(), label: el.getAttribute('aria-label') || ''} : null;
         })()
     })"""
@@ -294,6 +297,7 @@ with sync_playwright() as p:
     assert state["hasUser"] and state["authHidden"], f"session UI state wrong: {state}"
     assert state["footBadge"] and state["footBadge"]["text"] == "", f"footer badge should have no text: {state}"
     assert state["footBadge"]["label"] in (
+        "Save status on the server",
         "Progress saved to the server",
         "Saving…",
         "Offline — changes stay on this device",

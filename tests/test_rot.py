@@ -18,7 +18,9 @@ with sync_playwright() as p:
     out["wTipo_value"] = pg.input_value("#wTipo")
     out["semana_txt"] = pg.evaluate("document.getElementById('semanaTxt').textContent")
 
-    # manual writing override: pick Report and save
+    # manual writing override: pick Report and save (the control lives in PLAN)
+    pg.click("nav button[data-view='plan']")
+    pg.wait_for_timeout(200)
     pg.select_option("#ovW", "Report")
     out["override_set"] = pg.evaluate("D.weekOverrides.w === 'Report'")
     out["wTipo_tras_override"] = pg.input_value("#wTipo")

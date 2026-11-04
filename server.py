@@ -6023,14 +6023,17 @@ class H(BaseHTTPRequestHandler):
             except (ValueError, KeyError, IndexError, TypeError, AttributeError):
                 self._send_json(422, {"error": "invalid model json"})
                 return
-            if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
-                self._send_json(502, {"error": "model output too large"})
-                return
             cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
+            # A prompt leak is a safety refusal, not a size problem: check it
+            # before the length cap so an oversized echo is still reported as
+            # "unsafe output" (and audited as such) instead of "too large".
             if _leaks_system_prompt(cand_text):
                 _audit("ai_blocked", "", client_ip, self._rid,
                        {"reason": "prompt_leak", "chars": len(cand_text)})
                 self._send_json(502, {"error": "unsafe output"})
+                return
+            if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
+                self._send_json(502, {"error": "model output too large"})
                 return
             try:
                 model_obj = json.loads(cand_text)

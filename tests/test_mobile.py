@@ -25,18 +25,17 @@ with sync_playwright() as p:
     # full nav present (10 views + More)?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")
 
-    # BOOKS tab (hidden behind More in the mobile nav)
-    pg.click("#navMoreBtn")
-    pg.wait_for_timeout(80)
-    pg.click("nav button[data-view='libros']")
-    pg.wait_for_timeout(300)
-    out["libros_comprables"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
+    # BOOKS merged into PRACTICE: online practice and downloadable material
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(600)
+    out["online_cards"] = pg.eval_on_selector_all("#onlineList .book", "els => els.length")
+    out["material_cards"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
 
     # filter works on mobile
-    pg.fill("#bookFilter", "fce")
+    pg.fill("#matFilter", "listening")
     pg.wait_for_timeout(200)
-    out["filtro_fce"] = pg.eval_on_selector_all("#bookList .book", "els => els.length")
-    pg.fill("#bookFilter", "")
+    out["filtro_listening"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
+    pg.fill("#matFilter", "")
 
     # PROGRESS: export/import present + gates
     pg.click("nav button[data-view='prog']")

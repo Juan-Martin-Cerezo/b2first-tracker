@@ -19,8 +19,10 @@ with sync_playwright() as p:
     out["owner_nav_a"] = pg.text_content("#navLblMonA")
     out["owner_nav_b"] = pg.text_content("#navLblFriA")
     out["owner_st1_time"] = pg.text_content("#st1TimeBadge")
-    out["owner_rot_a"] = pg.text_content("#rotWkASesADay")
-    out["owner_rot_b"] = pg.text_content("#rotWkASesBDay")
+    out["owner_rot_a"] = pg.text_content("#navLblMonA")
+    out["owner_rot_b"] = pg.text_content("#navLblFriA")
+    out["owner_ses_a_time"] = pg.text_content("#st1TimeBadge")
+    out["owner_ses_b_time"] = pg.text_content("#st3TimeBadge")
 
     # 2. Switch to Maria Fatima (Ses A: Tue 17:00, Ses B: Thu 17:00)
     # A fabricated session no longer boots the app: the token has to exist on
@@ -59,15 +61,18 @@ with sync_playwright() as p:
     out["maria_st1_time"] = pg.text_content("#st1TimeBadge")
     out["maria_st3_badge"] = pg.text_content("#st3WkBadge")
     out["maria_st3_time"] = pg.text_content("#st3TimeBadge")
-    out["maria_rot_a"] = pg.text_content("#rotWkASesADay")
-    out["maria_rot_b"] = pg.text_content("#rotWkASesBDay")
+    out["maria_rot_a"] = pg.text_content("#navLblMonA")
+    out["maria_rot_b"] = pg.text_content("#navLblFriA")
+    out["maria_ses_a_time"] = pg.text_content("#st1TimeBadge")
+    out["maria_ses_b_time"] = pg.text_content("#st3TimeBadge")
 
-    # 3. Open User Modal
-    pg.click("#userChip")
+    # 3. Open User Modal (the chip now contains a logout button, so call the
+    #    app's own opener instead of clicking the chip's centre)
+    pg.evaluate("openUserModal()")
     pg.wait_for_timeout(300)
     out["modal_visible"] = pg.is_visible("#userModal")
     out["modal_user"] = pg.text_content("#modalUserName")
-    out["modal_schedule"] = pg.text_content("#modalUserSchedule")
+    out["modal_stage"] = pg.text_content("#modalUserStage")
     pg.click("#userModal .del")
     pg.wait_for_timeout(200)
     out["modal_closed"] = not pg.is_visible("#userModal")

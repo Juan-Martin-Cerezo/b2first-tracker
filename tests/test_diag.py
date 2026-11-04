@@ -137,12 +137,15 @@ with sync_playwright() as p:
     }"""
     )
 
-    # Check that the banner is visible on TODAY at the start (no diag in D.log)
-    banner_before = pg.evaluate("getComputedStyle(document.getElementById('diagBanner')).display !== 'none'")
-    assert banner_before is True, "Expected diagBanner to be visible before completing diagnostic"
+    # The Today banner is gone: the diagnostic opens from its own view. The
+    # intro card must be there while there is no result.
+    pg.evaluate("showView('diag')")
+    pg.wait_for_timeout(200)
+    intro_before = pg.evaluate("!!document.getElementById('diagIntroCard')")
+    assert intro_before is True, "Expected the diagnostic intro before completing it"
 
-    # Start the diagnostic from the TODAY banner
-    pg.click("#diagBannerBtn")
+    # Start the diagnostic from the intro card
+    pg.click("#diagStartBtn")
     pg.wait_for_selector("#diagQuestionCard", timeout=5000)
 
     # Assert 4: an explain does NOT appear in the DOM before finishing
@@ -164,7 +167,7 @@ with sync_playwright() as p:
         diagLogs: D.log.filter(x => x.type === 'diag'),
         errs: D.errs,
         diag: D.diag,
-        bannerVisible: getComputedStyle(document.getElementById('diagBanner')).display !== 'none',
+        introVisible: !!document.getElementById('diagIntroCard'),
         scoreText: document.getElementById('diagTotalScore').textContent.trim()
     })"""
     )
@@ -178,14 +181,17 @@ with sync_playwright() as p:
         "errs_len": len(res_all_ok["errs"]),
     }
 
-    # Assert 8: the diagnostic banner disappears from TODAY after completing it
+    # Assert 8: the start card disappears once a result exists
     pg.click("nav button[data-view='hoy']")
-    banner_after = pg.evaluate("getComputedStyle(document.getElementById('diagBanner')).display")
-    assert banner_after == "none", f"Expected diagBanner display 'none' after completion, got {banner_after}"
-    out["8_banner_disappears"] = banner_after == "none"
+    pg.wait_for_timeout(150)
+    pg.evaluate("showView('diag')")
+    pg.wait_for_timeout(150)
+    intro_after = pg.evaluate("!!document.getElementById('diagIntroCard')")
+    assert intro_after is False, "The intro card is still showing after a finished diagnostic"
+    out["8_intro_disappears"] = True
 
     # Assert 6: answer everything wrong -> 12 new entries in D.errs with valid tax and src:'diag'
-    pg.click("nav button[data-view='diag']")
+    pg.evaluate("showView('diag')")
     pg.wait_for_selector("#diagRepeatBtn", timeout=5000)
     pg.click("#diagRepeatBtn")
     pg.wait_for_selector("#diagQuestionCard", timeout=5000)
@@ -225,13 +231,13 @@ with sync_playwright() as p:
     parts_filtered = pg.evaluate(
         """() => ({
         activeView: document.querySelector('.view.active')?.id,
-        filterVal: PARTS_FILTER,
-        stepsCount: document.querySelectorAll('#partsList .step').length
+        filterVal: RES_FILTER,
+        papersCount: document.querySelectorAll('#resourcesList .res-paper').length
     })"""
     )
     assert parts_filtered["activeView"] == "v-practice"
-    assert parts_filtered["filterVal"] == first_weak_part
-    assert parts_filtered["stepsCount"] == 1
+    assert parts_filtered["filterVal"] == {"type": "ue", "part": first_weak_part}
+    assert parts_filtered["papersCount"] == 1
 
     # Clear localStorage when done
     pg.evaluate("localStorage.clear()")

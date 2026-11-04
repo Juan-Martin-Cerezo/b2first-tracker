@@ -31,18 +31,16 @@ with sync_playwright() as p:
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
-    # CHARTS tab exists in the nav
-    out["nav_graf"] = pg.eval_on_selector_all("nav button[data-view='graf']", "els => els.length")
+    # The charts live in Progress; there is no separate Charts tab any more.
+    out["nav_prog"] = pg.eval_on_selector_all("nav button[data-view='prog']", "els => els.length")
 
-    # no data: empty messages (CHARTS is behind "More" in the mobile nav)
-    pg.click("#navMoreBtn")
-    pg.wait_for_timeout(80)
-    pg.click("nav button[data-view='graf']")
+    # no data: the four panels share one empty message
+    pg.click("nav button[data-view='prog']")
     pg.wait_for_timeout(200)
-    out["evol_vacio"] = "Log Writing" in pg.evaluate("document.getElementById('gEvol').textContent")
-    out["part_vacio"] = "No data yet" in pg.evaluate("document.getElementById('gPart').textContent")
-    out["err_vacio"] = "No errors logged" in pg.evaluate("document.getElementById('gErr').textContent")
-    out["cons_vacio"] = "No logs yet" in pg.evaluate("document.getElementById('gCons').textContent")
+    out["evol_vacio"] = "Charts appear" in pg.evaluate("document.getElementById('gEvol').textContent")
+    out["part_vacio"] = "Charts appear" in pg.evaluate("document.getElementById('gPart').textContent")
+    out["err_vacio"] = "Charts appear" in pg.evaluate("document.getElementById('gErr').textContent")
+    out["cons_vacio"] = "Charts appear" in pg.evaluate("document.getElementById('gCons').textContent")
 
     # with data: the 4 panels render
     pg.evaluate("""D.log.push({date:'2026-08-15',type:'w',kind:'Essay',score:15,min:30});

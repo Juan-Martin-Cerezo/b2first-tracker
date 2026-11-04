@@ -225,7 +225,11 @@ def goto_view(pg, name):
         if pg.evaluate("getComputedStyle(document.getElementById('navMoreBtn')).display") != "none":
             pg.evaluate("document.getElementById('navMoreBtn').click()")
             pg.wait_for_timeout(60)
-    pg.click(f"nav button[data-view='{name}']")
+    # Views without a nav entry (diagnostic) go through the app's own router.
+    if pg.evaluate(f"!!document.querySelector(\"nav button[data-view='{name}']\")"):
+        pg.click(f"nav button[data-view='{name}']")
+    else:
+        pg.evaluate(f"showView('{name}')")
     pg.wait_for_timeout(250)
 
 
@@ -243,9 +247,10 @@ def show(pg, view, lang):
     elif view == "errors":
         goto_view(pg, "err")
     elif view in ("books", "material"):
-        goto_view(pg, "libros")
+        # Both live in Practice now; the Books tab is a redirect.
+        goto_view(pg, "practice")
         pg.wait_for_timeout(700)
-        target = "bookList" if view == "books" else "matList"
+        target = "onlineList" if view == "books" else "matList"
         pg.evaluate("document.getElementById('%s').scrollIntoView({block:'start'})" % target)
         pg.wait_for_timeout(200)
     elif view == "speaking":
@@ -327,12 +332,11 @@ def main():
             )
             pg.goto(URL + "app", wait_until="networkidle")
             pg.wait_for_timeout(500)
-            if pg.evaluate(
-                "typeof finishOnboarding==='function' && document.getElementById('onboardingOverlay')"
-                " && document.getElementById('onboardingOverlay').style.display==='flex'"
-            ):
-                pg.evaluate("finishOnboarding()")
-                pg.wait_for_timeout(200)
+            # The overlay can open before the synced progress says the intake
+            # is done. `finishOnboarding` no longer exists; close it the way
+            # the app does so the nav underneath is clickable.
+            pg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding();")
+            pg.wait_for_timeout(200)
 
             for lang in ("en", "es"):
                 for view in PAGE_VIEWS:

@@ -188,11 +188,11 @@ async def main():
         )
         nav_state = await page.evaluate(
             "() => ({view: document.querySelector('.view.active')?.id,"
-            " filter: PARTS_FILTER, steps: document.querySelectorAll('#partsList .step').length})"
+            " filter: RES_FILTER, papers: document.querySelectorAll('#resourcesList .res-paper').length})"
         )
         assert nav_state["view"] == "v-practice", f"Start did not navigate to PRACTICE: {nav_state}"
-        assert nav_state["filter"] == ue_part, f"Filter not applied: {nav_state}"
-        assert nav_state["steps"] == 1, f"Filter did not leave 1 part: {nav_state}"
+        assert nav_state["filter"] == {"type": "ue", "part": ue_part}, f"Filter not applied: {nav_state}"
+        assert nav_state["papers"] == 1, f"Filter did not leave one paper: {nav_state}"
         out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> PRACTICE part {ue_part}"
 
         # Clean up the test user's localStorage

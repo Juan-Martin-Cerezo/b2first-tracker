@@ -339,8 +339,10 @@ def main():
             for task in items:
                 assert len(task["prompts"]) == 5, task["id"]
         if n == 4:
+            # The bank ships five original follow-up questions per task; the
+            # assertion used to ask for six, which no task in the bank has.
             for task in items:
-                assert len(task["questions"]) >= 6, task["id"]
+                assert len(task["questions"]) >= 5, task["id"]
     status, body = get("/material/speaking.json")
     assert status == 200 and json.loads(body) == bank, "served bank differs from disk"
     out["1_bank"] = {"parts": len(parts), "photos": photo_count}
@@ -907,9 +909,10 @@ def main():
         pg.click("#spxParts [data-part='2']")
         pg.click("#spxStartBtn")
 
-        # --- 3. Brief: three bullets, timings and the one rule -------------
+        # --- 3. Brief: four bullets (partner role + AI mode), timings, rule ---
         assert wait_until(pg, "SP_EXAM.screen==='brief'", 5), "the brief never rendered"
-        assert pg.evaluate("document.querySelectorAll('.spx-brief li').length") == 3
+        assert pg.evaluate("document.querySelectorAll('.spx-brief li').length") == 4
+        assert pg.evaluate("document.getElementById('spxBriefAi').textContent.trim().length") > 0
         rule = pg.evaluate("document.querySelector('[data-i18n=\"spx_rule\"]').textContent")
         assert "5 seconds" in rule and "English" in rule, rule
         assert "Part 2" in pg.evaluate("document.getElementById('spxBriefTime').textContent")
@@ -971,7 +974,9 @@ def main():
         assert isinstance(bands["discourse_management"], int), bands
         assert isinstance(bands["interactive_communication"], int), bands
         assert bands["pronunciation"] is None, bands
-        assert pg.evaluate("(SPK.reportData||{}).duration_s") >= 120, \
+        # Part 2's script is 15 + 60 + 10 + 30 s = 115 s of turns, so the
+        # reported duration cannot be the old 120 s guess.
+        assert pg.evaluate("(SPK.reportData||{}).duration_s") >= 115, \
             pg.evaluate("(SPK.reportData||{}).duration_s")
         pronoun = pg.evaluate(
             "document.querySelectorAll('#spxFbScales .spk-scale')[2].textContent")
@@ -988,7 +993,9 @@ def main():
         assert wait_until(pg, "SP_EXAM.screen==='report'", 5), "the report screen never showed"
         entry = pg.evaluate("D.log.filter(e=>e.type==='sp').slice(-1)[0]")
         assert entry["type"] == "sp" and entry["part"] == 2, entry
-        assert entry["min"] >= 3, entry
+        # Minutes are derived from the measured seconds of the part, not rounded up.
+        measured = entry["part_stats"][0]["seconds"]
+        assert entry["min"] == max(1, math.ceil(measured / 60)), entry
         assert isinstance(entry["bands"], dict) and len(entry["bands"]) == 4, entry
         assert isinstance(entry["bands"]["interactive_communication"], int), entry
         assert entry["bands"]["pronunciation"] is None, entry
@@ -1008,7 +1015,7 @@ def main():
                 pass
             pg.wait_for_timeout(250)
         rows = [e for e in (saved or {}).get("log", []) if e.get("type") == "sp"]
-        assert rows and rows[-1]["part"] == 2 and rows[-1]["min"] >= 3, rows[-1:]
+        assert rows and rows[-1]["part"] == 2 and rows[-1]["min"] == entry["min"], rows[-1:]
         out["6_log"] = {"min": entry["min"], "bands": entry["bands"]}
 
         # --- 7. Silence: 6 s muted -> exactly one prompt -------------------
