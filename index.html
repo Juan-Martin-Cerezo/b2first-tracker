@@ -646,6 +646,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spx-note{font-size:var(--fs-xs);color:var(--txt-2);background:var(--surface-2);border-radius:var(--r-ctl);padding:8px 10px;margin:8px 0}
 .spx-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .spx-actions .btn{min-height:44px}
+#spxOverlay button{min-height:44px;min-width:44px}
 .spx-exam-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:12px;flex-wrap:wrap}
 .spx-phase{font-size:var(--fs-sm);color:var(--txt-2)}
 .spx-phase b{display:block;font-size:var(--fs-md);color:var(--txt)}
@@ -2271,7 +2272,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="live-sub" data-i18n="spx_sub">Cambridge B2 First · part by part</div>
                       </div>
                       <div class="live-actions">
-                        <button class="btn sm gray" id="spxCloseBtn" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
+                        <button class="btn sm gray" id="spxCloseBtn" onclick="SP_EXAM.close()" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
                       </div>
                     </div>
 
@@ -2279,7 +2280,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                     <section class="spx-screen" data-spx-screen="choose">
                       <p class="spx-sentence" id="spxChooseSentence"></p>
-                      <button type="button" class="spx-full" id="spxFullBtn" onclick="SP_EXAM.startFull()" aria-pressed="false">
+                      <button type="button" class="spx-full" id="spxFullBtn" onclick="SP_EXAM.startFull()" aria-pressed="false" aria-label="Choose the full exam" data-i18n-aria-label="spx_aria_full">
                         <span class="n" data-i18n="spx_full_exam">Full exam · Parts 1–4</span>
                         <span class="d" data-i18n="spx_full_desc">Examiner, partner and you, in the official order and timing.</span>
                         <span class="m" data-i18n="spx_full_meta">14 min · 4 parts</span>
@@ -2287,7 +2288,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-parts" id="spxParts" role="radiogroup" aria-labelledby="spxChooseSentence"></div>
                       <div class="spk-report-err" id="spxChooseErr" role="alert"></div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxStartBtn" onclick="SP_EXAM.start()" data-i18n="spx_start">Start</button>
+                        <button class="btn ok" id="spxStartBtn" onclick="SP_EXAM.start()" data-i18n="spx_start" aria-label="Start the exam" data-i18n-aria-label="spx_aria_start">Start</button>
                       </div>
                     </section>
 
@@ -2302,8 +2303,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <p class="spx-rule" data-i18n="spx_rule">Speak in English. If you go quiet for 5 seconds I will ask you a question.</p>
                       <div class="spk-report-err" id="spxBriefErr" role="alert"></div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxReadyBtn" onclick="SP_EXAM.ready()" data-i18n="spx_ready">I'm ready</button>
-                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back">Back</button>
+                        <button class="btn ok" id="spxReadyBtn" onclick="SP_EXAM.ready()" data-i18n="spx_ready" aria-label="Begin the part" data-i18n-aria-label="spx_aria_ready">I'm ready</button>
+                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
                       </div>
                     </section>
 
@@ -2332,8 +2333,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-tx" id="spxTx" aria-label="Transcript" aria-live="polite" data-exam-task data-i18n-aria-label="spx_transcript"></div>
                       <div class="spx-note spx-mic-note" id="spxMicNotice" role="status" style="display:none" data-i18n="spx_mic_denied">Microphone access was denied. The exam continues without speech recognition.</div>
                       <div class="spx-actions">
-                        <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry">Retry the voice</button>
-                        <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early">End this part</button>
+                        <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry" aria-label="Try the microphone again" data-i18n-aria-label="spx_aria_retry_voice">Retry the voice</button>
+                        <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early" aria-label="End this part early" data-i18n-aria-label="spx_aria_end_part">End this part</button>
                       </div>
                     </section>
 
@@ -2352,9 +2353,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <p id="spxFbNext"></p>
                       </div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxFbSave" onclick="SP_EXAM.saveReport()" data-i18n="spx_save">Save report</button>
-                        <button class="btn gray" id="spxFbRetry" onclick="SP_EXAM.retry()" data-i18n="spx_retry">Try the report again</button>
-                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back">Back</button>
+                        <button class="btn ok" id="spxFbSave" onclick="SP_EXAM.saveReport()" data-i18n="spx_save" aria-label="Save the report" data-i18n-aria-label="spx_aria_save">Save report</button>
+                        <button class="btn gray" id="spxFbRetry" onclick="SP_EXAM.retry()" data-i18n="spx_retry" aria-label="Ask for the report again" data-i18n-aria-label="spx_aria_retry_report">Try the report again</button>
+                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
                       </div>
                       <div class="spk-report-err" id="spxFbErr" role="alert"></div>
                     </section>
@@ -2371,8 +2372,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <p id="spxRpTip"></p>
                       </div>
                       <div class="spx-actions">
-                        <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again">Practise another part</button>
-                        <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close">Close</button>
+                        <button class="btn ok" onclick="SP_EXAM.restart()" data-i18n="spx_again" aria-label="Choose another part" data-i18n-aria-label="spx_aria_again">Practise another part</button>
+                        <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
                       </div>
                     </section>
                   </div>
@@ -4340,7 +4341,18 @@ const I18N={
     spx_no_bank:'No task found for Part {n}.',
     spx_report_failed:'The report could not be produced, so nothing was logged.',
     spx_report_working:'Marking your part…',
-    spx_saved_bands:'Bands: {bands}'
+    spx_saved_bands:'Bands: {bands}',
+    spx_aria_close:'Close the speaking exam',
+    spx_aria_full:'Choose the full exam',
+    spx_aria_start:'Start the exam',
+    spx_aria_ready:'Begin the part',
+    spx_aria_back:'Go back',
+    spx_aria_retry_voice:'Try the microphone again',
+    spx_aria_end_part:'End this part early',
+    spx_aria_save:'Save the report',
+    spx_aria_retry_report:'Ask for the report again',
+    spx_aria_again:'Choose another part',
+    spx_aria_part:'Part {n}, {min} minutes'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -5129,7 +5141,18 @@ const I18N={
     spx_no_bank:'No hay tarea para la Parte {n}.',
     spx_report_failed:'No se pudo generar el informe, así que no se guardó nada.',
     spx_report_working:'Corrigiendo tu parte…',
-    spx_saved_bands:'Bandas: {bands}'
+    spx_saved_bands:'Bandas: {bands}',
+    spx_aria_close:'Cerrar el examen oral',
+    spx_aria_full:'Elegir el examen completo',
+    spx_aria_start:'Empezar el examen',
+    spx_aria_ready:'Comenzar la parte',
+    spx_aria_back:'Volver',
+    spx_aria_retry_voice:'Probar el micrófono otra vez',
+    spx_aria_end_part:'Terminar esta parte antes',
+    spx_aria_save:'Guardar el informe',
+    spx_aria_retry_report:'Pedir el informe otra vez',
+    spx_aria_again:'Elegir otra parte',
+    spx_aria_part:'Parte {n}, {min} minutos'
   }
 };
 let LANG='en';
@@ -9346,9 +9369,34 @@ SP_EXAM.whoTurn=function(){
 /* Phase 52: keyboard while the exam overlay is open. Space mutes and unmutes
    the microphone; Escape leaves, and during a live part it asks first so a
    stray key never throws away the session. Typing in a field is left alone. */
+function spxFocusables(){
+  const ov=document.getElementById('spxOverlay');
+  if(!ov)return [];
+  return Array.prototype.filter.call(
+    ov.querySelectorAll('button,a[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'),
+    function(el){
+      if(el.disabled||el.tabIndex<0)return false;
+      if(el.closest('[aria-hidden="true"]'))return false;
+      const r=el.getBoundingClientRect();
+      if(r.width<=0||r.height<=0)return false;
+      const cs=getComputedStyle(el);
+      return cs.visibility!=='hidden'&&cs.display!=='none';
+    });
+}
+
 document.addEventListener('keydown',function(e){
   const ov=document.getElementById('spxOverlay');
   if(!ov||ov.style.display==='none')return;
+  if(e.key==='Tab'){
+    const items=spxFocusables();
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    const active=document.activeElement;
+    if(!ov.contains(active)){e.preventDefault();first.focus();return}
+    if(e.shiftKey&&active===first){e.preventDefault();last.focus();return}
+    if(!e.shiftKey&&active===last){e.preventDefault();first.focus();return}
+    return;
+  }
   if(e.key==='Escape'){
     e.preventDefault();
     if(SP_EXAM.screen==='exam'&&!window.confirm(t('spx_confirm_quit')))return;
@@ -9676,6 +9724,7 @@ function spxRenderChoose(){
     b.className='spx-part';
     b.setAttribute('role','radio');
     b.setAttribute('aria-checked',(!SP_EXAM.selectedFull&&SP_EXAM.part===n)?'true':'false');
+    b.setAttribute('aria-label',t('spx_aria_part',{n:n,min:meta.minutes}));
     b.dataset.part=String(n);
     b.innerHTML='<span class="n">'+esc(t('spx_part_title',{n:n,min:meta.minutes}))+'</span>'
       +'<span class="d">'+esc(t(meta.desc))+'</span>'

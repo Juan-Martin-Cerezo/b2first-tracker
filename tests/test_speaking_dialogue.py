@@ -30,6 +30,9 @@ Five checks, in order:
      the microphone with real key presses, and Escape asks before leaving a
      part that is in progress (dismiss keeps the exam, accept closes it).
      Outside a part, Escape closes without asking.
+  10. Accessibility. Every overlay button carries an aria-label that follows
+     the language switch, Tab and Shift+Tab stay inside the open dialog, and
+     every visible button is at least 44x44 px.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -792,6 +795,113 @@ def test_keyboard_overlay(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 10. Accessibility: labelled buttons, trapped focus and 44 px targets.
+# ---------------------------------------------------------------------------
+SCREENS = ["choose", "brief", "exam", "feedback", "report"]
+
+
+def visible_overlay_buttons(page):
+    return page.evaluate("""() => {
+        const ov = document.getElementById('spxOverlay');
+        return Array.from(ov.querySelectorAll('button')).filter(function (el) {
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden';
+        }).map(function (el) {
+            const r = el.getBoundingClientRect();
+            return {
+                id: el.id,
+                part: el.dataset.part || '',
+                label: (el.getAttribute('aria-label') || '').trim(),
+                text: el.textContent.trim().replace(/\\s+/g, ' '),
+                w: r.width,
+                h: r.height
+            };
+        });
+    }""")
+
+
+def test_overlay_accessibility(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    assert page.evaluate("SP_EXAM.screen") == "choose"
+
+    # Every button that exists in the overlay is labelled, hidden or not.
+    unlabelled = page.evaluate("""() => Array.from(
+        document.querySelectorAll('#spxOverlay button')).filter(function (el) {
+            return !(el.getAttribute('aria-label') || '').trim();
+        }).map(function (el) { return el.id || el.textContent.trim(); })""")
+    assert unlabelled == [], unlabelled
+
+    # Each screen's visible buttons: labelled, and at least 44x44.
+    per_screen = {}
+    for screen in SCREENS:
+        page.evaluate("(name) => spxSetScreen(name)", screen)
+        page.wait_for_timeout(60)
+        buttons = visible_overlay_buttons(page)
+        assert buttons, screen
+        for b in buttons:
+            assert b["label"], (screen, b)
+            assert b["w"] >= 43.5 and b["h"] >= 43.5, (screen, b)
+        per_screen[screen] = buttons
+
+    parts = [b for b in per_screen["choose"] if b["part"]]
+    assert len(parts) == 4, parts
+    for i, b in enumerate(parts, start=1):
+        assert b["label"].startswith("Part %d, " % i), b
+
+    # The labels follow the language switch instead of staying in English.
+    page.evaluate("() => spxSetScreen('choose')")
+    page.evaluate("setLang('es')")
+    page.wait_for_timeout(120)
+    es = {b["id"]: b["label"] for b in visible_overlay_buttons(page) if b["id"]}
+    page.evaluate("setLang('en')")
+    page.wait_for_timeout(120)
+    en = {b["id"]: b["label"] for b in visible_overlay_buttons(page) if b["id"]}
+    assert es["spxCloseBtn"] == page.evaluate("I18N.es.spx_aria_close"), es
+    assert en["spxCloseBtn"] == page.evaluate("I18N.en.spx_aria_close"), en
+    assert es["spxCloseBtn"] != en["spxCloseBtn"], (es, en)
+    assert page.evaluate(
+        "I18N.es.spx_aria_close !== I18N.en.spx_aria_close")
+
+    # Focus stays in the dialog: Tab from the last control wraps to the first
+    # (the close button) and Shift+Tab from the first wraps back to the last
+    # (Start).
+    page.evaluate("() => spxSetScreen('choose')")
+    assert page.evaluate("spxFocusables()[0].id") == "spxCloseBtn"
+    assert page.evaluate("spxFocusables().slice(-1)[0].id") == "spxStartBtn"
+
+    page.evaluate("() => spxFocusables().slice(-1)[0].focus()")
+    page.keyboard.press("Tab")
+    assert page.evaluate("document.activeElement.id") == "spxCloseBtn", \
+        page.evaluate("document.activeElement.id")
+    page.keyboard.press("Shift+Tab")
+    assert page.evaluate("document.activeElement.id") == "spxStartBtn", \
+        page.evaluate("document.activeElement.id")
+
+    # A focus that escaped the overlay is pulled back in on the next Tab.
+    page.evaluate("() => document.getElementById('themeToggle').focus()")
+    assert page.evaluate(
+        "!document.getElementById('spxOverlay').contains(document.activeElement)")
+    page.keyboard.press("Tab")
+    assert page.evaluate(
+        "document.getElementById('spxOverlay').contains(document.activeElement)")
+    assert page.evaluate("document.activeElement.id") == "spxCloseBtn"
+
+    # Closed, the trap lets the page navigate again.
+    page.evaluate("SP_EXAM.close()")
+    page.evaluate("() => document.getElementById('themeToggle').focus()")
+    page.keyboard.press("Tab")
+    assert page.evaluate(
+        "!document.getElementById('spxOverlay').contains(document.activeElement)")
+
+    assert errors == [], errors
+    print("10. overlay a11y: every button labelled, 44px targets, focus trapped")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -802,6 +912,7 @@ def main():
         test_mic_denied(p)
         test_speech_counts(p)
         test_keyboard_overlay(p)
+        test_overlay_accessibility(p)
     print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 
 
