@@ -14,7 +14,11 @@ Five checks, in order:
   4. Server. The follow-up prompt carries the candidate's words and asks for a
      question; the partner prompt names Alex. With no key there is no call at
      all (503).
-  5. No support. With SpeechRecognition removed, the whole exam still reaches
+  5. Follow-up cap. Two candidate answers in the same part produce exactly one
+     examiner follow-up: `SPK.followUps` stays at 1, the provider is asked once
+     and the transcript prints the extra question once. The written script
+     resumes. A new part gets a fresh budget.
+  6. No support. With SpeechRecognition removed, the whole exam still reaches
      the report and the page raises nothing.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
@@ -401,7 +405,117 @@ def test_part3_two_reactions(p):
 
 
 # ---------------------------------------------------------------------------
-# 5. No Web Speech: the exam still runs to the report.
+# 5. One examiner follow-up per part; the script resumes after it.
+# ---------------------------------------------------------------------------
+FOLLOW_LINE = "Why do you think that is?"
+SCRIPT_LINE = "Thank you, that is the end of the questions."
+
+
+def test_followup_capped(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    # One recognised candidate turn, so the follow-up has something to answer.
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+    page.evaluate("""() => {
+        spxSetScreen('exam');
+        SP_EXAM.part = 1;
+        SP_EXAM.phases = [{key: 'spx_response', who: 'candidate', sec: 60,
+                           qi: 0, prompt: 'Tell me about your city.'}];
+        SP_EXAM.phase = 0;
+        SP_EXAM.txShown = 0;
+        document.getElementById('spxTx').replaceChildren();
+        spxEnterPhase(0);
+    }""")
+    assert wait_until(page, "SPK.heard.final.indexOf(%s)>=0" % json.dumps(PHRASE), 10), \
+        page.evaluate("SPK.heard")
+    page.evaluate("spxSpeechStop()")
+
+    # Two candidate answers in the same part, then a scripted close.
+    page.evaluate("""() => {
+        window.__fu = [];
+        SPX_TEST.partnerProvider = function (question, body) {
+            window.__fu.push({question: question, payload: body});
+            return %s;
+        };
+        SPK.followUps = 0;
+        SP_EXAM.part = 1;
+        SP_EXAM.task = {topic: 'Cities'};
+        SP_EXAM.phases = [
+            {key: 'spx_response', who: 'candidate', sec: 60, qi: 0,
+             prompt: 'Tell me about your city.'},
+            {key: 'spx_response', who: 'candidate', sec: 60, qi: 1,
+             prompt: 'Do you like sport?'},
+            {key: 'spx_close', who: 'examiner', sec: 5, line: %s}
+        ];
+        SP_EXAM.phase = 0;
+        SP_EXAM.followUpBusy = false;
+        spxNextPhase();
+    }""" % (json.dumps(FOLLOW_LINE), json.dumps(SCRIPT_LINE)))
+
+    # The first answer earns exactly one follow-up, carrying what was heard.
+    assert wait_until(page, "SPK.followUps === 1", 10), page.evaluate("SPK.followUps")
+    calls = page.evaluate("window.__fu")
+    assert len(calls) == 1, calls
+    assert calls[0]["payload"].get("mode") == "examiner", calls[0]
+    assert calls[0]["payload"].get("candidate_said") == PHRASE, calls[0]
+    assert wait_until(page, "SP_EXAM.phase === 1", 10), page.evaluate("SP_EXAM.phase")
+
+    page.evaluate("spxRenderTx()")
+    shown = page.evaluate("document.getElementById('spxTx').textContent")
+    assert shown.count(FOLLOW_LINE) == 1, shown
+
+    # The second original candidate phase (index 3: the follow-up pair was
+    # spliced in at 1) hits the cap, so the script moves on.
+    page.evaluate("""() => {
+        SP_EXAM.phase = 3;
+        spxNextPhase();
+    }""")
+    page.wait_for_timeout(600)
+    assert page.evaluate("SPK.followUps") == 1, page.evaluate("SPK.followUps")
+    assert page.evaluate("window.__fu.length") == 1, page.evaluate("window.__fu")
+    assert page.evaluate("SP_EXAM.phase") == 4, page.evaluate("SP_EXAM.phase")
+    page.evaluate("spxRenderTx()")
+    shown = page.evaluate("document.getElementById('spxTx').textContent")
+    assert shown.count(FOLLOW_LINE) == 1, shown
+    assert SCRIPT_LINE in shown, shown
+
+    # A new part starts a new budget: entering it zeroes the counter and the
+    # first answer there may ask again.
+    page.evaluate("""() => {
+        SP_EXAM.session = {full: true, seed: 1, partner: 'Alex', partnerRot: 0,
+            plan: {parts: [{part: 4, task: {topic: 'Trips',
+                questions: ['Would you travel alone?', 'Why?']}}]},
+            partIndex: 0, turns: {examiner: 0, partner: 0, candidate: 0},
+            partStats: {}, currentPart: 1};
+        SP_EXAM.part = 4;
+        spxEnterSessionPart(0);
+        clearInterval(SP_EXAM.timer);
+        SP_EXAM.timer = null;
+    }""")
+    assert page.evaluate("SPK.followUps") == 0, page.evaluate("SPK.followUps")
+    page.evaluate("""() => {
+        window.__fu = [];
+        SP_EXAM.part = 4;
+        SP_EXAM.phases = [
+            {key: 'spx_response', who: 'candidate', sec: 30, qi: 0,
+             prompt: 'Would you travel alone?'},
+            {key: 'spx_close', who: 'examiner', sec: 5, line: %s}
+        ];
+        SP_EXAM.phase = 0;
+        SP_EXAM.followUpBusy = false;
+        spxNextPhase();
+    }""" % json.dumps(SCRIPT_LINE))
+    assert wait_until(page, "SPK.followUps === 1", 10), page.evaluate("SPK.followUps")
+    assert page.evaluate("window.__fu.length") == 1, page.evaluate("window.__fu")
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("5. follow-up cap: one per part, script resumes")
+    browser.close()
+
+
+# ---------------------------------------------------------------------------
+# 6. No Web Speech: the exam still runs to the report.
 # ---------------------------------------------------------------------------
 def test_no_support(p):
     browser, page, errors = open_app(p, "?spx_test=1&spk=sim", NO_SPEECH_STUB)
@@ -424,6 +538,7 @@ def main():
     with sync_playwright() as p:
         test_recognition_and_partner(p)
         test_part3_two_reactions(p)
+        test_followup_capped(p)
         test_no_support(p)
     print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
 

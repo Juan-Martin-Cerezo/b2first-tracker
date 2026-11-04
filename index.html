@@ -8233,7 +8233,11 @@ const SPK={
      keeps the last committed turn for the partner/examiner; `interim` only
      feeds the faded draft line in the transcript. Nothing here is persisted. */
   heard:{supported:!!(window.SpeechRecognition||window.webkitSpeechRecognition),
-    active:false,want:false,interim:'',final:'',error:'',restarts:0,committed:''}
+    active:false,want:false,interim:'',final:'',error:'',restarts:0,committed:''},
+  /* Phase 52: the examiner may add one follow-up per part, never more. The
+     counter starts at 0 for each part; once it reaches 1 the written script
+     takes over, so the exam cannot turn into an interview. */
+  followUps:0
 };
 window.SPK=SPK;
 window.spkDirectorTick=spkDirectorTick;
@@ -8452,6 +8456,7 @@ function spkReset(){
   SPK.reportSaved=false;SPK.reportDuration=0;
   SPK.turnSessionId='';SPK.turnState='';SPK.turnError='';
   SPK.lastTurnMs=null;SPK.turnLatencyMs=null;SPK.turnTextMs=null;
+  SPK.followUps=0;
   spkCancelBrowserSpeech();
   spxSpeechStop();
   spxHeardReset();
@@ -10132,10 +10137,12 @@ function spxPartnerTurn(ev){
 function spxFollowUpWanted(ph){
   if(!ph||ph.who!=='candidate'||ph.followUpAsked)return false;
   if(Number(SP_EXAM.part)!==1&&Number(SP_EXAM.part)!==4)return false;
+  if(Number(SPK.followUps)>=1)return false;
   if(!spxCandidateSaid())return false;
   return spxPartnerProviderWanted();
 }
 function spxInsertFollowUp(phaseAt,ph,line){
+  SPK.followUps=(Number(SPK.followUps)||0)+1;
   const qi=ph.qi;
   const prompt=ph.prompt||SP_EXAM.lastAsked||'';
   SP_EXAM.phases.splice(phaseAt+1,0,
@@ -10269,6 +10276,7 @@ function spxEnterSessionPart(index){
   SP_EXAM.partnerIdx=0;
   SP_EXAM.partnerSaid=[];
   SP_EXAM.followUpBusy=false;
+  SPK.followUps=0;
   spxOpenPartStat(entry.part);
   spxRenderTask();
   spxRenderPartnerHeader();
