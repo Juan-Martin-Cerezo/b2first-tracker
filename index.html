@@ -10221,11 +10221,12 @@ function spxProbePartnerAi(){
       .catch(function(){});
   }catch(e){}
 }
-/* Phase 52: Part 3 has two exchanges with the same partner, so the second
-   reaction must not repeat the first. The model is free to repeat itself (and
-   the bank may hold a repeated line); when it does, the next unused line from
-   the task bank takes its place. Compared on words, not punctuation, so
-   "I agree." and "I agree" count as the same line. */
+/* Phase 52: the partner never says the same written line twice in one session.
+   Part 3 has two exchanges with the same partner and Part 4 asks the partner
+   four times, so the script and the model both can land on a line already
+   said; when they do, the next unused variant from the bank takes its place.
+   Compared on words, not punctuation, so "I agree." and "I agree" are one
+   line. */
 function spxLineKey(text){
   return String(text||'').toLowerCase().replace(/[^a-z0-9']+/g,' ').trim();
 }
@@ -10235,21 +10236,41 @@ function spxPartnerRepeated(text){
   const said=Array.isArray(SP_EXAM.partnerSaid)?SP_EXAM.partnerSaid:[];
   return said.some(function(line){return spxLineKey(line)===key});
 }
+/* The variants available for the turn being spoken: the task's own lines
+   first, then the other tasks of the same part. A Part 4 task carries three
+   lines for four partner turns, and the neighbouring tasks share the topic,
+   so the pool is complete before anything is repeated. */
+function spxPartnerPool(task){
+  const pool=[];
+  const push=function(lines){
+    (Array.isArray(lines)?lines:[]).forEach(function(raw){
+      const line=String(raw||'').trim();
+      if(line&&pool.indexOf(line)<0)pool.push(line);
+    });
+  };
+  if(task)push(task.partnerLines);
+  const part=Number(SP_EXAM.part);
+  const parts=(SP_EXAM.bank&&Array.isArray(SP_EXAM.bank.parts))?SP_EXAM.bank.parts:[];
+  parts.forEach(function(p){
+    if(Number(p.part)!==part)return;
+    (p.tasks||[]).forEach(function(t){
+      if(!t||t===task)return;
+      push(t.partnerLines);
+    });
+  });
+  return pool;
+}
 function spxPartnerAlternative(fallback){
   if(fallback&&!spxPartnerRepeated(fallback))return String(fallback);
-  const bank=(SP_EXAM.task&&Array.isArray(SP_EXAM.task.partnerLines))
-    ?SP_EXAM.task.partnerLines:[];
-  for(let i=0;i<bank.length;i++){
-    const line=String(bank[i]||'');
-    if(line&&!spxPartnerRepeated(line))return line;
+  const pool=spxPartnerPool(SP_EXAM.task);
+  for(let i=0;i<pool.length;i++){
+    if(!spxPartnerRepeated(pool[i]))return pool[i];
   }
   return '';
 }
 function spxPartnerSay(text,fallback){
   let line=String(text||'');
-  if(Number(SP_EXAM.part)===3&&spxPartnerRepeated(line)){
-    line=spxPartnerAlternative(fallback);
-  }
+  if(spxPartnerRepeated(line))line=spxPartnerAlternative(fallback);
   if(!line)return '';
   if(!Array.isArray(SP_EXAM.partnerSaid))SP_EXAM.partnerSaid=[];
   SP_EXAM.partnerSaid.push(line);
@@ -10413,7 +10434,9 @@ function spxEnterSessionPart(index){
   SP_EXAM.promptUsed=false;
   SP_EXAM.awaitSince=0;
   SP_EXAM.partnerIdx=0;
-  SP_EXAM.partnerSaid=[];
+  /* The partner's memory of what it already said is per session, not per part:
+     a full run must not repeat a line it used in an earlier part. */
+  if(!Array.isArray(SP_EXAM.partnerSaid))SP_EXAM.partnerSaid=[];
   SP_EXAM.followUpBusy=false;
   SPK.followUps=0;
   spxOpenPartStat(entry.part);

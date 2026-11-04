@@ -31,8 +31,11 @@ Five checks, in order:
      part that is in progress (dismiss keeps the exam, accept closes it).
      Outside a part, Escape closes without asking.
   10. Accessibility. Every overlay button carries an aria-label that follows
-     the language switch, Tab and Shift+Tab stay inside the open dialog, and
-     every visible button is at least 44x44 px.
+      the language switch, Tab and Shift+Tab stay inside the open dialog, and
+      every visible button is at least 44x44 px.
+  11. No repeated partner line. The Part 4 script asks the partner four times
+      from a three-line task bank; the session says four different lines, and
+      the memory of what was said survives the change of part.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -452,6 +455,94 @@ def test_part3_two_reactions(p):
     page.evaluate("SP_EXAM.close()")
     assert errors == [], errors
     print("3. Part 3: two exchanges, both conditioned, no repeat")
+    browser.close()
+
+
+# ---------------------------------------------------------------------------
+# 4b. No written partner line twice in one session.
+# ---------------------------------------------------------------------------
+P4_BANK = [
+    "I would start with the cost, because that decides the rest.",
+    "And the journey matters too, since a long trip tires everybody.",
+    "So let us put both options side by side before we choose.",
+]
+FRESH_LINE = "A fresh answer for the next part, not said before."
+
+
+def test_partner_no_repeat(p):
+    browser, page, errors = open_app(p, "?spx_test=1", SPEECH_STUB)
+
+    page.evaluate("async () => { await SP_EXAM.open(); }")
+
+    # The real Part 4 script: the partner is asked four times and the bank of
+    # the task holds three lines, so the fourth scripted turn wraps onto the
+    # first one. The session has to answer with an unused variant instead.
+    first = page.evaluate("""() => {
+        spxSetScreen('exam');
+        SP_EXAM.part = 4;
+        SP_EXAM.task = {partnerLines: %s};
+        SP_EXAM.partnerSaid = [];
+        SP_EXAM.partnerIdx = 0;
+        const phases = spxPhasesFor(4, SP_EXAM.task, 1, 'nr-part4');
+        const partner = phases.filter(function (ph) { return ph.who === 'partner'; });
+        partner.forEach(function (ph) {
+            spxFireEvent({who: 'partner', text: ph.line, prompt: ph.prompt});
+        });
+        return {
+            scripted: partner.map(function (ph) { return ph.line; }),
+            lines: SPK.lines.filter(function (l) { return l.who === 'partner'; })
+                .map(function (l) { return l.text; }),
+            pool: spxPartnerPool(SP_EXAM.task),
+            said: SP_EXAM.partnerSaid.slice()
+        };
+    }""" % json.dumps(P4_BANK))
+
+    assert len(first["scripted"]) == 4, first
+    assert len(set(first["scripted"])) == 3, (
+        "the script itself should repeat once: %s" % first["scripted"])
+
+    assert len(first["lines"]) == 4, first
+    assert len(set(first["lines"])) == 4, (
+        "the partner repeated a written line: %s" % first["lines"])
+    for i in range(3):
+        assert first["lines"][i] != first["lines"][i + 1], first
+    assert first["lines"][:3] == P4_BANK, first
+    assert first["lines"][3] in first["pool"], first
+    assert first["said"] == first["lines"], first
+
+    page.evaluate("spxRenderTx()")
+    shown = page.evaluate("document.getElementById('spxTx').textContent")
+    for line in first["lines"]:
+        assert shown.count(line) == 1, (line, shown)
+
+    # A new part continues the same session: what was already said stays known,
+    # so the same line cannot come back at the start of the next part.
+    second = page.evaluate("""() => {
+        const used = SP_EXAM.partnerSaid.slice();
+        SP_EXAM.partnerRot = 0;
+        SP_EXAM.session = {full: true, partIndex: 0,
+            plan: {parts: [
+                {part: 4, task: {partnerLines: %s}, taskId: 'nr-a'},
+                {part: 4, task: {partnerLines: %s}, taskId: 'nr-b'}
+            ]},
+            turns: {examiner: 0, partner: 0, candidate: 0}, partStats: {}};
+        spxEnterSessionPart(1);
+        const kept = SP_EXAM.partnerSaid.slice();
+        spxPartnerTurn({prompt: 'Would you go again?', text: %s});
+        const said = SPK.lines.filter(function (l) { return l.who === 'partner'; })
+            .map(function (l) { return l.text; });
+        return {used: used, kept: kept, last: said[said.length - 1]};
+    }""" % (json.dumps(P4_BANK), json.dumps([P4_BANK[0], FRESH_LINE]),
+            json.dumps(P4_BANK[0])))
+
+    assert second["kept"] == second["used"], (
+        "a part change forgot what the partner already said: %s" % second)
+    assert second["last"] != P4_BANK[0], second
+    assert second["last"] == FRESH_LINE, second
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("4b. no repeated partner line, not even across parts")
     browser.close()
 
 
@@ -907,13 +998,14 @@ def main():
     with sync_playwright() as p:
         test_recognition_and_partner(p)
         test_part3_two_reactions(p)
+        test_partner_no_repeat(p)
         test_followup_capped(p)
         test_no_support(p)
         test_mic_denied(p)
         test_speech_counts(p)
         test_keyboard_overlay(p)
         test_overlay_accessibility(p)
-    print("OK: the partner reacts twice, the examiner follows up, and no support is safe")
+    print("OK: the partner reacts twice, never repeats a line, and no support is safe")
 
 
 if __name__ == "__main__":
