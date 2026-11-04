@@ -222,18 +222,6 @@ def examiner_instruction(part=1, task=None):
     return "\n".join(blocks)
 
 
-# Part 1 keeps the historical constant: older callers (and the S3 test) import
-# it directly. It is the same text `examiner_instruction(1)` produces.
-EXAMINER_SYSTEM = examiner_instruction(1)
-
-# Backwards-compatible aliases for the S3 task-bank constants.
-PART2_TASK = "These photographs show two ways of doing the same thing. " + PART2_INSTRUCTION
-PART3_PROMPT = PART3_INSTRUCTION
-PART4_QUESTIONS = (
-    "What did you think about the task you have just done?",
-)
-
-
 _PARTNER_BASE = """You are Candidate B in a Cambridge B2 First (FCE) Speaking test.
 You are another candidate, not the examiner, not a teacher and not an assistant.
 
@@ -303,9 +291,6 @@ def partner_instruction(part=1, task=None):
             "  then ask the other candidate what they think. One short question only.\n")
     blocks.append("\nStay in role for the whole exam. Be a good partner, not a second examiner.")
     return "\n".join(blocks)
-
-
-PARTNER_SYSTEM = partner_instruction(1, None)
 
 
 def scripted_lines(part=1, task=None, role="examiner"):

@@ -465,7 +465,3 @@ def system_prompt(interactive=False):
             + _REPORT_TAIL
             + "\nOUTPUT FORMAT (non-negotiable):\nReturn ONLY this exact JSON shape, no"
               " markdown and no extra text:\n" + shape)
-
-
-REPORT_SYSTEM = system_prompt(False)
-

@@ -1268,12 +1268,6 @@ def _spk_turn_session_mark(uid, session_id):
             _SPK_TURN_SESSIONS.pop(next(iter(_SPK_TURN_SESSIONS)))
 
 
-def _spk_turn_sessions_clear():
-    """Test hook: forget every metered session."""
-    with _SPK_TURN_LOCK:
-        _SPK_TURN_SESSIONS.clear()
-
-
 def _spk_wav_bytes(pcm, rate=SPK_TTS_RATE):
     """Wrap mono 16-bit PCM in a RIFF/WAVE container `decodeAudioData` accepts."""
     return struct.pack(

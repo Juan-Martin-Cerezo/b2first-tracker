@@ -9375,8 +9375,8 @@ const SP_EXAM={
      repeat, so a long silence can never repeat a question twice. */
   rephraseQi:-1,
   micMuted:false,txShown:0,answerTimer:null,
-  reportData:null,saved:false,entry:null,
-  busy:false,error:'',startedAt:0,
+  saved:false,entry:null,
+  busy:false,error:'',
   /* Phase 50: one session (a single part or the full exam), its plan, the
      partner's name, the per-part turn ledger and the part bridge timer. */
   session:null,full:false,seed:0,partner:'Alex',partnerRot:0,
@@ -11174,7 +11174,6 @@ SP_EXAM.ready=async function(){
   SPK.prefetchSeen={};
   SPK.prefetchIdx=-1;
   spxProbePartnerAi();
-  SP_EXAM.startedAt=performance.now();
   spxEnterSessionPart(0);
 };
 
