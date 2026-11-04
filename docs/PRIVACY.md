@@ -1,9 +1,11 @@
 # Privacy Policy — B2 First Tracker
 
-**Version 1.1** · Last updated: 2026-11-02 · Served live at `/privacy`
+**Version 1.2** · Last updated: 2026-11-04 · Served live at `/privacy`
 
 **Changelog**
 
+- 1.2 — 2026-11-04 · Speaking exam: recognition runs in the browser, the application
+  uploads no audio, and the transcript leaves only when an AI provider is configured.
 - 1.1 — 2026-11-02 · Account-recovery requests: what the login form stores, who reads it,
   and the 90-day retention.
 - 1.0 — 2026-10-30 · First complete version: data map, third parties, retention,
@@ -89,6 +91,21 @@ capped at 500 lines.
   instance's Content-Security-Policy blocks `static.cloudflareinsights.com`, so
   the beacon never executes. The owner is also expected to keep Web Analytics
   disabled in the Cloudflare dashboard.
+
+**Speech recognition in the Speaking exam.** The exam transcript is written by
+the browser's own speech recogniser (`SpeechRecognition` / `webkitSpeechRecognition`,
+`en-GB`), not by this server. The application never records your voice and
+never uploads audio for recognition: no recording is created, no audio file is
+written, and no audio passes through this server. The recogniser belongs to the
+browser, and a browser may use its vendor's speech service to turn speech into
+text; that path belongs to the browser, not to this application. With no AI
+provider configured, the recognised text stays in the browser and is discarded
+when the exam closes. With a provider configured (the server's text key or your
+own), only text leaves the browser: the last recognised candidate line goes to
+`/api/speaking/partner` for one reaction, and the transcript with its timings
+goes to `/api/speaking/report` only when you ask for a report. Neither request
+carries audio. The only Speaking features that send audio are the optional
+voices listed in §4.
 
 ## 4. Third parties that receive data
 

@@ -105,7 +105,7 @@ check("L2_cache_5_min",
           for r in (privacy, terms, security)),
       str([r.headers.get("cache-control") for r in (privacy, terms, security)]))
 VERSIONS = {
-    "privacy": ("Version 1.1", "Last updated: 2026-11-02"),
+    "privacy": ("Version 1.2", "Last updated: 2026-11-04"),
     "terms": ("Version 1.1", "Last updated: 2026-11-02"),
     "security": ("Version 1.0", "Last updated: 2026-10-30"),
 }
