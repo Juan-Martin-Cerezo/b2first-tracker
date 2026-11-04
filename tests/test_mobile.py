@@ -25,8 +25,9 @@ with sync_playwright() as p:
     # full nav present (10 views + More)?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")
 
-    # BOOKS merged into PRACTICE: online practice and downloadable material
-    pg.click("nav button[data-view='practice']")
+    # BOOKS split out of PRACTICE: online practice and downloadable material
+    # now live on Resources.
+    pg.click("nav button[data-view='resources']")
     pg.wait_for_timeout(600)
     out["online_cards"] = pg.eval_on_selector_all("#onlineList .book", "els => els.length")
     out["material_cards"] = pg.eval_on_selector_all("#matList .book", "els => els.length")

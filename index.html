@@ -14558,8 +14558,10 @@ function renderToday(){
     }
   }
 
-  // Set initial studio if none selected yet
-  if(!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a'){
+  // Set initial studio if none selected yet. Never while the speaking exam is
+  // open: picking a studio closes it, and a refresh (saving a report) would
+  // otherwise wipe the screen the user is reading.
+  if((!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a')&&!(window.SP_EXAM&&SP_EXAM.screen)){
     selectSessionStudio(defaultStudio);
   }
 

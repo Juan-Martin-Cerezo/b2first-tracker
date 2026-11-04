@@ -39,11 +39,18 @@ RUNTIME_KEYS = {
     "spx_brief_part2": "spx_brief_part",         # t('spx_brief_part' + SP_EXAM.part)
     "spx_brief_part3": "spx_brief_part",
     "spx_brief_part4": "spx_brief_part",
+    "plan_reset_field_rotationMode": "plan_reset_field_",   # t('plan_reset_field_' + field)
+    "plan_reset_field_rueCycle": "plan_reset_field_",
+    "plan_reset_field_wCycle": "plan_reset_field_",
+    "plan_reset_field_lCycle": "plan_reset_field_",
+    "plan_reset_field_spCycle": "plan_reset_field_",
+    "plan_reset_field_customPlan": "plan_reset_field_",
+    "plan_reset_field_weekOverrides": "plan_reset_field_",
 }
 
 # A deliberate ceiling: adding a runtime key means adding a real concatenation
 # first, and the list has to stay small enough to audit by hand.
-MAX_RUNTIME_KEYS = 16
+MAX_RUNTIME_KEYS = 23
 
 KEY_LINE = re.compile(r"^ {4}['\"]?([A-Za-z_][A-Za-z0-9_]*)['\"]?\s*:", re.M)
 DATA_I18N = re.compile(r"data-i18n(?:-[a-z-]+)?\s*=\s*[\"']([^\"']+)[\"']")

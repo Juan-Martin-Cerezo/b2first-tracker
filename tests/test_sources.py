@@ -50,15 +50,15 @@ with sync_playwright() as p:
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
-    # --- 1. The Practice item is in the nav and opens the screen ----------
+    # --- 1. The Resources item is in the nav and opens the screen ----------
     assert pg.evaluate(
-        "!!document.querySelector(\"nav button[data-view='practice']\")"
-    ), "Practice is not in the main navigation"
-    pg.click("nav button[data-view='practice']")
+        "!!document.querySelector(\"nav button[data-view='resources']\")"
+    ), "Resources is not in the main navigation"
+    pg.click("nav button[data-view='resources']")
     pg.wait_for_timeout(300)
     assert pg.evaluate(
-        "document.getElementById('v-practice').classList.contains('active')"
-    ), "Practice did not become the active view"
+        "document.getElementById('v-resources').classList.contains('active')"
+    ), "Resources did not become the active view"
 
     # --- 2. The catalogue is big enough and has the right shape -----------
     sources = pg.evaluate(

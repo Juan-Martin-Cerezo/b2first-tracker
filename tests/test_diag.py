@@ -225,7 +225,8 @@ with sync_playwright() as p:
     assert res_all_wrong["weakCards"] == 3
     out["7_byPart_and_weakest"] = {"byPart_keys": len(by_part), "weakest": weakest}
 
-    # Also check that the weakness button goes to PARTS with that filter applied
+    # Also check that the weakness button opens the part's sample paper on
+    # RESOURCES, where the filtered papers live since the Practice split.
     first_weak_part = weakest[0]
     pg.click(f"#diagWeakList .diag-go-part[data-part='{first_weak_part}']")
     parts_filtered = pg.evaluate(
@@ -235,7 +236,7 @@ with sync_playwright() as p:
         papersCount: document.querySelectorAll('#resourcesList .res-paper').length
     })"""
     )
-    assert parts_filtered["activeView"] == "v-practice"
+    assert parts_filtered["activeView"] == "v-resources"
     assert parts_filtered["filterVal"] == {"type": "ue", "part": first_weak_part}
     assert parts_filtered["papersCount"] == 1
 

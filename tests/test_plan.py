@@ -164,7 +164,7 @@ async def main():
             assert ("diagnostic" in r) or ("error" in r) or ("Writing" in r), f"Reason without data: {r!r}"
         out["7_reasons_con_datos"] = f"OK: {len(res7)} reasons cite diagnostic/errors/Writing"
 
-        # UI: rendered rows, "Why this?", Regenerate and Start -> PARTS
+        # UI: rendered rows, "Why this?", Regenerate and Start -> RESOURCES
         await page.click("nav button[data-view='plan']")
         rows = await page.eval_on_selector_all(
             "#wpRows .wp-row",
@@ -190,10 +190,12 @@ async def main():
             "() => ({view: document.querySelector('.view.active')?.id,"
             " filter: RES_FILTER, papers: document.querySelectorAll('#resourcesList .res-paper').length})"
         )
-        assert nav_state["view"] == "v-practice", f"Start did not navigate to PRACTICE: {nav_state}"
+        # Since the Practice/Resources split the sample papers filter lives on
+        # the Resources screen, and that is where a plan row sends you.
+        assert nav_state["view"] == "v-resources", f"Start did not navigate to RESOURCES: {nav_state}"
         assert nav_state["filter"] == {"type": "ue", "part": ue_part}, f"Filter not applied: {nav_state}"
         assert nav_state["papers"] == 1, f"Filter did not leave one paper: {nav_state}"
-        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> PRACTICE part {ue_part}"
+        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> RESOURCES part {ue_part}"
 
         # Clean up the test user's localStorage
         await page.evaluate(
