@@ -209,6 +209,7 @@ SPK_MIN_DAILY_DEFAULT = 20           # minutes per user per day
 SPK_MIN_DAILY_TOTAL_DEFAULT = 120    # minutes per instance per day
 SPK_MINUTE_MAX_BODY = 4096           # POST /api/speaking/minute body cap
 SPK_MINUTE_MAX_CALL_S = 300          # max seconds accepted in one report
+SPK_PARTNER_MAX_BODY = 8000          # POST /api/speaking/partner body cap
 DEFAULT_SPK_MODEL = "gemini-3.8-live"
 DEFAULT_SPK_TOKEN_URL = "https://generativelanguage.googleapis.com/v1beta/auth_tokens"
 DEFAULT_SPK_WS_URL = ("wss://generativelanguage.googleapis.com/ws/"
@@ -5423,7 +5424,7 @@ class H(BaseHTTPRequestHandler):
                 self._drain()
                 self._send_json(401, {"error": auth_err or "invalid session"})
                 return
-            if self._clen() > 8000:
+            if self._clen() > SPK_PARTNER_MAX_BODY:
                 self._drain()
                 self._send_json(413, {"error": "payload too large"})
                 return
