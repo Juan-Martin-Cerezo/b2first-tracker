@@ -40,6 +40,9 @@ Five checks, in order:
        stacks its two photographs, the panel scrolls, every visible button is
        inside the viewport, and the end-of-part button can be scrolled to and
        pressed. The state is saved to `tests/out/dy_mobile.png`.
+  13. Part 4 context. The examiner's follow-up carries the last three answers
+       the candidate already gave, oldest first, never the fourth-oldest; a new
+       answer pushes the window forward. Checked inside the follow-up test.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
@@ -283,6 +286,21 @@ def test_server_prompts():
     said_line = block.split("The candidate said:", 1)[1].split("One follow-up", 1)[0]
     assert "\n" not in said_line.strip(), block
     assert "\x00" not in block and "\t" not in said_line, block
+
+    # Phase 52: the examiner gets the earlier answers, oldest first, never more
+    # than the last three, and still sees the current turn on its own line.
+    earlier = ["EARLIER-ONE", "EARLIER-TWO", "EARLIER-THREE",
+               "EARLIER-FOUR", "EARLIER-FIVE"]
+    status, body = post(dict(base, mode="examiner", candidate_context=earlier))
+    assert status == 200, (status, body)
+    _system, block = calls[-1]
+    for line in ("EARLIER-THREE", "EARLIER-FOUR", "EARLIER-FIVE"):
+        assert line in block, block
+    for line in ("EARLIER-ONE", "EARLIER-TWO"):
+        assert line not in block, block
+    assert block.index("EARLIER-THREE") < block.index("EARLIER-FOUR") \
+        < block.index("EARLIER-FIVE"), block
+    assert PHRASE in block, block
 
     # No key, no BYO: refuse before touching the provider.
     os.environ.pop("B2_AI_KEY", None)
@@ -552,10 +570,17 @@ def test_partner_no_repeat(p):
 
 
 # ---------------------------------------------------------------------------
-# 5. One examiner follow-up per part; the script resumes after it.
+# 5. One examiner follow-up per part; the script resumes after it. The Part 4
+#    follow-up also carries the last three answers already in the transcript.
 # ---------------------------------------------------------------------------
 FOLLOW_LINE = "Why do you think that is?"
 SCRIPT_LINE = "Thank you, that is the end of the questions."
+P4_EARLIER = [
+    "I usually travel by train because airports are stressful.",
+    "My last holiday was a week in the mountains with friends.",
+    "I would like to try travelling alone next summer.",
+    "The cost matters more than the destination for me.",
+]
 
 
 def test_followup_capped(p):
@@ -640,8 +665,11 @@ def test_followup_capped(p):
         SP_EXAM.timer = null;
     }""")
     assert page.evaluate("SPK.followUps") == 0, page.evaluate("SPK.followUps")
+    # Phase 52: four answers already in the session transcript. The Part 4
+    # follow-up must carry the last three of them, oldest first.
     page.evaluate("""() => {
         window.__fu = [];
+        %s.forEach(function (line) { spkAddLine('in', line, 'candidate'); });
         SP_EXAM.part = 4;
         SP_EXAM.phases = [
             {key: 'spx_response', who: 'candidate', sec: 30, qi: 0,
@@ -651,9 +679,27 @@ def test_followup_capped(p):
         SP_EXAM.phase = 0;
         SP_EXAM.followUpBusy = false;
         spxNextPhase();
-    }""" % json.dumps(SCRIPT_LINE))
+    }""" % (json.dumps(P4_EARLIER), json.dumps(SCRIPT_LINE)))
     assert wait_until(page, "SPK.followUps === 1", 10), page.evaluate("SPK.followUps")
     assert page.evaluate("window.__fu.length") == 1, page.evaluate("window.__fu")
+
+    first = page.evaluate("window.__fu[0]['payload']")
+    assert first.get("mode") == "examiner", first
+    assert first.get("candidate_context") == P4_EARLIER[-3:], first
+    assert P4_EARLIER[0] not in first.get("candidate_context"), first
+
+    # A new answer pushes the window forward: the oldest of the three leaves.
+    page.evaluate("""() => {
+        const next = 'A new answer after the follow-up.';
+        window.__next = next;
+        window.__fu = [];
+        spkAddLine('in', next, 'candidate');
+        spxPartnerFromProvider('What about next year?', 'examiner');
+    }""")
+    assert wait_until(page, "window.__fu.length === 1", 10), page.evaluate("window.__fu")
+    second = page.evaluate("window.__fu[0]['payload']")
+    assert second.get("candidate_context") == P4_EARLIER[-2:] + [
+        page.evaluate("window.__next")], second
 
     page.evaluate("SP_EXAM.close()")
     assert errors == [], errors

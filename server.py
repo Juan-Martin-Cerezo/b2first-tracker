@@ -1181,6 +1181,27 @@ def _spk_live_available():
     return _spk_model_has_live(api_key, _spk_model())
 
 
+# Phase 52: earlier answers are data too. Part 4's examiner chains its follow-up
+# with the last three candidate lines of the session, so they are flattened,
+# stripped of control characters, capped and kept newest-last.
+SPK_CONTEXT_LINES = 3
+SPK_CONTEXT_CHARS = 300
+
+
+def _spk_candidate_context(value):
+    if not isinstance(value, list):
+        return []
+    lines = []
+    for item in value:
+        if not isinstance(item, str):
+            continue
+        line = re.sub(r"[\x00-\x1f\x7f]", " ", item)
+        line = re.sub(r"\s+", " ", line).strip()[:SPK_CONTEXT_CHARS]
+        if line:
+            lines.append(line)
+    return lines[-SPK_CONTEXT_LINES:]
+
+
 _SPK_TURN_LOCK = threading.Lock()
 _SPK_TURN_SESSIONS = {}   # {uid: {session_id: first_seen}}
 
@@ -5431,19 +5452,24 @@ class H(BaseHTTPRequestHandler):
                 said = re.sub(r"\s+", " ", said).strip()[:600]
             else:
                 said = ""
+            context = _spk_candidate_context(req.get("candidate_context"))
             mode = "examiner" if req.get("mode") == "examiner" else "partner"
             if mode == "examiner":
                 system = (
                     "You are the Cambridge B2 First speaking examiner. From what the "
                     "candidate just said, ask exactly one short follow-up question "
-                    "(maximum 20 words) that explores the content. It must end with a "
-                    "question mark. No comments, no praise, no quotation marks. "
-                    "Return JSON with exactly one key: {\"line\": \"...\"}."
+                    "(maximum 20 words) that explores the content. When earlier "
+                    "answers are provided, connect the question to them. It must end "
+                    "with a question mark. No comments, no praise, no quotation "
+                    "marks. Return JSON with exactly one key: {\"line\": \"...\"}."
                 )
                 user_block = (
                     "Topic: " + (topic or "the Speaking exam") + "\n"
                     "Examiner's question: " + question + "\n"
-                    "The candidate said: " + (said or "(nothing heard)") + "\n"
+                    + ("Earlier answers from the candidate, oldest first:\n"
+                       + "\n".join("  - " + line for line in context) + "\n"
+                       if context else "")
+                    + "The candidate said: " + (said or "(nothing heard)") + "\n"
                     "One follow-up question:"
                 )
             else:
