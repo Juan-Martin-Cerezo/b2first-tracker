@@ -34,13 +34,18 @@ Five checks, in order:
       the language switch, Tab and Shift+Tab stay inside the open dialog, and
       every visible button is at least 44x44 px.
   11. No repeated partner line. The Part 4 script asks the partner four times
-      from a three-line task bank; the session says four different lines, and
-      the memory of what was said survives the change of part.
+       from a three-line task bank; the session says four different lines, and
+       the memory of what was said survives the change of part.
+  12. Mobile. At 380x740 the overlay fits without sideways scrolling, Part 2
+       stacks its two photographs, the panel scrolls, every visible button is
+       inside the viewport, and the end-of-part button can be scrolled to and
+       pressed. The state is saved to `tests/out/dy_mobile.png`.
 
 Run:  uv run --with playwright python test_speaking_dialogue.py
 """
 import json
 import os
+import struct
 import sys
 import time
 import urllib.error
@@ -993,6 +998,157 @@ def test_overlay_accessibility(p):
     browser.close()
 
 
+# ---------------------------------------------------------------------------
+# 12. Mobile: the whole overlay works on a 380x740 screen.
+# ---------------------------------------------------------------------------
+MOBILE_W = 380
+MOBILE_H = 740
+
+
+def mobile_overlay_state(page):
+    return page.evaluate("""() => {
+        const ov = document.getElementById('spxOverlay');
+        const box = ov.firstElementChild;
+        const br = box.getBoundingClientRect();
+        const photos = Array.from(document.querySelectorAll('#spxTask .spx-photo'))
+            .map(function (el) {
+                const r = el.getBoundingClientRect();
+                return {left: r.left, top: r.top, right: r.right,
+                        bottom: r.bottom, width: r.width, height: r.height};
+            });
+        const buttons = Array.from(ov.querySelectorAll('button'))
+            .filter(function (el) {
+                const r = el.getBoundingClientRect();
+                const cs = getComputedStyle(el);
+                return r.width > 0 && r.height > 0 &&
+                    cs.visibility !== 'hidden' && cs.display !== 'none';
+            }).map(function (el) {
+                const r = el.getBoundingClientRect();
+                return {id: el.id, w: r.width, h: r.height,
+                        left: r.left, right: r.right};
+            });
+        return {
+            innerWidth: window.innerWidth,
+            innerHeight: window.innerHeight,
+            docScrollWidth: document.documentElement.scrollWidth,
+            box: {top: br.top, bottom: br.bottom, left: br.left, right: br.right,
+                  scrollWidth: box.scrollWidth, clientWidth: box.clientWidth,
+                  scrollHeight: box.scrollHeight, clientHeight: box.clientHeight,
+                  scrollTop: box.scrollTop},
+            photos: photos,
+            buttons: buttons,
+            placeholders: document.querySelectorAll('#spxTask .spx-photo-missing').length
+        };
+    }""")
+
+
+def png_size(path):
+    with open(path, "rb") as fh:
+        data = fh.read(24)
+    assert data[:8] == PNG_SIGNATURE, data[:8]
+    return struct.unpack(">II", data[16:24])
+
+
+def test_mobile_overlay(p):
+    browser = p.chromium.launch(args=[
+        "--use-fake-device-for-media-stream",
+        "--use-fake-ui-for-media-stream",
+        "--autoplay-policy=no-user-gesture-required",
+    ])
+    context = browser.new_context(
+        viewport={"width": MOBILE_W, "height": MOBILE_H},
+        is_mobile=True, has_touch=True, permissions=["microphone"])
+    context.add_init_script(SILENT_SPEECH_SYNTH)
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.goto(URL + "app?spx_test=1", wait_until="networkidle")
+    helpers.login_owner(page, URL)
+    page.evaluate("localStorage.setItem('spx_test','1')")
+    page.goto(URL + "app?spx_test=1", wait_until="networkidle")
+    page.wait_for_timeout(350)
+    helpers.dismiss_onboarding(page)
+
+    # Part 2 on a phone: the phase that carries the two photographs.
+    page.evaluate("async () => { await SPX_TEST.ensure(); await SP_EXAM.open(); }")
+    page.evaluate("""async () => {
+        SP_EXAM.select(2);
+        await SP_EXAM.start();
+        await SP_EXAM.ready();
+    }""")
+    page.wait_for_function(
+        """() => {
+            const imgs = Array.from(document.querySelectorAll('#spxTask .spx-photo img'));
+            return imgs.length === 2 && imgs.every(i => i.complete && i.naturalWidth > 200);
+        }""", timeout=20000)
+    page.wait_for_timeout(300)
+
+    before = mobile_overlay_state(page)
+    assert before["innerWidth"] == MOBILE_W, before
+    assert before["innerHeight"] == MOBILE_H, before
+    assert before["docScrollWidth"] <= MOBILE_W, \
+        "the page scrolls sideways on a 380 px screen: %s" % before["docScrollWidth"]
+    assert before["box"]["scrollWidth"] <= before["box"]["clientWidth"] + 0.5, before["box"]
+
+    # Every visible button is a real target and stays inside the screen.
+    assert before["buttons"], before
+    for b in before["buttons"]:
+        assert b["left"] >= -0.5 and b["right"] <= MOBILE_W + 0.5, b
+        assert b["w"] >= 43.5 and b["h"] >= 43.5, b
+
+    # Part 2: two real photographs, one under the other, not side by side.
+    photos = before["photos"]
+    assert before["placeholders"] == 0, "Part 2 fell back to a text placeholder"
+    assert len(photos) == 2, photos
+    assert abs(photos[0]["left"] - photos[1]["left"]) < 1, \
+        "the two photographs are not stacked: %s" % photos
+    assert photos[1]["top"] >= photos[0]["bottom"] - 1, photos
+    for photo in photos:
+        assert photo["width"] >= 200, photo
+        assert photo["right"] <= MOBILE_W + 0.5, photo
+
+    # The panel is taller than the screen and scrolls.
+    assert before["box"]["scrollHeight"] > before["box"]["clientHeight"] + 20, before["box"]
+
+    # Capture the stacked photographs on the phone, at the real viewport size.
+    page.evaluate("document.getElementById('spxTask').scrollIntoView({block:'start'})")
+    page.wait_for_timeout(150)
+    os.makedirs(OUT_DIR, exist_ok=True)
+    shot = os.path.join(OUT_DIR, "dy_mobile.png")
+    page.locator("#spxOverlay").screenshot(path=shot)
+    assert png_size(shot) == (MOBILE_W, MOBILE_H), png_size(shot)
+
+    # The end-of-part button starts off screen and becomes reachable by
+    # scrolling; pressing it really ends the part.
+    page.evaluate("document.getElementById('spxOverlay').firstElementChild.scrollTop = 0")
+    page.wait_for_timeout(100)
+    reset = mobile_overlay_state(page)
+    assert reset["box"]["scrollTop"] == 0, reset["box"]
+    end_btn = page.locator("button[data-i18n='spx_end_early']")
+    end_btn.scroll_into_view_if_needed()
+    page.wait_for_timeout(150)
+    after = mobile_overlay_state(page)
+    assert after["box"]["scrollTop"] > 0, after["box"]
+    reach = page.evaluate("""() => {
+        const btn = document.querySelector("button[data-i18n='spx_end_early']");
+        const box = document.getElementById('spxOverlay').firstElementChild;
+        const r = btn.getBoundingClientRect(), b = box.getBoundingClientRect();
+        return {top: r.top, bottom: r.bottom, left: r.left, right: r.right,
+                boxTop: b.top, boxBottom: b.bottom, inside:
+                    r.top >= b.top - 1 && r.bottom <= b.bottom + 1 &&
+                    r.left >= b.left - 1 && r.right <= b.right + 1};
+    }""")
+    assert reach["inside"] is True, reach
+    end_btn.click()
+    assert page.evaluate("SP_EXAM.screen") in ("feedback", "report"), \
+        page.evaluate("SP_EXAM.screen")
+
+    page.evaluate("SP_EXAM.close()")
+    assert errors == [], errors
+    print("12. mobile 380x740: stacked photos, scrolling panel, reachable buttons")
+    browser.close()
+
+
 def main():
     test_server_prompts()
     with sync_playwright() as p:
@@ -1005,6 +1161,7 @@ def main():
         test_speech_counts(p)
         test_keyboard_overlay(p)
         test_overlay_accessibility(p)
+        test_mobile_overlay(p)
     print("OK: the partner reacts twice, never repeats a line, and no support is safe")
 
 
