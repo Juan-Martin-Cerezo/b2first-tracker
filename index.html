@@ -1061,6 +1061,17 @@ footer{
   border-radius:var(--r-ctl);color:var(--txt);padding:11px 13px;font-size:var(--fs-md);font-family:var(--font);
   transition:border-color 150ms ease, box-shadow 150ms ease;margin-bottom:4px;
 }
+.plan-reset-detail{
+  margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;
+}
+.plan-reset-detail li{
+  display:flex;flex-direction:column;gap:2px;padding:8px 10px;
+  border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);
+  font-size:var(--fs-sm);
+}
+.plan-reset-detail b{font-weight:600;color:var(--txt)}
+.plan-reset-detail span{color:var(--txt-2);word-break:break-word}
+.plan-reset-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
 .auth-card input[type=color]{
   width:100%;height:44px;border:1px solid var(--line);border-radius:var(--r-ctl);
   background:var(--surface-2);padding:4px;cursor:pointer;
@@ -1786,6 +1797,24 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button class="btn" type="button" onclick="planLimitUseKey()" data-i18n="license_use_key">🔑 Use my own key</button>
       <button class="btn ok" type="button" onclick="planLimitHaveCode()" data-i18n="license_have_code">🎟️ I have a code</button>
       <button class="btn gray" type="button" onclick="closePlanLimit()" data-i18n="license_close">Not now</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PLAN ROTATION RESET CONFIRMATION ============
+     Replaces window.confirm for "Reset to defaults": it lists, field by
+     field, the values that actually differ from the defaults, closes with
+     Escape and keeps Tab inside the dialog while it is open. -->
+<div id="planResetModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planResetTitle" aria-describedby="planResetBody" onclick="if(event.target===this)closePlanResetDialog()">
+  <div class="auth-card" style="max-width:460px">
+    <h3 id="planResetTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="plan_reset_title">Reset rotation to defaults?</h3>
+    <p class="sub" id="planResetBody" style="margin-top:8px" data-i18n="plan_reset_body">These settings differ from the defaults and will change:</p>
+    <p class="sub" id="planResetNone" style="margin-top:8px;display:none" data-i18n="plan_reset_none">Everything is already at its defaults.</p>
+    <ul id="planResetDetail" class="plan-reset-detail"></ul>
+    <p id="planResetHint" class="t-xs muted" style="margin:10px 0 0" data-i18n="plan_reset_hint">You can undo this right after with Undo.</p>
+    <div class="plan-reset-actions">
+      <button type="button" class="btn gray" id="planResetCancel" onclick="closePlanResetDialog()" data-i18n="common_cancel">Cancel</button>
+      <button type="button" class="btn" id="planResetApply" onclick="applyPlanningReset()" data-i18n="plan_reset_apply">Reset</button>
     </div>
   </div>
 </div>
@@ -3147,12 +3176,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="wp-rotation-row">
               <label for="wpRotationMode"><b>Rotation</b></label>
               <select id="wpRotationMode" onchange="onRotationModeChange(this.value)">
-                <option value="by-part">By part</option>
-                <option value="full-section">Full paper each session</option>
-                <option value="custom">Custom</option>
+                <option value="by-part" data-i18n="plan_rotation_by_part">By part</option>
+                <option value="full-section" data-i18n="plan_rotation_full_section">Full paper each session</option>
+                <option value="custom" data-i18n="plan_rotation_custom">Custom</option>
               </select>
-              <button type="button" class="btn sm gray" id="wpResetBtn" onclick="resetPlanningDefaults()">Reset to defaults</button>
-              <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none">Undo</button>
+              <button type="button" class="btn sm gray" id="wpResetBtn" onclick="resetPlanningDefaults()" data-i18n="plan_reset_btn">Reset to defaults</button>
+              <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none" data-i18n="plan_undo_btn">Undo</button>
             </div>
             <div class="sub" id="wpRotationHelp"></div>
           </div>
@@ -3972,6 +4001,24 @@ const I18N={
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
     plan_advance1:'⚡ +1 Advance',
     plan_reset0:'↩ Reset (0)',
+    plan_reset_title:'Reset rotation to defaults?',
+    plan_reset_btn:'Reset to defaults',
+    plan_undo_btn:'Undo',
+    plan_reset_body:'These settings differ from the defaults and will change:',
+    plan_reset_none:'Everything is already at its defaults.',
+    plan_reset_hint:'You can undo this right after with Undo.',
+    plan_reset_apply:'Reset',
+    plan_reset_none_value:'none',
+    plan_reset_days:'{n} day(s)',
+    plan_reset_field_rotationMode:'Rotation',
+    plan_reset_field_rueCycle:'R&UoE cycle (parts)',
+    plan_reset_field_wCycle:'Writing cycle (genres)',
+    plan_reset_field_lCycle:'Listening cycle (parts)',
+    plan_reset_field_spCycle:'Speaking cycle (parts)',
+    plan_reset_field_customPlan:'Custom plan',
+    plan_rotation_by_part:'By part',
+    plan_rotation_full_section:'Full paper each session',
+    plan_rotation_custom:'Custom',
     plan_rotation:'What comes next',
     plan_override_genre:'Override writing genre',
     plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
@@ -4734,6 +4781,24 @@ const I18N={
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
     plan_advance1:'⚡ +1 Adelantar',
     plan_reset0:'↩ Reiniciar (0)',
+    plan_reset_title:'¿Volver la rotación a los valores por defecto?',
+    plan_reset_btn:'Volver a los valores por defecto',
+    plan_undo_btn:'Deshacer',
+    plan_reset_body:'Estos ajustes difieren de los valores por defecto y van a cambiar:',
+    plan_reset_none:'Todo está ya en los valores por defecto.',
+    plan_reset_hint:'Podés deshacerlo enseguida con Deshacer.',
+    plan_reset_apply:'Reiniciar',
+    plan_reset_none_value:'ninguno',
+    plan_reset_days:'{n} día(s)',
+    plan_reset_field_rotationMode:'Rotación',
+    plan_reset_field_rueCycle:'Ciclo R&UoE (partes)',
+    plan_reset_field_wCycle:'Ciclo de Writing (géneros)',
+    plan_reset_field_lCycle:'Ciclo de Listening (partes)',
+    plan_reset_field_spCycle:'Ciclo de Speaking (partes)',
+    plan_reset_field_customPlan:'Plan personalizado',
+    plan_rotation_by_part:'Por parte',
+    plan_rotation_full_section:'Paper completo por sesión',
+    plan_rotation_custom:'Personalizado',
     plan_rotation:'Qué viene ahora',
     plan_override_genre:'Cambiar género de writing',
     plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
@@ -5133,16 +5198,19 @@ function applyI18n(){
   document.title=t('app_title');
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const v=t(el.getAttribute('data-i18n'));
-    if(v)el.textContent=v;
+    /* Only touch the DOM when the text really changes: replacing an
+       unchanged text node between mousedown and mouseup makes Chromium drop
+       the click that was about to land on that element. */
+    if(v&&el.textContent!==v)el.textContent=v;
   });
   document.querySelectorAll('[data-i18n-html]').forEach(el=>{
     const v=t(el.getAttribute('data-i18n-html'));
-    if(v)el.innerHTML=v;
+    if(v&&el.innerHTML!==v)el.innerHTML=v;
   });
   ['title','aria-label','placeholder'].forEach(attr=>{
     document.querySelectorAll('[data-i18n-'+attr+']').forEach(el=>{
       const v=t(el.getAttribute('data-i18n-'+attr));
-      if(v)el.setAttribute(attr,v);
+      if(v&&el.getAttribute(attr)!==v)el.setAttribute(attr,v);
     });
   });
   const enBtn=document.getElementById('langEnBtn');
@@ -12777,9 +12845,72 @@ function undoPlanningChange(){
   save();
   refreshAll();
 }
-function resetPlanningDefaults(){
-  const msg='Reset rotationMode, rueCycle, wCycle, lCycle, spCycle and customPlan to their defaults? Your custom rotation settings will be discarded.';
-  if(typeof confirm==='function'&&!confirm(msg))return;
+/* Reset to defaults is destructive, so it asks first. The dialog lists only
+   the fields that actually differ (current value → default), closes with
+   Escape and keeps Tab inside it. Undo stays a single click: it is the way
+   back, not a destructive action. */
+let PLAN_RESET_FOCUS=null;
+function planResetValueText(field,v){
+  if(field==='rotationMode'){
+    const mode=normalizeRotationMode(v);
+    return t('plan_rotation_'+mode.split('-').join('_'));
+  }
+  if(field==='customPlan'){
+    const n=Object.keys(validateCustomPlan(v||{})).length;
+    return n?t('plan_reset_days',{n:n}):t('plan_reset_none_value');
+  }
+  const list=Array.isArray(v)?v:[];
+  return list.length?list.join(', '):t('plan_reset_none_value');
+}
+function planResetChanges(){
+  const s=D.settings||{};
+  const fields=['rotationMode','rueCycle','wCycle','lCycle','spCycle','customPlan'];
+  const out=[];
+  fields.forEach(field=>{
+    const cur=planningSnapshot()[field];
+    const def=field==='customPlan'?{}:(Array.isArray(SETTINGS_DEFAULT[field])?SETTINGS_DEFAULT[field].slice():SETTINGS_DEFAULT[field]);
+    if(JSON.stringify(cur)===JSON.stringify(def))return;
+    out.push({field:field,label:t('plan_reset_field_'+field),
+      from:planResetValueText(field,cur),to:planResetValueText(field,def)});
+  });
+  return out;
+}
+function openPlanResetDialog(){
+  const ov=document.getElementById('planResetModal');
+  const list=document.getElementById('planResetDetail');
+  if(!ov||!list)return;
+  const changes=planResetChanges();
+  list.innerHTML=changes.map(c=>
+    `<li><b>${esc(c.label)}</b><span>${esc(c.from)} → ${esc(c.to)}</span></li>`
+  ).join('');
+  const body=document.getElementById('planResetBody');
+  if(body)body.style.display=changes.length?'':'none';
+  const none=document.getElementById('planResetNone');
+  if(none)none.style.display=changes.length?'none':'';
+  const hint=document.getElementById('planResetHint');
+  if(hint)hint.style.display=changes.length?'':'none';
+  const apply=document.getElementById('planResetApply');
+  if(apply)apply.disabled=!changes.length;
+  PLAN_RESET_FOCUS=document.activeElement;
+  ov.style.display='flex';
+  const cancel=document.getElementById('planResetCancel');
+  if(cancel&&cancel.focus)cancel.focus();
+}
+function closePlanResetDialog(){
+  const ov=document.getElementById('planResetModal');
+  if(ov)ov.style.display='none';
+  if(PLAN_RESET_FOCUS&&PLAN_RESET_FOCUS.focus)PLAN_RESET_FOCUS.focus();
+  PLAN_RESET_FOCUS=null;
+}
+function planResetFocusables(){
+  const ov=document.getElementById('planResetModal');
+  if(!ov)return [];
+  return Array.prototype.filter.call(
+    ov.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'),
+    function(el){return !el.disabled&&el.tabIndex>=0&&el.getBoundingClientRect().width>0;});
+}
+function applyPlanningReset(){
+  closePlanResetDialog();
   beginPlanningEdit();
   const s=D.settings;
   s.rotationMode=SETTINGS_DEFAULT.rotationMode;
@@ -12789,6 +12920,27 @@ function resetPlanningDefaults(){
   s.spCycle=SETTINGS_DEFAULT.spCycle.slice();
   s.customPlan={};
   commitPlanningEdit();
+}
+document.addEventListener('keydown',function(e){
+  const ov=document.getElementById('planResetModal');
+  if(!ov||ov.style.display==='none')return;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    e.stopPropagation();
+    closePlanResetDialog();
+    return;
+  }
+  if(e.key!=='Tab')return;
+  const items=planResetFocusables();
+  if(!items.length)return;
+  const first=items[0],last=items[items.length-1];
+  const active=document.activeElement;
+  if(!ov.contains(active)){e.preventDefault();first.focus();return}
+  if(e.shiftKey&&active===first){e.preventDefault();last.focus();return}
+  if(!e.shiftKey&&active===last){e.preventDefault();first.focus();return}
+});
+function resetPlanningDefaults(){
+  openPlanResetDialog();
 }
 function onRotationModeChange(mode){
   beginPlanningEdit();

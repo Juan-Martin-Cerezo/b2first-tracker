@@ -135,6 +135,10 @@ with sync_playwright() as p:
     pg.wait_for_timeout(250)
     pg.evaluate("window.confirm = () => true")
     pg.click("#wpResetBtn")
+    pg.wait_for_timeout(200)
+    # Reset now goes through the accessible confirmation dialog (phase 87).
+    assert pg.is_visible("#planResetModal"), "the reset confirmation did not open"
+    pg.click("#planResetApply")
     pg.wait_for_timeout(400)
     reset = pg.evaluate(
         """() => ({
