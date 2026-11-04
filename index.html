@@ -417,11 +417,6 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--on-primary)}
 .chip-ctl{min-width:40px;justify-content:center;padding:8px 10px}
 .chips{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
-.chip-plan{
-  display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);font-weight:600;
-  color:var(--acc-text);background:var(--surface-2);border-radius:999px;padding:4px 12px;
-}
-.chip-plan .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 
 /* ---------- SUBSCRIPTION PLAN (phase 31) ---------- */
 .plan-usage{display:flex;flex-direction:column;gap:7px;margin:12px 0 4px}
@@ -1843,7 +1838,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
-    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
+    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
+    <button data-view="resources"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
     <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
@@ -2757,7 +2753,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
           <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
           <div id="examSources" class="u4-sources"></div>
-          <div class="u4-source-all"><button class="btn sm gray" type="button" onclick="showView('practice')" data-i18n="exam_sources_all">Open the full source library</button></div>
+          <div class="u4-source-all"><button class="btn sm gray" type="button" onclick="showView('resources')" data-i18n="exam_sources_all">Open the full source library</button></div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -3056,7 +3052,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="languageCard" style="margin-bottom:16px">
           <div class="plan-card-head">
             <h2 data-i18n="plan_language">Language</h2>
-            <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_language_chip">Interface</span></span>
           </div>
           <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
           <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
@@ -3069,7 +3064,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="planStatusCard" style="margin-bottom:16px">
           <div class="plan-card-head">
             <h2 data-i18n="license_title">Subscription</h2>
-            <span class="chip-plan" id="planNameChip"><span class="dot"></span><span id="planNameText" data-i18n="license_chip_free">Free</span></span>
           </div>
           <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.</div>
           <div class="plan-usage">
@@ -3114,7 +3108,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card">
               <div class="plan-card-head">
                 <h2 data-i18n="plan_exam_timers">🧪 Exam Timers</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_fce_format">FCE Format</span></span>
               </div>
               <div class="sub" data-i18n="plan_official_durations">Official durations for each paper.</div>
               <div class="row">
@@ -3219,7 +3212,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card plan-green-card">
               <div class="plan-card-head">
                 <h2 data-i18n="plan_rotation">What comes next</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="plan_rotation_chip">4-Session Loop</span></span>
               </div>
               <div class="sub" data-i18n="plan_upcoming_sub">Upcoming sessions automatically mapped across your configured days:</div>
 
@@ -3262,7 +3254,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card" id="byoCard">
               <div class="plan-card-head">
                 <h2 data-i18n="byo_title">✨ Writing Corrector provider</h2>
-                <span class="chip-plan"><span class="dot"></span><span data-i18n="byo_chip">Your key, your cost</span></span>
               </div>
               <div class="sub" data-i18n="byo_sub">Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.</div>
               <div class="row">
@@ -3312,15 +3303,34 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ PRACTICE SOURCES ============ -->
+      <!-- ============ PRACTICE (exercises by part only) ============ -->
       <section id="v-practice" class="view">
         <div class="page-head">
           <div>
-            <h1 class="page-title" data-i18n="practice_title">Practice sources</h1>
-            <p class="page-sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</p>
+            <h1 class="page-title" data-i18n="practice_head_title">Practice by part</h1>
+            <p class="page-sub" data-i18n="practice_head_sub">Every exercise of the four papers, in exam order. Each with its target time, a Start link and result logging.</p>
           </div>
         </div>
+
+        <div class="card" id="practiceParts">
+          <h2 data-i18n="parts_exercises">Exercises by part</h2>
+          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
+          <div id="partsList"></div>
+        </div>
+      </section>
+
+      <!-- ============ RESOURCES (sources, sample cards, books) ============ -->
+      <section id="v-resources" class="view">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="resources_title">Resources</h1>
+            <p class="page-sub" data-i18n="resources_page_sub">Official sample papers, online practice and every downloadable file in one place.</p>
+          </div>
+        </div>
+
         <div class="card">
+          <h2 data-i18n="practice_title">Practice sources</h2>
+          <div class="sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</div>
           <div class="practice-toolbar">
             <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
               <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
@@ -3338,39 +3348,37 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="practice-empty" id="practiceEmpty" style="display:none" data-i18n="practice_empty">No sources match this filter. Try “All” or turn off “Free only”.</div>
         </div>
 
-        <div class="card" id="practiceParts">
-          <h2 data-i18n="parts_exercises">Exercises by part</h2>
-          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
-          <div id="partsList"></div>
+        <!-- Online practice first, then one card per official sample, then downloads. -->
+        <div class="card" id="resourcesOnline">
+          <h2 data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h2>
+          <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
+          <div id="onlineList"></div>
         </div>
 
         <div class="card" id="practiceResources">
-          <h2 data-i18n="resources_title">Resources</h2>
-          <div class="sub" data-i18n="resources_sub">Each test in one card: questions, audio, tapescript, answer key and lesson plan.</div>
+          <h2 data-i18n="resources_samples_title">Sample papers</h2>
+          <div class="sub" data-i18n="resources_sub">One card per sample: questions, audio, tapescript, answer key and lesson plan.</div>
           <div id="resourcesList"></div>
         </div>
 
-        <!-- U4: Books merged into Practice. Same #onlineList / #matList /
-             #matFilter ids so renderOnline() and renderMaterial() keep working. -->
+        <!-- Same #onlineList / #matList / #matFilter ids so renderOnline()
+             and renderMaterial() keep working. -->
         <div class="card u4-practice-books" id="practiceBooks">
           <h2 data-i18n="practice_books_title">Books &amp; PDFs</h2>
           <div class="sub" data-i18n="practice_books_sub">The full library: online practice plus every downloaded PDF and audio file.</div>
-          <h3 class="folder" data-i18n="books_online">🌐 Online Practice (1-Click — Free)</h3>
-          <div class="sub" data-i18n="books_online_sub">Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).</div>
-          <div id="onlineList"></div>
-          <h3 class="folder" data-i18n="books_material" style="margin-top:18px">📥 Downloaded Material (PDFs &amp; Audio)</h3>
+          <h3 class="folder" data-i18n="books_material">📥 Downloaded Material (PDFs &amp; Audio)</h3>
           <div class="sub" data-i18n="books_material_sub">All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.</div>
           <input type="text" id="matFilter" placeholder="🔍 Filter material... (e.g. listening, part 3, writing)" data-i18n-placeholder="books_filter_ph" style="margin-bottom:12px">
           <div id="matList"></div>
         </div>
       </section>
 
-      <!-- ============ BOOKS (legacy, redirects to Practice) ============ -->
+      <!-- ============ BOOKS (legacy, redirects to Resources) ============ -->
       <section id="v-libros" class="view">
         <div class="card">
-          <h2 data-i18n="books_moved_title">Books &amp; PDFs are now inside Practice</h2>
-          <p class="sub" data-i18n="books_moved_sub">The Books tab was merged into Practice. PDFs, audio and online practice are still one click away.</p>
-          <button class="btn" type="button" onclick="showView('practice')" data-i18n="books_moved_cta">Go to Practice</button>
+          <h2 data-i18n="books_moved_title">Books &amp; PDFs are now inside Resources</h2>
+          <p class="sub" data-i18n="books_moved_sub">The Books tab was merged into Resources. PDFs, audio and online practice are still one click away.</p>
+          <button class="btn" type="button" onclick="showView('resources')" data-i18n="books_moved_cta">Go to Resources</button>
         </div>
       </section>
 
@@ -3576,11 +3584,14 @@ const I18N={
     nav_progress:'Progress',
     nav_plan:'Plan',
     nav_practice:'Practice',
+    nav_resources:'Resources',
     nav_errors:'Errors',
     nav_books:'Books',
     nav_ai:'Writing',
     nav_more:'More',
     nav_more_aria:'More sections',
+    practice_head_title:'Practice by part',
+    practice_head_sub:'Every exercise of the four papers, in exam order. Each with its target time, a Start link and result logging.',
     practice_title:'Practice sources',
     practice_sub:'Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.',
     practice_filter_aria:'Filter practice sources by skill',
@@ -3666,7 +3677,6 @@ const I18N={
     common_continue:'Continue',
     plan_language:'Language',
     plan_language_sub:'English is the default. Switching to Spanish translates the interface and is saved to your account.',
-    plan_language_chip:'Interface',
     lang_en:'English',
     lang_es:'Español',
     footer_privacy:'Privacy',
@@ -3841,7 +3851,13 @@ const I18N={
     res_tapescript_key:'Tapescript and key',
     res_online_practice:'Online practice',
     resources_title:'Resources',
-    resources_sub:'Each test in one card: questions, audio, tapescript, answer key and lesson plan.',
+    resources_page_sub:'Official sample papers, online practice and every downloadable file in one place.',
+    resources_samples_title:'Sample papers',
+    resources_sub:'One card per sample: questions, audio, tapescript, answer key and lesson plan.',
+    res_sample_official:'Official Sample Paper',
+    res_sample_official_2:'Official Sample Paper 2',
+    res_sample_schools:'For Schools Sample Paper',
+    res_sample_schools_2:'For Schools Sample Paper 2',
     resources_filter_active:'Showing {paper}',
     resources_filter_clear:'Show all papers',
     part_start:'Start',
@@ -3964,7 +3980,6 @@ const I18N={
     plan_delete_day:'Delete session day',
     plan_offset:'Offset: {offset}',
     plan_exam_timers:'🧪 Exam Timers',
-    plan_fce_format:'FCE Format',
     plan_official_durations:'Official durations for each paper.',
     plan_uoe_focus:'UoE Focus (min)',
     plan_listening_min:'Listening (min)',
@@ -4003,7 +4018,6 @@ const I18N={
     plan_advance1:'⚡ +1 Advance',
     plan_reset0:'↩ Reset (0)',
     plan_rotation:'What comes next',
-    plan_rotation_chip:'4-Session Loop',
     plan_override_genre:'Override writing genre',
     plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
     plan_week_a_odd:'Week A (Odd)',
@@ -4015,7 +4029,6 @@ const I18N={
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
     byo_title:'✨ Writing Corrector provider',
-    byo_chip:'Your key, your cost',
     byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
     byo_provider:'Provider',
     byo_provider_custom:'Custom',
@@ -4032,9 +4045,6 @@ const I18N={
     byo_test_ok:'Connected · {model}',
     byo_test_fail:'Failed · {code}',
     license_title:'Subscription',
-    license_chip_free:'Free',
-    license_chip_byo:'Your key',
-    license_chip_pro:'Pro',
     license_sub:'Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code or your own key lifts it.',
     license_write:'Writing Corrector & reports',
     license_speak:'Speaking mocks',
@@ -4087,10 +4097,10 @@ const I18N={
     books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
     books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
     practice_books_title:'Books & PDFs',
-    practice_books_sub:'The full library: online practice plus every downloaded PDF and audio file.',
-    books_moved_title:'Books & PDFs are now inside Practice',
-    books_moved_sub:'The Books tab was merged into Practice. PDFs, audio and online practice are still one click away.',
-    books_moved_cta:'Go to Practice',
+    practice_books_sub:'Every downloaded PDF and audio file, grouped by folder.',
+    books_moved_title:'Books & PDFs are now inside Resources',
+    books_moved_sub:'The Books tab was merged into Resources. PDFs, audio and online practice are still one click away.',
+    books_moved_cta:'Go to Resources',
     ai_title:'Writing Corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
@@ -4390,11 +4400,14 @@ const I18N={
     nav_progress:'Progreso',
     nav_plan:'Plan',
     nav_practice:'Práctica',
+    nav_resources:'Recursos',
     nav_errors:'Errores',
     nav_books:'Libros',
     nav_ai:'Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
+    practice_head_title:'Práctica por partes',
+    practice_head_sub:'Todos los ejercicios de las cuatro pruebas, en orden de examen. Cada uno con su tiempo objetivo, un botón para empezar y registro de resultados.',
     practice_title:'Fuentes de práctica',
     practice_sub:'Lugares legales y verificados para practicar cada examen. Primero los recursos gratuitos; las herramientas pagas o freemium están marcadas.',
     practice_filter_aria:'Filtrar fuentes de práctica por destreza',
@@ -4480,7 +4493,6 @@ const I18N={
     common_continue:'Continuar',
     plan_language:'Idioma',
     plan_language_sub:'El inglés es el valor por defecto. Al cambiar a español se traduce la interfaz y se guarda en tu cuenta.',
-    plan_language_chip:'Interfaz',
     lang_en:'English',
     lang_es:'Español',
     footer_privacy:'Privacidad',
@@ -4655,7 +4667,13 @@ const I18N={
     res_tapescript_key:'Transcripción y respuestas',
     res_online_practice:'Práctica en línea',
     resources_title:'Recursos',
-    resources_sub:'Cada test en una tarjeta: preguntas, audio, transcripción, respuestas y plan de clase.',
+    resources_page_sub:'Exámenes oficiales de muestra, práctica en línea y todos los archivos descargables en un solo lugar.',
+    resources_samples_title:'Exámenes de muestra',
+    resources_sub:'Una tarjeta por examen de muestra: preguntas, audio, transcripción, respuestas y plan de clase.',
+    res_sample_official:'Examen oficial de muestra',
+    res_sample_official_2:'Examen oficial de muestra 2',
+    res_sample_schools:'Examen de muestra For Schools',
+    res_sample_schools_2:'Examen de muestra For Schools 2',
     resources_filter_active:'Mostrando {paper}',
     resources_filter_clear:'Ver todas las pruebas',
     part_start:'Empezar',
@@ -4778,7 +4796,6 @@ const I18N={
     plan_delete_day:'Eliminar día de sesión',
     plan_offset:'Desfase: {offset}',
     plan_exam_timers:'🧪 Cronómetros del examen',
-    plan_fce_format:'Formato FCE',
     plan_official_durations:'Duraciones oficiales de cada prueba.',
     plan_uoe_focus:'Foco UoE (min)',
     plan_listening_min:'Listening (min)',
@@ -4817,7 +4834,6 @@ const I18N={
     plan_advance1:'⚡ +1 Adelantar',
     plan_reset0:'↩ Reiniciar (0)',
     plan_rotation:'Qué viene ahora',
-    plan_rotation_chip:'Ciclo de 4 sesiones',
     plan_override_genre:'Cambiar género de writing',
     plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
     plan_week_a_odd:'Semana A (impar)',
@@ -4829,7 +4845,6 @@ const I18N={
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
     byo_title:'✨ Proveedor del Writing Corrector',
-    byo_chip:'Tu clave, tu costo',
     byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
     byo_provider:'Proveedor',
     byo_provider_custom:'Personalizado',
@@ -4846,9 +4861,6 @@ const I18N={
     byo_test_ok:'Conectado · {model}',
     byo_test_fail:'Falló · {code}',
     license_title:'Suscripción',
-    license_chip_free:'Gratis',
-    license_chip_byo:'Tu clave',
-    license_chip_pro:'Pro',
     license_sub:'Tu plan define cuánto podés usar el Writing Corrector. El gratis sirve para probar el circuito; un código o tu propia clave lo amplían.',
     license_write:'Writing Corrector y reportes',
     license_speak:'Simulacros de speaking',
@@ -4901,10 +4913,10 @@ const I18N={
     books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
     books_filter_ph:'🔍 Filtrar material... (ej. listening, parte 3, writing)',
     practice_books_title:'Libros y PDFs',
-    practice_books_sub:'La biblioteca completa: práctica online y todos los PDF y audios descargados.',
-    books_moved_title:'Libros y PDFs ahora están en Práctica',
-    books_moved_sub:'La pestaña Libros se fusionó con Práctica. Los PDF, el audio y la práctica online siguen a un clic.',
-    books_moved_cta:'Ir a Práctica',
+    practice_books_sub:'Todos los PDF y audios descargados, agrupados por carpeta.',
+    books_moved_title:'Libros y PDFs ahora están en Recursos',
+    books_moved_sub:'La pestaña Libros se fusionó con Recursos. Los PDF, el audio y la práctica online siguen a un clic.',
+    books_moved_cta:'Ir a Recursos',
     ai_title:'Writing Corrector',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
@@ -12336,13 +12348,6 @@ function renderPlanCard(){
   if(!card)return;
   const p=PLAN_STATE;
   const byoKey=!!loadByo().key;
-  const nameEl=document.getElementById('planNameText');
-  if(nameEl){
-    const key=(p&&(p.plan==='pro'||p.plan==='byo'))?('license_chip_'+p.plan)
-      :(byoKey?'license_chip_byo':'license_chip_free');
-    nameEl.setAttribute('data-i18n',key);
-    nameEl.textContent=t(key);
-  }
   const wEl=document.getElementById('planWriteText');
   const sEl=document.getElementById('planSpeakText');
   const resetEl=document.getElementById('planResetText');
@@ -12921,20 +12926,24 @@ const RES_PAPERS=[
 ];
 function resourceCardHtml(c){
   const parts=(c.parts&&c.parts.length)?` data-res-parts="${c.parts.join(' ')}"`:'';
-  return `<div class="listen-test" data-listen-test="${esc(c.title)}"${parts}><div class="lt-head">${esc(c.title)}</div><div class="chips">${c.items.filter(Boolean).join('')}</div></div>`;
+  const items=c.items.filter(Boolean);
+  const online=items.filter(x=>/href="https?:/.test(x));
+  const local=items.filter(x=>!/href="https?:/.test(x));
+  return `<div class="listen-test" data-listen-test="${esc(c.title)}"${parts}><div class="lt-head">${esc(c.title)}</div><div class="chips">${online.concat(local).join('')}</div></div>`;
 }
 function resourceGrid(cards){
-  return `<div class="lt-grid">${cards.map(resourceCardHtml).join('')}</div>`;
+  return `<div class="lt-grid">${cards.filter(c=>c.items.some(Boolean)).map(resourceCardHtml).join('')}</div>`;
 }
 function setResourcesFilter(type,part){
   RES_FILTER=type?{type:type,part:part||null}:null;
+  showView('resources');
   renderResources();
   const el=document.getElementById('practiceResources');
   if(el&&el.scrollIntoView)el.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function clearResourcesFilter(){RES_FILTER=null;renderResources()}
+function clearResourcesFilter(){RES_FILTER=null;showView('resources');renderResources()}
 function goToPartFilter(partNum, type){
-  showView('practice');
+  showView('resources');
   setResourcesFilter(type||'ue', partNum||null);
 }
 function listeningRes(labelKey,key,title){
@@ -12986,19 +12995,23 @@ function listeningCardsArray(){
   return cards;
 }
 function listeningTestCards(){return resourceGrid(listeningCardsArray())}
+const SAMPLE_PAPER_KEY={rue:'paper_reading',w:'paper_writing',l:'paper_listening',sp:'paper_speaking'};
+function sampleCards(skill,samples){
+  return samples.map(s=>({title:t(SAMPLE_PAPER_KEY[skill])+' · '+t(s.key),items:s.items}));
+}
 function readingCardsArray(){
   const res=listeningRes;
   const plan=(key,title)=>res('res_lesson_plan',key,title);
-  const cards=[
-    {title:t('rt_test_1'),items:[res('res_questions','rueS1'),res('res_answer_key','keyS1')]},
-    {title:t('rt_test_2'),items:[res('res_questions','rueS2'),res('res_answer_key','keyS2')]},
-    {title:t('rt_fs_1'),items:[res('res_questions','rueFS1'),res('res_answer_key','keyFS1')]},
-    {title:t('rt_fs_2'),items:[res('res_questions','rueFS2'),res('res_answer_key','keyFS2')]}
-  ];
-  const plans=[];
-  for(let n=1;n<=7;n++)plans.push(plan('lpR'+n,'Part '+n));
-  for(let n=1;n<=7;n++)plans.push(plan('fR'+n,'For Schools · part '+n));
-  cards.push({title:t('res_lesson_plans'),items:plans});
+  const b2=[];
+  for(let n=1;n<=7;n++)b2.push(plan('lpR'+n,'Part '+n));
+  const fs=[];
+  for(let n=1;n<=7;n++)fs.push(plan('fR'+n,'For Schools · part '+n));
+  const cards=sampleCards('rue',[
+    {key:'res_sample_official',items:[res('res_questions','rueS1'),res('res_answer_key','keyS1')].concat(b2)},
+    {key:'res_sample_official_2',items:[res('res_questions','rueS2'),res('res_answer_key','keyS2')].concat(b2)},
+    {key:'res_sample_schools',items:[res('res_questions','rueFS1'),res('res_answer_key','keyFS1')].concat(fs)},
+    {key:'res_sample_schools_2',items:[res('res_questions','rueFS2'),res('res_answer_key','keyFS2')].concat(fs)}
+  ]);
   cards.push({title:t('res_self_study'),items:[
     res('res_reading_activities_1','rAct1'),
     res('res_reading_activities_2','rAct1b'),
@@ -13011,16 +13024,16 @@ function readingCardsArray(){
 function speakingCardsArray(){
   const res=listeningRes;
   const plan=(key,title)=>res('res_lesson_plan',key,title);
-  const cards=[
-    {title:t('spt_test_1'),items:[res('res_visuals','spS1')]},
-    {title:t('spt_test_2'),items:[res('res_visuals','spS2')]},
-    {title:t('spt_fs_1'),items:[res('res_visuals','spFS1')]},
-    {title:t('spt_fs_2'),items:[res('res_visuals','spFS2')]}
-  ];
-  const plans=[];
-  for(let n=1;n<=4;n++)plans.push(plan('lpSp'+n,'Part '+n));
-  for(let n=1;n<=4;n++)plans.push(plan('fSp'+n,'For Schools · part '+n));
-  cards.push({title:t('res_lesson_plans'),items:plans});
+  const b2=[];
+  for(let n=1;n<=4;n++)b2.push(plan('lpSp'+n,'Part '+n));
+  const fs=[];
+  for(let n=1;n<=4;n++)fs.push(plan('fSp'+n,'For Schools · part '+n));
+  const cards=sampleCards('sp',[
+    {key:'res_sample_official',items:[res('res_visuals','spS1')].concat(b2)},
+    {key:'res_sample_official_2',items:[res('res_visuals','spS2')].concat(b2)},
+    {key:'res_sample_schools',items:[res('res_visuals','spFS1')].concat(fs)},
+    {key:'res_sample_schools_2',items:[res('res_visuals','spFS2')].concat(fs)}
+  ]);
   const examiners=[];
   for(let n=0;n<6;n++)examiners.push(res('res_examiner_comments','exC'+n,'Examiner '+(n+1)));
   cards.push({title:t('res_examiner_comments'),items:examiners});
@@ -13034,21 +13047,19 @@ function speakingCardsArray(){
 function writingCardsArray(){
   const res=listeningRes;
   const plan=(key,title)=>res('res_lesson_plan',key,title);
-  const cards=[
-    {title:t('wt_test_1'),items:[res('res_writing_task','wS1')]},
-    {title:t('wt_test_2'),items:[res('res_writing_task','wS2')]},
-    {title:t('wt_fs_1'),items:[res('res_writing_task','wFS1')]},
-    {title:t('wt_fs_2'),items:[res('res_writing_task','wFS2')]}
-  ];
+  const b2=[plan('lpW1','Part 1'),plan('lpW2','Part 2')];
+  const fs=[plan('fW1','For Schools · part 1'),plan('fW2','For Schools · part 2')];
+  const cards=sampleCards('w',[
+    {key:'res_sample_official',items:[res('res_writing_task','wS1')].concat(b2)},
+    {key:'res_sample_official_2',items:[res('res_writing_task','wS2')].concat(b2)},
+    {key:'res_sample_schools',items:[res('res_writing_task','wFS1')].concat(fs)},
+    {key:'res_sample_schools_2',items:[res('res_writing_task','wFS2')].concat(fs)}
+  ]);
   cards.push({title:t('res_writing_guides'),items:[
     res('res_checklist','wCheck'),
     res('res_self_study','wAct1','Text 1'),
     res('res_self_study','wAct2','Text 2'),
     res('res_teacher_guide','wGuide')
-  ]});
-  cards.push({title:t('res_lesson_plans'),items:[
-    plan('lpW1','Part 1'),plan('lpW2','Part 2'),
-    plan('fW1','For Schools · part 1'),plan('fW2','For Schools · part 2')
   ]});
   cards.push({title:t('res_online'),items:[res('res_online_practice','https://www.examenglish.com/FCE/fce_writing.html')]});
   return cards;
@@ -15042,9 +15053,9 @@ function renderDiag(){
    list. init: wires listeners, applies PLAN timers and refreshes all. */
 function showView(viewId){
   /* U4 one-door decision: Books has no door of its own any more. Old links
-     and calls keep working, but they land on Practice, where the library
+     and calls keep working, but they land on Resources, where the library
      (PDFs, audio, online practice) now lives. */
-  if(viewId==='libros')viewId='practice';
+  if(viewId==='libros')viewId='resources';
   const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
   if(btn){btn.click();return}
   // Views without a nav entry (the diagnostic) still open when the plan
@@ -15056,6 +15067,7 @@ function showView(viewId){
   sec.classList.add('active');
   if(viewId==='diag')renderDiag();
   if(viewId==='practice')renderPractice();
+  if(viewId==='resources'){renderPractice();renderResources()}
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
   TEV_VIEW=viewId;
@@ -15063,10 +15075,10 @@ function showView(viewId){
 }
 document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   const _tevT0=Date.now();
-  /* U4: the legacy Books tab is a redirect to Practice, never a second view. */
+  /* U4: the legacy Books tab is a redirect to Resources, never a second view. */
   if(b.dataset.view==='libros'){
-    const practiceBtn=document.querySelector("nav button[data-view='practice']");
-    if(practiceBtn){practiceBtn.click();return}
+    const resourcesBtn=document.querySelector("nav button[data-view='resources']");
+    if(resourcesBtn){resourcesBtn.click();return}
   }
   document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
@@ -15075,6 +15087,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(sec)sec.classList.add('active');
   if(b.dataset.view==='diag')renderDiag();
   if(b.dataset.view==='practice')renderPractice();
+  if(b.dataset.view==='resources'){renderPractice();renderResources()}
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
   TEV_VIEW=b.dataset.view;
