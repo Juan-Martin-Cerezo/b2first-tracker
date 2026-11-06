@@ -90,11 +90,10 @@ with sync_playwright() as p:
         ["Listening part 1", "Listening part 2"],
         ["Writing essay", "Writing article"],
     ], f"itemsPerSession=2 mixed skills or took the wrong units: {pairs}"
-    slot_min = pg.evaluate("Math.max(1, Number(D.settings.slotMin) || 45)")
-    assert [s["min"] for s in pairs] == [slot_min * 2, slot_min * 2, slot_min * 2], (
+    assert [s["min"] for s in pairs] == [16, 20, 80], (
         f"the session duration is not the sum of its units: {pairs}"
     )
-    OUT["2_two_per_session"] = {"min": slot_min, "sessions": pairs}
+    OUT["2_two_per_session"] = pairs
 
     # 3. A different wCycle rotates Writing through those genres and loops.
     seed(pg, ("mon", "fri"), per=1, wcycle=["Article", "Report"])

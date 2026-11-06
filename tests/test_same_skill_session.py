@@ -45,8 +45,6 @@ with sync_playwright() as p:
         }"""
     )
 
-    slot_min = pg.evaluate("Math.max(1, Number(D.settings.slotMin) || 45)")
-
     # 1. itemsPerSession=2: the first eight sessions, one skill each.
     pairs = pg.evaluate(SESSIONS_JS, [["mon", "fri"], 2, 0, 8])
     assert [s["units"] for s in pairs] == [
@@ -59,10 +57,11 @@ with sync_playwright() as p:
         ["Writing report", "Writing review"],
         ["Speaking part 3", "Speaking part 4"],
     ], f"the per=2 session sequence is wrong: {pairs}"
-    for s in pairs:
+    expected_pairs = [16, 20, 80, 6, 18, 20, 80, 8]
+    for s, want in zip(pairs, expected_pairs):
         assert len(s["skills"]) == 1, f"a session mixed skills: {s}"
-        assert s["min"] == slot_min * len(s["units"]), (
-            f"the duration is not the sum of the units: {s}"
+        assert s["min"] == want, (
+            f"the duration is not the table sum of the units: {s} (want {want})"
         )
     OUT["per2"] = pairs
 
@@ -78,10 +77,11 @@ with sync_playwright() as p:
         ["Writing review", "Writing email", "Writing essay"],
         ["Speaking part 4", "Speaking part 1", "Speaking part 2"],
     ], f"the per=3 session sequence is wrong (wrap included): {triples}"
-    for s in triples:
+    expected_triples = [24, 30, 120, 10, 36, 30, 120, 10]
+    for s, want in zip(triples, expected_triples):
         assert len(s["skills"]) == 1, f"a per=3 session mixed skills: {s}"
-        assert s["min"] == slot_min * len(s["units"]), (
-            f"the per=3 duration is not the sum of the units: {s}"
+        assert s["min"] == want, (
+            f"the per=3 duration is not the table sum of the units: {s} (want {want})"
         )
     OUT["per3"] = triples
 

@@ -133,9 +133,9 @@ with sync_playwright() as p:
     )
     titles = pg.evaluate("() => buildWeeklyPlan(D).slots.map(s => slotTitleText(s))")
     assert titles == [
-        "Reading part 1 · 45 min",
-        "Listening part 1 · 45 min",
-        "Writing essay · 45 min",
+        "Reading part 1 · 8 min",
+        "Listening part 1 · 10 min",
+        "Writing essay · 40 min",
     ], f"the queue did not follow the schedule days: {titles}"
     out_today = TODAY in ("Mon", "Wed", "Sat")
     if out_today:

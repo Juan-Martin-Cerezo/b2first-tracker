@@ -118,8 +118,17 @@ with sync_playwright() as p:
     assert len({u.split(":")[0] for u in multi["units"]}) == 1, (
         f"a session mixed skills: {multi}"
     )
-    slot_min = pg.evaluate("Math.max(1, Number(D.settings.slotMin) || 45)")
-    assert multi["min"] == slot_min * 3, f"the total duration is not the sum: {multi}"
+    expected_min = pg.evaluate(
+        """(units) => units.reduce((total, u) => {
+            const parts = u.split(':');
+            const skill = parts[0], value = parts[1];
+            return total + (skill === 'w' ? UNIT_MIN.w[value] : UNIT_MIN[skill][Number(value)]);
+        }, 0)""",
+        multi["units"],
+    )
+    assert multi["min"] == expected_min, (
+        f"the total duration is not the table sum of the units: {multi} (want {expected_min})"
+    )
     assert "1)" in multi["title"] and "2)" in multi["title"] and "3)" in multi["title"], (
         f"the units are not numbered in order: {multi['title']!r}"
     )

@@ -12559,17 +12559,29 @@ function resetPlan(){
    6. Slot reasons are in English and cite the real datum ("you rated
       Writing 2/5", "you flagged reading speed", "part 3 is your weakest
       (2/8 in the diagnostic)").
-   7. slotMin (default 45) per slot. Never repeat the same part on the
-      same day. Without D.profile and without a diagnostic the plan is
-      empty with needDiag (previous behaviour).
+   7. Every unit has its own duration from UNIT_MIN (never a global slotMin):
+      a loose part is timed like that part, and a session is the sum of its
+      units. Never repeat the same part on the same day. Without D.profile
+      and without a diagnostic the plan is empty with needDiag (previous
+      behaviour).
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
 const PLAN_DAY_MAP={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
 const PLAN_DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
 const ROTATION_MODES=['by-part','full-section','custom'];
-const FULL_SECTION=[['ue',75],['l',40],['w',80],['sp',60]];
+/* Per-unit durations in minutes, matching the official B2 First timing:
+   R&UE=75, Listening=40 (transfer included), Writing=80, Speaking=14.
+   The totals must keep closing; see tests/test_unit_minutes.py. */
+const UNIT_MIN={
+  rue:{1:8,2:8,3:8,4:10,5:13,6:13,7:15},
+  l:{1:10,2:10,3:10,4:10},
+  w:{Essay:40,Article:40,Report:40,Review:40,Email:40},
+  sp:{1:2,2:4,3:4,4:4}
+};
+const PAPER_PARTS={ue:[1,2,3,4,5,6,7],l:[1,2,3,4],w:[1,2],sp:[1,2,3,4]};
+const FULL_SECTION=[['ue',75],['l',40],['w',80],['sp',14]];
 const FULL_SECTION_LABEL={ue:'Full R&UE',l:'Full Listening',w:'Full Writing',sp:'Full Speaking'};
 const CUSTOM_SKILLS=['rue','l','w','sp','mock'];
-const CUSTOM_SKILL_DEFAULT_MIN={rue:45,l:40,w:80,sp:60,mock:180};
+const CUSTOM_SKILL_DEFAULT_MIN={rue:75,l:40,w:80,sp:14,mock:180};
 function normalizeRotationMode(v){
   return ROTATION_MODES.indexOf(v)>=0?v:'by-part';
 }
@@ -12723,9 +12735,41 @@ function queueStartSession(s,log,offset,per){
   const n=normalizeItemsPerSession(per);
   return Math.floor(queueLogCount(s,log)/n)+(Math.trunc(Number(offset))||0);
 }
-function queueSlotForUnits(units,slotMin){
+/* Minutes for one queue unit, straight from the table. A writing genre is a
+   single writing task; a loose part is timed like that part, never like a
+   whole session. */
+function unitMinutes(u){
+  if(!u)return 0;
+  if(u.skill==='w')return UNIT_MIN.w[u.value]||UNIT_MIN.w.Essay;
+  const table=UNIT_MIN[u.skill]||{};
+  return Number(table[u.value])||0;
+}
+/* Minutes for a non-queue slot built by the weekly planner (custom fallback
+   included): sum the parts it really contains, or the whole paper when it
+   contains all of them. */
+function slotTableMinutes(sl){
+  if(!sl)return 0;
+  const type=sl.type==='ue'?'rue':sl.type;
+  if(type==='mock')return CUSTOM_SKILL_DEFAULT_MIN.mock;
+  if(type==='w')return UNIT_MIN.w.Essay;
+  const table=UNIT_MIN[type]||{};
+  const parts=slotParts(sl);
+  if(!parts.length)return Object.keys(table).reduce((total,k)=>total+(Number(table[k])||0),0);
+  return parts.reduce((total,p)=>total+(Number(table[p])||0),0);
+}
+/* True only when the slot really covers every part of its paper: that is the
+   one condition under which the word "Full" may be painted. */
+function isWholePaper(sl){
+  if(!sl)return false;
+  const all=PAPER_PARTS[sl.type];
+  if(!all)return false;
+  const parts=slotParts(sl);
+  if(!parts.length)return !!(sl.full||sl.section);
+  return all.every(p=>parts.indexOf(p)>=0);
+}
+function queueSlotForUnits(units){
   const first=units[0];
-  units.forEach(u=>{u.min=slotMin});
+  units.forEach(u=>{u.min=unitMinutes(u)});
   const min=units.reduce((total,u)=>total+(Number(u.min)||0),0);
   const skillLabel=planSkillLabel(first.skill);
   return {part:first.part,parts:first.skill==='w'?[]:[first.value],
@@ -12737,16 +12781,15 @@ function queueSlotForUnits(units,slotMin){
 }
 /* Consecutive sessions, `perSession` units each, starting at the session index
    `start`. Day keys are handed out in schedule order (Mon/Fri/Mon/Fri...). */
-function rotationQueueSessions(dayKeys,perSession,start,count,s,slotMin){
+function rotationQueueSessions(dayKeys,perSession,start,count,s){
   s=s||(D&&D.settings)||{};
   const cycles=queueCycles(s);
   const n=normalizeItemsPerSession(perSession);
-  const min=Math.max(1,Number(slotMin)||Number(s.slotMin)||45);
   const out=[];
   for(let i=0;i<count;i++){
     const units=[];
     for(let k=0;k<n;k++)units.push(queueBlockUnit(start+i,k,n,cycles));
-    const slot=queueSlotForUnits(units,min);
+    const slot=queueSlotForUnits(units);
     if(dayKeys&&dayKeys.length)slot.day=dayKeys[i%dayKeys.length];
     out.push(slot);
   }
@@ -12836,17 +12879,22 @@ function slotPartText(sl){
 function slotLabel(sl){
   if(!sl)return '';
   const parts=slotParts(sl);
+  const whole=isWholePaper(sl);
   if(sl.type==='mock')return 'Mock exam';
-  if(sl.type==='w')return 'Writing';
+  // A writing session is one task unless it is the whole two-part paper.
+  if(sl.type==='w')return (sl.section&&whole)?'Full Writing':'Writing';
   if(sl.type==='l'){
-    if(!parts.length)return 'Full Listening';
+    if(whole)return 'Full Listening';
+    if(!parts.length)return 'Listening';
     return parts.length===1?'Listening '+lpName(parts[0]).toLowerCase():'Listening parts '+parts.join(', ');
   }
   if(sl.type==='sp'){
-    if(!parts.length)return 'Full Speaking';
+    if(whole)return 'Full Speaking';
+    if(!parts.length)return 'Speaking';
     return parts.length===1?'Speaking part '+parts[0]:'Speaking parts '+parts.join(', ');
   }
-  if(!parts.length)return 'Full R&UE';
+  if(whole)return 'Full R&UE';
+  if(!parts.length)return 'Reading & Use of English';
   return parts.length===1?'UoE '+partName(parts[0]).toLowerCase():'UoE parts '+parts.join(', ');
 }
 /* One canonical title used by BOTH the PLAN row and the TODAY session block,
@@ -12859,7 +12907,7 @@ function slotTitleText(sl){
       :sl.units.map((u,i)=>`${i+1}) ${queueUnitLabel(u)}`).join(' · ');
     return labels+' · '+sl.min+' min';
   }
-  if(sl.section)return (FULL_SECTION_LABEL[sl.type]||slotLabel(sl))+' ('+sl.min+' min)';
+  if(sl.section)return slotLabel(sl)+' ('+sl.min+' min)';
   return slotPartText(sl)+slotLabel(sl)+' · '+sl.min+' min'+(sl.timed?' · timed (exam mode)':'');
 }
 function customSlotFor(day,c){
@@ -12884,7 +12932,6 @@ function buildWeeklyPlan(D){
   const dayN=DAYS.length;
   const slotsPerWeek=dayN;
   const rotationMode=normalizeRotationMode(s.rotationMode);
-  const slotMin=Math.max(1,Number(s.slotMin)||45);
   const errs=Array.isArray(D&&D.errs)?D.errs:[];
   const log=Array.isArray(D&&D.log)?D.log:[];
   const tax={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
@@ -12934,12 +12981,12 @@ function buildWeeklyPlan(D){
   if(useDiag){
     const weakSlots=weakest.map((p,i)=>{
       const bp=byPart[p]||{ok:0,n:0};
-      return {part:p,type:'ue',min:slotMin,timed:false,
+      return {part:p,type:'ue',min:0,timed:false,
         reason:(i===0?`part ${p} is your weakest`:`part ${p} is weakness #${i+1}`)+` (${bp.ok}/${bp.n} in the diagnostic)`};
     });
-    const wSlot={part:null,type:'w',min:slotMin,timed:false,
+    const wSlot={part:null,type:'w',min:0,timed:false,
       reason:hasW?'Writing is 25% of the exam and you already practise it: keep it every week':'you never practised Writing and it is 25% of the exam'};
-    const lSlot={part:lPart,type:'l',min:slotMin,timed:false,
+    const lSlot={part:lPart,type:'l',min:0,timed:false,
       reason:lCount?`Listening boost: ${lCount} T-MIS errors concentrated in part ${lPart}`:`Listening boost part ${lPart}: 0 T-MIS errors per part, lCycle rotation`};
     const priority=[wSlot,lSlot].concat(weakSlots);
     const chosen=[];
@@ -12956,13 +13003,13 @@ function buildWeeklyPlan(D){
     rated.forEach(sk=>{
       if(ordered.length>=slotsPerWeek)return;
       const n=sk.n;
-      if(sk.k==='w')ordered.push({part:null,type:'w',min:slotMin,timed:false,
+      if(sk.k==='w')ordered.push({part:null,type:'w',min:0,timed:false,
         reason:`you rated Writing ${n}/5 and it is 25% of the exam`});
-      else if(sk.k==='l'){usedParts[lPart]=true;ordered.push({part:lPart,type:'l',min:slotMin,timed:false,
+      else if(sk.k==='l'){usedParts[lPart]=true;ordered.push({part:lPart,type:'l',min:0,timed:false,
         reason:`you rated Listening ${n}/5: listening boost part ${lPart}`})}
-      else if(sk.k==='sp'){usedParts[spPart]=true;ordered.push({part:spPart,type:'sp',min:slotMin,timed:false,
+      else if(sk.k==='sp'){usedParts[spPart]=true;ordered.push({part:spPart,type:'sp',min:0,timed:false,
         reason:`you rated Speaking ${n}/5: speaking part ${spPart}`})}
-      else{const p=pickPart();ordered.push({part:p,type:'ue',min:slotMin,timed:false,
+      else{const p=pickPart();ordered.push({part:p,type:'ue',min:0,timed:false,
         reason:`you rated ${skillLabel[sk.k]} ${n}/5: part ${p} — ${partName(p).toLowerCase()}`})}
     });
   }
@@ -12984,7 +13031,7 @@ function buildWeeklyPlan(D){
         const m=STRUGGLE_MAP.filter(([l])=>l===label)[0];
         if(m&&m[1]===c)decl=label;
       });
-      reinf.push({part:r.part,type:'ue',min:slotMin,timed:!!r.timed,
+      reinf.push({part:r.part,type:'ue',min:0,timed:!!r.timed,
         reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
     });
     ordered=reinf.concat(ordered);
@@ -13004,8 +13051,11 @@ function buildWeeklyPlan(D){
     else if(fillMode==='lex'||fillMode==='gram'||fillMode==='text')fr=`most of your errors are ${topK} (${topN}): part ${part} — ${partName(part).toLowerCase()}`;
     else if(fillMode==='time')fr=`exam mode, timed: your ${topN} T-LIM errors call for part ${part} against the clock`;
     else fr=`no clear error majority: rueCycle rotation, part ${part} — ${partName(part).toLowerCase()}`;
-    ordered.push({part:part,type:'ue',min:slotMin,timed:fillMode==='time',reason:fr});
+    ordered.push({part:part,type:'ue',min:0,timed:fillMode==='time',reason:fr});
   }
+  // Duration is the table's, never a global slotMin. Applied after the shape
+  // is fixed so every fallback slot is timed like the work it contains.
+  ordered.forEach(sl=>{sl.min=slotTableMinutes(sl)});
   /* The by-part engine above is the default plan. The rotation modes below
      reuse it as their fallback and only change the shape of the session list,
      so TODAY always renders whatever this function returned. */
@@ -13015,7 +13065,7 @@ function buildWeeklyPlan(D){
     // One whole paper per chosen day, cycling the four official papers.
     slots=DAYS.map((day,i)=>{
       const sec=FULL_SECTION[i%FULL_SECTION.length];
-      return {part:null,parts:[],type:sec[0],min:sec[1],timed:false,section:true,full:true,
+      return {part:null,parts:(PAPER_PARTS[sec[0]]||[]).slice(),type:sec[0],min:sec[1],timed:false,section:true,full:true,
         reason:t('plan_full_reason',{paper:FULL_SECTION_LABEL[sec[0]],min:sec[1]})};
     });
     slots=rotateByOffset(slots,offset);
@@ -13028,7 +13078,7 @@ function buildWeeklyPlan(D){
       const b=base[i];
       if(b)return {part:b.part,parts:Array.isArray(b.parts)?b.parts.slice():(b.part!=null?[b.part]:[]),
         type:b.type,min:b.min,timed:!!b.timed,reason:b.reason};
-      return {part:null,parts:[],type:'ue',min:slotMin,timed:false,
+      return {part:null,parts:[],type:'ue',min:slotTableMinutes({part:null,type:'ue'}),timed:false,
         reason:t('plan_custom_reason',{day:day})};
     });
     slots=rotateByOffset(slots,offset);
@@ -13036,7 +13086,7 @@ function buildWeeklyPlan(D){
     // by-part: one continuous queue, `itemsPerSession` units of one skill per day.
     const per=normalizeItemsPerSession(s.itemsPerSession);
     const start=queueStartSession(s,log,offset,per);
-    slots=rotationQueueSessions(sessionDays.map(d=>d.key),per,start,dayN,s,slotMin);
+    slots=rotationQueueSessions(sessionDays.map(d=>d.key),per,start,dayN,s);
   }
   slots=slots.slice(0,dayN);
   slots.forEach((sl,i)=>{sl.day=DAYS[i];sl.time=TIMES[i]});

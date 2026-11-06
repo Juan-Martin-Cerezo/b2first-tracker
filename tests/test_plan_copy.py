@@ -137,7 +137,7 @@ with sync_playwright() as p:
         "Full R&UE (75 min)",
         "Full Listening (40 min)",
         "Full Writing (80 min)",
-        "Full Speaking (60 min)",
+        "Full Speaking (14 min)",
     ], f"full-section is not showing whole papers: {labels}"
     assert_no_bad_copy(full, "en")
     OUT["full_section"] = {"mode": full["mode"], "labels": labels[:4]}

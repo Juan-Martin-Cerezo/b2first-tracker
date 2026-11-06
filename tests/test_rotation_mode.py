@@ -72,7 +72,7 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(250)
 
-    # 1. by-part: loose exercises/parts with slotMin (the current behaviour).
+    # 1. by-part: loose exercises/parts, each timed by its own unit table.
     seed_profile(pg, FOUR_DAYS, "by-part")
     by_part = pg.evaluate(PLAN_JS)
     assert len(by_part) == 4, f"by-part should fill the four chosen days: {by_part}"
@@ -83,12 +83,14 @@ with sync_playwright() as p:
     assert all(len(set(s["units"])) == 1 for s in by_part if s["units"]), (
         f"by-part mixed skills inside a session: {by_part}"
     )
-    assert all(s["min"] == 45 for s in by_part), f"by-part changed slotMin: {by_part}"
+    assert [s["min"] for s in by_part] == [8, 10, 40, 2], (
+        f"by-part is not using the per-unit durations: {by_part}"
+    )
     assert [s["title"] for s in by_part] == [
-        "Reading part 1 · 45 min",
-        "Listening part 1 · 45 min",
-        "Writing essay · 45 min",
-        "Speaking part 1 · 45 min",
+        "Reading part 1 · 8 min",
+        "Listening part 1 · 10 min",
+        "Writing essay · 40 min",
+        "Speaking part 1 · 2 min",
     ], f"by-part is not the continuous queue: {[s['title'] for s in by_part]}"
     OUT["1_by_part"] = by_part
 
@@ -98,14 +100,14 @@ with sync_playwright() as p:
     assert [s["type"] for s in full] == ["ue", "l", "w", "sp"], (
         f"full-section did not cover the four papers: {full}"
     )
-    assert [s["min"] for s in full] == [75, 40, 80, 60], (
+    assert [s["min"] for s in full] == [75, 40, 80, 14], (
         f"full-section is not using the official exam times: {full}"
     )
     assert [s["title"] for s in full] == [
         "Full R&UE (75 min)",
         "Full Listening (40 min)",
         "Full Writing (80 min)",
-        "Full Speaking (60 min)",
+        "Full Speaking (14 min)",
     ], f"full-section titles are wrong: {[s['title'] for s in full]}"
     assert all(s["section"] and s["full"] for s in full), (
         f"full-section slots are not whole papers: {full}"

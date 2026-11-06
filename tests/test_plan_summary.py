@@ -26,7 +26,6 @@ SEED_BY_PART = """() => {
     D.sessionOffset = 0;
     D.settings.schedule = [{day:1,time:'15:30'},{day:2,time:'13:00'},{day:3,time:'10:00'},{day:4,time:'18:00'}];
     D.settings.rotationMode = 'by-part';
-    D.settings.slotMin = 45;
     save();
     refreshAll();
 }"""
@@ -108,33 +107,33 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(250)
 
-    # 1. By-part plan: 4 slots of 45 min = 180 min.
+    # 1. By-part plan: each slot is timed by its unit (8+10+40+2 = 60 min).
     pg.evaluate(SEED_BY_PART)
     pg.wait_for_timeout(300)
     a = pg.evaluate(READ_JS)
     text_a = assert_line_matches_plan(a, "by-part")
-    assert a["plan"]["total"] == 180 and a["plan"]["count"] == 4, (
-        f"the by-part plan is not 4 x 45 min: {a['plan']}"
+    assert a["plan"]["total"] == 60 and a["plan"]["count"] == 4, (
+        f"the by-part plan is not the sum of its units: {a['plan']}"
     )
-    assert "This week: 180 min across 4 sessions" in text_a, (
+    assert "This week: 60 min across 4 sessions" in text_a, (
         f"unexpected summary line: {text_a!r}"
     )
     OUT["1_by_part"] = a
 
-    # 2. Full-paper plan: five official papers, 75+40+80+60+75 = 330 min,
+    # 2. Full-paper plan: five official papers, 75+40+80+14+75 = 284 min,
     #    split per skill from the slots themselves.
     pg.evaluate(SEED_FULL_SECTION)
     pg.wait_for_timeout(300)
     b = pg.evaluate(READ_JS)
     text_b = assert_line_matches_plan(b, "full-section")
-    assert b["plan"]["total"] == 330, f"the full-paper week is not 330 min: {b['plan']}"
-    assert b["plan"]["bySkill"] == {"rue": 150, "l": 40, "w": 80, "sp": 60}, (
+    assert b["plan"]["total"] == 284, f"the full-paper week is not 284 min: {b['plan']}"
+    assert b["plan"]["bySkill"] == {"rue": 150, "l": 40, "w": 80, "sp": 14}, (
         f"the per-skill split is wrong: {b['plan']['bySkill']}"
     )
     assert "Reading & UoE 150 min" in text_b, f"R&UoE minutes missing: {text_b!r}"
     assert "Listening 40 min" in text_b, f"Listening minutes missing: {text_b!r}"
     assert "Writing 80 min" in text_b, f"Writing minutes missing: {text_b!r}"
-    assert "Speaking 60 min" in text_b, f"Speaking minutes missing: {text_b!r}"
+    assert "Speaking 14 min" in text_b, f"Speaking minutes missing: {text_b!r}"
     assert text_b != text_a, "two different plans produced the same summary line"
     OUT["2_full_section"] = b
 
@@ -143,7 +142,7 @@ with sync_playwright() as p:
     pg.wait_for_timeout(400)
     es = pg.evaluate(READ_JS)
     assert es["visible"], f"the summary disappeared in Spanish: {es}"
-    assert es["text"].startswith("Esta semana: 330 min en 5 sesiones"), (
+    assert es["text"].startswith("Esta semana: 284 min en 5 sesiones"), (
         f"the Spanish summary is missing: {es['text']!r}"
     )
     assert "Reading y UoE 150 min" in es["text"], (
