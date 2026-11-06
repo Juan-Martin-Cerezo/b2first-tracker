@@ -69,6 +69,48 @@ countdown in view.
 | **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress under `data/users/<id>/`. Recovery works through Google, a passkey, or a manual operator reset. |
 | **Privacy** | Progress is JSON on your server. No analytics SDK, no ads, no external database. |
 
+## How the plan works
+
+The Plan tab has two rotations, picked under **Rotation** on the week plan card. Both read the
+same session days from **Session Schedules**, and the same **Fast-forward (+1)** shifts either
+one by a session without touching the log.
+
+**By part** (the default) keeps one continuous queue of exercises. A week is a pair of skills
+that alternates forever: Reading & Use of English with Listening, then Writing with Speaking.
+The days of that week split the pair in order, so one session never mixes skills. **Exercises
+per session** puts 1–4 units of the same skill in a single session. The queue position comes
+from the units already in the log, not from a stored cursor, so a refresh or a second device
+cannot move it.
+
+**Full paper each session** ignores the queue: every scheduled session is one whole paper with
+its exam time, cycling Reading & Use of English → Listening → Writing → Speaking. Its Start
+button opens the paper in exam mode, and the log row carries the paper's own type (`rue`, `l`,
+`fw`, `sp`).
+
+Every unit is timed from its paper's own table, and the table closes with the official totals:
+
+| Paper | Units | Total (min) |
+| --- | --- | --- |
+| Reading & Use of English | part 1: 8 · part 2: 8 · part 3: 8 · part 4: 10 · part 5: 13 · part 6: 13 · part 7: 15 | 75 |
+| Listening | part 1: 10 · part 2: 10 · part 3: 10 · part 4: 10 | 40 |
+| Writing | 40 per task (Essay, Article, Report, Review, Email) | 80 |
+| Speaking | part 1: 2 · part 2: 4 · part 3: 4 · part 4: 4 | 14 |
+
+A session lasts exactly the sum of its units, and the summary line on the week plan card adds
+the rows it shows.
+
+Each skill has a fixed cycle, and both modes are drawn from it:
+
+- Reading & Use of English: parts 1–7.
+- Listening: parts 1–4.
+- Writing: Essay, Article, Report, Review, Email.
+- Speaking: parts 1–4.
+
+A pass through a cycle closes when every unit in it is in the log; a unit logged twice counts
+once, and the queue offers only what the current pass still misses before starting the next
+pass whole. The **What comes next** card and the progress lines read that same queue, so they
+cannot disagree with the session you get.
+
 ## The Speaking exam
 
 The Speaking exam runs in the browser, one part at a time or as the full fourteen minutes of
