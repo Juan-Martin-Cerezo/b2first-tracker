@@ -3368,6 +3368,76 @@ _STATIC_LOCK = threading.Lock()
 _STATIC_CACHE = {}  # {full_path: {key, raw, gz, etag, last_modified, mtime}}
 
 
+class _BrokenStatic(Exception):
+    """The file on disk is mid-write, truncated, empty or missing and no
+    validated copy is available: answer 503 instead of serving a partial body."""
+
+
+def _note_bad_static(full, reason, size, rid=""):
+    """Record a rejected static read in data/errors/ (no content, no PII).
+
+    A runner rewrites index.html in place while the server is live, so a
+    request can land mid-write. The event makes that visible without exposing
+    the partial document to the client.
+    """
+    try:
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        rec = {"ts": ts, "kind": "invalid_static",
+               "file": os.path.basename(full)[:120], "reason": reason,
+               "bytes": int(size), "rid": rid}
+        d = os.path.join(DATA_DIR, "errors")
+        os.makedirs(d, mode=0o700, exist_ok=True)
+        path = os.path.join(d, time.strftime("%Y-%m-%d") + ".jsonl")
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            os.write(fd, (json.dumps(rec) + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+    except Exception:
+        pass
+
+
+def _validate_html_doc(raw, prev_raw):
+    """True when `raw` is a whole HTML document, not a partial write.
+
+    Checks: closed document, balanced <script>/</script>, and no drop larger
+    than 5 % versus the last validated copy (a truncated rewrite shrinks).
+    """
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return False, "not-utf8"
+    if "</html>" not in text:
+        return False, "missing-</html>"
+    opens = len(re.findall(r"<script\b", text, re.I))
+    closes = len(re.findall(r"</script\s*>", text, re.I))
+    if opens != closes:
+        return False, "unbalanced-script"
+    if prev_raw and len(raw) < len(prev_raw) * 0.95:
+        return False, "shrunk>5%"
+    return True, ""
+
+
+def _validate_json_doc(raw, prev_raw):
+    """True when `raw` parses as a complete JSON container (object/array)."""
+    try:
+        obj = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return False, "invalid-json"
+    if not isinstance(obj, (dict, list)):
+        return False, "json-not-container"
+    return True, ""
+
+
+_UNAVAILABLE_HTML = (
+    b"<!doctype html><html><head><meta charset=\"utf-8\">"
+    b"<title>App unavailable</title></head><body>"
+    b"<h1>App temporarily unavailable</h1>"
+    b"<p>The app is being updated and no complete copy is available yet. "
+    b"Please retry in a moment.</p></body></html>"
+)
+
+
 def _compressible(ctype):
     """True for text-shaped payloads worth gzipping (skip already-compressed ones)."""
     return not ctype.startswith(("image/", "audio/", "video/",
@@ -3404,16 +3474,43 @@ def _if_modified_since_hit(header, mtime):
         return False
 
 
-def _static_entry(full, ctype):
-    """Return the cached (raw, gzip, validators) entry, rebuilding it on change."""
-    st = os.stat(full)
+def _static_entry(full, ctype, validator=None, rid=""):
+    """Return the cached (raw, gzip, validators) entry, rebuilding it on change.
+
+    With `validator`, the file is read and checked before it replaces the copy
+    in memory. A partial/truncated rewrite keeps the previous validated entry
+    being served; if there is none, _BrokenStatic tells the caller to answer
+    503 rather than hand the client a half-written document.
+    """
+    try:
+        st = os.stat(full)
+    except OSError:
+        if validator is not None:
+            with _STATIC_LOCK:
+                entry = _STATIC_CACHE.get(full)
+            if entry is not None:
+                return entry
+        raise
     key = (st.st_mtime_ns, st.st_size, st.st_ino)
     with _STATIC_LOCK:
         entry = _STATIC_CACHE.get(full)
         if entry and entry["key"] == key:
             return entry
-    with open(full, "rb") as f:
-        raw = f.read()
+        prev_raw = entry["raw"] if entry else None
+    try:
+        with open(full, "rb") as f:
+            raw = f.read()
+    except OSError:
+        if validator is not None and entry is not None:
+            return entry
+        raise
+    if validator is not None:
+        ok, reason = validator(raw, prev_raw)
+        if not ok:
+            _note_bad_static(full, reason, len(raw), rid)
+            if entry is not None:
+                return entry            # last validated copy stays live
+            raise _BrokenStatic(reason)
     gz = gzip.compress(raw, 6) if len(raw) >= 1024 and _compressible(ctype) else None
     # The hash covers the served bytes *and* the file identity: a same-mtime
     # redeploy gets a new ETag, and a bare `touch` invalidates client caches.
@@ -3630,16 +3727,22 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
 
-    def _serve_cached_static(self, full, ctype, extra=None):
+    def _serve_cached_static(self, full, ctype, extra=None, validator=None,
+                             critical=False):
         """Serve a static file from the in-memory cache with ETag/Last-Modified.
 
         Revalidated by (mtime_ns, size, inode), so `touch` invalidates on the next
         request. If-None-Match / If-Modified-Since answer 304 without a body and
         without recompressing. B2_NO_CACHE=1 bypasses the cache for baseline runs.
+
+        `validator(raw, prev_raw) -> (ok, reason)` checks a freshly written file
+        before it replaces the last good copy in memory. With `critical`, a
+        missing file falls back to that copy and, if there never was one, answers
+        503 with a clear page instead of an empty body.
         """
         extra = dict(extra or {})
         extra.setdefault("Cache-Control", "no-cache")
-        if B2_NO_CACHE:
+        if B2_NO_CACHE and validator is None:
             try:
                 with open(full, "rb") as f:
                     body = f.read()
@@ -3649,9 +3752,17 @@ class H(BaseHTTPRequestHandler):
             self._send(200, body, ctype, extra)
             return
         try:
-            entry = _static_entry(full, ctype)
+            entry = _static_entry(full, ctype, validator=validator, rid=self._rid)
+        except _BrokenStatic:
+            self._send(503, _UNAVAILABLE_HTML, "text/html; charset=utf-8",
+                       {"Cache-Control": "no-store", "Retry-After": "1"})
+            return
         except OSError:
-            self._send(404, b"not found", "text/plain")
+            if critical:
+                self._send(503, _UNAVAILABLE_HTML, "text/html; charset=utf-8",
+                           {"Cache-Control": "no-store", "Retry-After": "1"})
+            else:
+                self._send(404, b"not found", "text/plain")
             return
         inm = self.headers.get("If-None-Match")
         if _etag_matches(inm, entry["etag"]) or (
@@ -3913,7 +4024,11 @@ class H(BaseHTTPRequestHandler):
         # Tracker (index.html) — cached, revalidated by ETag so a redeploy is
         # picked up on the next request and an unchanged file costs a 304.
         if path in ("/app", "/index.html"):
-            self._serve_cached_static(TRACKER, "text/html; charset=utf-8")
+            # Served whole from the last validated in-memory copy: the runner
+            # rewrites index.html in place, so a mid-write request must never
+            # receive the partial document.
+            self._serve_cached_static(TRACKER, "text/html; charset=utf-8",
+                                      validator=_validate_html_doc, critical=True)
             return
 
         # Crawler metadata at the root (plain files, same static cache).
@@ -4007,7 +4122,7 @@ class H(BaseHTTPRequestHandler):
                            "application/json")
                 return
             ctype = "application/json; charset=utf-8"
-            self._serve_cached_static(full, ctype)
+            self._serve_cached_static(full, ctype, validator=_validate_json_doc)
             return
 
         # Catalog JSON (consumed by the LIBROS tab of the tracker).
