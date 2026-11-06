@@ -24,6 +24,7 @@ SEED_BY_PART = """() => {
     D.log = [];
     D.errs = [];
     D.sessionOffset = 0;
+    D.settings.schedule = [{day:1,time:'15:30'},{day:2,time:'13:00'},{day:3,time:'10:00'},{day:4,time:'18:00'}];
     D.settings.rotationMode = 'by-part';
     D.settings.slotMin = 45;
     save();
@@ -41,6 +42,7 @@ SEED_FULL_SECTION = """() => {
     D.log = [];
     D.errs = [];
     D.sessionOffset = 0;
+    D.settings.schedule = [{day:1,time:'15:30'},{day:2,time:'13:00'},{day:3,time:'10:00'},{day:4,time:'18:00'},{day:5,time:'17:00'}];
     D.settings.rotationMode = 'full-section';
     save();
     refreshAll();

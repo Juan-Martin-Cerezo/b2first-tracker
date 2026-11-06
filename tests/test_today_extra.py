@@ -18,6 +18,7 @@ OUT = {}
 WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 TODAY = WD[datetime.now().weekday()]
 OTHER_L = WD[(datetime.now().weekday() + 1) % 7].lower()
+DAY_NUM = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 0}
 
 READ_JS = """() => {
     const slots = buildWeeklyPlan(D).slots.map(sl => ({
@@ -56,13 +57,14 @@ def seed(pg):
     "2 sessions logged" and "current: Part 2".
     """
     pg.evaluate(
-        """(other) => {
+        """([other, otherDay]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
                 hoursWeek: 4, days: [other],
                 struggles: [], strugglesDeclared: [],
             };
+            D.settings.schedule = [{day: otherDay, time: '15:30'}];
             D.diag = null;
             D.log = [{date: today(), type: 'ue', part: 1, correct: 5, total: 8, min: 10}];
             D.errs = [];
@@ -72,7 +74,7 @@ def seed(pg):
             save();
             refreshAll();
         }""",
-        OTHER_L,
+        [OTHER_L, DAY_NUM[OTHER_L]],
     )
     pg.wait_for_timeout(250)
 
@@ -159,12 +161,13 @@ with sync_playwright() as p:
 
     # 4. A planned day keeps the normal Start button and offers no extra entry.
     pg.evaluate(
-        """(today) => {
+        """([today, todayDay]) => {
             D.profile.days = [today];
+            D.settings.schedule = [{day: todayDay, time: '15:30'}];
             save();
             refreshAll();
         }""",
-        TODAY.lower(),
+        [TODAY.lower(), DAY_NUM[TODAY.lower()]],
     )
     pg.wait_for_timeout(250)
     planned = pg.evaluate(READ_JS)
@@ -175,7 +178,12 @@ with sync_playwright() as p:
     OUT["planned_day"] = {"rest": planned["rest"], "extraBtn": planned["extraBtn"]}
 
     # 5. The label is translated in Spanish too.
-    pg.evaluate("(other) => { D.profile.days = [other]; save(); refreshAll(); }", OTHER_L)
+    pg.evaluate(
+        "([other, otherDay]) => { D.profile.days = [other];"
+        " D.settings.schedule = [{day: otherDay, time: '15:30'}];"
+        " save(); refreshAll(); }",
+        [OTHER_L, DAY_NUM[OTHER_L]],
+    )
     pg.wait_for_timeout(200)
     pg.evaluate("setLang('es')")
     pg.wait_for_timeout(300)

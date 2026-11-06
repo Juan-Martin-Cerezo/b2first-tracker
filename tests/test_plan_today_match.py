@@ -46,9 +46,14 @@ READ_JS = """() => {
 }"""
 
 
+DAY_NUM = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 0}
+
+
 def seed(pg, days, offset=0, hours=4):
+    """Seed the profile and the session schedule (the plan's real source)."""
+    schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in days]
     pg.evaluate(
-        """([days, offset, hours]) => {
+        """([days, offset, hours, schedule]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -59,12 +64,13 @@ def seed(pg, days, offset=0, hours=4):
             D.log = [];
             D.errs = [];
             D.sessionOffset = offset;
+            D.settings.schedule = schedule;
             D.settings.rotationMode = 'by-part';
             D.settings.customPlan = {};
             save();
             refreshAll();
         }""",
-        [days, offset, hours],
+        [days, offset, hours, schedule],
     )
     pg.wait_for_timeout(250)
 
@@ -114,10 +120,11 @@ with sync_playwright() as p:
     OUT["2_rest_day"] = rest["todayText"]
 
     # 3. A non-zero sessionOffset still keeps both sides identical, and it
-    #    really moves the rotation (the order changes).
-    seed(pg, [TODAY_L], offset=0)
+    #    really moves the rotation (the order changes). Two scheduled days are
+    #    needed for the rotation to be observable.
+    seed(pg, [TODAY_L, OTHER_L], offset=0)
     base = pg.evaluate(READ_JS)
-    seed(pg, [TODAY_L], offset=1)
+    seed(pg, [TODAY_L, OTHER_L], offset=1)
     shifted = pg.evaluate(READ_JS)
     plan_shifted = [r for r in shifted["plan"] if r["day"] == TODAY]
     assert shape(shifted["today"]) == shape(plan_shifted), (

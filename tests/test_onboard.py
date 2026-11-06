@@ -134,7 +134,9 @@ with sync_playwright() as p:
     preview_rows = pg.eval_on_selector_all(
         "#obPlanPreview .ob-preview-row", "els => els.length"
     )
-    assert preview_rows >= 5, f"Plan preview has {preview_rows} rows, expected >=5"
+    assert preview_rows == 3, (
+        f"Plan preview has {preview_rows} rows, expected one per chosen day (3)"
+    )
     pg.click("#obAcceptBtn")
     pg.wait_for_timeout(350)
     # Accepting starts the guided tour; finishing it is what marks the intake done.
@@ -201,7 +203,7 @@ with sync_playwright() as p:
     pg.evaluate("obClose()")
     out["6_esc"] = "OK: Esc ignored, intake still pending"
 
-    # 7. hoursWeek 2 -> 3 slots; 10+ -> 6 slots (no diagnostic)
+    # 7. The slot count is the number of scheduled days, not hoursWeek.
     res7 = pg.evaluate(
         """() => {
         const mk = h => ({examDate: null, targetGrade: 'B', skills: {rue:3,w:3,l:3,sp:3},
@@ -215,15 +217,16 @@ with sync_playwright() as p:
         return {n2, n10};
     }"""
     )
-    assert res7 == {"n2": 3, "n10": 6}, f"Bad slot counts per hoursWeek: {res7}"
-    out["7_slots_por_horas"] = f"OK: {res7}"
+    assert res7 == {"n2": 3, "n10": 3}, f"Slot count did not follow the schedule: {res7}"
+    out["7_slots_por_dias"] = f"OK: {res7}"
 
-    # 8. Days mon,fri -> slots land only on Mon and Fri
+    # 8. The schedule's days are the only days with slots.
     res8 = pg.evaluate(
         """() => {
         D.profile.days = ['mon','fri'];
         D.profile.hoursWeek = 6;
         D.profile.skills = {rue:2,w:3,l:4,sp:5};
+        D.settings.schedule = [{day:1,time:'15:30'},{day:5,time:'13:00'}];
         return buildWeeklyPlan(D).slots.map(s => s.day);
     }"""
     )

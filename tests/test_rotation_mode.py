@@ -21,9 +21,14 @@ ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 FOUR_DAYS = ["mon", "tue", "wed", "thu"]
 
 
+DAY_NUM = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 0}
+
+
 def seed_profile(pg, days=FOUR_DAYS, mode="by-part", custom=None):
+    """The schedule is the plan's source of days; profile.days only seeds it."""
+    schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in days]
     pg.evaluate(
-        """([days, mode, custom]) => {
+        """([days, mode, custom, schedule]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -34,12 +39,13 @@ def seed_profile(pg, days=FOUR_DAYS, mode="by-part", custom=None):
             D.log = [];
             D.errs = [];
             D.sessionOffset = 0;
+            D.settings.schedule = schedule;
             D.settings.rotationMode = mode;
             D.settings.customPlan = custom || {};
             save();
             refreshAll();
         }""",
-        [days, mode, custom],
+        [days, mode, custom, schedule],
     )
     pg.wait_for_timeout(250)
 

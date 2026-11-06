@@ -25,6 +25,7 @@ SEED_JS = """() => {
     D.log = [];
     D.errs = [];
     D.sessionOffset = 0;
+    D.settings.schedule = [{day:1,time:'15:30'},{day:2,time:'13:00'},{day:3,time:'10:00'},{day:4,time:'18:00'}];
     D.settings.rotationMode = 'custom';
     D.settings.customPlan = {
         Mon: {skill: 'rue', parts: '1,3', min: 50},

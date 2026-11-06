@@ -118,15 +118,29 @@ with sync_playwright() as p:
     lowered = plan_text.lower()
     assert "provider" not in lowered, "PLAN still mentions the provider"
     assert "api key" not in lowered, "PLAN still mentions the API key"
+
+    # 5b. Language and Subscription live in the settings panel too, never in
+    #     PLAN, and each has exactly one node in the page.
+    for card_id in ("languageCard", "planStatusCard"):
+        assert pg.evaluate(
+            f"document.getElementById('settingsModal').contains(document.getElementById('{card_id}'))"
+        ), f"#{card_id} is not inside the settings panel"
+        assert not pg.evaluate(
+            f"document.getElementById('v-plan').contains(document.getElementById('{card_id}'))"
+        ), f"#{card_id} is still inside #v-plan"
+        assert pg.evaluate(f"document.querySelectorAll('#{card_id}').length") == 1, (
+            f"#{card_id} is duplicated in the page"
+        )
+    assert "language" not in lowered, "PLAN still mentions language"
+    assert "subscription" not in lowered, "PLAN still mentions subscription"
     out["5_provider_in_settings"] = True
 
-    # 6. DOM order inside #v-plan: countdown, week plan, schedules, language,
-    #    subscription, what comes next. Nothing sits between week plan and
-    #    schedules.
+    # 6. DOM order inside #v-plan: countdown, week plan, schedules, what comes
+    #    next. Nothing sits between week plan and schedules.
     order = pg.evaluate(
         """() => {
         const ids = ['examCountdown', 'weeklyPlanCard', 'schedulesCard',
-                     'languageCard', 'planStatusCard', 'rotationCard'];
+                     'rotationCard'];
         const els = ids.map(id => document.getElementById(id));
         const v = document.getElementById('v-plan');
         return {

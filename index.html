@@ -941,6 +941,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 .wp-row .wp-main{flex:1;min-width:220px}
 .wp-row .wp-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
+.wp-when,.ts-when{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px;font-variant-numeric:tabular-nums}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .wp-rotation-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .wp-rotation-row select{max-width:260px}
@@ -1767,6 +1768,56 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <span id="byoTestStatus" class="t-xs muted" role="status"></span>
         </div>
         <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
+      </div>
+    </section>
+    <section id="languageSection" style="margin-top:16px">
+      <div class="card" id="languageCard">
+        <div class="plan-card-head">
+          <h2 data-i18n="plan_language">Language</h2>
+        </div>
+        <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
+        <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
+          <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
+          <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
+        </div>
+      </div>
+    </section>
+    <section id="subscriptionSection" style="margin-top:16px">
+      <div class="card" id="planStatusCard">
+        <div class="plan-card-head">
+          <h2 data-i18n="license_title">Subscription</h2>
+        </div>
+        <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.</div>
+        <div class="plan-usage">
+          <div class="plan-usage-row">
+            <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
+            <span class="plan-usage-count tnum" id="planWriteText">—</span>
+          </div>
+          <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
+          <div class="plan-usage-row">
+            <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
+            <span class="plan-usage-count tnum" id="planSpeakText">—</span>
+          </div>
+          <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
+          <div class="plan-usage-reset" id="planResetText"></div>
+        </div>
+        <div class="plan-code-row">
+          <div>
+            <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
+            <input type="text" id="planCode" autocomplete="off" spellcheck="false"
+                   placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
+                   data-i18n-placeholder="license_code_placeholder"
+                   aria-label="Activation code">
+          </div>
+          <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
+        </div>
+        <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
+          <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
+        </div>
+        <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
+        <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
       </div>
     </section>
   </div>
@@ -3232,56 +3283,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <!-- Language (English by default, Spanish available) -->
-        <div class="card" id="languageCard" style="margin-bottom:16px">
-          <div class="plan-card-head">
-            <h2 data-i18n="plan_language">Language</h2>
-          </div>
-          <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
-          <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
-            <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
-            <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
-          </div>
-        </div>
-
-        <!-- Subscription plan (phase 31): free / byo / pro, shown up front -->
-        <div class="card" id="planStatusCard" style="margin-bottom:16px">
-          <div class="plan-card-head">
-            <h2 data-i18n="license_title">Subscription</h2>
-          </div>
-          <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.</div>
-          <div class="plan-usage">
-            <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
-              <span class="plan-usage-count tnum" id="planWriteText">—</span>
-            </div>
-            <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
-            <div class="plan-usage-row">
-              <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
-              <span class="plan-usage-count tnum" id="planSpeakText">—</span>
-            </div>
-            <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
-            <div class="plan-usage-reset" id="planResetText"></div>
-          </div>
-          <div class="plan-code-row">
-            <div>
-              <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
-              <input type="text" id="planCode" autocomplete="off" spellcheck="false"
-                     placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
-                     data-i18n-placeholder="license_code_placeholder"
-                     aria-label="Activation code">
-            </div>
-            <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
-          </div>
-          <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-            <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
-            <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
-          </div>
-          <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
-          <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-        </div>
-
         <!-- Rotation Cycles & Schedule Roadmap -->
         <div class="card plan-green-card" id="rotationCard" style="margin-bottom:16px">
           <div class="plan-card-head">
@@ -3982,7 +3983,7 @@ const I18N={
     err_legend_tlim_means:'You ran out of time rather than getting it wrong',
     err_legend_tlim_example:'Part 5 unfinished at 0:00',
     plan_title:'Plan Configuration',
-    plan_sub:'Adjust your session schedules, language and subscription. Everything applies to the tracker instantly.',
+    plan_sub:'Adjust your session schedules and what comes next. Everything applies to the tracker instantly.',
     plan_edit_intake:'✏️ Edit my intake',
     plan_export_json:'💾 Export JSON',
     plan_import_backup:'📥 Import Backup',
@@ -4004,6 +4005,7 @@ const I18N={
     plan_sessions:'🗓 Session Schedules & Frequency',
     plan_add_day:'+ Add Session Day',
     plan_sessions_sub:'Configure as many session days and times as you want. The 4-step core cycle (R&UoE → Listening → Writing → Speaking) adapts automatically.',
+    plan_no_session_days:'No session days configured. Add a day in Session Schedules & Frequency.',
     plan_shift:'Session Shift / Fast-Forward',
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
     plan_advance1:'⚡ +1 Advance',
@@ -4773,7 +4775,7 @@ const I18N={
     err_legend_tlim_means:'Se te acabó el tiempo en lugar de equivocarte',
     err_legend_tlim_example:'Parte 5 sin terminar a las 0:00',
     plan_title:'Configuración del plan',
-    plan_sub:'Ajustá tus horarios de sesión, el idioma y la suscripción. Todo se aplica al tracker al instante.',
+    plan_sub:'Ajustá tus horarios de sesión y lo que viene. Todo se aplica al tracker al instante.',
     plan_edit_intake:'✏️ Editar mi perfil inicial',
     plan_export_json:'💾 Exportar JSON',
     plan_import_backup:'📥 Importar copia',
@@ -4795,6 +4797,7 @@ const I18N={
     plan_sessions:'🗓 Horarios y frecuencia de sesiones',
     plan_add_day:'+ Agregar día de sesión',
     plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. El ciclo base de 4 pasos (R&UoE → Listening → Writing → Speaking) se adapta solo.',
+    plan_no_session_days:'No hay días de sesión configurados. Agregá un día en Horarios y frecuencia de sesiones.',
     plan_shift:'Desplazamiento de sesiones / adelantar',
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
     plan_advance1:'⚡ +1 Adelantar',
@@ -6150,6 +6153,7 @@ function obApplySchedule(prof){
   const days=Array.isArray(prof.days)?prof.days:[];
   if(!days.length)return;
   if(!D.settings)D.settings={};
+  if(Array.isArray(D.settings.schedule))return;
   const times=['15:30','13:00','10:00','18:00','09:00','16:00','11:00'];
   D.settings.schedule=days.map((k,i)=>({day:OB_DAY_TO_JS[k],time:times[i%times.length]}));
 }
@@ -12488,6 +12492,7 @@ function openSettingsModal(){
   const ov=document.getElementById('settingsModal');
   if(ov)ov.style.display='flex';
   renderByoSettings();
+  renderPlanCard();
 }
 function closeSettingsModal(){
   const ov=document.getElementById('settingsModal');
@@ -12504,7 +12509,7 @@ function focusByoCard(){
 function planLimitUseKey(){focusByoCard()}
 function planLimitHaveCode(){
   closePlanLimit();
-  showView('plan');
+  openSettingsModal();
   const card=document.getElementById('planStatusCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
   const input=document.getElementById('planCode');
@@ -12540,9 +12545,11 @@ function resetPlan(){
    2. Without a diagnostic but with D.profile, the 2 lowest rated skills
       define the slots (w→Writing, l→Listening, rue→Reading & UoE,
       sp→Speaking); the rest fills from the rating order + rotation.
-   3. With D.profile the weekly slot count comes from hoursWeek:
-      2h→3 slots, 4h→4, 6h→5, 10+→6 (no profile: weekGoal).
-   4. With D.profile the slot days come from profile.days (not Mon–Fri).
+   3. The weekly slot count is the number of configured sessions, so the
+      week plan never invents a day the schedule does not have.
+   4. The slot days come from the session schedule (D.settings.schedule),
+      one slot per configured session, in week order; profile.days only seeds
+      that schedule once when it does not exist yet.
    5. profile.struggles adds one reinforcement slot per mapped taxonomy
       code (L-GAP→part 3, G-ERR→part 2, T-MIS→part 6, T-LIM→timed p4).
    6. Slot reasons are in English and cite the real datum ("you rated
@@ -12685,10 +12692,18 @@ function customSlotFor(day,c){
 function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
-  const weekGoal=Math.max(1,Number(s.weekGoal)||5);
   const prof=(D&&D.profile)||null;
   const hoursWeek=prof?(Number(prof.hoursWeek)||4):null;
-  const slotsPerWeek=prof?(hoursWeek<=2?3:hoursWeek<=4?4:hoursWeek<=6?5:6):weekGoal;
+  /* With no stored schedule the draft profile is the seed (the onboarding
+     preview runs before the list exists); once it exists it is the only source. */
+  const sessionDays=sessionDaysFromSchedule(
+    Array.isArray(s.schedule)?s.schedule:seedScheduleFromProfile(prof)
+  );
+  const DAYS=sessionDays.map(d=>PLAN_DAY_MAP[d.key]);
+  const TIMES=sessionDays.map(d=>d.time);
+  const dayN=DAYS.length;
+  const slotsPerWeek=dayN;
+  const rotationMode=normalizeRotationMode(s.rotationMode);
   const slotMin=Math.max(1,Number(s.slotMin)||45);
   const errs=Array.isArray(D&&D.errs)?D.errs:[];
   const log=Array.isArray(D&&D.log)?D.log:[];
@@ -12713,6 +12728,7 @@ function buildWeeklyPlan(D){
       hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
   };
   if(!useDiag&&!prof)return mk({source:source,needDiag:true});
+  if(!dayN)return mk({source:source,slots:[],reason:{},rotationMode:rotationMode,noSessionDays:true});
   const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3):[];
   const hasW=log.some(e=>e&&e.type==='w');
   const ranked=Object.keys(tax).map(k=>({k:k,n:tax[k]})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
@@ -12729,14 +12745,6 @@ function buildWeeklyPlan(D){
   let lPart=0,lCount=0;
   for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
   if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
-  const DAY_LABELS={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
-  const DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
-  let DAYS=['Mon','Tue','Wed','Thu','Fri'];
-  if(prof&&Array.isArray(prof.days)&&prof.days.length){
-    const dd=DAY_ORDER.filter(k=>prof.days.indexOf(k)>=0).map(k=>DAY_LABELS[k]);
-    if(dd.length)DAYS=dd;
-  }
-  const dayN=DAYS.length;
   const usedParts={};
   const pickPart=()=>{
     for(const p of seq){if(!usedParts[p]){usedParts[p]=true;return p}}
@@ -12778,6 +12786,29 @@ function buildWeeklyPlan(D){
         reason:`you rated ${skillLabel[sk.k]} ${n}/5: part ${p} — ${partName(p).toLowerCase()}`})}
     });
   }
+  if(prof){
+    // Rule 5: one reinforcement slot per mapped struggle code. They come
+    // before the rotation fill so they always get one of the scheduled days.
+    const REINF={'L-GAP':{part:3},'G-ERR':{part:2},'T-MIS':{part:6},'T-LIM':{part:4,timed:true}};
+    const REINF_LABEL={'L-GAP':'vocabulary','G-ERR':'grammar accuracy','T-MIS':'reading speed','T-LIM':'timing'};
+    const declared=Array.isArray(prof.strugglesDeclared)?prof.strugglesDeclared:[];
+    const codes=[];
+    (Array.isArray(prof.struggles)?prof.struggles:[]).forEach(c=>{
+      if(REINF[c]&&codes.indexOf(c)<0)codes.push(c);
+    });
+    const reinf=[];
+    codes.forEach(c=>{
+      const r=REINF[c];
+      let decl=REINF_LABEL[c];
+      declared.forEach(label=>{
+        const m=STRUGGLE_MAP.filter(([l])=>l===label)[0];
+        if(m&&m[1]===c)decl=label;
+      });
+      reinf.push({part:r.part,type:'ue',min:slotMin,timed:!!r.timed,
+        reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
+    });
+    ordered=reinf.concat(ordered);
+  }
   while(ordered.length<slotsPerWeek){
     const i=ordered.length;
     const dayParts={};
@@ -12795,30 +12826,9 @@ function buildWeeklyPlan(D){
     else fr=`no clear error majority: rueCycle rotation, part ${part} — ${partName(part).toLowerCase()}`;
     ordered.push({part:part,type:'ue',min:slotMin,timed:fillMode==='time',reason:fr});
   }
-  if(prof){
-    // Rule 5: one reinforcement slot per mapped struggle code
-    const REINF={'L-GAP':{part:3},'G-ERR':{part:2},'T-MIS':{part:6},'T-LIM':{part:4,timed:true}};
-    const REINF_LABEL={'L-GAP':'vocabulary','G-ERR':'grammar accuracy','T-MIS':'reading speed','T-LIM':'timing'};
-    const declared=Array.isArray(prof.strugglesDeclared)?prof.strugglesDeclared:[];
-    const codes=[];
-    (Array.isArray(prof.struggles)?prof.struggles:[]).forEach(c=>{
-      if(REINF[c]&&codes.indexOf(c)<0)codes.push(c);
-    });
-    codes.forEach(c=>{
-      const r=REINF[c];
-      let decl=REINF_LABEL[c];
-      declared.forEach(label=>{
-        const m=STRUGGLE_MAP.filter(([l])=>l===label)[0];
-        if(m&&m[1]===c)decl=label;
-      });
-      ordered.push({part:r.part,type:'ue',min:slotMin,timed:!!r.timed,
-        reason:`you flagged ${String(decl).toLowerCase()}: reinforcement, part ${r.part} — ${partName(r.part).toLowerCase()}`});
-    });
-  }
   /* The by-part engine above is the default plan. The rotation modes below
      reuse it as their fallback and only change the shape of the session list,
      so TODAY always renders whatever this function returned. */
-  const rotationMode=normalizeRotationMode(s.rotationMode);
   const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
   let slots;
   if(rotationMode==='full-section'){
@@ -12845,7 +12855,8 @@ function buildWeeklyPlan(D){
   }else{
     slots=rotateByOffset(ordered,offset);
   }
-  slots.forEach((sl,i)=>{sl.day=DAYS[i%dayN]});
+  slots=slots.slice(0,dayN);
+  slots.forEach((sl,i)=>{sl.day=DAYS[i];sl.time=TIMES[i]});
   const reason={};
   slots.forEach((sl,i)=>{reason[i]=sl.reason});
   return {slots:slots,reason:reason,source:source,rotationMode:rotationMode};
@@ -13151,11 +13162,17 @@ function renderWeeklyPlan(){
     if(whyBox)whyBox.style.display='none';
     return;
   }
+  if(plan.noSessionDays){
+    rows.innerHTML=`<div class="empty" id="wpNoSessionDays">${t('plan_no_session_days')}</div>`;
+    if(whyBox)whyBox.style.display='none';
+    return;
+  }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    return `<div class="wp-row" data-day="${sl.day}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
+    return `<div class="wp-row" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
       <div class="wp-main">
         <div class="wp-title tnum">${sl.day} · ${slotTitleText(sl)}</div>
+        <div class="wp-when tnum">${sl.time||''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
       <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
@@ -14071,15 +14088,61 @@ const CORE_SESSIONS=[
   {id:'sp',studio:'fri-b',name:'Full Speaking',fullTitle:'Session B — Full Speaking Simulation (60 min)',icon:'🗣️',dur:'60 min',badgeClass:'fri',desc:'15\' simulation (Parts 1-4) + 45\' C1 upgrade. Studio is open below.'}
 ];
 
-function getSchedule(){
+const SCHEDULE_DEFAULT=[{day:1,time:'15:30'},{day:5,time:'13:00'}];
+const SCHEDULE_TIMES=['15:30','13:00','10:00','18:00','09:00','16:00','11:00'];
+/* JS getDay() (0=Sunday) to the plan day key (mon..sun). */
+function scheduleDayKey(n){
+  const day=((Math.round(Number(n))||0)%7+7)%7;
+  return PLAN_DAY_ORDER[(day+6)%7];
+}
+function sortSchedule(list){
+  return (Array.isArray(list)?list:[]).map((slot,i)=>({slot:slot,i:i}))
+    .filter(x=>x.slot&&Number(x.slot.day)>=0&&Number(x.slot.day)<=6)
+    .sort((a,b)=>{
+      const ka=PLAN_DAY_ORDER.indexOf(scheduleDayKey(a.slot.day));
+      const kb=PLAN_DAY_ORDER.indexOf(scheduleDayKey(b.slot.day));
+      return ka-kb||a.i-b.i;
+    })
+    .map(x=>x.slot);
+}
+/* The schedule is the only source of the study days. profile.days seeds it
+   exactly once, when the schedule key is still absent; after that the user's
+   own list wins, including an explicitly empty one. */
+function seedScheduleFromProfile(prof){
   const s=D.settings||SETTINGS_DEFAULT;
-  if(Array.isArray(s.schedule)&&s.schedule.length>0){
-    return s.schedule;
+  const src=prof||D.profile||null;
+  const days=Array.isArray(src&&src.days)?src.days:[];
+  if(days.length){
+    const aTime=(s.sesA&&s.sesA.time)||SCHEDULE_TIMES[0];
+    const bTime=(s.sesB&&s.sesB.time)||SCHEDULE_TIMES[1];
+    return PLAN_DAY_ORDER.filter(k=>days.indexOf(k)>=0).map((k,i)=>({
+      day:(PLAN_DAY_ORDER.indexOf(k)+1)%7,
+      time:i===0?aTime:i===1?bTime:SCHEDULE_TIMES[i%SCHEDULE_TIMES.length]
+    }));
   }
   const legacy=[];
-  if(s.sesA&&typeof s.sesA.day==='number')legacy.push({day:+s.sesA.day,time:s.sesA.time||'15:30'});
-  if(s.sesB&&typeof s.sesB.day==='number')legacy.push({day:+s.sesB.day,time:s.sesB.time||'13:00'});
-  return legacy.length>0?legacy:[{day:1,time:'15:30'},{day:5,time:'13:00'}];
+  if(s.sesA&&typeof s.sesA.day==='number')legacy.push({day:+s.sesA.day,time:s.sesA.time||SCHEDULE_TIMES[0]});
+  if(s.sesB&&typeof s.sesB.day==='number')legacy.push({day:+s.sesB.day,time:s.sesB.time||SCHEDULE_TIMES[1]});
+  return legacy.length?legacy:SCHEDULE_DEFAULT.map(x=>({day:x.day,time:x.time}));
+}
+function seedScheduleIfNeeded(){
+  const s=D&&D.settings;
+  if(!s||Array.isArray(s.schedule))return;
+  const days=Array.isArray(D.profile&&D.profile.days)?D.profile.days:[];
+  if(days.length)s.schedule=seedScheduleFromProfile();
+}
+function getSchedule(){
+  const s=D.settings||SETTINGS_DEFAULT;
+  return Array.isArray(s.schedule)?s.schedule:seedScheduleFromProfile();
+}
+/* The schedule entries in week order, one row per configured session. */
+function sessionDaysFromSchedule(list){
+  return sortSchedule(list).map((slot,i)=>({
+    key:scheduleDayKey(slot.day),day:slot.day,time:slot.time,idx:i
+  }));
+}
+function getSessionDays(){
+  return sessionDaysFromSchedule(getSchedule());
 }
 
 function getSlotSession(weekNumber,slotIndex,scheduleLength){
@@ -14146,10 +14209,26 @@ function doNextSessionNow(){
   }
 }
 
+function repaintScheduleDrivenViews(){
+  save();
+  renderSchedulePreview();
+  renderWeeklyPlan();
+  renderToday();
+}
+
 function renderScheduleRows(){
   const c=document.getElementById('scheduleRowsContainer');
   if(!c)return;
   const sched=getSchedule();
+  if(!sched.length){
+    c.innerHTML=`<div class="empty" data-empty="1">${t('plan_no_session_days')}</div>`;
+    ['pADay','pATime','pBDay','pBTime'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.value='';
+    });
+    renderSchedulePreview();
+    return;
+  }
   c.innerHTML=sched.map((slot,i)=>`
     <div class="row" style="align-items:center;margin:0;gap:8px;background:var(--surface-container-low);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--outline-variant)">
       <div style="flex:1">
@@ -14163,7 +14242,7 @@ function renderScheduleRows(){
         <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
       </div>
       <div style="display:flex;align-items:flex-end;padding-top:16px">
-        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" ${sched.length<=1?'disabled style="opacity:0.4;cursor:not-allowed"':''}>🗑️</button>
+        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}">🗑️</button>
       </div>
     </div>
   `).join('');
@@ -14198,49 +14277,43 @@ function updateScheduleFromUI(){
   dayEls.forEach((el,i)=>{
     const day=+el.value;
     const time=(timeEls[i]&&timeEls[i].value)?timeEls[i].value:'15:30';
-    newSched.push({day,time});
+    if(day>=0&&day<=6)newSched.push({day,time});
   });
-  if(newSched.length){
-    D.settings.schedule=newSched;
-    D.settings.sesA=newSched[0]||{day:1,time:'15:30'};
-    D.settings.sesB=newSched[1]||newSched[0];
-  }
-  renderSchedulePreview();
+  D.settings.schedule=newSched;
+  repaintScheduleDrivenViews();
 }
 
 function addScheduleRow(){
-  const sched=getSchedule();
+  const sched=getSchedule().slice();
   const usedDays=new Set(sched.map(s=>s.day));
   let nextDay=1;
-  for(let d=1;d<=7;d++){
-    const cand=d%7;
+  for(let d=0;d<7;d++){
+    const cand=(d+1)%7;
     if(!usedDays.has(cand)){
       nextDay=cand;
       break;
     }
   }
   sched.push({day:nextDay,time:'17:00'});
-  D.settings.schedule=sched;
-  D.settings.sesA=sched[0];
-  D.settings.sesB=sched[1]||sched[0];
+  D.settings.schedule=sortSchedule(sched);
   renderScheduleRows();
+  repaintScheduleDrivenViews();
 }
 
 function removeScheduleRow(idx){
-  const sched=getSchedule();
-  if(sched.length<=1)return;
+  const sched=getSchedule().slice();
+  if(idx<0||idx>=sched.length)return;
   sched.splice(idx,1);
-  D.settings.schedule=sched;
-  D.settings.sesA=sched[0];
-  D.settings.sesB=sched[1]||sched[0];
+  D.settings.schedule=sortSchedule(sched);
   renderScheduleRows();
+  repaintScheduleDrivenViews();
 }
 
 function renderSchedulePreview(){
   const p=document.getElementById('planUpcomingPreview');
   if(!p)return;
-  const sched=getSchedule();
-  if(!sched.length)return;
+  const sched=getSessionDays();
+  if(!sched.length){p.innerHTML='';return}
   const now=new Date();
   const curWeek=isoWeek(now);
   const items=[];
@@ -14475,8 +14548,8 @@ function renderTodaySession(plan,todaySlots){
   box.innerHTML=`<h2>Today's session</h2><div style="display:flex;flex-direction:column;gap:10px">`+
     todaySlots.map(sl=>{
       const idx=plan.slots.indexOf(sl);
-      return `<div class="ts-row" data-day="${sl.day}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-min="${sl.min}">
-        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
+      return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-min="${sl.min}">
+        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-when tnum">${sl.time||''}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
         <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
       </div>`;
     }).join('')+`</div>`;
@@ -15705,7 +15778,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;

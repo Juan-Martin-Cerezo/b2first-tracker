@@ -44,6 +44,7 @@ async def main():
             D.log = [];
             D.errs = [];
             delete D.diag;
+            D.settings.schedule = [1,2,3,4,5].map(d => ({day: d, time: '15:30'}));
             hideAuthOverlay();
             hideOnboarding();
             refreshAll();
@@ -102,12 +103,14 @@ async def main():
         assert res3 == {"w5": 1, "l5": 1, "w6": 1, "l6": 1}, f"Bad w/l counts: {res3}"
         out["3_un_w_un_l"] = f"OK: {res3}"
 
-        # 4. weekGoal:3 -> 3 slots; weekGoal:6 -> 6 slots
+        # 4. The slot count is the number of scheduled days.
         res4 = await page.evaluate(
             """() => {
-            D.settings.weekGoal = 3; const n3 = buildWeeklyPlan(D).slots.length;
-            D.settings.weekGoal = 6; const n6 = buildWeeklyPlan(D).slots.length;
-            D.settings.weekGoal = 5;
+            const sched = n => [1,2,3,4,5,6,7].slice(0, n)
+                .map(d => ({day: d, time: '15:30'}));
+            D.settings.schedule = sched(3); const n3 = buildWeeklyPlan(D).slots.length;
+            D.settings.schedule = sched(6); const n6 = buildWeeklyPlan(D).slots.length;
+            D.settings.schedule = sched(5);
             return {n3, n6};
         }"""
         )
@@ -117,14 +120,16 @@ async def main():
         # 5. L-GAP majority -> part 1 or 3; G-ERR majority -> part 2 or 4
         res5 = await page.evaluate(
             """() => {
+            const sched = n => [1,2,3,4,5,6,7].slice(0, n)
+                .map(d => ({day: d, time: '15:30'}));
+            D.settings.schedule = sched(6);
             D.diag.weakest = [7,5,6];
-            D.settings.weekGoal = 6;
             const mk = code => [1,2,3].map(() => ({date:'2026-10-25', code, part:7, note:'x'}));
             D.errs = mk('L-GAP');
             const lex = buildWeeklyPlan(D).slots.map(s => s.part);
             D.errs = mk('G-ERR');
             const gram = buildWeeklyPlan(D).slots.map(s => s.part);
-            D.errs = []; D.settings.weekGoal = 5; D.diag.weakest = [3,2,7];
+            D.errs = []; D.settings.schedule = sched(5); D.diag.weakest = [3,2,7];
             return {lex, gram};
         }"""
         )
@@ -134,14 +139,15 @@ async def main():
         assert any(x in (2, 4) for x in gram_parts), f"G-ERR majority -> no part 2/4: {res5['gram']}"
         out["5_taxonomia_fill"] = f"OK: lex={res5['lex']}, gram={res5['gram']}"
 
-        # 6. No repeated part on the same day (weekGoal 7 -> some day has 2 slots)
+        # 6. One slot per scheduled day, and no repeated part on the same day.
         res6 = await page.evaluate(
             """() => {
-            D.settings.weekGoal = 7;
+            const old = D.settings.schedule;
+            D.settings.schedule = [1,2,3,4,5,6,0].map(d => ({day: d, time: '15:30'}));
             D.diag.weakest = [7,5,6];
             D.errs = [1,2,3,4].map(() => ({date:'2026-10-25', code:'L-GAP', part:7, note:'x'}));
             const plan = buildWeeklyPlan(D);
-            D.settings.weekGoal = 5; D.errs = []; D.diag.weakest = [3,2,7];
+            D.settings.schedule = old; D.errs = []; D.diag.weakest = [3,2,7];
             return plan.slots.map(s => ({day: s.day, part: s.part}));
         }"""
         )
