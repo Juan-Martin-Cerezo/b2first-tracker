@@ -81,15 +81,15 @@ with sync_playwright() as p:
     assert [s["day"] for s in sessions] == ["mon", "fri", "mon", "fri", "mon"], sessions
     OUT["1_queue_order"] = sessions
 
-    # 2. Two units per session: the first session is units 1-2, the second 3-4,
-    #    and the duration is the sum of the unit durations.
+    # 2. Two units per session: both units always come from the SAME skill; the
+    #    session duration is the sum of its units.
     seed(pg, ("mon", "fri"), per=2)
     pairs = pg.evaluate(SESSIONS_JS, [["mon", "fri"], 2, 0, 3])
     assert [s["units"] for s in pairs] == [
-        ["Reading part 1", "Listening part 1"],
-        ["Writing essay", "Speaking part 1"],
-        ["Reading part 2", "Listening part 2"],
-    ], f"itemsPerSession=2 did not take consecutive units: {pairs}"
+        ["Reading part 1", "Reading part 2"],
+        ["Listening part 1", "Listening part 2"],
+        ["Writing essay", "Writing article"],
+    ], f"itemsPerSession=2 mixed skills or took the wrong units: {pairs}"
     slot_min = pg.evaluate("Math.max(1, Number(D.settings.slotMin) || 45)")
     assert [s["min"] for s in pairs] == [slot_min * 2, slot_min * 2, slot_min * 2], (
         f"the session duration is not the sum of its units: {pairs}"

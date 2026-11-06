@@ -41,6 +41,7 @@ def seed_profile(pg, days=FOUR_DAYS, mode="by-part", custom=None):
             D.sessionOffset = 0;
             D.settings.schedule = schedule;
             D.settings.rotationMode = mode;
+            D.settings.itemsPerSession = 1;
             D.settings.customPlan = custom || {};
             save();
             refreshAll();
@@ -54,6 +55,7 @@ PLAN_JS = """() => buildWeeklyPlan(D).slots.map(s => ({
     day: s.day, type: s.type, part: s.part,
     parts: s.parts || [], min: s.min,
     section: !!s.section, full: !!s.full,
+    units: (s.units || []).map(u => u.skill),
     title: slotTitleText(s),
 }))"""
 
@@ -78,6 +80,9 @@ with sync_playwright() as p:
         f"by-part lost its loose parts: {by_part}"
     )
     assert not any(s["section"] for s in by_part), f"by-part used a full section: {by_part}"
+    assert all(len(set(s["units"])) == 1 for s in by_part if s["units"]), (
+        f"by-part mixed skills inside a session: {by_part}"
+    )
     assert all(s["min"] == 45 for s in by_part), f"by-part changed slotMin: {by_part}"
     assert [s["title"] for s in by_part] == [
         "Reading part 1 · 45 min",

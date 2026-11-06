@@ -1,8 +1,9 @@
-"""Phase 84: the "What comes next" card explains the rotation.
+"""Phase 97: "What comes next" shows the queue the user actually built.
 
-A seeded log gives a known position; changing the cycle input repaints the card
-at once; with no history the card says it starts at the first item instead of
-inventing a position.
+The card no longer explains internal cycles: it names the active mode in plain
+language and lists the next real units with the day of their session. Editing a
+cycle repaints the list at once, a manual writing override is named, and an
+empty log honestly starts at the first unit.
 """
 import json
 
@@ -13,21 +14,14 @@ from helpers import isolated_server, login_owner
 URL = isolated_server() + "/"
 
 STATE_JS = """() => {
-    const block = skill => {
-        const el = document.querySelector(
-            '#rotationCardBody .rot-skill[data-skill="' + skill + '"]'
-        );
-        if (!el) return null;
-        return {
-            text: el.innerText,
-            current: (el.querySelector('.rot-chip.rot-cur') || {}).textContent || '',
-            next: (el.querySelector('.rot-next') || {}).textContent || '',
-            chips: [...el.querySelectorAll('.rot-chip')].map(c => c.textContent.trim()),
-        };
-    };
+    const rows = [...document.querySelectorAll('#planUpcomingPreview .up-row')];
     return {
-        rue: block('rue'), l: block('l'), w: block('w'), sp: block('sp'),
-        hint: document.getElementById('rotationHint').innerText,
+        mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
+        override: (document.querySelector('#rotationCardBody .rot-override') || {}).textContent || '',
+        items: rows.map(r => ((r.querySelector('.badge') || {}).textContent || '').trim()),
+        days: rows.map(r => r.dataset.day),
+        hintExists: !!document.getElementById('rotationHint'),
+        cardText: document.getElementById('rotationCard').innerText,
     };
 }"""
 
@@ -44,8 +38,7 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(300)
 
-    # 0. The default rotation mode is the part-by-part behaviour this card
-    #    explains; the selector is the only place that decides it.
+    # 0. The default rotation mode is still by-part.
     mode = pg.evaluate(
         "() => ({mode: D.settings.rotationMode,"
         " select: document.getElementById('wpRotationMode').value})"
@@ -62,6 +55,8 @@ with sync_playwright() as p:
             {date: '2026-10-01', type: 'ue', part: 1, correct: 6, total: 8, min: 10},
             {date: '2026-10-02', type: 'ue', part: 2, correct: 6, total: 8, min: 10},
         ];
+        D.sessionOffset = 0;
+        D.settings.itemsPerSession = 1;
         D.settings.rueCycle = [1, 2, 3, 4];
         D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
         D.settings.lCycle = [1, 2, 3, 4];
@@ -72,82 +67,78 @@ with sync_playwright() as p:
     )
     pg.wait_for_timeout(250)
 
-    # 1. Every skill has a block, with a current item, a concrete next item and
-    #    the full cycle.
+    # 1. The upcoming list starts exactly where the log left the queue: two
+    #    logged units put the next session on Writing, and the list is real.
     state = pg.evaluate(STATE_JS)
-    assert state["rue"] and state["l"] and state["w"] and state["sp"], (
-        f"a skill block is missing: {state}"
+    assert state["mode"].strip() == "One exercise per session.", (
+        f"the mode line is not plain language: {state['mode']!r}"
     )
-    assert "current: Part 2" in state["rue"]["text"], (
-        f"the current position is not shown: {state['rue']}"
+    assert state["items"][:2] == ["Writing essay", "Speaking part 1"], (
+        f"the upcoming queue does not follow the log: {state['items']}"
     )
-    assert "next: Part 3" in state["rue"]["text"], (
-        f"the next exercise is not shown: {state['rue']}"
-    )
-    assert state["rue"]["current"].strip() == "Part 2 · Open cloze", (
-        f"the current cycle item is not highlighted: {state['rue']}"
-    )
-    assert len(state["rue"]["chips"]) == 4, (
-        f"the full cycle is not shown: {state['rue']}"
-    )
-    out["1_seeded"] = state["rue"]
+    assert len(state["items"]) == 6, f"the card did not list six units: {state['items']}"
+    out["1_seeded"] = {"mode": state["mode"], "items": state["items"]}
 
-    # 2. The hint says how the rotation works and where the next item comes from.
-    assert "rotation" in state["hint"].lower(), f"no rotation explanation: {state['hint']}"
-    assert "Week" in state["hint"], f"the source week is not named: {state['hint']}"
-    assert "in order" in state["hint"], f"the order is not explained: {state['hint']}"
+    # 2. The card no longer explains cycles, laps or internal positions.
+    assert not state["hintExists"], "the old cycle hint is still in the card"
+    lowered = state["cardText"].lower()
+    for jargon in ("lap ", "one item per session", "component by component", "4-step"):
+        assert jargon not in lowered, f"internal cycle copy leaked: {jargon!r} in {state['cardText']!r}"
 
-    # 3. Editing the cycle repaints the card and changes the next item.
-    pg.fill("#pRueCycle", "4,1,2,3")
+    # 3. Editing the R&UE cycle repaints the real next unit.
+    pg.evaluate("D.log = []; D.settings.rueCycle = [1,2,3,4]; save(); renderPlan();")
     pg.wait_for_timeout(200)
+    pg.fill("#pRueCycle", "4,1,2,3")
+    pg.evaluate("onCycleCommit()")
+    pg.wait_for_timeout(250)
     changed = pg.evaluate(STATE_JS)
-    assert "next: Part 2" in changed["rue"]["text"], (
-        f"the next item did not follow the new cycle: {changed['rue']}"
-    )
-    assert changed["rue"]["current"].strip() == "Part 1 · Multiple-choice cloze", (
-        f"the current item did not follow the new cycle: {changed['rue']}"
+    assert changed["items"][0] == "Reading part 4", (
+        f"the next unit did not follow the new cycle: {changed['items']}"
     )
     stored = pg.evaluate("D.settings.rueCycle")
     assert stored == [4, 1, 2, 3], f"the new cycle was not saved: {stored}"
-    out["3_cycle_change"] = {"card": changed["rue"], "stored": stored}
+    out["3_cycle_change"] = {"items": changed["items"], "stored": stored}
 
-    # 4. A manual writing override is named in the explanation.
+    # 4. A manual writing override is named in the card.
     pg.evaluate("D.weekOverrides.w = 'Report'; save(); renderRotationCard();")
     pg.wait_for_timeout(150)
     hinted = pg.evaluate(STATE_JS)
-    assert "Manual override: Report" in hinted["hint"], (
-        f"the manual override is not named: {hinted['hint']}"
+    assert "Manual override: Report" in hinted["override"], (
+        f"the manual override is not named: {hinted['override']!r}"
     )
-    out["4_override"] = hinted["hint"]
+    out["4_override"] = hinted["override"]
 
-    # 5. Without matching history the card is honest about the start.
+    # 5. Without history the card is honest about the start.
     pg.evaluate(
         "D.log = []; D.settings.rueCycle = [1,2,3,4];"
         " delete D.weekOverrides.w; save(); renderPlan();"
     )
     pg.wait_for_timeout(250)
     empty = pg.evaluate(STATE_JS)
-    assert "starting at the first item" in empty["rue"]["text"], (
-        f"no-history state is not explicit: {empty['rue']}"
+    assert empty["items"][0] == "Reading part 1", (
+        f"the first item is not announced: {empty['items']}"
     )
-    assert "next: Part 1 · Multiple-choice cloze" in empty["rue"]["text"], (
-        f"the first item is not announced: {empty['rue']}"
-    )
-    out["5_no_history"] = empty["rue"]
+    assert empty["mode"].strip() == "One exercise per session.", empty["mode"]
+    assert empty["override"] == "", f"the override did not clear: {empty['override']!r}"
+    out["5_no_history"] = {"items": empty["items"], "mode": empty["mode"]}
 
-    # 6. The Week plan card offers itemsPerSession and a no-jargon preview of
-    #    the next six units of the single queue.
+    # 6. With two exercises per session the preview shows two units of the
+    #    same skill, never one of each.
     queue = pg.evaluate(
         """() => {
             D.log = [];
             D.settings.itemsPerSession = 2;
             save();
             renderWeeklyPlan();
+            renderRotationCard();
             const sel = document.getElementById('wpItemsPerSession');
             return {
                 value: sel.value,
                 options: [...sel.options].map(o => o.value),
                 preview: document.getElementById('wpQueuePreview').textContent,
+                mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
+                items: [...document.querySelectorAll('#planUpcomingPreview .up-row .badge')]
+                    .map(el => el.textContent.trim()),
             };
         }"""
     )
@@ -158,12 +149,16 @@ with sync_playwright() as p:
     labels = queue["preview"].split("Next up:")[1].strip().split(" · ")
     assert labels == [
         "Reading part 1",
-        "Listening part 1",
-        "Writing essay",
-        "Speaking part 1",
         "Reading part 2",
+        "Listening part 1",
         "Listening part 2",
-    ], f"the preview is not the next six units: {labels}"
+        "Writing essay",
+        "Writing article",
+    ], f"the preview is not the next six units of the real sessions: {labels}"
+    assert "two" in queue["mode"].lower() and "Reading" in queue["mode"], (
+        f"the mode line does not describe two same-skill exercises: {queue['mode']!r}"
+    )
+    assert queue["items"][:2] == ["Reading part 1", "Reading part 2"], queue["items"]
     for jargon in ("cycle", "queue", "parallel"):
         assert jargon not in queue["preview"].lower(), (
             f"internal jargon leaked into the preview: {queue['preview']!r}"

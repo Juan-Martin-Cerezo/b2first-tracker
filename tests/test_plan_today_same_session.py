@@ -115,6 +115,9 @@ with sync_playwright() as p:
     seed(pg, [other_l[0], today_l], per=3)
     multi = same_as_plan(pg)
     assert len(multi["units"]) == 3, f"Today did not show three units: {multi}"
+    assert len({u.split(":")[0] for u in multi["units"]}) == 1, (
+        f"a session mixed skills: {multi}"
+    )
     slot_min = pg.evaluate("Math.max(1, Number(D.settings.slotMin) || 45)")
     assert multi["min"] == slot_min * 3, f"the total duration is not the sum: {multi}"
     assert "1)" in multi["title"] and "2)" in multi["title"] and "3)" in multi["title"], (

@@ -28,9 +28,8 @@ READ_JS = """() => {
         min: sl.min,
         title: slotTitleText(sl),
     }));
-    const card = document.querySelector(
-        '#rotationCardBody .rot-skill[data-skill="rue"]'
-    );
+    const upcoming = [...document.querySelectorAll('#planUpcomingPreview .up-row .badge')]
+        .map(el => el.textContent.trim());
     const btn = document.getElementById('todayExtraBtn');
     return {
         rest: !!document.querySelector('#todaySession [data-rest]'),
@@ -38,12 +37,10 @@ READ_JS = """() => {
         todayText: document.getElementById('todaySession').innerText,
         slots: slots,
         offset: D.sessionOffset,
-        rotation: card ? {
-            pos: (card.querySelector('.rot-pos') || {}).textContent || '',
-            now: (card.querySelector('.rot-now') || {}).textContent || '',
-            next: (card.querySelector('.rot-next') || {}).textContent || '',
-            chips: [...card.querySelectorAll('.rot-chip')].map(c => c.className + '|' + c.textContent.trim()),
-        } : null,
+        rotation: {
+            mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
+            upcoming: upcoming,
+        },
         solo: getComputedStyle(document.getElementById('soloModal')).display,
     };
 }"""
@@ -105,14 +102,11 @@ with sync_playwright() as p:
     assert before["extraBtn"]["text"] == "Extra session", (
         f"the extra session label is not English: {before['extraBtn']}"
     )
-    assert before["rotation"] and before["rotation"]["pos"] == "1 sessions logged", (
-        f"the seeded rotation is not the expected one: {before['rotation']}"
+    assert before["rotation"]["mode"].strip() == "One exercise per session.", (
+        f"the card does not name the active mode: {before['rotation']}"
     )
-    assert "Part 1" in before["rotation"]["now"], (
-        f"the seeded current item is not Part 1: {before['rotation']}"
-    )
-    assert "Part 2" in before["rotation"]["next"], (
-        f"the seeded next item is not Part 2: {before['rotation']}"
+    assert before["rotation"]["upcoming"][0] == "Speaking part 1", (
+        f"the upcoming queue ignores the logged work and the shift: {before['rotation']}"
     )
     OUT["before"] = {"offset": before["offset"], "slots": before["slots"],
                      "rotation": before["rotation"], "label": before["extraBtn"]["text"]}

@@ -2172,7 +2172,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div>
                     <span class="badge mon" id="st2WkBadge">Monday</span>
                     <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
-                    <div class="sesion-sub">Automatic Rotation: 1 dedicated text type per session with deep C1 audit.</div>
+                    <div class="sesion-sub" data-i18n="today_studio_writing_sub">One text type per session, with a deep C1 audit.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Studio Time</span>
@@ -3303,7 +3303,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
 
           <div id="rotationCardBody" style="display:flex;flex-direction:column;gap:10px;margin:12px 0"></div>
-          <div class="sub" id="rotationHint" style="margin:6px 0 14px"></div>
 
           <div class="row" style="align-items:flex-end;margin:12px 0">
             <div>
@@ -3312,24 +3311,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
 
-          <div class="plan-cycles">
-            <div class="cycle-box">
-              <span class="cycle-lbl" data-i18n="plan_week_a_odd">Week A (Odd)</span>
-              <span class="cycle-val" id="planWkASummary">Full R&amp;UoE + Full L</span>
-              <div style="margin-top:8px">
-                <label style="margin-top:2px" data-i18n="plan_uoe_focus">UoE Focus</label><select id="pEven"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-              </div>
-            </div>
-            <svg class="cycle-swap" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-refresh"/></svg>
-            <div class="cycle-box">
-              <span class="cycle-lbl" data-i18n="plan_week_b_even">Week B (Even)</span>
-              <span class="cycle-val" id="planWkBSummary">Full W + Full Sp</span>
-              <div style="margin-top:8px">
-                <label style="margin-top:2px" data-i18n="plan_uoe_alt">UoE Alternative</label><select id="pOdd"><option value="3">Part 3 (Word Formation, 8)</option><option value="4">Part 4 (KWT, 6)</option></select>
-              </div>
-            </div>
-          </div>
-          <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">The order you rotate exercises component by component:</div>
+          <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">Edit the order each skill cycles through:</div>
           <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
           <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
           <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
@@ -3750,13 +3732,6 @@ const I18N={
     next_studio_open:'Studio is open below.',
     next_label:'Next:',
     next_in_days:'in {days}d',
-    next_cycle:'Cycle:',
-    next_active_writing:'Active Writing genre:',
-    next_switch_sessions:'You can switch sessions above.',
-    next_ses_a_rue:"Session A (Full Reading & UoE 50')",
-    next_ses_b_l:"Session B (Full Listening 40')",
-    next_ses_a_w:'Session A (Full Writing — {genre})',
-    next_ses_b_sp:"Session B (Full Speaking 60')",
     metric_title:'Weekly Metrics',
     metric_hours:'Total hours',
     metric_uoe:'UoE accuracy',
@@ -3774,6 +3749,12 @@ const I18N={
     full_simulation:'Full Simulation',
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
+    today_session_title:"Today's session",
+    today_rest_day:'Rest day — no session planned today.',
+    today_next_session:'Next session: {day} at {time} — {title}.',
+    today_units_one:'1 exercise',
+    today_units_many:'{n} exercises',
+    today_studio_writing_sub:'One text type per session, with a deep C1 audit.',
     today_extra_session:'Extra session',
     today_extra_note:'Off-plan practice: it does not move the rotation or the shift.',
     stage_0:'Stage 0 — Foundations',
@@ -3999,7 +3980,7 @@ const I18N={
     plan_import_backup:'📥 Import Backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
-    plan_week_sub:'Slots built with deterministic rules from your diagnostic and your errors (no model calls).',
+    plan_week_sub:'Your week comes from your schedule, your cycles and the sessions you log.',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
@@ -4007,14 +3988,13 @@ const I18N={
     plan_time:'Time',
     plan_delete_day:'Delete session day',
     plan_offset:'Offset: {offset}',
-    plan_uoe_focus:'UoE Focus (min)',
     plan_voice:'Speaking voice',
     plan_voice_fast:'Instant — device voice (~2 s)',
     plan_voice_natural:'Natural voice — Gemini (~6 s)',
     plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.',
     plan_sessions:'🗓 Session Schedules & Frequency',
     plan_add_day:'+ Add Session Day',
-    plan_sessions_sub:'Configure as many session days and times as you want. The 4-step core cycle (R&UoE → Listening → Writing → Speaking) adapts automatically.',
+    plan_sessions_sub:'Set as many session days and times as you want. Sessions rotate Reading & UoE → Listening → Writing → Speaking, one skill per session.',
     plan_no_session_days:'No session days configured. Add a day in Session Schedules & Frequency.',
     plan_shift:'Session Shift / Fast-Forward',
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
@@ -4039,36 +4019,38 @@ const I18N={
     plan_rotation_by_part:'By part',
     plan_rotation_full_section:'Full paper each session',
     plan_rotation_custom:'Custom',
+    plan_help_by_part:'One skill per session: each session takes the next exercises of that skill, in order.',
+    plan_help_full:'Every session is one whole paper with its official exam time.',
+    plan_help_custom:'You choose the skill, parts and duration of every day below.',
+    plan_mode_one:'One exercise per session.',
+    plan_mode_many:'{n} {skill} exercises per session, all from the same skill.',
+    plan_mode_full:'A whole paper per session.',
+    plan_mode_custom:'Your custom plan, day by day.',
     plan_custom_skill:'Skill for {day}',
     plan_custom_parts:'Parts for {day}',
     plan_custom_min:'Minutes for {day}',
     plan_custom_parts_error:'Parts must be between 1 and {max}.',
+    plan_custom_reason:'Your custom plan for {day}.',
+    plan_full_reason:'One whole paper: {paper} (official {min} min).',
+    plan_why_queue:'Position from {n} logged sessions plus a shift of {offset}. Order: R&UE → Listening → Writing → Speaking.',
     plan_items_per_session:'Exercises per session',
     plan_queue_next:'Next up:',
-    plan_queue_start:'No sessions logged yet — starting at the first exercise.',
-    plan_queue_reason:'Continuous rotation across all skills.',
-    plan_queue_reason_many:'Continuous rotation · {n} exercises in one session.',
+    plan_queue_start:'Starting at your first planned session.',
+    plan_queue_reason:'{skill} exercise.',
+    plan_queue_reason_many:'{n} {skill} exercises in one session.',
+    plan_next_unit_reason:'Next exercise in this session.',
     plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Mock exam',
     plan_rotation:'What comes next',
     plan_override_genre:'Override writing genre',
-    plan_upcoming_sub:'Upcoming sessions automatically mapped across your configured days:',
-    plan_week_a_odd:'Week A (Odd)',
-    plan_week_b_even:'Week B (Even)',
-    plan_uoe_alt:'UoE Alternative',
-    plan_rotation_order:'The order you rotate exercises component by component:',
+    plan_upcoming_sub:'Your next sessions, exactly as your plan builds them:',
+    plan_rotation_order:'Edit the order each skill cycles through:',
     plan_rue_cycle:'R&UoE (parts 1-7, in order)',
     plan_w_cycle:'Writing (types, in order)',
     plan_l_cycle:'Listening (parts 1-4)',
     plan_sp_cycle:'Speaking (parts 1-4)',
-    plan_rotation_current:'current: {item}',
-    plan_rotation_next:'next: {item}',
-    plan_rotation_start:'starting at the first item',
-    plan_rotation_position:'{n} sessions logged',
-    plan_rotation_lap:'lap {lap} · {left} to close it',
-    plan_rotation_hint:'The rotation advances one item per session, in order, and starts again from the first after the last. The next item comes from Week {week}; a manual override wins when it is set.',
-    plan_rotation_override:' Manual override: {genre}.',
+    plan_rotation_override:'Manual override: {genre}.',
     settings_title:'Settings',
     settings_ai_provider:'AI provider',
     settings_close:'Close',
@@ -4547,13 +4529,6 @@ const I18N={
     next_studio_open:'El estudio está abierto abajo.',
     next_label:'Próximo:',
     next_in_days:'en {days}d',
-    next_cycle:'Ciclo:',
-    next_active_writing:'Género de writing activo:',
-    next_switch_sessions:'Podés cambiar de sesión arriba.',
-    next_ses_a_rue:"Sesión A (Reading & UoE completo 50')",
-    next_ses_b_l:"Sesión B (Listening completo 40')",
-    next_ses_a_w:'Sesión A (Writing completo — {genre})',
-    next_ses_b_sp:"Sesión B (Speaking completo 60')",
     metric_title:'Métricas semanales',
     metric_hours:'Horas totales',
     metric_uoe:'Precisión UoE',
@@ -4571,6 +4546,12 @@ const I18N={
     full_simulation:'Simulación completa',
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
+    today_session_title:'Sesión de hoy',
+    today_rest_day:'Día de descanso — hoy no hay sesión planificada.',
+    today_next_session:'Próxima sesión: {day} a las {time} — {title}.',
+    today_units_one:'1 ejercicio',
+    today_units_many:'{n} ejercicios',
+    today_studio_writing_sub:'Un tipo de texto por sesión, con auditoría C1 profunda.',
     today_extra_session:'Sesión extra',
     today_extra_note:'Práctica fuera del plan: no mueve la rotación ni el corrimiento.',
     stage_0:'Etapa 0 — Cimientos',
@@ -4796,7 +4777,7 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
-    plan_week_sub:'Franjas armadas con reglas deterministas a partir de tu diagnóstico y tus errores (sin llamadas a un modelo).',
+    plan_week_sub:'Tu semana sale de tus horarios, tus ciclos y las sesiones que registrás.',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
@@ -4804,14 +4785,13 @@ const I18N={
     plan_time:'Hora',
     plan_delete_day:'Eliminar día de sesión',
     plan_offset:'Desfase: {offset}',
-    plan_uoe_focus:'Foco UoE (min)',
     plan_voice:'Voz del examinador',
     plan_voice_fast:'Instantánea — voz del dispositivo (~2 s)',
     plan_voice_natural:'Natural — Gemini (~6 s)',
     plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una solicitud al Writing Corrector. La natural pide el audio a Gemini y cuesta una más.',
     plan_sessions:'🗓 Horarios y frecuencia de sesiones',
     plan_add_day:'+ Agregar día de sesión',
-    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. El ciclo base de 4 pasos (R&UoE → Listening → Writing → Speaking) se adapta solo.',
+    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. Las sesiones rotan Reading & UoE → Listening → Writing → Speaking, una habilidad por sesión.',
     plan_no_session_days:'No hay días de sesión configurados. Agregá un día en Horarios y frecuencia de sesiones.',
     plan_shift:'Desplazamiento de sesiones / adelantar',
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
@@ -4836,36 +4816,38 @@ const I18N={
     plan_rotation_by_part:'Por parte',
     plan_rotation_full_section:'Paper completo por sesión',
     plan_rotation_custom:'Personalizado',
+    plan_help_by_part:'Una habilidad por sesión: cada sesión toma los siguientes ejercicios de esa habilidad, en orden.',
+    plan_help_full:'Cada sesión es un paper completo con su tiempo oficial de examen.',
+    plan_help_custom:'Elegís la habilidad, las partes y la duración de cada día abajo.',
+    plan_mode_one:'Un ejercicio por sesión.',
+    plan_mode_many:'{n} ejercicios de {skill} por sesión, todos de la misma habilidad.',
+    plan_mode_full:'Un paper completo por sesión.',
+    plan_mode_custom:'Tu plan personalizado, día por día.',
     plan_custom_skill:'Habilidad para {day}',
     plan_custom_parts:'Partes para {day}',
     plan_custom_min:'Minutos para {day}',
     plan_custom_parts_error:'Las partes deben estar entre 1 y {max}.',
+    plan_custom_reason:'Tu plan personalizado para {day}.',
+    plan_full_reason:'Un paper completo: {paper} (oficial {min} min).',
+    plan_why_queue:'Posición según {n} sesiones registradas más un corrimiento de {offset}. Orden: R&UE → Listening → Writing → Speaking.',
     plan_items_per_session:'Ejercicios por sesión',
     plan_queue_next:'A continuación:',
-    plan_queue_start:'Todavía no registraste sesiones — empieza por el primer ejercicio.',
-    plan_queue_reason:'Rotación continua entre todas las habilidades.',
-    plan_queue_reason_many:'Rotación continua · {n} ejercicios en una sesión.',
+    plan_queue_start:'Empieza por tu primera sesión planificada.',
+    plan_queue_reason:'Ejercicio de {skill}.',
+    plan_queue_reason_many:'{n} ejercicios de {skill} en una sesión.',
+    plan_next_unit_reason:'Siguiente ejercicio de esta sesión.',
     plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Simulacro completo',
     plan_rotation:'Qué viene ahora',
     plan_override_genre:'Cambiar género de writing',
-    plan_upcoming_sub:'Próximas sesiones asignadas automáticamente a tus días configurados:',
-    plan_week_a_odd:'Semana A (impar)',
-    plan_week_b_even:'Semana B (par)',
-    plan_uoe_alt:'UoE alternativo',
-    plan_rotation_order:'El orden en que rotás los ejercicios componente por componente:',
+    plan_upcoming_sub:'Tus próximas sesiones, tal como las arma tu plan:',
+    plan_rotation_order:'Editá el orden por el que cicla cada habilidad:',
     plan_rue_cycle:'R&UoE (partes 1-7, en orden)',
     plan_w_cycle:'Writing (tipos, en orden)',
     plan_l_cycle:'Listening (partes 1-4)',
     plan_sp_cycle:'Speaking (partes 1-4)',
-    plan_rotation_current:'actual: {item}',
-    plan_rotation_next:'próximo: {item}',
-    plan_rotation_start:'empieza por el primer ítem',
-    plan_rotation_position:'{n} sesiones registradas',
-    plan_rotation_lap:'vuelta {lap} · {left} para cerrarla',
-    plan_rotation_hint:'La rotación avanza un ítem por sesión, en orden, y vuelve al primero después del último. El próximo sale de la semana {week}; si hay un override manual, gana ese.',
-    plan_rotation_override:' Override manual: {genre}.',
+    plan_rotation_override:'Override manual: {genre}.',
     settings_title:'Ajustes',
     settings_ai_provider:'Proveedor de IA',
     settings_close:'Cerrar',
@@ -12697,12 +12679,23 @@ function queueCycles(s){
   };
 }
 function queueMod(n,m){return ((Math.trunc(n)%m)+m)%m}
-function queueUnit(index,cycles){
-  const skill=QUEUE_SKILLS[queueMod(index,4)];
+function queueUnitAt(skill,occ,cycles){
   const cycle=cycles[skill];
-  const value=cycle[queueMod(Math.floor(index/4),cycle.length)];
+  const value=cycle[queueMod(occ,cycle.length)];
   return {skill:skill,type:skill==='rue'?'ue':skill,value:value,
     part:skill==='w'?null:value,kind:skill==='w'?value:null};
+}
+/* One unit of the interleaved Phase 96 order: skill = index % 4, lap = index / 4. */
+function queueUnit(index,cycles){
+  return queueUnitAt(QUEUE_SKILLS[queueMod(index,4)],Math.floor(index/4),cycles);
+}
+/* A session is one block of `per` consecutive units of the SAME skill. The
+   skill rotates R&UE -> Listening -> Writing -> Speaking per session; each skill
+   keeps its own infinite queue and wraps its cycle inside it, never mixing. */
+function queueBlockUnit(sessionIndex,k,per,cycles){
+  const skill=QUEUE_SKILLS[queueMod(sessionIndex,4)];
+  const lap=Math.floor(sessionIndex/4);
+  return queueUnitAt(skill,lap*per+k,cycles);
 }
 function queueUnitLabel(u){
   if(!u)return '';
@@ -12724,19 +12717,26 @@ function queueLogCount(s,log){
     return false;
   }).length;
 }
-function queueStartIndex(s,log,offset){
-  return queueLogCount(s,log)+(Math.trunc(Number(offset))||0);
+/* Position comes from the logged work, expressed in whole sessions: a fixed
+   `per` means every `per` logged units close one session. */
+function queueStartSession(s,log,offset,per){
+  const n=normalizeItemsPerSession(per);
+  return Math.floor(queueLogCount(s,log)/n)+(Math.trunc(Number(offset))||0);
 }
 function queueSlotForUnits(units,slotMin){
   const first=units[0];
-  const min=slotMin*units.length;
+  units.forEach(u=>{u.min=slotMin});
+  const min=units.reduce((total,u)=>total+(Number(u.min)||0),0);
+  const skillLabel=planSkillLabel(first.skill);
   return {part:first.part,parts:first.skill==='w'?[]:[first.value],
     type:first.type,min:min,timed:false,queue:true,units:units,
     session:units.length>1,
-    reason:units.length>1?t('plan_queue_reason_many',{n:units.length}):t('plan_queue_reason')};
+    reason:units.length>1
+      ?t('plan_queue_reason_many',{n:units.length,skill:skillLabel})
+      :t('plan_queue_reason',{skill:skillLabel})};
 }
-/* Consecutive sessions, `perSession` units each, starting at `start`. Day keys
-   are handed out in schedule order so the caller can alternate Mon/Fri/... */
+/* Consecutive sessions, `perSession` units each, starting at the session index
+   `start`. Day keys are handed out in schedule order (Mon/Fri/Mon/Fri...). */
 function rotationQueueSessions(dayKeys,perSession,start,count,s,slotMin){
   s=s||(D&&D.settings)||{};
   const cycles=queueCycles(s);
@@ -12745,12 +12745,81 @@ function rotationQueueSessions(dayKeys,perSession,start,count,s,slotMin){
   const out=[];
   for(let i=0;i<count;i++){
     const units=[];
-    for(let k=0;k<n;k++)units.push(queueUnit(start+i*n+k,cycles));
+    for(let k=0;k<n;k++)units.push(queueBlockUnit(start+i,k,n,cycles));
     const slot=queueSlotForUnits(units,min);
     if(dayKeys&&dayKeys.length)slot.day=dayKeys[i%dayKeys.length];
     out.push(slot);
   }
   return out;
+}
+/* The next `count` units in the exact order the sessions will consume them,
+   grouped by session. Used by the Week plan preview and the rotation card. */
+function nextQueueUnits(count){
+  const s=(D&&D.settings)||{};
+  const per=normalizeItemsPerSession(s.itemsPerSession);
+  const cycles=queueCycles(s);
+  const start=queueStartSession(s,D.log,D.sessionOffset||0,per);
+  const out=[];
+  for(let i=0;out.length<count;i++){
+    for(let k=0;k<per&&out.length<count;k++){
+      out.push(queueBlockUnit(start+i,k,per,cycles));
+    }
+  }
+  return out;
+}
+/* The next rows of the real plan, for the "What comes next" card: by-part
+   units with the day of their session, whole papers for full-section, and the
+   user's own day-by-day configuration for custom. */
+function planUpcomingRows(count){
+  const s=(D&&D.settings)||{};
+  const mode=normalizeRotationMode(s.rotationMode);
+  const days=getSessionDays();
+  if(!days.length)return [];
+  if(mode==='custom'){
+    return buildWeeklyPlan(D).slots.map(sl=>({
+      day:sl.day,time:sl.time||'',label:slotTitleText(sl),
+      skill:sl.type==='ue'?'rue':sl.type}));
+  }
+  const offset=Math.trunc(Number(D.sessionOffset)||0);
+  if(mode==='full-section'){
+    const out=[];
+    for(let i=0;i<count;i++){
+      const sec=FULL_SECTION[queueMod(i+offset,4)];
+      const d=days[i%days.length];
+      out.push({day:d.key,time:d.time,
+        label:FULL_SECTION_LABEL[sec[0]]+' ('+sec[1]+' min)',skill:sec[0]});
+    }
+    return out;
+  }
+  const per=normalizeItemsPerSession(s.itemsPerSession);
+  const cycles=queueCycles(s);
+  const start=queueStartSession(s,D.log,offset,per);
+  const out=[];
+  for(let i=0;out.length<count;i++){
+    const d=days[i%days.length];
+    for(let k=0;k<per&&out.length<count;k++){
+      const u=queueBlockUnit(start+i,k,per,cycles);
+      out.push({day:d.key,time:d.time,label:queueUnitLabel(u),skill:u.skill});
+    }
+  }
+  return out;
+}
+function planNumberWord(n){
+  const words=LANG==='es'?['','Uno','Dos','Tres','Cuatro']:['','One','Two','Three','Four'];
+  return words[n]||String(n);
+}
+/* Plain-language description of the active mode, used by Today and by the
+   "What comes next" card. No cycles, no offsets, no internal jargon. */
+function planModeLine(){
+  const s=(D&&D.settings)||{};
+  const mode=normalizeRotationMode(s.rotationMode);
+  if(mode==='full-section')return t('plan_mode_full');
+  if(mode==='custom')return t('plan_mode_custom');
+  const n=normalizeItemsPerSession(s.itemsPerSession);
+  if(n===1)return t('plan_mode_one');
+  const start=queueStartSession(s,D.log,D.sessionOffset||0,n);
+  const skill=QUEUE_SKILLS[queueMod(start,4)];
+  return t('plan_mode_many',{n:planNumberWord(n),skill:planSkillLabel(skill)});
 }
 function slotUnitsAttr(sl){
   return (Array.isArray(sl&&sl.units)?sl.units:[]).map(u=>u.skill+':'+u.value).join(',');
@@ -12798,7 +12867,7 @@ function customSlotFor(day,c){
   const parts=c.parts.slice();
   return {part:parts.length===1?parts[0]:null,parts:parts,type:type,min:c.min,timed:false,
     full:parts.length===0&&type!=='mock',
-    reason:`custom plan for ${day}: ${parts.length?'parts '+parts.join(', '):'full paper'}`};
+    reason:t('plan_custom_reason',{day:day})};
 }
 function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
@@ -12947,7 +13016,7 @@ function buildWeeklyPlan(D){
     slots=DAYS.map((day,i)=>{
       const sec=FULL_SECTION[i%FULL_SECTION.length];
       return {part:null,parts:[],type:sec[0],min:sec[1],timed:false,section:true,full:true,
-        reason:`full-section rotation: ${FULL_SECTION_LABEL[sec[0]]} in one session (official ${sec[1]} min)`};
+        reason:t('plan_full_reason',{paper:FULL_SECTION_LABEL[sec[0]],min:sec[1]})};
     });
     slots=rotateByOffset(slots,offset);
   }else if(rotationMode==='custom'){
@@ -12960,13 +13029,13 @@ function buildWeeklyPlan(D){
       if(b)return {part:b.part,parts:Array.isArray(b.parts)?b.parts.slice():(b.part!=null?[b.part]:[]),
         type:b.type,min:b.min,timed:!!b.timed,reason:b.reason};
       return {part:null,parts:[],type:'ue',min:slotMin,timed:false,
-        reason:`custom plan default for ${day}`};
+        reason:t('plan_custom_reason',{day:day})};
     });
     slots=rotateByOffset(slots,offset);
   }else{
-    // by-part: one continuous queue, `itemsPerSession` units per scheduled day.
+    // by-part: one continuous queue, `itemsPerSession` units of one skill per day.
     const per=normalizeItemsPerSession(s.itemsPerSession);
-    const start=queueStartIndex(s,log,offset);
+    const start=queueStartSession(s,log,offset,per);
     slots=rotationQueueSessions(sessionDays.map(d=>d.key),per,start,dayN,s,slotMin);
   }
   slots=slots.slice(0,dayN);
@@ -13165,20 +13234,17 @@ function renderRotationControls(plan){
   if(sel)sel.value=mode;
   const help=document.getElementById('wpRotationHelp');
   if(help)help.textContent=mode==='full-section'
-    ?'Each session is one whole paper with its official exam time.'
+    ?t('plan_help_full')
     :mode==='custom'
-      ?'You choose the skill, parts and duration of every day below.'
-      :'One continuous rotation across all skills, in order.';
+      ?t('plan_help_custom')
+      :t('plan_help_by_part');
   const items=document.getElementById('wpItemsPerSession');
   if(items)items.value=String(normalizeItemsPerSession(D.settings.itemsPerSession));
   const preview=document.getElementById('wpQueuePreview');
   if(preview){
     if(mode==='by-part'){
       const s=D.settings||{};
-      const start=queueStartIndex(s,D.log,D.sessionOffset||0);
-      const cycles=queueCycles(s);
-      const labels=[];
-      for(let k=0;k<6;k++)labels.push(queueUnitLabel(queueUnit(start+k,cycles)));
+      const labels=nextQueueUnits(6).map(queueUnitLabel);
       const empty=queueLogCount(s,D.log)===0;
       preview.style.display='';
       preview.textContent=(empty?t('plan_queue_start')+' ':'')+t('plan_queue_next')+' '+labels.join(' · ');
@@ -13316,6 +13382,14 @@ function renderWeeklyPlan(){
     </div>`;
   }).join('');
   const src=plan.source||{};
+  if(normalizeRotationMode(D.settings.rotationMode)==='by-part'){
+    const s=D.settings||{};
+    why.innerHTML=`<div>· ${esc(t('plan_why_queue',{
+      n:queueLogCount(s,D.log),
+      offset:Math.trunc(Number(D.sessionOffset)||0)}))}</div>`;
+    if(whyBox)whyBox.style.display='';
+    return;
+  }
   const diagTxt=(src.diag&&src.diag.parts&&src.diag.parts.length)?src.diag.parts.map(p=>`Part ${p.part}: ${p.ok}/${p.n} correct`).join(' · '):'no diagnostic';
   const taxTxt=Object.keys(src.tax||{}).map(k=>`${k}: ${src.tax[k]}`).join(' · ');
   if(why)why.innerHTML=`<div>· <b>Diagnostic</b> (parts + correct answers): ${esc(diagTxt)}</div>
@@ -14465,120 +14539,37 @@ function removeScheduleRow(idx){
   repaintScheduleDrivenViews();
 }
 
+/* "What comes next" shows the queue exactly as the plan already built it:
+   the next six units with their session day, whole papers or the user's own
+   day-by-day configuration. Nothing about internal cycles. */
 function renderSchedulePreview(){
   const p=document.getElementById('planUpcomingPreview');
   if(!p)return;
-  const sched=getSessionDays();
-  if(!sched.length){p.innerHTML='';return}
-  const now=new Date();
-  const curWeek=isoWeek(now);
-  const items=[];
-  
-  for(let i=0;i<4;i++){
-    const slotIdx=i%sched.length;
-    const weekOffset=Math.floor(i/sched.length);
-    const targetWeek=curWeek+weekOffset;
-    const slotInfo=getSlotSession(targetWeek,slotIdx,sched.length);
-    const dayName=dayFull(sched[slotIdx].day);
-    items.push(`
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--green-surface);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--green-surface-border);font-size:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:600;color:var(--on-green-card)">${slotInfo.session.icon} ${dayName} (${sched[slotIdx].time})</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="badge ${slotInfo.session.badgeClass}">${slotInfo.title}</span>
-          <span class="pill-tag">${slotInfo.session.dur}</span>
-        </div>
-      </div>
-    `);
-  }
-  p.innerHTML=items.join('');
+  const rows=planUpcomingRows(6);
+  if(!rows.length){p.innerHTML='';return}
+  p.innerHTML=rows.map(row=>`
+    <div class="up-row" data-day="${row.day}" data-skill="${row.skill||''}" data-time="${esc(row.time||'')}" style="display:flex;align-items:center;justify-content:space-between;background:var(--green-surface);padding:8px 12px;border-radius:var(--radius);border:1px solid var(--green-surface-border);font-size:12px">
+      <span style="font-weight:600;color:var(--on-green-card)">${esc(planDayFull(row.day))}${row.time?' '+esc(row.time):''}</span>
+      <span class="badge mon">${esc(row.label)}</span>
+    </div>
+  `).join('');
 }
 
 function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Formation',4:'Key Word Transformation',5:'Multiple choice reading',6:'Gapped text',7:'Multiple matching'}[p]||''}
 
 /* ---------- ROTATION CARD ----------
-   The card reads the cycles exactly as they are in the inputs (so changing one
-   repaints it at once) and derives the position from the user's log: one item
-   is consumed per logged session, in the cycle order. With no matching history
-   it says so instead of inventing a position. */
-const ROTATION_DEFS=[
-  {key:'rue',settingsKey:'rueCycle',cycleId:'pRueCycle',colKey:'prog_col_rue',
-   def:SETTINGS_DEFAULT.rueCycle,parse:v=>{const n=+v;return n>=1&&n<=7?n:null},
-   value:e=>e.type==='ue'&&e.part>=1&&e.part<=7?+e.part:null,
-   label:n=>`Part ${n} · ${partName(n)}`},
-  {key:'l',settingsKey:'lCycle',cycleId:'pLCycle',colKey:'prog_col_listening',
-   def:SETTINGS_DEFAULT.lCycle,parse:v=>{const n=+v;return n>=1&&n<=4?n:null},
-   value:e=>e.type==='lp'&&e.part>=1&&e.part<=4?+e.part:null,
-   label:n=>`Part ${n} · ${lpName(n)}`},
-  {key:'w',settingsKey:'wCycle',cycleId:'pWCycle',colKey:'prog_col_writing',
-   def:SETTINGS_DEFAULT.wCycle,parse:v=>SETTINGS_DEFAULT.wCycle.includes(v)?v:null,
-   value:e=>e.type==='w'&&SETTINGS_DEFAULT.wCycle.includes(e.kind)?e.kind:null,
-   label:v=>v},
-  {key:'sp',settingsKey:'spCycle',cycleId:'pSpCycle',colKey:'prog_col_speaking',
-   def:SETTINGS_DEFAULT.spCycle,parse:v=>{const n=+v;return n>=1&&n<=4?n:null},
-   value:e=>e.type==='sp'&&e.part>=1&&e.part<=4?+e.part:null,
-   label:n=>`Part ${n} · ${SP_PART_NAMES[n]}`}
-];
-function rotationCycle(def){
-  const el=document.getElementById(def.cycleId);
-  const stored=(D.settings&&D.settings[def.settingsKey])||def.def;
-  const raw=(el&&typeof el.value==='string'&&el.value.trim()!=='')?el.value:stored.join(',');
-  const cycle=String(raw).split(',').map(x=>def.parse(x.trim())).filter(x=>x!==null);
-  return cycle.length?cycle:def.def.slice();
-}
-function rotationPosition(def,cycle){
-  const log=Array.isArray(D.log)?D.log:[];
-  const allowed=cycle.map(String);
-  const count=log.filter(e=>{
-    if(!e||e.extra===true)return false;
-    const v=def.value(e);
-    return v!==null&&allowed.indexOf(String(v))>=0;
-  }).length;
-  if(!count)return {count:0,currentIdx:-1,nextIdx:0};
-  return {count,currentIdx:(count-1)%cycle.length,nextIdx:count%cycle.length};
-}
-/* Which lap of the cycle the logged sessions put the user on, and how many
-   sessions are left before that lap closes. Count 0 is the first lap, not a
-   completed one; exactly one full lap moves on to the next. */
-function rotationLap(count,len){
-  const lap=Math.floor(count/len)+1;
-  const done=count%len;
-  const left=done===0?len:len-done;
-  return {lap,left};
-}
+   "What comes next" describes the plan the user actually built, not internal
+   cycles: the upcoming rows are rendered by renderSchedulePreview, and this
+   paints the plain-language mode line plus any manual writing override. */
 function renderRotationCard(){
   const box=document.getElementById('rotationCardBody');
   if(!box)return;
-  box.innerHTML=ROTATION_DEFS.map(def=>{
-    const cycle=rotationCycle(def);
-    const pos=rotationPosition(def,cycle);
-    const lap=rotationLap(pos.count,cycle.length);
-    const next=cycle[pos.nextIdx];
-    const current=pos.currentIdx>=0?cycle[pos.currentIdx]:null;
-    const currentLine=current!==null
-      ?`<div class="rot-now">${t('plan_rotation_current',{item:def.label(current)})}</div>`
-      :`<div class="rot-now muted">${t('plan_rotation_start')}</div>`;
-    const chips=cycle.map((v,i)=>{
-      const cls=i===pos.currentIdx?'rot-cur':(i===pos.nextIdx?'rot-upcoming':'');
-      return `<span class="rot-chip ${cls}">${esc(def.label(v))}</span>`;
-    }).join('');
-    return `<div class="rot-skill" data-skill="${def.key}">
-      <div class="rot-head"><b>${t(def.colKey)}</b><span class="rot-pos">${t('plan_rotation_position',{n:pos.count})}</span></div>
-      <div class="rot-lap">${t('plan_rotation_lap',{lap:lap.lap,left:lap.left})}</div>
-      ${currentLine}
-      <div class="rot-next">${t('plan_rotation_next',{item:def.label(next)})}</div>
-      <div class="rot-cycle">${chips}</div>
-    </div>`;
-  }).join('');
-  const hint=document.getElementById('rotationHint');
-  if(hint){
-    const isWeekA=isoWeek(new Date())%2!==0;
-    const override=D.weekOverrides&&D.weekOverrides.w;
-    hint.textContent=t('plan_rotation_hint',{week:isWeekA?'A':'B'})+(override?t('plan_rotation_override',{genre:override}):'');
-  }
+  const override=D.weekOverrides&&D.weekOverrides.w;
+  box.innerHTML=`<div class="rot-mode">${esc(planModeLine())}</div>`+
+    (override?`<div class="rot-override">${esc(t('plan_rotation_override',{genre:override}))}</div>`:'');
+  renderSchedulePreview();
 }
-function onCycleInput(){applyCycleInputs();renderRotationCard()}
+function onCycleInput(){applyCycleInputs();renderRotationCard();renderWeeklyPlan()}
 
 function getSkillNextOccurrence(skillId,baseDate=new Date()){
   const sched=getSchedule();
@@ -14672,13 +14663,6 @@ function studioForSlot(sl){
   if(sl.type==='mock')return 'mock';
   return 'mon-a';
 }
-function nextTitleForSlot(sl){
-  if(sl&&sl.section&&sl.type==='l')return t('next_ses_b_l');
-  if(sl&&sl.section&&sl.type==='sp')return t('next_ses_b_sp');
-  if(sl&&sl.type==='w')return t('next_ses_a_w',{genre:slotLabel(sl)});
-  if(sl&&sl.section&&sl.type==='ue')return t('next_ses_a_rue');
-  return slotTitleText(sl);
-}
 function nextPlanOccurrence(plan,baseDate){
   if(!plan||!plan.slots||!plan.slots.length)return null;
   for(let step=1;step<=7;step++){
@@ -14689,6 +14673,16 @@ function nextPlanOccurrence(plan,baseDate){
   }
   return null;
 }
+/* Today's mode line: the active rotation in plain language plus how many
+   exercises this session contains (by-part is the only mode with a count). */
+function todayModeMeta(sl){
+  let line=planModeLine();
+  if(normalizeRotationMode(D.settings.rotationMode)==='by-part'){
+    const n=(Array.isArray(sl&&sl.units)&&sl.units.length)||1;
+    line+=' · '+(n===1?t('today_units_one'):t('today_units_many',{n:n}));
+  }
+  return line;
+}
 /* TODAY is not allowed to pick sessions on its own: it renders the rows of
    buildWeeklyPlan(D) that belong to today, with the same title, parts and
    duration the PLAN card shows. No match means an honest rest day. */
@@ -14697,25 +14691,33 @@ function renderTodaySession(plan,todaySlots){
   if(!box)return;
   TODAY_PLAN=plan;
   if(!todaySlots||!todaySlots.length){
-    box.innerHTML=`<h2>Today's session</h2><div class="ts-rest" data-rest="1">Rest day — no session planned today.</div>
+    const next=nextPlanOccurrence(plan,new Date());
+    const nextLine=next
+      ?`<div class="ts-next-session">${esc(t('today_next_session',{
+          day:planDayFull(next.slot.day),
+          time:next.slot.time||'',
+          title:slotTitleText(next.slot)}))}</div>`
+      :'';
+    box.innerHTML=`<h2>${t('today_session_title')}</h2><div class="ts-rest" data-rest="1">${t('today_rest_day')}</div>
+      ${nextLine}
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;align-items:flex-start">
         <button type="button" class="btn sm ok" id="todayExtraBtn" data-extra="1" onclick="startExtraSession()">${t('today_extra_session')}</button>
         <div class="ts-reason">${t('today_extra_note')}</div>
       </div>`;
     return;
   }
-  box.innerHTML=`<h2>Today's session</h2><div style="display:flex;flex-direction:column;gap:10px">`+
+  box.innerHTML=`<h2>${t('today_session_title')}</h2><div style="display:flex;flex-direction:column;gap:10px">`+
     todaySlots.map(sl=>{
       const idx=plan.slots.indexOf(sl);
       return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-min="${sl.min}">
-        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-when tnum">${sl.time||''}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
+        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-when tnum">${sl.time||''}</div><div class="ts-mode">${esc(todayModeMeta(sl))}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
         <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
       </div>`;
     }).join('')+`</div>`;
   if(QUEUE_PENDING&&QUEUE_PENDING.units.length&&QUEUE_PENDING.day===todaySlots[0].day){
     const u=QUEUE_PENDING.units[0];
     box.innerHTML+=`<div class="ts-row ts-next-unit" data-next-unit="${u.skill}:${u.value}" style="margin-top:10px">
-      <div class="ts-main"><div class="ts-title tnum">${esc(queueUnitLabel(u))}</div><div class="ts-reason">${esc(t('plan_queue_reason'))}</div></div>
+      <div class="ts-main"><div class="ts-title tnum">${esc(queueUnitLabel(u))}</div><div class="ts-reason">${esc(t('plan_next_unit_reason'))}</div></div>
       <button type="button" class="btn sm ok" onclick="startNextQueuedUnit()">${t('common_start')}</button>
     </div>`;
   }
@@ -14780,7 +14782,6 @@ function renderToday(){
   const d=new Date();
   const week=isoWeek(d);
   const s=D.settings||SETTINGS_DEFAULT;
-  const isWeekA=(week%2!==0);
   const wIdx=Math.floor(week/2)%s.wCycle.length;
   const autoW=s.wCycle[wIdx];
   const wov=D.weekOverrides||{};
@@ -14801,7 +14802,6 @@ function renderToday(){
   renderTodaySession(plan,todaySlots);
 
   const nb=document.getElementById('nextBox');
-  const weekLabel=isWeekA?t('week_a'):t('week_b');
   let defaultStudio='mon-a';
 
   if(todaySlots.length){
@@ -14812,7 +14812,7 @@ function renderToday(){
     const next=nextPlanOccurrence(plan,d);
     if(next){
       defaultStudio=studioForSlot(next.slot);
-      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${dayFull(next.dayIndex)} (${t('next_in_days',{days:next.daysAhead})}) — ${nextTitleForSlot(next.slot)}</b>. ${t('next_cycle')} <b>${weekLabel}</b> · ${t('next_active_writing')} <b>${wT}</b>. ${t('next_switch_sessions')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="todayStart(${next.index})">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
+      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${planDayFull(next.slot.day)} ${esc(next.slot.time||'')} (${t('next_in_days',{days:next.daysAhead})}) — ${esc(slotTitleText(next.slot))}</b>.</div></div><div class="next-actions"><button class="btn ok sm" onclick="todayStart(${next.index})">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
     }else{
       nb.innerHTML=`<div class="big">${t('next_no_session')}</div><div class="when">${t('next_configure_days')}</div>`;
     }
