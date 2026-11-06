@@ -1,4 +1,4 @@
-"""Phase 117: Today desktop layout redesigned with design-fundamentals principles.
+"""Phase 117 & 118: Today desktop layout redesigned with design-fundamentals principles.
 
 Verifies:
 - At 1280 and 1440 (and >= 1024): centered container 960-1040 px (>= 880 px)
@@ -6,6 +6,16 @@ Verifies:
   weight 1.6, right plain-text aside weight 1); session card >= 480 px wide,
   >= 280 px tall, 32 px padding, hero duration clamp(30px, 3.4vw, 46px);
   right column >= 240 px wide.
+- Phase 118 vertical composition (>= 1024 px):
+  - Today content block fills available height (min-height calc(100dvh - nav - footer))
+    with align-content: center when content fits, and natural top-aligned scroll
+    when content exceeds the viewport.
+  - At 1280 and 1440: vertical center of #todaySession is within < 15% of the
+    content area height from the content area center; top and bottom free space
+    are both >= 24 px and their difference is <= 15% of the content area height.
+  - Right column (#todayAside) starts within <= 8 px of #todaySession top edge,
+    measures >= 45% of #todaySession height, and distributes any extra height
+    between its two blocks (no leftover gap at the bottom).
 - Plain-text 'Next session' (e.g. 'Mon · Writing report · 15:30', or fallback
   'No session days configured') and 'This cycle' (e.g. 'Reading 4 of 7 parts done'
   read from D.log), with no pill border-radius, no chip background, no shadows,
@@ -15,10 +25,12 @@ Verifies:
   visible focus on Start, Fast-forward, and links; buttons >= 44x44 with full text
   and natural tab order.
 - Below 1024 px (320, 380, 768): single centered 560 px column with right column
-  stacked below the session and still visible.
+  stacked below the session and still visible; at 380 px the block starts in the
+  first 20% of the page (not vertically centered).
 - Zero horizontal scroll across 320, 380, 768, 1024, 1280, 1440 and no bottom-bar
   overlap.
-- Screenshots saved to tests/out/today_1280.png and tests/out/today_1440.png.
+- Screenshots saved to tests/out/today_1280.png, tests/out/today_1440.png, and
+  tests/out/today_1440_scroll.png (1440x700).
 """
 import json
 from pathlib import Path
@@ -81,9 +93,16 @@ MEASURE_DESKTOP = """
     const mode = session.querySelector('.ts-mode');
     const nav = document.getElementById('sideNav');
 
+    const main = document.querySelector('.content main');
+    const head = hoy.querySelector('.today-head');
+
+    const mainR = main.getBoundingClientRect();
+    const headR = head.getBoundingClientRect();
     const sr = shell.getBoundingClientRect();
     const cardR = session.getBoundingClientRect();
     const asideR = aside.getBoundingClientRect();
+    const nextR = nextBlock.getBoundingClientRect();
+    const cycleR = cycleBlock.getBoundingClientRect();
     const navR = nav.getBoundingClientRect();
 
     const shellCS = getComputedStyle(shell);
@@ -144,14 +163,30 @@ MEASURE_DESKTOP = """
         vh: window.innerHeight,
         scrollWidth: doc.scrollWidth,
         clientWidth: doc.clientWidth,
+        area: {
+            top: mainR.top,
+            bottom: mainR.bottom,
+            h: mainR.height,
+            centerY: (mainR.top + mainR.bottom) / 2,
+        },
+        head: {
+            top: headR.top,
+            bottom: headR.bottom,
+            h: headR.height,
+        },
         shell: {
             w: Math.round(sr.width),
+            h: Math.round(sr.height),
+            top: sr.top,
+            bottom: sr.bottom,
             left: sr.left,
             right: sr.right,
             center: (sr.left + sr.right) / 2,
+            centerY: (sr.top + sr.bottom) / 2,
             padTop: parseFloat(shellCS.paddingTop) || 0,
             padBottom: parseFloat(shellCS.paddingBottom) || 0,
             maxWidth: shellCS.maxWidth,
+            alignContent: shellCS.alignContent,
         },
         session: {
             w: Math.round(cardR.width),
@@ -160,6 +195,7 @@ MEASURE_DESKTOP = """
             right: cardR.right,
             top: cardR.top,
             bottom: cardR.bottom,
+            centerY: (cardR.top + cardR.bottom) / 2,
             padTop: parseFloat(cardCS.paddingTop) || 0,
             padRight: parseFloat(cardCS.paddingRight) || 0,
             padBottom: parseFloat(cardCS.paddingBottom) || 0,
@@ -172,6 +208,11 @@ MEASURE_DESKTOP = """
             right: asideR.right,
             top: asideR.top,
             bottom: asideR.bottom,
+            nextTop: nextR.top,
+            nextBottom: nextR.bottom,
+            cycleTop: cycleR.top,
+            cycleBottom: cycleR.bottom,
+            contentSpan: cycleR.bottom - nextR.top,
             visible: asideR.width > 0 && asideR.height > 0 && asideCS.display !== 'none',
             gap: parseFloat(asideCS.rowGap || asideCS.gap) || 0,
             blockGap: parseFloat(nextBlockCS.rowGap || nextBlockCS.gap) || 0,
@@ -308,6 +349,49 @@ with sync_playwright() as p:
         weight_ratio = m["session"]["w"] / m["aside"]["w"]
         assert 1.45 <= weight_ratio <= 1.75, f"{vw}: column ratio {weight_ratio:.2f} not ~1.6"
 
+        # Phase 118 A: Vertical centering in content area (main)
+        area_h = m["area"]["h"]
+        area_center = m["area"]["centerY"]
+        session_center_diff = abs(m["session"]["centerY"] - area_center)
+        assert session_center_diff < 0.15 * area_h, (
+            f"{vw}: session centerY {m['session']['centerY']:.1f} too far from content area center "
+            f"{area_center:.1f} (diff={session_center_diff:.1f}, limit={0.15 * area_h:.1f})"
+        )
+        # Free space above and below: both >= 24 px and difference <= 15% of content area height
+        top_space_session = m["session"]["top"] - m["area"]["top"]
+        bottom_space_session = m["area"]["bottom"] - m["session"]["bottom"]
+        top_space_block = m["head"]["top"] - m["area"]["top"]
+        bottom_space_block = m["area"]["bottom"] - m["session"]["bottom"]
+        assert top_space_session >= 24 and bottom_space_session >= 24, (
+            f"{vw}: session free space top={top_space_session:.1f} bottom={bottom_space_session:.1f} (< 24)"
+        )
+        assert abs(top_space_session - bottom_space_session) <= 0.15 * area_h, (
+            f"{vw}: session top/bottom air diff {abs(top_space_session - bottom_space_session):.1f} > 15% of {area_h:.1f}"
+        )
+        assert top_space_block >= 24 and bottom_space_block >= 24, (
+            f"{vw}: block free space top={top_space_block:.1f} bottom={bottom_space_block:.1f} (< 24)"
+        )
+        assert abs(top_space_block - bottom_space_block) <= 0.15 * area_h, (
+            f"{vw}: block top/bottom air diff {abs(top_space_block - bottom_space_block):.1f} > 15% of {area_h:.1f}"
+        )
+
+        # Phase 118 A.3 & B.5: Right column top-aligned (<= 8px from session top) and >= 45% of session height
+        assert abs(m["aside"]["top"] - m["session"]["top"]) <= 8, (
+            f"{vw}: aside top {m['aside']['top']} not within 8px of session top {m['session']['top']}"
+        )
+        assert abs(m["aside"]["nextTop"] - m["session"]["top"]) <= 8, (
+            f"{vw}: nextBlock top {m['aside']['nextTop']} not within 8px of session top {m['session']['top']}"
+        )
+        assert m["aside"]["h"] >= 0.45 * m["session"]["h"], (
+            f"{vw}: aside height {m['aside']['h']} < 45% of session height {m['session']['h']}"
+        )
+        assert m["aside"]["contentSpan"] >= 0.45 * m["session"]["h"], (
+            f"{vw}: aside content span {m['aside']['contentSpan']:.1f} < 45% of session height {m['session']['h']}"
+        )
+        assert abs(m["aside"]["bottom"] - m["aside"]["cycleBottom"]) <= 2, (
+            f"{vw}: extra height left as hole below cycleBlock ({m['aside']['bottom']} vs {m['aside']['cycleBottom']})"
+        )
+
         # Duration hero size clamp(30px, 3.4vw, 46px)
         expected_dur = min(46.0, max(30.0, vw * 0.034))
         assert abs(m["copy"]["durationFontSize"] - expected_dur) <= 1.5, (
@@ -356,6 +440,22 @@ with sync_playwright() as p:
             page.screenshot(path=str(shot), full_page=False)
             assert shot.exists() and shot.stat().st_size > 1000, f"missing screenshot {shot}"
 
+    # 1b. Shorter desktop window (1440x700): today_1440_scroll.png & no broken layout
+    page.set_viewport_size({"width": 1440, "height": 700})
+    page.wait_for_timeout(200)
+    m_scroll = page.evaluate(MEASURE_DESKTOP)
+    report["desktop"]["1440x700"] = m_scroll
+    assert m_scroll["scrollWidth"] <= m_scroll["clientWidth"]
+    assert not m_scroll["bottomOverlap"]
+    assert m_scroll["head"]["top"] >= m_scroll["area"]["top"] + 24, (
+        f"1440x700: head clipped under nav ({m_scroll['head']['top']} vs {m_scroll['area']['top']})"
+    )
+    assert abs(m_scroll["aside"]["top"] - m_scroll["session"]["top"]) <= 8
+    assert m_scroll["aside"]["h"] >= 0.45 * m_scroll["session"]["h"]
+    shot_scroll = OUT_DIR / "today_1440_scroll.png"
+    page.screenshot(path=str(shot_scroll), full_page=False)
+    assert shot_scroll.exists() and shot_scroll.stat().st_size > 1000, f"missing screenshot {shot_scroll}"
+
     # 2. Contrast >= 4.5:1 in both light and dark themes
     for theme in ("light", "dark"):
         page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
@@ -364,6 +464,7 @@ with sync_playwright() as p:
         report["contrast"][theme] = ratios
         for sel, r in ratios.items():
             assert r >= 4.5, f"{theme} contrast on {sel} is {r} < 4.5"
+    page.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
 
     # 3. Mobile & tablet (< 1024 px): single 560 px column, right column stacked below session and visible
     for vw, vh in [(320, 640), (380, 720), (768, 900)]:
@@ -372,6 +473,8 @@ with sync_playwright() as p:
         m = page.evaluate(MEASURE_DESKTOP)
         report["responsive"][str(vw)] = {
             "shellW": m["shell"]["w"],
+            "shellTop": round(m["shell"]["top"], 1),
+            "sessionTop": round(m["session"]["top"], 1),
             "sessionBottom": round(m["session"]["bottom"]),
             "asideTop": round(m["aside"]["top"]),
             "asideVisible": m["aside"]["visible"],
@@ -384,6 +487,14 @@ with sync_playwright() as p:
             f"{vw}: aside not stacked below session (aside.top={m['aside']['top']}, session.bottom={m['session']['bottom']})"
         )
         assert m["scrollWidth"] <= m["clientWidth"], f"{vw}: horizontal scroll {m['scrollWidth']} > {m['clientWidth']}"
+        if vw == 380:
+            # At 380 px: the block starts in the first 20% of the page (not centered)
+            assert m["shell"]["top"] <= 0.20 * vh, (
+                f"380: shell top {m['shell']['top']} > 20% of viewport height {vh}"
+            )
+            assert m["session"]["top"] <= 0.20 * vh, (
+                f"380: session top {m['session']['top']} > 20% of viewport height {vh}"
+            )
 
     # 4. Empty schedule fallback: 'No session days configured'
     page.set_viewport_size({"width": 1280, "height": 900})

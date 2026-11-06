@@ -1137,14 +1137,19 @@ tbody tr:hover{background:var(--surface-2)}
   .content main:has(#v-hoy.active){padding-block:0}
   #v-hoy .today-shell{
     max-width:960px;
+    min-height:calc(100dvh - var(--nav-offset, 120px) - 48px);
     padding-block:clamp(32px, 6vh, 72px);
-    gap:32px;
+    display:grid;
+    grid-template-columns:minmax(0, 1fr);
+    align-content:center;
+    gap:24px;
   }
   #v-hoy .today-grid{
     display:grid;
     grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
     gap:32px;
     align-items:start;
+    align-content:center;
   }
   #v-hoy #todaySession{
     min-height:280px;
@@ -1158,10 +1163,12 @@ tbody tr:hover{background:var(--surface-2)}
   }
   #v-hoy .ts-row .ts-actions{gap:16px}
   #v-hoy .today-aside{
-    padding:32px 0 32px 32px;
+    padding:0 0 0 32px;
     border-top:none;
     border-left:1px solid var(--line);
-    gap:32px;
+    gap:48px;
+    min-height:168px;
+    justify-content:space-between;
     align-self:start;
   }
 }
