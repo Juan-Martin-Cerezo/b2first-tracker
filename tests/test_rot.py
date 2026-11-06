@@ -13,20 +13,10 @@ with sync_playwright() as p:
     login_owner(pg, URL)
     out["scroll_ok"] = pg.evaluate("document.documentElement.scrollWidth") <= pg.evaluate("window.innerWidth")
 
-    # rotación: select de Writing + wTipo
-    out["ovW_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
+    # rotación: the writing genres are product constants now
+    out["ovW_opts"] = pg.evaluate("QUEUE_CYCLES.w.length")
     out["wTipo_value"] = pg.input_value("#wTipo")
     out["semana_txt"] = pg.evaluate("document.getElementById('semanaTxt').textContent")
-
-    # manual writing override: pick Report and save (the control lives in PLAN)
-    pg.click("nav button[data-view='plan']")
-    pg.wait_for_timeout(200)
-    pg.select_option("#ovW", "Report")
-    out["override_set"] = pg.evaluate("D.weekOverrides.w === 'Report'")
-    out["wTipo_tras_override"] = pg.input_value("#wTipo")
-    # limpiar override
-    pg.evaluate("delete D.weekOverrides.w; save(); renderToday();")
-    out["override_limpio"] = pg.evaluate("!D.weekOverrides.w")
 
     # stats: save state, load sample data with test flag and restore
     pg.evaluate("""const origLog = JSON.stringify(D.log);
@@ -44,11 +34,9 @@ with sync_playwright() as p:
     pg.evaluate("""D.log = JSON.parse(window.__origLog);
                    save(); refreshAll();""")
 
-    # PLAN ciclos cargados
-    pg.click("nav button[data-view='plan']")
-    pg.wait_for_timeout(200)
-    out["plan_rue_cycle"] = pg.input_value("#pRueCycle")
-    out["plan_w_cycle"] = pg.input_value("#pWCycle")
+    # PLAN ciclos: constants, no editable inputs
+    out["plan_rue_cycle"] = pg.evaluate("QUEUE_CYCLES.rue.join(',')")
+    out["plan_w_cycle"] = pg.evaluate("QUEUE_CYCLES.w.join(',')")
 
     out["errores_js"] = errs
     b.close()

@@ -94,30 +94,11 @@ with sync_playwright() as p:
     assert not undone["visible"], "Undo is still visible after being used"
     OUT["2_undo_restores"] = undone
 
-    # 2b. A cycle edit is also exactly one undo step.
-    pg.fill("#pRueCycle", "4,1,2,3")
-    pg.evaluate("document.getElementById('pRueCycle').dispatchEvent(new Event('change'))")
-    pg.wait_for_timeout(350)
-    cycle = pg.evaluate(
-        """() => ({
-            rue: D.settings.rueCycle,
-            undo: SETTINGS_UNDO ? SETTINGS_UNDO.rueCycle : null,
-        })"""
+    # 2b. The manual cycle editor is gone: there is no input to edit.
+    assert pg.evaluate("!!document.getElementById('pRueCycle')") is False, (
+        "the removable cycle editor is still in the DOM"
     )
-    assert cycle["rue"] == [4, 1, 2, 3], f"the cycle edit was not stored: {cycle}"
-    assert cycle["undo"] == [1, 2, 3, 4, 5, 6, 7], (
-        f"the previous cycle was not stored: {cycle}"
-    )
-    pg.click("#wpUndoBtn")
-    pg.wait_for_timeout(350)
-    restored = pg.evaluate(
-        "() => ({rue: D.settings.rueCycle, undo: SETTINGS_UNDO})"
-    )
-    assert restored["rue"] == [1, 2, 3, 4, 5, 6, 7], (
-        f"Undo did not restore the cycle: {restored}"
-    )
-    assert restored["undo"] is None, f"the cycle undo kept a second step: {restored}"
-    OUT["2b_cycle_undo"] = {"changed": cycle, "restored": restored}
+    OUT["2b_no_cycle_editor"] = True
 
     # 3. Reset to defaults returns the five keys and repaints the plan.
     pg.evaluate(

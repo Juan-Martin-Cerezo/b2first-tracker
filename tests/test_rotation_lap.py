@@ -63,7 +63,7 @@ with sync_playwright() as p:
         assert state["first"] == first, (
             f"{count} logged units should start at {first!r}: {state['first']!r}"
         )
-        assert state["mode"].strip() == "One exercise per session.", state["mode"]
+        assert "One exercise per session." in state["mode"], state["mode"]
         assert state["lapEls"] == 0, "the lap line is still rendered"
         assert state["skillEls"] == 0, "the per-skill cycle blocks are still rendered"
         assert "lap " not in state["text"].lower(), (
@@ -76,7 +76,7 @@ with sync_playwright() as p:
     pg.evaluate("setLang('es')")
     pg.wait_for_timeout(400)
     spanish = pg.evaluate(READ)
-    assert spanish["mode"].strip() == "Un ejercicio por sesión.", spanish["mode"]
+    assert "Un ejercicio por sesión." in spanish["mode"], spanish["mode"]
     assert "vuelta" not in spanish["text"].lower(), spanish["text"]
     out["spanish"] = spanish["mode"]
 

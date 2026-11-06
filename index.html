@@ -1026,20 +1026,6 @@ footer{
 .gate-matrix .gate-status.pass{color:var(--ok-text)}
 .gate-matrix .gate-status.fail{color:var(--bad-text)}
 
-/* ---------- ROTATION CARD ---------- */
-.rot-skill{border:1px solid var(--line);border-radius:var(--r-panel);padding:10px 12px;background:var(--surface-2)}
-.rot-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;color:var(--txt);font-size:var(--fs-sm)}
-.rot-head b{font-weight:700}
-.rot-pos{font-size:var(--fs-xs);color:var(--txt-2)}
-.rot-lap{font-size:var(--fs-xs);margin-top:2px;color:var(--txt-2)}
-.rot-now,.rot-next{font-size:var(--fs-xs);margin-top:4px;color:var(--txt)}
-.rot-now.muted{color:var(--txt-2)}
-.rot-next{font-weight:600;color:var(--acc-text)}
-.rot-cycle{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.rot-chip{font-size:var(--fs-xs);padding:4px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--txt-2);white-space:nowrap}
-.rot-chip.rot-cur{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text);font-weight:700}
-.rot-chip.rot-upcoming{border-color:var(--ok);color:var(--ok-text);font-weight:700}
-
 /* ---------- VIEWS & ANIMATION ---------- */
 .view{display:none}
 .view.active{display:block;animation:fadeUp 200ms ease}
@@ -2056,11 +2042,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
             <div class="session-nav" id="sessionNav">
-              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: Full R&amp;UoE</span> <span class="pill-tag">50 min</span></button>
-              <button class="session-nav-btn" data-ses="fri-a" id="navBtnFriA" onclick="selectSessionStudio('fri-a')">🎧 <span id="navLblFriA">Fri A: Full Listening</span> <span class="pill-tag">40 min</span></button>
-              <button class="session-nav-btn" data-ses="mon-b" id="navBtnMonB" onclick="selectSessionStudio('mon-b')">✍️ <span id="navLblMonB">Mon B: Full Writing</span> <span class="pill-tag" id="navWTag">Auto</span></button>
-              <button class="session-nav-btn" data-ses="fri-b" id="navBtnFriB" onclick="selectSessionStudio('fri-b')">🗣️ <span id="navLblFriB">Fri B: Full Speaking</span> <span class="pill-tag">60 min</span></button>
-              <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">Full</span></button>
+              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: R&amp;UoE</span> <span class="pill-tag" id="navDurMonA">—</span></button>
+              <button class="session-nav-btn" data-ses="fri-a" id="navBtnFriA" onclick="selectSessionStudio('fri-a')">🎧 <span id="navLblFriA">Fri A: Listening</span> <span class="pill-tag" id="navDurFriA">—</span></button>
+              <button class="session-nav-btn" data-ses="mon-b" id="navBtnMonB" onclick="selectSessionStudio('mon-b')">✍️ <span id="navLblMonB">Mon B: Writing</span> <span class="pill-tag" id="navDurMonB">—</span></button>
+              <button class="session-nav-btn" data-ses="fri-b" id="navBtnFriB" onclick="selectSessionStudio('fri-b')">🗣️ <span id="navLblFriB">Fri B: Speaking</span> <span class="pill-tag" id="navDurFriB">—</span></button>
+              <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">4 papers</span></button>
             </div>
 
             <!-- SESSION A (MONDAYS) -->
@@ -2070,12 +2056,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sesion-head">
                   <div>
                     <span class="badge mon" id="st1WkBadge">Monday</span>
-                    <div class="sesion-title">📚 Full Reading &amp; Use of English Sprint <span class="badge fri" id="st1TimeBadge">MON 15:30</span></div>
-                    <div class="sesion-sub">Speed Training: complete all 7 parts (52 questions) in 50 minutes under strict exam conditions.</div>
+                    <div class="sesion-title"><span id="st1Name">📚 Reading &amp; Use of English</span> <span class="badge fri" id="st1TimeBadge">MON 15:30</span></div>
+                    <div class="sesion-sub" id="st1Sub">—</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Sprint Time</span>
-                    <span class="dur-val">50 MIN</span>
+                    <span class="dur-label">Session time</span>
+                    <span class="dur-val" id="st1Dur">—</span>
                   </div>
                 </div>
 
@@ -2083,13 +2069,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="phase-stepper" id="uePhaseStepper">
                   <div class="phase-step active" data-phase="sprint" onclick="switchUePhase('sprint')">
                     <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">⚡ 50' Speed Sprint</div>
-                    <div class="ps-time">50:00 · 52 questions</div>
+                    <div class="ps-title" id="st1SprintTitle">⚡ Reading &amp; Use of English</div>
+                    <div class="ps-time" id="st1SprintTime">—</div>
                   </div>
                   <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">📊 Score &amp; Diagnosis</div>
-                    <div class="ps-time">10:00 · Full test logging</div>
+                    <div class="ps-time" id="st1ScoreTime">Log the session</div>
                   </div>
                 </div>
 
@@ -2099,7 +2085,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">High-Speed Sprint <span class="t">50 min · Parts 1 to 7 (All 52 Questions)</span></div>
+                        <div class="task-title"><span id="st1TaskTitle">Reading &amp; Use of English</span> <span class="t" id="st1TaskTime">—</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">50:00</span></div>
@@ -2107,12 +2093,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div class="guide">
-                      📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>
+                      <span id="st1GuideLead">📍 <b>Where to find the paper:</b></span>
                       <div class="chips" id="gUeChips" style="margin-top:6px"></div>
-                      • <b>Pacing guide:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.<br>
+                      <span id="st1GuidePace"></span><br>
                       • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
                     </div>
-                    <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">Full Sprint (Parts 1–7)</b></p>
+                    <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">—</b></p>
                     <div style="margin-top:12px">
                       <button class="btn" onclick="switchUePhase('score')">Proceed to Phase 2: Log Score →</button>
                     </div>
@@ -2125,13 +2111,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Answer Review &amp; Full Session Score Logging</div>
+                        <div class="task-title">Answer Review &amp; Session Score Logging</div>
                       </div>
                     </div>
                     <div class="row">
                       <div><label>Mode</label>
                         <select id="uePart" onchange="onUePartChange()">
-                          <option value="all" selected>Full Session: All 7 Parts (52 questions)</option>
+                          <option value="all" selected>All 7 parts (52 questions)</option>
                           <option value="1">Part 1 — Multiple-choice cloze (8)</option>
                           <option value="2">Part 2 — Open cloze (8)</option>
                           <option value="3">Part 3 — Word Formation (8)</option>
@@ -2153,10 +2139,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div class="row">
-                      <div><label>Test / Ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 Full / Test 2"></div>
+                      <div><label>Test / Ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 / Test 2"></div>
                       <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
                       <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
-                      <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="50"></div>
+                      <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="75"></div>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" onclick="saveUE()">✔ Save R&amp;UoE Session</button>
@@ -2171,12 +2157,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sesion-head">
                   <div>
                     <span class="badge mon" id="st2WkBadge">Monday</span>
-                    <div class="sesion-title">✍️ Full Writing Studio <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
-                    <div class="sesion-sub" data-i18n="today_studio_writing_sub">One text type per session, with a deep C1 audit.</div>
+                    <div class="sesion-title"><span id="st2Name">✍️ Writing</span> <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
+                    <div class="sesion-sub" id="st2Sub">One text type per session, with a deep C1 audit.</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Studio Time</span>
-                    <span class="dur-val">60 MIN</span>
+                    <span class="dur-label">Session time</span>
+                    <span class="dur-val" id="st2Dur">—</span>
                   </div>
                 </div>
 
@@ -2263,7 +2249,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="contraction-alert" id="wContractionWarn" style="display:none"></div>
                     <div class="row" style="margin-top:12px">
                       <div><label>Registered Word count</label><input type="number" id="wWords" min="100" value="160"></div>
-                      <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="60"></div>
+                      <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="40"></div>
                     </div>
                     <div style="margin-top:12px">
                       <button class="btn" onclick="switchWritingPhase('audit')">Proceed to Phase 3: Audit &amp; Rubric →</button>
@@ -2335,12 +2321,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sesion-head">
                   <div>
                     <span class="badge fri" id="st3WkBadge">Friday</span>
-                    <div class="sesion-title">🎧 Full Listening Studio <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
-                    <div class="sesion-sub">Full 4-part continuous audio test (30 questions) + 20' deep post-mortem.</div>
+                    <div class="sesion-title"><span id="st3Name">🎧 Listening</span> <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
+                    <div class="sesion-sub" id="st3Sub">—</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Studio Time</span>
-                    <span class="dur-val">60 MIN</span>
+                    <span class="dur-label">Session time</span>
+                    <span class="dur-val" id="st3Dur">—</span>
                   </div>
                 </div>
 
@@ -2348,13 +2334,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="phase-stepper" id="lPhaseStepper">
                   <div class="phase-step active" data-phase="play" onclick="switchListeningPhase('play')">
                     <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">🎧 40' Continuous Audio</div>
-                    <div class="ps-time">40:00 · 30 questions</div>
+                    <div class="ps-title" id="st3PlayTitle">🎧 Listening</div>
+                    <div class="ps-time" id="st3PlayTime">—</div>
                   </div>
                   <div class="phase-step" data-phase="pm" onclick="switchListeningPhase('pm')">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">🕵️ Auditory Post-Mortem</div>
-                    <div class="ps-time">20:00 · Trap Hunter</div>
+                    <div class="ps-time" id="st3PmTime">Root Cause Analysis</div>
                   </div>
                 </div>
 
@@ -2364,7 +2350,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">1</div>
                       <div>
-                        <div class="task-title">Continuous Audio (Parts 1 to 4) <span class="t">40 min · Never pause</span></div>
+                        <div class="task-title"><span id="st3TaskTitle">Listening</span> <span class="t" id="st3TaskTime">—</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">40:00</span></div>
@@ -2374,10 +2360,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="guide">
                       📍 <b>Audio files &amp; question papers:</b>
                       <div class="chips" id="gLChips" style="margin-top:6px"></div>
-                      • <b>Rule:</b> complete all 4 parts in one continuous go without pausing. Score out of 30.
+                      <span id="st3Rule">—</span>
                     </div>
                     <p id="lFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
                     <div class="row" style="margin-top:10px">
+                      <div><label>Mode</label>
+                        <select id="lPart" onchange="onLPartChange()">
+                          <option value="all" selected>All 4 parts (30 questions)</option>
+                          <option value="1">Part 1 — Short extracts (8)</option>
+                          <option value="2">Part 2 — Sentence completion (10)</option>
+                          <option value="3">Part 3 — Multiple matching (5)</option>
+                          <option value="4">Part 4 — Multiple choice (7)</option>
+                        </select>
+                      </div>
                       <div><label>Audio Source</label>
                         <select id="lFuente">
                           <option value="sample1">Sample Paper 1 (MP3 local)</option>
@@ -2389,7 +2384,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Test # / Ref.</label><input type="text" id="lRef" placeholder="e.g. Sample 1 / Test 3"></div>
                     </div>
                     <div class="row">
-                      <div><label>Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
+                      <div><label id="lOkLbl">Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
                       <div><label>Part 2 errors (gaps)</label><input type="number" id="lP2" min="0" value="0"></div>
                       <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
                     </div>
@@ -2421,12 +2416,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sesion-head">
                   <div>
                     <span class="badge fri" id="st4WkBadge">Friday</span>
-                    <div class="sesion-title">🗣️ Full Speaking Studio <span class="badge fri" id="st4TimeBadge">FRI 13:00</span></div>
-                    <div class="sesion-sub">15 min continuous simulation (Parts 1–4) + 45 min C1 deep upgrade and second recording.</div>
+                    <div class="sesion-title"><span id="st4Name">🗣️ Speaking</span> <span class="badge fri" id="st4TimeBadge">FRI 13:00</span></div>
+                    <div class="sesion-sub" id="st4Sub">—</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label">Studio Time</span>
-                    <span class="dur-val">60 MIN</span>
+                    <span class="dur-label">Session time</span>
+                    <span class="dur-val" id="st4Dur">—</span>
                   </div>
                 </div>
 
@@ -2434,13 +2429,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="phase-stepper" id="spPhaseStepper">
                   <div class="phase-step active" data-phase="mock" onclick="switchSpPhase('mock')">
                     <div class="ps-num">Phase 1</div>
-                    <div class="ps-title">🎙️ 15' Full Simulation</div>
-                    <div class="ps-time">15:00 · Parts 1, 2, 3, 4</div>
+                    <div class="ps-title" id="st4MockTitle">🎙️ Speaking</div>
+                    <div class="ps-time" id="st4MockTime">—</div>
                   </div>
                   <div class="phase-step" data-phase="upgrade" onclick="switchSpPhase('upgrade')">
                     <div class="ps-num">Phase 2</div>
-                    <div class="ps-title">🚀 45' C1 Polish &amp; Retake</div>
-                    <div class="ps-time">45:00 · Connectors &amp; Fluency</div>
+                    <div class="ps-title">🚀 C1 Polish &amp; Retake</div>
+                    <div class="ps-time">Extra practice · optional</div>
                   </div>
                 </div>
 
@@ -3225,8 +3220,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="plan_week_plan">Week plan</h2>
             <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
-          <div class="sub" data-i18n="plan_week_sub">Slots built with deterministic rules from your diagnostic and your errors (no model calls).</div>
+          <div class="sub" data-i18n="plan_week_sub">Your week follows your session days and the skill rotation. A refresh never moves it.</div>
           <div id="wpSummary" class="sub" style="margin-top:6px;font-weight:600;display:none"></div>
+          <div id="wpWeekBlock" class="sub" style="margin-top:6px;font-weight:600;display:none"></div>
           <div id="wpRotationControls" style="margin-top:12px">
             <div class="wp-rotation-row">
               <label for="wpRotationMode"><b>Rotation</b></label>
@@ -3264,7 +3260,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
             <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
           </div>
-          <div class="sub" data-i18n="plan_sessions_sub">Configure as many session days and times as you want. The 4-step core cycle (R&amp;UoE → Listening → Writing → Speaking) adapts automatically.</div>
+          <div class="sub" data-i18n="plan_sessions_sub">Set as many session days and times as you want. Each week works one pair of skills, and your days split them; nothing resets between weeks.</div>
 
           <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:8px;margin-top:12px"></div>
 
@@ -3303,32 +3299,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
 
           <div id="rotationCardBody" style="display:flex;flex-direction:column;gap:10px;margin:12px 0"></div>
-
-          <div class="row" style="align-items:flex-end;margin:12px 0">
-            <div>
-              <label for="ovW" data-i18n="plan_override_genre">Override writing genre</label>
-              <select id="ovW" onchange="setOv('w',this.value)"></select>
-            </div>
-          </div>
-
-          <div class="sub" style="margin-top:10px" data-i18n="plan_rotation_order">Edit the order each skill cycles through:</div>
-          <div><label data-i18n="plan_rue_cycle">R&amp;UoE (parts 1-7, in order)</label><input type="text" id="pRueCycle" placeholder="1,2,3,4,5,6,7" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
-          <div><label data-i18n="plan_w_cycle">Writing (types, in order)</label><input type="text" id="pWCycle" placeholder="Essay,Article,Report,Review,Email" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
-          <div><label data-i18n="plan_l_cycle">Listening (parts 1-4)</label><input type="text" id="pLCycle" placeholder="1,2,3,4" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
-          <div><label data-i18n="plan_sp_cycle">Speaking (parts 1-4)</label><input type="text" id="pSpCycle" placeholder="1,2,3,4" onfocus="beginPlanningEdit()" oninput="onCycleInput()" onchange="onCycleCommit()"></div>
-          <div style="margin-top:12px">
-            <label for="pVoice" data-i18n="plan_voice">Speaking voice</label>
-            <select id="pVoice">
-              <option value="fast" data-i18n="plan_voice_fast">Instant — device voice (~2 s)</option>
-              <option value="natural" data-i18n="plan_voice_natural">Natural voice — Gemini (~6 s)</option>
-            </select>
-            <div class="t-xs muted" style="margin-top:4px" data-i18n="plan_voice_hint">Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.</div>
-          </div>
-        </div>
-
-        <div style="margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn ok" onclick="savePlan()" data-i18n="plan_save">💾 Save plan</button>
-          <button class="btn gray" onclick="resetPlan()" data-i18n="plan_restore">↩ Restore original plan</button>
         </div>
       </section>
 
@@ -3815,10 +3785,10 @@ const I18N={
     day_thursday:'Thursday',
     day_friday:'Friday',
     day_saturday:'Saturday',
-    today_nav_rue:'Full R&UoE',
-    today_nav_listening:'Full Listening',
-    today_nav_writing:'Full Writing',
-    today_nav_speaking:'Full Speaking',
+    today_nav_rue:'R&UoE',
+    today_nav_listening:'Listening',
+    today_nav_writing:'Writing',
+    today_nav_speaking:'Speaking',
     exam_title:'Exam Simulation',
     exam_sub:'Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.',
     exam_desc_rue:'7 parts. Tests your reading comprehension and grammar proficiency.',
@@ -3980,7 +3950,7 @@ const I18N={
     plan_import_backup:'📥 Import Backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
-    plan_week_sub:'Your week comes from your schedule, your cycles and the sessions you log.',
+    plan_week_sub:'Your week follows your session days and the skill rotation. A refresh never moves it.',
     plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
@@ -3988,13 +3958,9 @@ const I18N={
     plan_time:'Time',
     plan_delete_day:'Delete session day',
     plan_offset:'Offset: {offset}',
-    plan_voice:'Speaking voice',
-    plan_voice_fast:'Instant — device voice (~2 s)',
-    plan_voice_natural:'Natural voice — Gemini (~6 s)',
-    plan_voice_hint:'Instant speaks the reply with your device, so the turn costs one Writing Corrector request. Natural asks Gemini for the audio and costs one more.',
     plan_sessions:'🗓 Session Schedules & Frequency',
     plan_add_day:'+ Add Session Day',
-    plan_sessions_sub:'Set as many session days and times as you want. Sessions rotate Reading & UoE → Listening → Writing → Speaking, one skill per session.',
+    plan_sessions_sub:'Set as many session days and times as you want. Each week works one pair of skills, and your days split them; nothing resets between weeks.',
     plan_no_session_days:'No session days configured. Add a day in Session Schedules & Frequency.',
     plan_shift:'Session Shift / Fast-Forward',
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
@@ -4019,7 +3985,10 @@ const I18N={
     plan_rotation_by_part:'By part',
     plan_rotation_full_section:'Full paper each session',
     plan_rotation_custom:'Custom',
-    plan_help_by_part:'One skill per session: each session takes the next exercises of that skill, in order.',
+    plan_help_by_part:'One skill per session. Weeks alternate Reading & UoE + Listening with Writing + Speaking; your session days split the pair.',
+    plan_week_block_summary:'This week: {now} — next week: {next}',
+    plan_week_block_days:'This week: {days} — next week: {next}',
+    plan_week_block_day:'{day} · {skill}',
     plan_help_full:'Every session is one whole paper with its official exam time.',
     plan_help_custom:'You choose the skill, parts and duration of every day below.',
     plan_mode_one:'One exercise per session.',
@@ -4032,25 +4001,24 @@ const I18N={
     plan_custom_parts_error:'Parts must be between 1 and {max}.',
     plan_custom_reason:'Your custom plan for {day}.',
     plan_full_reason:'One whole paper: {paper} (official {min} min).',
-    plan_why_queue:'Position from {n} logged sessions plus a shift of {offset}. Order: R&UE → Listening → Writing → Speaking.',
+    plan_why_queue:'Position from {n} logged sessions plus a shift of {offset}. Weeks alternate: Reading & UoE + Listening, then Writing + Speaking.',
     plan_items_per_session:'Exercises per session',
     plan_queue_next:'Next up:',
     plan_queue_start:'Starting at your first planned session.',
     plan_queue_reason:'{skill} exercise.',
     plan_queue_reason_many:'{n} {skill} exercises in one session.',
     plan_next_unit_reason:'Next exercise in this session.',
+    studio_not_planned:'This skill is not in your current plan.',
+    studio_sub_official:'All {n} parts · {min} min (official exam time).',
+    studio_sub_whole:'All {n} parts · {min} min.',
+    studio_sub_part:'This part only · {min} min.',
+    studio_sub_parts:'{n} parts · {min} min in total.',
+    studio_sub_paper:'{min} min.',
     plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Mock exam',
     plan_rotation:'What comes next',
-    plan_override_genre:'Override writing genre',
     plan_upcoming_sub:'Your next sessions, exactly as your plan builds them:',
-    plan_rotation_order:'Edit the order each skill cycles through:',
-    plan_rue_cycle:'R&UoE (parts 1-7, in order)',
-    plan_w_cycle:'Writing (types, in order)',
-    plan_l_cycle:'Listening (parts 1-4)',
-    plan_sp_cycle:'Speaking (parts 1-4)',
-    plan_rotation_override:'Manual override: {genre}.',
     settings_title:'Settings',
     settings_ai_provider:'AI provider',
     settings_close:'Close',
@@ -4111,8 +4079,6 @@ const I18N={
     license_have_code:'🎟️ I have a code',
     license_close:'Not now',
     license_ia_free:'{n} of {limit} free left · see Plan',
-    plan_save:'💾 Save plan',
-    plan_restore:'↩ Restore original plan',
     books_online:'🌐 Online Practice (1-Click — Free)',
     books_online_sub:'Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).',
     books_material:'📥 Downloaded Material (PDFs & Audio)',
@@ -4283,8 +4249,6 @@ const I18N={
     alert_describe_error:'Describe the error',
     alert_data_imported:'Data imported ✓',
     alert_invalid_file:'Invalid file',
-    alert_plan_saved:'Plan saved ✓',
-    alert_restore_plan:'Restore the original plan? Your changes will be lost.',
     alert_10min:'⏰ 10 minutes remaining',
     alert_5min:'⏰ 5 minutes remaining',
     alert_result_saved:'Result saved ✓',
@@ -4612,10 +4576,10 @@ const I18N={
     day_thursday:'Jueves',
     day_friday:'Viernes',
     day_saturday:'Sábado',
-    today_nav_rue:'R&UoE completo',
-    today_nav_listening:'Listening completo',
-    today_nav_writing:'Writing completo',
-    today_nav_speaking:'Speaking completo',
+    today_nav_rue:'R&UoE',
+    today_nav_listening:'Listening',
+    today_nav_writing:'Writing',
+    today_nav_speaking:'Speaking',
     exam_title:'Simulación de examen',
     exam_sub:'Elegí un módulo para empezar una simulación cronometrada en condiciones estrictas de examen. Asegurate de tener un ambiente tranquilo antes de empezar.',
     exam_desc_rue:'7 partes. Evalúa tu comprensión lectora y tu gramática.',
@@ -4777,7 +4741,7 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
-    plan_week_sub:'Tu semana sale de tus horarios, tus ciclos y las sesiones que registrás.',
+    plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Un refresh no la mueve.',
     plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
@@ -4785,13 +4749,9 @@ const I18N={
     plan_time:'Hora',
     plan_delete_day:'Eliminar día de sesión',
     plan_offset:'Desfase: {offset}',
-    plan_voice:'Voz del examinador',
-    plan_voice_fast:'Instantánea — voz del dispositivo (~2 s)',
-    plan_voice_natural:'Natural — Gemini (~6 s)',
-    plan_voice_hint:'La instantánea habla con el dispositivo, así que el turno cuesta una solicitud al Writing Corrector. La natural pide el audio a Gemini y cuesta una más.',
     plan_sessions:'🗓 Horarios y frecuencia de sesiones',
     plan_add_day:'+ Agregar día de sesión',
-    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. Las sesiones rotan Reading & UoE → Listening → Writing → Speaking, una habilidad por sesión.',
+    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. Cada semana trabaja un par de habilidades y tus días lo reparten; nada se reinicia entre semanas.',
     plan_no_session_days:'No hay días de sesión configurados. Agregá un día en Horarios y frecuencia de sesiones.',
     plan_shift:'Desplazamiento de sesiones / adelantar',
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
@@ -4816,7 +4776,10 @@ const I18N={
     plan_rotation_by_part:'Por parte',
     plan_rotation_full_section:'Paper completo por sesión',
     plan_rotation_custom:'Personalizado',
-    plan_help_by_part:'Una habilidad por sesión: cada sesión toma los siguientes ejercicios de esa habilidad, en orden.',
+    plan_help_by_part:'Una habilidad por sesión. Las semanas alternan Reading & UoE + Listening con Writing + Speaking; tus días reparten el par.',
+    plan_week_block_summary:'Esta semana: {now} — la próxima: {next}',
+    plan_week_block_days:'Esta semana: {days} — la próxima: {next}',
+    plan_week_block_day:'{day} · {skill}',
     plan_help_full:'Cada sesión es un paper completo con su tiempo oficial de examen.',
     plan_help_custom:'Elegís la habilidad, las partes y la duración de cada día abajo.',
     plan_mode_one:'Un ejercicio por sesión.',
@@ -4829,25 +4792,24 @@ const I18N={
     plan_custom_parts_error:'Las partes deben estar entre 1 y {max}.',
     plan_custom_reason:'Tu plan personalizado para {day}.',
     plan_full_reason:'Un paper completo: {paper} (oficial {min} min).',
-    plan_why_queue:'Posición según {n} sesiones registradas más un corrimiento de {offset}. Orden: R&UE → Listening → Writing → Speaking.',
+    plan_why_queue:'Posición según {n} sesiones registradas más un corrimiento de {offset}. Las semanas alternan: Reading & UoE + Listening, después Writing + Speaking.',
     plan_items_per_session:'Ejercicios por sesión',
     plan_queue_next:'A continuación:',
     plan_queue_start:'Empieza por tu primera sesión planificada.',
     plan_queue_reason:'Ejercicio de {skill}.',
     plan_queue_reason_many:'{n} ejercicios de {skill} en una sesión.',
     plan_next_unit_reason:'Siguiente ejercicio de esta sesión.',
+    studio_not_planned:'Esta destreza no está en tu plan actual.',
+    studio_sub_official:'Todas las partes ({n}) · {min} min (tiempo oficial de examen).',
+    studio_sub_whole:'Todas las partes ({n}) · {min} min.',
+    studio_sub_part:'Solo esta parte · {min} min.',
+    studio_sub_parts:'{n} partes · {min} min en total.',
+    studio_sub_paper:'{min} min.',
     plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Simulacro completo',
     plan_rotation:'Qué viene ahora',
-    plan_override_genre:'Cambiar género de writing',
     plan_upcoming_sub:'Tus próximas sesiones, tal como las arma tu plan:',
-    plan_rotation_order:'Editá el orden por el que cicla cada habilidad:',
-    plan_rue_cycle:'R&UoE (partes 1-7, en orden)',
-    plan_w_cycle:'Writing (tipos, en orden)',
-    plan_l_cycle:'Listening (partes 1-4)',
-    plan_sp_cycle:'Speaking (partes 1-4)',
-    plan_rotation_override:'Override manual: {genre}.',
     settings_title:'Ajustes',
     settings_ai_provider:'Proveedor de IA',
     settings_close:'Cerrar',
@@ -4908,8 +4870,6 @@ const I18N={
     license_have_code:'🎟️ Tengo un código',
     license_close:'Ahora no',
     license_ia_free:'{n} de {limit} gratis · ver Plan',
-    plan_save:'💾 Guardar plan',
-    plan_restore:'↩ Restaurar plan original',
     books_online:'🌐 Práctica online (1 clic — gratis)',
     books_online_sub:'Ejercicios interactivos ilimitados por habilidad. Materiales oficiales de Cambridge + plataformas gratuitas (sin descargas).',
     books_material:'📥 Material descargado (PDF y audio)',
@@ -5080,8 +5040,6 @@ const I18N={
     alert_describe_error:'Describí el error',
     alert_data_imported:'Datos importados ✓',
     alert_invalid_file:'Archivo inválido',
-    alert_plan_saved:'Plan guardado ✓',
-    alert_restore_plan:'¿Restaurar el plan original? Se perderán tus cambios.',
     alert_10min:'⏰ Quedan 10 minutos',
     alert_5min:'⏰ Quedan 5 minutos',
     alert_result_saved:'Resultado guardado ✓',
@@ -5262,6 +5220,15 @@ function setLang(code){
   if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
 }
 function syncLangFromD(){LANG=normalizeLang(D&&D.settings&&D.settings.lang)}
+/* The four skill cycles are product constants. They are also stored in
+   SETTINGS_DEFAULT so an old document still loads, but nothing reads them as
+   user input: no screen edits them any more. */
+const QUEUE_CYCLES={
+  rue:[1,2,3,4,5,6,7],
+  w:['Essay','Article','Report','Review','Email'],
+  l:[1,2,3,4],
+  sp:[1,2,3,4]
+};
 const SETTINGS_DEFAULT={
   lang:'en',
   /* Phase 38: `fast` speaks the reply with the browser's own speechSynthesis
@@ -5271,10 +5238,10 @@ const SETTINGS_DEFAULT={
   ueMin:50,planMin:5,writeMin:35,revMin:20,listenMin:40,sp1Sec:60,sp2Sec:180,
   wMin:140,wMax:190,even:3,odd:4,
   streakFreeze:1,weekGoal:5,
-  rueCycle:[1,2,3,4,5,6,7],
-  wCycle:['Essay','Article','Report','Review','Email'],
-  lCycle:[1,2,3,4],
-  spCycle:[1,2,3,4],
+  rueCycle:QUEUE_CYCLES.rue.slice(),
+  wCycle:QUEUE_CYCLES.w.slice(),
+  lCycle:QUEUE_CYCLES.l.slice(),
+  spCycle:QUEUE_CYCLES.sp.slice(),
   rotationMode:'by-part',
   itemsPerSession:1,
   customPlan:{},
@@ -11703,7 +11670,7 @@ function onUePartChange(){
   if(!tot)return;
   if(val==='all'||val==='full'){
     tot.value=52;
-    if(min)min.value=50;
+    if(min)min.value=75;
   }else{
     const qMap={'1':8,'2':8,'3':8,'4':6,'5':6,'6':6,'7':10};
     const minMap={'1':8,'2':8,'3':8,'4':10,'5':20,'6':20,'7':20};
@@ -11719,31 +11686,31 @@ const SOLO_PARTS={
     {n:2,name:'Part 2 — Open cloze',q:8,min:8},
     {n:3,name:'Part 3 — Word Formation',q:8,min:8},
     {n:4,name:'Part 4 — Key Word Transformation',q:6,min:10},
-    {n:5,name:'Part 5 — Multiple choice reading',q:6,min:20},
-    {n:6,name:'Part 6 — Gapped text',q:6,min:20},
-    {n:7,name:'Part 7 — Multiple matching',q:10,min:20},
-    {n:'all',name:'Full Reading & Use of English (Parts 1–7)',q:52,min:50}
+    {n:5,name:'Part 5 — Multiple choice reading',q:6,min:13},
+    {n:6,name:'Part 6 — Gapped text',q:6,min:13},
+    {n:7,name:'Part 7 — Multiple matching',q:10,min:15},
+    {n:'all',name:'Full Reading & Use of English (Parts 1–7)',q:52,min:75}
   ],
   lp:[
-    {n:1,name:'Part 1 — Short extracts (3 options)',q:8,min:8},
+    {n:1,name:'Part 1 — Short extracts (3 options)',q:8,min:10},
     {n:2,name:'Part 2 — Sentence completion',q:10,min:10},
-    {n:3,name:'Part 3 — Multiple matching',q:5,min:8},
+    {n:3,name:'Part 3 — Multiple matching',q:5,min:10},
     {n:4,name:'Part 4 — Multiple choice (long)',q:7,min:10},
     {n:'all',name:'Full Listening Test (Parts 1–4)',q:30,min:40}
   ],
   w:[
     {n:'Essay',name:'Part 1: Essay',q:20,min:40},
-    {n:'Article',name:'Part 2: Article',q:20,min:35},
-    {n:'Report',name:'Part 2: Report',q:20,min:35},
-    {n:'Review',name:'Part 2: Review',q:20,min:35},
-    {n:'Email',name:'Part 2: Email / Letter',q:20,min:35}
+    {n:'Article',name:'Part 2: Article',q:20,min:40},
+    {n:'Report',name:'Part 2: Report',q:20,min:40},
+    {n:'Review',name:'Part 2: Review',q:20,min:40},
+    {n:'Email',name:'Part 2: Email / Letter',q:20,min:40}
   ],
   sp:[
     {n:1,name:'Part 1 — Interview',q:0,min:2},
     {n:2,name:'Part 2 — Long turn (compare photos)',q:0,min:4},
     {n:3,name:'Part 3 — Collaborative task',q:0,min:4},
-    {n:4,name:'Part 4 — Discussion',q:0,min:5},
-    {n:'all',name:'Full Speaking Simulation (Parts 1–4)',q:0,min:15}
+    {n:4,name:'Part 4 — Discussion',q:0,min:4},
+    {n:'all',name:'Full Speaking Simulation (Parts 1–4)',q:0,min:14}
   ]
 };
 
@@ -11882,10 +11849,28 @@ function saveW(){
   document.getElementById('wPv').value=0;document.getElementById('wCol').value=0;
   document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
 }
+function onLPartChange(){
+  const partEl=document.getElementById('lPart');
+  const partVal=partEl?String(partEl.value):'all';
+  const max=partVal==='all'?30:(L_PART_Q[partVal]||10);
+  const lbl=document.getElementById('lOkLbl');
+  if(lbl)lbl.textContent='Correct (out of '+max+')';
+  const ok=document.getElementById('lOk');
+  if(ok)ok.max=max;
+  const min=document.getElementById('lMin');
+  if(min)min.value=partVal==='all'?40:(UNIT_MIN.l[partVal]||10);
+}
 function saveL(){
   const correct=+document.getElementById('lOk').value;
   if(!correct&&correct!==0){alert(t('alert_set_correct'));return}
-  log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min:+document.getElementById('lMin').value});
+  const partEl=document.getElementById('lPart');
+  const partVal=partEl?String(partEl.value):'all';
+  const min=+document.getElementById('lMin').value;
+  if(partVal==='all'){
+    log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min});
+  }else{
+    log({type:'lp',part:+partVal,book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:L_PART_Q[partVal]||10,min});
+  }
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
 function saveSP(report){
@@ -12055,7 +12040,7 @@ function gateSkillState(skill,th){
     return {ok:covered===4,covered,total:4};
   }
   if(skill==='w'){
-    const kinds=SETTINGS_DEFAULT.wCycle;
+    const kinds=QUEUE_CYCLES.w;
     const best=gateBestByPart(log.filter(e=>e.type==='w'&&kinds.includes(e.kind)),
       e=>e.kind,e=>typeof e.score==='number'?e.score:null);
     let covered=0;kinds.forEach(k=>{if(best[k]!==undefined&&best[k]>=th.w)covered++});
@@ -12140,26 +12125,16 @@ function importData(ev){
 function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
 document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCount));
 /* ---------- PLAN ----------
-   Long-term configuration view (everything in SETTINGS_DEFAULT is
-   user-editable):
-   - renderPlan(): loads current values into the inputs
-   - savePlan():   reads the inputs, validates cycles (filters parts
-                   out of range), persists and re-applies timers + rotation
-   - resetPlan():  restores SETTINGS_DEFAULT (with confirm)
-   - applyTimers(): re-initialises the countdowns with the saved
-                   durations (called on save and on load). */
+   Long-term configuration view. Schedule, time, mode and exercises per session
+   apply as soon as they change; the only explicit reset is the one behind
+   "Reset to defaults". Skills and cycles are product constants.
+   - renderPlan(): loads the current values into whatever controls exist
+   - applyTimers(): re-initialises the countdowns with the fixed durations. */
 function renderPlan(){
   const s=D.settings;
-  const setVal=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
   renderScheduleRows();
-  const pv=document.getElementById('pVoice');
-  if(pv)pv.value=spkVoiceMode();
   if(document.getElementById('pEven'))document.getElementById('pEven').value=s.even||3;
   if(document.getElementById('pOdd'))document.getElementById('pOdd').value=s.odd||4;
-  setVal('pRueCycle',(s.rueCycle||[1,2,3,4,5,6,7]).join(','));
-  setVal('pWCycle',(s.wCycle||['Essay','Article','Report','Review','Email']).join(','));
-  setVal('pLCycle',(s.lCycle||[1,2,3,4]).join(','));
-  setVal('pSpCycle',(s.spCycle||[1,2,3,4]).join(','));
   renderByoSettings();
   renderRotationCard();
   renderPlanCard();
@@ -12519,29 +12494,6 @@ function planLimitHaveCode(){
   const input=document.getElementById('planCode');
   if(input)input.focus();
 }
-function savePlan(){
-  updateScheduleFromUI();
-  const s=D.settings,g=id=>{const el=document.getElementById(id);return el?el.value:''};
-  const pv=g('pVoice');
-  if(pv==='fast'||pv==='natural')s.voice=pv;
-  if(g('pEven'))s.even=+g('pEven')||3;if(g('pOdd'))s.odd=+g('pOdd')||4;
-  if(g('pRueCycle')!==''){s.rueCycle=String(g('pRueCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);if(!s.rueCycle.length)s.rueCycle=[1,2,3,4,5,6,7];}
-  if(g('pWCycle')!==''){s.wCycle=String(g('pWCycle')).split(',').map(x=>x.trim()).filter(x=>['Essay','Article','Report','Review','Email'].includes(x));if(!s.wCycle.length)s.wCycle=['Essay','Article','Report','Review','Email'];}
-  if(g('pLCycle')!==''){s.lCycle=String(g('pLCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.lCycle.length)s.lCycle=[1,2,3,4];}
-  if(g('pSpCycle')!==''){s.spCycle=String(g('pSpCycle')).split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);if(!s.spCycle.length)s.spCycle=[1,2,3,4];}
-  save();applyTimers();refreshAll();
-  track('plan_generate',{count:(getSchedule()||[]).length});
-  alert(t('alert_plan_saved'));
-}
-function resetPlan(){
-  if(!confirm(t('alert_restore_plan')))return;
-  D.settings=JSON.parse(JSON.stringify(SETTINGS_DEFAULT));
-  SETTINGS_UNDO=null;
-  delete D.settingsUndo;
-  D.sessionOffset=0;
-  save();renderPlan();applyTimers();refreshAll();
-}
-
 /* ---------- WEEKLY PLAN (buildWeeklyPlan) ----------
    Deterministic rules (NO AI) that derive the week from the diagnostic,
    the error taxonomy and the intake profile (D.profile):
@@ -12666,29 +12618,23 @@ function rotateByOffset(arr,offset){
   const k=((Math.trunc(offset)%n)+n)%n;
   return k?arr.slice(k).concat(arr.slice(0,k)):arr.slice();
 }
-/* ---------- ROTATION QUEUE (by-part) ----------
-   One continuous queue of work units shared by PLAN and TODAY: the skills
-   repeat R&UE -> Listening -> Writing -> Speaking and each skill advances
-   through its own cycle. The position comes from the units already logged,
-   never from a stored cursor, so a refresh cannot move it. */
+/* ---------- WEEK BLOCKS (by-part) ----------
+   One continuous queue of work units shared by PLAN and TODAY. Weeks alternate
+   a pair of skills forever: week A (1st, 3rd, ...) is R&UE + Listening, week B
+   (2nd, 4th, ...) is Writing + Speaking. The days of a week split the pair in
+   order (day 1 -> first skill, day 2 -> second, day 3 -> first again), so a
+   session never mixes skills. Each skill's position continues across weeks.
+   The position comes from the units already logged, never from a stored
+   cursor, so a refresh cannot move it. */
 const QUEUE_SKILLS=['rue','l','w','sp'];
+const WEEK_SKILL_PAIRS=[['rue','l'],['w','sp']];
 function normalizeItemsPerSession(v){
   const n=Math.round(Number(v));
   return n>=1&&n<=4?n:1;
 }
-function queueCycles(s){
-  s=s||(D&&D.settings)||{};
-  const pick=(name,def,lo,hi)=>{
-    const list=Array.isArray(s[name])?s[name].map(Number).filter(n=>n>=lo&&n<=hi):[];
-    return list.length?list:def.slice();
-  };
-  const w=(Array.isArray(s.wCycle)?s.wCycle:[]).filter(g=>SETTINGS_DEFAULT.wCycle.indexOf(g)>=0);
-  return {
-    rue:pick('rueCycle',[1,2,3,4,5,6,7],1,7),
-    l:pick('lCycle',[1,2,3,4],1,4),
-    w:w.length?w.slice():SETTINGS_DEFAULT.wCycle.slice(),
-    sp:pick('spCycle',[1,2,3,4],1,4)
-  };
+function queueCycles(){
+  return {rue:QUEUE_CYCLES.rue.slice(),w:QUEUE_CYCLES.w.slice(),
+    l:QUEUE_CYCLES.l.slice(),sp:QUEUE_CYCLES.sp.slice()};
 }
 function queueMod(n,m){return ((Math.trunc(n)%m)+m)%m}
 function queueUnitAt(skill,occ,cycles){
@@ -12697,17 +12643,37 @@ function queueUnitAt(skill,occ,cycles){
   return {skill:skill,type:skill==='rue'?'ue':skill,value:value,
     part:skill==='w'?null:value,kind:skill==='w'?value:null};
 }
-/* One unit of the interleaved Phase 96 order: skill = index % 4, lap = index / 4. */
+/* One unit of the legacy interleaved order, kept for callers that only ask
+   which skill comes after which. */
 function queueUnit(index,cycles){
   return queueUnitAt(QUEUE_SKILLS[queueMod(index,4)],Math.floor(index/4),cycles);
 }
-/* A session is one block of `per` consecutive units of the SAME skill. The
-   skill rotates R&UE -> Listening -> Writing -> Speaking per session; each skill
-   keeps its own infinite queue and wraps its cycle inside it, never mixing. */
-function queueBlockUnit(sessionIndex,k,per,cycles){
-  const skill=QUEUE_SKILLS[queueMod(sessionIndex,4)];
-  const lap=Math.floor(sessionIndex/4);
-  return queueUnitAt(skill,lap*per+k,cycles);
+function weekPairFor(weekIndex){
+  return WEEK_SKILL_PAIRS[queueMod(weekIndex,2)];
+}
+function weekSkillAt(weekIndex,dayIndex){
+  const pair=weekPairFor(weekIndex);
+  return pair[queueMod(dayIndex,2)];
+}
+function sessionSkillFor(sessionIndex,daysPerWeek){
+  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
+  const week=Math.floor(sessionIndex/n);
+  return weekSkillAt(week,sessionIndex%n);
+}
+/* How many earlier sessions of the same skill exist before this index: the
+   skill's own position continues across weeks and blocks, it never resets. */
+function sessionOccurrence(sessionIndex,daysPerWeek,skill){
+  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
+  let occ=0;
+  for(let i=0;i<sessionIndex;i++){if(sessionSkillFor(i,n)===skill)occ++}
+  return occ;
+}
+/* A session is one block of `per` consecutive units of the SAME skill. */
+function queueBlockUnit(sessionIndex,k,per,cycles,daysPerWeek){
+  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
+  const skill=sessionSkillFor(sessionIndex,n);
+  const occ=sessionOccurrence(sessionIndex,n,skill)*per;
+  return queueUnitAt(skill,occ+k,cycles);
 }
 function queueUnitLabel(u){
   if(!u)return '';
@@ -12782,13 +12748,13 @@ function queueSlotForUnits(units){
 /* Consecutive sessions, `perSession` units each, starting at the session index
    `start`. Day keys are handed out in schedule order (Mon/Fri/Mon/Fri...). */
 function rotationQueueSessions(dayKeys,perSession,start,count,s){
-  s=s||(D&&D.settings)||{};
-  const cycles=queueCycles(s);
+  const cycles=queueCycles();
   const n=normalizeItemsPerSession(perSession);
+  const d=Math.max(1,(dayKeys&&dayKeys.length)||1);
   const out=[];
   for(let i=0;i<count;i++){
     const units=[];
-    for(let k=0;k<n;k++)units.push(queueBlockUnit(start+i,k,n,cycles));
+    for(let k=0;k<n;k++)units.push(queueBlockUnit(start+i,k,n,cycles,d));
     const slot=queueSlotForUnits(units);
     if(dayKeys&&dayKeys.length)slot.day=dayKeys[i%dayKeys.length];
     out.push(slot);
@@ -12800,13 +12766,34 @@ function rotationQueueSessions(dayKeys,perSession,start,count,s){
 function nextQueueUnits(count){
   const s=(D&&D.settings)||{};
   const per=normalizeItemsPerSession(s.itemsPerSession);
-  const cycles=queueCycles(s);
-  const start=queueStartSession(s,D.log,D.sessionOffset||0,per);
+  const cycles=queueCycles();
+  const start=planSessionStart(s);
+  const d=Math.max(1,getSessionDays().length);
   const out=[];
   for(let i=0;out.length<count;i++){
     for(let k=0;k<per&&out.length<count;k++){
-      out.push(queueBlockUnit(start+i,k,per,cycles));
+      out.push(queueBlockUnit(start+i,k,per,cycles,d));
     }
+  }
+  return out;
+}
+/* The next `count` sessions with their real day, for the Week plan pattern. */
+function planNextSessions(count){
+  const s=(D&&D.settings)||{};
+  const days=getSessionDays();
+  if(!days.length)return [];
+  const per=normalizeItemsPerSession(s.itemsPerSession);
+  const cycles=queueCycles();
+  const start=planSessionStart(s);
+  const out=[];
+  for(let i=0;i<count;i++){
+    const units=[];
+    for(let k=0;k<per;k++)units.push(queueBlockUnit(start+i,k,per,cycles,days.length));
+    const slot=queueSlotForUnits(units);
+    const day=days[i%days.length];
+    slot.day=day.key;
+    slot.time=day.time;
+    out.push(slot);
   }
   return out;
 }
@@ -12835,13 +12822,13 @@ function planUpcomingRows(count){
     return out;
   }
   const per=normalizeItemsPerSession(s.itemsPerSession);
-  const cycles=queueCycles(s);
+  const cycles=queueCycles();
   const start=queueStartSession(s,D.log,offset,per);
   const out=[];
   for(let i=0;out.length<count;i++){
     const d=days[i%days.length];
     for(let k=0;k<per&&out.length<count;k++){
-      const u=queueBlockUnit(start+i,k,per,cycles);
+      const u=queueBlockUnit(start+i,k,per,cycles,days.length);
       out.push({day:d.key,time:d.time,label:queueUnitLabel(u),skill:u.skill});
     }
   }
@@ -12851,6 +12838,36 @@ function planNumberWord(n){
   const words=LANG==='es'?['','Uno','Dos','Tres','Cuatro']:['','One','Two','Three','Four'];
   return words[n]||String(n);
 }
+function planSessionStart(s){
+  s=s||(D&&D.settings)||{};
+  const per=normalizeItemsPerSession(s.itemsPerSession);
+  return queueStartSession(s,D.log,D.sessionOffset||0,per);
+}
+/* Which skill pair is active and which comes next, in plain language. */
+function planBlockPairLine(){
+  const days=getSessionDays();
+  if(!days.length)return '';
+  const start=planSessionStart();
+  const week=Math.floor(start/days.length);
+  return t('plan_week_block_summary',{
+    now:weekPairFor(week).map(planSkillLabel).join(' + '),
+    next:weekPairFor(week+1).map(planSkillLabel).join(' + ')});
+}
+/* Week plan line: the pair plus the real days of this schedule. */
+function planWeekBlockLine(){
+  const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
+  if(mode!=='by-part')return '';
+  const days=getSessionDays();
+  if(!days.length)return '';
+  const start=planSessionStart();
+  const week=Math.floor(start/days.length);
+  const next=weekPairFor(week+1).map(planSkillLabel).join(' + ');
+  if(days.length<=2)return t('plan_week_block_summary',{
+    now:weekPairFor(week).map(planSkillLabel).join(' + '),next:next});
+  const list=days.map((d,i)=>t('plan_week_block_day',{
+    day:planDayFull(d.key),skill:planSkillLabel(weekSkillAt(week,i))})).join(', ');
+  return t('plan_week_block_days',{days:list,next:next});
+}
 /* Plain-language description of the active mode, used by Today and by the
    "What comes next" card. No cycles, no offsets, no internal jargon. */
 function planModeLine(){
@@ -12859,13 +12876,21 @@ function planModeLine(){
   if(mode==='full-section')return t('plan_mode_full');
   if(mode==='custom')return t('plan_mode_custom');
   const n=normalizeItemsPerSession(s.itemsPerSession);
-  if(n===1)return t('plan_mode_one');
-  const start=queueStartSession(s,D.log,D.sessionOffset||0,n);
-  const skill=QUEUE_SKILLS[queueMod(start,4)];
-  return t('plan_mode_many',{n:planNumberWord(n),skill:planSkillLabel(skill)});
+  let detail=t('plan_mode_one');
+  if(n!==1){
+    const days=getSessionDays();
+    const d=Math.max(1,days.length);
+    const skill=sessionSkillFor(planSessionStart(s),d);
+    detail=t('plan_mode_many',{n:planNumberWord(n),skill:planSkillLabel(skill)});
+  }
+  const base=planBlockPairLine();
+  return base?base+' · '+detail:detail;
 }
 function slotUnitsAttr(sl){
   return (Array.isArray(sl&&sl.units)?sl.units:[]).map(u=>u.skill+':'+u.value).join(',');
+}
+function queueUnitsText(sl){
+  return (Array.isArray(sl&&sl.units)?sl.units:[]).map(queueUnitLabel).join(' · ');
 }
 function slotParts(sl){
   if(Array.isArray(sl&&sl.parts))return sl.parts.slice();
@@ -12917,6 +12942,220 @@ function customSlotFor(day,c){
     full:parts.length===0&&type!=='mock',
     reason:t('plan_custom_reason',{day:day})};
 }
+/* ---------- HONEST STUDIO COPY ----------
+   Every Today studio is painted from the plan row the user will really do.
+   A partial session names the parts it contains and the table's minutes; only
+   a slot that covers the whole paper may use the word "Full". */
+const UE_PART_Q={1:8,2:8,3:8,4:6,5:6,6:6,7:10};
+const L_PART_Q={1:8,2:10,3:5,4:7};
+function studioSkillOfType(type){return type==='ue'?'rue':type}
+function studioPartNumbers(sl,skill){
+  if(!sl)return [];
+  if(Array.isArray(sl.units)&&sl.units.length){
+    return sl.units.map(u=>u.value).filter(v=>typeof v==='number');
+  }
+  return slotParts(sl).filter(v=>typeof v==='number');
+}
+/* Whole paper means every part of that paper, and for Writing that means the
+   full two-task paper (only full-section ever schedules that as one session). */
+function studioIsWhole(sl){
+  if(!sl)return false;
+  if(sl.section)return true;
+  if(sl.type==='w')return false;
+  if(Array.isArray(sl.units)&&sl.units.length)return false;
+  return isWholePaper(sl);
+}
+function nextUnitSlotForSkill(skill){
+  const s=(D&&D.settings)||{};
+  const per=normalizeItemsPerSession(s.itemsPerSession);
+  const cycles=queueCycles();
+  const start=planSessionStart(s);
+  const d=Math.max(1,getSessionDays().length);
+  for(let i=0;i<16;i++){
+    if(sessionSkillFor(start+i,d)!==skill)continue;
+    const units=[];
+    for(let k=0;k<per;k++)units.push(queueBlockUnit(start+i,k,per,cycles,d));
+    return queueSlotForUnits(units);
+  }
+  return null;
+}
+function nextSectionSlotForSkill(type){
+  const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
+  for(let i=0;i<4;i++){
+    const sec=FULL_SECTION[queueMod(i+offset,4)];
+    if(sec[0]===type)return {part:null,parts:(PAPER_PARTS[type]||[]).slice(),type:type,min:sec[1],
+      timed:false,section:true,full:true};
+  }
+  return null;
+}
+/* The session a studio stands for: the first matching row of the real week,
+   then (by-part) that skill's next unit in the queue. Custom has no hidden
+   queue, so a skill the user did not schedule stays honestly empty. */
+function studioSlotFor(skill,plan){
+  const p=plan||buildWeeklyPlan(D);
+  const match=((p&&p.slots)||[]).filter(sl=>studioSkillOfType(sl.type)===skill);
+  if(match.length)return match[0];
+  const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
+  if(mode==='full-section')return nextSectionSlotForSkill(skill==='rue'?'ue':skill);
+  if(mode==='custom')return null;
+  return nextUnitSlotForSkill(skill);
+}
+function studioHeadline(sl,skill){
+  const label=planSkillLabel(skill);
+  if(!sl)return label;
+  if(studioIsWhole(sl))return FULL_SECTION_LABEL[sl.type]||label;
+  if(Array.isArray(sl.units)&&sl.units.length)return sl.units.map(queueUnitLabel).join(' · ');
+  if(sl.type==='w')return 'Writing';
+  const parts=slotParts(sl);
+  const noun={ue:'Reading',l:'Listening',sp:'Speaking'}[sl.type]||'';
+  if(!parts.length)return label;
+  return parts.length===1?noun+' part '+parts[0]:noun+' parts '+parts.join(', ');
+}
+function studioPartsPhrase(sl){
+  if(!sl)return '';
+  if(sl.section)return 'Parts 1–'+slotParts(sl).length;
+  const parts=studioPartNumbers(sl,studioSkillOfType(sl.type));
+  if(parts.length)return parts.length===1?'Part '+parts[0]:'Parts '+parts.join(', ');
+  return slotParts(sl).length===1?'Part '+slotParts(sl)[0]:'Parts '+slotParts(sl).join(', ');
+}
+function studioSubtitle(sl,skill){
+  if(!sl)return t('studio_not_planned');
+  if(sl.section)return t('studio_sub_official',{n:slotParts(sl).length,min:sl.min});
+  if(studioIsWhole(sl))return t('studio_sub_whole',{
+    n:(PAPER_PARTS[sl.type]||slotParts(sl)||[]).length,min:sl.min});
+  if(Array.isArray(sl.units)&&sl.units.length){
+    return sl.units.length===1
+      ?t('studio_sub_part',{min:sl.min})
+      :t('studio_sub_parts',{n:sl.units.length,min:sl.min});
+  }
+  if(sl.type==='w')return t('today_studio_writing_sub')+' · '+sl.min+' min';
+  if(!slotParts(sl).length)return t('studio_sub_paper',{min:sl.min});
+  return t('studio_sub_part',{min:sl.min});
+}
+function studioQuestionCount(sl,skill){
+  if(!sl)return 0;
+  if(skill==='rue'){
+    if(studioIsWhole(sl))return 52;
+    const parts=studioPartNumbers(sl,'rue');
+    return parts.length?parts.reduce((n,p)=>n+(UE_PART_Q[p]||0),0):52;
+  }
+  if(skill==='l'){
+    if(studioIsWhole(sl))return 30;
+    const parts=studioPartNumbers(sl,'l');
+    return parts.length?parts.reduce((n,p)=>n+(L_PART_Q[p]||0),0):30;
+  }
+  return 0;
+}
+function studioSet(id,text){
+  const el=document.getElementById(id);
+  if(el)el.textContent=text;
+}
+function paintUeStudio(sl){
+  const whole=studioIsWhole(sl);
+  const title=whole?'Full R&UE':studioHeadline(sl,'rue');
+  const min=sl?(Number(sl.min)||0):0;
+  const q=studioQuestionCount(sl,'rue');
+  studioSet('st1Name','📚 '+title);
+  studioSet('st1Sub',studioSubtitle(sl,'rue'));
+  studioSet('st1Dur',sl?min+' MIN':'—');
+  studioSet('st1SprintTitle','⚡ '+title);
+  studioSet('st1SprintTime',sl?min+':00 · '+q+' questions':'—');
+  studioSet('st1ScoreTime',whole?'Log the whole paper':'Log this part');
+  studioSet('st1TaskTitle',title);
+  studioSet('st1TaskTime',sl?min+' min · '+q+' questions':'');
+  const lead=document.getElementById('st1GuideLead');
+  if(lead){
+    lead.innerHTML=whole
+      ?'📍 <b>Where to find the full test (Parts 1 to 7, 52 questions):</b>'
+      :'📍 <b>Where to find '+esc(studioHeadline(sl,'rue'))+' ('+q+' questions):</b>';
+  }
+  const pace=document.getElementById('st1GuidePace');
+  if(pace){
+    pace.innerHTML=whole
+      ?'• <b>Pacing guide:</b> Parts 1–4 (Use of English) ~25 min · Parts 5–7 (Reading &amp; Gapped text) ~25 min.'
+      :'• <b>Pacing guide:</b> '+esc(studioPartsPhrase(sl))+' only · '+min+' min.';
+  }
+  studioSet('semanaTxt',sl?(whole?'Full Sprint (Parts 1–7)':studioHeadline(sl,'rue')):t('studio_not_planned'));
+  const partEl=document.getElementById('uePart');
+  const tot=document.getElementById('ueTotal');
+  const minEl=document.getElementById('ueMin');
+  const parts=studioPartNumbers(sl,'rue');
+  if(partEl){
+    if(whole){
+      partEl.value='all';
+      if(tot)tot.value=52;
+      if(minEl)minEl.value=min||75;
+    }else if(parts.length){
+      partEl.value=String(parts[0]);
+      if(tot)tot.value=UE_PART_Q[parts[0]]||8;
+      if(minEl)minEl.value=unitMinutes({skill:'rue',value:parts[0]})||8;
+    }
+  }
+  if(sl&&min&&window.ueTimer&&ueTimer.set)ueTimer.set(min);
+}
+function paintWritingStudio(sl){
+  const whole=studioIsWhole(sl);
+  const title=whole?'Full Writing':studioHeadline(sl,'w');
+  studioSet('st2Name','✍️ '+title);
+  studioSet('st2Sub',studioSubtitle(sl,'w'));
+  studioSet('st2Dur',sl?sl.min+' MIN':'—');
+  if(sl){
+    const genre=(Array.isArray(sl.units)&&sl.units.length)?sl.units[0].value:'';
+    const sel=document.getElementById('wTipo');
+    if(sel&&genre)sel.value=genre;
+    const minEl=document.getElementById('wMin');
+    if(minEl)minEl.value=sl.min;
+  }
+}
+function paintListeningStudio(sl){
+  const whole=studioIsWhole(sl);
+  const title=whole?'Full Listening':studioHeadline(sl,'l');
+  const min=sl?(Number(sl.min)||0):0;
+  const q=studioQuestionCount(sl,'l');
+  studioSet('st3Name','🎧 '+title);
+  studioSet('st3Sub',studioSubtitle(sl,'l'));
+  studioSet('st3Dur',sl?min+' MIN':'—');
+  studioSet('st3PlayTitle','🎧 '+title);
+  studioSet('st3PlayTime',sl?min+':00 · '+q+' questions':'—');
+  studioSet('st3TaskTitle',title);
+  studioSet('st3TaskTime',sl?min+' min · '+(whole?'all parts':'this part only'):'');
+  studioSet('st3Rule',sl
+    ?(whole
+      ?'• <b>Rule:</b> all 4 parts in one continuous go without pausing. Score out of 30.'
+      :'• <b>Rule:</b> '+studioHeadline(sl,'l')+' only. Score out of '+q+'.')
+    :'—');
+  const partEl=document.getElementById('lPart');
+  if(partEl){
+    const parts=studioPartNumbers(sl,'l');
+    partEl.value=(whole||!parts.length)?'all':String(parts[0]);
+  }
+  onLPartChange();
+  if(sl&&min&&window.lTimer&&lTimer.set)lTimer.set(min);
+}
+function paintSpeakingStudio(sl){
+  const whole=studioIsWhole(sl);
+  const title=whole?'Full Speaking':studioHeadline(sl,'sp');
+  const min=sl?(Number(sl.min)||0):0;
+  studioSet('st4Name','🗣️ '+title);
+  studioSet('st4Sub',studioSubtitle(sl,'sp'));
+  studioSet('st4Dur',sl?min+' MIN':'—');
+  studioSet('st4MockTitle','🎙️ '+title);
+  studioSet('st4MockTime',sl?min+':00 · '+studioPartsPhrase(sl):'—');
+}
+function paintSessionStudios(plan){
+  const p=plan||buildWeeklyPlan(D);
+  const ue=studioSlotFor('rue',p);
+  const w=studioSlotFor('w',p);
+  const l=studioSlotFor('l',p);
+  const sp=studioSlotFor('sp',p);
+  paintUeStudio(ue);
+  paintWritingStudio(w);
+  paintListeningStudio(l);
+  paintSpeakingStudio(sp);
+  const pill=(id,sl)=>{const el=document.getElementById(id);if(el)el.textContent=sl?sl.min+' min':'—'};
+  pill('navDurMonA',ue);pill('navDurFriA',l);pill('navDurMonB',w);pill('navDurFriB',sp);
+}
+
 function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
@@ -12967,11 +13206,11 @@ function buildWeeklyPlan(D){
     else if(top==='T-MIS'){fillMode='text';fillSeq=[5,6]}
     else if(top==='T-LIM'){fillMode='time';fillSeq=[]}
   }
-  const rue=(Array.isArray(s.rueCycle)&&s.rueCycle.length)?s.rueCycle.map(Number).filter(p=>p>=1&&p<=7):[1,2,3,4,5,6,7];
+  const rue=QUEUE_CYCLES.rue.slice();
   const seq=fillSeq.concat(rue.filter(p=>fillSeq.indexOf(p)<0));
   let lPart=0,lCount=0;
   for(let p=1;p<=4;p++){const c=tMisByPart[p]||0;if(c>lCount){lCount=c;lPart=p}}
-  if(!lPart)lPart=(Array.isArray(s.lCycle)&&s.lCycle.length)?(Number(s.lCycle[0])||1):1;
+  if(!lPart)lPart=QUEUE_CYCLES.l[0];
   const usedParts={};
   const pickPart=()=>{
     for(const p of seq){if(!usedParts[p]){usedParts[p]=true;return p}}
@@ -12999,7 +13238,7 @@ function buildWeeklyPlan(D){
     const skills=(prof&&prof.skills)||{};
     const skillLabel={rue:'Reading & Use of English',w:'Writing',l:'Listening',sp:'Speaking'};
     const rated=['rue','w','l','sp'].map(k=>({k:k,n:Math.min(5,Math.max(1,Number(skills[k])||3))})).sort((a,b)=>a.n-b.n);
-    const spPart=(Array.isArray(s.spCycle)&&s.spCycle.length)?(Number(s.spCycle[0])||1):1;
+    const spPart=QUEUE_CYCLES.sp[0];
     rated.forEach(sk=>{
       if(ordered.length>=slotsPerWeek)return;
       const n=sk.n;
@@ -13257,24 +13496,6 @@ function onRotationModeChange(mode){
   D.settings.rotationMode=normalizeRotationMode(mode);
   commitPlanningEdit();
 }
-function applyCycleInputs(){
-  const s=D.settings,g=id=>{const el=document.getElementById(id);return el?String(el.value):''};
-  const rue=g('pRueCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=7);
-  if(rue.length)s.rueCycle=rue;
-  const w=g('pWCycle').split(',').map(x=>x.trim()).filter(x=>SETTINGS_DEFAULT.wCycle.indexOf(x)>=0);
-  if(w.length)s.wCycle=w;
-  const l=g('pLCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);
-  if(l.length)s.lCycle=l;
-  const sp=g('pSpCycle').split(',').map(x=>+x.trim()).filter(x=>x>=1&&x<=4);
-  if(sp.length)s.spCycle=sp;
-}
-function onCycleCommit(){
-  // The pre-edit snapshot comes from onfocus; only create one when the input
-  // was reached without focus (e.g. a scripted change).
-  if(!PLANNING_EDIT_BASE)beginPlanningEdit();
-  applyCycleInputs();
-  commitPlanningEdit();
-}
 function renderRotationControls(plan){
   // The controls are static in the markup: only their state changes. Replacing
   // them on every repaint would destroy a button between mousedown and click
@@ -13290,14 +13511,21 @@ function renderRotationControls(plan){
       :t('plan_help_by_part');
   const items=document.getElementById('wpItemsPerSession');
   if(items)items.value=String(normalizeItemsPerSession(D.settings.itemsPerSession));
+  const blockLine=document.getElementById('wpWeekBlock');
+  if(blockLine){
+    const line=mode==='by-part'?planWeekBlockLine():'';
+    blockLine.textContent=line;
+    blockLine.style.display=line?'':'none';
+  }
   const preview=document.getElementById('wpQueuePreview');
   if(preview){
     if(mode==='by-part'){
       const s=D.settings||{};
-      const labels=nextQueueUnits(6).map(queueUnitLabel);
+      const sessions=planNextSessions(4);
       const empty=queueLogCount(s,D.log)===0;
       preview.style.display='';
-      preview.textContent=(empty?t('plan_queue_start')+' ':'')+t('plan_queue_next')+' '+labels.join(' · ');
+      preview.innerHTML=`<div class="sub">${esc((empty?t('plan_queue_start')+' ':'')+t('plan_queue_next'))}</div>`+
+        sessions.map(sl=>`<div class="wp-next" data-day="${sl.day}" data-time="${sl.time||''}" data-units="${slotUnitsAttr(sl)}" data-min="${sl.min}"><b>${esc(planDayLabel(sl.day)||sl.day)}</b> · ${esc(queueUnitsText(sl))}</div>`).join('');
     }else{
       preview.style.display='none';
       preview.textContent='';
@@ -13595,21 +13823,21 @@ function exSave(){
 const PARTS=[
  {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
  {g:'Reading & Use of English',n:2,t:'Open cloze',q:8,min:8,type:'ue',note:''},
- {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:'Included in Week A Monday session'},
- {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:'Included in Week B Monday session'},
- {g:'Reading & Use of English',n:5,t:'Multiple choice (2 texts)',q:6,min:20,type:'ue',note:''},
- {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:20,type:'ue',note:''},
- {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:20,type:'ue',note:''},
- {g:'Listening',n:1,t:'Short extracts (3 options)',q:8,min:8,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
+ {g:'Reading & Use of English',n:3,t:'Word formation',q:8,min:8,type:'ue',note:''},
+ {g:'Reading & Use of English',n:4,t:'Key word transformation',q:6,min:10,type:'ue',note:''},
+ {g:'Reading & Use of English',n:5,t:'Multiple choice (2 texts)',q:6,min:13,type:'ue',note:''},
+ {g:'Reading & Use of English',n:6,t:'Gapped text',q:6,min:13,type:'ue',note:''},
+ {g:'Reading & Use of English',n:7,t:'Multiple matching',q:10,min:15,type:'ue',note:''},
+ {g:'Listening',n:1,t:'Short extracts (3 options)',q:8,min:10,type:'lp',note:'Audio: Sample 2 part-1 (BOOKS → Material)'},
  {g:'Listening',n:2,t:'Sentence completion',q:10,min:10,type:'lp',note:'Audio: Sample 2 part-2 · the Stage 0 gate checks your errors here'},
- {g:'Listening',n:3,t:'Multiple matching',q:5,min:8,type:'lp',note:'Audio: Sample 2 part-3'},
+ {g:'Listening',n:3,t:'Multiple matching',q:5,min:10,type:'lp',note:'Audio: Sample 2 part-3'},
  {g:'Listening',n:4,t:'Multiple choice (long)',q:7,min:10,type:'lp',note:'Audio: Sample 2 part-4'},
   {g:'Speaking',n:1,t:'Interview',q:0,min:2,type:'sp',note:'Personal questions with the Writing Corrector or your teacher'},
-  {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:1,type:'sp',note:'Included in Friday Speaking Studio'},
-  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:3,type:'sp',note:'Included in Friday Speaking Studio'},
-  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:'Included in Friday Speaking Studio'},
+  {g:'Speaking',n:2,t:'Long turn (compare photos)',q:0,min:4,type:'sp',note:''},
+  {g:'Speaking',n:3,t:'Collaborative task',q:0,min:4,type:'sp',note:''},
+  {g:'Speaking',n:4,t:'Discussion',q:0,min:4,type:'sp',note:''},
   {g:'Writing',n:1,t:'Essay',q:0,min:40,type:'w',kind:'Essay',note:''},
-  {g:'Writing',n:2,t:'Article / Report / Review / Email',q:0,min:35,type:'w',kind:'Article',note:''}
+  {g:'Writing',n:2,t:'Article / Report / Review / Email',q:0,min:40,type:'w',kind:'Article',note:''}
 ];
 let RES_FILTER=null;
 const RES_PAPERS=[
@@ -14348,10 +14576,10 @@ function renderGrafCons(){
 /* ---------- TODAY VIEW & SESSION ENGINE ---------- */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const CORE_SESSIONS=[
-  {id:'rue',studio:'mon-a',name:'Full Reading & Use of English',fullTitle:'Session A — Full Reading & Use of English Sprint (50 min)',icon:'📚',dur:'50 min',badgeClass:'mon',desc:'52 questions in 50 min. Studio is open below.'},
-  {id:'l',studio:'fri-a',name:'Full Listening',fullTitle:'Session B — Full Listening Test (40 min)',icon:'🎧',dur:'40 min',badgeClass:'fri',desc:'30 questions uninterrupted + 20\' post-mortem. Studio is open below.'},
-  {id:'w',studio:'mon-b',name:'Full Writing',fullTitle:'Session A — Full Writing Studio',icon:'✍️',dur:'60 min',badgeClass:'mon',desc:'5\' plan + 35\' write + 20\' audit. Studio is open below.'},
-  {id:'sp',studio:'fri-b',name:'Full Speaking',fullTitle:'Session B — Full Speaking Simulation (60 min)',icon:'🗣️',dur:'60 min',badgeClass:'fri',desc:'15\' simulation (Parts 1-4) + 45\' C1 upgrade. Studio is open below.'}
+  {id:'rue',studio:'mon-a',name:'Reading & Use of English'},
+  {id:'l',studio:'fri-a',name:'Listening'},
+  {id:'w',studio:'mon-b',name:'Writing'},
+  {id:'sp',studio:'fri-b',name:'Speaking'}
 ];
 
 const SCHEDULE_DEFAULT=[{day:1,time:'15:30'},{day:5,time:'13:00'}];
@@ -14428,12 +14656,11 @@ function getSlotSession(weekNumber,slotIndex,scheduleLength){
   const globalSlot=(weekNumber-1)*scheduleLength+slotIndex+offset;
   const sessionIdx=((globalSlot%4)+4)%4;
   const writingIdx=Math.floor(globalSlot/4);
-  const writingGenre=(s.wCycle&&s.wCycle.length)?s.wCycle[((writingIdx%s.wCycle.length)+s.wCycle.length)%s.wCycle.length]:'Essay';
+  const writingGenre=QUEUE_CYCLES.w[queueMod(writingIdx,QUEUE_CYCLES.w.length)];
   const meta=CORE_SESSIONS[sessionIdx];
   const activeW=(D.weekOverrides&&D.weekOverrides.w)||writingGenre;
-  const title=meta.id==='w'?`Full Writing (${activeW})`:meta.name;
-  const fullTitle=meta.id==='w'?`Session A — Full Writing Studio: ${activeW} (60 min)`:meta.fullTitle;
-  return {globalSlot,sessionIdx,writingGenre,session:meta,activeWritingGenre:activeW,title,fullTitle};
+  const title=meta.id==='w'?'Writing ('+activeW+')':meta.name;
+  return {globalSlot,sessionIdx,writingGenre,session:meta,activeWritingGenre:activeW,title};
 }
 
 function getNextScheduledSession(baseDate=new Date()){
@@ -14610,16 +14837,13 @@ function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Fo
 /* ---------- ROTATION CARD ----------
    "What comes next" describes the plan the user actually built, not internal
    cycles: the upcoming rows are rendered by renderSchedulePreview, and this
-   paints the plain-language mode line plus any manual writing override. */
+   paints the plain-language mode line. */
 function renderRotationCard(){
   const box=document.getElementById('rotationCardBody');
   if(!box)return;
-  const override=D.weekOverrides&&D.weekOverrides.w;
-  box.innerHTML=`<div class="rot-mode">${esc(planModeLine())}</div>`+
-    (override?`<div class="rot-override">${esc(t('plan_rotation_override',{genre:override}))}</div>`:'');
+  box.innerHTML=`<div class="rot-mode">${esc(planModeLine())}</div>`;
   renderSchedulePreview();
 }
-function onCycleInput(){applyCycleInputs();renderRotationCard();renderWeeklyPlan()}
 
 function getSkillNextOccurrence(skillId,baseDate=new Date()){
   const sched=getSchedule();
@@ -14830,14 +15054,11 @@ function startNextQueuedUnit(){
 function renderToday(){
   updatePersonalizedUI();
   const d=new Date();
-  const week=isoWeek(d);
   const s=D.settings||SETTINGS_DEFAULT;
-  const wIdx=Math.floor(week/2)%s.wCycle.length;
-  const autoW=s.wCycle[wIdx];
+  const wIdx=Math.floor(isoWeek(d)/2)%QUEUE_CYCLES.w.length;
+  const autoW=QUEUE_CYCLES.w[wIdx];
   const wov=D.weekOverrides||{};
   const wT=wov.w||autoW;
-  const ovW=document.getElementById('ovW');
-  if(ovW)ovW.innerHTML=s.wCycle.map(g=>`<option ${g==wT?'selected':''}>${g}</option>`).join('');
   if(document.getElementById('wTipo'))document.getElementById('wTipo').value=wT;
   if(document.getElementById('navWTag'))document.getElementById('navWTag').textContent=wT;
   if(document.getElementById('wWords')){
@@ -14849,6 +15070,7 @@ function renderToday(){
   const plan=buildWeeklyPlan(D);
   const todayLabel=planTodayLabel();
   const todaySlots=plan.slots.filter(sl=>sl.day===todayLabel);
+  paintSessionStudios(plan);
   renderTodaySession(plan,todaySlots);
 
   const nb=document.getElementById('nextBox');
@@ -14950,7 +15172,6 @@ function renderRecent(){
     return `<div class="metric-row"><span>${MOD[e.type]?MOD[e.type](e):e.type} <span class="muted">· ${fmtDate(e.date)}</span></span><span class="metric-val tnum">${sc}</span></div>`;
   }).join('');
 }
-function setOv(k,v){D.weekOverrides=D.weekOverrides||{};D.weekOverrides[k]=v;save();renderToday()}
 
 /* ---------- STREAK ---------- */
 let _prevStreakVal=null;
@@ -15173,7 +15394,7 @@ function qlSetType(type){
     if(hint)hint.textContent=t('ql_correct_total');
   }else if(type==='w'){
     QL_STATE.part=1;
-    QL_STATE.kind=(s.wCycle&&s.wCycle[0])||'Essay';
+    QL_STATE.kind=QUEUE_CYCLES.w[0];
     qlSetKind(QL_STATE.kind);
     if(cLbl)cLbl.textContent=t('ql_score20');
     if(cIn){cIn.max=20;cIn.value=16;}

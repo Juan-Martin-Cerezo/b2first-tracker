@@ -135,7 +135,7 @@ with sync_playwright() as p:
     assert titles == [
         "Reading part 1 · 8 min",
         "Listening part 1 · 10 min",
-        "Writing essay · 40 min",
+        "Reading part 2 · 8 min",
     ], f"the queue did not follow the schedule days: {titles}"
     out_today = TODAY in ("Mon", "Wed", "Sat")
     if out_today:

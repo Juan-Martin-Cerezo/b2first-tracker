@@ -139,7 +139,7 @@ with sync_playwright() as p:
             };
         }"""
     )
-    assert summary["rowTotal"] == 60, f"the visible rows do not add up: {summary['rows']}"
+    assert summary["rowTotal"] == 36, f"the visible rows do not add up: {summary['rows']}"
     assert f"{summary['rowTotal']} min" in summary["text"], (
         f"the summary does not match the rows: {summary}"
     )

@@ -85,7 +85,7 @@ with sync_playwright() as p:
     out["sesA"] = pg.evaluate("getComputedStyle(document.getElementById('sesA')).display")
     out["sesB"] = pg.evaluate("getComputedStyle(document.getElementById('sesB')).display")
     out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
-    out["rot_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
+    out["rot_opts"] = pg.evaluate("QUEUE_CYCLES.w.length")
     out["nextBox"] = pg.evaluate("document.getElementById('nextBox').textContent.slice(0,70)")
     # The rotation mode is explicit now (by-part is the default) and TODAY has
     # its own plan-derived session block next to the next-session banner.

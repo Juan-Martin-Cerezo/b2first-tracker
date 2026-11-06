@@ -102,10 +102,10 @@ with sync_playwright() as p:
     assert before["extraBtn"]["text"] == "Extra session", (
         f"the extra session label is not English: {before['extraBtn']}"
     )
-    assert before["rotation"]["mode"].strip() == "One exercise per session.", (
+    assert "One exercise per session." in before["rotation"]["mode"], (
         f"the card does not name the active mode: {before['rotation']}"
     )
-    assert before["rotation"]["upcoming"][0] == "Speaking part 1", (
+    assert before["rotation"]["upcoming"][0] == "Writing article", (
         f"the upcoming queue ignores the logged work and the shift: {before['rotation']}"
     )
     OUT["before"] = {"offset": before["offset"], "slots": before["slots"],

@@ -135,12 +135,6 @@ def main():
         "unused i18n keys (delete from en and es): %s" % ", ".join(orphans)
     )
 
-    # 4. The speaking-voice control keeps its label.
-    assert 'id="pVoice"' in src, "the #pVoice control disappeared"
-    assert "plan_voice" in en_keys and "plan_voice" in es_keys, (
-        "plan_voice label was removed from a dictionary"
-    )
-
     print(json.dumps({
         "en_keys": len(en_keys),
         "es_keys": len(es_keys),

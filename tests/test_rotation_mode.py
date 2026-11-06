@@ -83,15 +83,15 @@ with sync_playwright() as p:
     assert all(len(set(s["units"])) == 1 for s in by_part if s["units"]), (
         f"by-part mixed skills inside a session: {by_part}"
     )
-    assert [s["min"] for s in by_part] == [8, 10, 40, 2], (
+    assert [s["min"] for s in by_part] == [8, 10, 8, 10], (
         f"by-part is not using the per-unit durations: {by_part}"
     )
     assert [s["title"] for s in by_part] == [
         "Reading part 1 · 8 min",
         "Listening part 1 · 10 min",
-        "Writing essay · 40 min",
-        "Speaking part 1 · 2 min",
-    ], f"by-part is not the continuous queue: {[s['title'] for s in by_part]}"
+        "Reading part 2 · 8 min",
+        "Listening part 2 · 10 min",
+    ], f"by-part is not the weekly block queue: {[s['title'] for s in by_part]}"
     OUT["1_by_part"] = by_part
 
     # 2. full-section: one whole paper per chosen day, official times, cycling.

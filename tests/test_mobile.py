@@ -20,7 +20,7 @@ with sync_playwright() as p:
     out["sesA"] = pg.evaluate("getComputedStyle(document.getElementById('sesA')).display")
     out["sesB"] = pg.evaluate("getComputedStyle(document.getElementById('sesB')).display")
     out["sesFull"] = pg.evaluate("getComputedStyle(document.getElementById('sesFull')).display")
-    out["rot_opts"] = pg.eval_on_selector_all("#ovW option", "els => els.length")
+    out["rot_opts"] = pg.evaluate("QUEUE_CYCLES.w.length")
 
     # full nav present (10 views + More)?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")

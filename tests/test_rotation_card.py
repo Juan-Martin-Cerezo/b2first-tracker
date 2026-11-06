@@ -70,8 +70,11 @@ with sync_playwright() as p:
     # 1. The upcoming list starts exactly where the log left the queue: two
     #    logged units put the next session on Writing, and the list is real.
     state = pg.evaluate(STATE_JS)
-    assert state["mode"].strip() == "One exercise per session.", (
+    assert "One exercise per session." in state["mode"], (
         f"the mode line is not plain language: {state['mode']!r}"
+    )
+    assert "This week: Writing + Speaking" in state["mode"], (
+        f"the mode line does not name the active block: {state['mode']!r}"
     )
     assert state["items"][:2] == ["Writing essay", "Speaking part 1"], (
         f"the upcoming queue does not follow the log: {state['items']}"
@@ -85,45 +88,43 @@ with sync_playwright() as p:
     for jargon in ("lap ", "one item per session", "component by component", "4-step"):
         assert jargon not in lowered, f"internal cycle copy leaked: {jargon!r} in {state['cardText']!r}"
 
-    # 3. Editing the R&UE cycle repaints the real next unit.
-    pg.evaluate("D.log = []; D.settings.rueCycle = [1,2,3,4]; save(); renderPlan();")
-    pg.wait_for_timeout(200)
-    pg.fill("#pRueCycle", "4,1,2,3")
-    pg.evaluate("onCycleCommit()")
+    # 3. The cycles are constants: an old stored value never moves the plan.
+    pg.evaluate(
+        "D.log = []; D.sessionOffset = 0;"
+        " D.settings.rueCycle = [4,1,2,3]; save(); renderPlan();"
+    )
     pg.wait_for_timeout(250)
     changed = pg.evaluate(STATE_JS)
-    assert changed["items"][0] == "Reading part 4", (
-        f"the next unit did not follow the new cycle: {changed['items']}"
+    assert changed["items"][0] == "Reading part 1", (
+        f"the stored cycle changed the constant next unit: {changed['items']}"
     )
     stored = pg.evaluate("D.settings.rueCycle")
-    assert stored == [4, 1, 2, 3], f"the new cycle was not saved: {stored}"
-    out["3_cycle_change"] = {"items": changed["items"], "stored": stored}
+    assert stored == [4, 1, 2, 3], f"the old key was rewritten unexpectedly: {stored}"
+    out["3_cycle_constant"] = {"items": changed["items"], "stored": stored}
 
-    # 4. A manual writing override is named in the card.
-    pg.evaluate("D.weekOverrides.w = 'Report'; save(); renderRotationCard();")
+    # 4. The manual override control is gone and nothing paints an override.
+    pg.evaluate("D.weekOverrides.w = 'Report'; save(); renderPlan();")
     pg.wait_for_timeout(150)
     hinted = pg.evaluate(STATE_JS)
-    assert "Manual override: Report" in hinted["override"], (
-        f"the manual override is not named: {hinted['override']!r}"
-    )
-    out["4_override"] = hinted["override"]
+    assert hinted["override"] == "", f"the override is still painted: {hinted['override']!r}"
+    assert "Manual override" not in hinted["cardText"], hinted["cardText"]
+    out["4_no_override"] = hinted["override"]
 
     # 5. Without history the card is honest about the start.
     pg.evaluate(
-        "D.log = []; D.settings.rueCycle = [1,2,3,4];"
-        " delete D.weekOverrides.w; save(); renderPlan();"
+        "D.log = []; delete D.weekOverrides.w; save(); renderPlan();"
     )
     pg.wait_for_timeout(250)
     empty = pg.evaluate(STATE_JS)
     assert empty["items"][0] == "Reading part 1", (
         f"the first item is not announced: {empty['items']}"
     )
-    assert empty["mode"].strip() == "One exercise per session.", empty["mode"]
+    assert "One exercise per session." in empty["mode"], empty["mode"]
     assert empty["override"] == "", f"the override did not clear: {empty['override']!r}"
     out["5_no_history"] = {"items": empty["items"], "mode": empty["mode"]}
 
-    # 6. With two exercises per session the preview shows two units of the
-    #    same skill, never one of each.
+    # 6. With two exercises per session the preview shows four sessions, each
+    #    with two units of the same skill, never one of each.
     queue = pg.evaluate(
         """() => {
             D.log = [];
@@ -136,6 +137,11 @@ with sync_playwright() as p:
                 value: sel.value,
                 options: [...sel.options].map(o => o.value),
                 preview: document.getElementById('wpQueuePreview').textContent,
+                rows: [...document.querySelectorAll('#wpQueuePreview .wp-next')].map(r => ({
+                    day: r.dataset.day,
+                    units: (r.dataset.units || '').split(',').filter(Boolean),
+                    text: r.textContent.trim(),
+                })),
                 mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
                 items: [...document.querySelectorAll('#planUpcomingPreview .up-row .badge')]
                     .map(el => el.textContent.trim()),
@@ -146,15 +152,13 @@ with sync_playwright() as p:
     assert queue["value"] == "2", f"the select did not reflect itemsPerSession: {queue}"
     assert queue["options"] == ["1", "2", "3", "4"], f"the select options are wrong: {queue}"
     assert "Next up:" in queue["preview"], f"the preview lost its label: {queue}"
-    labels = queue["preview"].split("Next up:")[1].strip().split(" · ")
-    assert labels == [
-        "Reading part 1",
-        "Reading part 2",
-        "Listening part 1",
-        "Listening part 2",
-        "Writing essay",
-        "Writing article",
-    ], f"the preview is not the next six units of the real sessions: {labels}"
+    assert [r["units"] for r in queue["rows"]] == [
+        ["rue:1", "rue:2"],
+        ["l:1", "l:2"],
+        ["w:Essay", "w:Article"],
+        ["sp:1", "sp:2"],
+    ], f"the preview is not the next four real sessions: {queue['rows']}"
+    assert all(" · " in r["text"] for r in queue["rows"]), queue["rows"]
     assert "two" in queue["mode"].lower() and "Reading" in queue["mode"], (
         f"the mode line does not describe two same-skill exercises: {queue['mode']!r}"
     )

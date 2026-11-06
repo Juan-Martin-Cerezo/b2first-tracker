@@ -41,11 +41,14 @@ SEED_JS = """() => {
     refreshAll();
 }"""
 
-# Today's automatic genre, then a manual override that differs from it.
+# Today's automatic genre, then a stored (legacy) manual override. The control
+# itself was removed in phase 100; the reset still has to clear old data.
 SET_OVERRIDE_JS = """() => {
     const auto = document.getElementById('wTipo') ? document.getElementById('wTipo').value : null;
     const chosen = auto === 'Report' ? 'Review' : 'Report';
-    setOv('w', chosen);
+    D.weekOverrides = D.weekOverrides || {};
+    D.weekOverrides.w = chosen;
+    save();
     refreshAll();
     return {auto: auto, override: chosen};
 }"""
@@ -56,8 +59,8 @@ STATE_JS = """() => {
     return {
         overrides: JSON.parse(JSON.stringify(D.weekOverrides || {})),
         wTipo: document.getElementById('wTipo') ? document.getElementById('wTipo').value : null,
-        ovW: document.getElementById('ovW') ? document.getElementById('ovW').value : null,
-        hint: document.getElementById('rotationHint') ? document.getElementById('rotationHint').textContent : '',
+        ovW: !!document.getElementById('ovW'),
+        hint: (document.querySelector('#rotationCardBody .rot-override') || {}).textContent || '',
         stored: stored ? (stored.weekOverrides || null) : null,
     };
 }"""
@@ -92,10 +95,12 @@ with sync_playwright() as p:
     assert before["overrides"] == {"w": picked["override"]}, (
         f"the override was not stored: {before}"
     )
-    assert before["wTipo"] == picked["override"], f"Today ignores the override: {before}"
-    assert before["ovW"] == picked["override"], f"the select ignores the override: {before}"
-    assert "Manual override: " + picked["override"] in before["hint"], (
-        f"the rotation hint does not name the override: {before}"
+    assert before["wTipo"] == picked["auto"], (
+        f"the removed override still drives Today: {before}"
+    )
+    assert before["ovW"] is False, f"the removed select is back in the DOM: {before}"
+    assert before["hint"] == "", (
+        f"the rotation card still paints an override: {before}"
     )
     assert before["stored"] == {"w": picked["override"]}, (
         f"the override did not reach localStorage: {before}"
@@ -123,8 +128,8 @@ with sync_playwright() as p:
     assert after["wTipo"] == picked["auto"], (
         f"Today still uses the removed override: {after}"
     )
-    assert after["ovW"] == picked["auto"], f"the select still shows the override: {after}"
-    assert "Manual override" not in after["hint"], f"the hint still names the override: {after}"
+    assert after["ovW"] is False, f"the removed select is back after reset: {after}"
+    assert after["hint"] == "", f"the hint still names the override: {after}"
     assert not after["stored"], f"the cleared overrides were not persisted: {after}"
     OUT["3_reset_clears"] = after
 
@@ -144,8 +149,8 @@ with sync_playwright() as p:
     assert restored["overrides"] == {"w": picked["override"]}, (
         f"Undo did not restore the override: {restored}"
     )
-    assert restored["wTipo"] == picked["override"], (
-        f"Undo did not repaint Today with the override: {restored}"
+    assert restored["wTipo"] == picked["auto"], (
+        f"the removed override drives Today again: {restored}"
     )
     OUT["4_undo_restores"] = {"undo": undo, "state": restored}
 

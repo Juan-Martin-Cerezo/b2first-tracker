@@ -95,11 +95,11 @@ with sync_playwright() as p:
     )
     OUT["2_two_per_session"] = pairs
 
-    # 3. A different wCycle rotates Writing through those genres and loops.
+    # 3. The cycles are product constants: an old stored wCycle is ignored.
     seed(pg, ("mon", "fri"), per=1, wcycle=["Article", "Report"])
     writing = pg.evaluate(
         """() => {
-            const cycles = queueCycles(D.settings);
+            const cycles = queueCycles();
             const out = [];
             for (let i = 0; i < 16; i++) {
                 const u = queueUnit(i, cycles);
@@ -109,8 +109,8 @@ with sync_playwright() as p:
         }"""
     )
     assert writing == [
-        "Writing article", "Writing report", "Writing article", "Writing report",
-    ], f"Writing did not follow wCycle: {writing}"
+        "Writing essay", "Writing article", "Writing report", "Writing review",
+    ], f"Writing did not follow the constant cycle: {writing}"
     OUT["3_wcycle"] = writing
 
     # 4. The queue wraps without gaps or repeats.
