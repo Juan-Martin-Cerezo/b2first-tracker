@@ -1,6 +1,6 @@
 """Phase 98: the word "Full" only appears when all the parts are in session.
 
-Plan, Today and "What comes next" are checked in the three rotation modes.
+Plan, Today and "What comes next" are checked in both rotation modes.
 A single exercise is named after its part ("Reading part 3"), and full-section
 is the only mode allowed to call a paper whole, because it really runs every
 part with the official total.
@@ -35,10 +35,10 @@ READ_JS = """() => ({
 })"""
 
 
-def seed(pg, mode="by-part", per=1, custom=None):
+def seed(pg, mode="by-part", per=1):
     schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in ALL_DAYS]
     pg.evaluate(
-        """([schedule, mode, per, custom]) => {
+        """([schedule, mode, per]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -57,21 +57,12 @@ def seed(pg, mode="by-part", per=1, custom=None):
             D.settings.lCycle = [1, 2, 3, 4];
             D.settings.spCycle = [1, 2, 3, 4];
             D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
-            D.settings.customPlan = custom || {};
             save();
             refreshAll();
         }""",
-        [schedule, mode, per, custom],
+        [schedule, mode, per],
     )
     pg.wait_for_timeout(300)
-
-
-PARTIAL_CUSTOM = {
-    "Mon": {"skill": "rue", "parts": "1,3", "min": 50},
-    "Tue": {"skill": "l", "parts": "2", "min": 20},
-    "Wed": {"skill": "w", "parts": "", "min": 40},
-    "Thu": {"skill": "sp", "parts": "2", "min": 30},
-}
 
 
 def assert_partial_labels(state, label):
@@ -115,13 +106,7 @@ with sync_playwright() as p:
     # 2. itemsPerSession=1 is the explicit phase requirement: still no "Full".
     assert all("Full" not in r["title"] for r in by_part["rows"]), by_part["rows"]
 
-    # 3. custom with partial parts: no "Full" either.
-    seed(pg, "custom", per=1, custom=PARTIAL_CUSTOM)
-    custom = pg.evaluate(READ_JS)
-    assert_partial_labels(custom, "custom")
-    OUT["3_custom"] = custom
-
-    # 4. full-section: every row is the whole paper, says "Full" and carries
+    # 3. full-section: every row is the whole paper, says "Full" and carries
     #    the official total with every part present.
     seed(pg, "full-section", per=1)
     full = pg.evaluate(READ_JS)

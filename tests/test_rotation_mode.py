@@ -1,9 +1,8 @@
 """Phase 86: the user chooses how the plan rotates.
 
 by-part keeps loose exercises/parts; full-section makes every session one
-whole paper with its official exam time; custom follows the user's day-by-day
-settings. Switching the mode repaints TODAY without a reload, and an invalid
-customPlan falls back to the default of that day instead of breaking.
+whole paper with its official exam time. Switching the mode repaints TODAY
+without a reload, and an unknown stored mode falls back to by-part.
 """
 import json
 from datetime import datetime
@@ -24,11 +23,11 @@ FOUR_DAYS = ["mon", "tue", "wed", "thu"]
 DAY_NUM = {"mon": 1, "tue": 2, "wed": 3, "thu": 4, "fri": 5, "sat": 6, "sun": 0}
 
 
-def seed_profile(pg, days=FOUR_DAYS, mode="by-part", custom=None):
+def seed_profile(pg, days=FOUR_DAYS, mode="by-part"):
     """The schedule is the plan's source of days; profile.days only seeds it."""
     schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in days]
     pg.evaluate(
-        """([days, mode, custom, schedule]) => {
+        """([days, mode, schedule]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -42,11 +41,10 @@ def seed_profile(pg, days=FOUR_DAYS, mode="by-part", custom=None):
             D.settings.schedule = schedule;
             D.settings.rotationMode = mode;
             D.settings.itemsPerSession = 1;
-            D.settings.customPlan = custom || {};
             save();
             refreshAll();
         }""",
-        [days, mode, custom, schedule],
+        [days, mode, schedule],
     )
     pg.wait_for_timeout(250)
 
@@ -114,22 +112,7 @@ with sync_playwright() as p:
     )
     OUT["2_full_section"] = full
 
-    # 3. custom: exactly what the user asked for, day by day.
-    custom = {
-        "Mon": {"skill": "rue", "parts": "1,3", "min": 50},
-        "Tue": {"skill": "l", "parts": "1-4", "min": 40},
-        "Wed": {"skill": "w", "parts": "", "min": 80},
-        "Thu": {"skill": "sp", "parts": "2", "min": 30},
-    }
-    seed_profile(pg, FOUR_DAYS, "custom", custom)
-    got = {s["day"]: s for s in pg.evaluate(PLAN_JS)}
-    assert got["Mon"]["type"] == "ue" and got["Mon"]["parts"] == [1, 3] and got["Mon"]["min"] == 50, got["Mon"]
-    assert got["Tue"]["type"] == "l" and got["Tue"]["parts"] == [1, 2, 3, 4] and got["Tue"]["min"] == 40, got["Tue"]
-    assert got["Wed"]["type"] == "w" and got["Wed"]["parts"] == [] and got["Wed"]["min"] == 80, got["Wed"]
-    assert got["Thu"]["type"] == "sp" and got["Thu"]["parts"] == [2] and got["Thu"]["min"] == 30, got["Thu"]
-    OUT["3_custom"] = got
-
-    # 4. Switching the mode repaints TODAY in place, with no reload.
+    # 3. Switching the mode repaints TODAY in place, with no reload.
     seed_profile(pg, ALL_DAYS, "by-part")
     before = pg.evaluate("document.getElementById('todaySession').innerText")
     pg.select_option("#wpRotationMode", "full-section")
@@ -143,36 +126,35 @@ with sync_playwright() as p:
     assert after["mode"] == "full-section", f"the select did not persist the mode: {after}"
     assert after["text"] != before, "TODAY did not repaint when the mode changed"
     assert "Full " in after["text"], f"TODAY is not showing a full paper: {after['text']}"
-    OUT["4_repaint"] = {"before": before, "after": after["text"]}
+    OUT["3_repaint"] = {"before": before, "after": after["text"]}
 
-    # 5. An invalid customPlan falls back to the default custom day, which is
-    #    the plan without any custom entries (custom kept its old behaviour).
-    seed_profile(pg, FOUR_DAYS, "custom", {})
-    baseline = {s["day"]: s for s in pg.evaluate(PLAN_JS)}
-    seed_profile(
-        pg,
-        FOUR_DAYS,
-        "custom",
-        {
-            "Mon": {"skill": "nope", "min": 30},          # bad skill
-            "Funday": {"skill": "rue", "min": 30},        # bad day
-            "Tue": {"skill": "rue", "min": 999},          # bad duration
-            "Wed": {"skill": "rue", "parts": "99", "min": 5},  # parts out of range
-            "Thu": {"skill": "sp", "parts": "2", "min": 30},   # valid
-        },
+    # 4. A stored unknown mode falls back to by-part instead of breaking.
+    seed_profile(pg, FOUR_DAYS, "by-part")
+    baseline = pg.evaluate(PLAN_JS)
+    legacy = pg.evaluate(
+        """() => {
+            D.settings.rotationMode = 'custom';
+            save();
+            refreshAll();
+            return {
+                normalized: normalizeRotationMode(D.settings.rotationMode),
+                select: document.getElementById('wpRotationMode').value,
+                plan: buildWeeklyPlan(D).slots.map(s => ({
+                    day: s.day, type: s.type, part: s.part,
+                    parts: s.parts || [], min: s.min,
+                    section: !!s.section, full: !!s.full,
+                    units: (s.units || []).map(u => u.skill),
+                    title: slotTitleText(s),
+                })),
+            };
+        }"""
     )
-    fallback = {s["day"]: s for s in pg.evaluate(PLAN_JS)}
-    for day in ("Mon", "Tue", "Wed"):
-        assert fallback[day]["type"] == baseline[day]["type"], (
-            f"{day} did not fall back to its default: {fallback[day]} vs {baseline[day]}"
-        )
-        assert fallback[day]["min"] == baseline[day]["min"], (
-            f"{day} kept an invalid duration: {fallback[day]}"
-        )
-    assert fallback["Thu"]["type"] == "sp" and fallback["Thu"]["parts"] == [2], (
-        f"the valid custom day did not survive: {fallback['Thu']}"
+    assert legacy["normalized"] == "by-part", f"unknown mode did not fall back: {legacy}"
+    assert legacy["select"] == "by-part", f"selector kept the unknown mode: {legacy}"
+    assert legacy["plan"] == baseline, (
+        f"an unknown mode did not behave as by-part: {legacy['plan']} vs {baseline}"
     )
-    OUT["5_invalid_custom"] = fallback
+    OUT["4_unknown_falls_back"] = legacy["normalized"]
 
     assert page_errors == [], f"page errors: {page_errors}"
     OUT["errors"] = page_errors

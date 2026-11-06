@@ -50,7 +50,6 @@ def seed(pg, offset):
                 {day:0,time:'09:00'},
             ];
             D.settings.rotationMode = 'full-section';
-            D.settings.customPlan = {};
             save();
             refreshAll();
         }""",

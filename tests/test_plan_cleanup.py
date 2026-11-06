@@ -179,7 +179,7 @@ with sync_playwright() as p:
         }"""
     )
     assert rotation["mode"] == "by-part", f"default rotation mode is not by-part: {rotation}"
-    assert rotation["options"] == ["by-part", "full-section", "custom"], (
+    assert rotation["options"] == ["by-part", "full-section"], (
         f"rotation modes are wrong: {rotation}"
     )
     assert rotation["help"].strip(), f"the mode has no one-line help: {rotation}"

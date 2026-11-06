@@ -2,8 +2,8 @@
 
 Changing the mode stores the previous rotation state and shows a discreet
 Undo for the life of the page; Undo restores the whole previous state and
-repaints. Reset to defaults puts rotationMode, the four cycles and customPlan
-back. The undo never survives a reload.
+repaints. Reset to defaults puts rotationMode and the four cycles back. The
+undo never survives a reload.
 """
 import json
 
@@ -26,7 +26,6 @@ SEED_JS = """() => {
     D.errs = [];
     D.sessionOffset = 0;
     D.settings.rotationMode = 'by-part';
-    D.settings.customPlan = {};
     D.settings.rueCycle = [1, 2, 3, 4, 5, 6, 7];
     D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
     D.settings.lCycle = [1, 2, 3, 4];
@@ -100,15 +99,14 @@ with sync_playwright() as p:
     )
     OUT["2b_no_cycle_editor"] = True
 
-    # 3. Reset to defaults returns the five keys and repaints the plan.
+    # 3. Reset to defaults returns the rotation settings and repaints the plan.
     pg.evaluate(
         """() => {
-            D.settings.rotationMode = 'custom';
+            D.settings.rotationMode = 'full-section';
             D.settings.rueCycle = [7, 1];
             D.settings.wCycle = ['Article'];
             D.settings.lCycle = [4];
             D.settings.spCycle = [3];
-            D.settings.customPlan = {Mon: {skill: 'rue', parts: '1', min: 30}};
             save();
             refreshAll();
         }"""
@@ -128,7 +126,6 @@ with sync_playwright() as p:
             wCycle: D.settings.wCycle,
             lCycle: D.settings.lCycle,
             spCycle: D.settings.spCycle,
-            customPlan: D.settings.customPlan,
             rows: document.querySelectorAll('#wpRows .wp-row').length,
             slots: buildWeeklyPlan(D).slots.length,
         })"""
@@ -138,7 +135,6 @@ with sync_playwright() as p:
     assert reset["wCycle"] == ["Essay", "Article", "Report", "Review", "Email"], f"reset left wCycle: {reset}"
     assert reset["lCycle"] == [1, 2, 3, 4], f"reset left lCycle: {reset}"
     assert reset["spCycle"] == [1, 2, 3, 4], f"reset left spCycle: {reset}"
-    assert reset["customPlan"] == {}, f"reset left customPlan: {reset}"
     assert reset["rows"] == reset["slots"], f"reset did not repaint the plan: {reset}"
     OUT["3_reset_defaults"] = reset
 

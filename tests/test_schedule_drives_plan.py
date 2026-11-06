@@ -59,7 +59,6 @@ def seed(pg, schedule, profile_days=None):
             D.sessionOffset = 0;
             D.settings.schedule = schedule;
             D.settings.rotationMode = 'by-part';
-            D.settings.customPlan = {};
             save();
             refreshAll();
         }""",
@@ -241,11 +240,10 @@ with sync_playwright() as p:
     for mode, expected in (
         ("by-part", ["Mon", "Wed", "Sat"]),
         ("full-section", ["Mon", "Wed", "Sat"]),
-        ("custom", ["Mon", "Wed", "Sat"]),
     ):
         days = mode_days(pg, mode)
         assert days == expected, f"{mode} did not use the schedule days: {days}"
-    OUT["7_modes"] = ["by-part", "full-section", "custom"]
+    OUT["7_modes"] = ["by-part", "full-section"]
 
     assert page_errors == [], f"page errors: {page_errors}"
     OUT["errors"] = page_errors

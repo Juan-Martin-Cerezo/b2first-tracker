@@ -945,13 +945,6 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .wp-rotation-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .wp-rotation-row select{max-width:260px}
-.wp-custom-rows{display:flex;flex-direction:column;gap:6px}
-.wp-custom-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;border-radius:var(--r-panel);background:var(--surface-2)}
-.wp-custom-row .wp-custom-day{font-weight:600;min-width:38px}
-.wp-custom-row .wp-custom-skill,.wp-custom-row .wp-custom-parts,.wp-custom-row .wp-custom-min{min-height:44px;min-width:44px}
-.wp-custom-row .wp-custom-parts{max-width:120px}
-.wp-custom-row .wp-custom-min{max-width:80px}
-.wp-custom-row .wp-custom-err{flex-basis:100%;color:var(--bad-text);font-size:var(--fs-xs)}
 
 /* today session block (same data as the PLAN row) */
 .ts-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2)}
@@ -3229,7 +3222,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <select id="wpRotationMode" onchange="onRotationModeChange(this.value)">
                 <option value="by-part" data-i18n="plan_rotation_by_part">By part</option>
                 <option value="full-section" data-i18n="plan_rotation_full_section">Full paper each session</option>
-                <option value="custom" data-i18n="plan_rotation_custom">Custom</option>
               </select>
               <button type="button" class="btn sm gray" id="wpResetBtn" onclick="resetPlanningDefaults()" data-i18n="plan_reset_btn">Reset to defaults</button>
               <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none" data-i18n="plan_undo_btn">Undo</button>
@@ -3246,12 +3238,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
             <div class="sub" id="wpQueuePreview" style="margin-top:6px"></div>
           </div>
-          <div id="wpCustomEditor" style="margin-top:10px"></div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
-          <details id="wpWhy" style="margin-top:12px">
-            <summary data-i18n="plan_why">Why this?</summary>
-            <div id="wpWhyBody" style="font-size:14px;color:var(--txt-2);margin-top:8px;display:flex;flex-direction:column;gap:4px"></div>
-          </details>
         </div>
 
         <!-- Session Schedules (immediately after the week plan) -->
@@ -3951,7 +3938,6 @@ const I18N={
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
     plan_week_sub:'Your week follows your session days and the skill rotation. A refresh never moves it.',
-    plan_why:'Why this?',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
     plan_session_day:'Session {n} — Day',
@@ -3974,34 +3960,23 @@ const I18N={
     plan_reset_hint:'You can undo this right after with Undo.',
     plan_reset_apply:'Reset',
     plan_reset_none_value:'none',
-    plan_reset_days:'{n} day(s)',
     plan_reset_field_rotationMode:'Rotation',
     plan_reset_field_rueCycle:'R&UoE cycle (parts)',
     plan_reset_field_wCycle:'Writing cycle (genres)',
     plan_reset_field_lCycle:'Listening cycle (parts)',
     plan_reset_field_spCycle:'Speaking cycle (parts)',
-    plan_reset_field_customPlan:'Custom plan',
     plan_reset_field_weekOverrides:'Manual overrides this week',
     plan_rotation_by_part:'By part',
     plan_rotation_full_section:'Full paper each session',
-    plan_rotation_custom:'Custom',
     plan_help_by_part:'One skill per session. Weeks alternate Reading & UoE + Listening with Writing + Speaking; your session days split the pair.',
     plan_week_block_summary:'This week: {now} — next week: {next}',
     plan_week_block_days:'This week: {days} — next week: {next}',
     plan_week_block_day:'{day} · {skill}',
     plan_help_full:'Every session is one whole paper with its official exam time.',
-    plan_help_custom:'You choose the skill, parts and duration of every day below.',
     plan_mode_one:'One exercise per session.',
     plan_mode_many:'{n} {skill} exercises per session, all from the same skill.',
     plan_mode_full:'A whole paper per session.',
-    plan_mode_custom:'Your custom plan, day by day.',
-    plan_custom_skill:'Skill for {day}',
-    plan_custom_parts:'Parts for {day}',
-    plan_custom_min:'Minutes for {day}',
-    plan_custom_parts_error:'Parts must be between 1 and {max}.',
-    plan_custom_reason:'Your custom plan for {day}.',
     plan_full_reason:'One whole paper: {paper} (official {min} min).',
-    plan_why_queue:'Position from {n} logged sessions plus a shift of {offset}. Weeks alternate: Reading & UoE + Listening, then Writing + Speaking.',
     plan_items_per_session:'Exercises per session',
     plan_queue_next:'Next up:',
     plan_queue_start:'Starting at your first planned session.',
@@ -4742,7 +4717,6 @@ const I18N={
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
     plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Un refresh no la mueve.',
-    plan_why:'¿Por qué esto?',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
     plan_session_day:'Sesión {n} — Día',
@@ -4765,34 +4739,23 @@ const I18N={
     plan_reset_hint:'Podés deshacerlo enseguida con Deshacer.',
     plan_reset_apply:'Reiniciar',
     plan_reset_none_value:'ninguno',
-    plan_reset_days:'{n} día(s)',
     plan_reset_field_rotationMode:'Rotación',
     plan_reset_field_rueCycle:'Ciclo R&UoE (partes)',
     plan_reset_field_wCycle:'Ciclo de Writing (géneros)',
     plan_reset_field_lCycle:'Ciclo de Listening (partes)',
     plan_reset_field_spCycle:'Ciclo de Speaking (partes)',
-    plan_reset_field_customPlan:'Plan personalizado',
     plan_reset_field_weekOverrides:'Ajustes manuales de esta semana',
     plan_rotation_by_part:'Por parte',
     plan_rotation_full_section:'Paper completo por sesión',
-    plan_rotation_custom:'Personalizado',
     plan_help_by_part:'Una habilidad por sesión. Las semanas alternan Reading & UoE + Listening con Writing + Speaking; tus días reparten el par.',
     plan_week_block_summary:'Esta semana: {now} — la próxima: {next}',
     plan_week_block_days:'Esta semana: {days} — la próxima: {next}',
     plan_week_block_day:'{day} · {skill}',
     plan_help_full:'Cada sesión es un paper completo con su tiempo oficial de examen.',
-    plan_help_custom:'Elegís la habilidad, las partes y la duración de cada día abajo.',
     plan_mode_one:'Un ejercicio por sesión.',
     plan_mode_many:'{n} ejercicios de {skill} por sesión, todos de la misma habilidad.',
     plan_mode_full:'Un paper completo por sesión.',
-    plan_mode_custom:'Tu plan personalizado, día por día.',
-    plan_custom_skill:'Habilidad para {day}',
-    plan_custom_parts:'Partes para {day}',
-    plan_custom_min:'Minutos para {day}',
-    plan_custom_parts_error:'Las partes deben estar entre 1 y {max}.',
-    plan_custom_reason:'Tu plan personalizado para {day}.',
     plan_full_reason:'Un paper completo: {paper} (oficial {min} min).',
-    plan_why_queue:'Posición según {n} sesiones registradas más un corrimiento de {offset}. Las semanas alternan: Reading & UoE + Listening, después Writing + Speaking.',
     plan_items_per_session:'Ejercicios por sesión',
     plan_queue_next:'A continuación:',
     plan_queue_start:'Empieza por tu primera sesión planificada.',
@@ -5244,7 +5207,6 @@ const SETTINGS_DEFAULT={
   spCycle:QUEUE_CYCLES.sp.slice(),
   rotationMode:'by-part',
   itemsPerSession:1,
-  customPlan:{},
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
 /* =====================================================================
@@ -6441,6 +6403,8 @@ function load(){
     // user) and must not be synced. Drop anything a legacy document carries.
     delete settings.aiKey;
     delete settings.byo;
+    // The custom rotation mode is gone: a legacy document cannot bring it back.
+    delete settings.customPlan;
     return {
       log: Array.isArray(d.log) ? d.log : [],
       errs: Array.isArray(d.errs) ? d.errs : [],
@@ -6466,6 +6430,8 @@ function load(){
 }
 function save(){
   D.updated_at=Date.now();
+  // Old documents may still carry the settings of the removed custom mode.
+  if(D.settings)delete D.settings.customPlan;
   // The undo snapshot is a one-step, in-memory convenience: it must never
   // reach localStorage or the server, so it is stripped just for the write.
   const undo=D.settingsUndo;
@@ -6549,6 +6515,7 @@ function syncPull(){
           const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
           delete mergedSettings.aiKey;
           delete mergedSettings.byo;
+          delete mergedSettings.customPlan;
           D = {
             log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
             errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
@@ -11837,14 +11804,19 @@ function saveUE(){
   if(partVal==='all'||partVal==='full'){
     log({type:'rue',book,ref:ref||'Full Sprint (Parts 1-7)',correct,total:total||52,min});
   }else{
-    log({type:'ue',part:+partVal,book,ref,correct,total,min});
+    const entry={type:'ue',part:+partVal,book,ref,correct,total,min};
+    const unit=takePlanUnit('rue',+partVal);if(unit)entry.unit=unit;
+    log(entry);
   }
   document.getElementById('ueOk').value=0;document.getElementById('ueRef').value='';
 }
 function saveW(){
   const score=+document.getElementById('wScore').value;
   if(!score){alert(t('alert_set_score'));return}
-  log({type:'w',kind:document.getElementById('wTipo').value,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length,lex:{pv:+document.getElementById('wPv').value||0,col:+document.getElementById('wCol').value||0}});
+  const kind=document.getElementById('wTipo').value;
+  const entry={type:'w',kind,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length,lex:{pv:+document.getElementById('wPv').value||0,col:+document.getElementById('wCol').value||0}};
+  const unit=takePlanUnit('w',kind);if(unit)entry.unit=unit;
+  log(entry);
   document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
   document.getElementById('wPv').value=0;document.getElementById('wCol').value=0;
   document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
@@ -11869,7 +11841,9 @@ function saveL(){
   if(partVal==='all'){
     log({type:'l',book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:30,p2:+document.getElementById('lP2').value,min});
   }else{
-    log({type:'lp',part:+partVal,book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:L_PART_Q[partVal]||10,min});
+    const entry={type:'lp',part:+partVal,book:document.getElementById('lFuente').value,ref:document.getElementById('lRef').value,correct,total:L_PART_Q[partVal]||10,min};
+    const unit=takePlanUnit('l',+partVal);if(unit)entry.unit=unit;
+    log(entry);
   }
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
@@ -11945,10 +11919,14 @@ function saveSP(report){
         }
       };
     });
+    const unit=takePlanUnit('sp',entry.part);if(unit)entry.unit=unit;
     log(entry);
     return entry;
   }
-  log({type:'sp',part:+document.getElementById('spPart').value,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0});
+  const part=+document.getElementById('spPart').value;
+  const entry={type:'sp',part,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0};
+  const unit=takePlanUnit('sp',part);if(unit)entry.unit=unit;
+  log(entry);
 }
 function saveRUE(){
   const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
@@ -12519,7 +12497,7 @@ function planLimitHaveCode(){
    buildWeeklyPlan(D) is pure: it mutates neither D nor the DOM. */
 const PLAN_DAY_MAP={mon:'Mon',tue:'Tue',wed:'Wed',thu:'Thu',fri:'Fri',sat:'Sat',sun:'Sun'};
 const PLAN_DAY_ORDER=['mon','tue','wed','thu','fri','sat','sun'];
-const ROTATION_MODES=['by-part','full-section','custom'];
+const ROTATION_MODES=['by-part','full-section'];
 /* Per-unit durations in minutes, matching the official B2 First timing:
    R&UE=75, Listening=40 (transfer included), Writing=80, Speaking=14.
    The totals must keep closing; see tests/test_unit_minutes.py. */
@@ -12532,8 +12510,6 @@ const UNIT_MIN={
 const PAPER_PARTS={ue:[1,2,3,4,5,6,7],l:[1,2,3,4],w:[1,2],sp:[1,2,3,4]};
 const FULL_SECTION=[['ue',75],['l',40],['w',80],['sp',14]];
 const FULL_SECTION_LABEL={ue:'Full R&UE',l:'Full Listening',w:'Full Writing',sp:'Full Speaking'};
-const CUSTOM_SKILLS=['rue','l','w','sp','mock'];
-const CUSTOM_SKILL_DEFAULT_MIN={rue:75,l:40,w:80,sp:14,mock:180};
 function normalizeRotationMode(v){
   return ROTATION_MODES.indexOf(v)>=0?v:'by-part';
 }
@@ -12543,74 +12519,6 @@ function planDayLabel(key){
 function planDayFull(day){
   const i=PLAN_DAY_ORDER.indexOf(String(day||'').toLowerCase());
   return i>=0?dayFull(i+1):String(day||'');
-}
-function customSkillPartsMax(skill){
-  return skill==='rue'?7:(skill==='l'||skill==='sp')?4:0;
-}
-function parseCustomParts(raw,max){
-  const out=[];
-  if(max<=0||raw==null)return out;
-  const add=n=>{if(Number.isInteger(n)&&n>=1&&n<=max&&out.indexOf(n)<0)out.push(n)};
-  if(Array.isArray(raw)){
-    raw.forEach(v=>add(Number(v)));
-  }else{
-    String(raw).split(',').forEach(chunk=>{
-      const range=String(chunk).trim().match(/^(\d+)\s*-\s*(\d+)$/);
-      if(range){
-        let a=Number(range[1]),b=Number(range[2]);
-        if(a>b){const t=a;a=b;b=t}
-        for(let n=a;n<=b;n++)add(n);
-      }else{
-        add(Number(String(chunk).trim()));
-      }
-    });
-  }
-  return out.sort((a,b)=>a-b);
-}
-/* Tokens parseCustomParts would silently drop: the editor shows them inline
-   so the user sees why that day fell back instead of guessing. */
-function customPartsInvalid(raw,max){
-  if(max<=0||raw==null||String(raw).trim()==='')return [];
-  const bad=[];
-  String(raw).split(',').forEach(chunk=>{
-    const txt=String(chunk).trim();
-    if(!txt)return;
-    const range=txt.match(/^(\d+)\s*-\s*(\d+)$/);
-    if(range){
-      const a=Number(range[1]),b=Number(range[2]);
-      for(let n=Math.min(a,b);n<=Math.max(a,b);n++){
-        if(n<1||n>max){bad.push(txt);break}
-      }
-      return;
-    }
-    const n=Number(txt);
-    if(!Number.isInteger(n)||n<1||n>max)bad.push(txt);
-  });
-  return bad;
-}
-/* D.settings.customPlan is user input: only well-formed entries survive.
-   A bad day, skill, duration or parts list is ignored, and that day then
-   falls back to the plan buildWeeklyPlan would have produced anyway. */
-function validateCustomPlan(raw){
-  const out={};
-  if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
-  Object.keys(raw).forEach(key=>{
-    const day=planDayLabel(key);
-    if(!day)return;
-    const v=raw[key];
-    if(!v||typeof v!=='object'||Array.isArray(v))return;
-    const skill=String(v.skill||'').toLowerCase();
-    if(CUSTOM_SKILLS.indexOf(skill)<0)return;
-    const min=Math.round(Number(v.min));
-    if(!isFinite(min)||min<5||min>180)return;
-    const max=customSkillPartsMax(skill);
-    const parts=parseCustomParts(v.parts,max);
-    // A parts list that was given but has nothing inside the paper's range
-    // makes the whole entry invalid, so the day falls back to its default.
-    if(max>0&&v.parts!=null&&String(v.parts).trim()!==''&&!parts.length)return;
-    out[day]={skill:skill,parts:parts,min:min};
-  });
-  return out;
 }
 function rotateByOffset(arr,offset){
   const n=arr.length;
@@ -12710,13 +12618,12 @@ function unitMinutes(u){
   const table=UNIT_MIN[u.skill]||{};
   return Number(table[u.value])||0;
 }
-/* Minutes for a non-queue slot built by the weekly planner (custom fallback
-   included): sum the parts it really contains, or the whole paper when it
-   contains all of them. */
+/* Minutes for a non-queue slot built by the weekly planner: sum the parts it
+   really contains, or the whole paper when it contains all of them. */
 function slotTableMinutes(sl){
   if(!sl)return 0;
   const type=sl.type==='ue'?'rue':sl.type;
-  if(type==='mock')return CUSTOM_SKILL_DEFAULT_MIN.mock;
+  if(type==='mock')return 180;
   if(type==='w')return UNIT_MIN.w.Essay;
   const table=UNIT_MIN[type]||{};
   const parts=slotParts(sl);
@@ -12798,18 +12705,12 @@ function planNextSessions(count){
   return out;
 }
 /* The next rows of the real plan, for the "What comes next" card: by-part
-   units with the day of their session, whole papers for full-section, and the
-   user's own day-by-day configuration for custom. */
+   units with the day of their session, whole papers for full-section. */
 function planUpcomingRows(count){
   const s=(D&&D.settings)||{};
   const mode=normalizeRotationMode(s.rotationMode);
   const days=getSessionDays();
   if(!days.length)return [];
-  if(mode==='custom'){
-    return buildWeeklyPlan(D).slots.map(sl=>({
-      day:sl.day,time:sl.time||'',label:slotTitleText(sl),
-      skill:sl.type==='ue'?'rue':sl.type}));
-  }
   const offset=Math.trunc(Number(D.sessionOffset)||0);
   if(mode==='full-section'){
     const out=[];
@@ -12874,7 +12775,6 @@ function planModeLine(){
   const s=(D&&D.settings)||{};
   const mode=normalizeRotationMode(s.rotationMode);
   if(mode==='full-section')return t('plan_mode_full');
-  if(mode==='custom')return t('plan_mode_custom');
   const n=normalizeItemsPerSession(s.itemsPerSession);
   let detail=t('plan_mode_one');
   if(n!==1){
@@ -12935,13 +12835,6 @@ function slotTitleText(sl){
   if(sl.section)return slotLabel(sl)+' ('+sl.min+' min)';
   return slotPartText(sl)+slotLabel(sl)+' · '+sl.min+' min'+(sl.timed?' · timed (exam mode)':'');
 }
-function customSlotFor(day,c){
-  const type=c.skill==='rue'?'ue':c.skill;
-  const parts=c.parts.slice();
-  return {part:parts.length===1?parts[0]:null,parts:parts,type:type,min:c.min,timed:false,
-    full:parts.length===0&&type!=='mock',
-    reason:t('plan_custom_reason',{day:day})};
-}
 /* ---------- HONEST STUDIO COPY ----------
    Every Today studio is painted from the plan row the user will really do.
    A partial session names the parts it contains and the table's minutes; only
@@ -12989,15 +12882,14 @@ function nextSectionSlotForSkill(type){
   return null;
 }
 /* The session a studio stands for: the first matching row of the real week,
-   then (by-part) that skill's next unit in the queue. Custom has no hidden
-   queue, so a skill the user did not schedule stays honestly empty. */
+   then that skill's next unit in the queue (or the next whole paper when
+   full-section is active). */
 function studioSlotFor(skill,plan){
   const p=plan||buildWeeklyPlan(D);
   const match=((p&&p.slots)||[]).filter(sl=>studioSkillOfType(sl.type)===skill);
   if(match.length)return match[0];
   const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
   if(mode==='full-section')return nextSectionSlotForSkill(skill==='rue'?'ue':skill);
-  if(mode==='custom')return null;
   return nextUnitSlotForSkill(skill);
 }
 function studioHeadline(sl,skill){
@@ -13141,6 +13033,11 @@ function paintSpeakingStudio(sl){
   studioSet('st4Dur',sl?min+' MIN':'—');
   studioSet('st4MockTitle','🎙️ '+title);
   studioSet('st4MockTime',sl?min+':00 · '+studioPartsPhrase(sl):'—');
+  const partEl=document.getElementById('spPart');
+  if(partEl&&!whole){
+    const parts=studioPartNumbers(sl,'sp');
+    if(parts.length)partEl.value=String(parts[0]);
+  }
 }
 function paintSessionStudios(plan){
   const p=plan||buildWeeklyPlan(D);
@@ -13295,9 +13192,9 @@ function buildWeeklyPlan(D){
   // Duration is the table's, never a global slotMin. Applied after the shape
   // is fixed so every fallback slot is timed like the work it contains.
   ordered.forEach(sl=>{sl.min=slotTableMinutes(sl)});
-  /* The by-part engine above is the default plan. The rotation modes below
-     reuse it as their fallback and only change the shape of the session list,
-     so TODAY always renders whatever this function returned. */
+  /* The by-part engine above is the default plan. full-section reuses it as
+     its fallback and only changes the shape of the session list, so TODAY
+     always renders whatever this function returned. */
   const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
   let slots;
   if(rotationMode==='full-section'){
@@ -13306,19 +13203,6 @@ function buildWeeklyPlan(D){
       const sec=FULL_SECTION[i%FULL_SECTION.length];
       return {part:null,parts:(PAPER_PARTS[sec[0]]||[]).slice(),type:sec[0],min:sec[1],timed:false,section:true,full:true,
         reason:t('plan_full_reason',{paper:FULL_SECTION_LABEL[sec[0]],min:sec[1]})};
-    });
-    slots=rotateByOffset(slots,offset);
-  }else if(rotationMode==='custom'){
-    const cp=validateCustomPlan(s.customPlan);
-    const base=DAYS.map((day,i)=>ordered.length?ordered[i%ordered.length]:null);
-    slots=DAYS.map((day,i)=>{
-      const c=cp[day];
-      if(c)return customSlotFor(day,c);
-      const b=base[i];
-      if(b)return {part:b.part,parts:Array.isArray(b.parts)?b.parts.slice():(b.part!=null?[b.part]:[]),
-        type:b.type,min:b.min,timed:!!b.timed,reason:b.reason};
-      return {part:null,parts:[],type:'ue',min:slotTableMinutes({part:null,type:'ue'}),timed:false,
-        reason:t('plan_custom_reason',{day:day})};
     });
     slots=rotateByOffset(slots,offset);
   }else{
@@ -13336,9 +13220,6 @@ function buildWeeklyPlan(D){
 let WEEK_PLAN=null;
 let SETTINGS_UNDO=null;
 let PLANNING_EDIT_BASE=null;
-/* Raw editor rows with parts the validator would drop, kept only so the
-   inline error can show what the user actually typed. Never persisted. */
-let CUSTOM_PLAN_DRAFT={};
 function lpName(p){return {1:'Short extracts',2:'Sentence completion',3:'Multiple matching',4:'Multiple choice (long)'}[p]||'general'}
 function planningSnapshot(){
   const s=D.settings||{};
@@ -13348,7 +13229,6 @@ function planningSnapshot(){
     wCycle:(s.wCycle||SETTINGS_DEFAULT.wCycle).slice(),
     lCycle:(s.lCycle||SETTINGS_DEFAULT.lCycle).slice(),
     spCycle:(s.spCycle||SETTINGS_DEFAULT.spCycle).slice(),
-    customPlan:JSON.parse(JSON.stringify(s.customPlan||{})),
     weekOverrides:JSON.parse(JSON.stringify(D.weekOverrides||{}))
   };
 }
@@ -13371,13 +13251,11 @@ function commitPlanningEdit(){
 function applyPlanningSnapshot(snap){
   if(!snap)return;
   const s=D.settings;
-  CUSTOM_PLAN_DRAFT={};
   s.rotationMode=normalizeRotationMode(snap.rotationMode);
   s.rueCycle=(snap.rueCycle||SETTINGS_DEFAULT.rueCycle).slice();
   s.wCycle=(snap.wCycle||SETTINGS_DEFAULT.wCycle).slice();
   s.lCycle=(snap.lCycle||SETTINGS_DEFAULT.lCycle).slice();
   s.spCycle=(snap.spCycle||SETTINGS_DEFAULT.spCycle).slice();
-  s.customPlan=validateCustomPlan(snap.customPlan||{});
   D.weekOverrides=JSON.parse(JSON.stringify(snap.weekOverrides||{}));
 }
 function undoPlanningChange(){
@@ -13398,10 +13276,6 @@ function planResetValueText(field,v){
     const mode=normalizeRotationMode(v);
     return t('plan_rotation_'+mode.split('-').join('_'));
   }
-  if(field==='customPlan'){
-    const n=Object.keys(validateCustomPlan(v||{})).length;
-    return n?t('plan_reset_days',{n:n}):t('plan_reset_none_value');
-  }
   if(field==='weekOverrides'){
     const list=Object.keys(v||{}).map(k=>v[k]).filter(x=>x!==undefined&&x!==null&&x!=='');
     return list.length?list.join(', '):t('plan_reset_none_value');
@@ -13411,11 +13285,11 @@ function planResetValueText(field,v){
 }
 function planResetChanges(){
   const s=D.settings||{};
-  const fields=['rotationMode','rueCycle','wCycle','lCycle','spCycle','customPlan','weekOverrides'];
+  const fields=['rotationMode','rueCycle','wCycle','lCycle','spCycle','weekOverrides'];
   const out=[];
   fields.forEach(field=>{
     const cur=planningSnapshot()[field];
-    const def=(field==='customPlan'||field==='weekOverrides')?{}:(Array.isArray(SETTINGS_DEFAULT[field])?SETTINGS_DEFAULT[field].slice():SETTINGS_DEFAULT[field]);
+    const def=(field==='weekOverrides')?{}:(Array.isArray(SETTINGS_DEFAULT[field])?SETTINGS_DEFAULT[field].slice():SETTINGS_DEFAULT[field]);
     if(JSON.stringify(cur)===JSON.stringify(def))return;
     out.push({field:field,label:t('plan_reset_field_'+field),
       from:planResetValueText(field,cur),to:planResetValueText(field,def)});
@@ -13459,14 +13333,12 @@ function planResetFocusables(){
 function applyPlanningReset(){
   closePlanResetDialog();
   beginPlanningEdit();
-  CUSTOM_PLAN_DRAFT={};
   const s=D.settings;
   s.rotationMode=SETTINGS_DEFAULT.rotationMode;
   s.rueCycle=SETTINGS_DEFAULT.rueCycle.slice();
   s.wCycle=SETTINGS_DEFAULT.wCycle.slice();
   s.lCycle=SETTINGS_DEFAULT.lCycle.slice();
   s.spCycle=SETTINGS_DEFAULT.spCycle.slice();
-  s.customPlan={};
   D.weekOverrides={};
   commitPlanningEdit();
 }
@@ -13506,9 +13378,7 @@ function renderRotationControls(plan){
   const help=document.getElementById('wpRotationHelp');
   if(help)help.textContent=mode==='full-section'
     ?t('plan_help_full')
-    :mode==='custom'
-      ?t('plan_help_custom')
-      :t('plan_help_by_part');
+    :t('plan_help_by_part');
   const items=document.getElementById('wpItemsPerSession');
   if(items)items.value=String(normalizeItemsPerSession(D.settings.itemsPerSession));
   const blockLine=document.getElementById('wpWeekBlock');
@@ -13538,64 +13408,6 @@ function onItemsPerSessionChange(v){
   D.settings.itemsPerSession=normalizeItemsPerSession(v);
   save();
   refreshAll();
-}
-function customSkillOfSlot(sl){
-  if(!sl)return 'rue';
-  return sl.type==='ue'?'rue':sl.type==='mock'?'mock':sl.type;
-}
-function renderCustomPlanEditor(plan){
-  const box=document.getElementById('wpCustomEditor');
-  if(!box)return;
-  if(normalizeRotationMode(D.settings.rotationMode)!=='custom'||!plan||!plan.slots||!plan.slots.length){
-    box.innerHTML='';
-    return;
-  }
-  const cp=validateCustomPlan(D.settings.customPlan);
-  const days=[];
-  plan.slots.forEach(sl=>{if(days.indexOf(sl.day)<0)days.push(sl.day)});
-  const skills=[['rue','R&UE'],['l','Listening'],['w','Writing'],['sp','Speaking'],['mock','Mock']];
-  box.innerHTML=`<div class="sub" style="margin-bottom:6px"><b>Custom plan</b> — one row per chosen day.</div>
-    <div class="wp-custom-rows">${days.map(day=>{
-      const sl=plan.slots.filter(x=>x.day===day)[0]||null;
-      const fallback=cp[day]||{skill:customSkillOfSlot(sl),parts:slotParts(sl),min:sl?sl.min:CUSTOM_SKILL_DEFAULT_MIN.rue};
-      const c=CUSTOM_PLAN_DRAFT[day]||fallback;
-      const max=customSkillPartsMax(c.skill);
-      const partsTxt=Array.isArray(c.parts)?c.parts.join(','):String(c.parts||'');
-      const bad=customPartsInvalid(partsTxt,max);
-      const errId='wpCustomErr-'+day;
-      const dayName=planDayFull(day);
-      return `<div class="wp-custom-row" data-day="${day}">
-        <span class="wp-custom-day">${day}</span>
-        <select class="wp-custom-skill" aria-label="${esc(t('plan_custom_skill',{day:dayName}))}" onchange="onCustomPlanField()">${skills.map(([v,l])=>`<option value="${v}" ${c.skill===v?'selected':''}>${l}</option>`).join('')}</select>
-        <input type="text" class="wp-custom-parts" aria-label="${esc(t('plan_custom_parts',{day:dayName}))}" aria-invalid="${bad.length?'true':'false'}"${bad.length?` aria-describedby="${errId}"`:''} value="${esc(partsTxt)}" placeholder="${max===7?'1,3 or 1-7':max?'1-4':'—'}" ${max?'':'disabled'} onchange="onCustomPlanField()">
-        <input type="number" class="wp-custom-min" aria-label="${esc(t('plan_custom_min',{day:dayName}))}" min="5" max="180" value="${c.min}" onchange="onCustomPlanField()">
-        <span class="muted t-xs">min</span>
-        ${bad.length?`<span class="wp-custom-err" id="${errId}" role="alert">${esc(t('plan_custom_parts_error',{max:max}))}</span>`:''}
-      </div>`;
-    }).join('')}</div>`;
-}
-function onCustomPlanField(){
-  beginPlanningEdit();
-  const out={};
-  document.querySelectorAll('#wpCustomEditor .wp-custom-row').forEach(row=>{
-    const day=row.dataset.day;
-    const skillEl=row.querySelector('.wp-custom-skill');
-    const partsEl=row.querySelector('.wp-custom-parts');
-    const minEl=row.querySelector('.wp-custom-min');
-    const rowData={
-      skill:skillEl?skillEl.value:'rue',
-      parts:partsEl?partsEl.value:'',
-      min:minEl?Number(minEl.value):0
-    };
-    out[day]=rowData;
-    if(customPartsInvalid(rowData.parts,customSkillPartsMax(rowData.skill)).length){
-      CUSTOM_PLAN_DRAFT[day]=rowData;
-    }else{
-      delete CUSTOM_PLAN_DRAFT[day];
-    }
-  });
-  D.settings.customPlan=validateCustomPlan(out);
-  commitPlanningEdit();
 }
 /* The summary line is derived from the slots buildWeeklyPlan already produced:
    total minutes and the minutes per skill, nothing estimated. */
@@ -13633,22 +13445,16 @@ function renderWeeklyPlan(){
   WEEK_PLAN=plan;
   renderPlanSummary(plan);
   const rows=document.getElementById('wpRows');
-  const whyBox=document.getElementById('wpWhy');
-  const why=document.getElementById('wpWhyBody');
   renderRotationControls(plan);
-  renderCustomPlanEditor(plan);
   if(plan.needDiag){
     rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t('plan_need_diag')}</div>
       <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">${t('plan_go_diag')}</button></div>`;
-    if(whyBox)whyBox.style.display='none';
     return;
   }
   if(plan.noSessionDays){
     rows.innerHTML=`<div class="empty" id="wpNoSessionDays">${t('plan_no_session_days')}</div>`;
-    if(whyBox)whyBox.style.display='none';
     return;
   }
-  if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
     return `<div class="wp-row" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
       <div class="wp-main">
@@ -13659,24 +13465,6 @@ function renderWeeklyPlan(){
       <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
     </div>`;
   }).join('');
-  const src=plan.source||{};
-  if(normalizeRotationMode(D.settings.rotationMode)==='by-part'){
-    const s=D.settings||{};
-    why.innerHTML=`<div>· ${esc(t('plan_why_queue',{
-      n:queueLogCount(s,D.log),
-      offset:Math.trunc(Number(D.sessionOffset)||0)}))}</div>`;
-    if(whyBox)whyBox.style.display='';
-    return;
-  }
-  const diagTxt=(src.diag&&src.diag.parts&&src.diag.parts.length)?src.diag.parts.map(p=>`Part ${p.part}: ${p.ok}/${p.n} correct`).join(' · '):'no diagnostic';
-  const taxTxt=Object.keys(src.tax||{}).map(k=>`${k}: ${src.tax[k]}`).join(' · ');
-  if(why)why.innerHTML=`<div>· <b>Diagnostic</b> (parts + correct answers): ${esc(diagTxt)}</div>
-    <div>· <b>Error taxonomy counts</b>: ${esc(taxTxt)}</div>
-    <div>· <b>Sessions in the last 14 days</b>: ${src.sessions14}</div>
-    <div>· <b>weekGoal</b>: ${src.weekGoal} slots`+(src.profile?` (from your intake: ${src.profile.hoursWeek}h/week)`:'')+`</div>`;
-  if(why&&src.profile){
-    why.innerHTML+=`<div>· <b>Intake</b>: exam ${esc(src.profile.examDate||'not set')} · target ${esc(src.profile.targetGrade||'-')} · days ${esc((src.profile.days||[]).join(', ')||'-')} · struggles ${esc((src.profile.struggles||[]).join(', ')||'none')}</div>`;
-  }
 }
 function regenWeeklyPlan(){renderWeeklyPlan()}
 function wpStart(i){
@@ -15027,21 +14815,67 @@ function startQueueUnit(u){
   else if(u.type==='sp')goToPartFilter(u.part,'sp');
   else goToPartFilter(u.part,'ue');
 }
+/* The unit a Today Start opened. The studio is painted with exactly this
+   exercise and the minutes the plan gives it; the save that follows tags its
+   row with the same unit, so the log keeps what was planned and not only what
+   the user happened to type. Cleared once the unit is logged. */
+let PLAN_UNIT_START=null;
+const UNIT_STUDIO={rue:'mon-a',l:'fri-a',w:'mon-b',sp:'fri-b'};
+const UNIT_STUDIO_CARD={rue:'studioMonA',l:'studioFriA',w:'studioMonB',sp:'studioFriB'};
+function unitStartSlot(u){
+  const type=u.skill==='rue'?'ue':u.skill;
+  const unit={skill:u.skill,type:type,value:u.value,
+    part:type==='w'?null:u.value,kind:type==='w'?u.value:null,min:u.min};
+  return {part:unit.part,parts:type==='w'?[]:[u.value],type:type,min:u.min,
+    timed:false,queue:true,units:[unit],session:false,reason:''};
+}
+function openPlanUnit(u){
+  if(!u)return;
+  PLAN_UNIT_START={skill:u.skill,value:u.value,min:u.min};
+  const slot=unitStartSlot(u);
+  if(u.skill==='rue')paintUeStudio(slot);
+  else if(u.skill==='l')paintListeningStudio(slot);
+  else if(u.skill==='w')paintWritingStudio(slot);
+  else if(u.skill==='sp')paintSpeakingStudio(slot);
+  selectSessionStudio(UNIT_STUDIO[u.skill]||'mon-a');
+  const card=document.getElementById(UNIT_STUDIO_CARD[u.skill]);
+  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+/* The plan tag for a row saved from a studio: the exercise the plan opened
+   and the minutes it allocated. A different exercise is not this unit. */
+function takePlanUnit(skill,value){
+  const u=PLAN_UNIT_START;
+  if(!u||u.skill!==skill||String(u.value)!==String(value))return null;
+  PLAN_UNIT_START=null;
+  return {skill:u.skill,value:u.value,min:u.min};
+}
+/* The exercises a plan slot really contains, in order. By-part rows carry
+   their queue units; other shapes name their parts. A whole paper has no
+   single unit to open. */
+function planSlotUnits(sl){
+  if(!sl)return [];
+  if(Array.isArray(sl.units)&&sl.units.length){
+    return sl.units.map(u=>({skill:u.skill,value:u.value,min:u.min}));
+  }
+  if(sl.section||sl.type==='mock')return [];
+  const parts=slotParts(sl);
+  if(!parts.length)return [];
+  const skill=sl.type==='ue'?'rue':sl.type;
+  return parts.map(p=>({skill:skill,value:p,min:unitMinutes({skill:skill,value:p})}));
+}
 function todayStart(i){
   const sl=(TODAY_PLAN&&TODAY_PLAN.slots&&TODAY_PLAN.slots[i])||null;
   if(!sl)return;
   if(sl.section){startFullPaperSession(sl.type);return}
-  if(Array.isArray(sl.units)&&sl.units.length){
-    QUEUE_PENDING=sl.units.length>1?{day:sl.day,units:sl.units.slice(1)}:null;
-    startQueueUnit(sl.units[0]);
+  const units=planSlotUnits(sl);
+  if(units.length){
+    QUEUE_PENDING=units.length>1?{day:sl.day,units:units.slice(1)}:null;
+    openPlanUnit(units[0]);
     return;
   }
   QUEUE_PENDING=null;
-  if(sl.type==='w')goToPartFilter(sl.part,'w');
-  else if(sl.type==='l')goToPartFilter(sl.part,'lp');
-  else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
-  else if(sl.type==='mock')showView('exam');
-  else goToPartFilter(sl.part,'ue');
+  if(sl.type==='mock')showView('exam');
+  else startQueueUnit(sl);
 }
 function startNextQueuedUnit(){
   if(!QUEUE_PENDING||!QUEUE_PENDING.units.length)return;
@@ -15049,7 +14883,7 @@ function startNextQueuedUnit(){
   const left=QUEUE_PENDING.units.length;
   if(!left)QUEUE_PENDING=null;
   renderToday();
-  startQueueUnit(u);
+  openPlanUnit(u);
 }
 function renderToday(){
   updatePersonalizedUI();

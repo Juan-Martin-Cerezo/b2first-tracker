@@ -26,12 +26,11 @@ SEED_JS = """() => {
     D.log = [];
     D.errs = [];
     D.sessionOffset = 0;
-    D.settings.rotationMode = 'custom';
+    D.settings.rotationMode = 'full-section';
     D.settings.rueCycle = [7, 1];
     D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
     D.settings.lCycle = [1, 2, 3, 4];
     D.settings.spCycle = [1, 2, 3, 4];
-    D.settings.customPlan = {Mon: {skill: 'rue', parts: '1', min: 30}};
     SETTINGS_UNDO = null;
     delete D.settingsUndo;
     save();
@@ -82,16 +81,19 @@ with sync_playwright() as p:
     )
     labels = [r["label"] for r in opened["rows"]]
     assert labels == [
-        "Rotation", "R&UoE cycle (parts)", "Custom plan"
+        "Rotation", "R&UoE cycle (parts)"
     ], f"the dialog listed the wrong fields: {labels}"
     values = {r["label"]: r["value"] for r in opened["rows"]}
-    assert values["Rotation"] == "Custom → By part", f"rotation detail is wrong: {values}"
+    assert values["Rotation"] == "Full paper each session → By part", (
+        f"rotation detail is wrong: {values}"
+    )
     assert values["R&UoE cycle (parts)"] == "7, 1 → 1, 2, 3, 4, 5, 6, 7", (
         f"cycle detail is wrong: {values}"
     )
-    assert values["Custom plan"] == "1 day(s) → none", f"custom plan detail is wrong: {values}"
     assert opened["applyEnabled"], f"Apply is disabled with pending changes: {opened}"
-    assert pg.evaluate("D.settings.rotationMode") == "custom", "opening the dialog already reset"
+    assert pg.evaluate("D.settings.rotationMode") == "full-section", (
+        "opening the dialog already reset"
+    )
     OUT["1_open_by_keyboard"] = opened
 
     # 2. Escape closes it and returns focus to the Reset button.
@@ -106,7 +108,7 @@ with sync_playwright() as p:
     )
     assert not closed["open"], f"Escape did not close the dialog: {closed}"
     assert closed["active"] == "wpResetBtn", f"focus did not return to Reset: {closed}"
-    assert closed["mode"] == "custom", f"Escape applied the reset anyway: {closed}"
+    assert closed["mode"] == "full-section", f"Escape applied the reset anyway: {closed}"
     OUT["2_escape_closes"] = closed
 
     # 3. Focus is trapped: Tab from the last control wraps to the first, and
@@ -140,7 +142,6 @@ with sync_playwright() as p:
             open: document.getElementById('planResetModal').style.display !== 'none',
             mode: D.settings.rotationMode,
             rue: D.settings.rueCycle,
-            custom: D.settings.customPlan,
             undo: SETTINGS_UNDO ? SETTINGS_UNDO.rotationMode : null,
             undoVisible: getComputedStyle(document.getElementById('wpUndoBtn')).display !== 'none',
         })"""
@@ -148,8 +149,7 @@ with sync_playwright() as p:
     assert not applied["open"], f"the dialog stayed open after Apply: {applied}"
     assert applied["mode"] == "by-part", f"Apply did not reset the mode: {applied}"
     assert applied["rue"] == [1, 2, 3, 4, 5, 6, 7], f"Apply did not reset the cycle: {applied}"
-    assert applied["custom"] == {}, f"Apply left the custom plan: {applied}"
-    assert applied["undo"] == "custom", f"the reset was not undoable: {applied}"
+    assert applied["undo"] == "full-section", f"the reset was not undoable: {applied}"
     assert applied["undoVisible"], f"Undo is not offered after the reset: {applied}"
     OUT["4_apply_by_keyboard"] = applied
 
@@ -200,11 +200,11 @@ with sync_playwright() as p:
     # 7. Both dictionaries define every key the dialog asks for.
     keys = pg.evaluate(
         """() => ['plan_reset_title','plan_reset_body','plan_reset_none','plan_reset_hint',
-                    'plan_reset_apply','plan_reset_none_value','plan_reset_days',
+                    'plan_reset_apply','plan_reset_none_value',
                     'plan_reset_field_rotationMode','plan_reset_field_rueCycle',
                     'plan_reset_field_wCycle','plan_reset_field_lCycle',
-                    'plan_reset_field_spCycle','plan_reset_field_customPlan',
-                    'plan_rotation_by_part','plan_rotation_full_section','plan_rotation_custom',
+                    'plan_reset_field_spCycle',
+                    'plan_rotation_by_part','plan_rotation_full_section',
                     'plan_reset_btn','plan_undo_btn']
             .filter(k => !I18N.en[k] || !I18N.es[k])"""
     )

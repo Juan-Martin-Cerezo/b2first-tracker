@@ -44,7 +44,6 @@ RUNTIME_KEYS = {
     "plan_reset_field_wCycle": "plan_reset_field_",
     "plan_reset_field_lCycle": "plan_reset_field_",
     "plan_reset_field_spCycle": "plan_reset_field_",
-    "plan_reset_field_customPlan": "plan_reset_field_",
     "plan_reset_field_weekOverrides": "plan_reset_field_",
 }
 

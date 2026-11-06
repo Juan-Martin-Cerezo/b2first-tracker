@@ -3,8 +3,7 @@
 No screen may claim a behaviour the app does not have ("4-step core cycle",
 "component by component", "advances one item per session", "continuous
 rotation"). With itemsPerSession=2 the preview shows two units of the same
-skill, full-section says "a whole paper per session", and custom mirrors the
-user's day-by-day configuration exactly.
+skill, and full-section says "a whole paper per session".
 """
 import json
 
@@ -47,11 +46,11 @@ READ_JS = """() => ({
 })"""
 
 
-def seed(pg, mode="by-part", per=1, custom=None, days=None):
+def seed(pg, mode="by-part", per=1, days=None):
     days = days or ALL_DAYS
     schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in days]
     pg.evaluate(
-        """([schedule, mode, per, custom]) => {
+        """([schedule, mode, per]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -70,11 +69,10 @@ def seed(pg, mode="by-part", per=1, custom=None, days=None):
             D.settings.lCycle = [1, 2, 3, 4];
             D.settings.spCycle = [1, 2, 3, 4];
             D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
-            D.settings.customPlan = custom || {};
             save();
             refreshAll();
         }""",
-        [schedule, mode, per, custom],
+        [schedule, mode, per],
     )
     pg.wait_for_timeout(300)
 
@@ -142,24 +140,16 @@ with sync_playwright() as p:
     assert_no_bad_copy(full, "en")
     OUT["full_section"] = {"mode": full["mode"], "labels": labels[:4]}
 
-    # 4. custom: the card mirrors the user's day-by-day configuration.
-    custom = {
-        "Mon": {"skill": "rue", "parts": "1,3", "min": 50},
-        "Tue": {"skill": "l", "parts": "1-4", "min": 40},
-        "Wed": {"skill": "w", "parts": "", "min": 80},
-        "Thu": {"skill": "sp", "parts": "2", "min": 30},
-    }
-    seed(pg, "custom", per=1, custom=custom, days=["mon", "tue", "wed", "thu"])
-    got = pg.evaluate(READ_JS)
-    assert "custom plan, day by day" in got["mode"].lower(), got["mode"]
-    assert [r["day"] for r in got["upcoming"]] == ["Mon", "Tue", "Wed", "Thu"], got["upcoming"]
-    for row, (day, cfg) in zip(got["upcoming"], custom.items()):
-        assert str(cfg["min"]) + " min" in row["label"], (
-            f"{day} does not show the configured duration: {row}"
-        )
-    assert "1, 3" in got["upcoming"][0]["label"], got["upcoming"][0]
-    assert_no_bad_copy(got, "en")
-    OUT["custom"] = {"mode": got["mode"], "upcoming": got["upcoming"]}
+    # 4. The removed custom mode is not offered or painted.
+    removed = pg.evaluate(
+        """() => ({
+            options: [...document.getElementById('wpRotationMode').options].map(o => o.value),
+            mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
+        })"""
+    )
+    assert removed["options"] == ["by-part", "full-section"], removed
+    assert "custom plan" not in removed["mode"].lower(), removed
+    OUT["4_no_custom"] = removed
 
     assert page_errors == [], f"page errors: {page_errors}"
     OUT["errors"] = page_errors

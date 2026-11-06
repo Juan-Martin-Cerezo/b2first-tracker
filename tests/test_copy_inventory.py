@@ -1,7 +1,7 @@
 """Phase 99: living inventory of every session-copy surface.
 
 The suite walks Plan, Today, "What comes next", the four Today studios and the
-log in every rotation mode, prints the text it saw, and fails when a partial
+log in both rotation modes, prints the text it saw, and fails when a partial
 session is described with a completeness phrase. It is the documentation of the
 sweep: each entry lists the mode, the surface and the exact phrases.
 
@@ -63,10 +63,10 @@ STUDIOS_JS = """() => {
 }"""
 
 
-def seed(pg, mode="by-part", per=1, custom=None, days=ALL_DAYS, offset=0):
+def seed(pg, mode="by-part", per=1, days=ALL_DAYS, offset=0):
     schedule = [{"day": DAY_NUM[d], "time": "15:30"} for d in days]
     pg.evaluate(
-        """([schedule, mode, per, custom, offset]) => {
+        """([schedule, mode, per, offset]) => {
             D.profile = {
                 examDate: null, targetGrade: 'B',
                 skills: {rue: 3, w: 3, l: 3, sp: 3},
@@ -81,11 +81,10 @@ def seed(pg, mode="by-part", per=1, custom=None, days=ALL_DAYS, offset=0):
             D.settings.schedule = schedule;
             D.settings.rotationMode = mode;
             D.settings.itemsPerSession = per;
-            D.settings.customPlan = custom || {};
             save();
             refreshAll();
         }""",
-        [schedule, mode, per, custom, offset],
+        [schedule, mode, per, offset],
     )
     pg.wait_for_timeout(300)
 
@@ -198,36 +197,7 @@ with sync_playwright() as p:
     OUT["log"] = logged["log"].strip()[:220]
     OUT["chart_labels"] = chart.strip()[:220]
 
-    # 3. custom, partial and whole.
-    custom = {
-        "Mon": {"skill": "rue", "parts": "1,3", "min": 50},
-        "Tue": {"skill": "l", "parts": "2", "min": 20},
-        "Wed": {"skill": "w", "parts": "", "min": 40},
-        "Thu": {"skill": "sp", "parts": "2", "min": 30},
-    }
-    seed(pg, "custom", custom=custom, days=["mon", "tue", "wed", "thu"])
-    custom_state = collect(pg)
-    assert_partial_is_honest(custom_state, "custom partial")
-    assert_studio_durations(custom_state, "custom partial")
-    assert custom_state["studios"]["rue"]["dur"] == "50 MIN", custom_state["studios"]["rue"]
-    assert "Reading parts 1, 3" in custom_state["studios"]["rue"]["name"], (
-        custom_state["studios"]["rue"]
-    )
-    OUT["custom_partial"] = inventory(custom_state, "custom partial")
-
-    whole_custom = {
-        "Mon": {"skill": "rue", "parts": "", "min": 75},
-        "Tue": {"skill": "l", "parts": "1-4", "min": 40},
-        "Wed": {"skill": "w", "parts": "", "min": 40},
-        "Thu": {"skill": "sp", "parts": "1-4", "min": 14},
-    }
-    seed(pg, "custom", custom=whole_custom, days=["mon", "tue", "wed", "thu"])
-    whole_state = collect(pg)
-    assert "Full R&UE" in whole_state["studios"]["rue"]["name"], whole_state["studios"]["rue"]
-    assert whole_state["studios"]["rue"]["dur"] == "75 MIN", whole_state["studios"]["rue"]
-    OUT["custom_whole"] = inventory(whole_state, "custom whole")
-
-    # 4. full-section: Full is true, with the official totals.
+    # 3. full-section: Full is true, with the official totals.
     seed(pg, "full-section")
     full = collect(pg)
     official = {"rue": 75, "l": 40, "w": 80, "sp": 14}
@@ -246,22 +216,20 @@ with sync_playwright() as p:
                         "4-step", "component by component", "advances one item"],
             "full-section": ["one exercise per session", "by part",
                              "custom plan, day by day"],
-            "custom": ["whole paper", "one exercise per session", "by part"],
         },
         "es": {
             "by-part": ["paper completo", "prueba completa", "un ítem por sesión",
                         "ciclo base de 4 pasos", "componente por componente"],
             "full-section": ["un ejercicio por sesión", "por parte",
                              "plan personalizado, día por día"],
-            "custom": ["paper completo", "un ejercicio por sesión", "por parte"],
         },
     }
     help_seen = {}
     for lang in ("en", "es"):
         pg.evaluate(f"setLang('{lang}')")
         pg.wait_for_timeout(250)
-        for mode in ("by-part", "full-section", "custom"):
-            seed(pg, mode, custom=custom if mode == "custom" else None)
+        for mode in ("by-part", "full-section"):
+            seed(pg, mode)
             copy = " ".join(
                 collect(pg)[k] for k in ("help", "mode", "todayMode")
             ).lower()

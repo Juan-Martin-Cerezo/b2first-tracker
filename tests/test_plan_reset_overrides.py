@@ -29,7 +29,6 @@ SEED_JS = """() => {
     D.errs = [];
     D.sessionOffset = 0;
     D.settings.rotationMode = 'by-part';
-    D.settings.customPlan = {};
     D.settings.rueCycle = [1, 2, 3, 4, 5, 6, 7];
     D.settings.wCycle = ['Essay', 'Article', 'Report', 'Review', 'Email'];
     D.settings.lCycle = [1, 2, 3, 4];

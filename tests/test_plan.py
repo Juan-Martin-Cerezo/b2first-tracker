@@ -170,7 +170,7 @@ async def main():
             assert ("diagnostic" in r) or ("error" in r) or ("Writing" in r), f"Reason without data: {r!r}"
         out["7_reasons_con_datos"] = f"OK: {len(res7)} reasons cite diagnostic/errors/Writing"
 
-        # UI: rendered rows, "Why this?", Regenerate and Start -> RESOURCES
+        # UI: rendered rows, Regenerate and Start -> RESOURCES
         await page.click("nav button[data-view='plan']")
         rows = await page.eval_on_selector_all(
             "#wpRows .wp-row",
@@ -179,11 +179,12 @@ async def main():
         )
         assert len(rows) == 5, f"Expected 5 rows in card, got {len(rows)}"
         assert all(r["reason"].strip() for r in rows), f"Empty reason in row: {rows}"
-        await page.click("#wpWhy summary")
-        why_open = await page.evaluate("document.getElementById('wpWhy').open === true")
-        why_text = await page.eval_on_selector("#wpWhyBody", "e => e.textContent")
-        assert why_open is True, "details 'Why this?' did not open"
-        assert "weekGoal" in why_text and "14 days" in why_text and "taxonomy" in why_text, f"why incomplete: {why_text}"
+        assert await page.evaluate("!!document.getElementById('wpWhy')") is False, (
+            "the removed 'Why this?' block is still in the DOM"
+        )
+        assert "why this" not in (
+            await page.evaluate("document.getElementById('v-plan').innerText")
+        ).lower(), "the removed 'Why this?' copy is still painted"
         await page.click("#wpRegenBtn")
         rows_after = await page.eval_on_selector_all("#wpRows .wp-row", "els => els.length")
         assert rows_after == 5, f"Regenerate broke rows: {rows_after}"
@@ -201,7 +202,7 @@ async def main():
         assert nav_state["view"] == "v-resources", f"Start did not navigate to RESOURCES: {nav_state}"
         assert nav_state["filter"] == {"type": "ue", "part": ue_part}, f"Filter not applied: {nav_state}"
         assert nav_state["papers"] == 1, f"Filter did not leave one paper: {nav_state}"
-        out["ui_card_y_empezar"] = f"OK: rows=5, why open, Start -> RESOURCES part {ue_part}"
+        out["ui_card_y_empezar"] = f"OK: rows=5, no why block, Start -> RESOURCES part {ue_part}"
 
         # Clean up the test user's localStorage
         await page.evaluate(

@@ -68,7 +68,6 @@ def seed(pg, days, offset=0, hours=4):
             D.sessionOffset = offset;
             D.settings.schedule = schedule;
             D.settings.rotationMode = 'by-part';
-            D.settings.customPlan = {};
             save();
             refreshAll();
         }""",

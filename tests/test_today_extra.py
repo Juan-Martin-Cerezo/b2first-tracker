@@ -67,7 +67,6 @@ def seed(pg):
             D.errs = [];
             D.sessionOffset = 2;
             D.settings.rotationMode = 'by-part';
-            D.settings.customPlan = {};
             save();
             refreshAll();
         }""",
