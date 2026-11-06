@@ -48,12 +48,14 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(300)
 
+    # The seed logs Reading parts 1..4, so the next Reading session owes part 5:
+    # a part already done in the current pass is never offered again.
     expected = {
         0: "Reading part 1",
         1: "Listening part 1",
         2: "Writing essay",
         3: "Speaking part 1",
-        4: "Reading part 2",
+        4: "Reading part 5",
     }
     seen = {}
     for count, first in expected.items():

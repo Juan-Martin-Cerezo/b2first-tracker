@@ -12522,11 +12522,13 @@ function queueCycles(){
     l:QUEUE_CYCLES.l.slice(),sp:QUEUE_CYCLES.sp.slice()};
 }
 function queueMod(n,m){return ((Math.trunc(n)%m)+m)%m}
-function queueUnitAt(skill,occ,cycles){
-  const cycle=cycles[skill];
-  const value=cycle[queueMod(occ,cycle.length)];
+function queueUnitOf(skill,value){
   return {skill:skill,type:skill==='rue'?'ue':skill,value:value,
     part:skill==='w'?null:value,kind:skill==='w'?value:null};
+}
+function queueUnitAt(skill,occ,cycles){
+  const cycle=cycles[skill];
+  return queueUnitOf(skill,cycle[queueMod(occ,cycle.length)]);
 }
 /* One unit of the legacy interleaved order, kept for callers that only ask
    which skill comes after which. */
@@ -12592,21 +12594,54 @@ function queueLogUnit(skill,e){
   const value=String(raw);
   return QUEUE_CYCLES[skill].map(String).indexOf(value)>=0?value:null;
 }
-/* Units of the skill's current pass already done, straight from the log: a
-   unit counts once per pass, and the pass closes when every unit is in it (the
-   next new unit starts the following pass). */
-function queueLapDone(skill,log){
+/* The skill's current pass, straight from the log: which units are already
+   done in it (a repeat does not count twice), how long the pass is and how
+   many passes closed before it. The pass closes when every unit is in it, and
+   the next new unit starts the following one. One source of truth for the
+   progress lines and for the units the queue still offers. */
+function queueLapState(skill,log){
   const total=QUEUE_CYCLES[skill].length;
   const rows=(Array.isArray(log)?log:[]).filter(e=>queueLogUnit(skill,e))
     .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))
       ||((Number(a.created_at)||0)-(Number(b.created_at)||0)));
-  let done=new Set();
+  let done=new Set(),closed=0;
   rows.forEach(e=>{
-    const value=queueLogUnit(skill,e);
-    if(done.size>=total)done=new Set();
-    done.add(value);
+    if(done.size>=total){closed++;done=new Set()}
+    done.add(queueLogUnit(skill,e));
   });
-  return {done:done.size,total:total};
+  return {done:done,total:total,closed:closed};
+}
+function queueLapDone(skill,log){
+  const state=queueLapState(skill,log);
+  return {done:state.done.size,total:state.total};
+}
+/* Units of work the log really holds: every unit counts once per pass, so a
+   repeated exercise never moves the queue twice and a closed pass counts
+   whole. This, not the number of rows, is the position of the queue. */
+function queueLoggedUnits(log){
+  return QUEUE_SKILLS.reduce((n,skill)=>{
+    const state=queueLapState(skill,log);
+    return n+state.closed*state.total+state.done.size;
+  },0);
+}
+/* The next units a skill still owes, in the order they will be asked: the
+   units pending in the current pass (cycle order, skipping what the log says
+   is already done) and then the following passes whole. A unit is never
+   offered twice inside the same pass. */
+function queuePendingUnits(skill,log,count){
+  const cycle=QUEUE_CYCLES[skill];
+  const state=queueLapState(skill,log);
+  const out=[];
+  const pushPass=(skipDone)=>{
+    cycle.forEach(value=>{
+      if(out.length>=count)return;
+      if(skipDone&&state.done.has(String(value)))return;
+      out.push(queueUnitOf(skill,value));
+    });
+  };
+  pushPass(true);
+  while(out.length<count)pushPass(false);
+  return out;
 }
 const PLAN_PROGRESS_KEY={rue:'plan_progress_rue',l:'plan_progress_l',
   w:'plan_progress_w',sp:'plan_progress_sp'};
@@ -12719,7 +12754,9 @@ function planNextSessions(count){
   return out;
 }
 /* The next rows of the real plan, for the "What comes next" card: by-part
-   units with the day of their session, whole papers for full-section. */
+   units with the day of their session, whole papers for full-section. The
+   position and the units both come from the log's passes, so a repeated
+   exercise never skips a unit and a done unit is never offered again. */
 function planUpcomingRows(count){
   const s=(D&&D.settings)||{};
   const mode=normalizeRotationMode(s.rotationMode);
@@ -12737,13 +12774,18 @@ function planUpcomingRows(count){
     return out;
   }
   const per=normalizeItemsPerSession(s.itemsPerSession);
-  const cycles=queueCycles();
-  const start=queueStartSession(s,D.log,offset,per);
+  const start=Math.floor(queueLoggedUnits(D.log)/per)+offset;
+  const pending={};
+  QUEUE_SKILLS.forEach(skill=>{
+    pending[skill]=queuePendingUnits(skill,D.log,count+per*2);
+  });
   const out=[];
   for(let i=0;out.length<count;i++){
     const d=days[i%days.length];
+    const skill=sessionSkillFor(start+i,days.length);
     for(let k=0;k<per&&out.length<count;k++){
-      const u=queueBlockUnit(start+i,k,per,cycles,days.length);
+      const u=(pending[skill]||[]).shift();
+      if(!u)break;
       out.push({day:d.key,time:d.time,label:queueUnitLabel(u),skill:u.skill});
     }
   }
