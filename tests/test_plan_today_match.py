@@ -37,7 +37,7 @@ READ_JS = """() => {
         parts: e.dataset.parts || '',
         units: e.dataset.units || '',
         min: Number(e.dataset.min),
-        title: (e.querySelector('.ts-title') || {}).textContent || '',
+        title: strip((e.querySelector('.ts-title') || {}).textContent || ''),
     }));
     return {
         plan: plan,

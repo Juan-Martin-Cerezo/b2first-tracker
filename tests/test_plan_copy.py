@@ -38,6 +38,11 @@ READ_JS = """() => ({
     cardText: document.getElementById('rotationCard').innerText,
     mode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
     todayMode: (document.querySelector('#todaySession .ts-mode') || {}).textContent || '',
+    todaySkill: (() => {
+        const sl = buildWeeklyPlan(D).slots.find(s => s.day === planTodayLabel());
+        if (!sl) return null;
+        return {type: sl.type, units: (sl.units || []).map(u => u.skill)};
+    })(),
     preview: document.getElementById('wpQueuePreview').textContent,
     upcoming: [...document.querySelectorAll('#planUpcomingPreview .up-row')].map(r => ({
         day: r.dataset.day,
@@ -106,8 +111,13 @@ with sync_playwright() as p:
     assert "two" in state["mode"].lower() and "Reading" in state["mode"], (
         f"the mode line is wrong: {state['mode']!r}"
     )
-    assert "two" in state["todayMode"].lower() and "Reading" in state["todayMode"], (
-        f"Today does not name the active mode: {state['todayMode']!r}"
+    assert "2" in state["todayMode"] and "exercises" in state["todayMode"], (
+        f"Today does not name the two exercises: {state['todayMode']!r}"
+    )
+    skill = state["todaySkill"]["units"][0] if state["todaySkill"]["units"] else state["todaySkill"]["type"]
+    skill_word = {"rue": "Reading", "l": "Listening", "w": "Writing", "sp": "Speaking", "ue": "Reading"}[skill]
+    assert skill_word in state["todayMode"], (
+        f"Today does not name its own skill: {state['todayMode']!r} (want {skill_word})"
     )
     assert state["upcoming"][0]["label"] == "Reading part 1", state["upcoming"]
     assert state["upcoming"][1]["label"] == "Reading part 2", state["upcoming"]

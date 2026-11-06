@@ -61,6 +61,12 @@ READ_JS = """() => ({
         text: s.units.map(queueUnitLabel).join(' · '),
     })),
     todayMode: (document.querySelector('#todaySession .ts-mode') || {}).textContent || '',
+    todayText: (document.getElementById('todaySession') || {}).innerText || '',
+    todaySkill: (() => {
+        const sl = buildWeeklyPlan(D).slots.find(s => s.day === planTodayLabel());
+        if (!sl) return null;
+        return {type: sl.type, units: (sl.units || []).map(u => u.skill)};
+    })(),
     cardMode: (document.querySelector('#rotationCardBody .rot-mode') || {}).textContent || '',
 })"""
 
@@ -111,14 +117,26 @@ with sync_playwright() as p:
     ], f"the next four sessions are not the week blocks: {labels}"
     OUT["2_next_four"] = state["rows"]
 
-    # 3. Today carries the same active block.
-    assert state["todayMode"], f"Today has no session block: {state}"
+    # 3. The active block lives in PLAN only; Today names the session it shows.
+    assert state["todayMode"], f"Today has no session line: {state}"
+    assert state["todaySkill"], f"Today has no plan row: {state}"
     pair = block.split(" — next week:")[0]
-    assert pair in state["todayMode"], (
-        f"Today does not show the active block: {state['todayMode']!r} vs {pair!r}"
+    assert pair not in state["todayMode"], (
+        f"Today still repeats the week block: {state['todayMode']!r} vs {pair!r}"
     )
-    assert state["cardMode"] and state["todayMode"].startswith(state["cardMode"]), (
-        f"Today and What comes next disagree: {state['cardMode']!r} vs {state['todayMode']!r}"
+    assert "This week:" not in state["todayText"], (
+        f"Today still shows the week block line: {state['todayText']!r}"
+    )
+    assert "next week:" not in state["todayText"].lower(), (
+        f"Today still shows next week's block: {state['todayText']!r}"
+    )
+    assert state["cardMode"] and state["cardMode"].startswith(pair), (
+        f"What comes next lost the block line: {state['cardMode']!r}"
+    )
+    skill = state["todaySkill"]["units"][0] if state["todaySkill"]["units"] else state["todaySkill"]["type"]
+    skill_word = {"rue": "Reading", "l": "Listening", "w": "Writing", "sp": "Speaking", "ue": "Reading"}[skill]
+    assert skill_word in state["todayMode"], (
+        f"Today does not name its own skill: {state['todayMode']!r} (want {skill_word})"
     )
     OUT["3_today_block"] = {"today": state["todayMode"], "card": state["cardMode"]}
 

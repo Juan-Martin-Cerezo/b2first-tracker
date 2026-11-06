@@ -950,6 +950,7 @@ tbody tr:hover{background:var(--surface-2)}
 .ts-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2)}
 .ts-row .ts-main{flex:1;min-width:220px}
 .ts-row .ts-title{font-weight:600;font-size:var(--fs-sm);color:var(--txt)}
+.ts-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .ts-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .ts-rest{font-size:var(--fs-sm);color:var(--txt-2)}
 
@@ -3677,18 +3678,7 @@ const I18N={
     last_sp_when:'Took place on {date}',
     last_sp_parts:'{n} parts done',
     last_sp_parts_one:'1 part done',
-    next_today:'TODAY',
-    next_no_session_today:'No session scheduled today',
-    next_no_session:'No session scheduled',
-    next_configure_days:'Please configure your study days in PLAN.',
-    next_open_studio:'Open studio',
     next_fast_forward:'Fast-forward (+1)',
-    next_shift:'Shift (+1)',
-    next_do_now:'Do next session now',
-    next_schedule:'Schedule:',
-    next_studio_open:'Studio is open below.',
-    next_label:'Next:',
-    next_in_days:'in {days}d',
     metric_title:'Weekly Metrics',
     metric_hours:'Total hours',
     metric_uoe:'UoE accuracy',
@@ -3709,8 +3699,10 @@ const I18N={
     today_session_title:"Today's session",
     today_rest_day:'Rest day — no session planned today.',
     today_next_session:'Next session: {day} at {time} — {title}.',
-    today_units_one:'1 exercise',
-    today_units_many:'{n} exercises',
+    today_skill_rue:'Reading',
+    today_mode_one:'1 {skill} exercise',
+    today_mode_many:'{n} {skill} exercises',
+    today_mode_full:'Today: {paper}',
     today_studio_writing_sub:'One text type per session, with a deep C1 audit.',
     today_extra_session:'Extra session',
     today_extra_note:'Off-plan practice: it does not move the rotation or the shift.',
@@ -4456,18 +4448,7 @@ const I18N={
     last_sp_when:'Se hizo el {date}',
     last_sp_parts:'{n} partes hechas',
     last_sp_parts_one:'1 parte hecha',
-    next_today:'HOY',
-    next_no_session_today:'Hoy no hay sesión programada',
-    next_no_session:'No hay sesión programada',
-    next_configure_days:'Configurá tus días de estudio en PLAN.',
-    next_open_studio:'Abrir estudio',
     next_fast_forward:'Adelantar (+1)',
-    next_shift:'Desplazar (+1)',
-    next_do_now:'Hacer la próxima sesión ahora',
-    next_schedule:'Horario:',
-    next_studio_open:'El estudio está abierto abajo.',
-    next_label:'Próximo:',
-    next_in_days:'en {days}d',
     metric_title:'Métricas semanales',
     metric_hours:'Horas totales',
     metric_uoe:'Precisión UoE',
@@ -4488,8 +4469,10 @@ const I18N={
     today_session_title:'Sesión de hoy',
     today_rest_day:'Día de descanso — hoy no hay sesión planificada.',
     today_next_session:'Próxima sesión: {day} a las {time} — {title}.',
-    today_units_one:'1 ejercicio',
-    today_units_many:'{n} ejercicios',
+    today_skill_rue:'Reading',
+    today_mode_one:'1 ejercicio de {skill}',
+    today_mode_many:'{n} ejercicios de {skill}',
+    today_mode_full:'Hoy: {paper}',
     today_studio_writing_sub:'Un tipo de texto por sesión, con auditoría C1 profunda.',
     today_extra_session:'Sesión extra',
     today_extra_note:'Práctica fuera del plan: no mueve la rotación ni el corrimiento.',
@@ -14735,15 +14718,32 @@ function nextPlanOccurrence(plan,baseDate){
   }
   return null;
 }
-/* Today's mode line: the active rotation in plain language plus how many
-   exercises this session contains (by-part is the only mode with a count). */
-function todayModeMeta(sl){
-  let line=planModeLine();
-  if(normalizeRotationMode(D.settings.rotationMode)==='by-part'){
-    const n=(Array.isArray(sl&&sl.units)&&sl.units.length)||1;
-    line+=' · '+(n===1?t('today_units_one'):t('today_units_many',{n:n}));
+/* Today's card header: the day, the units this session really contains and
+   their total duration, on one line. */
+function todayHeaderText(sl){
+  if(!sl)return '';
+  const units=Array.isArray(sl.units)&&sl.units.length?sl.units:null;
+  const body=units?units.map(queueUnitLabel).join(' + '):slotLabel(sl);
+  return `${planDayFull(sl.day).slice(0,3)} · ${body} · ${sl.min} min`;
+}
+/* The skill word the Today card may use: the session's own skill, never the
+   queue position. Reading & UoE is named "Reading" in this one-line count. */
+function todaySkillName(skill){
+  if(skill==='rue')return t('today_skill_rue');
+  return planSkillLabel(skill);
+}
+/* Today's mode line describes the session shown: one or several units of the
+   skill practiced today, or the whole paper when full-section is active. */
+function todayModeLine(sl){
+  if(!sl)return '';
+  if(normalizeRotationMode(D.settings.rotationMode)==='full-section'){
+    return t('today_mode_full',{paper:slotLabel(sl)});
   }
-  return line;
+  const units=Array.isArray(sl.units)&&sl.units.length?sl.units:null;
+  const n=units?units.length:Math.max(1,slotParts(sl).length);
+  const skill=units?units[0].skill:(sl.type==='ue'?'rue':sl.type);
+  const name=todaySkillName(skill);
+  return n===1?t('today_mode_one',{skill:name}):t('today_mode_many',{n:n,skill:name});
 }
 /* TODAY is not allowed to pick sessions on its own: it renders the rows of
    buildWeeklyPlan(D) that belong to today, with the same title, parts and
@@ -14772,8 +14772,11 @@ function renderTodaySession(plan,todaySlots){
     todaySlots.map(sl=>{
       const idx=plan.slots.indexOf(sl);
       return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-min="${sl.min}">
-        <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-when tnum">${sl.time||''}</div><div class="ts-mode">${esc(todayModeMeta(sl))}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
-        <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
+        <div class="ts-main"><div class="ts-title tnum">${esc(todayHeaderText(sl))}</div><div class="ts-when tnum">${esc(sl.time||'')}</div><div class="ts-mode">${esc(todayModeLine(sl))}</div></div>
+        <div class="ts-actions">
+          <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
+          <button type="button" class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
+        </div>
       </div>`;
     }).join('')+`</div>`;
   if(QUEUE_PENDING&&QUEUE_PENDING.units.length&&QUEUE_PENDING.day===todaySlots[0].day){
@@ -14907,21 +14910,16 @@ function renderToday(){
   paintSessionStudios(plan);
   renderTodaySession(plan,todaySlots);
 
+  // Today owns a single session block: the old top banner is gone. The studio
+  // the session points to is still chosen from the same plan row.
   const nb=document.getElementById('nextBox');
+  if(nb){nb.innerHTML='';nb.style.display='none';}
   let defaultStudio='mon-a';
-
   if(todaySlots.length){
     defaultStudio=studioForSlot(todaySlots[0]);
-    const titles=todaySlots.map(sl=>slotTitleText(sl)).join(' · ');
-    nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_today')} (${todayLabel}): <b style="color:var(--ok-text)">${titles}</b></div><div class="when">${t('next_schedule')} <b>${slotLabel(todaySlots[0])}</b> (${todaySlots[0].min} min) · ${t('next_studio_open')}</div></div><div class="next-actions"><button class="btn ok sm" onclick="selectSessionStudio('${defaultStudio}')">${t('next_open_studio')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button></div>`;
   }else{
     const next=nextPlanOccurrence(plan,d);
-    if(next){
-      defaultStudio=studioForSlot(next.slot);
-      nb.innerHTML=`<div class="next-copy"><div class="big">${t('next_no_session_today')}</div><div class="when">${t('next_label')} <b>${planDayFull(next.slot.day)} ${esc(next.slot.time||'')} (${t('next_in_days',{days:next.daysAhead})}) — ${esc(slotTitleText(next.slot))}</b>.</div></div><div class="next-actions"><button class="btn ok sm" onclick="todayStart(${next.index})">${t('next_do_now')}</button><button class="btn sm gray" onclick="advanceSession(1)" title="${t('next_shift')}">${t('next_shift')}</button></div>`;
-    }else{
-      nb.innerHTML=`<div class="big">${t('next_no_session')}</div><div class="when">${t('next_configure_days')}</div>`;
-    }
+    if(next)defaultStudio=studioForSlot(next.slot);
   }
 
   // Set initial studio if none selected yet. Never while the speaking exam is

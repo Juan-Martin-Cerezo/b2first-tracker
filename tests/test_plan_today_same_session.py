@@ -72,11 +72,16 @@ def same_as_plan(pg):
     assert state["today"], f"Today rendered no session: {state}"
     assert not state["rest"], f"Today is a rest day: {state}"
     assert len(plan_today) == 1, f"the plan has no single row for today: {state['plan']}"
-    assert state["today"] == plan_today, (
-        "Today and plan disagree:\n"
-        f"today={state['today']}\nplan={plan_today}"
-    )
-    return state["today"][0]
+    assert len(state["today"]) == 1, f"Today rendered more than one session: {state['today']}"
+    today_row = state["today"][0]
+    plan_row = plan_today[0]
+    # The header format is Today's own (day · units · duration), but the
+    # session it names must still be exactly the plan's row.
+    for field in ("day", "units", "min", "type"):
+        assert today_row[field] == plan_row[field], (
+            f"Today and plan disagree on {field}: {today_row} vs {plan_row}"
+        )
+    return today_row, plan_row
 
 
 with sync_playwright() as p:
@@ -104,7 +109,7 @@ with sync_playwright() as p:
     seen = []
     for days in cases:
         seed(pg, days, per=1)
-        row = same_as_plan(pg)
+        row, plan_row = same_as_plan(pg)
         assert len(row["units"]) == 1, f"one unit per session expected: {row}"
         assert row["units"][0].split(":")[0] in ("rue", "l", "w", "sp"), row
         seen.append(row)
@@ -113,7 +118,7 @@ with sync_playwright() as p:
 
     # 4. itemsPerSession=3: both screens show the three units in order.
     seed(pg, [other_l[0], today_l], per=3)
-    multi = same_as_plan(pg)
+    multi, plan_multi_row = same_as_plan(pg)
     assert len(multi["units"]) == 3, f"Today did not show three units: {multi}"
     assert len({u.split(":")[0] for u in multi["units"]}) == 1, (
         f"a session mixed skills: {multi}"
@@ -129,8 +134,11 @@ with sync_playwright() as p:
     assert multi["min"] == expected_min, (
         f"the total duration is not the table sum of the units: {multi} (want {expected_min})"
     )
-    assert "1)" in multi["title"] and "2)" in multi["title"] and "3)" in multi["title"], (
-        f"the units are not numbered in order: {multi['title']!r}"
+    assert " + " in multi["title"], (
+        f"the single card does not list the units on one line: {multi['title']!r}"
+    )
+    assert "1)" in plan_multi_row["title"] and "3)" in plan_multi_row["title"], (
+        f"the plan row does not number the units in order: {plan_multi_row['title']!r}"
     )
     plan_multi = pg.evaluate(READ_JS)["plan"]
     assert any(r["day"] == TODAY and len(r["units"]) == 3 for r in plan_multi), plan_multi
