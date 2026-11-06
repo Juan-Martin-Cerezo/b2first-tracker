@@ -1,8 +1,10 @@
-"""Phase 103: Today is one centered column that never scrolls sideways.
+"""Phase 106: Today is readable at every width, not just non-scrolling.
 
-The card keeps one session block and names each unit once, Start is a real
-44x44 target, and the column is centered at 320, 380, 768 and 1280 px. Each
-width leaves a screenshot in tests/out/today_<width>.png.
+The card keeps one session block and names each unit once. On top of that the
+title must get real width (>=200px at 320, >=240 otherwise) and wrap by word
+into at most three lines, the action buttons must not clip their text, the
+bottom bar must stay inside the viewport and the session card must not slide
+under it. Each width leaves a screenshot in tests/out/today_<width>.png.
 """
 import json
 import os
@@ -55,9 +57,17 @@ MEASURE = """() => {
     const doc = document.documentElement;
     const card = document.getElementById('todaySession');
     const r = card.getBoundingClientRect();
+    const nav = document.getElementById('sideNav');
+    const nr = nav.getBoundingClientRect();
     const row = card.querySelector('.ts-row:not(.ts-next-unit)');
-    const start = row ? row.querySelector('button') : null;
+    const buttons = row ? Array.from(row.querySelectorAll('button')) : [];
+    const start = buttons[0] || null;
+    const fast = buttons[1] || null;
     const sr = start ? start.getBoundingClientRect() : null;
+    const title = row ? row.querySelector('.ts-title') : null;
+    const tcs = title ? getComputedStyle(title) : null;
+    const tr = title ? title.getBoundingClientRect() : null;
+    const lineHeight = tcs ? parseFloat(tcs.lineHeight) : 0;
     const text = card.innerText;
     const labels = row
         ? (row.dataset.units || '').split(',').filter(Boolean)
@@ -72,19 +82,75 @@ MEASURE = """() => {
         while ((i = text.indexOf(needle, i)) >= 0) { n++; i += needle.length; }
         return n;
     };
+    const visibleTextEls = root => Array.from(root.querySelectorAll('*')).filter(el => {
+        const own = Array.from(el.childNodes).some(
+            n => n.nodeType === 3 && n.textContent.trim());
+        if (!own) return false;
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        const b = el.getBoundingClientRect();
+        if (b.width < 1 || b.height < 1) return false;
+        // clipped labels (icon-only nav) are not visible text
+        if (cs.position === 'absolute' && b.width <= 1) return false;
+        return true;
+    });
+    const narrow = [];
+    for (const root of [document.getElementById('v-hoy'), nav]) {
+        for (const el of visibleTextEls(root)) {
+            if (el.clientWidth < 40) {
+                narrow.push({tag: el.tagName, cls: el.className,
+                             w: el.clientWidth,
+                             text: (el.textContent || '').trim().slice(0, 40)});
+            }
+        }
+    }
+    const navItems = Array.from(nav.querySelectorAll('button[data-view], #navMoreBtn'))
+        .filter(el => getComputedStyle(el).display !== 'none')
+        .map(el => {
+            const b = el.getBoundingClientRect();
+            return {view: el.dataset.view || 'more',
+                    left: b.left, right: b.right,
+                    w: Math.round(b.width)};
+        });
+    const box = el => el ? {
+        cw: el.clientWidth, sw: el.scrollWidth,
+        w: Math.round(el.getBoundingClientRect().width),
+    } : null;
     return {
         scrollWidth: doc.scrollWidth,
         clientWidth: doc.clientWidth,
+        viewportWidth: window.innerWidth,
         centeredAt: (r.left + r.right) / 2,
         cardWidth: Math.round(r.width),
+        cardBottom: r.bottom,
+        navTop: nr.top,
+        navFixedBottom: getComputedStyle(nav).position === 'fixed',
         rows: card.querySelectorAll('.ts-row:not(.ts-next-unit)').length,
         labels: labels,
         occurrences: labels.map(count),
         time: row ? (row.dataset.time || '') : '',
         timeCount: row ? count(row.dataset.time || '') : 0,
         start: sr ? {w: Math.round(sr.width), h: Math.round(sr.height)} : null,
+        title: title ? {
+            cw: title.clientWidth,
+            w: Math.round(tr.width),
+            h: Math.round(tr.height),
+            lineHeight: Math.round(lineHeight * 100) / 100,
+            lines: lineHeight ? Math.round(tr.height / lineHeight) : 0,
+            wrap: tcs.whiteSpace,
+            wordBreak: tcs.wordBreak,
+            overflowWrap: tcs.overflowWrap,
+        } : null,
+        startBox: box(start),
+        fastBox: box(fast),
+        navItems: navItems,
+        narrowText: narrow,
     };
 }"""
+
+
+def title_min(width):
+    return 200 if width == 320 else 240
 
 
 with sync_playwright() as p:
@@ -108,9 +174,11 @@ with sync_playwright() as p:
         pg.wait_for_timeout(220)
         state = pg.evaluate(MEASURE)
 
+        # -- document does not scroll sideways ------------------------------
         assert state["scrollWidth"] <= state["clientWidth"] + 1, (
             f"{width}px: Today scrolls sideways: {state}"
         )
+        # -- one session block, each unit and the time named once ------------
         assert len(state["labels"]) == 2, f"{width}px: no two-unit session: {state}"
         assert state["rows"] == 1, f"{width}px: {state['rows']} session blocks: {state}"
         assert state["occurrences"] == [1, 1], (
@@ -124,6 +192,8 @@ with sync_playwright() as p:
         assert state["start"]["w"] >= 44 and state["start"]["h"] >= 44, (
             f"{width}px: Start is {state['start']}, need 44x44"
         )
+
+        # -- centered column -------------------------------------------------
         offset = abs(state["centeredAt"] - state["clientWidth"] / 2)
         assert offset <= 8, (
             f"{width}px: the card is not centered ({offset:.1f}px off): {state}"
@@ -133,11 +203,71 @@ with sync_playwright() as p:
                 f"{width}px: the column is {state['cardWidth']}px wide"
             )
 
+        # -- title gets real width and wraps by word, not by character ------
+        t = state["title"]
+        assert t is not None, f"{width}px: no session title: {state}"
+        assert t["cw"] >= title_min(width), (
+            f"{width}px: the title block is only {t['cw']}px wide "
+            f"(need >= {title_min(width)}): {state}"
+        )
+        assert t["lines"] <= 3, (
+            f"{width}px: the title takes {t['lines']} lines: {state}"
+        )
+        assert t["h"] <= 3 * t["lineHeight"] + 4, (
+            f"{width}px: the title is {t['h']}px tall for line-height "
+            f"{t['lineHeight']}: {state}"
+        )
+        assert t["wordBreak"] != "break-all", (
+            f"{width}px: the title breaks words character by character: {state}"
+        )
+        assert t["wrap"] != "break-spaces", (
+            f"{width}px: the title keeps break-spaces: {state}"
+        )
+
+        # -- action buttons keep their text whole ---------------------------
+        for name in ("startBox", "fastBox"):
+            b = state[name]
+            assert b is not None, f"{width}px: {name} button missing: {state}"
+            assert b["sw"] <= b["cw"] + 1, (
+                f"{width}px: {name} text is clipped "
+                f"(scrollWidth {b['sw']} > clientWidth {b['cw']}): {state}"
+            )
+
+        # -- no visible text block is crushed below 40px -------------------
+        assert state["narrowText"] == [], (
+            f"{width}px: visible text blocks under 40px: {state['narrowText']}"
+        )
+
+        # -- bottom bar items stay inside the viewport ---------------------
+        assert state["navItems"], f"{width}px: no nav items: {state}"
+        for item in state["navItems"]:
+            assert item["right"] <= state["viewportWidth"] + 1, (
+                f"{width}px: nav item {item['view']} overflows right: {state}"
+            )
+            assert item["left"] >= -1, (
+                f"{width}px: nav item {item['view']} overflows left: {state}"
+            )
+
+        # -- the card never slides under a fixed bottom bar ----------------
+        if state["navFixedBottom"]:
+            assert state["cardBottom"] <= state["navTop"] + 1, (
+                f"{width}px: the session card overlaps the bottom bar "
+                f"(card {state['cardBottom']} > nav {state['navTop']}): {state}"
+            )
+
         pg.screenshot(path=os.path.join(OUT_DIR, f"today_{width}.png"), full_page=True)
         seen[str(width)] = {
             "card": state["cardWidth"],
             "offset": round(offset, 2),
             "start": state["start"],
+            "title": {
+                "clientWidth": state["title"]["cw"],
+                "lines": state["title"]["lines"],
+                "height": state["title"]["h"],
+            },
+            "startBox": state["startBox"],
+            "fastBox": state["fastBox"],
+            "nav": [{"view": i["view"], "w": i["w"]} for i in state["navItems"]],
             "scrollWidth": state["scrollWidth"],
             "clientWidth": state["clientWidth"],
         }
