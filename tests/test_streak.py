@@ -190,14 +190,16 @@ async def main():
             qlSetType('lp');
             qlPickRange(6, 10);
             qlSave();
-            const after = calcStreak().weekCount;
+            const st = calcStreak();
+            const after = st.weekCount;
             const expectedAfter = (mon === t0) ? 1 : 2;
-            return {before, after, expectedAfter, pill: document.getElementById('streakTopNum').textContent.trim()};
+            return {before, after, expectedAfter, current: st.current,
+                    pill: document.getElementById('streakTopNum').textContent.trim()};
         }"""
         )
         assert res_g["before"] == 1, f"Expected weekCount=1 before quicklog, got {res_g}"
         assert res_g["after"] == res_g["expectedAfter"], f"Expected weekCount={res_g['expectedAfter']}, got {res_g}"
-        assert res_g["pill"] == str(res_g["after"]), f"Pill out of date: {res_g}"
+        assert res_g["pill"] == str(res_g["current"]), f"Pill out of date: {res_g}"
         out["g_week_count"] = f"OK: weekCount={res_g['after']}"
 
         # Clean up the test user's localStorage

@@ -1,7 +1,10 @@
 """Tests of the deterministic weekly plan (buildWeeklyPlan) and its PLAN card.
 
-Fixtures injected via page.evaluate with an isolated test user (pattern from
-test_streak.py): it uses no real owner data and does not touch data/.
+The week is the continuous rotation queue: the diagnostic gates the plan, and
+the sessions come from the schedule and the units already logged, one skill per
+session. Fixtures injected via page.evaluate with an isolated test user
+(pattern from test_streak.py): it uses no real owner data and does not touch
+data/.
 """
 
 import asyncio
@@ -73,7 +76,9 @@ async def main():
         assert "Take the diagnostic" in res1["text"], f"Missing CTA: {res1['text']}"
         out["1_sin_diag_needDiag"] = "OK: needDiag visible, 0 slots"
 
-        # 2. Diagnostic weakest:[3,2,7] -> those 3 parts appear in the slots
+        # 2. The diagnostic gates the plan; the week itself is the rotation
+        #    queue: one session per scheduled day, each one single skill and
+        #    starting at the first unit when the log is empty.
         await page.evaluate(
             """() => {
             D.diag = %s;
@@ -83,25 +88,49 @@ async def main():
             % DIAG_FIXTURE
         )
         res2 = await page.evaluate(
-            "() => buildWeeklyPlan(D).slots.map(s => s.part)"
+            """() => buildWeeklyPlan(D).slots.map(s => ({
+                type: s.type,
+                skills: (s.units || []).map(u => u.skill),
+                units: (s.units || []).map(queueUnitLabel),
+            }))"""
         )
-        parts2 = [x for x in res2 if x is not None]
-        for w in (3, 2, 7):
-            assert w in parts2, f"Expected weakest part {w} in slots, got {res2}"
-        out["2_weakest_en_slots"] = f"OK: parts={res2}"
+        assert len(res2) == 5, f"Expected one session per scheduled day: {res2}"
+        assert all(r["units"] for r in res2), f"Slot without queue units: {res2}"
+        assert all(len(set(r["skills"])) == 1 for r in res2), (
+            f"a session mixed skills: {res2}"
+        )
+        assert res2[0]["units"] == ["Reading part 1"], (
+            f"the empty log did not start the queue at unit 1: {res2}"
+        )
+        out["2_sesiones_de_la_cola"] = f"OK: {[r['units'] for r in res2]}"
 
-        # 3. Always exactly 1 Writing slot and 1 Listening slot
+        # 3. The position comes from the log: five days with no log interleave
+        #    R&UE and Listening; five logged Reading units move the same week
+        #    to Writing and Speaking.
         res3 = await page.evaluate(
             """() => {
-            const cnt = (p, t) => p.slots.filter(s => s.type === t).length;
-            const p5 = buildWeeklyPlan(D);
-            D.settings.weekGoal = 6; const p6 = buildWeeklyPlan(D);
-            D.settings.weekGoal = 5;
-            return {w5: cnt(p5,'w'), l5: cnt(p5,'l'), w6: cnt(p6,'w'), l6: cnt(p6,'l')};
+            const sched = n => [1,2,3,4,5,6,7].slice(0, n)
+                .map(d => ({day: d, time: '15:30'}));
+            const skills = () => buildWeeklyPlan(D).slots.map(s => s.units[0].skill);
+            D.settings.schedule = sched(5); const d5 = skills();
+            D.settings.schedule = sched(6); const d6 = skills();
+            D.settings.schedule = sched(5);
+            D.log = [1,2,3,4,5].map(() => ({date:'2026-10-01', type:'ue', part:1, min:8}));
+            const moved = skills();
+            D.log = [];
+            return {d5, d6, moved};
         }"""
         )
-        assert res3 == {"w5": 1, "l5": 1, "w6": 1, "l6": 1}, f"Bad w/l counts: {res3}"
-        out["3_un_w_un_l"] = f"OK: {res3}"
+        assert res3["d5"] == ["rue", "l", "rue", "l", "rue"], (
+            f"the five-day week is not the queue from unit 1: {res3['d5']}"
+        )
+        assert res3["d6"] == ["rue", "l", "rue", "l", "rue", "l"], (
+            f"the six-day week is not the queue from unit 1: {res3['d6']}"
+        )
+        assert res3["moved"] == ["w", "sp", "w", "sp", "w"], (
+            f"five logged units did not move the queue: {res3['moved']}"
+        )
+        out["3_posicion_del_log"] = f"OK: {res3}"
 
         # 4. The slot count is the number of scheduled days.
         res4 = await page.evaluate(
@@ -117,27 +146,28 @@ async def main():
         assert res4 == {"n3": 3, "n6": 6}, f"Bad slot counts: {res4}"
         out["4_weekGoal_3_y_6"] = f"OK: {res4}"
 
-        # 5. L-GAP majority -> part 1 or 3; G-ERR majority -> part 2 or 4
+        # 5. itemsPerSession: a session takes that many consecutive units of one
+        #    skill, and its minutes are the sum of those units.
         res5 = await page.evaluate(
             """() => {
-            const sched = n => [1,2,3,4,5,6,7].slice(0, n)
-                .map(d => ({day: d, time: '15:30'}));
-            D.settings.schedule = sched(6);
-            D.diag.weakest = [7,5,6];
-            const mk = code => [1,2,3].map(() => ({date:'2026-10-25', code, part:7, note:'x'}));
-            D.errs = mk('L-GAP');
-            const lex = buildWeeklyPlan(D).slots.map(s => s.part);
-            D.errs = mk('G-ERR');
-            const gram = buildWeeklyPlan(D).slots.map(s => s.part);
-            D.errs = []; D.settings.schedule = sched(5); D.diag.weakest = [3,2,7];
-            return {lex, gram};
+            D.log = []; D.errs = [];
+            D.settings.itemsPerSession = 2;
+            const plan = buildWeeklyPlan(D);
+            D.settings.itemsPerSession = 1;
+            return plan.slots.map(s => ({
+                skills: s.units.map(u => u.skill),
+                min: s.min,
+                sum: s.units.reduce((n, u) => n + unitMinutes(u), 0),
+            }));
         }"""
         )
-        lex_parts = [x for x in res5["lex"] if x is not None]
-        gram_parts = [x for x in res5["gram"] if x is not None]
-        assert any(x in (1, 3) for x in lex_parts), f"L-GAP majority -> no part 1/3: {res5['lex']}"
-        assert any(x in (2, 4) for x in gram_parts), f"G-ERR majority -> no part 2/4: {res5['gram']}"
-        out["5_taxonomia_fill"] = f"OK: lex={res5['lex']}, gram={res5['gram']}"
+        assert res5 and all(
+            len(s["skills"]) == 2 and len(set(s["skills"])) == 1 for s in res5
+        ), f"two-unit sessions are not two units of one skill: {res5}"
+        assert all(s["min"] == s["sum"] for s in res5), (
+            f"session minutes are not the sum of its units: {res5}"
+        )
+        out["5_items_per_session"] = f"OK: {[(s['skills'], s['min']) for s in res5]}"
 
         # 6. One slot per scheduled day, and no repeated part on the same day.
         res6 = await page.evaluate(
@@ -160,15 +190,20 @@ async def main():
             assert len(vals) == len(set(vals)), f"Repeated part on {day}: {ps}"
         out["6_sin_repetir_por_dia"] = f"OK: per day={by_day}"
 
-        # 7. Each slot's reason is non-empty and cites the data that justifies it
+        # 7. Each slot's reason is non-empty and names the skill it trains.
         res7 = await page.evaluate(
-            "() => buildWeeklyPlan(D).slots.map(s => s.reason)"
+            """() => buildWeeklyPlan(D).slots.map(s => ({
+                reason: s.reason,
+                label: planSkillLabel(s.units[0].skill),
+            }))"""
         )
         assert len(res7) >= 5, f"Expected >=5 reasons, got {res7}"
         for r in res7:
-            assert isinstance(r, str) and r.strip(), f"Empty reason: {r!r}"
-            assert ("diagnostic" in r) or ("error" in r) or ("Writing" in r), f"Reason without data: {r!r}"
-        out["7_reasons_con_datos"] = f"OK: {len(res7)} reasons cite diagnostic/errors/Writing"
+            assert isinstance(r["reason"], str) and r["reason"].strip(), (
+                f"Empty reason: {r!r}"
+            )
+            assert r["label"] in r["reason"], f"Reason without its skill: {r!r}"
+        out["7_reasons_con_skill"] = f"OK: {len(res7)} reasons name their skill"
 
         # UI: rendered rows, Regenerate and Start -> RESOURCES
         await page.click("nav button[data-view='plan']")

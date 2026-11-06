@@ -1,8 +1,8 @@
 """Tests of the onboarding intake wizard (4 steps) and its outputs:
 
 - the wizard (dialog, focus trap, Back/Continue, Esc) and D.profile
-- the profile-driven weekly plan (hoursWeek -> slots, profile.days,
-  skills ratings, struggles reinforcement slots, real reasons)
+- the weekly plan (the rotation queue driven by the schedule and the log:
+  one session per scheduled day, one skill per session, position from the log)
 - Today's exam countdown using profile.examDate
 - "Edit my intake" / "Replay the app tour" in Plan -> Settings
 - the 7-step feature tour, skipping invisible targets
@@ -14,7 +14,6 @@ from test_sync.py): it never touches data/ and sync only writes there.
 
 import json
 import os
-import re
 import sys
 import tempfile
 import threading
@@ -235,33 +234,44 @@ with sync_playwright() as p:
     assert "Mon" in res8 and "Fri" in res8, f"Chosen days missing: {res8}"
     out["8_dias_elegidos"] = f"OK: days={res8}"
 
-    # 9. No diagnostic, skills.w = 1 -> Writing slot with its rating (n/5)
+    # 9. The week comes from the rotation queue: two days with no log ask for
+    #    Reading part 1 and Listening part 1; two logged units move the same
+    #    days to Writing and Speaking.
     res9 = pg.evaluate(
         """() => {
-        D.profile.skills = {rue:4,w:1,l:3,sp:2};
-        D.profile.struggles = [];
-        D.profile.strugglesDeclared = [];
-        const w = buildWeeklyPlan(D).slots.find(s => s.type === 'w');
-        return w ? {reason: w.reason} : null;
+        const skills = () => buildWeeklyPlan(D).slots.map(s => s.units[0].skill);
+        D.log = [];
+        const empty = skills();
+        D.log = [
+            {date: '2026-10-01', type: 'ue', part: 1, min: 8},
+            {date: '2026-10-02', type: 'lp', part: 1, min: 10}
+        ];
+        const moved = skills();
+        D.log = [];
+        return {empty, moved};
     }"""
     )
-    assert res9 is not None, "No Writing slot with skills.w = 1"
-    assert re.search(r"you rated Writing \d/5", res9["reason"]), f"Reason without rating: {res9}"
-    out["9_writing_por_rating"] = f"OK: {res9['reason']}"
+    assert res9 == {"empty": ["rue", "l"], "moved": ["w", "sp"]}, (
+        f"The week is not the queue at the logged position: {res9}"
+    )
+    out["9_cola_por_posicion"] = f"OK: {res9}"
 
-    # 10. struggles ['G-ERR'] -> grammar reinforcement slot with its reason
+    # 10. The intake ratings and declared struggles do not add or reorder
+    #     sessions: the week is still one session per scheduled day.
     res10 = pg.evaluate(
         """() => {
+        const skills = () => buildWeeklyPlan(D).slots.map(s => s.units[0].skill);
+        const before = skills();
+        D.profile.skills = {rue: 1, w: 5, l: 1, sp: 5};
         D.profile.struggles = ['G-ERR'];
         D.profile.strugglesDeclared = ['Grammar accuracy'];
-        const g = buildWeeklyPlan(D).slots.find(s => /flagged/.test(s.reason));
-        return g ? {part: g.part, reason: g.reason} : null;
+        const after = skills();
+        return {before, after};
     }"""
     )
-    assert res10 is not None, "No reinforcement slot for G-ERR"
-    assert res10["part"] in (2, 4), f"Not a grammar slot: {res10}"
-    assert "flagged" in res10["reason"], f"Reason does not cite the struggle: {res10}"
-    out["10_refuerzo_gramatica"] = f"OK: {res10}"
+    assert res10["after"] == res10["before"], f"Intake reordered the week: {res10}"
+    assert len(res10["after"]) == 2, f"Intake changed the session count: {res10}"
+    out["10_intake_sin_efecto"] = f"OK: {res10}"
 
     # 11. Today countdown uses profile.examDate (+ chip when missing)
     pg.evaluate(
