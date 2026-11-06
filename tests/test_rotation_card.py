@@ -135,6 +135,41 @@ with sync_playwright() as p:
     )
     out["5_no_history"] = empty["rue"]
 
+    # 6. The Week plan card offers itemsPerSession and a no-jargon preview of
+    #    the next six units of the single queue.
+    queue = pg.evaluate(
+        """() => {
+            D.log = [];
+            D.settings.itemsPerSession = 2;
+            save();
+            renderWeeklyPlan();
+            const sel = document.getElementById('wpItemsPerSession');
+            return {
+                value: sel.value,
+                options: [...sel.options].map(o => o.value),
+                preview: document.getElementById('wpQueuePreview').textContent,
+            };
+        }"""
+    )
+    pg.wait_for_timeout(200)
+    assert queue["value"] == "2", f"the select did not reflect itemsPerSession: {queue}"
+    assert queue["options"] == ["1", "2", "3", "4"], f"the select options are wrong: {queue}"
+    assert "Next up:" in queue["preview"], f"the preview lost its label: {queue}"
+    labels = queue["preview"].split("Next up:")[1].strip().split(" · ")
+    assert labels == [
+        "Reading part 1",
+        "Listening part 1",
+        "Writing essay",
+        "Speaking part 1",
+        "Reading part 2",
+        "Listening part 2",
+    ], f"the preview is not the next six units: {labels}"
+    for jargon in ("cycle", "queue", "parallel"):
+        assert jargon not in queue["preview"].lower(), (
+            f"internal jargon leaked into the preview: {queue['preview']!r}"
+        )
+    out["6_queue_preview"] = queue
+
     assert page_errors == [], f"page errors: {page_errors}"
     out["errors"] = page_errors
     browser.close()

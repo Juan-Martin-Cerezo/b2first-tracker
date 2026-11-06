@@ -79,6 +79,12 @@ with sync_playwright() as p:
     )
     assert not any(s["section"] for s in by_part), f"by-part used a full section: {by_part}"
     assert all(s["min"] == 45 for s in by_part), f"by-part changed slotMin: {by_part}"
+    assert [s["title"] for s in by_part] == [
+        "Reading part 1 · 45 min",
+        "Listening part 1 · 45 min",
+        "Writing essay · 45 min",
+        "Speaking part 1 · 45 min",
+    ], f"by-part is not the continuous queue: {[s['title'] for s in by_part]}"
     OUT["1_by_part"] = by_part
 
     # 2. full-section: one whole paper per chosen day, official times, cycling.
@@ -132,8 +138,9 @@ with sync_playwright() as p:
     assert "Full " in after["text"], f"TODAY is not showing a full paper: {after['text']}"
     OUT["4_repaint"] = {"before": before, "after": after["text"]}
 
-    # 5. An invalid customPlan falls back to the default of each day.
-    seed_profile(pg, FOUR_DAYS, "by-part")
+    # 5. An invalid customPlan falls back to the default custom day, which is
+    #    the plan without any custom entries (custom kept its old behaviour).
+    seed_profile(pg, FOUR_DAYS, "custom", {})
     baseline = {s["day"]: s for s in pg.evaluate(PLAN_JS)}
     seed_profile(
         pg,

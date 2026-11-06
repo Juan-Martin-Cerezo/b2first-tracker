@@ -27,13 +27,15 @@ READ_JS = """() => {
         day: e.dataset.day,
         type: e.dataset.type,
         parts: e.dataset.parts || '',
+        units: e.dataset.units || '',
         min: Number(e.dataset.min),
         title: strip((e.querySelector('.wp-title') || {}).textContent || ''),
     }));
-    const today = [...document.querySelectorAll('#todaySession .ts-row')].map(e => ({
+    const today = [...document.querySelectorAll('#todaySession .ts-row:not(.ts-next-unit)')].map(e => ({
         day: e.dataset.day,
         type: e.dataset.type,
         parts: e.dataset.parts || '',
+        units: e.dataset.units || '',
         min: Number(e.dataset.min),
         title: (e.querySelector('.ts-title') || {}).textContent || '',
     }));
@@ -76,7 +78,7 @@ def seed(pg, days, offset=0, hours=4):
 
 
 def shape(rows):
-    return [(r["title"], r["parts"], r["min"], r["type"]) for r in rows]
+    return [(r["title"], r["parts"], r["units"], r["min"], r["type"]) for r in rows]
 
 
 with sync_playwright() as p:

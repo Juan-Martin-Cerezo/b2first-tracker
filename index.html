@@ -3239,6 +3239,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none" data-i18n="plan_undo_btn">Undo</button>
             </div>
             <div class="sub" id="wpRotationHelp"></div>
+            <div class="wp-rotation-row" style="margin-top:8px">
+              <label for="wpItemsPerSession" data-i18n="plan_items_per_session">Exercises per session</label>
+              <select id="wpItemsPerSession" onchange="onItemsPerSessionChange(this.value)">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div class="sub" id="wpQueuePreview" style="margin-top:6px"></div>
           </div>
           <div id="wpCustomEditor" style="margin-top:10px"></div>
           <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
@@ -4033,6 +4043,11 @@ const I18N={
     plan_custom_parts:'Parts for {day}',
     plan_custom_min:'Minutes for {day}',
     plan_custom_parts_error:'Parts must be between 1 and {max}.',
+    plan_items_per_session:'Exercises per session',
+    plan_queue_next:'Next up:',
+    plan_queue_start:'No sessions logged yet — starting at the first exercise.',
+    plan_queue_reason:'Continuous rotation across all skills.',
+    plan_queue_reason_many:'Continuous rotation · {n} exercises in one session.',
     plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Mock exam',
@@ -4825,6 +4840,11 @@ const I18N={
     plan_custom_parts:'Partes para {day}',
     plan_custom_min:'Minutos para {day}',
     plan_custom_parts_error:'Las partes deben estar entre 1 y {max}.',
+    plan_items_per_session:'Ejercicios por sesión',
+    plan_queue_next:'A continuación:',
+    plan_queue_start:'Todavía no registraste sesiones — empieza por el primer ejercicio.',
+    plan_queue_reason:'Rotación continua entre todas las habilidades.',
+    plan_queue_reason_many:'Rotación continua · {n} ejercicios en una sesión.',
     plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Simulacro completo',
@@ -5274,6 +5294,7 @@ const SETTINGS_DEFAULT={
   lCycle:[1,2,3,4],
   spCycle:[1,2,3,4],
   rotationMode:'by-part',
+  itemsPerSession:1,
   customPlan:{},
   e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}
 };
@@ -12651,6 +12672,89 @@ function rotateByOffset(arr,offset){
   const k=((Math.trunc(offset)%n)+n)%n;
   return k?arr.slice(k).concat(arr.slice(0,k)):arr.slice();
 }
+/* ---------- ROTATION QUEUE (by-part) ----------
+   One continuous queue of work units shared by PLAN and TODAY: the skills
+   repeat R&UE -> Listening -> Writing -> Speaking and each skill advances
+   through its own cycle. The position comes from the units already logged,
+   never from a stored cursor, so a refresh cannot move it. */
+const QUEUE_SKILLS=['rue','l','w','sp'];
+function normalizeItemsPerSession(v){
+  const n=Math.round(Number(v));
+  return n>=1&&n<=4?n:1;
+}
+function queueCycles(s){
+  s=s||(D&&D.settings)||{};
+  const pick=(name,def,lo,hi)=>{
+    const list=Array.isArray(s[name])?s[name].map(Number).filter(n=>n>=lo&&n<=hi):[];
+    return list.length?list:def.slice();
+  };
+  const w=(Array.isArray(s.wCycle)?s.wCycle:[]).filter(g=>SETTINGS_DEFAULT.wCycle.indexOf(g)>=0);
+  return {
+    rue:pick('rueCycle',[1,2,3,4,5,6,7],1,7),
+    l:pick('lCycle',[1,2,3,4],1,4),
+    w:w.length?w.slice():SETTINGS_DEFAULT.wCycle.slice(),
+    sp:pick('spCycle',[1,2,3,4],1,4)
+  };
+}
+function queueMod(n,m){return ((Math.trunc(n)%m)+m)%m}
+function queueUnit(index,cycles){
+  const skill=QUEUE_SKILLS[queueMod(index,4)];
+  const cycle=cycles[skill];
+  const value=cycle[queueMod(Math.floor(index/4),cycle.length)];
+  return {skill:skill,type:skill==='rue'?'ue':skill,value:value,
+    part:skill==='w'?null:value,kind:skill==='w'?value:null};
+}
+function queueUnitLabel(u){
+  if(!u)return '';
+  if(u.skill==='rue')return 'Reading part '+u.value;
+  if(u.skill==='l')return 'Listening part '+u.value;
+  if(u.skill==='w')return 'Writing '+String(u.value).toLowerCase();
+  if(u.skill==='sp')return 'Speaking part '+u.value;
+  return String(u.value);
+}
+function queueLogCount(s,log){
+  const c=queueCycles(s);
+  const sets={ue:c.rue.map(String),lp:c.l.map(String),w:c.w.map(String),sp:c.sp.map(String)};
+  return (Array.isArray(log)?log:[]).filter(e=>{
+    if(!e||e.extra===true)return false;
+    if(e.type==='ue')return sets.ue.indexOf(String(e.part))>=0;
+    if(e.type==='lp')return sets.lp.indexOf(String(e.part))>=0;
+    if(e.type==='w')return sets.w.indexOf(String(e.kind))>=0;
+    if(e.type==='sp')return sets.sp.indexOf(String(e.part))>=0;
+    return false;
+  }).length;
+}
+function queueStartIndex(s,log,offset){
+  return queueLogCount(s,log)+(Math.trunc(Number(offset))||0);
+}
+function queueSlotForUnits(units,slotMin){
+  const first=units[0];
+  const min=slotMin*units.length;
+  return {part:first.part,parts:first.skill==='w'?[]:[first.value],
+    type:first.type,min:min,timed:false,queue:true,units:units,
+    session:units.length>1,
+    reason:units.length>1?t('plan_queue_reason_many',{n:units.length}):t('plan_queue_reason')};
+}
+/* Consecutive sessions, `perSession` units each, starting at `start`. Day keys
+   are handed out in schedule order so the caller can alternate Mon/Fri/... */
+function rotationQueueSessions(dayKeys,perSession,start,count,s,slotMin){
+  s=s||(D&&D.settings)||{};
+  const cycles=queueCycles(s);
+  const n=normalizeItemsPerSession(perSession);
+  const min=Math.max(1,Number(slotMin)||Number(s.slotMin)||45);
+  const out=[];
+  for(let i=0;i<count;i++){
+    const units=[];
+    for(let k=0;k<n;k++)units.push(queueUnit(start+i*n+k,cycles));
+    const slot=queueSlotForUnits(units,min);
+    if(dayKeys&&dayKeys.length)slot.day=dayKeys[i%dayKeys.length];
+    out.push(slot);
+  }
+  return out;
+}
+function slotUnitsAttr(sl){
+  return (Array.isArray(sl&&sl.units)?sl.units:[]).map(u=>u.skill+':'+u.value).join(',');
+}
 function slotParts(sl){
   if(Array.isArray(sl&&sl.parts))return sl.parts.slice();
   return (sl&&sl.part!=null)?[sl.part]:[];
@@ -12680,6 +12784,12 @@ function slotLabel(sl){
    so the two screens can never drift apart. */
 function slotTitleText(sl){
   if(!sl)return '';
+  if(Array.isArray(sl.units)&&sl.units.length){
+    const labels=sl.units.length===1
+      ?queueUnitLabel(sl.units[0])
+      :sl.units.map((u,i)=>`${i+1}) ${queueUnitLabel(u)}`).join(' · ');
+    return labels+' · '+sl.min+' min';
+  }
   if(sl.section)return (FULL_SECTION_LABEL[sl.type]||slotLabel(sl))+' ('+sl.min+' min)';
   return slotPartText(sl)+slotLabel(sl)+' · '+sl.min+' min'+(sl.timed?' · timed (exam mode)':'');
 }
@@ -12854,7 +12964,10 @@ function buildWeeklyPlan(D){
     });
     slots=rotateByOffset(slots,offset);
   }else{
-    slots=rotateByOffset(ordered,offset);
+    // by-part: one continuous queue, `itemsPerSession` units per scheduled day.
+    const per=normalizeItemsPerSession(s.itemsPerSession);
+    const start=queueStartIndex(s,log,offset);
+    slots=rotationQueueSessions(sessionDays.map(d=>d.key),per,start,dayN,s,slotMin);
   }
   slots=slots.slice(0,dayN);
   slots.forEach((sl,i)=>{sl.day=DAYS[i];sl.time=TIMES[i]});
@@ -13055,9 +13168,32 @@ function renderRotationControls(plan){
     ?'Each session is one whole paper with its official exam time.'
     :mode==='custom'
       ?'You choose the skill, parts and duration of every day below.'
-      :'Exercises and loose parts rotate between sessions (default).';
+      :'One continuous rotation across all skills, in order.';
+  const items=document.getElementById('wpItemsPerSession');
+  if(items)items.value=String(normalizeItemsPerSession(D.settings.itemsPerSession));
+  const preview=document.getElementById('wpQueuePreview');
+  if(preview){
+    if(mode==='by-part'){
+      const s=D.settings||{};
+      const start=queueStartIndex(s,D.log,D.sessionOffset||0);
+      const cycles=queueCycles(s);
+      const labels=[];
+      for(let k=0;k<6;k++)labels.push(queueUnitLabel(queueUnit(start+k,cycles)));
+      const empty=queueLogCount(s,D.log)===0;
+      preview.style.display='';
+      preview.textContent=(empty?t('plan_queue_start')+' ':'')+t('plan_queue_next')+' '+labels.join(' · ');
+    }else{
+      preview.style.display='none';
+      preview.textContent='';
+    }
+  }
   const undo=document.getElementById('wpUndoBtn');
   if(undo)undo.style.display=SETTINGS_UNDO?'':'none';
+}
+function onItemsPerSessionChange(v){
+  D.settings.itemsPerSession=normalizeItemsPerSession(v);
+  save();
+  refreshAll();
 }
 function customSkillOfSlot(sl){
   if(!sl)return 'rue';
@@ -13170,7 +13306,7 @@ function renderWeeklyPlan(){
   }
   if(whyBox)whyBox.style.display='';
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    return `<div class="wp-row" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
+    return `<div class="wp-row" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
       <div class="wp-main">
         <div class="wp-title tnum">${sl.day} · ${slotTitleText(sl)}</div>
         <div class="wp-when tnum">${sl.time||''}</div>
@@ -13194,6 +13330,11 @@ function regenWeeklyPlan(){renderWeeklyPlan()}
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
   if(!sl)return;
+  if(Array.isArray(sl.units)&&sl.units.length){
+    QUEUE_PENDING=sl.units.length>1?{day:sl.day,units:sl.units.slice(1)}:null;
+    startQueueUnit(sl.units[0]);
+    return;
+  }
   if(sl.type==='w')goToPartFilter(sl.part,'w');
   else if(sl.type==='l')goToPartFilter(sl.part,'lp');
   else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
@@ -14517,6 +14658,9 @@ function updatePersonalizedUI(){
 }
 
 let TODAY_PLAN=null;
+/* Units still waiting inside the session that was just started. TODAY offers
+   the next one here instead of jumping straight to the following day. */
+let QUEUE_PENDING=null;
 function planTodayLabel(){
   return PLAN_DAY_MAP[PLAN_DAY_ORDER[(new Date().getDay()+6)%7]];
 }
@@ -14563,11 +14707,18 @@ function renderTodaySession(plan,todaySlots){
   box.innerHTML=`<h2>Today's session</h2><div style="display:flex;flex-direction:column;gap:10px">`+
     todaySlots.map(sl=>{
       const idx=plan.slots.indexOf(sl);
-      return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-min="${sl.min}">
+      return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-min="${sl.min}">
         <div class="ts-main"><div class="ts-title tnum">${slotTitleText(sl)}</div><div class="ts-when tnum">${sl.time||''}</div><div class="ts-reason">${esc(sl.reason)}</div></div>
         <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
       </div>`;
     }).join('')+`</div>`;
+  if(QUEUE_PENDING&&QUEUE_PENDING.units.length&&QUEUE_PENDING.day===todaySlots[0].day){
+    const u=QUEUE_PENDING.units[0];
+    box.innerHTML+=`<div class="ts-row ts-next-unit" data-next-unit="${u.skill}:${u.value}" style="margin-top:10px">
+      <div class="ts-main"><div class="ts-title tnum">${esc(queueUnitLabel(u))}</div><div class="ts-reason">${esc(t('plan_queue_reason'))}</div></div>
+      <button type="button" class="btn sm ok" onclick="startNextQueuedUnit()">${t('common_start')}</button>
+    </div>`;
+  }
 }
 /* A rest day still allows practice: the extra session opens the solo logger and
    tags whatever it saves with `extra`. The rotation counts only planned rows,
@@ -14593,15 +14744,36 @@ function startFullPaperSession(type){
   showView('exam');
   startRealMock(type==='ue'?'rue':type);
 }
+function startQueueUnit(u){
+  if(!u)return;
+  if(u.type==='w')goToPartFilter(u.part,'w');
+  else if(u.type==='l')goToPartFilter(u.part,'lp');
+  else if(u.type==='sp')goToPartFilter(u.part,'sp');
+  else goToPartFilter(u.part,'ue');
+}
 function todayStart(i){
   const sl=(TODAY_PLAN&&TODAY_PLAN.slots&&TODAY_PLAN.slots[i])||null;
   if(!sl)return;
   if(sl.section){startFullPaperSession(sl.type);return}
+  if(Array.isArray(sl.units)&&sl.units.length){
+    QUEUE_PENDING=sl.units.length>1?{day:sl.day,units:sl.units.slice(1)}:null;
+    startQueueUnit(sl.units[0]);
+    return;
+  }
+  QUEUE_PENDING=null;
   if(sl.type==='w')goToPartFilter(sl.part,'w');
   else if(sl.type==='l')goToPartFilter(sl.part,'lp');
   else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
   else if(sl.type==='mock')showView('exam');
   else goToPartFilter(sl.part,'ue');
+}
+function startNextQueuedUnit(){
+  if(!QUEUE_PENDING||!QUEUE_PENDING.units.length)return;
+  const u=QUEUE_PENDING.units.shift();
+  const left=QUEUE_PENDING.units.length;
+  if(!left)QUEUE_PENDING=null;
+  renderToday();
+  startQueueUnit(u);
 }
 function renderToday(){
   updatePersonalizedUI();
