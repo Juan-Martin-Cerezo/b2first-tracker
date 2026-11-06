@@ -971,6 +971,24 @@ tbody tr:hover{background:var(--surface-2)}
 #v-hoy .practice-now-link span{font-size:clamp(12px, 3.4vw, 13px)}
 @media (max-width:560px){ #v-hoy .practice-now-row{flex-direction:column} }
 
+/* ---------- PLAN: one centered column, same shell as Today ---------- */
+#v-plan .plan-shell{
+  width:100%;max-width:560px;min-width:0;
+  margin-inline:auto;
+  display:flex;flex-direction:column;gap:18px;
+  padding-inline:max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
+  padding-bottom:max(16px, env(safe-area-inset-bottom));
+}
+#v-plan .plan-shell>.card,#v-plan .plan-shell>.page-head{margin-bottom:0}
+#v-plan .page-head .page-title{font-size:clamp(22px, 6vw, 30px);line-height:1.1}
+#v-plan .wp-row{padding:clamp(12px, 4vw, 14px);gap:clamp(8px, 3vw, 10px)}
+#v-plan .wp-row .wp-main{flex:1 1 220px;min-width:0}
+#v-plan .wp-row .wp-title{overflow-wrap:break-word;word-break:normal;white-space:normal}
+#v-plan .wp-row .btn{max-width:100%;white-space:normal}
+#v-plan .wp-rotation-row select,#v-plan .wp-rotation-row label{min-width:0}
+#v-plan .sched-day-select,#v-plan .sched-time-input{min-width:0;max-width:100%}
+#v-plan .plan-shell .page-head>div{min-width:0}
+
 /* ---------- ERROR TAXONOMY ---------- */
 .err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .err-head .del{margin-left:auto}
@@ -3203,6 +3221,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
       <!-- ============ PLAN ============ -->
       <section id="v-plan" class="view">
+        <div class="plan-shell">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="plan_title">Plan Configuration</h1>
@@ -3216,10 +3235,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <div class="card" id="examCountdown" style="margin-bottom:16px"></div>
+        <div class="card" id="examCountdown"></div>
 
         <!-- Week plan (derived from the diagnostic + error taxonomy) -->
-        <div class="card" id="weeklyPlanCard" style="margin-bottom:16px">
+        <div class="card" id="weeklyPlanCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_plan">Week plan</h2>
             <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
@@ -3253,7 +3272,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
 
         <!-- Session Schedules (immediately after the week plan) -->
-        <div class="card" id="schedulesCard" style="margin-bottom:16px">
+        <div class="card" id="schedulesCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
             <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
@@ -3288,7 +3307,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
 
         <!-- Rotation Cycles & Schedule Roadmap -->
-        <div class="card plan-green-card" id="rotationCard" style="margin-bottom:16px">
+        <div class="card plan-green-card" id="rotationCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_rotation">What comes next</h2>
           </div>
@@ -3297,6 +3316,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:6px;margin:12px 0 16px"></div>
 
           <div id="rotationCardBody" style="display:flex;flex-direction:column;gap:10px;margin:12px 0"></div>
+        </div>
         </div>
       </section>
 
