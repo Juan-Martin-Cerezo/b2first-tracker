@@ -6153,9 +6153,10 @@ function obApplySchedule(prof){
   const days=Array.isArray(prof.days)?prof.days:[];
   if(!days.length)return;
   if(!D.settings)D.settings={};
-  if(Array.isArray(D.settings.schedule))return;
+  if(storedSchedule(D.settings))return;
   const times=['15:30','13:00','10:00','18:00','09:00','16:00','11:00'];
   D.settings.schedule=days.map((k,i)=>({day:OB_DAY_TO_JS[k],time:times[i%times.length]}));
+  D.settings.sessions=D.settings.schedule;
 }
 function obStartDiagnostic(){
   OB.error='';
@@ -12697,7 +12698,7 @@ function buildWeeklyPlan(D){
   /* With no stored schedule the draft profile is the seed (the onboarding
      preview runs before the list exists); once it exists it is the only source. */
   const sessionDays=sessionDaysFromSchedule(
-    Array.isArray(s.schedule)?s.schedule:seedScheduleFromProfile(prof)
+    storedSchedule(s)||seedScheduleFromProfile(prof)
   );
   const DAYS=sessionDays.map(d=>PLAN_DAY_MAP[d.key]);
   const TIMES=sessionDays.map(d=>d.time);
@@ -14125,15 +14126,26 @@ function seedScheduleFromProfile(prof){
   if(s.sesB&&typeof s.sesB.day==='number')legacy.push({day:+s.sesB.day,time:s.sesB.time||SCHEDULE_TIMES[1]});
   return legacy.length?legacy:SCHEDULE_DEFAULT.map(x=>({day:x.day,time:x.time}));
 }
+/* The card historically stored the list in `schedule`; `sessions` is accepted
+   too so an old or external document with either key is the same list. */
+function storedSchedule(s){
+  const src=s||(D&&D.settings)||{};
+  if(Array.isArray(src.schedule))return src.schedule;
+  if(Array.isArray(src.sessions))return src.sessions;
+  return null;
+}
 function seedScheduleIfNeeded(){
   const s=D&&D.settings;
-  if(!s||Array.isArray(s.schedule))return;
+  if(!s||storedSchedule(s))return;
   const days=Array.isArray(D.profile&&D.profile.days)?D.profile.days:[];
-  if(days.length)s.schedule=seedScheduleFromProfile();
+  if(days.length){
+    s.schedule=seedScheduleFromProfile();
+    s.sessions=s.schedule;
+  }
 }
 function getSchedule(){
   const s=D.settings||SETTINGS_DEFAULT;
-  return Array.isArray(s.schedule)?s.schedule:seedScheduleFromProfile();
+  return storedSchedule(s)||seedScheduleFromProfile();
 }
 /* The schedule entries in week order, one row per configured session. */
 function sessionDaysFromSchedule(list){
@@ -14280,6 +14292,7 @@ function updateScheduleFromUI(){
     if(day>=0&&day<=6)newSched.push({day,time});
   });
   D.settings.schedule=newSched;
+  D.settings.sessions=newSched;
   repaintScheduleDrivenViews();
 }
 
@@ -14296,6 +14309,7 @@ function addScheduleRow(){
   }
   sched.push({day:nextDay,time:'17:00'});
   D.settings.schedule=sortSchedule(sched);
+  D.settings.sessions=D.settings.schedule;
   renderScheduleRows();
   repaintScheduleDrivenViews();
 }
@@ -14305,6 +14319,7 @@ function removeScheduleRow(idx){
   if(idx<0||idx>=sched.length)return;
   sched.splice(idx,1);
   D.settings.schedule=sortSchedule(sched);
+  D.settings.sessions=D.settings.schedule;
   renderScheduleRows();
   repaintScheduleDrivenViews();
 }
