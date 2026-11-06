@@ -954,6 +954,7 @@ tbody tr:hover{background:var(--surface-2)}
 .ts-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .ts-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .ts-rest{font-size:var(--fs-sm);color:var(--txt-2)}
+.ts-summary{padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2);font-size:var(--fs-sm);color:var(--txt)}
 
 /* ---------- ERROR TAXONOMY ---------- */
 .err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -3707,6 +3708,7 @@ const I18N={
     today_studio_writing_sub:'One text type per session, with a deep C1 audit.',
     today_extra_session:'Extra session',
     today_extra_note:'Off-plan practice: it does not move the rotation or the shift.',
+    today_done_summary:'Session done: {planned} min planned, {real} min practised.',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
@@ -4481,6 +4483,7 @@ const I18N={
     today_studio_writing_sub:'Un tipo de texto por sesión, con auditoría C1 profunda.',
     today_extra_session:'Sesión extra',
     today_extra_note:'Práctica fuera del plan: no mueve la rotación ni el corrimiento.',
+    today_done_summary:'Sesión completada: {planned} min planificados, {real} min reales.',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
@@ -14834,6 +14837,7 @@ function renderTodaySession(plan,todaySlots){
       <button type="button" class="btn sm ok" onclick="startNextQueuedUnit()">${t('common_start')}</button>
     </div>`;
   }
+  box.innerHTML+=sessionSummaryLine();
 }
 /* A rest day still allows practice: the extra session opens the solo logger and
    tags whatever it saves with `extra`. The rotation counts only planned rows,
@@ -14913,6 +14917,63 @@ function planSlotUnits(sl){
   if(!parts.length)return [];
   const skill=sl.type==='ue'?'rue':sl.type;
   return parts.map(p=>({skill:skill,value:p,min:unitMinutes({skill:skill,value:p})}));
+}
+/* Minutes of the day's session: the units the plan put in it, finished and read
+   back from D.log. The plan cursor advances as soon as a session is logged, so
+   the completed session is rebuilt from today's rows (oldest first) instead of
+   from the slot Today paints now. Planned minutes are the ones the unit was
+   planned for (the row's tag, else the session table); real minutes are the
+   rows' own `min`. Nothing is estimated. */
+function sessionTodayDone(){
+  const key=dayKey(new Date());
+  const rows=[];
+  (D.log||[]).forEach((e,i)=>{
+    if(!e||e.date!==key||e.extra===true)return;
+    for(const skill of QUEUE_SKILLS){
+      const value=queueLogUnit(skill,e);
+      if(value!=null){rows.push({row:e,skill:skill,value:String(value),idx:i});return}
+    }
+  });
+  if(!rows.length)return {planned:0,real:0,done:false};
+  rows.sort((a,b)=>{
+    const ta=Number(a.row.created_at)||0,tb=Number(b.row.created_at)||0;
+    if(ta!==tb)return ta-tb;
+    return b.idx-a.idx;
+  });
+  const per=Math.max(1,normalizeItemsPerSession((D.settings||{}).itemsPerSession));
+  const groups=[];
+  let group=[];
+  rows.forEach(r=>{
+    const distinct=new Set(group.map(g=>g.skill+':'+g.value));
+    const isNew=!group.some(g=>g.skill===r.skill&&g.value===r.value);
+    if(group.length&&(group[group.length-1].skill!==r.skill||(isNew&&distinct.size>=per))){
+      groups.push(group);
+      group=[];
+    }
+    group.push(r);
+  });
+  if(group.length)groups.push(group);
+  for(let i=groups.length-1;i>=0;i--){
+    const seen=new Set();
+    let planned=0,real=0;
+    groups[i].forEach(r=>{
+      real+=Number(r.row.min)||0;
+      const k=r.skill+':'+r.value;
+      if(seen.has(k))return;
+      seen.add(k);
+      const tagged=r.row.unit&&String(r.row.unit.value)===r.value
+        ?Number(r.row.unit.min):NaN;
+      planned+=Number.isFinite(tagged)?tagged:unitMinutes({skill:r.skill,value:r.value});
+    });
+    if(seen.size>=per)return {planned:planned,real:real,done:true};
+  }
+  return {planned:0,real:0,done:false};
+}
+function sessionSummaryLine(){
+  const s=sessionTodayDone();
+  if(!s.done)return '';
+  return `<div class="ts-summary tnum" data-planned="${s.planned}" data-real="${s.real}">`
+    +esc(t('today_done_summary',{planned:s.planned,real:s.real}))+'</div>';
 }
 function todayStart(i){
   const sl=(TODAY_PLAN&&TODAY_PLAN.slots&&TODAY_PLAN.slots[i])||null;
