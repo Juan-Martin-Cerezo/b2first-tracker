@@ -3021,6 +3021,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
+        <div class="card metrics-card" id="weekSummaryCard" style="margin-bottom:16px">
+          <h4 class="metrics-title" data-i18n="week_summary_title">Last 4 weeks</h4>
+          <div class="sub" data-i18n="week_summary_sub">Average minutes planned vs practised per skill, read from your log.</div>
+          <div id="weekSummaryBody" style="margin-top:10px"></div>
+        </div>
+
         <div class="stat-grid">
           <div class="stat-card">
             <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-charts"/></svg>
@@ -3979,6 +3985,10 @@ const I18N={
     plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Mock exam',
+    week_summary_title:'Last 4 weeks',
+    week_summary_sub:'Average minutes planned vs practised per skill, read from your log.',
+    week_summary_item:'{planned} min planned, {real} min practised',
+    week_summary_not_enough:'Not enough data yet — log at least 2 weeks.',
     plan_rotation:'What comes next',
     plan_upcoming_sub:'Your next sessions, exactly as your plan builds them:',
     settings_title:'Settings',
@@ -4745,6 +4755,10 @@ const I18N={
     plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Simulacro completo',
+    week_summary_title:'Últimas 4 semanas',
+    week_summary_sub:'Promedio de minutos planificados y practicados por destreza, leído de tu registro.',
+    week_summary_item:'{planned} min planificados, {real} min practicados',
+    week_summary_not_enough:'Todavía no hay datos suficientes — registrá al menos 2 semanas.',
     plan_rotation:'Qué viene ahora',
     plan_upcoming_sub:'Tus próximas sesiones, tal como las arma tu plan:',
     settings_title:'Ajustes',
@@ -15395,6 +15409,80 @@ function qlSave(){
   }
 }
 
+/* ---------- WEEKLY SUMMARY (planned vs real, last 4 weeks) ----------
+   Both series are read back from D.log; the current plan is never used to
+   rewrite the past. A row's planned minutes are its own plan tag (written when
+   the unit came from the plan) or the session table for the unit or paper the
+   row stands for. Real minutes are the row's `min`. Weeks are ISO weeks: the
+   current one plus the three before it. With fewer than two weeks of history
+   there is no average to show, so the card says so instead of drawing a number
+   out of a single week. */
+const WEEK_SUMMARY_SKILLS=['rue','l','w','sp'];
+const WEEK_SUMMARY_WEEKS=4;
+function weekSummarySkillOf(e){
+  if(!e)return null;
+  if(e.type==='ue'||e.type==='rue')return 'rue';
+  if(e.type==='lp'||e.type==='l')return 'l';
+  if(e.type==='w'||e.type==='fw')return 'w';
+  if(e.type==='sp')return 'sp';
+  return null;
+}
+function weekSummaryPlanned(e,skill){
+  if(!e)return 0;
+  const tagged=Number(e.unit&&e.unit.min);
+  if(Number.isFinite(tagged))return Math.max(0,tagged);
+  if(e.extra===true)return 0;
+  const value=queueLogUnit(skill,e);
+  if(value!=null)return unitMinutes({skill:skill,value:value});
+  const table=UNIT_MIN[skill]||{};
+  return Object.keys(table).reduce((total,k)=>total+(Number(table[k])||0),0);
+}
+function weekSummaryStart(now){
+  const today=dayKey(now||new Date());
+  const dow=(_parseLocalDay(today).getDay()+6)%7;
+  return _addDaysKey(today,-dow-(WEEK_SUMMARY_WEEKS-1)*7);
+}
+function weeklySummary(log,now){
+  const today=dayKey(now||new Date());
+  const start=weekSummaryStart(now||new Date());
+  const weeks={};
+  const acc={};
+  WEEK_SUMMARY_SKILLS.forEach(k=>{acc[k]={planned:0,real:0,rows:0}});
+  (Array.isArray(log)?log:[]).forEach(e=>{
+    if(!e||!e.date)return;
+    const d=dayKey(e.date);
+    if(d<start||d>today)return;
+    const skill=weekSummarySkillOf(e);
+    if(!skill)return;
+    weeks[_isoWeekKey(d)]=true;
+    acc[skill].planned+=weekSummaryPlanned(e,skill);
+    acc[skill].real+=Math.max(0,Number(e.min)||0);
+    acc[skill].rows++;
+  });
+  const n=Object.keys(weeks).length;
+  const enough=n>=2;
+  const rows=WEEK_SUMMARY_SKILLS.filter(k=>acc[k].rows>0).map(k=>({
+    skill:k,
+    planned:enough?Math.round(acc[k].planned/n):0,
+    real:enough?Math.round(acc[k].real/n):0
+  }));
+  return {weeks:n,enough:enough,rows:rows,windowStart:start,windowEnd:today};
+}
+function renderWeeklySummary(){
+  const el=document.getElementById('weekSummaryBody');
+  if(!el)return;
+  const sum=weeklySummary(D.log);
+  if(!sum.enough){
+    el.innerHTML='<div class="empty" id="weekSummaryEmpty">'+esc(t('week_summary_not_enough'))+'</div>';
+    return;
+  }
+  el.innerHTML=sum.rows.map(r=>
+    '<div class="metric-row ws-row" data-skill="'+r.skill+'" data-planned="'+r.planned+'" data-real="'+r.real+'">'
+    +'<span>'+esc(planSkillLabel(r.skill))+'</span>'
+    +'<span class="metric-val tnum">'+esc(t('week_summary_item',{planned:r.planned,real:r.real}))+'</span>'
+    +'</div>').join('');
+}
+
 /* ---------- METRICS (Weekly / Progress / Analytics) ----------
    Fills the metrics cards of TODAY, PROGRESS and CHARTS with data
    computed from D.log/D.errs. Called from refreshAll(). */
@@ -16148,7 +16236,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
