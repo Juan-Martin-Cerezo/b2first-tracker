@@ -2390,7 +2390,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <p id="lFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
                     <div class="row" style="margin-top:10px">
                       <div><label>Mode</label>
-                        <select id="lPart" onchange="onLPartChange()">
+                        <select id="lPart">
                           <option value="all" selected>All 4 parts (30 questions)</option>
                           <option value="1">Part 1 — Short extracts (8)</option>
                           <option value="2">Part 2 — Sentence completion (10)</option>
@@ -11859,6 +11859,15 @@ function onLPartChange(){
   const min=document.getElementById('lMin');
   if(min)min.value=partVal==='all'?40:(UNIT_MIN.l[partVal]||10);
 }
+/* Bound here, not with an inline onchange attribute: the markup can be in the
+   DOM before this script runs (or without it, if a load is cut short), and an
+   inline handler throws "onLPartChange is not defined" in that window. A
+   listener registered by this script is simply absent until the function
+   exists, never a ReferenceError. */
+(function(){
+  const el=document.getElementById('lPart');
+  if(el)el.addEventListener('change',onLPartChange);
+})();
 function saveL(){
   const correct=+document.getElementById('lOk').value;
   if(!correct&&correct!==0){alert(t('alert_set_correct'));return}
