@@ -931,6 +931,11 @@ tbody tr:hover{background:var(--surface-2)}
 .wp-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .wp-rotation-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .wp-rotation-row select{max-width:260px}
+/* The day rows are a keyboard stop of their own: focus must be visible. */
+.wp-row:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+/* Every target on PLAN measures at least 44x44, rows and schedules alike. */
+#v-plan .btn{min-height:44px;min-width:44px}
+#v-plan .btn.sm::after{inset:0;min-width:0;min-height:0}
 
 /* today session block (same data as the PLAN row) */
 .ts-row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2)}
@@ -3244,7 +3249,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
             <div class="sub" id="wpQueuePreview" style="margin-top:6px"></div>
           </div>
-          <div id="wpRows" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
+          <div id="wpRows" aria-live="polite" aria-relevant="additions" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
         </div>
 
         <!-- Session Schedules (immediately after the week plan) -->
@@ -3985,6 +3990,8 @@ const I18N={
     plan_week_summary:'This week: {total} min across {n} sessions — {breakdown}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Mock exam',
+    plan_start_aria:'Start {unit}',
+    plan_row_aria:'{day} session: {unit}',
     week_summary_title:'Last 4 weeks',
     week_summary_sub:'Average minutes planned vs practised per skill, read from your log.',
     week_summary_item:'{planned} min planned, {real} min practised',
@@ -4753,6 +4760,8 @@ const I18N={
     studio_sub_parts:'{n} partes · {min} min en total.',
     studio_sub_paper:'{min} min.',
     plan_week_summary:'Esta semana: {total} min en {n} sesiones — {breakdown}',
+    plan_start_aria:'Empezar {unit}',
+    plan_row_aria:'Sesión del {day}: {unit}',
     plan_week_summary_item:'{skill} {min} min',
     plan_skill_mock:'Simulacro completo',
     week_summary_title:'Últimas 4 semanas',
@@ -13524,13 +13533,15 @@ function renderWeeklyPlan(){
     return;
   }
   rows.innerHTML=plan.slots.map((sl,i)=>{
-    return `<div class="wp-row" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
+    const unit=slotTitleText(sl);
+    const day=planDayFull(sl.day);
+    return `<div class="wp-row" tabindex="0" role="group" aria-label="${esc(t('plan_row_aria',{day:day,unit:unit}))}" data-day="${sl.day}" data-time="${sl.time||''}" data-part="${sl.part!=null?sl.part:''}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-type="${sl.type}" data-timed="${sl.timed?1:0}" data-min="${sl.min}" data-section="${sl.section?1:0}">
       <div class="wp-main">
-        <div class="wp-title tnum">${sl.day} · ${slotTitleText(sl)}</div>
+        <div class="wp-title tnum">${sl.day} · ${unit}</div>
         <div class="wp-when tnum">${sl.time||''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <button type="button" class="btn sm ok wp-start" onclick="wpStart(${i})">${t('common_start')}</button>
+      <button type="button" class="btn sm ok wp-start" aria-label="${esc(t('plan_start_aria',{unit:unit}))}" onclick="wpStart(${i})">${t('common_start')}</button>
     </div>`;
   }).join('');
 }
