@@ -57,6 +57,8 @@ MEASURE = """() => {
     const doc = document.documentElement;
     const card = document.getElementById('todaySession');
     const r = card.getBoundingClientRect();
+    const shell = document.querySelector('#v-hoy .today-shell') || card;
+    const shellRect = shell.getBoundingClientRect();
     const nav = document.getElementById('sideNav');
     const nr = nav.getBoundingClientRect();
     const row = card.querySelector('.ts-row:not(.ts-next-unit)');
@@ -120,7 +122,7 @@ MEASURE = """() => {
         scrollWidth: doc.scrollWidth,
         clientWidth: doc.clientWidth,
         viewportWidth: window.innerWidth,
-        centeredAt: (r.left + r.right) / 2,
+        centeredAt: (shellRect.left + shellRect.right) / 2,
         cardWidth: Math.round(r.width),
         cardBottom: r.bottom,
         navTop: nr.top,
