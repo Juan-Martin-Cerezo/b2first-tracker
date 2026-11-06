@@ -124,8 +124,17 @@ with sync_playwright() as p:
         assert a["rel"] == "noopener noreferrer", f"card link without rel=noopener noreferrer: {a}"
 
     # --- 6. Today shows 1-3 one-tap sources under the daily suggestion ----
+    # Practise this now belongs to rest days, so the schedule leaves today out.
     pg.click("nav button[data-view='hoy']")
     pg.wait_for_timeout(300)
+    pg.evaluate(
+        """() => {
+            D.settings.schedule = [{day: (new Date().getDay() + 3) % 7, time: '15:30'}];
+            save();
+            refreshAll();
+        }"""
+    )
+    pg.wait_for_timeout(250)
     now = pg.evaluate(
         """() => {
         const box = document.getElementById('practiceNow');

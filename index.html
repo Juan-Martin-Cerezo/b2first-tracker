@@ -329,8 +329,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 .grid-12{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
 .grid-12>[class^="col-"]{display:flex;flex-direction:column;gap:18px;min-width:0}
 .grid-12>[class^="col-"]>.card,
-.grid-12>[class^="col-"]>.next-session,
-.grid-12>[class^="col-"]>.session-nav{margin-bottom:0}
+.grid-12>[class^="col-"]>.next-session{margin-bottom:0}
 #sesA,#sesB,#sesFull{display:flex;flex-direction:column;gap:18px}
 #sesA>.card,#sesB>.card,#sesFull>.card{margin-bottom:0}
 .col-8{grid-column:span 8;min-width:0}
@@ -854,26 +853,11 @@ tbody tr:hover{background:var(--surface-2)}
 .next-session .next-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:none}
 .card.diag-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .card.diag-banner>div:first-child{flex:1;min-width:180px}
-/* ---------- SESSION NAV / PHASE STEPPER ---------- */
+/* ---------- PHASE STEPPER ---------- */
 .lt-grid{display:flex;flex-direction:column;gap:10px;margin:10px 0 16px}
 .listen-test{background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:var(--r-panel);padding:12px 14px}
 .listen-test .lt-head{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin-bottom:6px}
 .listen-test .chips{margin:0}
-.session-nav{display:flex;flex-wrap:wrap;gap:8px;overflow-x:visible;padding-bottom:6px;margin-bottom:18px}
-.session-nav-btn{
-  position:relative;
-  display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-ctl);
-  background:var(--surface);color:var(--txt-2);border:1px solid var(--line);
-  font-size:var(--fs-xs);font-weight:600;cursor:pointer;white-space:nowrap;min-height:40px;
-  transition:background-color 150ms ease, color 150ms ease, border-color 150ms ease, transform 120ms ease-out;
-}
-.session-nav-btn:hover{background:var(--surface-2);color:var(--txt);border-color:var(--acc)}
-.session-nav-btn:active{transform:scale(0.96)}
-.session-nav-btn.active{background:var(--acc);color:var(--on-primary);border-color:var(--acc)}
-.session-nav-btn .pill-tag{
-  font-size:var(--fs-xs);padding:2px 8px;border-radius:999px;
-  background:color-mix(in oklch, currentColor 12%, transparent);color:inherit;
-}
 .phase-stepper{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:14px 0 16px}
 .phase-step{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
@@ -955,6 +939,28 @@ tbody tr:hover{background:var(--surface-2)}
 .ts-reason{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
 .ts-rest{font-size:var(--fs-sm);color:var(--txt-2)}
 .ts-summary{padding:12px 14px;border-radius:var(--r-panel);background:var(--surface-2);font-size:var(--fs-sm);color:var(--txt)}
+
+/* ---------- TODAY: one centered column ---------- */
+#v-hoy .today-shell{
+  width:100%;max-width:560px;min-width:0;
+  margin-inline:auto;
+  display:flex;flex-direction:column;gap:18px;
+  padding-inline:max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
+  padding-bottom:max(16px, env(safe-area-inset-bottom));
+}
+#v-hoy .today-shell>.card{margin-bottom:0}
+#v-hoy .today-head .page-title{font-size:clamp(22px, 6vw, 30px);line-height:1.1}
+#v-hoy #sesA,#v-hoy #sesB,#v-hoy #sesFull{display:none}
+#v-hoy #todaySession,#v-hoy #practiceNow{padding:clamp(18px, 5vw, 24px)}
+#v-hoy .ts-row{padding:clamp(14px, 4vw, 18px);gap:clamp(10px, 3vw, 14px)}
+#v-hoy .ts-row .ts-main{min-width:0}
+#v-hoy .ts-row .ts-title{font-size:clamp(15px, 4.2vw, 17px);overflow-wrap:anywhere}
+#v-hoy .ts-when,#v-hoy .ts-mode,#v-hoy .ts-rest,#v-hoy .ts-summary{font-size:clamp(12px, 3.4vw, 13px)}
+#v-hoy .ts-actions .btn{min-height:44px;min-width:44px}
+#v-hoy .practice-now-link{padding:clamp(12px, 3.5vw, 16px)}
+#v-hoy .practice-now-link b{font-size:clamp(14px, 4vw, 16px)}
+#v-hoy .practice-now-link span{font-size:clamp(12px, 3.4vw, 13px)}
+@media (max-width:560px){ #v-hoy .practice-now-row{flex-direction:column} }
 
 /* ---------- ERROR TAXONOMY ---------- */
 .err-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -1325,7 +1331,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   footer{text-align:center;padding:12px clamp(16px,4vw,32px)}
 
   /* no sideways scrolling inside cards: let these rows wrap instead */
-  .session-nav{flex-wrap:wrap;overflow-x:visible}
   .gates-tabs{flex-wrap:wrap;overflow-x:visible}
 
   /* session header: duration no longer floats to the left when it wraps */
@@ -2018,32 +2023,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <main>
       <!-- ============ TODAY ============ -->
       <section id="v-hoy" class="view active">
-        <div class="page-head">
-          <div>
+        <div class="today-shell">
+          <div class="today-head">
             <h1 class="page-title" id="userTitle">Today</h1>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn gray" onclick="openSoloModal()" data-i18n="today_log_single">Log single part</button>
-            <button class="btn" onclick="document.getElementById('sessionNav').scrollIntoView({behavior:'smooth'})" data-i18n="today_start_session">Start session</button>
-          </div>
-        </div>
-
-        <div class="grid-12">
-          <!-- Main column -->
-          <div class="col-8">
-            <div class="next-session" id="nextBox"></div>
-            <div class="card" id="todaySession"></div>
-            <div class="card practice-now" id="practiceNow"></div>
-            <div class="card" id="lastSpeaking" style="display:none"></div>
-
-            <!-- Session Studio Navigation Tabs (Interactive 1-Click Studio Selector) -->
-            <div class="session-nav" id="sessionNav">
-              <button class="session-nav-btn active" data-ses="mon-a" id="navBtnMonA" onclick="selectSessionStudio('mon-a')">📚 <span id="navLblMonA">Mon A: R&amp;UoE</span> <span class="pill-tag" id="navDurMonA">—</span></button>
-              <button class="session-nav-btn" data-ses="fri-a" id="navBtnFriA" onclick="selectSessionStudio('fri-a')">🎧 <span id="navLblFriA">Fri A: Listening</span> <span class="pill-tag" id="navDurFriA">—</span></button>
-              <button class="session-nav-btn" data-ses="mon-b" id="navBtnMonB" onclick="selectSessionStudio('mon-b')">✍️ <span id="navLblMonB">Mon B: Writing</span> <span class="pill-tag" id="navDurMonB">—</span></button>
-              <button class="session-nav-btn" data-ses="fri-b" id="navBtnFriB" onclick="selectSessionStudio('fri-b')">🗣️ <span id="navLblFriB">Fri B: Speaking</span> <span class="pill-tag" id="navDurFriB">—</span></button>
-              <button class="session-nav-btn" data-ses="mock" onclick="selectSessionStudio('mock')">🧪 Mock Exam <span class="pill-tag">4 papers</span></button>
-            </div>
+          <div class="next-session" id="nextBox"></div>
+          <div class="card" id="todaySession"></div>
+          <div class="card practice-now" id="practiceNow" style="display:none"></div>
+          <div class="card" id="lastSpeaking" style="display:none"></div>
 
             <!-- SESSION A (MONDAYS) -->
             <div id="sesA">
@@ -2862,8 +2849,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 </div>
               </div>
             </div>
-          </div>
-
         </div>
       </section>
 
@@ -3672,8 +3657,6 @@ const I18N={
     footer_privacy:'Privacy',
     footer_terms:'Terms',
     footer_security:'Security',
-    today_log_single:'Log single part',
-    today_start_session:'Start session',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
     last_sp_title:'Last speaking exam',
@@ -3700,14 +3683,11 @@ const I18N={
     today_title_fmt:'Today · {name}',
     today_session_title:"Today's session",
     today_rest_day:'Rest day — no session planned today.',
-    today_next_session:'Next session: {day} at {time} — {title}.',
     today_skill_rue:'Reading',
     today_mode_one:'1 {skill} exercise',
     today_mode_many:'{n} {skill} exercises',
     today_mode_full:'Today: {paper}',
     today_studio_writing_sub:'One text type per session, with a deep C1 audit.',
-    today_extra_session:'Extra session',
-    today_extra_note:'Off-plan practice: it does not move the rotation or the shift.',
     today_done_summary:'Session done: {planned} min planned, {real} min practised.',
     stage_0:'Stage 0 — Foundations',
     stage_1:'Stage 1 — Precision',
@@ -3767,10 +3747,6 @@ const I18N={
     day_thursday:'Thursday',
     day_friday:'Friday',
     day_saturday:'Saturday',
-    today_nav_rue:'R&UoE',
-    today_nav_listening:'Listening',
-    today_nav_writing:'Writing',
-    today_nav_speaking:'Speaking',
     exam_title:'Exam Simulation',
     exam_sub:'Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.',
     exam_desc_rue:'7 parts. Tests your reading comprehension and grammar proficiency.',
@@ -4447,8 +4423,6 @@ const I18N={
     footer_privacy:'Privacidad',
     footer_terms:'Términos',
     footer_security:'Seguridad',
-    today_log_single:'Registrar una parte',
-    today_start_session:'Empezar sesión',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
     last_sp_title:'Último examen de Speaking',
@@ -4475,14 +4449,11 @@ const I18N={
     today_title_fmt:'Hoy · {name}',
     today_session_title:'Sesión de hoy',
     today_rest_day:'Día de descanso — hoy no hay sesión planificada.',
-    today_next_session:'Próxima sesión: {day} a las {time} — {title}.',
     today_skill_rue:'Reading',
     today_mode_one:'1 ejercicio de {skill}',
     today_mode_many:'{n} ejercicios de {skill}',
     today_mode_full:'Hoy: {paper}',
     today_studio_writing_sub:'Un tipo de texto por sesión, con auditoría C1 profunda.',
-    today_extra_session:'Sesión extra',
-    today_extra_note:'Práctica fuera del plan: no mueve la rotación ni el corrimiento.',
     today_done_summary:'Sesión completada: {planned} min planificados, {real} min reales.',
     stage_0:'Etapa 0 — Cimientos',
     stage_1:'Etapa 1 — Precisión',
@@ -4542,10 +4513,6 @@ const I18N={
     day_thursday:'Jueves',
     day_friday:'Viernes',
     day_saturday:'Sábado',
-    today_nav_rue:'R&UoE',
-    today_nav_listening:'Listening',
-    today_nav_writing:'Writing',
-    today_nav_speaking:'Speaking',
     exam_title:'Simulación de examen',
     exam_sub:'Elegí un módulo para empezar una simulación cronometrada en condiciones estrictas de examen. Asegurate de tener un ambiente tranquilo antes de empezar.',
     exam_desc_rue:'7 partes. Evalúa tu comprensión lectora y tu gramática.',
@@ -6596,18 +6563,23 @@ function selectSessionStudio(id){
      empty card. The panel lives in the Friday B studio. */
   if(id!=='fri-b'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
   CURRENT_STUDIO=id;
-  document.querySelectorAll('.session-nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.ses===id));
-  const sMonA=document.getElementById('studioMonA');
-  const sMonB=document.getElementById('studioMonB');
-  const sFriA=document.getElementById('studioFriA');
-  const sFriB=document.getElementById('studioFriB');
-  const sMock=document.getElementById('sesFull');
-  
-  if(sMonA)sMonA.style.display=(id==='mon-a'?'block':'none');
-  if(sMonB)sMonB.style.display=(id==='mon-b'?'block':'none');
-  if(sFriA)sFriA.style.display=(id==='fri-a'?'block':'none');
-  if(sFriB)sFriB.style.display=(id==='fri-b'?'block':'none');
-  if(sMock)sMock.style.display=(id==='mock'?'block':'none');
+  const group=(gid,on)=>{const el=document.getElementById(gid);if(el)el.style.display=on?'flex':'none'};
+  const card=(cid,on)=>{const el=document.getElementById(cid);if(el)el.style.display=on?'block':'none'};
+  group('sesA',id==='mon-a'||id==='mon-b');
+  group('sesB',id==='fri-a'||id==='fri-b');
+  group('sesFull',id==='mock');
+  card('studioMonA',id==='mon-a');
+  card('studioMonB',id==='mon-b');
+  card('studioFriA',id==='fri-a');
+  card('studioFriB',id==='fri-b');
+}
+/* The resting state of TODAY: every studio group closed. */
+function closeSessionStudios(){
+  CURRENT_STUDIO='';
+  ['sesA','sesB','sesFull'].forEach(gid=>{
+    const el=document.getElementById(gid);
+    if(el)el.style.display='none';
+  });
 }
 
 function switchWritingPhase(p){
@@ -11684,7 +11656,6 @@ function openSoloModal(defaultSkill,defaultPart){
   onSoloSkillChange(defaultPart);
 }
 function closeSoloModal(){
-  EXTRA_SESSION=false;
   const el=document.getElementById('soloModal');
   if(el)el.style.display='none';
 }
@@ -11782,7 +11753,6 @@ function saveSoloPractice(){
 /* ---------- SAVE HANDLERS ---------- */
 function log(e){
   const entry = Object.assign({date:today(), created_at:Date.now()}, e);
-  if(EXTRA_SESSION){entry.extra=true;EXTRA_SESSION=false}
   D.log.push(entry);
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
   save();
@@ -13081,8 +13051,6 @@ function paintSessionStudios(plan){
   paintWritingStudio(w);
   paintListeningStudio(l);
   paintSpeakingStudio(sp);
-  const pill=(id,sl)=>{const el=document.getElementById(id);if(el)el.textContent=sl?sl.min+' min':'—'};
-  pill('navDurMonA',ue);pill('navDurFriA',l);pill('navDurMonB',w);pill('navDurFriB',sp);
 }
 
 function buildWeeklyPlan(D){
@@ -13827,7 +13795,7 @@ function renderResources(){
 function startPart(i){
   const p=PARTS[i];
   if(p.type==='sp'){openSpeakingExam();return}
-  if(p.type==='w'){showView('hoy');switchWritingPhase('write');return}
+  if(p.type==='w'){showView('hoy');selectSessionStudio('mon-b');switchWritingPhase('write');return}
   showView('exam');
   startRealMock(p.type==='lp'?'l':'rue');
 }
@@ -14131,6 +14099,9 @@ function practiceRotationSkill(){
 function renderPracticeNow(){
   const box=document.getElementById('practiceNow');
   if(!box)return;
+  /* Today only offers off-plan practice when the schedule has nothing for
+     today. On a session day the card is not shown at all: no border, no gap. */
+  if(hasSessionToday()){box.style.display='none';box.innerHTML='';return;}
   const diag=D&&D.diag;
   const weak=diag&&Array.isArray(diag.weakest)?Number(diag.weakest[0]):0;
   let list=[],sub='',skill='';
@@ -14469,6 +14440,12 @@ function sessionDaysFromSchedule(list){
 function getSessionDays(){
   return sessionDaysFromSchedule(getSchedule());
 }
+/* TODAY answers one question: is a session planned for today? The schedule is
+   the only source, so the answer follows the user's own days. */
+function hasSessionToday(){
+  const wd=new Date().getDay();
+  return getSchedule().some(slot=>Number(slot.day)===wd);
+}
 
 function getSlotSession(weekNumber,slotIndex,scheduleLength){
   const s=D.settings||SETTINGS_DEFAULT;
@@ -14528,8 +14505,6 @@ function doNextSessionNow(){
   const nextSlot=getNextScheduledSession();
   if(nextSlot){
     selectSessionStudio(nextSlot.session.studio);
-    const nav=document.getElementById('sessionNav');
-    if(nav)nav.scrollIntoView({behavior:'smooth'});
   }
 }
 
@@ -14538,6 +14513,7 @@ function repaintScheduleDrivenViews(){
   renderSchedulePreview();
   renderWeeklyPlan();
   renderToday();
+  renderPracticeNow();
 }
 
 function renderScheduleRows(){
@@ -14712,16 +14688,6 @@ function updatePersonalizedUI(){
   const aShort=dayShort(aSlot.day);
   const bShort=dayShort(bSlot.day);
 
-  // Dynamic Navigation Studio Tabs
-  const nA=document.getElementById('navLblMonA');
-  if(nA)nA.textContent=sched.length===2?`${aShort} A: ${t('today_nav_rue')}`:`${rueOccur.dayShort}: ${t('today_nav_rue')}`;
-  const nFA=document.getElementById('navLblFriA');
-  if(nFA)nFA.textContent=sched.length===2?`${bShort} A: ${t('today_nav_listening')}`:`${lOccur.dayShort}: ${t('today_nav_listening')}`;
-  const nB=document.getElementById('navLblMonB');
-  if(nB)nB.textContent=sched.length===2?`${aShort} B: ${t('today_nav_writing')}`:`${wOccur.dayShort}: ${t('today_nav_writing')}`;
-  const nFB=document.getElementById('navLblFriB');
-  if(nFB)nFB.textContent=sched.length===2?`${bShort} B: ${t('today_nav_speaking')}`:`${spOccur.dayShort}: ${t('today_nav_speaking')}`;
-
   // Dynamic Studio Card Badges
   const st1W=document.getElementById('st1WkBadge');
   if(st1W)st1W.textContent=sched.length===2?aDayName:localizeDayName(rueOccur.dayName);
@@ -14750,24 +14716,6 @@ let TODAY_PLAN=null;
 let QUEUE_PENDING=null;
 function planTodayLabel(){
   return PLAN_DAY_MAP[PLAN_DAY_ORDER[(new Date().getDay()+6)%7]];
-}
-function studioForSlot(sl){
-  if(!sl)return 'mon-a';
-  if(sl.type==='l')return 'fri-a';
-  if(sl.type==='w')return 'mon-b';
-  if(sl.type==='sp')return 'fri-b';
-  if(sl.type==='mock')return 'mock';
-  return 'mon-a';
-}
-function nextPlanOccurrence(plan,baseDate){
-  if(!plan||!plan.slots||!plan.slots.length)return null;
-  for(let step=1;step<=7;step++){
-    const dt=new Date(baseDate.getTime()+step*86400000);
-    const label=PLAN_DAY_MAP[PLAN_DAY_ORDER[(dt.getDay()+6)%7]];
-    const index=plan.slots.findIndex(sl=>sl.day===label);
-    if(index>=0)return {slot:plan.slots[index],index:index,dayIndex:dt.getDay(),daysAhead:step};
-  }
-  return null;
 }
 /* Today's card header: the day, the units this session really contains and
    their total duration, on one line. */
@@ -14804,19 +14752,8 @@ function renderTodaySession(plan,todaySlots){
   if(!box)return;
   TODAY_PLAN=plan;
   if(!todaySlots||!todaySlots.length){
-    const next=nextPlanOccurrence(plan,new Date());
-    const nextLine=next
-      ?`<div class="ts-next-session">${esc(t('today_next_session',{
-          day:planDayFull(next.slot.day),
-          time:next.slot.time||'',
-          title:slotTitleText(next.slot)}))}</div>`
-      :'';
-    box.innerHTML=`<h2>${t('today_session_title')}</h2><div class="ts-rest" data-rest="1">${t('today_rest_day')}</div>
-      ${nextLine}
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;align-items:flex-start">
-        <button type="button" class="btn sm ok" id="todayExtraBtn" data-extra="1" onclick="startExtraSession()">${t('today_extra_session')}</button>
-        <div class="ts-reason">${t('today_extra_note')}</div>
-      </div>`;
+    box.innerHTML=`<h2>${esc(planDayFull(planTodayLabel()))}</h2>
+      <div class="ts-rest" data-rest="1">${esc(t('today_rest_day'))}</div>`;
     return;
   }
   box.innerHTML=`<h2>${t('today_session_title')}</h2><div style="display:flex;flex-direction:column;gap:10px">`+
@@ -14838,14 +14775,6 @@ function renderTodaySession(plan,todaySlots){
     </div>`;
   }
   box.innerHTML+=sessionSummaryLine();
-}
-/* A rest day still allows practice: the extra session opens the solo logger and
-   tags whatever it saves with `extra`. The rotation counts only planned rows,
-   and nothing here touches D.sessionOffset, so the week stays where it was. */
-let EXTRA_SESSION=false;
-function startExtraSession(){
-  EXTRA_SESSION=true;
-  openSoloModal();
 }
 /* A full-section slot is one whole paper: open its own session with the
    official timer instead of the loose-part filter. The written papers run in
@@ -15019,24 +14948,12 @@ function renderToday(){
   paintSessionStudios(plan);
   renderTodaySession(plan,todaySlots);
 
-  // Today owns a single session block: the old top banner is gone. The studio
-  // the session points to is still chosen from the same plan row.
+  // Today owns a single session block: the old top banner is gone. The studios
+  // stay closed until Start opens the one the session points to, and a rest day
+  // never keeps one open.
   const nb=document.getElementById('nextBox');
   if(nb){nb.innerHTML='';nb.style.display='none';}
-  let defaultStudio='mon-a';
-  if(todaySlots.length){
-    defaultStudio=studioForSlot(todaySlots[0]);
-  }else{
-    const next=nextPlanOccurrence(plan,d);
-    if(next)defaultStudio=studioForSlot(next.slot);
-  }
-
-  // Set initial studio if none selected yet. Never while the speaking exam is
-  // open: picking a studio closes it, and a refresh (saving a report) would
-  // otherwise wipe the screen the user is reading.
-  if((!CURRENT_STUDIO||CURRENT_STUDIO==='mon-a')&&!(window.SP_EXAM&&SP_EXAM.screen)){
-    selectSessionStudio(defaultStudio);
-  }
+  if(!todaySlots.length&&!(QUEUE_PENDING&&QUEUE_PENDING.units.length))closeSessionStudios();
 
   renderLastSpeaking();
 }
