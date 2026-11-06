@@ -915,6 +915,7 @@ tbody tr:hover{background:var(--surface-2)}
 .plan-dark-card .sub{color:var(--txt-2)}
 .plan-dark-card label{color:var(--txt-2)}
 .plan-dark-card select,.plan-dark-card input{background:var(--surface);border:1px solid var(--line);color:var(--txt)}
+.rot-done{font-size:var(--fs-xs);color:var(--txt-2);font-variant-numeric:tabular-nums}
 .plan-green-card{background:var(--surface);color:var(--txt)}
 .plan-green-card h2{color:var(--txt)}
 .plan-green-card .sub{color:var(--txt-2)}
@@ -3968,6 +3969,10 @@ const I18N={
     plan_mode_one:'One exercise per session.',
     plan_mode_many:'{n} {skill} exercises per session, all from the same skill.',
     plan_mode_full:'A whole paper per session.',
+    plan_progress_rue:'{done} of {total} Reading parts done',
+    plan_progress_l:'{done} of {total} Listening parts done',
+    plan_progress_w:'{done} of {total} Writing tasks done',
+    plan_progress_sp:'{done} of {total} Speaking parts done',
     plan_full_reason:'One whole paper: {paper} (official {min} min).',
     plan_items_per_session:'Exercises per session',
     plan_queue_next:'Next up:',
@@ -4738,6 +4743,10 @@ const I18N={
     plan_mode_one:'Un ejercicio por sesión.',
     plan_mode_many:'{n} ejercicios de {skill} por sesión, todos de la misma habilidad.',
     plan_mode_full:'Un paper completo por sesión.',
+    plan_progress_rue:'{done} de {total} partes de Reading hechas',
+    plan_progress_l:'{done} de {total} partes de Listening hechas',
+    plan_progress_w:'{done} de {total} tareas de Writing hechas',
+    plan_progress_sp:'{done} de {total} partes de Speaking hechas',
     plan_full_reason:'Un paper completo: {paper} (oficial {min} min).',
     plan_items_per_session:'Ejercicios por sesión',
     plan_queue_next:'A continuación:',
@@ -12586,6 +12595,43 @@ function queueLogCount(s,log){
     return false;
   }).length;
 }
+/* The cycle unit a log row stands for, or null when the row is not one unit of
+   that skill's cycle. The same rows the queue counts, so progress and the next
+   session can never disagree. */
+function queueLogUnit(skill,e){
+  if(!e||e.extra===true)return null;
+  const type={rue:'ue',l:'lp',w:'w',sp:'sp'}[skill];
+  if(!type||e.type!==type)return null;
+  const raw=skill==='w'?e.kind:e.part;
+  if(raw==null)return null;
+  const value=String(raw);
+  return QUEUE_CYCLES[skill].map(String).indexOf(value)>=0?value:null;
+}
+/* Units of the skill's current pass already done, straight from the log: a
+   unit counts once per pass, and the pass closes when every unit is in it (the
+   next new unit starts the following pass). */
+function queueLapDone(skill,log){
+  const total=QUEUE_CYCLES[skill].length;
+  const rows=(Array.isArray(log)?log:[]).filter(e=>queueLogUnit(skill,e))
+    .sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))
+      ||((Number(a.created_at)||0)-(Number(b.created_at)||0)));
+  let done=new Set();
+  rows.forEach(e=>{
+    const value=queueLogUnit(skill,e);
+    if(done.size>=total)done=new Set();
+    done.add(value);
+  });
+  return {done:done.size,total:total};
+}
+const PLAN_PROGRESS_KEY={rue:'plan_progress_rue',l:'plan_progress_l',
+  w:'plan_progress_w',sp:'plan_progress_sp'};
+function planProgressLines(){
+  return QUEUE_SKILLS.map(skill=>{
+    const lap=queueLapDone(skill,D&&D.log);
+    return `<div class="rot-done" data-skill="${skill}">`
+      +esc(t(PLAN_PROGRESS_KEY[skill],{done:lap.done,total:lap.total}))+'</div>';
+  }).join('');
+}
 /* Position comes from the logged work, expressed in whole sessions: a fixed
    `per` means every `per` logged units close one session. */
 function queueStartSession(s,log,offset,per){
@@ -14612,7 +14658,9 @@ function partName(p){return {1:'Multiple-choice cloze',2:'Open cloze',3:'Word Fo
 function renderRotationCard(){
   const box=document.getElementById('rotationCardBody');
   if(!box)return;
-  box.innerHTML=`<div class="rot-mode">${esc(planModeLine())}</div>`;
+  const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
+  box.innerHTML=`<div class="rot-mode">${esc(planModeLine())}</div>`
+    +(mode==='by-part'?planProgressLines():'');
   renderSchedulePreview();
 }
 
