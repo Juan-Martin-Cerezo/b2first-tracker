@@ -1,4 +1,4 @@
-"""Phase 117 & 118: Today desktop layout redesigned with design-fundamentals principles.
+"""Phase 117, 118 & 121: Today desktop layout redesigned with design-fundamentals principles.
 
 Verifies:
 - At 1280 and 1440 (and >= 1024): centered container 960-1040 px (>= 880 px)
@@ -6,13 +6,13 @@ Verifies:
   weight 1.6, right plain-text aside weight 1); session card >= 480 px wide,
   >= 280 px tall, 32 px padding, hero duration clamp(30px, 3.4vw, 46px);
   right column >= 240 px wide.
-- Phase 118 vertical composition (>= 1024 px):
+- Phase 118 & 121 vertical composition (>= 1024 px):
   - Today content block fills available height (min-height calc(100dvh - nav - footer))
-    with align-content: center when content fits, and natural top-aligned scroll
-    when content exceeds the viewport.
-  - At 1280 and 1440: vertical center of #todaySession is within < 15% of the
-    content area height from the content area center; top and bottom free space
-    are both >= 24 px and their difference is <= 15% of the content area height.
+    with grid-auto-rows: min-content and align-content: center when content fits,
+    and natural top-aligned scroll when content exceeds the available height.
+  - At 1024, 1280, and 1440: the first visible child of .today-shell has
+    childTop - areaTop >= 15% of area height, areaBottom - childBottom >= 15%
+    of area height, and their difference <= 15% of area height.
   - Right column (#todayAside) starts within <= 8 px of #todaySession top edge,
     measures >= 45% of #todaySession height, and distributes any extra height
     between its two blocks (no leftover gap at the bottom).
@@ -99,6 +99,13 @@ MEASURE_DESKTOP = """
     const mainR = main.getBoundingClientRect();
     const headR = head.getBoundingClientRect();
     const sr = shell.getBoundingClientRect();
+    const firstChild = Array.from(shell.children).find(el => {
+        const cs = getComputedStyle(el);
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        const b = el.getBoundingClientRect();
+        return b.width > 0 && b.height > 0;
+    });
+    const firstChildR = firstChild ? firstChild.getBoundingClientRect() : sr;
     const cardR = session.getBoundingClientRect();
     const asideR = aside.getBoundingClientRect();
     const nextR = nextBlock.getBoundingClientRect();
@@ -173,6 +180,12 @@ MEASURE_DESKTOP = """
             top: headR.top,
             bottom: headR.bottom,
             h: headR.height,
+        },
+        firstChild: {
+            top: firstChildR.top,
+            bottom: firstChildR.bottom,
+            h: firstChildR.height,
+            centerY: (firstChildR.top + firstChildR.bottom) / 2,
         },
         shell: {
             w: Math.round(sr.width),
@@ -349,27 +362,38 @@ with sync_playwright() as p:
         weight_ratio = m["session"]["w"] / m["aside"]["w"]
         assert 1.45 <= weight_ratio <= 1.75, f"{vw}: column ratio {weight_ratio:.2f} not ~1.6"
 
-        # Phase 118 A: Vertical centering in content area (main)
+        # Phase 118 & 121: Vertical centering in content area (main) measured on first visible child of shell
         area_h = m["area"]["h"]
         area_center = m["area"]["centerY"]
+        child_top_space = m["firstChild"]["top"] - m["area"]["top"]
+        child_bottom_space = m["area"]["bottom"] - m["firstChild"]["bottom"]
+        assert child_top_space >= 0.15 * area_h, (
+            f"{vw}: firstChild top space {child_top_space:.1f} < 15% of area height {area_h:.1f}"
+        )
+        assert child_bottom_space >= 0.15 * area_h, (
+            f"{vw}: firstChild bottom space {child_bottom_space:.1f} < 15% of area height {area_h:.1f}"
+        )
+        assert abs(child_top_space - child_bottom_space) <= 0.15 * area_h, (
+            f"{vw}: firstChild top/bottom air diff {abs(child_top_space - child_bottom_space):.1f} > 15% of {area_h:.1f}"
+        )
         session_center_diff = abs(m["session"]["centerY"] - area_center)
         assert session_center_diff < 0.15 * area_h, (
             f"{vw}: session centerY {m['session']['centerY']:.1f} too far from content area center "
             f"{area_center:.1f} (diff={session_center_diff:.1f}, limit={0.15 * area_h:.1f})"
         )
-        # Free space above and below: both >= 24 px and difference <= 15% of content area height
+        # Free space above and below: both >= 15% of content area height and difference <= 15%
         top_space_session = m["session"]["top"] - m["area"]["top"]
         bottom_space_session = m["area"]["bottom"] - m["session"]["bottom"]
         top_space_block = m["head"]["top"] - m["area"]["top"]
         bottom_space_block = m["area"]["bottom"] - m["session"]["bottom"]
-        assert top_space_session >= 24 and bottom_space_session >= 24, (
-            f"{vw}: session free space top={top_space_session:.1f} bottom={bottom_space_session:.1f} (< 24)"
+        assert top_space_session >= 0.15 * area_h and bottom_space_session >= 0.15 * area_h, (
+            f"{vw}: session free space top={top_space_session:.1f} bottom={bottom_space_session:.1f} (< 15% of {area_h:.1f})"
         )
         assert abs(top_space_session - bottom_space_session) <= 0.15 * area_h, (
             f"{vw}: session top/bottom air diff {abs(top_space_session - bottom_space_session):.1f} > 15% of {area_h:.1f}"
         )
-        assert top_space_block >= 24 and bottom_space_block >= 24, (
-            f"{vw}: block free space top={top_space_block:.1f} bottom={bottom_space_block:.1f} (< 24)"
+        assert top_space_block >= 0.15 * area_h and bottom_space_block >= 0.15 * area_h, (
+            f"{vw}: block free space top={top_space_block:.1f} bottom={bottom_space_block:.1f} (< 15% of {area_h:.1f})"
         )
         assert abs(top_space_block - bottom_space_block) <= 0.15 * area_h, (
             f"{vw}: block top/bottom air diff {abs(top_space_block - bottom_space_block):.1f} > 15% of {area_h:.1f}"
@@ -447,14 +471,24 @@ with sync_playwright() as p:
     report["desktop"]["1440x700"] = m_scroll
     assert m_scroll["scrollWidth"] <= m_scroll["clientWidth"]
     assert not m_scroll["bottomOverlap"]
-    assert m_scroll["head"]["top"] >= m_scroll["area"]["top"] + 24, (
-        f"1440x700: head clipped under nav ({m_scroll['head']['top']} vs {m_scroll['area']['top']})"
+    assert m_scroll["firstChild"]["top"] >= m_scroll["area"]["top"] + 24, (
+        f"1440x700: firstChild clipped under nav ({m_scroll['firstChild']['top']} vs {m_scroll['area']['top']})"
     )
     assert abs(m_scroll["aside"]["top"] - m_scroll["session"]["top"]) <= 8
     assert m_scroll["aside"]["h"] >= 0.45 * m_scroll["session"]["h"]
     shot_scroll = OUT_DIR / "today_1440_scroll.png"
     page.screenshot(path=str(shot_scroll), full_page=False)
     assert shot_scroll.exists() and shot_scroll.stat().st_size > 1000, f"missing screenshot {shot_scroll}"
+
+    # 1c. Overflow desktop window (1440x480): when content exceeds available height, top-aligned & natural scroll
+    page.set_viewport_size({"width": 1440, "height": 480})
+    page.wait_for_timeout(150)
+    m_overflow = page.evaluate(MEASURE_DESKTOP)
+    assert m_overflow["scrollWidth"] <= m_overflow["clientWidth"]
+    assert not m_overflow["bottomOverlap"]
+    assert abs(m_overflow["firstChild"]["top"] - (m_overflow["area"]["top"] + m_overflow["shell"]["padTop"])) <= 2, (
+        f"1440x480: overflow content not top-aligned ({m_overflow['firstChild']['top']} vs {m_overflow['area']['top'] + m_overflow['shell']['padTop']})"
+    )
 
     # 2. Contrast >= 4.5:1 in both light and dark themes
     for theme in ("light", "dark"):
