@@ -1051,6 +1051,15 @@ tbody tr:hover{background:var(--surface-2)}
   padding:12px 16px;
   color:var(--txt);
 }
+#v-hoy .ts-row .ts-cta{
+  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
 #v-hoy .ts-row .ts-actions{
   flex:0 0 auto;
   width:100%;
@@ -1061,30 +1070,78 @@ tbody tr:hover{background:var(--surface-2)}
   align-items:center;
   gap:12px;
 }
+#v-hoy .ts-microcopy{
+  font-size:var(--today-fs-meta);
+  font-weight:400;
+  line-height:1.45;
+  color:var(--txt-2);
+  margin:0;
+}
 #v-hoy #todaySession .btn{
-  min-height:44px;
+  min-height:52px;
   min-width:44px;
-  padding:8px 16px;
+  padding:12px 24px;
   font-size:var(--today-fs-meta);
   font-weight:600;
   line-height:1.25;
   max-width:100%;
   white-space:normal;
   position:relative;
+  gap:10px;
+}
+#v-hoy #todaySession .btn .ts-play-ico{
+  width:16px;
+  height:16px;
+  flex:none;
+  display:block;
+}
+#v-hoy #todaySession .btn.ok{
+  background:var(--acc);
+  color:var(--on-primary);
+  border:1px solid transparent;
+  box-shadow:var(--shadow-1);
+}
+#v-hoy #todaySession .btn.ok:hover{
+  background:color-mix(in oklch, var(--acc) 92%, black);
+  box-shadow:var(--shadow-2);
 }
 #v-hoy #todaySession .btn.gray{
-  background:var(--surface-2);
+  background:transparent;
   border:1px solid var(--line);
   color:var(--txt);
+  box-shadow:none;
+  padding:12px 20px;
 }
 #v-hoy #todaySession .btn.gray:hover{
-  background:var(--line);
-  color:var(--acc-text);
+  background:var(--surface-2);
+  border-color:var(--txt-2);
+  color:var(--txt);
+  box-shadow:none;
+}
+#v-hoy #todaySession .btn:active{
+  transform:translateY(2px);
+}
+#v-hoy #todaySession .btn:disabled,
+#v-hoy #todaySession .btn[disabled]{
+  opacity:.45;
+  cursor:not-allowed;
+  transform:none;
+  box-shadow:none;
+  transition:none;
 }
 #v-hoy #todaySession .btn::after{inset:0;min-width:0;min-height:0}
 #v-hoy #todaySession .btn:focus,#v-hoy #todaySession .btn:focus-visible,#v-hoy a:focus,#v-hoy a:focus-visible{
   outline:2px solid var(--acc);
   outline-offset:2px;
+}
+@media (max-width:767px){
+  .content main:has(#v-hoy.active){padding-top:10px}
+  #v-hoy .today-shell,#v-hoy .today-block,#v-hoy .today-grid{gap:12px}
+  #v-hoy #todaySession{padding:14px 16px;gap:10px}
+  #v-hoy .ts-list,#v-hoy .ts-row{gap:10px}
+  #v-hoy .ts-row .ts-main{gap:4px}
+  #v-hoy .ts-row .ts-cta{gap:6px}
+  #v-hoy .ts-row .ts-actions{gap:8px}
 }
 #v-hoy .today-aside{
   display:flex;
@@ -1171,8 +1228,8 @@ tbody tr:hover{background:var(--surface-2)}
     padding:0 0 0 32px;
     border-top:none;
     border-left:1px solid var(--line);
-    gap:48px;
-    min-height:168px;
+    gap:56px;
+    min-height:184px;
     justify-content:space-between;
     align-self:start;
   }
@@ -1385,17 +1442,65 @@ footer{
 /* ---------- QUICK-LOG FAB & TOAST ---------- */
 #qlFab{
   position:fixed;right:16px;z-index:60;
-  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
-  width:56px;height:56px;border-radius:50%;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 8px);
+  min-width:44px;min-height:44px;width:44px;height:44px;
+  padding:0;border-radius:999px;
   background:var(--acc);color:var(--on-primary);border:none;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--font);font-size:var(--fs-sm);font-weight:600;line-height:1;
+  cursor:pointer;
   box-shadow:var(--shadow-2);
-  transition:transform 150ms ease-out, background-color 150ms ease;
+  transition:transform 150ms ease-out, background-color 150ms ease, box-shadow 150ms ease;
 }
-#qlFab svg{width:24px;height:24px}
-#qlFab:hover{background:color-mix(in oklch, var(--acc) 88%, var(--txt));transform:scale(1.05)}
-#qlFab:active{transform:scale(0.96)}
+#qlFab svg{width:20px;height:20px;flex:none;display:block}
+#qlFab .ql-fab-label{
+  display:none;
+  white-space:nowrap;
+}
+#qlFab:focus .ql-fab-label,
+#qlFab:focus-visible .ql-fab-label{
+  display:block;
+  position:fixed;
+  right:72px;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + 26px);
+  background:var(--txt);
+  color:var(--bg);
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:var(--fs-xs);
+  font-weight:600;
+  line-height:1.2;
+  box-shadow:var(--shadow-2);
+  pointer-events:none;
+}
+#qlFab:hover{background:color-mix(in oklch, var(--acc) 92%, black);box-shadow:var(--shadow-3)}
+#qlFab:active{transform:translateY(2px)}
+#qlFab:focus,#qlFab:focus-visible{
+  outline:2px solid var(--acc);
+  outline-offset:2px;
+}
 #qlFab.ql-flash{background:var(--ok-strong);color:var(--on-ok);transform:scale(1.06)}
+@media (min-width:768px){
+  #qlFab{
+    width:auto;height:48px;min-height:48px;min-width:48px;
+    padding:0 20px;
+    border-radius:999px;
+  }
+  #qlFab .ql-fab-label,
+  #qlFab:focus .ql-fab-label,
+  #qlFab:focus-visible .ql-fab-label{
+    display:inline;
+    position:static;
+    background:transparent;
+    color:inherit;
+    padding:0;
+    border-radius:0;
+    font-size:var(--fs-sm);
+    font-weight:600;
+    line-height:1;
+    box-shadow:none;
+  }
+}
 @media (min-width:769px){
   #qlFab{bottom:calc(env(safe-area-inset-bottom, 0px) + 24px);right:24px}
 }
@@ -2110,7 +2215,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </div>
 
 <!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
-<button id="qlFab" type="button" onclick="openSoloModal()" title="Log single part practice" aria-label="Log single part practice" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg></button>
+<button id="qlFab" type="button" onclick="openSoloModal()" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span class="ql-fab-label" data-i18n="fab_log_single">Log session</span></button>
 
 <!-- ============ FEATURE TOUR (7 anchored steps) ============ -->
 <div id="tourSpot" class="tour-spot" aria-hidden="true" style="display:none"></div>
@@ -3916,7 +4021,7 @@ const I18N={
     google_link_error:'Could not continue with Google. Try again.',
     google_user_ph:'e.g. maria',
     common_cancel:'Cancel',
-    common_start:'Start',
+    common_start:'Start session',
     common_close:'Close',
     common_retry:'Retry',
     common_back:'Back',
@@ -3953,6 +4058,7 @@ const I18N={
     total_time:'Total Time',
     today_title_fmt:'Today · {name}',
     today_session_title:"Today's session",
+    today_start_microcopy:"Opens the studio for today's session.",
     today_rest_day:'Rest day — no session planned today.',
     today_skill_rue:'Reading',
     today_mode_one:'1 {skill} exercise',
@@ -4375,8 +4481,8 @@ const I18N={
     diag_title:'Initial diagnostic',
     diag_sub:'10 min · 12 B2-level questions (Parts 1 to 7). No feedback is shown during the test.',
     diag_total_time:'Total time',
-    fab_log_single:'Log single part practice',
-    solo_title:'Log Single Part Practice',
+    fab_log_single:'Log session',
+    solo_title:'Log session',
     solo_sub:'Extra practice done outside scheduled sessions',
     solo_skill:'Skill / Component',
     solo_ue:'📖 Reading & Use of English (Parts 1–7)',
@@ -4695,7 +4801,7 @@ const I18N={
     google_link_error:'No se pudo continuar con Google. Probá de nuevo.',
     google_user_ph:'ej. maria',
     common_cancel:'Cancelar',
-    common_start:'Empezar',
+    common_start:'Empezar sesión',
     common_close:'Cerrar',
     common_retry:'Reintentar',
     common_back:'Atrás',
@@ -4732,6 +4838,7 @@ const I18N={
     total_time:'Tiempo total',
     today_title_fmt:'Hoy · {name}',
     today_session_title:'Sesión de hoy',
+    today_start_microcopy:'Abre el estudio para la sesión de hoy.',
     today_rest_day:'Día de descanso — hoy no hay sesión planificada.',
     today_skill_rue:'Reading',
     today_mode_one:'1 ejercicio de {skill}',
@@ -5154,8 +5261,8 @@ const I18N={
     diag_title:'Diagnóstico inicial',
     diag_sub:'10 min · 12 preguntas de nivel B2 (partes 1 a 7). No se muestra retroalimentación durante la prueba.',
     diag_total_time:'Tiempo total',
-    fab_log_single:'Registrar práctica de una parte',
-    solo_title:'Registrar práctica de una parte',
+    fab_log_single:'Registrar sesión',
+    solo_title:'Registrar sesión',
     solo_sub:'Práctica extra fuera de las sesiones programadas',
     solo_skill:'Habilidad / Componente',
     solo_ue:'📖 Reading & Use of English (partes 1–7)',
@@ -15190,13 +15297,16 @@ function renderTodaySession(plan,todaySlots){
     return;
   }
   box.innerHTML=`<h2>${t('today_session_title')}</h2><div class="ts-list">`+
-    todaySlots.map(sl=>{
+    todaySlots.map((sl,slotPos)=>{
       const idx=plan.slots.indexOf(sl);
       return `<div class="ts-row" data-day="${sl.day}" data-time="${sl.time||''}" data-type="${sl.type}" data-parts="${slotParts(sl).join(',')}" data-units="${slotUnitsAttr(sl)}" data-min="${sl.min}">
         <div class="ts-main"><div class="ts-title tnum">${esc(todayTitleLabel(sl))}<span class="ts-title-min"> · ${esc(sl.min+' min')}</span></div><div class="ts-duration tnum">${esc(sl.min+' min')}</div><div class="ts-when tnum">${esc(sl.time||'')}</div><div class="ts-mode">${esc(todayModeLine(sl))}</div></div>
-        <div class="ts-actions">
-          <button type="button" class="btn sm ok" onclick="todayStart(${idx})">${t('common_start')}</button>
-          <button type="button" class="btn sm gray" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
+        <div class="ts-cta">
+          <div class="ts-actions">
+            <button type="button" class="btn sm ok ts-start" onclick="todayStart(${idx})"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
+            <button type="button" class="btn sm gray ts-ff" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
+          </div>
+          ${slotPos===0?`<p class="ts-microcopy">${esc(t('today_start_microcopy'))}</p>`:''}
         </div>
       </div>`;
     }).join('')+`</div>`;
@@ -15204,7 +15314,7 @@ function renderTodaySession(plan,todaySlots){
     const u=QUEUE_PENDING.units[0];
     box.innerHTML+=`<div class="ts-row ts-next-unit" data-next-unit="${u.skill}:${u.value}">
       <div class="ts-main"><div class="ts-title tnum">${esc(queueUnitLabel(u))}</div><div class="ts-reason">${esc(t('plan_next_unit_reason'))}</div></div>
-      <button type="button" class="btn sm ok" onclick="startNextQueuedUnit()">${t('common_start')}</button>
+      <button type="button" class="btn sm ok ts-start" onclick="startNextQueuedUnit()"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
     </div>`;
   }
   box.innerHTML+=sessionSummaryLine();
