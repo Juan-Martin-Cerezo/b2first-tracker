@@ -1,12 +1,15 @@
-"""Phase 120: Design system consistency across Today, Exam, Progress, and Plan.
+"""Phase 120 + 122: Design system consistency across all eight tabs.
 
-Verifies at 320, 768, and 1280 px across the four tabs (Today, Exam, Progress, Plan):
-1. All four tabs use the same computed font-size and font-weight for headings of the same level (h1, h2, h3).
+Verifies at 320, 768, and 1280 px across all eight tabs
+(Today, Exam, Progress, Plan, Practice, Resources, Errors, Writing):
+1. All eight tabs use the same computed font-size and font-weight for headings of the same level (h1, h2, h3).
 2. All visible <button> elements have height in {44, 48, 52} px, and at most 3 distinct button heights per tab.
 3. Computed paddings and gaps of cards and card containers are multiples of 4 px.
-4. Zero horizontal scroll in any tab or width.
-5. Primary text contrast >= 4.5:1 in both light and dark themes.
-6. Screenshots saved to tests/out/design_<tab>_<width>.png.
+4. Zero horizontal scroll on documentElement in any tab or width; internal horizontal scroll is only
+   admitted inside an explicit .table-wrap container (Errors legend table at 320 px).
+5. Tab-specific layout & typography invariants for Today, Exam, Progress, Plan, Practice, Resources, Errors, and Writing.
+6. Text contrast >= 4.5:1 in both light and dark themes (including danger error message in Writing).
+7. Screenshots saved to tests/out/design_<tab>_<width>.png for all eight tabs.
 """
 import json
 from pathlib import Path
@@ -22,6 +25,10 @@ TABS = (
     ("exam", "exam"),
     ("prog", "progress"),
     ("plan", "plan"),
+    ("practice", "practice"),
+    ("resources", "resources"),
+    ("err", "errors"),
+    ("ia", "writing"),
 )
 
 SEED_JS = """
@@ -51,15 +58,45 @@ SEED_JS = """
         {id: 'r4', date: '2026-04-04', created_at: 4000, type: 'w', kind: 'Essay', score: 15, total: 20, min: 35}
     ];
     D.errs = [
-        {id: 'e1', date: '2026-04-02', code: 'L-GAP', desc: 'Missed collocation', fix: 'Review unit 2'},
-        {id: 'e2', date: '2026-04-03', code: 'G-ERR', desc: 'Wrong tense', fix: 'Check past perfect'}
+        {id: 'e1', date: '2026-04-02', code: 'L-GAP', desc: 'Missed collocation in Part 1', fix: 'Review unit 2'},
+        {id: 'e2', date: '2026-04-03', code: 'G-ERR', desc: 'Wrong tense after wish', fix: 'Check past perfect'}
     ];
+    MATERIALS = [
+        {
+            folder: '01-Examenes-Oficiales',
+            name: 'b2-first-RUE 2022.pdf',
+            rel: '01-Examenes-Oficiales/b2-first-RUE 2022.pdf',
+            href: '/mat/01-Examenes-Oficiales/b2-first-RUE%202022.pdf',
+            ext: 'PDF',
+            size: 1458176
+        },
+        {
+            folder: '01-Examenes-Oficiales',
+            name: 'b2-first-Listening 2022.pdf',
+            rel: '01-Examenes-Oficiales/b2-first-Listening 2022.pdf',
+            href: '/mat/01-Examenes-Oficiales/b2-first-Listening%202022.pdf',
+            ext: 'PDF',
+            size: 982016
+        },
+        {
+            folder: '01-Examenes-Oficiales',
+            name: 'listening-audio-file v2.mp3',
+            rel: '01-Examenes-Oficiales/listening-audio-file v2.mp3',
+            href: '/mat/01-Examenes-Oficiales/listening-audio-file%20v2.mp3',
+            ext: 'AUDIO',
+            size: 18452000
+        }
+    ];
+    buildMatIndex();
     const sorted = getSessionDays();
     const todayKey = PLAN_DAY_ORDER[(wd + 6) % 7];
     const todayIdx = sorted.findIndex(d => d.key === todayKey);
     D.sessionOffset = todayIdx > 0 ? -todayIdx : 0;
     save();
     refreshAll();
+    renderResources();
+    renderMaterial();
+    setIaState('error', 'Text is too short (minimum 40 words required for B2 grading).');
 }
 """
 
@@ -105,7 +142,9 @@ MEASURE_TAB_JS = """
     });
 
     // 3. Cards and card containers paddings & gaps
-    const cardEls = Array.from(root.querySelectorAll('.card, .stat-card, .exam-card')).filter(isVisible);
+    const cardEls = Array.from(
+        root.querySelectorAll('.card, .stat-card, .exam-card, .practice-card, .listen-test, .step, .err-item')
+    ).filter(isVisible);
     const cards = cardEls.map(c => {
         const cs = getComputedStyle(c);
         return {
@@ -122,7 +161,9 @@ MEASURE_TAB_JS = """
     });
 
     const containerEls = Array.from(
-        root.querySelectorAll('.grid-12, .stat-grid, .exam-select-grid, .today-shell, .today-grid, .plan-shell, #wpRows')
+        root.querySelectorAll(
+            '.grid-12, .stat-grid, .exam-select-grid, .today-shell, .today-grid, .plan-shell, #wpRows, .practice-grid, .lt-grid, #errList'
+        )
     ).filter(isVisible);
     const containers = containerEls.map(c => {
         const cs = getComputedStyle(c);
@@ -132,6 +173,20 @@ MEASURE_TAB_JS = """
             colGap: Math.round(parseFloat(cs.columnGap) || 0),
         };
     });
+
+    // Internal horizontal overflow check: only allowed on .table-wrap
+    const internalScrollers = Array.from(root.querySelectorAll('*')).filter(el => {
+        if (!isVisible(el)) return false;
+        const cs = getComputedStyle(el);
+        if (cs.overflowX !== 'auto' && cs.overflowX !== 'scroll') return false;
+        return el.scrollWidth > el.clientWidth + 1;
+    }).map(el => ({
+        tag: el.tagName.toLowerCase(),
+        cls: el.className || '',
+        id: el.id || '',
+        clientWidth: el.clientWidth,
+        scrollWidth: el.scrollWidth,
+    }));
 
     // 4. Plan specific: uniform .wp-row heights and select == secondary button height (48)
     let planCheck = null;
@@ -182,9 +237,133 @@ MEASURE_TAB_JS = """
         });
     }
 
+    // 7. Practice specific: consistent .step row heights, uniform padding/gap, single button variant & height
+    let practiceCheck = null;
+    if (viewId === 'practice') {
+        const steps = Array.from(root.querySelectorAll('#partsList .step')).filter(isVisible);
+        const stepBtns = Array.from(root.querySelectorAll('#partsList .step button')).filter(isVisible);
+        practiceCheck = {
+            stepCount: steps.length,
+            stepHeights: steps.map(s => Math.round(s.getBoundingClientRect().height)),
+            stepPaddings: steps.map(s => {
+                const cs = getComputedStyle(s);
+                return [
+                    Math.round(parseFloat(cs.paddingTop)),
+                    Math.round(parseFloat(cs.paddingRight)),
+                    Math.round(parseFloat(cs.paddingBottom)),
+                    Math.round(parseFloat(cs.paddingLeft)),
+                ];
+            }),
+            buttonVariants: Array.from(new Set(stepBtns.map(b => b.className.trim()))),
+            buttonHeights: Array.from(new Set(stepBtns.map(b => Math.round(b.getBoundingClientRect().height)))),
+        };
+    }
+
+    // 8. Resources specific: sample cards uniform padding/gap, link rhythm, right-aligned tabular-nums, name highest weight
+    let resourcesCheck = null;
+    if (viewId === 'resources') {
+        const sampleCards = Array.from(root.querySelectorAll('#resourcesList .listen-test')).filter(isVisible);
+        const practiceCards = Array.from(root.querySelectorAll('#practiceGrid .practice-card')).filter(isVisible);
+        const books = Array.from(root.querySelectorAll('#onlineList .book, #matList .book')).filter(isVisible);
+        resourcesCheck = {
+            sampleCount: sampleCards.length,
+            samplePaddings: sampleCards.map(c => {
+                const cs = getComputedStyle(c);
+                return [
+                    Math.round(parseFloat(cs.paddingTop)),
+                    Math.round(parseFloat(cs.paddingRight)),
+                    Math.round(parseFloat(cs.paddingBottom)),
+                    Math.round(parseFloat(cs.paddingLeft)),
+                ];
+            }),
+            practiceCardsHierarchy: practiceCards.map(c => {
+                const h3 = c.querySelector('h3');
+                const what = c.querySelector('.practice-what');
+                const mins = c.querySelector('.practice-mins');
+                const h3CS = h3 ? getComputedStyle(h3) : null;
+                const whatCS = what ? getComputedStyle(what) : null;
+                const minsCS = mins ? getComputedStyle(mins) : null;
+                return {
+                    nameWeight: h3CS ? parseInt(h3CS.fontWeight, 10) : 0,
+                    whatWeight: whatCS ? parseInt(whatCS.fontWeight, 10) : 0,
+                    whatSize: whatCS ? Math.round(parseFloat(whatCS.fontSize)) : 0,
+                    minsSize: minsCS ? Math.round(parseFloat(minsCS.fontSize)) : 0,
+                    minsTabular: minsCS ? minsCS.fontVariantNumeric.includes('tabular-nums') : false,
+                    minsAlignRight: minsCS ? minsCS.textAlign === 'right' : false,
+                };
+            }),
+            booksHierarchy: books.map(b => {
+                const nameEl = b.querySelector('b');
+                const metaEl = b.querySelector('.meta');
+                const numEl = b.querySelector('.price, .book-size');
+                const bCS = getComputedStyle(b);
+                const nCS = nameEl ? getComputedStyle(nameEl) : null;
+                const mCS = metaEl ? getComputedStyle(metaEl) : null;
+                const numCS = numEl ? getComputedStyle(numEl) : null;
+                return {
+                    padTop: Math.round(parseFloat(bCS.paddingTop)),
+                    padBottom: Math.round(parseFloat(bCS.paddingBottom)),
+                    nameWeight: nCS ? parseInt(nCS.fontWeight, 10) : 0,
+                    metaWeight: mCS ? parseInt(mCS.fontWeight, 10) : 0,
+                    metaSize: mCS ? Math.round(parseFloat(mCS.fontSize)) : 0,
+                    numTabular: numCS ? numCS.fontVariantNumeric.includes('tabular-nums') : false,
+                    numAlignRight: numCS ? numCS.textAlign === 'right' : false,
+                };
+            }),
+        };
+    }
+
+    // 9. Errors specific: legend table at 320px, sticky th, uniform row heights, empty state pattern
+    let errCheck = null;
+    if (viewId === 'err') {
+        const wrap = root.querySelector('#errLegend .table-wrap');
+        const tbl = root.querySelector('#errLegend .err-legend-table');
+        const ths = Array.from(root.querySelectorAll('#errLegend th')).filter(isVisible);
+        const trs = Array.from(root.querySelectorAll('#errLegend tbody tr')).filter(isVisible);
+        const items = Array.from(root.querySelectorAll('#errList .err-item')).filter(isVisible);
+        errCheck = {
+            wrapClientWidth: wrap ? wrap.clientWidth : 0,
+            wrapScrollWidth: wrap ? wrap.scrollWidth : 0,
+            tableWidth: tbl ? Math.round(tbl.getBoundingClientRect().width) : 0,
+            colWidths: ths.map(th => Math.round(th.getBoundingClientRect().width)),
+            thSticky: ths.every(th => {
+                const cs = getComputedStyle(th);
+                return cs.position === 'sticky' && cs.top === '0px';
+            }),
+            trHeights: trs.map(tr => Math.round(tr.getBoundingClientRect().height)),
+            errItemHeights: items.map(it => Math.round(it.getBoundingClientRect().height)),
+        };
+    }
+
+    // 10. Writing specific: labels above fields, #iaKind height == 48, help text in meta size, danger error visible
+    let iaCheck = null;
+    if (viewId === 'ia') {
+        const lblKind = root.querySelector('label[for="iaKind"]');
+        const selKind = root.querySelector('#iaKind');
+        const lblText = root.querySelector('label[for="iaText"]');
+        const areaText = root.querySelector('#iaText');
+        const meter = root.querySelector('.live-word-meter');
+        const errBox = root.querySelector('#iaError');
+        const errMsg = root.querySelector('#iaErrorMsg');
+        const lkR = lblKind ? lblKind.getBoundingClientRect() : null;
+        const skR = selKind ? selKind.getBoundingClientRect() : null;
+        const ltR = lblText ? lblText.getBoundingClientRect() : null;
+        const atR = areaText ? areaText.getBoundingClientRect() : null;
+        const mCS = meter ? getComputedStyle(meter) : null;
+        iaCheck = {
+            kindLabelAbove: (lkR && skR) ? (lkR.bottom <= skR.top + 1) : false,
+            textLabelAbove: (ltR && atR) ? (ltR.bottom <= atR.top + 1) : false,
+            kindHeight: skR ? Math.round(skR.height) : 0,
+            meterFontSize: mCS ? Math.round(parseFloat(mCS.fontSize)) : 0,
+            errorVisible: errBox ? isVisible(errBox) : false,
+            errorMsgText: errMsg ? errMsg.innerText.trim() : '',
+        };
+    }
+
     return {
         scrollWidth: doc.scrollWidth,
         clientWidth: doc.clientWidth,
+        internalScrollers,
         headings,
         buttons,
         cards,
@@ -192,6 +371,10 @@ MEASURE_TAB_JS = """
         planCheck,
         examCheck,
         progCheck,
+        practiceCheck,
+        resourcesCheck,
+        errCheck,
+        iaCheck,
     };
 }
 """
@@ -241,6 +424,15 @@ CONTRAST_TAB_JS = """
         '.stat-card-val',
         '.metric-row',
         '.wp-title',
+        '.step h3',
+        '.practice-card h3',
+        '.practice-what',
+        '.book b',
+        '.book .meta',
+        '.listen-test .lt-head',
+        '#errLegend td',
+        '.err-item .err-desc',
+        '#iaErrorMsg',
     ];
     const results = {};
     for (const sel of selectors) {
@@ -290,10 +482,15 @@ def main():
                 m = page.evaluate(MEASURE_TAB_JS, view_id)
                 report["widths"][str(vw)][view_id] = m
 
-                # 1. Zero horizontal scroll
+                # 1. Zero horizontal scroll on documentElement
                 assert m["scrollWidth"] <= m["clientWidth"], (
-                    f"{vw}px {view_id}: horizontal scroll {m['scrollWidth']} > {m['clientWidth']}"
+                    f"{vw}px {view_id}: page horizontal scroll {m['scrollWidth']} > {m['clientWidth']}"
                 )
+                # Internal horizontal scroll is only allowed inside .table-wrap
+                for sc in m["internalScrollers"]:
+                    assert "table-wrap" in sc["cls"], (
+                        f"{vw}px {view_id}: unexpected internal horizontal scroll container: {sc}"
+                    )
 
                 # 2. Collect heading sizes/weights per level
                 for level in ("h1", "h2", "h3"):
@@ -354,6 +551,81 @@ def main():
                     for h in sh:
                         assert h == 48, f"{vw}px plan: select height {h} != 48 (secondary button height)"
 
+                if view_id == "practice":
+                    pc = m["practiceCheck"]
+                    assert pc["stepCount"] == 17, f"{vw}px practice: expected 17 part rows, got {pc['stepCount']}"
+                    assert max(pc["stepHeights"]) - min(pc["stepHeights"]) <= 1, (
+                        f"{vw}px practice: part rows do not have consistent height: {pc['stepHeights']}"
+                    )
+                    for pad in pc["stepPaddings"]:
+                        assert pad == [16, 16, 16, 16], f"{vw}px practice: step padding {pad} != [16, 16, 16, 16]"
+                    assert len(pc["buttonVariants"]) == 1, (
+                        f"{vw}px practice: buttons have multiple variants: {pc['buttonVariants']}"
+                    )
+                    assert pc["buttonHeights"] == [44], (
+                        f"{vw}px practice: practice button heights {pc['buttonHeights']} != [44]"
+                    )
+
+                if view_id == "resources":
+                    rc = m["resourcesCheck"]
+                    assert rc["sampleCount"] > 0, f"{vw}px resources: no sample cards rendered"
+                    for pad in rc["samplePaddings"]:
+                        assert pad == [16, 16, 16, 16], f"{vw}px resources: sample card padding {pad} != [16, 16, 16, 16]"
+                    for pch in rc["practiceCardsHierarchy"]:
+                        assert pch["nameWeight"] > pch["whatWeight"], (
+                            f"{vw}px resources: practice-card name not highest weight: {pch}"
+                        )
+                        assert pch["whatSize"] == 12 and pch["minsSize"] == 12, (
+                            f"{vw}px resources: practice-card secondary text not meta size (12px): {pch}"
+                        )
+                        assert pch["minsTabular"] and pch["minsAlignRight"], (
+                            f"{vw}px resources: practice-mins not right-aligned tabular-nums: {pch}"
+                        )
+                    for bh in rc["booksHierarchy"]:
+                        assert bh["padTop"] == 12 and bh["padBottom"] == 12, (
+                            f"{vw}px resources: book vertical rhythm not uniform 12px: {bh}"
+                        )
+                        assert bh["nameWeight"] > bh["metaWeight"], (
+                            f"{vw}px resources: book name not highest weight: {bh}"
+                        )
+                        assert bh["metaSize"] == 12, f"{vw}px resources: book meta size != 12: {bh}"
+                        assert bh["numTabular"] and bh["numAlignRight"], (
+                            f"{vw}px resources: book price/size not right-aligned tabular-nums: {bh}"
+                        )
+
+                if view_id == "err":
+                    ec = m["errCheck"]
+                    assert ec["thSticky"], f"{vw}px err: table headers are not sticky: {ec}"
+                    assert ec["tableWidth"] >= 500, f"{vw}px err: legend table crushed ({ec['tableWidth']}px)"
+                    assert all(w >= 60 for w in ec["colWidths"]), (
+                        f"{vw}px err: legend table column clipped: {ec['colWidths']}"
+                    )
+                    assert max(ec["trHeights"]) - min(ec["trHeights"]) <= 1, (
+                        f"{vw}px err: legend table rows do not have consistent height: {ec['trHeights']}"
+                    )
+                    assert max(ec["errItemHeights"]) - min(ec["errItemHeights"]) <= 1, (
+                        f"{vw}px err: logged error rows do not have consistent height: {ec['errItemHeights']}"
+                    )
+                    if vw == 320:
+                        assert ec["wrapScrollWidth"] > ec["wrapClientWidth"], (
+                            f"320px err: expected internal scroll on .table-wrap: {ec}"
+                        )
+
+                if view_id == "ia":
+                    ic = m["iaCheck"]
+                    assert ic["kindLabelAbove"] and ic["textLabelAbove"], (
+                        f"{vw}px ia: labels are not above fields: {ic}"
+                    )
+                    assert ic["kindHeight"] == 48, (
+                        f"{vw}px ia: #iaKind height {ic['kindHeight']} != 48 (secondary button height)"
+                    )
+                    assert ic["meterFontSize"] == 12, (
+                        f"{vw}px ia: help text below field not meta size (12px): {ic}"
+                    )
+                    assert ic["errorVisible"] and ic["errorMsgText"], (
+                        f"{vw}px ia: error message not visible for validation check: {ic}"
+                    )
+
                 # 6. Screenshots
                 shot_primary = OUT_DIR / f"design_{view_id}_{vw}.png"
                 page.screenshot(path=str(shot_primary), full_page=False)
@@ -362,14 +634,14 @@ def main():
                     shot_alias = OUT_DIR / f"design_{alias}_{vw}.png"
                     shot_alias.write_bytes(shot_primary.read_bytes())
 
-            # Verify cross-tab heading consistency at this width
+            # Verify cross-tab heading consistency at this width across all 8 tabs
             for level, by_tab in heading_by_level.items():
                 distinct = set(by_tab.values())
                 assert len(distinct) == 1, (
                     f"{vw}px: {level} (font-size, font-weight) differs across tabs: {by_tab}"
                 )
 
-        # Contrast >= 4.5:1 in light and dark themes across all 4 tabs
+        # Contrast >= 4.5:1 in light and dark themes across all 8 tabs
         page.set_viewport_size({"width": 1280, "height": 900})
         for theme in ("light", "dark"):
             page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
@@ -382,6 +654,56 @@ def main():
                 report["contrast"][theme][view_id] = ratios
                 for sel, r in ratios.items():
                     assert r >= 4.5, f"{theme} {view_id} {sel}: contrast {r} < 4.5"
+
+        # Verify empty state pattern in Errors and focus ring across Practice, Resources, Errors, Writing
+        page.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+        page.evaluate("() => { D.errs = []; renderErrs(); renderErrPills(); showView('err'); }")
+        page.wait_for_timeout(100)
+        empty_check = page.evaluate(
+            """() => {
+                const empties = Array.from(document.querySelectorAll('#v-err .empty'));
+                return empties.map(e => {
+                    const cs = getComputedStyle(e);
+                    return {
+                        padTop: Math.round(parseFloat(cs.paddingTop)),
+                        padBottom: Math.round(parseFloat(cs.paddingBottom)),
+                        rowGap: Math.round(parseFloat(cs.rowGap)),
+                        hasBtn: !!e.querySelector('button.btn'),
+                    };
+                });
+            }"""
+        )
+        assert len(empty_check) == 2 and all(
+            ec["padTop"] == 16 and ec["padBottom"] == 16 and ec["rowGap"] == 8 and ec["hasBtn"]
+            for ec in empty_check
+        ), f"Errors empty state does not use unified .empty pattern: {empty_check}"
+
+        focus_targets = [
+            ("practice", "#v-practice #partsList .step button"),
+            ("resources", "#v-resources #practiceGrid a.btn"),
+            ("err", "#v-err #errCode2"),
+            ("ia", "#v-ia #iaKind"),
+        ]
+        for view_id, sel in focus_targets:
+            page.evaluate(f"showView('{view_id}')")
+            page.wait_for_timeout(80)
+            fc = page.evaluate(
+                """(selector) => {
+                    const el = document.querySelector(selector);
+                    if (!el) return null;
+                    el.focus();
+                    const cs = getComputedStyle(el);
+                    return {
+                        outlineStyle: cs.outlineStyle,
+                        outlineWidth: Math.round(parseFloat(cs.outlineWidth)),
+                        outlineOffset: Math.round(parseFloat(cs.outlineOffset)),
+                    };
+                }""",
+                sel,
+            )
+            assert fc and fc["outlineStyle"] == "solid" and fc["outlineWidth"] == 2 and fc["outlineOffset"] == 2, (
+                f"Focus ring mismatch on {view_id} ({sel}): {fc}"
+            )
 
         assert not errors, f"page errors: {errors}"
         browser.close()
