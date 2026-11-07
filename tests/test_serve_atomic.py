@@ -97,6 +97,30 @@ def main():
     assert status == 503, f"unavailable /app answered {status}"
     assert b"temporarily unavailable" in body.lower()
 
+    # 6. B2_NO_CACHE=1: truncating the file and requesting /app still returns
+    # the good HTML (and omits ETag) — atomic protection does not depend on cache.
+    target_nc = os.path.join(TMP, "index-nocache.html")
+    shutil.copyfile(SRC, target_nc)
+    S.TRACKER = target_nc
+    os.environ["B2_NO_CACHE"] = "1"
+    S.B2_NO_CACHE = True
+    try:
+        with urllib.request.urlopen(URL + "/app") as r:
+            assert r.status == 200, f"B2_NO_CACHE=1 initial /app answered {r.status}"
+            assert r.headers.get("ETag") is None, "B2_NO_CACHE=1 sent an ETag"
+            assert r.read() == original
+        with open(target_nc, "wb") as f:
+            f.write(original[: len(original) // 2])
+        with urllib.request.urlopen(URL + "/app") as r:
+            nc_half = r.read()
+            assert r.status == 200, f"B2_NO_CACHE=1 truncated /app answered {r.status}"
+            assert r.headers.get("ETag") is None, "B2_NO_CACHE=1 sent an ETag on fallback"
+        assert nc_half == original, "B2_NO_CACHE=1 leaked a truncated index.html"
+        check_complete(nc_half, "no-cache-truncated")
+    finally:
+        os.environ.pop("B2_NO_CACHE", None)
+        S.B2_NO_CACHE = False
+
     # The rejected reads must be recorded without exposing any content.
     data_dir = os.environ.get("B2_DATA_DIR", "")
     errors = os.path.join(data_dir, "errors") if data_dir else ""
@@ -108,7 +132,7 @@ def main():
                 joined += f.read()
     assert b"invalid_static" in joined, "invalid_static was not recorded"
 
-    print("atomic serve OK: half, empty, restored, deleted, unavailable")
+    print("atomic serve OK: half, empty, restored, deleted, unavailable, B2_NO_CACHE=1")
 
 
 if __name__ == "__main__":

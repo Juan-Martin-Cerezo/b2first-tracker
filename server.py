@@ -125,6 +125,13 @@ def _is_demo():
     return bool(B2_DEMO)
 
 
+def _no_cache():
+    """Return True when the static payload cache is disabled (B2_NO_CACHE=1)."""
+    if isinstance(B2_NO_CACHE, str):
+        return B2_NO_CACHE.strip() in ("1", "true", "True")
+    return bool(B2_NO_CACHE) or (os.environ.get("B2_NO_CACHE") or "").strip() in ("1", "true", "True")
+
+
 def _public_health():
     """True when /api/health may expose absolute paths (B2_PUBLIC_HEALTH=1)."""
     if isinstance(B2_PUBLIC_HEALTH, str):
@@ -3474,7 +3481,7 @@ def _if_modified_since_hit(header, mtime):
         return False
 
 
-def _static_entry(full, ctype, validator=None, rid=""):
+def _static_entry(full, ctype, validator=None, rid="", no_cache=False):
     """Return the cached (raw, gzip, validators) entry, rebuilding it on change.
 
     With `validator`, the file is read and checked before it replaces the copy
@@ -3494,7 +3501,7 @@ def _static_entry(full, ctype, validator=None, rid=""):
     key = (st.st_mtime_ns, st.st_size, st.st_ino)
     with _STATIC_LOCK:
         entry = _STATIC_CACHE.get(full)
-        if entry and entry["key"] == key:
+        if not no_cache and entry and entry["key"] == key:
             return entry
         prev_raw = entry["raw"] if entry else None
     try:
@@ -3511,6 +3518,8 @@ def _static_entry(full, ctype, validator=None, rid=""):
             if entry is not None:
                 return entry            # last validated copy stays live
             raise _BrokenStatic(reason)
+    if no_cache and entry is not None and entry["key"] == key:
+        return {"raw": raw}
     gz = gzip.compress(raw, 6) if len(raw) >= 1024 and _compressible(ctype) else None
     # The hash covers the served bytes *and* the file identity: a same-mtime
     # redeploy gets a new ETag, and a bare `touch` invalidates client caches.
@@ -3742,17 +3751,10 @@ class H(BaseHTTPRequestHandler):
         """
         extra = dict(extra or {})
         extra.setdefault("Cache-Control", "no-cache")
-        if B2_NO_CACHE and validator is None:
-            try:
-                with open(full, "rb") as f:
-                    body = f.read()
-            except OSError:
-                self._send(404, b"not found", "text/plain")
-                return
-            self._send(200, body, ctype, extra)
-            return
+        no_cache = _no_cache()
         try:
-            entry = _static_entry(full, ctype, validator=validator, rid=self._rid)
+            entry = _static_entry(full, ctype, validator=validator,
+                                  rid=self._rid, no_cache=no_cache)
         except _BrokenStatic:
             self._send(503, _UNAVAILABLE_HTML, "text/html; charset=utf-8",
                        {"Cache-Control": "no-store", "Retry-After": "1"})
@@ -3763,6 +3765,9 @@ class H(BaseHTTPRequestHandler):
                            {"Cache-Control": "no-store", "Retry-After": "1"})
             else:
                 self._send(404, b"not found", "text/plain")
+            return
+        if no_cache:
+            self._send(200, entry["raw"], ctype, extra)
             return
         inm = self.headers.get("If-None-Match")
         if _etag_matches(inm, entry["etag"]) or (
