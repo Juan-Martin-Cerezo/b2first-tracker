@@ -989,7 +989,8 @@ tbody tr:hover{background:var(--surface-2)}
 .cycle-lbl{font-size:var(--t-meta);letter-spacing:.1em;text-transform:uppercase;color:var(--txt-2);margin-bottom:var(--s1)}
 .cycle-val{font-size:var(--t-sub);font-weight:600;color:var(--txt)}
 .cycle-swap{display:flex;align-items:center;justify-content:center;color:var(--txt-2);width:20px;height:20px;flex:none}
-.plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:var(--s2);margin-bottom:var(--s1);flex-wrap:wrap}
+.plan-card-head{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);margin-bottom:var(--s2);flex-wrap:wrap}
+.plan-card-head h2{margin:0}
 
 /* language switcher (PLAN) */
 .lang-switch{display:inline-flex;gap:var(--s1);margin-top:var(--s3);padding:var(--s1);border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface-2)}
@@ -1331,7 +1332,137 @@ tbody tr:hover{background:var(--surface-2)}
   padding-bottom:max(var(--s4), env(safe-area-inset-bottom));
 }
 #v-plan .plan-shell>.card,#v-plan .plan-shell>.page-head{margin-bottom:0}
+#v-plan .page-head{flex-direction:column;align-items:stretch;gap:var(--s4)}
 #v-plan .page-head .page-title{font-size:var(--t-display);font-weight:700;line-height:1.1}
+#v-plan .plan-actions{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--s3);
+}
+@media (max-width:639px){
+  #v-plan .plan-actions{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+#v-plan .plan-actions .btn{
+  width:100%;
+  height:var(--btn-h-secondary);
+  min-height:var(--btn-h-secondary);
+  justify-content:flex-start;
+  text-align:left;
+  padding:0 var(--s4);
+  gap:var(--s2);
+}
+#v-plan .plan-actions .btn-ico{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  flex:0 0 20px;
+  line-height:1;
+}
+#v-plan .plan-actions .btn-label{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#v-plan .exam-date-row{
+  display:flex;
+  align-items:flex-end;
+  gap:var(--s3);
+  margin-top:var(--s3);
+}
+#v-plan .exam-date-field{
+  flex:1 1 160px;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:var(--s1);
+}
+#v-plan .exam-date-field label{
+  margin:0;
+  text-align:left;
+  width:100%;
+}
+#v-plan .exam-date-field input[type="date"]{
+  width:100%;
+  height:var(--btn-h-secondary);
+  min-height:var(--btn-h-secondary);
+  margin:0;
+}
+#v-plan .exam-save-btn{
+  flex:0 0 auto;
+  height:var(--btn-h-secondary);
+  min-height:var(--btn-h-secondary);
+  padding:0 var(--s4);
+  margin:0;
+  white-space:nowrap;
+}
+#v-plan .exam-intake-btn{
+  flex:0 0 auto;
+  height:var(--btn-h-tertiary);
+  min-height:var(--btn-h-tertiary);
+  padding:0 var(--s2);
+  margin:0;
+  background:transparent;
+  border-color:transparent;
+  color:var(--txt-2);
+  box-shadow:none;
+  white-space:nowrap;
+}
+#v-plan .exam-intake-btn:hover{
+  background:var(--surface-2);
+  border-color:transparent;
+  color:var(--txt);
+}
+@media (max-width:480px){
+  #v-plan .exam-date-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  #v-plan .exam-date-field{
+    order:1;
+    flex:0 0 auto;
+    width:100%;
+  }
+  #v-plan .exam-save-btn{
+    order:2;
+    width:100%;
+  }
+  #v-plan .exam-intake-btn{
+    order:3;
+    width:100%;
+    justify-content:center;
+  }
+}
+#v-plan #wpRegenBtn{
+  margin-left:auto;
+  background:transparent;
+  border-color:transparent;
+  color:var(--txt-2);
+  box-shadow:none;
+}
+#v-plan #wpRegenBtn:hover{
+  background:var(--surface-2);
+  border-color:transparent;
+  color:var(--txt);
+}
+#v-plan #wpSummary,
+#v-plan #wpWeekBlock{
+  font-size:var(--t-body);
+  font-weight:400;
+  color:var(--txt-2);
+  line-height:1.5;
+  margin:var(--s2) 0 0 0;
+}
+#v-plan #wpSummary b,
+#v-plan #wpSummary strong{
+  font-weight:600;
+  color:var(--txt);
+}
 #v-plan .wp-row{padding:var(--s3) var(--s4);gap:var(--s3)}
 #v-plan .wp-row .wp-main{flex:1 1 220px;min-width:0}
 #v-plan .wp-row .wp-title{overflow-wrap:break-word;word-break:normal;white-space:normal}
@@ -3669,11 +3800,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h1 class="page-title" data-i18n="plan_title">Plan Configuration</h1>
             <p class="page-sub" data-i18n="plan_sub">Adjust your session schedules, language and subscription. Everything applies to the tracker instantly.</p>
           </div>
-          <div style="display:flex;gap:var(--s2);flex-wrap:wrap">
-            <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake">✏️ Edit my intake</button>
-            <button class="btn gray" id="tourReplayBtn" onclick="startTour()" data-i18n="tour_replay">🎬 Replay the app tour</button>
-            <button class="btn gray" onclick="exportData()" data-i18n="plan_export_json">💾 Export JSON</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup">📥 Import Backup</button>
+          <div class="plan-actions">
+            <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake"><span class="btn-ico" aria-hidden="true">✏️</span> <span class="btn-label">Edit my intake</span></button>
+            <button class="btn gray" id="tourReplayBtn" onclick="startTour()" data-i18n="tour_replay"><span class="btn-ico" aria-hidden="true">🎬</span> <span class="btn-label">Replay the app tour</span></button>
+            <button class="btn gray" onclick="exportData()" data-i18n="plan_export_json"><span class="btn-ico" aria-hidden="true">💾</span> <span class="btn-label">Export JSON</span></button>
+            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup"><span class="btn-ico" aria-hidden="true">📥</span> <span class="btn-label">Import Backup</span></button>
           </div>
         </div>
 
@@ -3683,11 +3814,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="weeklyPlanCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_plan">Week plan</h2>
-            <button type="button" class="btn sm gray" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
+            <button type="button" class="btn sm gray btn-tertiary" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
           </div>
           <div class="sub" data-i18n="plan_week_sub">Your week follows your session days and the skill rotation. A refresh never moves it.</div>
-          <div id="wpSummary" class="sub" style="margin-top:var(--s2);font-weight:600;display:none"></div>
-          <div id="wpWeekBlock" class="sub" style="margin-top:var(--s2);font-weight:600;display:none"></div>
+          <div id="wpSummary" class="sub" style="display:none"></div>
+          <div id="wpWeekBlock" class="sub" style="display:none"></div>
           <div id="wpRotationControls" style="margin-top:var(--s3)">
             <div class="wp-rotation-row">
               <label for="wpRotationMode"><b>Rotation</b></label>
@@ -5626,10 +5757,22 @@ function applyI18n(){
   document.title=t('app_title');
   document.querySelectorAll('[data-i18n]').forEach(el=>{
     const v=t(el.getAttribute('data-i18n'));
+    if(!v)return;
+    const lbl=el.querySelector(':scope > .btn-label');
+    const ico=el.querySelector(':scope > .btn-ico');
+    if(lbl&&ico){
+      const sp=v.indexOf(' ');
+      if(sp>0){
+        const nextIco=v.slice(0,sp),nextLbl=v.slice(sp+1);
+        if(ico.textContent!==nextIco)ico.textContent=nextIco;
+        if(lbl.textContent!==nextLbl)lbl.textContent=nextLbl;
+        return;
+      }
+    }
     /* Only touch the DOM when the text really changes: replacing an
        unchanged text node between mousedown and mouseup makes Chromium drop
        the click that was about to land on that element. */
-    if(v&&el.textContent!==v)el.textContent=v;
+    if(el.textContent!==v)el.textContent=v;
   });
   document.querySelectorAll('[data-i18n-html]').forEach(el=>{
     const v=t(el.getAttribute('data-i18n-html'));
@@ -13999,7 +14142,8 @@ function renderPlanSummary(plan){
   if(!sum.count||!sum.total){el.textContent='';el.style.display='none';return}
   const breakdown=['rue','l','w','sp','mock'].filter(k=>sum.bySkill[k]).map(k=>
     t('plan_week_summary_item',{skill:planSkillLabel(k),min:sum.bySkill[k]})).join(' · ');
-  el.textContent=t('plan_week_summary',{total:sum.total,n:sum.count,breakdown:breakdown});
+  const raw=t('plan_week_summary',{total:sum.total,n:sum.count,breakdown:breakdown});
+  el.innerHTML=esc(raw).replace(/\b\d+\b/g,'<b class="tnum">$&</b>');
   el.style.display='';
 }
 function renderWeeklyPlan(){
@@ -15656,10 +15800,10 @@ function renderExamCountdown(){
   el.style.display='';
   el.innerHTML=`<h2>${t('exam_countdown')}</h2>
     <div class="sub">${t('exam_no_date')}</div>
-    <div style="display:flex;gap:var(--s2);align-items:flex-end;flex-wrap:wrap">
-      <button type="button" class="btn ok sm" onclick="openIntake()">${t('exam_set_date')}</button>
-      <div style="flex:1;min-width:160px"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
-      <button type="button" class="btn ok" onclick="setExamDate()">${t('exam_save_date')}</button>
+    <div class="exam-date-row">
+      <button type="button" class="btn sm gray btn-tertiary exam-intake-btn" onclick="openIntake()">${t('exam_set_date')}</button>
+      <div class="exam-date-field"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
+      <button type="button" class="btn ok exam-save-btn" onclick="setExamDate()">${t('exam_save_date')}</button>
     </div>`;
 }
 function setExamDate(){
