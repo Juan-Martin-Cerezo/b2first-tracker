@@ -1358,7 +1358,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 @media (max-width:639px){
   #v-plan .plan-actions{
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
 #v-plan .plan-actions .btn{
@@ -1380,9 +1380,10 @@ tbody tr:hover{background:var(--surface-2)}
 }
 #v-plan .plan-actions .btn-label{
   min-width:0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  white-space:normal;
+  line-height:1.2;
+  text-align:center;
+  overflow-wrap:break-word;
 }
 #v-plan .exam-date-row{
   display:flex;
@@ -2152,12 +2153,32 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:639px){
   #v-plan .plan-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+/* Fase 126c — below 430px two columns cannot hold the labels: stack them. */
+@media (max-width:430px){
+  #v-plan .plan-actions{grid-template-columns:minmax(0,1fr)}
+}
 
-/* B3 — the schedule row keeps day, time and delete on one line. */
-@media (max-width:768px){
-  #scheduleRowsContainer .sched-row{flex-direction:row;align-items:flex-end;flex-wrap:nowrap}
-  #scheduleRowsContainer .sched-row>div{flex:1 1 0;min-width:0}
-  #scheduleRowsContainer .sched-row .sched-del{flex:0 0 var(--btn-h-tertiary);margin-left:auto}
+/* Fase 126c — one header per session row; day and time share one line. */
+#scheduleRowsContainer .sched-row{
+  display:flex;flex-direction:column;gap:0;margin:0;
+  padding:var(--s1) var(--s3);
+  background:var(--surface-container-low);
+  border:1px solid var(--outline-variant);
+  border-radius:var(--radius);
+}
+#scheduleRowsContainer .sched-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s2);min-width:0;min-height:var(--btn-h-tertiary);
+}
+#scheduleRowsContainer .sched-title{
+  min-width:0;font-size:var(--t-meta);font-weight:600;line-height:1.2;
+  color:var(--txt-2);letter-spacing:.02em;
+}
+#scheduleRowsContainer .sched-fields{display:flex;gap:var(--s2);min-width:0}
+#scheduleRowsContainer .sched-field{flex:1 1 0;min-width:0}
+#scheduleRowsContainer .sched-field label{
+  display:block;margin:0 0 2px;font-size:var(--t-meta);font-weight:600;
+  line-height:1.2;letter-spacing:.02em;color:var(--txt-2);text-transform:none;
 }
 
 /* A2 — no floating action on phones: Today's header carries the action. */
@@ -4703,7 +4724,8 @@ const I18N={
     plan_week_sub:'Your week follows your session days and the skill rotation. A refresh never moves it.',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
     plan_go_diag:'Go to the diagnostic →',
-    plan_session_day:'Session {n} — Day',
+    plan_session:'Session {n}',
+    plan_day:'Day',
     plan_time:'Time',
     plan_delete_day:'Delete session day',
     plan_offset:'Offset: {offset}',
@@ -5483,7 +5505,8 @@ const I18N={
     plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Un refresh no la mueve.',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
-    plan_session_day:'Sesión {n} — Día',
+    plan_session:'Sesión {n}',
+    plan_day:'Día',
     plan_time:'Hora',
     plan_delete_day:'Eliminar día de sesión',
     plan_offset:'Desfase: {offset}',
@@ -15205,7 +15228,7 @@ function renderGrafPart(){
 function renderGrafErr(){
   const el=document.getElementById('gErr'),errs=D.errs||[];
   if(!(D.log||[]).length){el.innerHTML='';return}
-  if(!errs.length){el.innerHTML='';return}
+  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet — the taxonomy fills up when you log a mistake.</div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
   const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
@@ -15230,13 +15253,15 @@ function renderGrafCons(){
   const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
   const max=Math.max(...weeks.map(w=>byWeek[w]));
   const W=340,H=150,padL=24,padB=20,padT=8,padR=8;
-  const bw=(W-padL-padR)/weeks.length;
+  const bwMax=48;
+  const sliceW=(W-padL-padR)/Math.max(weeks.length,1);
+  const bw=Math.min(bwMax,sliceW);
   let g='';
   weeks.forEach((w,i)=>{
     const n=byWeek[w];
     const h=(H-padT-padB)*(max?n/max:0);
-    const x=padL+i*bw;
-    g+=`<rect x="${x+2}" y="${H-padB-h}" width="${bw-4}" height="${h}" rx="3" fill="var(--acc)"/>`;
+    const x=padL+i*sliceW+(sliceW-bw)/2;
+    g+=`<rect x="${x}" y="${H-padB-h}" width="${bw}" height="${h}" rx="3" fill="var(--acc)"/>`;
     g+=svgTxt(x+bw/2,H-5,'W'+w,'var(--dim)',9,'middle');
   });
   // Streak: consecutive weeks (backwards from the current one) with >= 1 log
@@ -15424,19 +15449,22 @@ function renderScheduleRows(){
     return;
   }
   c.innerHTML=sched.map((slot,i)=>`
-    <div class="row sched-row" style="align-items:flex-end;margin:0;gap:var(--s2);background:var(--surface-container-low);padding:var(--s3);border-radius:var(--radius);border:1px solid var(--outline-variant)">
-      <div style="flex:1">
-        <label style="font-size:var(--t-meta);margin-bottom:var(--s1)">${t('plan_session_day',{n:i+1})}</label>
-        <select class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
-          ${Array.from({length:7},(_,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${dayFull(dIdx)}</option>`).join('')}
-        </select>
+    <div class="sched-row">
+      <div class="sched-head">
+        <span class="sched-title">${t('plan_session',{n:i+1})}</span>
+        <button type="button" class="btn sm gray sched-del" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
       </div>
-      <div style="flex:1">
-        <label style="font-size:var(--t-meta);margin-bottom:var(--s1)">${t('plan_time')}</label>
-        <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
-      </div>
-      <div class="sched-del" style="display:flex;align-items:flex-end;margin-left:auto">
-        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
+      <div class="sched-fields">
+        <div class="sched-field">
+          <label for="schedDay${i}">${t('plan_day')}</label>
+          <select id="schedDay${i}" class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
+            ${Array.from({length:7},(_,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${dayFull(dIdx)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="sched-field">
+          <label for="schedTime${i}">${t('plan_time')}</label>
+          <input id="schedTime${i}" type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
+        </div>
       </div>
     </div>
   `).join('');
