@@ -1332,21 +1332,20 @@ tbody tr:hover{background:var(--surface-2)}
   padding-bottom:max(var(--s4), env(safe-area-inset-bottom));
 }
 #v-plan .plan-shell>.card,#v-plan .plan-shell>.page-head{margin-bottom:0}
+#v-plan .plan-col{display:flex;flex-direction:column;gap:var(--s5);min-width:0}
+#v-plan .plan-col>.card,#v-plan .plan-col>.page-head{margin-bottom:0}
 @media (min-width:1024px){
   #v-plan .plan-shell{
     display:grid;
     grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
-    grid-auto-flow:row dense;
     align-items:start;
     gap:var(--s5);
     padding-inline:0;
     padding-bottom:0;
   }
-  #v-plan .plan-shell>.page-head{grid-column:1 / -1}
-  #v-plan .plan-shell>#weeklyPlanCard{grid-column:1}
-  #v-plan .plan-shell>#examCountdown{grid-column:2}
-  #v-plan .plan-shell>#schedulesCard{grid-column:1}
-  #v-plan .plan-shell>#rotationCard{grid-column:2}
+  #v-plan .plan-shell>.page-head{grid-column:1 / -1;grid-row:1}
+  #v-plan .plan-col-left{grid-column:1;grid-row:2}
+  #v-plan .plan-col-right{grid-column:2;grid-row:2}
   #v-plan .plan-shell .plan-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 #v-plan .page-head{flex-direction:column;align-items:stretch;gap:var(--s4)}
@@ -1892,7 +1891,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     font-size:var(--t-meta);text-align:center;justify-content:center;
   }
   #sideNav button[data-view] .nav-label,#navMoreBtn .nav-label{
-    font-size:var(--t-meta);min-width:0;max-width:100%;text-align:center;
+    font-size:10px;line-height:1.1;letter-spacing:0;text-transform:uppercase;
+    min-width:0;max-width:100%;text-align:center;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   #sideNav button[data-view].extra{display:none}
@@ -1972,11 +1972,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:400px){
   .stat-grid{grid-template-columns:1fr}
 }
-@media (max-width:520px){
+@media (max-width:430px){
+  /* six labelled items at 360–430px: no side padding, 1px gap */
+  #sideNav{gap:1px;padding-left:0;padding-right:0}
+  #sideNav button[data-view],#navMoreBtn{padding-left:0;padding-right:0}
+}
+@media (max-width:359px){
   /* icon-only bottom bar: six items share the width, labels stay for AT */
   #sideNav button[data-view],#navMoreBtn{flex:1 1 0;min-width:0;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);padding:var(--s1) 2px}
   #sideNav .nav-label,#navMoreBtn .nav-label{
-    position:absolute;width:1px;min-width:0;height:1px;padding:0;margin:-1px;
+    position:absolute;width:0;min-width:0;height:0;padding:0;margin:-1px;
     overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
   }
 }
@@ -3861,8 +3866,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <div class="card" id="examCountdown"></div>
-
+        <div class="plan-col plan-col-left">
         <!-- Week plan (derived from the diagnostic + error taxonomy) -->
         <div class="card" id="weeklyPlanCard">
           <div class="plan-card-head">
@@ -3931,6 +3935,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
         </div>
+        </div>
+
+        <div class="plan-col plan-col-right">
+        <!-- Exam countdown -->
+        <div class="card" id="examCountdown"></div>
 
         <!-- Rotation Cycles & Schedule Roadmap -->
         <div class="card plan-green-card" id="rotationCard">
@@ -3942,6 +3951,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div id="planUpcomingPreview" style="display:flex;flex-direction:column;gap:var(--s2);margin:var(--s3) 0 var(--s4)"></div>
 
           <div id="rotationCardBody" style="display:flex;flex-direction:column;gap:var(--s3);margin:var(--s3) 0"></div>
+        </div>
         </div>
         </div>
       </section>
