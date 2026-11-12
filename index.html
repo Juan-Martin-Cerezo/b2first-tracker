@@ -1570,10 +1570,14 @@ footer{
 .gate-matrix thead th{background:var(--surface-2);color:var(--txt-2);font-weight:600}
 .gate-matrix tbody th{white-space:nowrap;background:var(--surface-2);color:var(--txt)}
 .gate-matrix tbody tr.current{background:var(--acc-soft)}
-.gate-matrix td.gate{margin:0;padding:9px 10px;border-left:4px solid var(--bad);border-radius:0;background:transparent}
-.gate-matrix td.gate.pass{border-left-color:var(--ok);background:transparent}
+.gate-matrix td.gate{margin:0;padding:9px 10px;border-left:0;border-radius:0;background:transparent}
+.gate-matrix td.gate.pass{background:transparent}
 .gate-matrix .gate-name{color:var(--txt);font-weight:600;line-height:1.35}
-.gate-matrix .gate-txt{margin-top:5px;color:var(--txt-2)}
+.gate-matrix .gate-txt{
+  display:inline-block;margin-top:5px;padding:1px 8px;border-radius:999px;
+  background:var(--bad-soft);color:var(--bad-text);font-size:var(--t-meta);font-weight:600;
+}
+.gate-matrix td.gate.pass .gate-txt{background:var(--ok-soft);color:var(--ok-text)}
 .gate-matrix .gate-status{display:inline-block;margin-top:5px;font-weight:700}
 .gate-matrix .gate-status.pass{color:var(--ok-text)}
 .gate-matrix .gate-status.fail{color:var(--bad-text)}
@@ -2120,6 +2124,101 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #sideNav{max-width:100vw}
   #sideNav button[data-view],#navMoreBtn{min-height:44px}
   #qlFab{right:clamp(var(--s4),4vw,var(--s6))}
+}
+
+/* === F126: mobile legibility, chrome and action hierarchy === */
+/* B2 — subtitles are support text, never a second headline. */
+.page-head .page-sub{font-size:var(--t-meta);color:var(--txt-2);line-height:1.5;max-width:46ch}
+.stat-card-label{letter-spacing:.08em}
+.cycle-lbl{letter-spacing:.08em}
+#v-hoy .today-meta-label{font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+
+/* B3/B4 — Practice: the result inputs read as fields and Save owns the row. */
+#v-practice .step-log label{
+  margin:0 0 var(--s1);font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+  letter-spacing:.02em;text-transform:none;
+}
+#v-practice .step-log input[type=number]{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
+  height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);
+}
+@media (max-width:768px){
+  #v-practice .step-log{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #v-practice .step-log-end{grid-column:1 / -1}
+  #v-practice .step-log-end .btn{width:100%}
+}
+
+/* B3 — PLAN header actions stay a compact 2x2 instead of four tall blocks. */
+@media (max-width:639px){
+  #v-plan .plan-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* B3 — the schedule row keeps day, time and delete on one line. */
+@media (max-width:768px){
+  #scheduleRowsContainer .sched-row{flex-direction:row;align-items:flex-end;flex-wrap:nowrap}
+  #scheduleRowsContainer .sched-row>div{flex:1 1 0;min-width:0}
+  #scheduleRowsContainer .sched-row .sched-del{flex:0 0 var(--btn-h-tertiary);margin-left:auto}
+}
+
+/* A2 — no floating action on phones: Today's header carries the action. */
+@media (max-width:768px){
+  #qlFab{display:none}
+  #v-hoy .today-log-btn{
+    display:inline-flex;align-items:center;gap:var(--s2);flex:none;
+    height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);padding:0 var(--s4);
+  }
+  #v-hoy .today-log-btn svg{width:18px;height:18px;flex:none;display:block}
+}
+
+/* A3 — four top-bar controls at most on phones, each with a 44px target.
+   The gear stays: it is the only way into Settings (language/subscription)
+   and the i18n suite opens it at 390px. The sync dot is status, not a control. */
+@media (max-width:768px){
+  #syncBadge{display:none}
+  .topbar .user-chip{min-width:44px;min-height:44px;justify-content:center}
+  .topbar .top-streak{min-height:44px;min-width:44px;justify-content:center}
+}
+
+/* B5 — active bottom-bar tab: colour and a 2px indicator, no filled block. */
+@media (max-width:768px){
+  #sideNav button[data-view]{position:relative}
+  #sideNav button[data-view].active{background:transparent;color:var(--acc-text)}
+  #sideNav button[data-view].active::after{
+    content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+    width:20px;height:2px;border-radius:2px;background:var(--acc);
+  }
+}
+
+/* A1 — below 768px each stage is its own card, one row per skill. */
+@media (max-width:767px){
+  #v-prog .card:has(> #gates){padding:var(--s3)}
+  .gate-wrap{overflow:visible;background:transparent;box-shadow:none;border-radius:0}
+  .gate-matrix{display:block;border-collapse:separate;border-spacing:0;font-size:var(--t-body)}
+  .gate-matrix thead{display:none}
+  .gate-matrix tbody{display:flex;flex-direction:column;gap:var(--s2)}
+  .gate-matrix tbody tr{
+    display:block;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:var(--r-panel);padding:var(--s1) var(--s4);overflow:hidden;
+  }
+  .gate-matrix tbody tr.current{border-color:var(--acc-border)}
+  .gate-matrix tbody th{
+    display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);
+    height:auto;white-space:normal;background:transparent;border:0;padding:0 0 var(--s1);margin:0 0 var(--s1);
+    border-bottom:1px solid var(--line);font-size:var(--t-sub);font-weight:600;color:var(--txt);
+  }
+  .gate-matrix tbody th .gate-status{margin:0;font-size:var(--t-meta);font-weight:600}
+  .gate-matrix td.gate{
+    display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);
+    column-gap:var(--s3);padding:2px 0;height:auto;border:0;background:transparent;
+  }
+  .gate-matrix td.gate+td.gate{border-top:1px solid var(--line)}
+  .gate-matrix td.gate::before{
+    content:attr(data-label);grid-column:1;grid-row:1;align-self:start;
+    font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+    overflow-wrap:normal;word-break:normal;
+  }
+  .gate-matrix .gate-name{grid-column:2;grid-row:1;margin:0;font-size:var(--t-body);line-height:1.35}
+  .gate-matrix .gate-txt{display:none}
 }
 </style>
 </head>
@@ -3702,7 +3801,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <div class="grid-12">
+        <div class="card" id="progChartsEmpty" style="display:none">
+          <h2>Your charts unlock after your first session</h2>
+          <p class="sub">Temporal evolution · By part · Errors by type · Weekly consistency</p>
+          <button type="button" class="btn" onclick="openQuickLog()">Log your first session</button>
+        </div>
+
+        <div class="grid-12" id="progChartsGrid">
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
@@ -3749,7 +3854,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <p style="font-size:var(--t-meta);color:var(--on-surface-variant);margin-top:var(--s2)" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
         </div>
 
-        <div class="grid-12">
+        <div class="grid-12" id="progHistoryGrid">
           <div class="col-6">
             <div class="card">
               <h2 data-i18n="prog_history">History</h2>
@@ -12754,13 +12859,13 @@ function renderGates(){
   const el=document.getElementById('gates');
   if(!el)return;
   const cols=[['rue','prog_col_rue'],['l','prog_col_listening'],['w','prog_col_writing'],['sp','prog_col_speaking']];
-  el.innerHTML=`<div class="table-wrap"><table class="gate-matrix">
+  el.innerHTML=`<div class="table-wrap gate-wrap"><table class="gate-matrix">
     <thead><tr><th>${t('prog_stage_col')}</th>${cols.map(c=>`<th>${t(c[1])}</th>`).join('')}</tr></thead>
     <tbody>${calc.stages.map((s,i)=>`<tr class="${i===st?'current':''}">
       <th>${t('prog_stage_row',{n:s.n})}<div class="gate-status ${s.ok?'pass':'fail'}">${t(s.ok?'prog_achieved':'prog_pending')}</div></th>
       ${cols.map(c=>{
         const cell=s.cells[c[0]];
-        return `<td class="gate ${cell.ok?'pass':'fail'}">
+        return `<td class="gate ${cell.ok?'pass':'fail'}" data-label="${esc(t(c[1]))}">
           <div class="gate-name">${esc(cell.text)}</div>
           <div class="gate-txt">${cell.covered}/${cell.total} · ${t(cell.ok?'prog_achieved':'prog_pending')}</div>
         </td>`;
@@ -14584,7 +14689,7 @@ function renderParts(){
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p class="step-note">${p.note}</p>`:''}
       <div class="step-actions">
-        <button class="btn sm gray" onclick="startPart(${i})">${esc(t('part_start'))}</button>
+        <button class="btn sm" onclick="startPart(${i})">${esc(t('part_start'))}</button>
         <button class="btn sm gray" onclick="setResourcesFilter('${p.type}',${p.n})">${esc(t('part_resources'))}</button>
       </div>
       ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" onclick="savePart(${i})">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
@@ -14635,7 +14740,7 @@ const MOD={
 };
 function renderLog(){
   const tb=document.querySelector('#logTable tbody');
-  if(!D.log.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">You haven\'t logged anything yet.<button class="btn sm ok" onclick="openQuickLog()">Log your first session</button></div></td></tr>';return}
+  if(!D.log.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">You haven\'t logged anything yet.</div></td></tr>';return}
   tb.innerHTML=D.log.map((e,i)=>{
     const wSc=e.score!==undefined?e.score:e.total;
     return `<tr>
@@ -14698,7 +14803,7 @@ function renderStats(){
     const best=Math.max(...scored.map(e=>e.score));
     rows.push(`<tr><td>Speaking P${i} — band</td><td>${es.length}</td><td>${avg.toFixed(1)}/5</td><td>${best}/5</td><td>${scored[0].score}/5</td></tr>`);
   }
-  document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5"><div class="empty">No data yet — log exercises and you\'ll see your evolution here.<button class="btn sm ok" onclick="openQuickLog()">Log a session</button></div></td></tr>';
+  document.querySelector('#statsTable tbody').innerHTML=rows.length?rows.join(''):'<tr><td colspan="5"><div class="empty">No data yet — log exercises and you\'ll see your evolution here.</div></td></tr>';
 }
 
 /* ---------- ERRORS ----------
@@ -15044,6 +15149,7 @@ function svgBar(label,pct,min,color){
 }
 function renderGrafEvol(){
   const el=document.getElementById('gEvol'),log=D.log||[];
+  if(!log.length){el.innerHTML='';return}
   /* A speaking entry has no correct/total: its band (0-5) is scaled to the
      same 0-100 axis as the other series. Old "done" entries are skipped. */
   const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
@@ -15078,6 +15184,7 @@ function renderGrafEvol(){
 }
 function renderGrafPart(){
   const el=document.getElementById('gPart'),log=D.log||[];
+  if(!log.length){el.innerHTML='';return}
   const MIN=60;
   const rows=[];
   const push=(label,es,extra)=>{
@@ -15097,7 +15204,8 @@ function renderGrafPart(){
 }
 function renderGrafErr(){
   const el=document.getElementById('gErr'),errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  if(!(D.log||[]).length){el.innerHTML='';return}
+  if(!errs.length){el.innerHTML='';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
   const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
@@ -15116,7 +15224,7 @@ function renderGrafErr(){
 }
 function renderGrafCons(){
   const el=document.getElementById('gCons'),log=D.log||[];
-  if(!log.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  if(!log.length){el.innerHTML='';return}
   const byWeek={};
   log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
   const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
@@ -15136,6 +15244,19 @@ function renderGrafCons(){
   while(byWeek[wCur]){streak++;wCur--}
   document.getElementById('gStreak').textContent='Current streak: '+streak+' week'+(streak===1?'':'s');
   el.innerHTML=svgChart(W,H,g);
+}
+/* One empty state instead of five: with no log the chart grid is not shown
+   and a single card explains what unlocks after the first session. */
+function renderProgChartsState(){
+  const has=!!(D.log&&D.log.length);
+  const grid=document.getElementById('progChartsGrid');
+  const empty=document.getElementById('progChartsEmpty');
+  const history=document.getElementById('progHistoryGrid');
+  const summary=document.getElementById('weekSummaryCard');
+  if(grid)grid.style.display=has?'':'none';
+  if(empty)empty.style.display=has?'none':'';
+  if(history)history.style.display=has?'':'none';
+  if(summary)summary.style.display=has?'':'none';
 }
 /* ---------- TODAY VIEW & SESSION ENGINE ---------- */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -15303,7 +15424,7 @@ function renderScheduleRows(){
     return;
   }
   c.innerHTML=sched.map((slot,i)=>`
-    <div class="row" style="align-items:flex-end;margin:0;gap:var(--s2);background:var(--surface-container-low);padding:var(--s3);border-radius:var(--radius);border:1px solid var(--outline-variant)">
+    <div class="row sched-row" style="align-items:flex-end;margin:0;gap:var(--s2);background:var(--surface-container-low);padding:var(--s3);border-radius:var(--radius);border:1px solid var(--outline-variant)">
       <div style="flex:1">
         <label style="font-size:var(--t-meta);margin-bottom:var(--s1)">${t('plan_session_day',{n:i+1})}</label>
         <select class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
@@ -15314,8 +15435,8 @@ function renderScheduleRows(){
         <label style="font-size:var(--t-meta);margin-bottom:var(--s1)">${t('plan_time')}</label>
         <input type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
       </div>
-      <div style="display:flex;align-items:flex-end">
-        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}">🗑️</button>
+      <div class="sched-del" style="display:flex;align-items:flex-end;margin-left:auto">
+        <button type="button" class="btn sm gray" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
       </div>
     </div>
   `).join('');
@@ -15442,11 +15563,10 @@ function getSkillNextOccurrence(skillId,baseDate=new Date()){
 function updatePersonalizedUI(){
   const s=D.settings||SETTINGS_DEFAULT;
   const sched=getSchedule();
-  const userName=(USER&&USER.name)?USER.name:'Student';
 
   // Dynamic Header
   const titleEl=document.getElementById('userTitle');
-  if(titleEl)titleEl.textContent=t('today_title_fmt',{name:userName});
+  if(titleEl)titleEl.textContent=t('nav_today');
 
   const now=new Date();
   const rueOccur=getSkillNextOccurrence('rue',now);
@@ -15901,7 +16021,7 @@ function renderRecent(){
   const el=document.getElementById('recentList');
   if(!el)return;
   const rows=(D.log||[]).slice(0,5);
-  if(!rows.length){el.innerHTML=`<div class="empty">${t('recent_empty')}<button class="btn sm ok" onclick="openQuickLog()">${t('recent_quick')}</button></div>`;return}
+  if(!rows.length){el.innerHTML=`<div class="empty">${t('recent_empty')}</div>`;return}
   el.innerHTML=rows.map(e=>{
     const sc=e.type==='w'?((e.score!==undefined?e.score:e.total)+'/20'):e.type==='fw'?((e.s1||'-')+'/'+(e.s2||'-')):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total);
     return `<div class="metric-row"><span>${MOD[e.type]?MOD[e.type](e):e.type} <span class="muted">· ${fmtDate(e.date)}</span></span><span class="metric-val tnum">${sc}</span></div>`;
@@ -17045,7 +17165,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
 })();
 
-function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
