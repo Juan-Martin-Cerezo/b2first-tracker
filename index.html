@@ -514,7 +514,7 @@ input:focus,select:focus,textarea:focus{
 .badge.freemium{background:var(--acc-soft);color:var(--acc-text)}
 .badge.paid{background:var(--warn-soft);color:var(--warn-text)}
 .practice-empty{padding:var(--s4);border:1px dashed var(--line);border-radius:var(--r-panel);color:var(--txt-2);font-size:var(--t-body);text-align:center}
-.practice-now-row{display:flex;flex-wrap:wrap;gap:var(--s3)}
+.practice-now-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:var(--s3)}
 .practice-now-link{display:flex;flex-direction:column;gap:var(--s1);flex:1 1 180px;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3) var(--s4);text-decoration:none;color:var(--txt);transition:border-color 150ms ease,background-color 150ms ease}
 .practice-now-link:hover{border-color:var(--acc);background:var(--surface)}
 .practice-now-link b{font-size:var(--t-body);overflow-wrap:anywhere}
@@ -1041,7 +1041,7 @@ tbody tr:hover{background:var(--surface-2)}
   --today-fs-meta:var(--t-body);
 }
 #v-hoy .today-shell{
-  width:100%;max-width:560px;min-width:0;
+  width:100%;max-width:100%;min-width:0;
   margin-inline:auto;
   display:flex;flex-direction:column;gap:var(--s5);
   padding-inline:max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
@@ -1070,7 +1070,8 @@ tbody tr:hover{background:var(--surface-2)}
 #v-hoy #todaySession{
   display:flex;
   flex-direction:column;
-  justify-content:space-between;
+  justify-content:flex-start;
+  align-self:start;
   gap:var(--s4);
 }
 #v-hoy #todaySession h2,#v-hoy #practiceNow h2,#v-hoy #lastSpeaking h2{
@@ -1236,11 +1237,12 @@ tbody tr:hover{background:var(--surface-2)}
   flex-direction:column;
   gap:var(--s5);
   min-width:0;
-  padding:var(--s4) 0 0;
-  border-top:1px solid var(--line);
-  background:transparent;
-  border-radius:0;
+  padding:var(--s5);
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:var(--r-panel);
   box-shadow:none;
+  align-self:start;
 }
 #v-hoy .today-meta-block{
   display:flex;
@@ -1277,21 +1279,22 @@ tbody tr:hover{background:var(--surface-2)}
   font-size:var(--today-fs-meta);
   line-height:1.5;
 }
-#v-hoy .practice-now-link{padding:var(--s3) var(--s4)}
+#v-hoy .practice-now-link{padding:var(--s2) var(--s4)}
 #v-hoy .practice-now-link b{font-size:var(--today-fs-data);line-height:1.3}
 #v-hoy .practice-now-link span{font-size:var(--today-fs-meta);line-height:1.5}
-@media (max-width:560px){ #v-hoy .practice-now-row{flex-direction:column} }
+@media (max-width:560px){
+  #v-hoy .practice-now-row{flex-direction:column;align-items:stretch}
+  #v-hoy .practice-now-row .practice-now-link{flex:0 0 auto}
+}
 @media (min-width:1024px){
   .content main:has(#v-hoy.active){padding-block:0}
   #v-hoy .today-shell{
-    max-width:960px;
-    min-height:calc(100dvh - var(--nav-offset, 120px) - var(--s7));
-    padding-block:var(--s7);
-    display:grid;
-    grid-template-columns:minmax(0, 1fr);
-    grid-auto-rows:min-content;
-    align-content:center;
-    justify-content:center;
+    width:100%;
+    max-width:none;
+    padding-block:var(--s5);
+    padding-bottom:max(var(--s5), env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
     gap:var(--s5);
   }
   #v-hoy .today-grid{
@@ -1299,39 +1302,53 @@ tbody tr:hover{background:var(--surface-2)}
     grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
     gap:var(--s6);
     align-items:start;
-    align-content:center;
   }
   #v-hoy #todaySession{
-    min-height:280px;
-    padding:var(--s6);
-    gap:var(--s5);
+    padding:var(--s5);
+    gap:var(--s4);
   }
-  #v-hoy .ts-list{gap:var(--s5)}
+  #v-hoy .ts-list{gap:var(--s4)}
   #v-hoy .ts-row{
-    flex:1;
-    gap:var(--s5);
+    flex:0 0 auto;
+    gap:var(--s4);
   }
   #v-hoy .ts-row .ts-actions{gap:var(--s4)}
   #v-hoy .today-aside{
-    padding:0 0 0 var(--s6);
-    border-top:none;
-    border-left:1px solid var(--line);
-    gap:var(--s7);
-    min-height:184px;
-    justify-content:space-between;
+    padding:var(--s5);
+    border:1px solid var(--line);
+    gap:var(--s5);
+    min-height:0;
+    justify-content:flex-start;
     align-self:start;
   }
 }
 
 /* ---------- PLAN: one centered column, same shell as Today ---------- */
 #v-plan .plan-shell{
-  width:100%;max-width:560px;min-width:0;
+  width:100%;max-width:100%;min-width:0;
   margin-inline:auto;
   display:flex;flex-direction:column;gap:var(--s5);
   padding-inline:max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
   padding-bottom:max(var(--s4), env(safe-area-inset-bottom));
 }
 #v-plan .plan-shell>.card,#v-plan .plan-shell>.page-head{margin-bottom:0}
+@media (min-width:1024px){
+  #v-plan .plan-shell{
+    display:grid;
+    grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-auto-flow:row dense;
+    align-items:start;
+    gap:var(--s5);
+    padding-inline:0;
+    padding-bottom:0;
+  }
+  #v-plan .plan-shell>.page-head{grid-column:1 / -1}
+  #v-plan .plan-shell>#weeklyPlanCard{grid-column:1}
+  #v-plan .plan-shell>#examCountdown{grid-column:2}
+  #v-plan .plan-shell>#schedulesCard{grid-column:1}
+  #v-plan .plan-shell>#rotationCard{grid-column:2}
+  #v-plan .plan-shell .plan-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 #v-plan .page-head{flex-direction:column;align-items:stretch;gap:var(--s4)}
 #v-plan .page-head .page-title{font-size:var(--t-display);font-weight:700;line-height:1.1}
 #v-plan .plan-actions{
@@ -1370,6 +1387,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 #v-plan .exam-date-row{
   display:flex;
+  flex-wrap:wrap;
   align-items:flex-end;
   gap:var(--s3);
   margin-top:var(--s3);
@@ -1677,7 +1695,7 @@ footer{
 /* ---------- QUICK-LOG FAB & TOAST ---------- */
 #qlFab{
   position:fixed;right:var(--s4);z-index:60;
-  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--s2));
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--s4));
   min-width:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);
   padding:0;border-radius:999px;
   background:var(--acc);color:var(--on-primary);border:none;
@@ -1738,6 +1756,14 @@ footer{
 }
 @media (min-width:769px){
   #qlFab{bottom:calc(env(safe-area-inset-bottom, 0px) + var(--s5));right:var(--s5)}
+}
+/* Desktop: the quick log lives in Today's header; the floating FAB is only
+   used on tablet and mobile where it can sit above the bottom bar. */
+#v-hoy .today-log-btn{display:none}
+@media (min-width:1024px){
+  #qlFab{display:none}
+  #v-hoy .today-log-btn{display:inline-flex;align-items:center;gap:var(--s2);height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);padding:0 var(--s5)}
+  #v-hoy .today-log-btn svg{width:18px;height:18px;flex:none;display:block}
 }
 .ql-toast{
   position:fixed;right:var(--s4);z-index:210;
@@ -1842,7 +1868,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .grid-12{gap:var(--s4)}
 }
 @media (max-width:768px){
-  body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))}
+  body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--btn-h-tertiary) + var(--s5))}
   .content main{padding:var(--s4) clamp(16px,4vw,32px) var(--s6)}
 
   /* top bar */
@@ -1860,18 +1886,21 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     overflow:visible;
   }
   #sideNav button[data-view]{
-    flex:1 0 auto;min-width:44px;
+    flex:1 1 0;min-width:0;
     flex-direction:column;gap:2px;
     padding:var(--s1) 2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
     font-size:var(--t-meta);text-align:center;justify-content:center;
   }
-  #sideNav button[data-view] .nav-label,#navMoreBtn .nav-label{font-size:var(--t-meta);min-width:40px;text-align:center}
+  #sideNav button[data-view] .nav-label,#navMoreBtn .nav-label{
+    font-size:var(--t-meta);min-width:0;max-width:100%;text-align:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
   #sideNav button[data-view].extra{display:none}
   #sideNav.more-open{flex-wrap:wrap}
-  #sideNav.more-open button[data-view].extra{display:flex;flex:1 0 18%;min-width:60px}
+  #sideNav.more-open button[data-view].extra{display:flex;flex:1 1 28%;min-width:0}
   #navMoreBtn{
-    display:flex;flex:1 0 auto;flex-direction:column;gap:2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
-    min-width:44px;text-align:center;justify-content:center;
+    display:flex;flex:1 1 0;flex-direction:column;gap:2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
+    min-width:0;text-align:center;justify-content:center;
   }
   #navMoreBtn .nav-ico{width:18px;height:18px}
 
@@ -1943,7 +1972,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:400px){
   .stat-grid{grid-template-columns:1fr}
 }
-@media (max-width:380px){
+@media (max-width:520px){
   /* icon-only bottom bar: six items share the width, labels stay for AT */
   #sideNav button[data-view],#navMoreBtn{flex:1 1 0;min-width:0;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);padding:var(--s1) 2px}
   #sideNav .nav-label,#navMoreBtn .nav-label{
@@ -2064,6 +2093,29 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   color:var(--txt-2);background:var(--surface-2);border:1px solid var(--line);
 }
 .spx-gap[data-gap="1"]{color:var(--ok-text);border-color:var(--ok-border)}
+/* === F125: responsive uniforme === */
+#v-hoy .today-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s4);flex-wrap:wrap;min-width:0;
+}
+#v-hoy .today-head .page-title{min-width:0}
+/* Rest day: the today card carries the real next-session / cycle / streak data,
+   so the aside is folded into it instead of floating as loose text. */
+#v-hoy .today-rest-stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:var(--s5);margin-top:var(--s2);
+}
+#v-hoy .today-grid.is-rest{grid-template-columns:minmax(0,1fr)}
+#v-hoy .today-grid.is-rest #todayAside{display:none}
+/* Practice shortcuts: in a column the card height comes from its content,
+   never from the row flex-basis. */
+#v-hoy .practice-now-row .practice-now-link{min-height:0}
+/* Bottom bar never overflows its viewport on narrow phones. */
+@media (max-width:768px){
+  #sideNav{max-width:100vw}
+  #sideNav button[data-view],#navMoreBtn{min-height:44px}
+  #qlFab{right:clamp(var(--s4),4vw,var(--s6))}
+}
 </style>
 </head>
 <body>
@@ -2604,7 +2656,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
     <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
     <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
-    <button data-view="resources"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
+    <button data-view="resources" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
     <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
@@ -2621,6 +2673,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="today-block">
             <div class="today-head">
               <h1 class="page-title" id="userTitle">Today</h1>
+              <button type="button" class="btn ok today-log-btn" onclick="openSoloModal()" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span data-i18n="fab_log_single">Log session</span></button>
             </div>
             <div class="next-session" id="nextBox"></div>
             <div class="today-grid" id="todayGrid">
@@ -15543,10 +15596,28 @@ function renderTodaySession(plan,todaySlots){
   renderTodayAside(plan,todaySlots);
   const box=document.getElementById('todaySession');
   if(!box)return;
+  const isRest=!todaySlots||!todaySlots.length;
+  const grid=document.getElementById('todayGrid');
+  if(grid)grid.classList.toggle('is-rest',isRest);
   TODAY_PLAN=plan;
-  if(!todaySlots||!todaySlots.length){
+  if(isRest){
+    const streak=calcStreak();
     box.innerHTML=`<h2>${esc(planDayFull(planTodayLabel()))}</h2>
-      <div class="ts-rest" data-rest="1">${esc(t('today_rest_day'))}</div>`;
+      <div class="ts-rest" data-rest="1">${esc(t('today_rest_day'))}</div>
+      <div class="today-rest-stats">
+        <div class="today-meta-block">
+          <div class="today-meta-label">${esc(t('today_next_label'))}</div>
+          <div class="today-meta-value">${esc(todayNextSessionText(plan,todaySlots))}</div>
+        </div>
+        <div class="today-meta-block">
+          <div class="today-meta-label">${esc(t('today_cycle_label'))}</div>
+          <div class="today-meta-value">${esc(todayCycleText(plan,todaySlots))}</div>
+        </div>
+        <div class="today-meta-block">
+          <div class="today-meta-label">${esc(t('metric_streak'))}</div>
+          <div class="today-meta-value tnum">${streak.current} ${streak.current===1?'day':'days'}</div>
+        </div>
+      </div>`;
     return;
   }
   box.innerHTML=`<h2>${t('today_session_title')}</h2><div class="ts-list">`+
