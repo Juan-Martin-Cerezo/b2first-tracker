@@ -559,9 +559,14 @@ def main():
                     )
                     for pad in pc["stepPaddings"]:
                         assert pad == [16, 16, 16, 16], f"{vw}px practice: step padding {pad} != [16, 16, 16, 16]"
-                    assert len(pc["buttonVariants"]) == 1, (
-                        f"{vw}px practice: buttons have multiple variants: {pc['buttonVariants']}"
+                    # Fase 126: a part row has one primary action (Start) and one
+                    # secondary (Resources). The rule is "no invented styles", not
+                    # "one variant only": any variant outside this pair is a defect.
+                    allowed = {"btn sm", "btn sm gray"}
+                    assert set(pc["buttonVariants"]) <= allowed, (
+                        f"{vw}px practice: unexpected button variants: {pc['buttonVariants']}"
                     )
+
                     assert pc["buttonHeights"] == [44], (
                         f"{vw}px practice: practice button heights {pc['buttonHeights']} != [44]"
                     )
