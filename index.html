@@ -1872,42 +1872,52 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .grid-12{gap:var(--s4)}
 }
 @media (max-width:768px){
-  body{padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--btn-h-tertiary) + var(--s5))}
-  .content main{padding:var(--s4) clamp(16px,4vw,32px) var(--s6)}
+  body{padding-bottom:calc(var(--nav-bottom, calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))) + var(--s4))}
+  .content main{padding:var(--s4) clamp(16px,4vw,32px) var(--s4)}
 
   /* top bar */
-  .topbar{padding:var(--s2) clamp(16px,4vw,32px);gap:var(--s2);flex-wrap:nowrap}
-  .topbar .top-actions{gap:var(--s2)}
+  .topbar{padding:var(--s2) clamp(12px,4vw,32px);gap:var(--s2);flex-wrap:nowrap}
+  .topbar .brand{flex:0 1 auto;min-width:0}
+  .topbar .top-actions{gap:var(--s2);flex-wrap:nowrap}
   .theme-toggle{width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary)}
+  .topbar .user-chip{min-width:44px;min-height:44px;height:var(--btn-h-tertiary);justify-content:center}
+  .topbar .user-chip button{display:none}
   .topbar .user-chip .avatar{width:28px;height:28px}
+  .topbar .top-streak{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);min-width:44px;padding:0 var(--s2);justify-content:center;white-space:nowrap}
 
-  /* bottom nav: 5 items max + More */
+  /* bottom nav: 5 items + More, all labels always visible */
   #sideNav{
     position:fixed;left:0;right:0;bottom:0;top:auto;z-index:90;
+    width:100%;max-width:100vw;
     flex-wrap:nowrap;justify-content:space-around;align-items:center;
     padding:var(--s1) var(--s1) calc(var(--s1) + env(safe-area-inset-bottom, 0px));
     gap:var(--s1);box-shadow:0 -2px 12px oklch(0 0 0 / 0.10);
     overflow:visible;
   }
-  #sideNav button[data-view]{
-    flex:1 1 0;min-width:0;
-    flex-direction:column;gap:2px;
+  #sideNav button[data-view],#navMoreBtn{
+    display:flex;flex:1 1 0;min-width:0;
+    flex-direction:column;align-items:center;justify-content:center;gap:2px;
     padding:var(--s1) 2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
-    font-size:var(--t-meta);text-align:center;justify-content:center;
+    font-size:var(--t-meta);text-align:center;overflow:visible;
   }
   #sideNav button[data-view] .nav-label,#navMoreBtn .nav-label{
-    font-size:10px;line-height:1.1;letter-spacing:0;text-transform:uppercase;
-    min-width:0;max-width:100%;text-align:center;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    display:block;width:100%;min-width:0;
+    font-size:10px;line-height:1.15;letter-spacing:0;text-transform:none;
+    text-align:center;white-space:nowrap;overflow:visible;text-overflow:clip;
   }
+  #sideNav button[data-view] .nav-ico,#navMoreBtn .nav-ico{width:18px;height:18px;flex:none}
   #sideNav button[data-view].extra{display:none}
-  #sideNav.more-open{flex-wrap:wrap}
-  #sideNav.more-open button[data-view].extra{display:flex;flex:1 1 28%;min-width:0}
-  #navMoreBtn{
-    display:flex;flex:1 1 0;flex-direction:column;gap:2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
-    min-width:0;text-align:center;justify-content:center;
+  #sideNav.more-open{flex-wrap:wrap;gap:0;padding-left:0;padding-right:0}
+  #sideNav.more-open button[data-view]:not(.extra),
+  #sideNav.more-open #navMoreBtn{flex:0 0 calc(100% / 6);order:1}
+  #sideNav.more-open button[data-view].extra{
+    display:flex;flex:0 0 calc(100% / 3);order:0;min-width:0;
+    height:auto;min-height:var(--btn-h-secondary);padding:var(--s2) var(--s1);
+    border-bottom:1px solid var(--line);border-radius:0;
   }
-  #navMoreBtn .nav-ico{width:18px;height:18px}
+  #sideNav.more-open button[data-view].extra .nav-label{
+    white-space:normal;line-height:1.2;overflow:visible;text-overflow:clip;
+  }
 
   /* page headers */
   .page-head{margin-bottom:var(--s4);gap:var(--s2);flex-direction:column;align-items:flex-start}
@@ -1978,17 +1988,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .stat-grid{grid-template-columns:1fr}
 }
 @media (max-width:430px){
-  /* six labelled items at 360–430px: no side padding, 1px gap */
-  #sideNav{gap:1px;padding-left:0;padding-right:0}
-  #sideNav button[data-view],#navMoreBtn{padding-left:0;padding-right:0}
+  .topbar{padding:var(--s2) var(--s3)}
+  .topbar .brand{gap:6px}
+  .topbar .brand img{height:22px;width:22px}
+  .topbar .brand span{font-size:14px}
+  /* six labelled items at 320–430px: no side padding, no gap */
+  #sideNav{gap:0;padding-left:0;padding-right:0}
+  #sideNav button[data-view],#navMoreBtn{padding:var(--s1) 0}
 }
 @media (max-width:359px){
-  /* icon-only bottom bar: six items share the width, labels stay for AT */
-  #sideNav button[data-view],#navMoreBtn{flex:1 1 0;min-width:0;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);padding:var(--s1) 2px}
-  #sideNav .nav-label,#navMoreBtn .nav-label{
-    position:absolute;width:0;min-width:0;height:0;padding:0;margin:-1px;
-    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
-  }
+  .topbar{padding:var(--s2) var(--s2);gap:var(--s1)}
+  .topbar .brand{gap:var(--s1)}
+  .topbar .brand img{height:18px;width:18px}
+  .topbar .brand span{font-size:12px;letter-spacing:-.02em}
 }
 
 /* === U3: view reorder === */
@@ -2191,11 +2203,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #v-hoy .today-log-btn svg{width:18px;height:18px;flex:none;display:block}
 }
 
-/* A3 — four top-bar controls at most on phones, each with a 44px target.
-   The gear stays: it is the only way into Settings (language/subscription)
-   and the i18n suite opens it at 390px. The sync dot is status, not a control. */
+/* A3 — top-bar controls stay on one row with 44px targets on phones.
+   The sync dot keeps its status role (hidden when ok/local, 8px dot on error). */
 @media (max-width:768px){
-  #syncBadge{display:none}
   .topbar .user-chip{min-width:44px;min-height:44px;justify-content:center}
   .topbar .top-streak{min-height:44px;min-width:44px;justify-content:center}
 }
@@ -17133,16 +17143,20 @@ function syncNavOffset(){
   const topbar=document.querySelector('.topbar');
   const nav=document.getElementById('sideNav');
   let bottom=0;
+  let navBottom=0;
   if(topbar)bottom=Math.max(bottom,topbar.getBoundingClientRect().bottom);
   if(nav){
     const cs=getComputedStyle(nav);
-    const fixedBottom=cs.position==='fixed'&&cs.top==='auto';
-    if(!fixedBottom){
-      const r=nav.getBoundingClientRect();
-      if(r.height>0)bottom=Math.max(bottom,r.bottom);
+    const fixedBottom=cs.position==='fixed';
+    const r=nav.getBoundingClientRect();
+    if(fixedBottom){
+      if(r.height>0)navBottom=Math.ceil(r.height);
+    }else if(r.height>0){
+      bottom=Math.max(bottom,r.bottom);
     }
   }
   document.documentElement.style.setProperty('--nav-offset',Math.ceil(bottom)+'px');
+  document.documentElement.style.setProperty('--nav-bottom',navBottom+'px');
 }
 window.addEventListener('resize',syncNavOffset);
 function showView(viewId){
@@ -17164,6 +17178,7 @@ function showView(viewId){
   if(viewId==='resources'){renderPractice();renderResources()}
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
+  syncNavOffset();
   TEV_VIEW=viewId;
   track('view_change',{view:viewId,ms:0});
 }
@@ -17184,13 +17199,14 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   if(b.dataset.view==='resources'){renderPractice();renderResources()}
   const nav=document.getElementById('sideNav');
   if(nav)nav.classList.remove('more-open');
+  syncNavOffset();
   TEV_VIEW=b.dataset.view;
   track('view_change',{view:b.dataset.view,ms:Date.now()-_tevT0});
 });
 (function(){
   const more=document.getElementById('navMoreBtn');
   const nav=document.getElementById('sideNav');
-  if(more&&nav)more.onclick=()=>nav.classList.toggle('more-open');
+  if(more&&nav)more.onclick=()=>{nav.classList.toggle('more-open');syncNavOffset();};
 })();
 
 function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
