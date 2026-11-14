@@ -17,7 +17,8 @@
 (function(){
   try{
     var t=localStorage.getItem('b2first_theme');
-    if(t==='dark'){
+    var dark=(t==='dark')||(t==='system'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if(dark){
       document.documentElement.setAttribute('data-theme','dark');
       var mt=document.getElementById('metaTheme');
       if(mt)mt.setAttribute('content','#121416');
@@ -200,7 +201,7 @@
   --fs-xl: var(--t-display);
 
   --nav-h: 64px;
-  --content-max: 1080px;
+  --content-max: 1240px;
 }
 
 /* concentric radii: outer = inner + padding */
@@ -237,7 +238,7 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 }
-.auth-card,.spx-overlay,.spx-tx,.ob-plan-preview,.table-wrap,.more-sheet-panel{overscroll-behavior-y:contain}
+.auth-card,.spx-overlay,.spx-tx,.ob-plan-preview,.table-wrap,.more-sheet-panel,.acct-sheet-panel{overscroll-behavior-y:contain}
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
 a{color:var(--acc-text);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -298,69 +299,88 @@ input:focus,select:focus,textarea:focus{
 .shell{display:flex;flex-direction:column;min-height:100vh}
 .wrap{width:100%;max-width:var(--content-max);margin:0 auto;padding-inline:clamp(var(--s4),4vw,var(--s6))}
 .content{flex:1;display:flex;flex-direction:column;min-width:0}
-.content main{flex:1;width:100%;max-width:var(--content-max);margin:0 auto;padding:var(--s5) clamp(var(--s4),4vw,var(--s6)) var(--s7)}
+.content main{flex:1;width:100%;max-width:var(--content-max);margin:0 auto;padding:var(--s5) var(--s6) var(--s7)}
 
-/* ---------- TOPBAR ---------- */
+/* ---------- TOPBAR (3 zones: brand · streak · avatar) ---------- */
+.top-chrome{display:contents}
 .topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-  padding:var(--s3) clamp(var(--s4),4vw,var(--s6));
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:nowrap;
+  height:56px;min-height:56px;box-sizing:border-box;
+  padding:0 clamp(var(--s5),3vw,var(--s6));
   background:var(--surface);
+  border-bottom:1px solid var(--line);
+  box-shadow:none;
   position:sticky;top:0;z-index:30;
-  box-shadow:var(--shadow-1);
 }
-.topbar .brand{display:flex;align-items:center;gap:var(--s2);min-width:0}
-.topbar .brand img{height:28px;width:auto;object-fit:contain}
+.topbar .brand{display:flex;align-items:center;gap:var(--s2);min-width:0;flex:0 1 auto}
+.topbar .brand img{width:24px;height:24px;object-fit:contain;flex:none;outline:none}
 .topbar .brand span{font-size:var(--t-sub);font-weight:600;letter-spacing:-.01em;color:var(--txt);white-space:nowrap}
-.topbar-view-title{display:none}
-.sync-badge{display:inline-flex;align-items:center;justify-content:center;width:var(--s2);height:var(--s2);border-radius:50%;flex:none;background:var(--on-surface-variant)}
-/* Only the offline/error state is shown: "saved" and "saving" stay silent. */
-.sync-badge.state-ok,.sync-badge.state-local{display:none}
+.sticky-view-bar{
+  position:fixed;top:48px;left:0;right:0;z-index:29;
+  height:32px;display:flex;align-items:center;justify-content:center;
+  padding:0 var(--s4);
+  background:var(--surface);border-bottom:1px solid var(--line);
+  opacity:0;transform:translateY(-6px);pointer-events:none;
+  transition:opacity 150ms ease, transform 150ms ease;
+}
+body.topbar-compact .sticky-view-bar{opacity:1;transform:translateY(0);pointer-events:auto}
+.topbar-view-title{
+  display:block;min-width:0;max-width:100%;text-align:center;
+  font-size:12px;font-weight:600;line-height:1.2;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sync-badge{display:inline-flex;align-items:center;justify-content:center;width:var(--s2);height:var(--s2);border-radius:50%;flex:none;background:var(--txt-2)}
+.sync-badge.state-ok{background:var(--ok)}
+.sync-badge.state-local{background:var(--txt-2)}
 .sync-badge.state-off{background:var(--warn)}
 .sync-badge:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.topbar .top-actions{display:flex;align-items:center;gap:var(--s2);flex-shrink:0}
-.topbar .user-chip{display:flex;align-items:center;gap:var(--s2);cursor:pointer}
+.topbar .top-actions{display:flex;align-items:center;gap:var(--s2);flex-shrink:0;flex-wrap:nowrap}
+.topbar .top-streak{
+  display:inline-flex;align-items:center;gap:var(--s1);flex:none;
+  font-size:12px;line-height:1;font-weight:600;color:var(--txt-2);
+  background:transparent;border:none;padding:0;border-radius:0;white-space:nowrap;
+}
+.topbar .top-streak .streak-flame{width:12px;height:12px;flex:none;display:block;color:var(--txt-2)}
+.topbar .top-streak b{font-weight:600;font-size:12px;line-height:1}
+.topbar .user-chip{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:44px;min-height:44px;width:44px;height:44px;padding:0;
+  border:none;background:transparent;border-radius:999px;cursor:pointer;flex:none;
+}
 .topbar .user-chip .avatar{
-  width:var(--s6);height:var(--s6);border-radius:50%;background:var(--acc);color:var(--on-primary);
+  width:28px;height:28px;border-radius:50%;background:var(--acc);color:var(--on-primary);
   display:flex;align-items:center;justify-content:center;font-size:var(--t-meta);font-weight:600;
+  transition:box-shadow 150ms ease;
 }
-.theme-toggle{
-  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
-  width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
-  color:var(--txt);transition:background-color 150ms ease, color 150ms ease, transform 120ms ease-out;flex:none;
-}
-.theme-toggle:hover{background:var(--line);color:var(--acc-text)}
-.theme-toggle:active{transform:scale(0.96)}
+.topbar .user-chip:hover .avatar{box-shadow:0 0 0 2px var(--acc-border)}
 
-/* ---------- NAV (top on desktop) ---------- */
+/* ---------- NAV (inline in topbar on desktop >=1024px, bottom bar <=1023px) ---------- */
 #sideNav{
-  display:flex;flex-wrap:wrap;gap:var(--s1);align-items:center;
-  background:var(--surface);
-  padding:var(--s2) clamp(var(--s4),4vw,var(--s6));
-  box-shadow:var(--shadow-1);
-  position:sticky;top:64px;z-index:29;
+  display:flex;flex-wrap:nowrap;gap:2px;align-items:center;
+  background:transparent;padding:0;
 }
 #sideNav button[data-view]{
-  display:flex;align-items:center;gap:var(--s2);
-  height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);padding:0 var(--s3);
+  display:flex;align-items:center;gap:5px;
+  height:44px;min-height:44px;padding:0 var(--s2);
   border:none;border-radius:var(--r-ctl);background:transparent;
-  color:var(--txt-2);font-family:var(--font);font-size:var(--t-meta);font-weight:600;
-  letter-spacing:.02em;text-transform:uppercase;cursor:pointer;text-align:left;
+  color:var(--txt-2);font-family:var(--font);font-size:13px;font-weight:500;
+  letter-spacing:0;text-transform:none;cursor:pointer;text-align:left;white-space:nowrap;flex-shrink:0;
   transition:background-color 150ms ease, color 150ms ease, transform 120ms ease-out;
 }
 #sideNav button[data-view]:hover{background:var(--surface-2);color:var(--txt)}
 #sideNav button[data-view]:active{transform:scale(0.96)}
-#sideNav button[data-view].active{background:var(--acc);color:var(--on-primary)}
-.nav-ico{width:18px;height:18px;flex:none;display:block}
-#sideNav .nav-label{min-width:40px;text-align:center}
+#sideNav button[data-view].active{background:var(--acc-soft);color:var(--acc-text);font-weight:600}
+.nav-ico{width:16px;height:16px;flex:none;display:block}
+#sideNav .nav-label{min-width:0;text-align:center}
 #navMoreBtn{
   display:none;align-items:center;gap:var(--s2);
-  height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);padding:0 var(--s3);border:none;border-radius:var(--r-ctl);
-  background:transparent;color:var(--txt-2);font-size:var(--t-meta);font-weight:600;
-  text-transform:uppercase;letter-spacing:.02em;cursor:pointer;
+  height:44px;min-height:44px;padding:0 var(--s2);border:none;border-radius:var(--r-ctl);
+  background:transparent;color:var(--txt-2);font-size:13px;font-weight:500;
+  letter-spacing:0;cursor:pointer;
   transition:background-color 150ms ease, color 150ms ease;
 }
 #navMoreBtn:hover{background:var(--surface-2);color:var(--txt)}
-#navMoreBtn .nav-ico{width:16px;height:16px}
+#navMoreBtn .nav-ico{width:18px;height:18px}
 
 /* ---------- PAGE HEADERS ---------- */
 .page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--s4);margin-bottom:var(--s5);flex-wrap:wrap}
@@ -1240,6 +1260,7 @@ tbody tr:hover{background:var(--surface-2)}
 #v-hoy .today-aside{
   display:flex;
   flex-direction:column;
+  width:100%;
   gap:var(--s5);
   min-width:0;
   padding:var(--s5);
@@ -1291,6 +1312,14 @@ tbody tr:hover{background:var(--surface-2)}
   #v-hoy .practice-now-row{flex-direction:column;align-items:stretch}
   #v-hoy .practice-now-row .practice-now-link{flex:0 0 auto}
 }
+@media (min-width:600px) and (max-width:1023px){
+  #v-hoy .today-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap:var(--s4);
+    align-items:start;
+  }
+}
 @media (min-width:1024px){
   .content main:has(#v-hoy.active){padding-block:0}
   #v-hoy .today-shell{
@@ -1304,7 +1333,7 @@ tbody tr:hover{background:var(--surface-2)}
   }
   #v-hoy .today-grid{
     display:grid;
-    grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-columns:minmax(0, 2fr) minmax(0, 1fr);
     gap:var(--s6);
     align-items:start;
   }
@@ -1328,7 +1357,7 @@ tbody tr:hover{background:var(--surface-2)}
   }
 }
 
-/* ---------- PLAN: one centered column, same shell as Today ---------- */
+/* ---------- PLAN: one centered column on phone, 2 cols on tablet/desktop ---------- */
 #v-plan .plan-shell{
   width:100%;max-width:100%;min-width:0;
   margin-inline:auto;
@@ -1339,10 +1368,22 @@ tbody tr:hover{background:var(--surface-2)}
 #v-plan .plan-shell>.card,#v-plan .plan-shell>.page-head{margin-bottom:0}
 #v-plan .plan-col{display:flex;flex-direction:column;gap:var(--s5);min-width:0}
 #v-plan .plan-col>.card,#v-plan .plan-col>.page-head{margin-bottom:0}
+@media (min-width:704px) and (max-width:1023px){
+  #v-plan .plan-shell{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    align-items:start;
+    gap:var(--s4);
+  }
+  #v-plan .plan-shell>.page-head{grid-column:1 / -1;grid-row:1}
+  #v-plan .plan-col{gap:var(--s4)}
+  #v-plan .plan-col-left{grid-column:1;grid-row:2}
+  #v-plan .plan-col-right{grid-column:2;grid-row:2}
+}
 @media (min-width:1024px){
   #v-plan .plan-shell{
     display:grid;
-    grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-columns:minmax(0, 2fr) minmax(0, 1fr);
     align-items:start;
     gap:var(--s5);
     padding-inline:0;
@@ -1763,9 +1804,6 @@ footer{
     box-shadow:none;
   }
 }
-@media (min-width:769px){
-  #qlFab{bottom:calc(env(safe-area-inset-bottom, 0px) + var(--s5));right:var(--s5)}
-}
 /* Desktop: the quick log lives in Today's header; the floating FAB is only
    used on tablet and mobile where it can sit above the bottom bar. */
 #v-hoy .today-log-btn{display:none}
@@ -1783,7 +1821,7 @@ footer{
   transition:opacity 150ms ease, transform 150ms ease-out;
 }
 .ql-toast.show{opacity:1;transform:translateY(0)}
-@media (min-width:769px){
+@media (min-width:1024px){
   .ql-toast{bottom:calc(env(safe-area-inset-bottom, 0px) + 96px);right:var(--s5)}
 }
 .ql-step{
@@ -1872,28 +1910,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 
 /* ---------- RESPONSIVE ---------- */
-@media (max-width:1024px){
+@media (max-width:1023px){
   .col-8,.col-7,.col-6,.col-5,.col-4,.col-12{grid-column:span 12}
-  .grid-12{gap:var(--s4)}
-}
-@media (max-width:768px){
-  body{padding-bottom:calc(var(--nav-bottom, calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))) + var(--s4))}
-  .content main{padding:var(--s4) clamp(16px,4vw,32px) var(--s4)}
+  .grid-12{gap:var(--s4);align-items:start}
 
-  /* top bar */
-  .topbar{padding:var(--s2) clamp(12px,4vw,32px);gap:var(--s2);flex-wrap:nowrap}
-  .topbar .brand{flex:0 1 auto;min-width:0}
-  .topbar .top-actions{gap:var(--s2);flex-wrap:nowrap}
-  .theme-toggle{width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary)}
-  .topbar .user-chip{min-width:44px;min-height:44px;height:var(--btn-h-tertiary);justify-content:center}
-  .topbar .user-chip button{display:none}
-  .topbar .user-chip .avatar{width:28px;height:28px}
-  .topbar .top-streak{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);min-width:44px;padding:0 var(--s2);justify-content:center;white-space:nowrap}
+  body{padding-bottom:calc(var(--nav-bottom, calc(var(--nav-h) + env(safe-area-inset-bottom, 0px))) + var(--s4))}
 
   /* bottom nav: 5 items (Today, Exam, Practice, Progress, More), all labels always visible */
   #sideNav{
     position:fixed;left:0;right:0;bottom:0;top:auto;z-index:90;
-    width:100%;max-width:100vw;
+    width:100%;max-width:100vw;background:var(--surface);
     height:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     min-height:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     flex-wrap:nowrap;justify-content:space-around;align-items:center;
@@ -1928,14 +1954,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .page-head{margin-bottom:var(--s4);gap:var(--s2);flex-direction:column;align-items:flex-start}
   .page-stat{text-align:left;margin-top:var(--s1)}
 
-  /* forms */
-  select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
-    font-size:16px; /* prevents iOS auto-zoom */
-    padding:var(--s2) var(--s3);
-  }
-  .row{flex-direction:column;gap:var(--s3)}
-  .row>div{min-width:100%}
-
   /* hit areas on touch */
   .btn{height:var(--btn-h-primary);min-height:var(--btn-h-primary)}
   .btn.gray,.btn.bad,.btn.provider{height:var(--btn-h-secondary);min-height:var(--btn-h-secondary)}
@@ -1959,18 +1977,23 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .stat-card{padding:var(--s4)}
 
   .plan-cycles{flex-direction:column;gap:var(--s2)}
-  footer{text-align:center;padding:var(--s3) clamp(16px,4vw,32px)}
-
-  /* no sideways scrolling inside cards: let these rows wrap instead */
   .gates-tabs{flex-wrap:wrap;overflow-x:visible}
-
-  /* session header: duration no longer floats to the left when it wraps */
   .sesion-card .sesion-head{flex-direction:column;align-items:stretch;gap:var(--s2)}
   .sesion-dur{display:flex;align-items:baseline;gap:var(--s2);text-align:left}
   .sesion-dur .dur-label,.sesion-dur .dur-val{display:inline;margin:0}
-
-  /* tables keep their own scroller only when the columns cannot shrink */
   th,td{padding:var(--s2) var(--s3)}
+}
+@media (min-width:704px) and (max-width:1023px){
+  .grid-12>.col-6{grid-column:span 6}
+}
+@media (max-width:767px){
+  /* forms */
+  select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
+    font-size:16px; /* prevents iOS auto-zoom */
+    padding:var(--s2) var(--s3);
+  }
+  .row{flex-direction:column;gap:var(--s3)}
+  .row>div{min-width:100%}
 }
 @media (max-width:520px){
   /* three-step grids would leave one orphan card: stack them deliberately */
@@ -1993,19 +2016,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .stat-grid{grid-template-columns:1fr}
 }
 @media (max-width:430px){
-  .topbar{padding:var(--s2) var(--s3)}
-  .topbar .brand{gap:6px}
-  .topbar .brand img{height:22px;width:22px}
-  .topbar .brand span{font-size:14px}
-  /* six labelled items at 320–430px: no side padding, no gap */
+  /* five labelled items at 320–430px: no side padding, no gap */
   #sideNav{gap:0;padding-left:0;padding-right:0}
   #sideNav button[data-view],#navMoreBtn{padding:var(--s1) 0}
-}
-@media (max-width:359px){
-  .topbar{padding:var(--s2) var(--s2);gap:var(--s1)}
-  .topbar .brand{gap:var(--s1)}
-  .topbar .brand img{height:18px;width:18px}
-  .topbar .brand span{font-size:12px;letter-spacing:-.02em}
 }
 
 /* === U3: view reorder === */
@@ -2019,33 +2032,21 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     transition-duration:0.01ms !important;
     scroll-behavior:auto !important;
   }
-  .btn:active,.chip:active,.theme-toggle:active,#qlFab:active,.more-sheet-item:active,#sideNav button:active{
+  .btn:active,.chip:active,#qlFab:active,.more-sheet-item:active,.acct-seg-btn:active,#sideNav button:active{
     transform:none !important;
   }
 }
 
 /* === U2: chrome cleanup === */
-.top-streak{
-  display:inline-flex;align-items:center;gap:var(--s1);flex:none;
-  padding:var(--s1) var(--s3);border-radius:999px;line-height:1;
-  background:var(--acc-soft);color:var(--acc-text);
-  font-size:var(--t-meta);font-weight:600;
-}
-.top-streak b{font-weight:700}
 .card,.tile,.panel{min-width:0;max-width:100%;overflow-wrap:anywhere}
 .card img,.card svg{max-width:100%}
 .grid-12,.grid-12>*,.practice-grid,.stat-grid,.phase-stepper,
 .ia-bands-grid,.spx-parts,.spx-photos{min-width:0}
 .book{flex-wrap:wrap}
 .book>div,.book-main,.spx-task,.spx-part{min-width:0;overflow-wrap:anywhere}
-@media (max-width:768px){
-  .topbar{gap:var(--s2)}
-  .top-streak{padding:var(--s1) var(--s2)}
+@media (max-width:1023px){
   .card{padding:var(--s4);margin-bottom:var(--s4)}
   .prog-moved-grid{margin-bottom:var(--s4)}
-}
-@media (max-width:400px){
-  .top-streak{padding:var(--s1) var(--s2)}
 }
 
 /* === U4: practice + exam === */
@@ -2156,7 +2157,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
    never from the row flex-basis. */
 #v-hoy .practice-now-row .practice-now-link{min-height:0}
 /* Bottom bar never overflows its viewport on narrow phones. */
-@media (max-width:768px){
+@media (max-width:1023px){
   #sideNav{max-width:100vw}
   #sideNav button[data-view],#navMoreBtn{min-height:44px}
   #qlFab{right:clamp(var(--s4),4vw,var(--s6))}
@@ -2178,7 +2179,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
   height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);
 }
-@media (max-width:768px){
+@media (max-width:767px){
   #v-practice .step-log{grid-template-columns:repeat(3,minmax(0,1fr))}
   #v-practice .step-log-end{grid-column:1 / -1}
   #v-practice .step-log-end .btn{width:100%}
@@ -2216,8 +2217,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   line-height:1.2;letter-spacing:.02em;color:var(--txt-2);text-transform:none;
 }
 
-/* A2 — no floating action on phones: Today's header carries the action. */
-@media (max-width:768px){
+/* A2 — no floating action on phones/tablets: Today's header carries the action. */
+@media (max-width:1023px){
   #qlFab{display:none}
   #v-hoy .today-log-btn{
     display:inline-flex;align-items:center;gap:var(--s2);flex:none;
@@ -2226,15 +2227,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #v-hoy .today-log-btn svg{width:18px;height:18px;flex:none;display:block}
 }
 
-/* A3 — top-bar controls stay on one row with 44px targets on phones.
-   The sync dot keeps its status role (hidden when ok/local, 8px dot on error). */
-@media (max-width:768px){
-  .topbar .user-chip{min-width:44px;min-height:44px;justify-content:center}
-  .topbar .top-streak{min-height:44px;min-width:44px;justify-content:center}
-}
+/* A3 — top-bar avatar keeps >=44px touch target across all widths. */
+.topbar .user-chip{min-width:44px;min-height:44px;justify-content:center}
 
 /* B5 — active bottom-bar tab: colour and a 2px indicator, no filled block. */
-@media (max-width:768px){
+@media (max-width:1023px){
   #sideNav button[data-view],#navMoreBtn{position:relative}
   #sideNav button[data-view].active,#sideNav #navMoreBtn.active{background:transparent;color:var(--acc-text)}
   #sideNav button[data-view].active::after,#sideNav #navMoreBtn.active::after{
@@ -2334,10 +2331,26 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 
-@media (max-width:768px){
-  /* Main & card rhythm: compact 12px/16px multiples of 4, thumb clear above FAB + bottom nav */
-  .content main{padding:var(--s3) var(--s3) calc(var(--s5) + 56px)}
-  footer{text-align:center;padding:var(--s3) var(--s4) calc(var(--btn-h-tertiary) + 12px)}
+/* === Progress 2 independent flex columns (tablet & desktop) === */
+#progChartsGrid .col-6{
+  display:flex;flex-direction:column;gap:var(--s4);min-width:0;
+}
+#progChartsGrid .col-6>.card{margin-bottom:0}
+
+/* === F129: Topbar 3-tier heights, sticky sub-bar, Account popover/sheet & 3 layout tiers === */
+@media (max-width:599px){
+  .topbar{padding:0 var(--s4)}
+  .content main{padding:var(--s4) var(--s4) calc(var(--s5) + 56px)}
+}
+@media (min-width:600px) and (max-width:1023px){
+  .topbar{padding:0 clamp(24px, 3vw, 32px)}
+  .content main{padding:var(--s5) clamp(24px, 3vw, 32px) calc(var(--s5) + 56px)}
+  footer{padding:var(--s4) clamp(24px, 3vw, 32px) calc(var(--btn-h-tertiary) + 16px)}
+}
+@media (max-width:767px){
+  .topbar{height:48px;min-height:48px}
+  .topbar .brand span{display:none}
+  .sticky-view-bar{top:48px}
   .page-head{margin-bottom:var(--s3);gap:var(--s2)}
   .card{padding:var(--s4);margin-bottom:var(--s3)}
   .stat-grid,.exam-select-grid,.grid-12{gap:var(--s3)}
@@ -2346,28 +2359,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .streak-card{padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
   #v-hoy .today-aside{padding:var(--s4);gap:var(--s3)}
   #v-hoy .today-rest-stats{gap:var(--s3)}
-
-  /* Compact sticky header on scroll > 64px (after 430/359px blocks so specificity/order wins) */
-  @keyframes topbarTitleIn{
-    from{opacity:0;transform:translateY(4px)}
-    to{opacity:1;transform:translateY(0)}
-  }
-  .topbar{height:60px;min-height:60px;box-sizing:border-box}
-  .topbar-view-title{
-    display:none;flex:1 1 0;min-width:0;text-align:center;
-    font-size:14px;font-weight:600;line-height:1.2;color:var(--txt);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    pointer-events:none;
-  }
-  .topbar.is-compact{
-    height:48px;min-height:48px;
-    padding-top:2px;padding-bottom:2px;margin-bottom:12px;
-    box-shadow:var(--shadow-2);
-  }
-  .topbar.is-compact .brand span{display:none}
-  .topbar.is-compact .topbar-view-title{
-    display:block;animation:topbarTitleIn 160ms ease both;pointer-events:auto;
-  }
+}
+@media (min-width:768px){
+  .topbar{height:56px;min-height:56px}
+  .topbar .brand span{display:inline}
+  .sticky-view-bar{top:56px}
+}
+@media (max-width:1023px){
+  footer{text-align:center;padding:var(--s3) var(--s4) calc(var(--btn-h-tertiary) + 16px)}
 
   /* Primary view FAB in compact state: thumb-reachable above bottom bar on all 8 views */
   #qlFab{
@@ -2386,7 +2385,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   body.sheet-open #qlFab{opacity:0;pointer-events:none}
 
   /* Tactile feedback */
-  .btn:active,.chip:active,.theme-toggle:active,#qlFab:active{transform:scale(.97)}
+  .btn:active,.chip:active,#qlFab:active,.acct-seg-btn:active,.acct-action-btn:active{transform:scale(.97)}
 
   /* Clear single primary action per card / row; lighter secondary text actions */
   #v-plan .plan-actions{display:flex;flex-wrap:wrap;gap:var(--s2)}
@@ -2411,10 +2410,130 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   #v-ia #iaCard > h2,
   #v-err .card:has(> #errPills > .empty){display:none}
 }
+@media (min-width:1024px){
+  .top-chrome{
+    position:sticky;top:0;z-index:30;
+    display:grid;grid-template-columns:minmax(116px, auto) minmax(0, 1fr) minmax(96px, auto);
+    align-items:center;height:56px;min-height:56px;
+    padding:0 var(--s6);gap:var(--s3);
+    background:var(--surface);border-bottom:1px solid var(--line);
+  }
+  .top-chrome .topbar{
+    grid-column:1 / -1;grid-row:1;position:static;
+    height:56px;min-height:56px;padding:0;
+    background:transparent;border-bottom:none;
+    pointer-events:none;
+  }
+  .top-chrome .topbar .brand,
+  .top-chrome .topbar .top-actions{pointer-events:auto}
+  .top-chrome #sideNav{
+    grid-column:2;grid-row:1;justify-self:center;z-index:2;
+    position:static;width:auto;max-width:100%;
+    height:56px;background:transparent;box-shadow:none;padding:0;gap:2px;
+  }
+  #sideNav #navMoreBtn{display:none}
+  .sticky-view-bar{display:none}
+  .content main{max-width:var(--content-max);margin-inline:auto;padding:var(--s5) var(--s6) var(--s7)}
+  .card p,.card .sub,.page-head .page-sub,.note,.guide,.ts-reason,.ts-summary{max-width:72ch}
+}
 @media (max-width:359px){
-  .topbar.is-compact .top-actions{gap:var(--s1)}
   .more-sheet-grid{gap:var(--s2)}
   .more-sheet-item{padding:var(--s3) var(--s2)}
+}
+
+/* === Account popover (>=768px) / bottom sheet (<=767px) === */
+.acct-sheet-overlay{
+  position:fixed;inset:0;z-index:125;
+  background:oklch(0 0 0 / 0.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity 180ms ease;
+}
+.acct-sheet-overlay.is-open{opacity:1}
+.acct-sheet-panel{
+  width:100%;max-width:600px;max-height:85vh;overflow-y:auto;
+  background:var(--surface);color:var(--txt);
+  border-radius:var(--r-modal) var(--r-modal) 0 0;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-3);
+  padding:var(--s2) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+  transform:translateY(24px);
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.acct-sheet-overlay.is-open .acct-sheet-panel{transform:translateY(0)}
+.acct-sheet-panel:focus{outline:0}
+.acct-sheet-handle{
+  width:36px;height:4px;border-radius:2px;background:var(--line);
+  margin:0 auto var(--s2);
+}
+.acct-sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  padding-bottom:var(--s3);margin-bottom:var(--s3);border-bottom:1px solid var(--line);
+}
+.acct-user-row{display:flex;align-items:center;gap:var(--s3);min-width:0;flex:1}
+.acct-avatar{
+  width:36px;height:36px;border-radius:50%;flex:none;
+  background:var(--acc);color:var(--on-primary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:var(--t-body);font-weight:700;
+}
+.acct-user-meta{min-width:0;flex:1}
+.acct-user-name{
+  font-size:var(--t-sub);font-weight:600;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.acct-sync-row{
+  display:flex;align-items:center;gap:6px;margin-top:2px;
+  font-size:var(--t-meta);color:var(--txt-2);
+}
+.acct-sync-row .sync-badge{width:8px;height:8px;flex:none}
+.acct-sheet-section{margin-bottom:var(--s3)}
+.acct-sheet-label{
+  display:block;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+  margin-bottom:var(--s1);
+}
+.acct-seg{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(0, 1fr));gap:var(--s1);
+  padding:3px;border-radius:var(--r-ctl);background:var(--surface-2);border:1px solid var(--line);
+}
+.acct-seg-btn{
+  min-height:44px;height:44px;padding:0 var(--s2);
+  border:none;border-radius:calc(var(--r-ctl) - 2px);
+  background:transparent;color:var(--txt-2);
+  font-family:var(--font);font-size:var(--t-meta);font-weight:600;cursor:pointer;
+  transition:background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+.acct-seg-btn:hover{color:var(--txt)}
+.acct-seg-btn.active{
+  background:var(--surface);color:var(--acc-text);
+  box-shadow:0 1px 2px oklch(0 0 0 / 0.08);
+}
+.acct-seg-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.acct-actions{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s2)}
+.acct-action-btn{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  width:100%;min-height:44px;height:44px;padding:0 var(--s3);
+  border:1px solid var(--line);border-radius:var(--r-ctl);
+  background:var(--surface-2);color:var(--txt);
+  font-family:var(--font);font-size:var(--t-body);font-weight:600;cursor:pointer;
+  transition:background 140ms ease, transform 140ms ease;
+}
+.acct-action-btn:hover{background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-border)}
+.acct-action-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@media (min-width:768px){
+  .acct-sheet-overlay{
+    background:oklch(0 0 0 / 0.16);
+    align-items:flex-start;justify-content:flex-end;
+    padding:62px clamp(24px, 3vw, 32px) var(--s4);
+  }
+  .acct-sheet-panel{
+    width:min(340px, calc(100vw - 32px));max-width:340px;
+    border-radius:var(--r-panel);padding:var(--s4);
+    transform:translateY(-8px);
+  }
+  .acct-sheet-handle{display:none}
+}
+@media (min-width:1024px){
+  .acct-sheet-overlay{padding:62px var(--s6) var(--s4)}
 }
 </style>
 </head>
@@ -2930,40 +3049,43 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 006 .5l2-2a4 4 0 00-6-6l-1 1"/><path d="M14 10a4 4 0 00-6-.5l-2 2a4 4 0 006 6l1-1"/></symbol>
     <symbol id="ic-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></symbol>
     <symbol id="ic-audio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="16" r="2"/></symbol>
+    <symbol id="ic-flame" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.5 2.2c.2 2.4-1 4.1-2.4 5.5-1.4 1.4-2.1 2.7-2.1 4.1 0 1.2.6 2.2 1.5 2.8-.2-.7-.1-1.6.5-2.4.5-.8 1.5-1.5 1.8-2.6.8 1.1 1.7 2.1 1.7 3.8 0 .8-.3 1.5-.7 2 .9-.6 1.5-1.7 1.5-3 0-1.6-.6-3-1.4-4.1.6-.4 1.2-.1 1.8.6 1.2 1.5 1.8 3.2 1.8 5 0 3.7-2.7 6.5-6.5 6.5S5.5 17.6 5.5 13.7c0-3 1.7-5.5 3.9-7.6 1.8-1.7 3.6-2.9 4.1-3.9z"/></symbol>
   </defs>
 </svg>
 
 <div class="shell">
-  <!-- ============ TOP BAR ============ -->
-  <div class="topbar" id="topbar">
-    <div class="brand">
-      <img src="/assets/logo-192.png" alt="B2 First logo" class="logo-img">
-      <span>B2 FIRST</span>
+  <!-- ============ TOP BAR (3 zones: brand · streak · avatar) + NAV ============ -->
+  <div class="top-chrome" id="topChrome">
+    <div class="topbar" id="topbar">
+      <div class="brand" id="topbarBrand" role="img" aria-label="B2 First Tracker · Today">
+        <img src="/assets/logo-192.png" alt="" aria-hidden="true" class="logo-img">
+        <span>B2 FIRST</span>
+      </div>
+      <div class="top-actions">
+        <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak"><svg class="streak-flame" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-flame"/></svg><b id="streakTopNum" class="tnum">0</b></span>
+        <button type="button" class="user-chip" id="userChip" onclick="toggleAccountSheet()" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet" title="Account, theme &amp; settings" aria-label="Account, theme &amp; settings" data-i18n-title="acct_chip" data-i18n-aria-label="acct_chip"><span class="avatar">A</span></button>
+      </div>
     </div>
-    <span id="topbarViewTitle" class="topbar-view-title" aria-hidden="true"></span>
-    <div class="top-actions">
-      <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
-      <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
-      <button class="btn sm gray" id="settingsBtn" type="button" onclick="openSettingsModal()" title="Settings" aria-label="Settings" data-i18n-title="settings_title" data-i18n-aria-label="settings_title">⚙</button>
-      <div class="user-chip" id="userChip" onclick="openUserModal()" title="View profile &amp; switch user" data-i18n-title="user_chip"><span class="avatar">A</span></div>
-      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode" data-i18n-title="theme_toggle" data-i18n-aria-label="theme_toggle"></button>
-    </div>
+
+    <!-- ============ NAV: inline in topbar on desktop >= 1024px, bottom bar (5 + More) <= 1023px ============ -->
+    <nav id="sideNav" aria-label="Main navigation" data-i18n-aria-label="nav_aria">
+      <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
+      <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
+      <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
+      <button data-view="plan" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
+      <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
+      <button data-view="resources" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
+      <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
+      <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
+      <button id="navMoreBtn" type="button" aria-label="More sections" aria-expanded="false" aria-controls="moreSheet" aria-haspopup="dialog" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
+    </nav>
   </div>
 
-  <!-- ============ NAV: top row on desktop, bottom bar (5 + More) on mobile ============ -->
-  <nav id="sideNav" aria-label="Main navigation" data-i18n-aria-label="nav_aria">
-    <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
-    <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
-    <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
-    <button data-view="plan" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
-    <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
-    <button data-view="resources" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
-    <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
-    <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
-    <button id="navMoreBtn" type="button" aria-label="More sections" aria-expanded="false" aria-controls="moreSheet" aria-haspopup="dialog" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
-  </nav>
+  <div id="stickyViewBar" class="sticky-view-bar" aria-hidden="true">
+    <span id="topbarViewTitle" class="topbar-view-title"></span>
+  </div>
 
-  <!-- ============ MORE BOTTOM SHEET (mobile <= 768px) ============ -->
+  <!-- ============ MORE BOTTOM SHEET (<= 1023px) ============ -->
   <div id="moreSheet" class="more-sheet-overlay" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle" style="display:none">
     <div class="more-sheet-panel" tabindex="-1">
       <div class="more-sheet-handle" aria-hidden="true"></div>
@@ -2992,6 +3114,45 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <span class="more-sheet-label" data-i18n="ai_title">Writing Corrector</span>
           <span class="more-sheet-desc" data-i18n="more_desc_ia">Cambridge B2 rubric grading</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ACCOUNT POPOVER (>= 768px) / BOTTOM SHEET (<= 767px) ============ -->
+  <div id="accountSheet" class="acct-sheet-overlay" role="dialog" aria-modal="true" aria-labelledby="acctSheetTitle" style="display:none">
+    <div class="acct-sheet-panel" tabindex="-1">
+      <div class="acct-sheet-handle" aria-hidden="true"></div>
+      <div class="acct-sheet-head">
+        <div class="acct-user-row">
+          <span class="acct-avatar" id="acctAvatar" aria-hidden="true">A</span>
+          <div class="acct-user-meta">
+            <div class="acct-user-name" id="acctSheetTitle">Student</div>
+            <div class="acct-sync-row">
+              <span id="syncBadge" class="sync-badge state-local" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
+              <span id="acctSyncText">Saved locally</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="del more-sheet-close" id="acctSheetClose" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="acct-sheet-section">
+        <span class="acct-sheet-label" data-i18n="acct_theme">Theme</span>
+        <div class="acct-seg" role="group" data-i18n-aria-label="acct_theme" aria-label="Theme">
+          <button type="button" class="acct-seg-btn" id="acctThemeLight" onclick="setThemeMode('light')" aria-pressed="false" data-i18n="acct_theme_light">Light</button>
+          <button type="button" class="acct-seg-btn" id="acctThemeDark" onclick="setThemeMode('dark')" aria-pressed="false" data-i18n="acct_theme_dark">Dark</button>
+          <button type="button" class="acct-seg-btn" id="acctThemeSystem" onclick="setThemeMode('system')" aria-pressed="false" data-i18n="acct_theme_system">System</button>
+        </div>
+      </div>
+      <div class="acct-sheet-section">
+        <span class="acct-sheet-label" data-i18n="plan_language">Language</span>
+        <div class="acct-seg" role="group" data-i18n-aria-label="plan_language" aria-label="Language">
+          <button type="button" class="acct-seg-btn" id="acctLangEn" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
+          <button type="button" class="acct-seg-btn" id="acctLangEs" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
+        </div>
+      </div>
+      <div class="acct-actions">
+        <button type="button" class="acct-action-btn" id="acctSettingsBtn" onclick="closeAccountSheet(false);openSettingsModal()" data-i18n="settings_title">Settings</button>
+        <button type="button" class="acct-action-btn" id="acctProfileBtn" onclick="closeAccountSheet(false);openUserModal()" data-i18n="acct_profile">Profile &amp; switch user</button>
       </div>
     </div>
   </div>
@@ -4044,15 +4205,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
               <div id="gEvol"></div>
             </div>
-          </div>
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
-              <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
-              <div id="gPart"></div>
-            </div>
-          </div>
-          <div class="col-6">
             <div class="card">
               <h2 data-i18n="charts_errors">🧩 Errors by type</h2>
               <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy.</div>
@@ -4060,6 +4212,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
           <div class="col-6">
+            <div class="card">
+              <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
+              <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
+              <div id="gPart"></div>
+            </div>
             <div class="card">
               <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
               <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
@@ -4582,6 +4739,14 @@ const I18N={
     nav_ai:'Writing',
     nav_more:'More',
     nav_more_aria:'More sections',
+    acct_chip:'Account, theme & settings',
+    acct_theme:'Theme',
+    acct_theme_light:'Light',
+    acct_theme_dark:'Dark',
+    acct_theme_system:'System',
+    acct_profile:'Profile & switch user',
+    acct_demo:'Demo mode · saved locally',
+    acct_demo_user:'Demo student',
     more_desc_plan:'Schedule, intake & countdown',
     more_desc_resources:'Samples, PDFs, audio & links',
     more_desc_err:'Mistake taxonomy & patterns',
@@ -5397,6 +5562,14 @@ const I18N={
     nav_ai:'Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
+    acct_chip:'Cuenta, tema y ajustes',
+    acct_theme:'Tema',
+    acct_theme_light:'Claro',
+    acct_theme_dark:'Oscuro',
+    acct_theme_system:'Sistema',
+    acct_profile:'Perfil y cambiar usuario',
+    acct_demo:'Modo demo · guardado local',
+    acct_demo_user:'Estudiante demo',
     more_desc_plan:'Agenda, perfil y cuenta atrás',
     more_desc_resources:'Modelos, PDFs, audio y enlaces',
     more_desc_err:'Taxonomía de fallos y patrones',
@@ -6256,8 +6429,13 @@ function applyI18n(){
   const esBtn=document.getElementById('langEsBtn');
   if(enBtn){enBtn.setAttribute('aria-pressed',LANG==='en'?'true':'false');enBtn.classList.toggle('active',LANG==='en')}
   if(esBtn){esBtn.setAttribute('aria-pressed',LANG==='es'?'true':'false');esBtn.classList.toggle('active',LANG==='es')}
+  const acctEn=document.getElementById('acctLangEn');
+  const acctEs=document.getElementById('acctLangEs');
+  if(acctEn){acctEn.setAttribute('aria-pressed',LANG==='en'?'true':'false');acctEn.classList.toggle('active',LANG==='en')}
+  if(acctEs){acctEs.setAttribute('aria-pressed',LANG==='es'?'true':'false');acctEs.classList.toggle('active',LANG==='es')}
   if(typeof updateTopbarViewTitle==='function')updateTopbarViewTitle();
   if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
+  if(typeof syncAccountSheet==='function')syncAccountSheet();
 }
 function setLang(code){
   const next=normalizeLang(code);
@@ -7613,14 +7791,17 @@ function renderUserChip(){
   if(!el)return;
   if(DEMO&&DEMO.demo){
     el.innerHTML='<span class="avatar">A</span>';
-    el.style.cursor='default';
+    el.style.cursor='pointer';
+    if(typeof syncAccountSheet==='function')syncAccountSheet();
     renderGates();
     return;
   }
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
-    el.innerHTML=`<span class="avatar" style="background:${USER.color||'var(--primary)'}" title="${USER.name}">${initial}</span>
-      <button class="btn sm gray" onclick="event.stopPropagation();doLogout()" title="Change user">⇄</button>`;
+    const avStyle=USER.color?`background:${USER.color};color:#fff`:'';
+    el.innerHTML=`<span class="avatar" style="${avStyle}" title="${USER.name}">${initial}</span>`;
+    el.style.cursor='pointer';
+    if(typeof syncAccountSheet==='function')syncAccountSheet();
     renderGates();
   }
 }
@@ -7733,6 +7914,10 @@ function syncStatus(s,field){
     el.className=cls;
     el.setAttribute('title',label);
     el.setAttribute('aria-label',label);
+  }
+  const acctSync=document.getElementById('acctSyncText');
+  if(acctSync){
+    acctSync.textContent=(DEMO&&DEMO.demo)?t('acct_demo'):label;
   }
 }
 function syncPush(){
@@ -17611,7 +17796,7 @@ function syncNavOffset(){
 }
 window.addEventListener('resize',()=>{
   syncNavOffset();
-  if(typeof closeMoreSheet==='function'&&window.innerWidth>768){
+  if(typeof closeMoreSheet==='function'&&window.innerWidth>1023){
     const s=document.getElementById('moreSheet');
     if(s&&s.style.display!=='none')closeMoreSheet(false);
   }
@@ -17620,14 +17805,13 @@ window.addEventListener('resize',()=>{
 });
 const MORE_SHEET_VIEWS=new Set(['plan','resources','err','ia']);
 let _moreSheetTrigger=null;
+let _accountSheetTrigger=null;
 function currentActiveViewId(){
   const sec=document.querySelector('.view.active');
   if(!sec||!sec.id)return 'hoy';
   return sec.id.replace(/^view-/,'').replace(/^v-/,'');
 }
 function updateTopbarViewTitle(viewId){
-  const el=document.getElementById('topbarViewTitle');
-  if(!el)return;
   const vid=viewId||currentActiveViewId();
   const sec=document.getElementById('v-'+vid)||document.getElementById('view-'+vid);
   let title='';
@@ -17639,7 +17823,10 @@ function updateTopbarViewTitle(viewId){
     const navBtn=document.querySelector(`nav button[data-view="${vid}"] .nav-label`);
     if(navBtn)title=(navBtn.textContent||'').trim();
   }
-  el.textContent=title;
+  const el=document.getElementById('topbarViewTitle');
+  if(el)el.textContent=title;
+  const brand=document.getElementById('topbarBrand');
+  if(brand)brand.setAttribute('aria-label','B2 First Tracker · '+(title||t('nav_today')||'Today'));
 }
 function syncMoreActiveState(viewId){
   const vid=viewId||currentActiveViewId();
@@ -17651,7 +17838,7 @@ function syncMoreActiveState(viewId){
 }
 function mobilePrimaryConfig(viewId){
   const vid=viewId||currentActiveViewId();
-  if(window.innerWidth>768){
+  if(window.innerWidth>1023){
     return {label:t('fab_log_single'),run:()=>openSoloModal()};
   }
   switch(vid){
@@ -17711,32 +17898,38 @@ function syncMobilePrimaryFab(viewId){
   if(lbl)lbl.textContent=cfg.label;
 }
 function syncTopbarCompact(){
-  const bar=document.getElementById('topbar')||document.querySelector('.topbar');
-  if(!bar)return;
-  if(window.innerWidth>768){
-    bar.classList.remove('is-compact');
+  const stickyBar=document.getElementById('stickyViewBar');
+  if(window.innerWidth>1023){
     document.body.classList.remove('topbar-compact');
+    if(stickyBar)stickyBar.setAttribute('aria-hidden','true');
     return;
   }
   const y=window.scrollY||window.pageYOffset||0;
-  const was=bar.classList.contains('is-compact');
+  const was=document.body.classList.contains('topbar-compact');
   const next=was?(y>48):(y>64);
   if(next!==was){
-    bar.classList.toggle('is-compact',next);
     document.body.classList.toggle('topbar-compact',next);
   }
+  if(stickyBar)stickyBar.setAttribute('aria-hidden',next?'false':'true');
   updateTopbarViewTitle();
+}
+function syncSheetBodyLock(){
+  const moreOpen=(document.getElementById('moreSheet')||{}).style?.display==='flex';
+  const acctOpen=(document.getElementById('accountSheet')||{}).style?.display==='flex';
+  const locked=moreOpen||acctOpen;
+  document.documentElement.classList.toggle('sheet-open',locked);
+  document.body.classList.toggle('sheet-open',locked);
 }
 function openMoreSheet(){
   const sheet=document.getElementById('moreSheet');
   const moreBtn=document.getElementById('navMoreBtn');
   if(!sheet)return;
+  if(typeof closeAccountSheet==='function')closeAccountSheet(false);
   _moreSheetTrigger=document.activeElement;
   syncMoreActiveState();
   sheet.style.display='flex';
   sheet.classList.add('is-open');
-  document.documentElement.classList.add('sheet-open');
-  document.body.classList.add('sheet-open');
+  syncSheetBodyLock();
   if(moreBtn)moreBtn.setAttribute('aria-expanded','true');
   const panel=sheet.querySelector('.more-sheet-panel')||sheet;
   if(panel&&typeof panel.focus==='function')panel.focus();
@@ -17748,13 +17941,99 @@ function closeMoreSheet(restoreFocus){
   const wasOpen=sheet.style.display!=='none';
   sheet.classList.remove('is-open');
   sheet.style.display='none';
-  document.documentElement.classList.remove('sheet-open');
-  document.body.classList.remove('sheet-open');
+  syncSheetBodyLock();
   if(moreBtn)moreBtn.setAttribute('aria-expanded','false');
   if(restoreFocus&&wasOpen){
     const target=(moreBtn&&getComputedStyle(moreBtn).display!=='none')?moreBtn:_moreSheetTrigger;
     if(target&&typeof target.focus==='function')target.focus();
   }
+}
+function syncAccountSheet(){
+  const title=document.getElementById('acctSheetTitle');
+  const av=document.getElementById('acctAvatar');
+  const profBtn=document.getElementById('acctProfileBtn');
+  const isDemo=!!(DEMO&&DEMO.demo);
+  if(USER&&!isDemo){
+    const name=(USER.name||'Student').trim()||'Student';
+    const initial=name.charAt(0).toUpperCase();
+    if(title)title.textContent=name;
+    if(av){av.textContent=initial;av.style.background=USER.color||'var(--acc)';av.style.color=USER.color?'#fff':'';}
+    if(profBtn)profBtn.style.display='';
+  }else{
+    if(title)title.textContent=isDemo?t('acct_demo_user'):'Student';
+    if(av){av.textContent='A';av.style.background='var(--acc)';av.style.color='';}
+    if(profBtn)profBtn.style.display='none';
+  }
+  const acctSync=document.getElementById('acctSyncText');
+  if(acctSync&&isDemo)acctSync.textContent=t('acct_demo');
+  if(typeof syncThemeButtons==='function')syncThemeButtons();
+  const acctEn=document.getElementById('acctLangEn');
+  const acctEs=document.getElementById('acctLangEs');
+  if(acctEn){acctEn.setAttribute('aria-pressed',LANG==='en'?'true':'false');acctEn.classList.toggle('active',LANG==='en')}
+  if(acctEs){acctEs.setAttribute('aria-pressed',LANG==='es'?'true':'false');acctEs.classList.toggle('active',LANG==='es')}
+}
+function openAccountSheet(){
+  const sheet=document.getElementById('accountSheet');
+  const chip=document.getElementById('userChip');
+  if(!sheet)return;
+  closeMoreSheet(false);
+  _accountSheetTrigger=document.activeElement;
+  syncAccountSheet();
+  sheet.style.display='flex';
+  sheet.classList.add('is-open');
+  syncSheetBodyLock();
+  if(chip)chip.setAttribute('aria-expanded','true');
+  const panel=sheet.querySelector('.acct-sheet-panel')||sheet;
+  if(panel&&typeof panel.focus==='function')panel.focus();
+}
+function closeAccountSheet(restoreFocus){
+  const sheet=document.getElementById('accountSheet');
+  const chip=document.getElementById('userChip');
+  if(!sheet)return;
+  const wasOpen=sheet.style.display!=='none';
+  sheet.classList.remove('is-open');
+  sheet.style.display='none';
+  syncSheetBodyLock();
+  if(chip)chip.setAttribute('aria-expanded','false');
+  if(restoreFocus&&wasOpen){
+    const target=chip||_accountSheetTrigger;
+    if(target&&typeof target.focus==='function')target.focus();
+  }
+}
+function toggleAccountSheet(){
+  const sheet=document.getElementById('accountSheet');
+  if(sheet&&sheet.style.display!=='none')closeAccountSheet(true);
+  else openAccountSheet();
+}
+function trapSheetKeydown(sheet,onClose,e){
+  if(!sheet||sheet.style.display==='none')return false;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+    return true;
+  }
+  if(e.key==='Tab'){
+    const focusables=Array.from(sheet.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+      .filter(el=>{
+        const cs=getComputedStyle(el);
+        if(cs.display==='none'||cs.visibility==='hidden')return false;
+        const r=el.getBoundingClientRect();
+        return r.width>0&&r.height>0;
+      });
+    if(!focusables.length){e.preventDefault();return true}
+    const first=focusables[0],last=focusables[focusables.length-1];
+    if(!sheet.contains(document.activeElement)||!focusables.includes(document.activeElement)){
+      e.preventDefault();(e.shiftKey?last:first).focus();return true;
+    }
+    if(e.shiftKey&&document.activeElement===first){
+      e.preventDefault();last.focus();
+    }else if(!e.shiftKey&&document.activeElement===last){
+      e.preventDefault();first.focus();
+    }
+    return true;
+  }
+  return false;
 }
 function activateNavView(viewId,isUserClick){
   if(viewId==='libros')viewId='resources';
@@ -17767,7 +18046,8 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='practice')renderPractice();
   if(viewId==='resources'){renderPractice();renderResources()}
   closeMoreSheet(false);
-  if(window.innerWidth<=768&&(window.scrollY||window.pageYOffset||0)>0)window.scrollTo(0,0);
+  closeAccountSheet(false);
+  if(window.innerWidth<=1023&&(window.scrollY||window.pageYOffset||0)>0)window.scrollTo(0,0);
   syncMoreActiveState(viewId);
   updateTopbarViewTitle(viewId);
   syncMobilePrimaryFab(viewId);
@@ -17803,6 +18083,8 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   const sheet=document.getElementById('moreSheet');
   const closeBtn=document.getElementById('moreSheetClose');
   const fab=document.getElementById('qlFab');
+  const acctSheet=document.getElementById('accountSheet');
+  const acctClose=document.getElementById('acctSheetClose');
   if(more){
     more.onclick=()=>{
       const open=sheet&&sheet.style.display!=='none';
@@ -17821,33 +18103,15 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
       });
     });
   }
+  if(acctClose)acctClose.onclick=()=>closeAccountSheet(true);
+  if(acctSheet){
+    acctSheet.addEventListener('click',e=>{
+      if(e.target===acctSheet)closeAccountSheet(true);
+    });
+  }
   document.addEventListener('keydown',e=>{
-    if(!sheet||sheet.style.display==='none')return;
-    if(e.key==='Escape'){
-      e.preventDefault();
-      e.stopPropagation();
-      closeMoreSheet(true);
-      return;
-    }
-    if(e.key==='Tab'){
-      const focusables=Array.from(sheet.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
-        .filter(el=>{
-          const cs=getComputedStyle(el);
-          if(cs.display==='none'||cs.visibility==='hidden')return false;
-          const r=el.getBoundingClientRect();
-          return r.width>0&&r.height>0;
-        });
-      if(!focusables.length){e.preventDefault();return}
-      const first=focusables[0],last=focusables[focusables.length-1];
-      if(!sheet.contains(document.activeElement)||!focusables.includes(document.activeElement)){
-        e.preventDefault();(e.shiftKey?last:first).focus();return;
-      }
-      if(e.shiftKey&&document.activeElement===first){
-        e.preventDefault();last.focus();
-      }else if(!e.shiftKey&&document.activeElement===last){
-        e.preventDefault();first.focus();
-      }
-    }
+    if(trapSheetKeydown(acctSheet,()=>closeAccountSheet(true),e))return;
+    trapSheetKeydown(sheet,()=>closeMoreSheet(true),e);
   });
   if(fab){
     fab.onclick=()=>mobilePrimaryConfig().run();
@@ -17900,30 +18164,55 @@ syncNavOffset();
    (sun/moon) and the preference is stored in localStorage.
    The system theme is not auto-detected: light by default. */
 const THEME_KEY='b2first_theme';
+const THEME_MQ=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
 function currentTheme(){
   return document.documentElement.getAttribute('data-theme')||'light';
+}
+function currentThemeMode(){
+  try{
+    const saved=localStorage.getItem(THEME_KEY);
+    if(saved==='dark'||saved==='light'||saved==='system')return saved;
+  }catch(e){}
+  return 'light';
+}
+function resolveTheme(mode){
+  if(mode==='system')return (THEME_MQ&&THEME_MQ.matches)?'dark':'light';
+  return mode==='dark'?'dark':'light';
+}
+function syncThemeButtons(){
+  const mode=currentThemeMode();
+  const map={light:'acctThemeLight',dark:'acctThemeDark',system:'acctThemeSystem'};
+  Object.keys(map).forEach(k=>{
+    const b=document.getElementById(map[k]);
+    if(!b)return;
+    const on=(mode===k);
+    b.classList.toggle('active',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
 }
 function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   const mt=document.getElementById('metaTheme');
   if(mt)mt.setAttribute('content',t==='dark'?'#121416':'#fbfcfd');
-  const btn=document.getElementById('themeToggle');
-  if(btn)btn.innerHTML=t==='dark'
-    ?'<svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-sun"/></svg>'
-    :'<svg viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-moon"/></svg>';
+  syncThemeButtons();
+}
+function setThemeMode(mode){
+  const m=(mode==='dark'||mode==='system')?mode:'light';
+  try{localStorage.setItem(THEME_KEY,m)}catch(e){}
+  const resolved=resolveTheme(m);
+  applyTheme(resolved);
+  track('theme_toggle',{theme:resolved,mode:m});
 }
 function toggleTheme(){
-  const next=currentTheme()==='dark'?'light':'dark';
-  applyTheme(next);
-  track('theme_toggle',{theme:next});
-  try{localStorage.setItem(THEME_KEY,next)}catch(e){}
+  setThemeMode(currentTheme()==='dark'?'light':'dark');
+}
+if(THEME_MQ&&typeof THEME_MQ.addEventListener==='function'){
+  THEME_MQ.addEventListener('change',()=>{
+    if(currentThemeMode()==='system')applyTheme(resolveTheme('system'));
+  });
 }
 document.addEventListener('DOMContentLoaded',()=>{
-  let saved=null;
-  try{saved=localStorage.getItem(THEME_KEY)}catch(e){}
-  applyTheme(saved==='dark'?'dark':'light');
-  const btn=document.getElementById('themeToggle');
-  if(btn)btn.onclick=toggleTheme;
+  applyTheme(resolveTheme(currentThemeMode()));
   syncNavOffset();
 });
 

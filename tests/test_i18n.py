@@ -124,8 +124,10 @@ with sync_playwright() as p:
     assert pg.evaluate("window.D.settings.lang") == "en", "D.settings.lang default is not en"
     out["1_fresh_english"] = {"lang": "en", "nav0": labels[0], "setting": "en"}
 
-    # 2. The switcher lives in Settings and turns the UI into Spanish.
-    pg.click("#settingsBtn")
+    # 2. Settings opens via Account sheet (#userChip -> #acctSettingsBtn) and turns the UI into Spanish.
+    pg.click("#userChip")
+    pg.wait_for_selector("#accountSheet.is-open")
+    pg.click("#acctSettingsBtn")
     pg.wait_for_timeout(200)
     assert pg.is_visible("#langEsBtn"), "language switch is not visible in Settings"
     pg.click("#langEsBtn")
@@ -150,8 +152,10 @@ with sync_playwright() as p:
     assert pg.evaluate("window.D.settings.lang") == "es", "D.settings.lang did not persist"
     out["3_persisted_reload"] = {"lang": pg.evaluate("document.documentElement.lang"), "nav0": nav_labels(pg)[0]}
 
-    # 4. Switch back to English from Settings.
-    pg.click("#settingsBtn")
+    # 4. Switch back to English from Settings (via Account sheet).
+    pg.click("#userChip")
+    pg.wait_for_selector("#accountSheet.is-open")
+    pg.click("#acctSettingsBtn")
     pg.wait_for_timeout(200)
     pg.click("#langEnBtn")
     pg.wait_for_function("document.documentElement.lang === 'en'")
