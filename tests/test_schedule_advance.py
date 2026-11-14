@@ -21,7 +21,7 @@ with sync_playwright() as p:
     # 1. Check default schedule rows count
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(200)
-    initial_rows = pg.eval_on_selector_all("#scheduleRowsContainer .row", "els => els.length")
+    initial_rows = pg.eval_on_selector_all("#scheduleRowsContainer .sched-row", "els => els.length")
     out["initial_schedule_rows"] = initial_rows
 
     # 2. Add new session days (Total 4 days: Mon, Tue, Thu, Sat)
@@ -39,7 +39,7 @@ with sync_playwright() as p:
     }""")
     pg.wait_for_timeout(200)
 
-    rows_after_add = pg.eval_on_selector_all("#scheduleRowsContainer .row", "els => els.length")
+    rows_after_add = pg.eval_on_selector_all("#scheduleRowsContainer .sched-row", "els => els.length")
     out["rows_after_add"] = rows_after_add
     out["preview_items_count"] = pg.eval_on_selector_all("#planUpcomingPreview > div", "els => els.length")
 

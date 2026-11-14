@@ -85,7 +85,7 @@ def remove_day(pg, day_num):
     """Click the delete button of the row that holds day_num."""
     pg.evaluate(
         """(day) => {
-            const rows = [...document.querySelectorAll('#scheduleRowsContainer .row')];
+            const rows = [...document.querySelectorAll('#scheduleRowsContainer .sched-row')];
             const row = rows.find(r => +r.querySelector('.sched-day-select').value === day);
             if (row) row.querySelector('button').click();
         }""",
