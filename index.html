@@ -2092,12 +2092,25 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ob-diag-box .h{font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px}
 .ob-plan-preview{max-height:260px;overflow-y:auto;padding-right:2px}
 .ob-preview-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.ob-preview-row .t{font-weight:600}
+.ob-preview-row .t{font-weight:600;min-width:0}
 .ob-preview-row .m{font-size:var(--fs-xs);color:var(--txt-2);white-space:nowrap}
 .ob-plan-meta{font-size:var(--fs-xs);color:var(--txt-2);margin:8px 0 0}
 .ob-plan-empty{font-size:var(--fs-sm);color:var(--txt-2);padding:10px 0}
 .ob-day-chips{display:flex;gap:6px;flex-wrap:wrap}
 .ob-day-chips .chip-btn{min-width:52px;padding:8px 10px}
+.ob-day-times{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.ob-time-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);padding:6px 10px}
+.ob-time-row label{margin:0;text-transform:none;letter-spacing:normal;font-size:var(--fs-sm);font-weight:600;color:var(--txt);flex:1 1 auto;min-width:0}
+.ob-time-row input[type=time]{width:auto;min-width:120px;flex:0 0 auto;min-height:40px;height:40px;padding:6px 10px}
+.ob-time-row input[type=time].is-invalid{border-color:var(--bad)}
+.ob-warn{font-size:var(--fs-xs);color:var(--warn-text);background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--r-ctl);padding:8px 10px;margin:8px 0 0;line-height:1.45}
+.ob-fieldset{border:none;padding:0;margin:12px 0}
+.ob-rot-cards{flex-direction:column}
+.ob-rot-card{align-items:flex-start;width:100%;letter-spacing:normal;font-weight:400}
+.ob-rot-card input{margin-top:3px;flex:none}
+.ob-rot-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ob-rot-title{font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
+.ob-rot-desc{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.4;font-weight:400}
 .ob-note{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;margin:10px 0 0}
 .ob-acct-card{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-ctl);padding:14px;margin:4px 0 0}
 .ob-acct-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px}
@@ -4916,10 +4929,18 @@ const I18N={
     ob_plan_body:'This is the first week the app built from your date, your ratings and the check. You can change it any time in Plan.',
     ob_hours:'Hours per week',
     ob_days:'Days you can study',
+    ob_day_times_label:'Study times',
+    ob_rotation_label:'Rotation mode',
+    ob_rot_by_part_title:'By part',
+    ob_rot_by_part_desc:'Short sessions, one skill per day: a part of Reading, Listening, a Writing task or a Speaking part.',
+    ob_rot_full_title:'Full mocks',
+    ob_rot_full_desc:'Exam-length papers: Full R&UE 75 min, Full Listening 40, Full Writing 80, Full Speaking 14.',
+    ob_items_per_session:'Units per session',
     ob_plan_sessions:'{n} sessions · about {min} min each',
+    ob_plan_sessions_range:'{n} sessions · {min}–{max} min each',
     ob_plan_total:'{total} minutes this week',
     ob_plan_accept:'Use this plan and continue',
-    ob_plan_edit_hint:'Change your hours or days and the sessions update right away.',
+    ob_plan_edit_hint:'Change your hours, days, times or mode and the sessions update right away.',
     ob_plan_none:'No sessions yet.',
     ob_part:'Part {n}',
     ob_timed:'timed',
@@ -4929,8 +4950,10 @@ const I18N={
     ob_type_w:'Writing',
     ob_type_l:'Listening',
     ob_type_sp:'Speaking',
-    ob_day_note:'The sessions appear in Today on the days you pick.',
+    ob_day_note:'The sessions appear in Today on the days and times you pick.',
     ob_error_day:'Pick at least one study day.',
+    ob_error_time:'Enter a valid time (HH:MM) for every selected day.',
+    ob_warn_same_time:'Two or more days are set to the same time. You can keep it or adjust each day.',
     ob_acct_title:'Your plan',
     ob_acct_loading:'Checking your account plan…',
     ob_acct_unavailable:'Your limits and plan are in Settings → Plan.',
@@ -5739,10 +5762,18 @@ const I18N={
     ob_plan_body:'Esta es la primera semana que armó la app con tu fecha, tus notas y el chequeo. Podés cambiarla cuando quieras en Plan.',
     ob_hours:'Horas por semana',
     ob_days:'Días que podés estudiar',
+    ob_day_times_label:'Horarios por día',
+    ob_rotation_label:'Modo de rotación',
+    ob_rot_by_part_title:'Por partes',
+    ob_rot_by_part_desc:'Sesiones cortas, una habilidad por día: una parte de Reading, Listening, una tarea de Writing o una parte de Speaking.',
+    ob_rot_full_title:'Mocks completos',
+    ob_rot_full_desc:'Papers completos de examen: Full R&UE 75 min, Full Listening 40, Full Writing 80, Full Speaking 14.',
+    ob_items_per_session:'Unidades por sesión',
     ob_plan_sessions:'{n} sesiones · unos {min} min cada una',
+    ob_plan_sessions_range:'{n} sesiones · {min}–{max} min cada una',
     ob_plan_total:'{total} minutos esta semana',
     ob_plan_accept:'Usar este plan y seguir',
-    ob_plan_edit_hint:'Cambiá las horas o los días y las sesiones se actualizan al instante.',
+    ob_plan_edit_hint:'Cambiá las horas, días, horarios o modo y las sesiones se actualizan al instante.',
     ob_plan_none:'Todavía no hay sesiones.',
     ob_part:'Parte {n}',
     ob_timed:'cronometrada',
@@ -5752,8 +5783,10 @@ const I18N={
     ob_type_w:'Writing',
     ob_type_l:'Listening',
     ob_type_sp:'Speaking',
-    ob_day_note:'Las sesiones aparecen en Today los días que elijas.',
+    ob_day_note:'Las sesiones aparecen en Today los días y horarios que elijas.',
     ob_error_day:'Elegí al menos un día de estudio.',
+    ob_error_time:'Ingresá una hora válida (HH:MM) para cada día elegido.',
+    ob_warn_same_time:'Dos o más días tienen la misma hora. Podés dejarlo así o ajustar cada día.',
     ob_acct_title:'Tu plan',
     ob_acct_loading:'Consultando tu plan…',
     ob_acct_unavailable:'Tus límites y tu plan están en Settings → Plan.',
@@ -7112,8 +7145,66 @@ function obDefaultDays(){
   });
   return out;
 }
+function obOrderedDays(days){
+  const set=new Set(Array.isArray(days)?days:[]);
+  return OB_DAYS.map(([k])=>k).filter(k=>set.has(k));
+}
+function obIsValidTime(v){
+  return typeof v==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+}
+function obFallbackTimeForDay(k,usedTimes){
+  const idx=Math.max(0,OB_DAYS.findIndex(([x])=>x===k));
+  const preferred=SCHEDULE_TIMES[idx%SCHEDULE_TIMES.length];
+  if(!usedTimes||!usedTimes.has(preferred))return preferred;
+  const free=SCHEDULE_TIMES.find(tVal=>!usedTimes.has(tVal));
+  return free||preferred;
+}
+function obSeedDayTimes(days){
+  const ordered=obOrderedDays(days);
+  const sched=(typeof D!=='undefined'&&D&&D.settings)?storedSchedule(D.settings):null;
+  const schedMap={};
+  if(Array.isArray(sched)){
+    sched.forEach(sl=>{
+      if(sl&&sl.day!=null&&obIsValidTime(sl.time)){
+        schedMap[scheduleDayKey(sl.day)]=sl.time;
+      }
+    });
+  }
+  const times={};
+  const used=new Set();
+  ordered.forEach(k=>{
+    const val=schedMap[k]||obFallbackTimeForDay(k,used);
+    times[k]=val;
+    used.add(val);
+  });
+  return times;
+}
+function obInitialDaysAndTimes(p){
+  const sched=(typeof D!=='undefined'&&D&&D.settings)?storedSchedule(D.settings):null;
+  let days;
+  if(Array.isArray(sched)&&sched.length){
+    days=obOrderedDays(sched.map(sl=>scheduleDayKey(sl.day)));
+  }else if(p&&Array.isArray(p.days)&&p.days.length){
+    days=obOrderedDays(p.days);
+  }else{
+    days=obOrderedDays(obDefaultDays());
+  }
+  return {days,dayTimes:obSeedDayTimes(days)};
+}
 function obDefaultDraft(){
-  return {examDate:'',targetGrade:'B',skills:{rue:3,w:3,l:3,sp:3},hoursWeek:6,days:obDefaultDays(),strugglesDeclared:[]};
+  const s=(typeof D!=='undefined'&&D&&D.settings)||{};
+  const dt=obInitialDaysAndTimes(null);
+  return {
+    examDate:'',
+    targetGrade:'B',
+    skills:{rue:3,w:3,l:3,sp:3},
+    hoursWeek:6,
+    days:dt.days,
+    dayTimes:dt.dayTimes,
+    rotationMode:normalizeRotationMode(s.rotationMode),
+    itemsPerSession:normalizeItemsPerSession(s.itemsPerSession),
+    strugglesDeclared:[]
+  };
 }
 function obCodes(d){
   return STRUGGLE_MAP.filter(([label])=>d.strugglesDeclared.indexOf(label)>=0).map(([,code])=>code).filter((c,i,a)=>a.indexOf(c)===i);
@@ -7125,19 +7216,24 @@ function obDraftProfile(){
     targetGrade:d.targetGrade,
     skills:{rue:d.skills.rue,w:d.skills.w,l:d.skills.l,sp:d.skills.sp},
     hoursWeek:d.hoursWeek,
-    days:d.days.slice(),
+    days:obOrderedDays(d.days),
     struggles:obCodes(d),
     strugglesDeclared:d.strugglesDeclared.slice(),
     declaredAt:new Date().toISOString()
   };
 }
 function obDraftFromProfile(p){
+  const s=(typeof D!=='undefined'&&D&&D.settings)||{};
+  const dt=obInitialDaysAndTimes(p);
   return {
     examDate:p.examDate||'',
     targetGrade:p.targetGrade||'B',
     skills:Object.assign({rue:3,w:3,l:3,sp:3},p.skills||{}),
     hoursWeek:Number(p.hoursWeek)||6,
-    days:(Array.isArray(p.days)&&p.days.length)?p.days.slice():obDefaultDays(),
+    days:dt.days,
+    dayTimes:dt.dayTimes,
+    rotationMode:normalizeRotationMode(s.rotationMode),
+    itemsPerSession:normalizeItemsPerSession(s.itemsPerSession),
     strugglesDeclared:(Array.isArray(p.strugglesDeclared)?p.strugglesDeclared:[]).slice()
   };
 }
@@ -7197,23 +7293,82 @@ function obDayShortLabel(day){
   const i=OB_DAY_INDEX[day];
   return i==null?day:dayShort(i);
 }
+function obDraftSchedule(d){
+  d=d||OB.draft||obDefaultDraft();
+  return obOrderedDays(d.days).map(k=>({
+    day:OB_DAY_TO_JS[k],
+    time:(d.dayTimes&&obIsValidTime(d.dayTimes[k]))?d.dayTimes[k]:''
+  }));
+}
 function obPlanFor(prof){
-  return buildWeeklyPlan(Object.assign({},D,{profile:prof}));
+  const d=OB.draft||obDefaultDraft();
+  const sched=obDraftSchedule(d);
+  const s=Object.assign({},(typeof D!=='undefined'&&D&&D.settings)||{}, {
+    schedule:sched,
+    sessions:sched,
+    rotationMode:normalizeRotationMode(d.rotationMode),
+    itemsPerSession:normalizeItemsPerSession(d.itemsPerSession)
+  });
+  return buildWeeklyPlan(Object.assign({},D,{profile:prof,settings:s}));
+}
+function obPreviewSlotLabel(sl){
+  if(!sl)return '';
+  if(sl.section)return FULL_SECTION_LABEL[sl.type]||t('ob_type_'+sl.type);
+  if(Array.isArray(sl.units)&&sl.units.length)return sl.units.map(queueUnitLabel).join(' · ');
+  const part=sl.part!=null?' · '+t('ob_part',{n:sl.part}):'';
+  return t('ob_type_'+sl.type)+part;
 }
 function obPlanRowsHtml(plan){
   if(!plan||!plan.slots||!plan.slots.length)return `<div class="ob-plan-empty">${t('ob_plan_none')}</div>`;
   return plan.slots.map(sl=>{
-    const part=sl.part!=null?' · '+t('ob_part',{n:sl.part}):'';
-    return `<div class="ob-preview-row"><span class="t">${obDayShortLabel(sl.day)} · ${t('ob_type_'+sl.type)}${part}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
+    const when=sl.time?' '+esc(sl.time):'';
+    return `<div class="ob-preview-row" data-day="${esc(sl.day)}" data-time="${esc(sl.time||'')}" data-type="${esc(sl.type)}" data-min="${sl.min}"><span class="t">${esc(obDayShortLabel(sl.day))}${when} · ${esc(obPreviewSlotLabel(sl))}</span><span class="m">${sl.min} min${sl.timed?' · '+t('ob_timed'):''}</span></div>`;
   }).join('');
 }
 function obPlanSummaryHtml(plan){
   const slots=(plan&&plan.slots)||[];
   if(!slots.length)return '';
-  const min=Math.min.apply(null,slots.map(sl=>Number(sl.min)||0));
-  const total=slots.reduce((a,sl)=>a+(Number(sl.min)||0),0);
-  return `<span class="ob-summary-pill">${t('ob_plan_sessions',{n:slots.length,min:min})}</span>
+  const mins=slots.map(sl=>Number(sl.min)||0);
+  const min=Math.min.apply(null,mins);
+  const max=Math.max.apply(null,mins);
+  const total=mins.reduce((a,b)=>a+b,0);
+  const sessPill=min===max
+    ?t('ob_plan_sessions',{n:slots.length,min:min})
+    :t('ob_plan_sessions_range',{n:slots.length,min:min,max:max});
+  return `<span class="ob-summary-pill">${sessPill}</span>
     <span class="ob-summary-pill">${t('ob_plan_total',{total:total})}</span>`;
+}
+function obDayTimesHtml(){
+  const d=OB.draft||obDefaultDraft();
+  const days=obOrderedDays(d.days);
+  if(!days.length)return '';
+  return `<div class="ob-field-label" style="margin-top:10px">${t('ob_day_times_label')}</div>`+
+    days.map(k=>{
+      const val=(d.dayTimes&&d.dayTimes[k])||'';
+      const label=dayFull(OB_DAY_TO_JS[k]);
+      return `<div class="ob-time-row" data-day="${k}">
+        <label for="obTime_${k}">${esc(label)}</label>
+        <input type="time" id="obTime_${k}" data-day="${k}" value="${esc(val)}" oninput="obSetDayTime('${k}',this.value)" onchange="obSetDayTime('${k}',this.value)">
+      </div>`;
+    }).join('');
+}
+function obDuplicateTimeWarning(days,dayTimes){
+  const seen=new Set();
+  for(const k of days){
+    const tVal=dayTimes&&dayTimes[k];
+    if(!obIsValidTime(tVal))continue;
+    if(seen.has(tVal))return true;
+    seen.add(tVal);
+  }
+  return false;
+}
+function obUpdateTimeWarning(){
+  const el=document.getElementById('obTimeWarn');
+  if(!el)return;
+  const d=OB.draft||obDefaultDraft();
+  const warn=obDuplicateTimeWarning(obOrderedDays(d.days),d.dayTimes);
+  el.textContent=warn?t('ob_warn_same_time'):'';
+  el.style.display=warn?'':'none';
 }
 function obAcctUnitLabel(w){
   if(w==='month')return t('ob_acct_unit_month');
@@ -7392,6 +7547,9 @@ function obStepHtml(){
   }
   const prof=obDraftProfile();
   const plan=obPlanFor(prof);
+  const mode=normalizeRotationMode(d.rotationMode);
+  const items=normalizeItemsPerSession(d.itemsPerSession);
+  const dupWarn=obDuplicateTimeWarning(obOrderedDays(d.days),d.dayTimes);
   return `<h2 class="ob-title" id="obTitle">${t('ob_plan_title')}</h2>
     <p class="ob-body">${t('ob_plan_body')}</p>
     <div class="ob-summary" id="obPlanSummary">${obPlanSummaryHtml(plan)}</div>
@@ -7402,7 +7560,35 @@ function obStepHtml(){
     <div class="ob-field"><span class="ob-field-label" id="obDaysLbl">${t('ob_days')}</span>
       <div class="ob-day-chips" role="group" aria-labelledby="obDaysLbl">${OB_DAYS.map(([k])=>`
         <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay('${k}')">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
-      </div></div>
+      </div>
+      <div class="ob-day-times" id="obDayTimes">${obDayTimesHtml()}</div>
+      <div class="ob-warn" id="obTimeWarn" role="status" style="${dupWarn?'':'display:none'}">${dupWarn?esc(t('ob_warn_same_time')):''}</div>
+    </div>
+    <fieldset class="ob-field ob-fieldset">
+      <legend class="ob-field-label">${t('ob_rotation_label')}</legend>
+      <div class="ob-radio-cards ob-rot-cards">
+        <label class="ob-radio-card ob-rot-card">
+          <input type="radio" name="obRotationMode" value="by-part" ${mode==='by-part'?'checked':''} onchange="obSetRotationMode(this.value)">
+          <span class="ob-rot-copy">
+            <span class="ob-rot-title">${t('ob_rot_by_part_title')}</span>
+            <span class="ob-rot-desc">${t('ob_rot_by_part_desc')}</span>
+          </span>
+        </label>
+        <label class="ob-radio-card ob-rot-card">
+          <input type="radio" name="obRotationMode" value="full-section" ${mode==='full-section'?'checked':''} onchange="obSetRotationMode(this.value)">
+          <span class="ob-rot-copy">
+            <span class="ob-rot-title">${t('ob_rot_full_title')}</span>
+            <span class="ob-rot-desc">${t('ob_rot_full_desc')}</span>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+    <div class="ob-field" id="obItemsField" style="${mode==='by-part'?'':'display:none'}">
+      <span class="ob-field-label" id="obItemsLbl">${t('ob_items_per_session')}</span>
+      <div class="ob-chips" role="group" aria-labelledby="obItemsLbl">${[1,2,3,4].map(n=>`
+        <button type="button" class="chip-btn" data-items="${n}" aria-pressed="${items===n}" onclick="obSetItemsPerSession(${n})">${n}</button>`).join('')}
+      </div>
+    </div>
     <div class="ob-plan-preview" id="obPlanPreview">${obPlanRowsHtml(plan)}</div>
     <p class="ob-note">${t('ob_plan_edit_hint')} ${t('ob_day_note')}</p>
     <p class="ob-error" id="obError" role="alert">${esc(OB.error||'')}</p>
@@ -7497,11 +7683,55 @@ function obSetHours(v){
   obRefreshPlan();
 }
 function obToggleDay(k){
-  const i=OB.draft.days.indexOf(k);
-  if(i>=0)OB.draft.days.splice(i,1);else OB.draft.days.push(k);
+  const d=OB.draft;
+  const i=d.days.indexOf(k);
+  if(i>=0){
+    d.days.splice(i,1);
+  }else{
+    d.days=obOrderedDays(d.days.concat([k]));
+    if(!d.dayTimes)d.dayTimes={};
+    if(!obIsValidTime(d.dayTimes[k])){
+      const sched=(typeof D!=='undefined'&&D&&D.settings)?storedSchedule(D.settings):null;
+      const hit=Array.isArray(sched)&&sched.find(sl=>scheduleDayKey(sl.day)===k&&obIsValidTime(sl.time));
+      if(hit){
+        d.dayTimes[k]=hit.time;
+      }else{
+        const used=new Set(d.days.filter(x=>x!==k).map(x=>d.dayTimes[x]).filter(obIsValidTime));
+        d.dayTimes[k]=obFallbackTimeForDay(k,used);
+      }
+    }
+  }
   const b=document.querySelector('.chip-btn[data-day="'+k+'"]');
   if(b)b.setAttribute('aria-pressed',String(i<0));
+  const dtEl=document.getElementById('obDayTimes');
+  if(dtEl)dtEl.innerHTML=obDayTimesHtml();
   OB.error='';
+  obShowError();
+  obUpdateTimeWarning();
+  obRefreshPlan();
+}
+function obSetDayTime(k,val){
+  const d=OB.draft;
+  if(!d.dayTimes)d.dayTimes={};
+  d.dayTimes[k]=val||'';
+  const inp=document.getElementById('obTime_'+k);
+  if(inp&&obIsValidTime(d.dayTimes[k]))inp.classList.remove('is-invalid');
+  OB.error='';
+  obShowError();
+  obUpdateTimeWarning();
+  obRefreshPlan();
+}
+function obSetRotationMode(val){
+  const mode=normalizeRotationMode(val);
+  OB.draft.rotationMode=mode;
+  const field=document.getElementById('obItemsField');
+  if(field)field.style.display=mode==='by-part'?'':'none';
+  obRefreshPlan();
+}
+function obSetItemsPerSession(n){
+  const per=normalizeItemsPerSession(n);
+  OB.draft.itemsPerSession=per;
+  document.querySelectorAll('.chip-btn[data-items]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.items===per)));
   obRefreshPlan();
 }
 function obRefreshPlan(){
@@ -7511,14 +7741,17 @@ function obRefreshPlan(){
   const prev=document.getElementById('obPlanPreview');
   if(prev)prev.innerHTML=obPlanRowsHtml(plan);
 }
-function obApplySchedule(prof){
-  const days=Array.isArray(prof.days)?prof.days:[];
+function obApplySchedule(prof,dayTimes){
+  const days=obOrderedDays(Array.isArray(prof.days)?prof.days:[]);
   if(!days.length)return;
   if(!D.settings)D.settings={};
-  if(storedSchedule(D.settings))return;
-  const times=['15:30','13:00','10:00','18:00','09:00','16:00','11:00'];
-  D.settings.schedule=days.map((k,i)=>({day:OB_DAY_TO_JS[k],time:times[i%times.length]}));
-  D.settings.sessions=D.settings.schedule;
+  if(!dayTimes&&storedSchedule(D.settings))return;
+  const sched=days.map((k,i)=>({
+    day:OB_DAY_TO_JS[k],
+    time:(dayTimes&&obIsValidTime(dayTimes[k]))?dayTimes[k]:SCHEDULE_TIMES[i%SCHEDULE_TIMES.length]
+  }));
+  D.settings.schedule=sched;
+  D.settings.sessions=sched;
 }
 function obStartDiagnostic(){
   OB.error='';
@@ -7556,8 +7789,31 @@ function obAfterDiagnostic(){
 function obAcceptPlan(){
   if(!OB.active)return;
   OB.error='';
+  const d=OB.draft||(OB.draft=obDefaultDraft());
+  if(!d.dayTimes)d.dayTimes={};
+  document.querySelectorAll('#obDayTimes input[data-day]').forEach(inp=>{
+    const k=inp.dataset.day;
+    if(k)d.dayTimes[k]=inp.value||'';
+  });
   const prof=obDraftProfile();
   if(!prof.days.length){OB.error=t('ob_error_day');obShowError();return}
+  let badInput=null;
+  for(const k of prof.days){
+    const inp=document.getElementById('obTime_'+k);
+    const val=d.dayTimes[k]||'';
+    if(!obIsValidTime(val)||(inp&&inp.validity&&!inp.validity.valid)){
+      if(inp)inp.classList.add('is-invalid');
+      if(!badInput)badInput=inp;
+    }else if(inp){
+      inp.classList.remove('is-invalid');
+    }
+  }
+  if(badInput||prof.days.some(k=>!obIsValidTime(d.dayTimes[k]||''))){
+    OB.error=t('ob_error_time');
+    obShowError();
+    if(badInput&&badInput.focus)badInput.focus();
+    return;
+  }
   const plan=obPlanFor(prof);
   prof.plan={
     generatedAt:new Date().toISOString(),
@@ -7567,7 +7823,10 @@ function obAcceptPlan(){
   };
   if(D.profile&&D.profile.planStepSeen)prof.planStepSeen=true;
   D.profile=prof;
-  obApplySchedule(prof);
+  if(!D.settings)D.settings={};
+  D.settings.rotationMode=normalizeRotationMode(d.rotationMode);
+  D.settings.itemsPerSession=normalizeItemsPerSession(d.itemsPerSession);
+  obApplySchedule(prof,d.dayTimes);
   if(OB.editing){
     save();
     refreshAll();
