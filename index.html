@@ -2078,6 +2078,21 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ob-day-chips{display:flex;gap:6px;flex-wrap:wrap}
 .ob-day-chips .chip-btn{min-width:52px;padding:8px 10px}
 .ob-note{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;margin:10px 0 0}
+.ob-acct-card{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-ctl);padding:14px;margin:4px 0 0}
+.ob-acct-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ob-acct-badge-neutral{background:var(--surface);color:var(--txt-2);border:1px solid var(--line)}
+.ob-acct-sub{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;margin:0 0 10px}
+.ob-acct-list{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ob-acct-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:var(--fs-sm)}
+.ob-acct-row .k{color:var(--txt-2);flex:0 1 auto;max-width:54%}
+.ob-acct-row .v{font-weight:600;color:var(--txt);text-align:right;flex:1 1 auto;min-width:0}
+.ob-acct-meta{font-size:var(--fs-xs);color:var(--txt-2);margin-top:10px;line-height:1.45}
+.ob-acct-upgrade{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-ctl);padding:12px 14px;margin-top:12px}
+.ob-acct-upgrade-h{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin:0 0 4px}
+.ob-acct-upgrade-sub{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;margin:0}
+.ob-acct-upgrade .ob-cta-row{margin-top:10px}
+.ob-acct-status{font-size:var(--fs-xs);color:var(--txt-2);min-height:16px;margin-top:8px}
+.ob-acct-status-ok{color:var(--ok-text);font-weight:600}
 .tour-spot{
   position:fixed;z-index:218;pointer-events:none;display:none;
   border:2px solid var(--acc);border-radius:12px;
@@ -2324,7 +2339,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button type="button" id="obLangEs" onclick="obSetLang('es')" aria-pressed="false">ES</button>
     </div>
     <div class="ob-progress" aria-hidden="true"><div class="ob-progress-fill" id="obProgressFill"></div></div>
-    <div class="ob-step-count tnum" id="obStepCount" aria-live="polite">1/4</div>
+    <div class="ob-step-count tnum" id="obStepCount" aria-live="polite">1/5</div>
     <div id="obStepBody"></div>
     <div class="ob-actions">
       <button type="button" class="btn gray" id="obBackBtn" onclick="obBack()" style="visibility:hidden" data-i18n="common_back">Back</button>
@@ -4551,6 +4566,34 @@ const I18N={
     ob_type_sp:'Speaking',
     ob_day_note:'The sessions appear in Today on the days you pick.',
     ob_error_day:'Pick at least one study day.',
+    ob_acct_title:'Your plan',
+    ob_acct_loading:'Checking your account plan…',
+    ob_acct_unavailable:'Your limits and plan are in Settings → Plan.',
+    ob_acct_badge_free:'Free',
+    ob_acct_badge_byo:'Your own key',
+    ob_acct_badge_pro:'Pro',
+    ob_acct_badge_owner:'Owner',
+    ob_acct_sub_free:'What your free account includes:',
+    ob_acct_sub_byo:'Unlimited with your own key. You pay your provider directly.',
+    ob_acct_sub_pro:'Your Pro plan is active.',
+    ob_acct_sub_owner:'Unlimited account.',
+    ob_acct_writing_label:'Writing Corrector',
+    ob_acct_speaking_label:'Speaking mocks',
+    ob_acct_pron_label:'Pronunciation',
+    ob_acct_unit_day:'day',
+    ob_acct_unit_week:'week',
+    ob_acct_unit_month:'month',
+    ob_acct_writing_val:'{n} per {unit}',
+    ob_acct_speaking_val_one:'{n} mock · {min} min per {unit}',
+    ob_acct_speaking_val_many:'{n} mocks · {min} min per {unit}',
+    ob_acct_byo_unlimited:'Unlimited (your key)',
+    ob_acct_pron_full:'Full',
+    ob_acct_pron_preview:'Preview',
+    ob_acct_no_card_no_ads:'No card required · No ads',
+    ob_acct_no_ads:'No ads',
+    ob_acct_upgrade_title:'Want higher limits?',
+    ob_acct_upgrade_sub:'Upgrade to Pro for higher monthly limits and full pronunciation.',
+    ob_acct_byo_btn:'Configure provider key',
     week_a:'Week A',
     week_b:'Week B',
     day_sunday:'Sunday',
@@ -5332,6 +5375,34 @@ const I18N={
     ob_type_sp:'Speaking',
     ob_day_note:'Las sesiones aparecen en Today los días que elijas.',
     ob_error_day:'Elegí al menos un día de estudio.',
+    ob_acct_title:'Tu plan',
+    ob_acct_loading:'Consultando tu plan…',
+    ob_acct_unavailable:'Tus límites y tu plan están en Settings → Plan.',
+    ob_acct_badge_free:'Gratis',
+    ob_acct_badge_byo:'Tu propia clave',
+    ob_acct_badge_pro:'Pro',
+    ob_acct_badge_owner:'Propietario',
+    ob_acct_sub_free:'Qué incluye tu cuenta gratis:',
+    ob_acct_sub_byo:'Ilimitado con tu propia clave. Le pagás directo a tu proveedor.',
+    ob_acct_sub_pro:'Tu plan Pro está activo.',
+    ob_acct_sub_owner:'Cuenta ilimitada.',
+    ob_acct_writing_label:'Writing Corrector',
+    ob_acct_speaking_label:'Simulacros de speaking',
+    ob_acct_pron_label:'Pronunciación',
+    ob_acct_unit_day:'día',
+    ob_acct_unit_week:'semana',
+    ob_acct_unit_month:'mes',
+    ob_acct_writing_val:'{n} por {unit}',
+    ob_acct_speaking_val_one:'{n} simulacro · {min} min por {unit}',
+    ob_acct_speaking_val_many:'{n} simulacros · {min} min por {unit}',
+    ob_acct_byo_unlimited:'Ilimitado (tu propia clave)',
+    ob_acct_pron_full:'Completa',
+    ob_acct_pron_preview:'Vista previa',
+    ob_acct_no_card_no_ads:'Sin tarjeta · Sin anuncios',
+    ob_acct_no_ads:'Sin anuncios',
+    ob_acct_upgrade_title:'¿Querés más margen?',
+    ob_acct_upgrade_sub:'Pasá a Pro para tener límites mensuales más altos y pronunciación completa.',
+    ob_acct_byo_btn:'Configurar clave del proveedor',
     week_a:'Semana A',
     week_b:'Semana B',
     day_sunday:'Domingo',
@@ -6044,8 +6115,8 @@ const SETTINGS_DEFAULT={
    ever sent and the app behaves exactly the same.
    ===================================================================== */
 const TEV_VER='1.0.0';
-const TEV_NAMES=['app_open','view_change','onboarding_step','onboarding_done','onboarding_skip','quicklog_open','quicklog_save','session_save','diag_start','diag_finish','plan_generate','ai_request','ai_success','ai_error','ai_blocked','theme_toggle','export_data','delete_account','login','register','js_error','fetch_error','slow_view'];
-const TEV_PROPS=['view','part','kind','ms','count','ok','code','step','theme','ver','message_trunc','stack_hash','status','endpoint'];
+const TEV_NAMES=['app_open','view_change','onboarding_step','onboarding_plan_step','onboarding_done','onboarding_skip','quicklog_open','quicklog_save','session_save','diag_start','diag_finish','plan_generate','ai_request','ai_success','ai_error','ai_blocked','theme_toggle','export_data','delete_account','login','register','js_error','fetch_error','slow_view'];
+const TEV_PROPS=['view','part','kind','ms','count','ok','code','step','plan','theme','ver','message_trunc','stack_hash','status','endpoint'];
 const TEV_PROP_MAX=64;
 const TEV_MSG_MAX=120;
 const TEV_FLUSH_MS=10000;
@@ -6617,14 +6688,22 @@ async function doDeleteAccount(){
 }
 
 /* ---------- ONBOARDING (mandatory setup + feature tour) ----------
-   New accounts must finish four steps before they can use the app:
+   New accounts must finish five steps before they can use the app:
    1) exam date + target grade, 2) self-assessment of the four skills,
-   3) the 10-minute diagnostic, 4) the generated weekly plan.
+   3) the 10-minute diagnostic, 4) the generated weekly plan,
+   6) account plan & limits ("Your plan", displayed as 5/5).
+   D.onboardStep mapping:
+   1..4 = intake/diag/study-plan steps; 6 = account plan step (5/5);
+   5 = plan step completed / in tour (when !D.onboarded && profile.planStepSeen)
+       or onboarding finished (D.onboarded===true).
+   Migration: legacy onboardStep===5 && !D.onboarded (without planStepSeen)
+   maps into step 6 before starting the tour; already-onboarded users never
+   see step 6.
    Steps 1-2 save D.profile incrementally. Step 3 saves D.onboardStep=3
    before handing over to the diagnostic view; finishDiag() calls
    obAfterDiagnostic() so the overlay reopens at step 4. The plan comes
    from buildWeeklyPlan(D) and a snapshot is stored in D.profile.plan.
-   Only then does the guided tour start; when it ends D.onboarded=true.
+   Only after step 6 does the guided tour start; when it ends D.onboarded=true.
    There is no skip control and Escape intentionally does nothing.
    Every transition saves D.onboardStep, so a closed tab resumes where
    it stopped. */
@@ -6633,8 +6712,8 @@ const OB_DAYS=[['mon','Mon'],['tue','Tue'],['wed','Wed'],['thu','Thu'],['fri','F
 const OB_SKILLS=[['rue','Reading & Use of English'],['w','Writing'],['l','Listening'],['sp','Speaking']];
 const OB_DAY_TO_JS={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
 const OB_DAY_INDEX={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
-const OB_TOTAL=4;
-var OB={step:1,active:false,editing:false,draft:null,opener:null,awaitDiag:false,error:''};
+const OB_TOTAL=5;
+var OB={step:1,active:false,editing:false,draft:null,opener:null,awaitDiag:false,error:'',planReqId:0};
 function obDayKey(jsDay){
   const hit=OB_DAYS.find(([k])=>OB_DAY_TO_JS[k]===jsDay);
   return hit?hit[0]:'mon';
@@ -6677,14 +6756,24 @@ function obDraftFromProfile(p){
   };
 }
 function obDisplayIndex(){
-  if(!OB.editing)return OB.step;
-  return OB.step<=2?OB.step:3;
+  if(OB.editing)return OB.step<=2?OB.step:3;
+  return OB.step===6?5:OB.step;
 }
 function obDisplayTotal(){return OB.editing?3:OB_TOTAL}
 function maybeStartTourFromStep(){
   hideOnboarding();
   OB.active=false;
   setTimeout(()=>startTour(),250);
+}
+function obResolveStep(rawStep){
+  /* Mapping: 5 && !D.onboarded && !planStepSeen -> 6 (account plan step before tour).
+     5 && (D.onboarded || planStepSeen) -> tour/done. */
+  const s=Number(rawStep)||1;
+  if(s===5){
+    if(D&&!D.onboarded&&!(D.profile&&D.profile.planStepSeen))return 6;
+    return 5;
+  }
+  return s;
 }
 function showOnboarding(edit){
   const ov=document.getElementById('onboardingOverlay');
@@ -6695,9 +6784,9 @@ function showOnboarding(edit){
   OB.opener=document.activeElement;
   const p=(typeof D!=='undefined'&&D&&D.profile)||null;
   OB.draft=p?obDraftFromProfile(p):obDefaultDraft();
-  let step=edit?1:(Number(D&&D.onboardStep)||1);
-  if(step>=5&&!edit){maybeStartTourFromStep();return}
-  if(step<1||step>OB_TOTAL)step=1;
+  let step=edit?1:obResolveStep(D&&D.onboardStep);
+  if(!edit&&(step===5||step>6)){maybeStartTourFromStep();return}
+  if(step<1||(step>4&&step!==6))step=1;
   if(step===3&&D&&D.diag)step=4;
   if(step===4&&!p&&!(D&&D.diag))step=1;
   OB.step=step;
@@ -6740,8 +6829,139 @@ function obPlanSummaryHtml(plan){
   return `<span class="ob-summary-pill">${t('ob_plan_sessions',{n:slots.length,min:min})}</span>
     <span class="ob-summary-pill">${t('ob_plan_total',{total:total})}</span>`;
 }
+function obAcctUnitLabel(w){
+  if(w==='month')return t('ob_acct_unit_month');
+  if(w==='week')return t('ob_acct_unit_week');
+  return t('ob_acct_unit_day');
+}
+function obEffectiveAccountPlan(p){
+  if(!p)return 'unavailable';
+  if(p.plan==='owner'||p.plan==='pro')return p.plan;
+  if(p.plan==='byo'||loadByo().key)return 'byo';
+  return 'free';
+}
+function obToggleCodeBox(){
+  const wrap=document.getElementById('obPlanCodeWrap');
+  const btn=document.getElementById('obHaveCodeBtn');
+  if(!wrap)return;
+  const open=wrap.style.display==='none';
+  wrap.style.display=open?'':'none';
+  if(btn)btn.setAttribute('aria-expanded',String(open));
+  if(open){
+    const inp=document.getElementById('obPlanCode');
+    if(inp)inp.focus();
+  }
+}
+function obAccountRowsHtml(p,kind){
+  const lim=(p&&p.limits)||{};
+  const wLim=lim.writing;
+  const sLim=lim.speaking;
+  let wVal='—',sVal='—';
+  if(kind==='owner'){
+    wVal=t('license_unlimited');
+    sVal=t('license_unlimited');
+  }else if(kind==='byo'){
+    wVal=t('ob_acct_byo_unlimited');
+    sVal=t('ob_acct_byo_unlimited');
+  }else{
+    if(wLim&&typeof wLim.limit==='number'){
+      wVal=t('ob_acct_writing_val',{n:wLim.limit,unit:obAcctUnitLabel(wLim.window)});
+    }
+    if(sLim&&typeof sLim.mocks==='number'){
+      const sk=sLim.mocks===1?'ob_acct_speaking_val_one':'ob_acct_speaking_val_many';
+      sVal=t(sk,{n:sLim.mocks,min:sLim.minutes,unit:obAcctUnitLabel(sLim.window)});
+    }
+  }
+  const pron=lim.pronunciation==='full'?t('ob_acct_pron_full'):(lim.pronunciation?t('ob_acct_pron_preview'):'—');
+  return `<div class="ob-acct-list">
+    <div class="ob-acct-row"><span class="k">${esc(t('ob_acct_writing_label'))}</span><span class="v tnum">${esc(wVal)}</span></div>
+    <div class="ob-acct-row"><span class="k">${esc(t('ob_acct_speaking_label'))}</span><span class="v tnum">${esc(sVal)}</span></div>
+    <div class="ob-acct-row"><span class="k">${esc(t('ob_acct_pron_label'))}</span><span class="v">${esc(pron)}</span></div>
+  </div>`;
+}
+function obRenderAccountPlanBody(p,statusNote){
+  const el=document.getElementById('obAccountPlanBody');
+  if(!el)return;
+  if(!p){
+    el.innerHTML=`<div class="ob-diag-box"><p class="ob-body" style="margin:0">${esc(t('ob_acct_unavailable'))}</p></div>`;
+    return;
+  }
+  const kind=obEffectiveAccountPlan(p);
+  const badgeMap={
+    free:t('ob_acct_badge_free'),
+    byo:t('ob_acct_badge_byo'),
+    pro:t('ob_acct_badge_pro'),
+    owner:t('ob_acct_badge_owner')
+  };
+  const subMap={
+    free:t('ob_acct_sub_free'),
+    byo:t('ob_acct_sub_byo'),
+    pro:t('ob_acct_sub_pro'),
+    owner:t('ob_acct_sub_owner')
+  };
+  const badgeCls=kind==='pro'||kind==='owner'?'badge ok':(kind==='byo'?'badge fri':'badge ob-acct-badge-neutral');
+  const usage=p.usage||{};
+  const when=usage.reset_at||p.reset_at;
+  let meta='';
+  if(kind==='pro'){
+    const parts=[];
+    if(when)parts.push(t('license_reset',{date:planDate(when)}));
+    parts.push(t('ob_acct_no_ads'));
+    meta=`<div class="ob-acct-meta">${esc(parts.join(' · '))}</div>`;
+  }else if(kind==='free'||kind==='byo'){
+    meta=`<div class="ob-acct-meta">${esc(t('ob_acct_no_card_no_ads'))}</div>`;
+  }else if(kind==='owner'){
+    meta=`<div class="ob-acct-meta">${esc(t('ob_acct_no_ads'))}</div>`;
+  }
+  let extra='';
+  if(kind==='free'){
+    extra=`<div class="ob-acct-upgrade">
+      <div class="ob-acct-upgrade-h">${esc(t('ob_acct_upgrade_title'))}</div>
+      <p class="ob-acct-upgrade-sub">${esc(t('ob_acct_upgrade_sub'))}</p>
+      <div class="ob-cta-row">
+        <button type="button" class="btn sm" id="obPlanSubscribeBtn" onclick="startBillingCheckout({btnId:'obPlanSubscribeBtn',statusId:'obPlanBillingStatus'})">${esc(t('billing_subscribe'))}</button>
+        <button type="button" class="btn sm gray" id="obHaveCodeBtn" aria-expanded="false" onclick="obToggleCodeBox()">${esc(t('license_have_code'))}</button>
+      </div>
+      <div id="obPlanCodeWrap" style="display:none">
+        <div class="plan-code-row">
+          <div>
+            <label class="plan-usage-label" for="obPlanCode">${esc(t('license_code_label'))}</label>
+            <input type="text" id="obPlanCode" autocomplete="off" spellcheck="false" placeholder="${esc(t('license_code_placeholder'))}" aria-label="${esc(t('license_code_label'))}">
+          </div>
+          <button type="button" class="btn sm ok" id="obPlanRedeemBtn" onclick="redeemPlanCode({inputId:'obPlanCode',statusId:'obPlanRedeemStatus',btnId:'obPlanRedeemBtn'})">${esc(t('license_redeem'))}</button>
+        </div>
+        <div id="obPlanRedeemStatus" class="ob-acct-status" role="status"></div>
+      </div>
+      <div id="obPlanBillingStatus" class="ob-acct-status" role="status"></div>
+    </div>`;
+  }else if(kind==='byo'){
+    extra=`<div class="ob-cta-row"><button type="button" class="btn sm gray" id="obByoManageBtn" onclick="focusByoCard()">${esc(t('ob_acct_byo_btn'))}</button></div>`;
+  }else if(kind==='pro'&&statusNote){
+    extra=`<div id="obPlanRedeemStatus" class="ob-acct-status ob-acct-status-ok" role="status">${esc(statusNote)}</div>`;
+  }
+  el.innerHTML=`<div class="ob-acct-card">
+    <div class="ob-acct-head"><span class="${badgeCls}">${esc(badgeMap[kind]||kind)}</span></div>
+    <p class="ob-acct-sub">${esc(subMap[kind]||'')}</p>
+    ${obAccountRowsHtml(p,kind)}
+    ${meta}
+  </div>${extra}`;
+}
+async function obLoadAccountPlan(){
+  const reqId=(OB.planReqId=(OB.planReqId||0)+1);
+  let timer=null;
+  const timedOut=new Promise(res=>{timer=setTimeout(()=>res(null),3000)});
+  const plan=await Promise.race([loadPlan(),timedOut]);
+  if(timer){clearTimeout(timer);timer=null}
+  if(!OB.active||OB.step!==6||OB.planReqId!==reqId)return;
+  obRenderAccountPlanBody(plan);
+  track('onboarding_plan_step',{plan:obEffectiveAccountPlan(plan)});
+}
 function obStepHtml(){
   const d=OB.draft;
+  if(OB.step===6){
+    return `<h2 class="ob-title" id="obTitle">${t('ob_acct_title')}</h2>
+      <div id="obAccountPlanBody"><p class="ob-body">${t('ob_acct_loading')}</p></div>`;
+  }
   if(OB.step===1){
     return `<h2 class="ob-title" id="obTitle">${t('ob_goal_title')}</h2>
       <p class="ob-body">${t('ob_goal_body')}</p>
@@ -6824,6 +7044,7 @@ function obRender(){
   const f=body.querySelector('input,select,button')||next;
   if(f&&f.focus)f.focus();
   track('onboarding_step',{step:OB.step});
+  if(OB.step===6)obLoadAccountPlan();
 }
 function obShowError(){
   const el=document.getElementById('obError');
@@ -6853,6 +7074,16 @@ function obNext(){
   }else if(OB.step===2){
     obPersistDraft();
     OB.step=OB.editing?4:3;
+  }else if(OB.step===6){
+    if(!D.profile)D.profile=obDraftProfile();
+    D.profile.planStepSeen=true;
+    D.onboardStep=5;
+    D.onboarded=false;
+    save();
+    hideOnboarding();
+    OB.opener=null;
+    setTimeout(()=>startTour(),200);
+    return;
   }else return;
   D.onboardStep=OB.step;
   save();
@@ -6861,7 +7092,11 @@ function obNext(){
 function obBack(){
   if(!OB.active||OB.step<=1)return;
   OB.error='';
-  OB.step=OB.editing?(OB.step===4?2:OB.step-1):OB.step-1;
+  if(OB.step===6){
+    OB.step=4;
+  }else{
+    OB.step=OB.editing?(OB.step===4?2:OB.step-1):OB.step-1;
+  }
   D.onboardStep=OB.step;
   save();
   obRender();
@@ -6944,6 +7179,7 @@ function obAcceptPlan(){
     days:prof.days.slice(),
     slots:(plan.slots||[]).map(sl=>({day:sl.day,type:sl.type,part:sl.part,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
   };
+  if(D.profile&&D.profile.planStepSeen)prof.planStepSeen=true;
   D.profile=prof;
   obApplySchedule(prof);
   if(OB.editing){
@@ -6952,14 +7188,13 @@ function obAcceptPlan(){
     obClose();
     return;
   }
-  D.onboardStep=5;
+  D.onboardStep=6;
   D.onboarded=false;
   save();
   refreshAll();
-  hideOnboarding();
-  OB.opener=null;
   track('onboarding_plan_accepted');
-  setTimeout(()=>startTour(),200);
+  OB.step=6;
+  obRender();
 }
 function obClose(){
   hideOnboarding();
@@ -6976,6 +7211,11 @@ function obFocusable(root){
 }
 document.addEventListener('keydown',e=>{
   if(!OB.active)return;
+  const sm=document.getElementById('settingsModal');
+  if(sm&&sm.style.display==='flex'){
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeSettingsModal()}
+    return;
+  }
   // Escape never cancels the mandatory setup; only Back moves backwards.
   if(e.key==='Escape'){e.preventDefault();e.stopPropagation();return}
   if(e.key==='Enter'&&e.target&&!e.target.closest('button')&&!e.target.closest('a')&&!e.target.closest('input')&&!e.target.closest('select')&&!e.target.closest('textarea')){
@@ -6990,6 +7230,8 @@ document.addEventListener('keydown',e=>{
   }
 });
 document.addEventListener('focusin',e=>{
+  const sm=document.getElementById('settingsModal');
+  if(sm&&sm.style.display==='flex')return;
   if(OB.active&&!e.target.closest('#obDialog')){
     const f=obFocusable(document.getElementById('obDialog'));
     if(f[0])f[0].focus();
@@ -7132,12 +7374,15 @@ function maybeStartOnboarding(){
   let legacy=null;
   try{legacy=localStorage.getItem('ob_'+USER.id)}catch(e){}
   if(legacy){D.onboarded=true;save();return}
+  const step=obResolveStep(D.onboardStep);
+  if(step===6){showOnboarding();return}
+  if(step>=5){maybeStartTourFromStep();return}
   /* Anyone with history, a diagnostic or a declared profile went through setup
-     before this screen existed. Walling them out would look like data loss. */
-  if((D.log&&D.log.length)||D.diag||(D.profile&&D.profile.declaredAt)){
+     before this screen existed (onboardStep===1). Mid-wizard users (step>=2)
+     resume at their saved step instead of skipping setup. */
+  if(step===1&&((D.log&&D.log.length)||D.diag||(D.profile&&D.profile.declaredAt))){
     D.onboarded=true;save();return;
   }
-  if((Number(D.onboardStep)||1)>=5){maybeStartTourFromStep();return}
   showOnboarding();
 }
 
@@ -7345,6 +7590,8 @@ function syncPull(){
           localStorage.setItem(userKey(),JSON.stringify(D));
           applyTimers();
           refreshAll();
+          if(D.onboarded&&OB.active&&!OB.editing)hideOnboarding();
+          else if(!D.onboarded&&!OB.editing&&OB.active&&OB.step===1&&Number(D.onboardStep)>1)maybeStartOnboarding();
         }
         syncStatus('ok');
         return d;
@@ -13163,9 +13410,10 @@ function renderBillingCard(){
     st.textContent='';
   }
 }
-async function startBillingCheckout(){
-  const st=document.getElementById('planBillingStatus');
-  const btn=document.getElementById('planSubscribeBtn');
+async function startBillingCheckout(opts){
+  const o=(opts&&typeof opts==='object')?opts:{};
+  const st=document.getElementById(o.statusId||'planBillingStatus');
+  const btn=document.getElementById(o.btnId||'planSubscribeBtn');
   if(btn)btn.disabled=true;
   if(st)st.textContent='…';
   try{
@@ -13218,15 +13466,17 @@ async function handleBillingReturn(){
       await loadPlan();
       const el=document.getElementById('planBillingStatus');
       if(el)el.textContent=t('billing_active');
+      if(OB.active&&OB.step===6)obRenderAccountPlanBody(PLAN_STATE,t('billing_active'));
       return;
     }
   }
   if(st)st.textContent=t('billing_pending');
 }
-async function redeemPlanCode(){
-  const input=document.getElementById('planCode');
-  const st=document.getElementById('planRedeemStatus');
-  const btn=document.getElementById('planRedeemBtn');
+async function redeemPlanCode(opts){
+  const o=(opts&&typeof opts==='object')?opts:{};
+  const input=document.getElementById(o.inputId||'planCode');
+  const st=document.getElementById(o.statusId||'planRedeemStatus');
+  const btn=document.getElementById(o.btnId||'planRedeemBtn');
   const code=input?input.value.trim():'';
   if(!code){if(st)st.textContent=t('license_code_needed');return;}
   if(btn)btn.disabled=true;
@@ -13238,9 +13488,11 @@ async function redeemPlanCode(){
     if(r.status===401){sessionExpired();return;}
     if(r.ok&&j&&j.plan){
       if(input)input.value='';
-      if(st)st.textContent=t('license_redeem_ok',{date:planDate(j.until)});
+      const okMsg=t('license_redeem_ok',{date:planDate(j.until)});
+      if(st)st.textContent=okMsg;
       await loadPlan();
       refreshAll();
+      if(OB.active&&OB.step===6)obRenderAccountPlanBody(PLAN_STATE,okMsg);
       return;
     }
     if(st){
@@ -13275,6 +13527,7 @@ function openSettingsModal(){
 function closeSettingsModal(){
   const ov=document.getElementById('settingsModal');
   if(ov)ov.style.display='none';
+  if(OB.active&&OB.step===6)obLoadAccountPlan();
 }
 function focusByoCard(){
   closePlanLimit();
