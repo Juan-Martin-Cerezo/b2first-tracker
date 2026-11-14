@@ -1,4 +1,4 @@
-"""Tests of the onboarding intake wizard (4 steps) and its outputs:
+"""Tests of the onboarding intake wizard (5 steps) and its outputs:
 
 - the wizard (dialog, focus trap, Back/Continue, Esc) and D.profile
 - the weekly plan (the rotation queue driven by the schedule and the log:
@@ -69,7 +69,7 @@ with sync_playwright() as p:
     pg.evaluate("u => localStorage.setItem('b2first_user', JSON.stringify(u))", user)
     pg.reload(wait_until="networkidle")
 
-    # 1. First visit -> wizard visible at step 1/4
+    # 1. First visit -> wizard visible at step 1/5
     pg.wait_for_selector("#onboardingOverlay", state="visible", timeout=5000)
     res1 = pg.evaluate(
         """() => ({
@@ -78,7 +78,7 @@ with sync_playwright() as p:
     })"""
     )
     assert res1["visible"] is True, f"Wizard not visible on first visit: {res1}"
-    assert res1["step"] == "1/4", f"Expected step 1/4, got {res1}"
+    assert res1["step"] == "1/5", f"Expected step 1/5, got {res1}"
     out["1_primera_visita"] = f"OK: wizard visible, step {res1['step']}"
 
     # 2. Initial focus is inside the dialog
@@ -88,7 +88,7 @@ with sync_playwright() as p:
     assert res2 is True, "Initial focus is not inside #obDialog"
     out["2_foco_inicial"] = "OK: focus inside #obDialog"
 
-    # 3. Continue advances to 2/4; Back returns to 1/4 (step 1 requires a date)
+    # 3. Continue advances to 2/5; Back returns to 1/5 (step 1 requires a date)
     pg.fill("#obExamDate", "2027-06-12")
     pg.click("#obNextBtn")
     pg.wait_for_timeout(100)
@@ -96,11 +96,11 @@ with sync_playwright() as p:
     pg.click("#obBackBtn")
     pg.wait_for_timeout(100)
     step_b = pg.text_content("#obStepCount").strip()
-    assert step_a == "2/4", f"Continue did not advance: {step_a}"
-    assert step_b == "1/4", f"Back did not return: {step_b}"
-    out["3_continue_back"] = "OK: Continue -> 2/4, Back -> 1/4"
+    assert step_a == "2/5", f"Continue did not advance: {step_a}"
+    assert step_b == "1/5", f"Back did not return: {step_b}"
+    out["3_continue_back"] = "OK: Continue -> 2/5, Back -> 1/5"
 
-    # 4. Complete the 4 steps -> D.profile with all the fields + onboarded
+    # 4. Complete the 5 steps -> D.profile with all the fields + onboarded
     pg.fill("#obExamDate", "2027-06-12")
     pg.click("input[name='obGrade'][value='A']")
     pg.click("#obNextBtn")  # 1 -> 2 (skills)
@@ -118,7 +118,7 @@ with sync_playwright() as p:
     )
     pg.click("#obStepBody .btn.ok")  # -> plan step
     pg.wait_for_timeout(150)
-    assert pg.text_content("#obStepCount").strip() == "4/4", "Did not reach the plan step"
+    assert pg.text_content("#obStepCount").strip() == "4/5", "Did not reach the plan step"
     # Choose 6 h/week and mon/wed/sat with the real chips.
     pg.click(".chip-btn[data-hours='6']")
     pg.evaluate(
@@ -137,9 +137,12 @@ with sync_playwright() as p:
         f"Plan preview has {preview_rows} rows, expected one per chosen day (3)"
     )
     pg.click("#obAcceptBtn")
+    pg.wait_for_timeout(200)
+    assert pg.text_content("#obStepCount").strip() == "5/5", "Did not reach the account plan step"
+    pg.click("#obNextBtn")
     pg.wait_for_timeout(350)
-    # Accepting starts the guided tour; finishing it is what marks the intake done.
-    assert pg.evaluate("TOUR.active === true"), "Accepting the plan did not start the tour"
+    # Continuing from step 5/5 starts the guided tour; finishing it marks the intake done.
+    assert pg.evaluate("TOUR.active === true"), "Continuing past account plan did not start the tour"
     pg.evaluate("endTour()")
     # Let the save that carries onboarded=true reach the server before reload.
     pg.wait_for_timeout(900)
@@ -364,13 +367,13 @@ with sync_playwright() as p:
         D.log = []; D.errs = []; save(); refreshAll();
         return {
             today: document.getElementById('recentList').textContent,
-            charts: document.getElementById('gEvol').textContent,
+            charts: document.getElementById('progChartsEmpty').textContent,
             errors: document.getElementById('errList').textContent
         };
     }"""
     )
     assert "Your first session takes 15 seconds" in res_e["today"], res_e["today"]
-    assert "Charts appear after your first session" in res_e["charts"], res_e["charts"]
+    assert "Your charts unlock after your first session" in res_e["charts"], res_e["charts"]
     assert "Tag a miss after a practice test" in res_e["errors"], res_e["errors"]
     out["empty_states"] = "OK: Today / Charts / Errors copy"
 
