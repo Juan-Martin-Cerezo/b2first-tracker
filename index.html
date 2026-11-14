@@ -2287,7 +2287,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   margin-bottom:var(--s3);
 }
 .more-sheet-title{font-size:var(--t-title);font-weight:600;color:var(--txt)}
-.more-sheet-close{flex:none;color:var(--txt)}
+.more-sheet-panel:focus{outline:0}
+.more-sheet-close{
+  flex:none;
+  display:grid;place-items:center;
+  width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);
+  min-width:44px;min-height:44px;padding:0;
+  background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-ctl);color:var(--txt-2);outline:0;
+}
+.more-sheet-close svg{display:block;width:18px;height:18px}
+.more-sheet-close:hover{background:var(--surface-2);color:var(--txt)}
+.more-sheet-close:focus{outline:0}
+.more-sheet-close:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .more-sheet-grid{
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);
 }
@@ -2310,7 +2322,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (max-width:768px){
   /* Main & card rhythm: compact 12px/16px multiples of 4, thumb clear above FAB + bottom nav */
   .content main{padding:var(--s3) var(--s3) calc(var(--s5) + 56px)}
-  footer{text-align:left;padding:var(--s3) 148px var(--s3) var(--s4)}
+  footer{text-align:center;padding:var(--s3) var(--s4) calc(var(--btn-h-tertiary) + 12px)}
   .page-head{margin-bottom:var(--s3);gap:var(--s2)}
   .card{padding:var(--s4);margin-bottom:var(--s3)}
   .stat-grid,.exam-select-grid,.grid-12{gap:var(--s3)}
@@ -2938,7 +2950,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   <!-- ============ MORE BOTTOM SHEET (mobile <= 768px) ============ -->
   <div id="moreSheet" class="more-sheet-overlay" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle" style="display:none">
-    <div class="more-sheet-panel">
+    <div class="more-sheet-panel" tabindex="-1">
       <div class="more-sheet-handle" aria-hidden="true"></div>
       <div class="more-sheet-head">
         <span class="more-sheet-title" id="moreSheetTitle" data-i18n="nav_more">More</span>
@@ -17473,8 +17485,8 @@ function openMoreSheet(){
   document.documentElement.classList.add('sheet-open');
   document.body.classList.add('sheet-open');
   if(moreBtn)moreBtn.setAttribute('aria-expanded','true');
-  const firstFocus=sheet.querySelector('.more-sheet-item.active, .more-sheet-item, #moreSheetClose');
-  if(firstFocus&&typeof firstFocus.focus==='function')firstFocus.focus();
+  const panel=sheet.querySelector('.more-sheet-panel')||sheet;
+  if(panel&&typeof panel.focus==='function')panel.focus();
 }
 function closeMoreSheet(restoreFocus){
   const sheet=document.getElementById('moreSheet');
@@ -17574,7 +17586,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
         });
       if(!focusables.length){e.preventDefault();return}
       const first=focusables[0],last=focusables[focusables.length-1];
-      if(!sheet.contains(document.activeElement)){
+      if(!sheet.contains(document.activeElement)||!focusables.includes(document.activeElement)){
         e.preventDefault();(e.shiftKey?last:first).focus();return;
       }
       if(e.shiftKey&&document.activeElement===first){
