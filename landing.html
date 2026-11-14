@@ -94,6 +94,14 @@
     0 0 0 1px var(--line),
     0 2px 4px -2px oklch(0.3 0.04 260 / 0.10),
     0 18px 40px -18px oklch(0.3 0.06 260 / 0.26);
+  --m-main-shadow:
+    inset 0 1px 0 var(--hi),
+    0 0 0 1px var(--line),
+    0 2px 8px -2px oklch(0.3 0.04 260 / 0.08);
+  --m-float-shadow:
+    inset 0 1px 0 var(--hi),
+    0 0 0 1px oklch(0 0 0 / 0.06),
+    0 12px 24px oklch(0 0 0 / 0.10);
   --img-outline: oklch(0 0 0 / 0.1);
 }
 :root[data-theme="dark"]{
@@ -125,6 +133,14 @@
     0 0 0 1px var(--line),
     0 2px 4px -2px oklch(0 0 0 / 0.40),
     0 24px 48px -24px oklch(0 0 0 / 0.70);
+  --m-main-shadow:
+    inset 0 1px 0 var(--hi),
+    0 0 0 1px var(--line),
+    0 4px 12px -4px oklch(0 0 0 / 0.35);
+  --m-float-shadow:
+    inset 0 1px 0 var(--hi),
+    0 0 0 1px oklch(1 0 0 / 0.14),
+    0 12px 24px oklch(0 0 0 / 0.45);
   --img-outline: oklch(1 0 0 / 0.1);
 }
 
@@ -149,7 +165,7 @@
   --fs-40: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
   --fs-56: clamp(2rem, 1.3rem + 3vw, 3.5rem);
   --fs-72: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
-  --fs-display: clamp(44px, 6.2vw, 84px);
+  --fs-display: clamp(36px, 5.4vw, 76px);
 
   /* radii: 10 controls / 16 cards / 999 pills */
   --r-ctl: 10px;
@@ -214,7 +230,7 @@ ul,ol{list-style:none}
 /* ---------- BUTTONS ---------- */
 .btn{
   position:relative;isolation:isolate;
-  display:inline-flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
   flex-shrink:0;min-height:48px;padding:0 22px;
   border:0;border-radius:var(--r-ctl);
   background:var(--acc);color:var(--on-acc);
@@ -227,7 +243,7 @@ ul,ol{list-style:none}
 /* hover = overlay opacity, so only opacity/transform ever animate */
 .btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:currentColor;opacity:0;transition:opacity var(--t-fast) var(--ease-out)}
 .btn:hover::after{opacity:0.10}
-.btn svg{width:16px;height:16px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
+.btn svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
 .btn:hover svg{transform:translateX(2px)}
 .btn:active{transform:scale(0.97)}
 .btn-secondary{background:var(--surface);color:var(--txt);box-shadow:var(--e1), inset 0 1px 0 var(--hi)}
@@ -255,7 +271,15 @@ ul,ol{list-style:none}
   border-radius:var(--r-ctl);color:var(--txt-2);font-size:var(--fs-14);font-weight:500;
 }
 .nav-links a:hover{color:var(--txt);background:var(--inset)}
-.nav-cta{margin-inline-start:var(--sp-2)}
+.nav-cta{
+  display:inline-flex;align-items:center;gap:6px;min-height:44px;
+  margin-inline-start:var(--sp-2);padding:0 var(--sp-2);border-radius:var(--r-ctl);
+  color:var(--acc-text);font:600 var(--fs-14)/1 var(--font);white-space:nowrap;flex-shrink:0;
+  transition:color var(--t-fast) var(--ease-out);
+}
+.nav-cta:hover{color:var(--txt)}
+.nav-cta svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
+.nav-cta:hover svg{transform:translateX(2px)}
 @media (max-width:767px){
   .nav-links{display:none}
   .nav-cta{margin-inline-start:auto}
@@ -272,15 +296,13 @@ ul,ol{list-style:none}
 .eb-n{color:var(--txt-3);font-variant-numeric:tabular-nums;letter-spacing:0.06em}
 .eb-rule{flex:none;width:24px;height:1px;background:var(--line-2)}
 h1{
-  font-size:var(--fs-display);line-height:1.02;letter-spacing:-0.03em;font-weight:650;
+  font-size:var(--fs-display);line-height:1.06;letter-spacing:-0.03em;font-weight:650;
   text-wrap:balance;margin-bottom:var(--sp-8);
 }
 .h1-em{color:var(--acc-text)}
-/* keep the first line to two words wherever 44px allows it (≥390px) */
-@media (min-width:390px){ .h1-l1{white-space:nowrap} }
 h2{font-size:var(--fs-56);line-height:1.04;letter-spacing:-0.03em;font-weight:640;max-width:18ch}
 h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
-.lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:52ch}
+.lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:46ch}
 .sec-head h2{margin-bottom:var(--sp-6)}
 .sec-lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:48ch}
 .prose p{font-size:var(--fs-16);line-height:1.7;color:var(--txt-2);max-width:60ch}
@@ -329,22 +351,21 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
 
 /* trust ribbon */
 .trust{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-4) var(--sp-6);
-  margin-top:clamp(48px, 6vw, 88px);padding-block:var(--sp-6);
+  margin-top:clamp(40px, 5vw, 72px);
   border-top:1px solid var(--line);
 }
-.badges{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--sp-2);padding-block:var(--sp-4)}
 .badges li{
-  display:inline-flex;align-items:center;gap:var(--sp-2);min-height:36px;padding:0 14px 0 12px;
+  display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px 0 12px;
   border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1), inset 0 1px 0 var(--hi);
-  font-size:var(--fs-14);font-weight:550;color:var(--txt);white-space:nowrap;
+  font-size:var(--fs-13);font-weight:550;color:var(--txt);white-space:nowrap;
 }
-.badges svg{width:16px;height:16px;color:var(--acc-text)}
+.badges svg{width:16px;height:16px;flex:none;color:var(--acc-text)}
 @media (max-width:767px){
   .badges{gap:6px}
-  .badges li{gap:6px;min-height:32px;padding:0 10px 0 9px;font-size:var(--fs-13)}
-  .badges svg{width:14px;height:14px}
+  .badges li{min-height:32px;padding:0 10px 0 9px}
 }
+.trust-foot{padding-block:var(--sp-2);border-top:1px solid var(--line)}
 .trust-src{
   display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;
   font-size:var(--fs-14);font-weight:550;color:var(--txt-2);
@@ -367,18 +388,18 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
 .m-card{
   position:relative;min-width:0;
   background:var(--surface);border-radius:var(--r-card);padding:20px;
-  box-shadow:inset 0 1px 0 var(--hi), var(--e2);
 }
-.m-main{z-index:1}
+.m-main{z-index:1;box-shadow:var(--m-main-shadow)}
 .m-float{
   z-index:2;margin-top:-12px;margin-inline-start:22%;
   transform:rotate(0.6deg);transform-origin:20% 0;
+  box-shadow:var(--m-float-shadow);
 }
-.m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2) var(--sp-3);margin-bottom:var(--sp-4)}
+.m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2) var(--sp-3);margin:2px 2px var(--sp-4) 0}
 .m-label{font-size:var(--fs-13);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);white-space:nowrap}
 .m-chip{
   display:inline-flex;align-items:center;min-height:26px;padding:0 10px;
-  border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);
+  border-radius:var(--r-ctl);background:var(--acc-soft);color:var(--acc-text);
   font-size:var(--fs-13);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 .m-plan{display:grid;gap:2px}
@@ -392,10 +413,10 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
 .m-plan .is-next .m-tick{box-shadow:inset 0 0 0 1.5px var(--acc)}
 .m-plan .is-next .m-tick::after{content:"";width:8px;height:8px;border-radius:var(--r-pill);background:var(--acc)}
 .m-task{min-width:0}
-.m-task b{display:block;font-size:var(--fs-16);font-weight:600;line-height:1.3;color:var(--txt)}
+.m-task b{display:block;font-size:0.9375rem;font-weight:600;line-height:1.3;color:var(--txt)}
 .m-task span{display:block;font-size:var(--fs-13);line-height:1.4;color:var(--txt-2)}
 .m-plan .is-done .m-task b{color:var(--txt-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
-.m-min{font-size:var(--fs-14);font-weight:600;line-height:1.3;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.m-min{font-size:var(--fs-13);font-weight:600;line-height:1.3;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .m-progress{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4)}
 .m-progress-label{flex:none;font-size:var(--fs-13);font-weight:600;color:var(--txt-2);font-variant-numeric:tabular-nums}
 .m-bar{flex:1;height:6px;border-radius:var(--r-pill);background:var(--inset);overflow:hidden}
@@ -734,7 +755,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
   *,*::before,*::after{transition-duration:0s !important;transition-delay:0s !important;animation:none !important}
   .m-float{margin-top:var(--sp-3);transform:none}
   .btn:active,.legal-links a:active,.lift:hover{transform:none}
-  .btn:hover svg,.trust-src:hover svg{transform:none}
+  .btn:hover svg,.nav-cta:hover svg,.trust-src:hover svg{transform:none}
 }
 </style>
 </head>
@@ -753,7 +774,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="btn sm nav-cta btn-ghost" id="navCta" href="/app">Open the app</a>
+    <a class="nav-cta" id="navCta" href="/app">Open the app<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
   </div>
 </header>
 
@@ -764,7 +785,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
       <div class="grid hero-grid">
         <div class="hero-copy">
           <p class="eyebrow"><span class="eb-n">FCE</span><span class="eb-rule" aria-hidden="true"></span>Cambridge B2 First · Self-study</p>
-          <h1 id="hero-title"><span class="h1-l1">Someone finally</span> marks&nbsp;<span class="h1-em">your writing.</span></h1>
+          <h1 id="hero-title">Someone finally marks your <span class="h1-em">writing.</span></h1>
           <p class="lede">B2 First Tracker is a study system for preparing the Cambridge B2 First alone. It marks your writing against the four Cambridge bands, decides what to practise today, and shows the progress you cannot see on your own.</p>
           <div class="hero-ctas">
             <a class="btn" id="heroCta" href="/app">Start practising — it’s free<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
@@ -818,11 +839,13 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
 
       <div class="trust">
         <ul class="badges" aria-label="Facts you can check">
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4L2 8l3.5 4M10.5 4L14 8l-3.5 4"/></svg>MIT licensed</li>
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="4.5" rx="1"/><rect x="2.5" y="9" width="11" height="4.5" rx="1"/><path d="M5 4.75h.01M5 11.25h.01"/></svg>Self-hostable</li>
-          <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="3.5" width="13" height="9" rx="1.5"/><path d="M1.5 6.5h13M2.5 13.5l11-11"/></svg>No card</li>
+          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="4" r="1.75"/><circle cx="5" cy="12" r="1.75"/><circle cx="11" cy="6" r="1.75"/><path d="M5 5.75v4.5M11 7.75c0 2.25-1.5 3-6 3"/></svg>MIT licensed</li>
+          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2.5" width="12" height="4.5" rx="1.25"/><rect x="2" y="9" width="12" height="4.5" rx="1.25"/><path d="M4.75 4.75h.01M4.75 11.25h.01"/></svg>Self-hostable</li>
+          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 6.5h12M2.5 13.5l11-11"/></svg>No card</li>
         </ul>
-        <a class="trust-src" href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Read the source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
+        <div class="trust-foot">
+          <a class="trust-src" href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Read the source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
+        </div>
       </div>
     </div>
   </section>
@@ -1110,7 +1133,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
     if(u&&u.id){
       var nav=document.getElementById('navCta');
       var hero=document.getElementById('heroCta');
-      if(nav)nav.textContent='Continue →';
+      if(nav)nav.firstChild.nodeValue='Continue';
       if(hero)hero.firstChild.nodeValue='Continue studying';
     }
   }catch(e){}
