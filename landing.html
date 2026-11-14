@@ -101,7 +101,7 @@
   --line: oklch(0.30 0.010 255);
   --line-strong: oklch(0.38 0.012 255);
   --txt: oklch(0.95 0.004 255);
-  --txt-2: oklch(0.75 0.010 255);
+  --txt-2: oklch(0.79 0.010 255);
   --acc: oklch(0.72 0.13 255);
   --acc-hover: oklch(0.77 0.12 255);
   --acc-press: oklch(0.81 0.10 255);
@@ -217,6 +217,9 @@ ul,ol{list-style:none}
 .btn-secondary{background:var(--card);color:var(--txt);border:1px solid var(--line-strong);box-shadow:var(--shadow-border)}
 .btn-secondary:hover{background:var(--card);color:var(--txt);box-shadow:var(--shadow-border-hover), 0 0 0 4px var(--acc-soft)}
 .btn-secondary:active{background:var(--inset);color:var(--txt)}
+.btn-ghost{background:transparent;color:var(--acc-text);border:1px solid var(--acc-line);box-shadow:none}
+.btn-ghost:hover{background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-line)}
+.btn-ghost:active{background:var(--acc-soft);color:var(--acc-text)}
 .btn:disabled,.btn[aria-disabled="true"]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .btn:disabled:hover,.btn[aria-disabled="true"]:hover{background:var(--acc)}
 .btn-secondary:disabled:hover,.btn-secondary[aria-disabled="true"]:hover{background:var(--card)}
@@ -325,15 +328,16 @@ h3{font-size:var(--fs-h3);line-height:1.25;letter-spacing:-0.015em}
   background:var(--card);border-radius:var(--r-lg);
   padding:var(--s-5);box-shadow:var(--shadow-float);min-width:0;
 }
-.m-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-bottom:var(--s-4)}
-.m-label{font-size:var(--fs-micro);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2)}
+.m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s-2) var(--s-3);margin-bottom:var(--s-4)}
+.m-label{font-size:var(--fs-micro);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2);white-space:nowrap}
 .m-chip{
-  display:inline-flex;align-items:center;min-height:28px;padding:0 var(--s-2);
+  display:inline-flex;align-items:center;min-height:28px;padding:0 var(--s-2);margin-inline-start:auto;
   border-radius:999px;background:var(--acc-soft);color:var(--acc-text);
   font-size:var(--fs-micro);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-.m-plan li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:var(--s-3);padding:var(--s-3) var(--s-2);border-top:1px solid var(--line)}
-.m-plan li:first-child{border-top:0;padding-top:0}
+.m-plan{display:grid;gap:10px}
+.m-plan li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:start;gap:var(--s-3);padding:14px var(--s-2);border-top:1px solid var(--line)}
+.m-plan li:first-child{border-top:0}
 .m-plan .is-next{background:var(--acc-soft);border-radius:var(--r-sm);border-top-color:transparent}
 .m-tick{display:grid;place-items:center;width:24px;height:24px;border-radius:999px;box-shadow:inset 0 0 0 1.5px var(--line-strong);color:transparent}
 .m-tick svg{width:14px;height:14px}
@@ -345,17 +349,18 @@ h3{font-size:var(--fs-h3);line-height:1.25;letter-spacing:-0.015em}
 .m-task span{display:block;font-size:var(--fs-micro);line-height:1.4;color:var(--txt-2)}
 .m-plan .is-done .m-task b{color:var(--txt-2)}
 .m-plan .is-next .m-task b{font-weight:600}
-.m-min{font-size:var(--fs-sm);font-weight:600;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.m-min{align-self:start;font-size:var(--fs-sm);font-weight:600;line-height:1.3;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .m-progress{margin-top:var(--s-4)}
 .m-progress-label{display:block;margin-bottom:var(--s-1);font-size:var(--fs-micro);font-weight:600;color:var(--txt-2);font-variant-numeric:tabular-nums}
 .m-bar{height:4px;border-radius:999px;background:var(--inset);overflow:hidden}
-.m-bar span{display:block;width:100%;height:100%;border-radius:inherit;background:var(--acc);transform-origin:left;transform:scaleX(0.4)}
+.m-bar span{display:block;width:33%;height:100%;border-radius:inherit;background:var(--acc)}
 .m-row{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:var(--s-3);align-items:stretch}
 .m-row .m-card{height:100%}
+.m-row .m-head{flex-direction:column;align-items:flex-start;gap:var(--s-2)}
+.m-row .m-chip{margin-inline-start:0}
 .m-mini{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s-2);height:72px}
 .m-mini span{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:var(--s-1);height:100%;justify-content:flex-end}
 .m-mini i{display:block;width:100%;max-width:20px;height:calc(var(--v) * 20%);border-radius:var(--r-xs) var(--r-xs) 2px 2px;background:var(--acc)}
-.m-mini span:nth-child(even) i{background:var(--acc-line)}
 .m-mini em{font-style:normal;font-size:var(--fs-micro);font-weight:600;color:var(--txt-2);line-height:1.2;text-align:center}
 .m-mini em b{display:block;color:var(--txt);font-variant-numeric:tabular-nums}
 .m-trend svg{width:100%;height:72px;color:var(--acc);overflow:visible}
@@ -398,8 +403,8 @@ h3{font-size:var(--fs-h3);line-height:1.25;letter-spacing:-0.015em}
 .bands-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s-3);margin-bottom:var(--s-5)}
 .bands-head b{font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
 .bands-head span{font-size:var(--fs-micro);color:var(--txt-2);white-space:nowrap}
-.band-list{display:grid;gap:var(--s-5)}
-.band{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--s-2) var(--s-3);align-items:baseline}
+.band-list{display:grid;gap:0}
+.band{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px var(--s-3);align-items:baseline;padding-block:12px}
 .band-name{font-size:var(--fs-sm);font-weight:500;color:var(--txt);min-width:0}
 .band-val{font-size:var(--fs-sm);font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap}
 .band-val small{font-size:var(--fs-micro);font-weight:500;color:var(--txt-2)}
@@ -627,7 +632,7 @@ footer{padding-block:var(--s-16) var(--s-12);border-top:1px solid var(--line)}
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="btn sm nav-cta" id="navCta" href="/app">Open the app</a>
+    <a class="btn sm nav-cta btn-ghost" id="navCta" href="/app">Open the app</a>
   </div>
 </header>
 
@@ -651,7 +656,7 @@ footer{padding-block:var(--s-16) var(--s-12);border-top:1px solid var(--line)}
       </div>
 
       <figure class="hero-visual">
-        <div class="mock" role="img" aria-label="Product preview with sample data: today's session of three tasks — Use of English, Writing and Speaking — a marked essay across the four Cambridge bands, and an eight-week band trend.">
+        <div class="mock" role="img" aria-label="Product preview with sample data: today's session of three tasks — Use of English, Writing and Speaking — a marked essay across the four Cambridge bands (Content 4, Communicative Achievement 3, Organisation 4, Language 3), and an eight-week band trend.">
           <div class="m-card">
             <div class="m-head">
               <span class="m-label">Today’s session</span>
@@ -675,8 +680,8 @@ footer{padding-block:var(--s-16) var(--s-12);border-top:1px solid var(--line)}
               </li>
             </ol>
             <div class="m-progress">
-              <span class="m-progress-label" id="sessProgressLabel">2 of 5 today</span>
-              <div class="m-bar" role="progressbar" aria-labelledby="sessProgressLabel" aria-label="Session progress, sample data: 2 of 5 today" aria-valuemin="0" aria-valuemax="5" aria-valuenow="2"><span></span></div>
+              <span class="m-progress-label" id="sessProgressLabel">1 of 3 today</span>
+              <div class="m-bar" role="progressbar" aria-labelledby="sessProgressLabel" aria-label="Session progress, sample data: 1 of 3 today" aria-valuemin="0" aria-valuemax="3" aria-valuenow="1"><span></span></div>
             </div>
           </div>
           <div class="m-row">
@@ -690,7 +695,7 @@ footer{padding-block:var(--s-16) var(--s-12);border-top:1px solid var(--line)}
               </div>
             </div>
             <div class="m-card m-trend">
-              <div class="m-head"><span class="m-label">Band trend</span><span class="m-chip">Sample</span></div>
+              <div class="m-head"><span class="m-label">Band trend</span><span class="m-chip">Sample · 8 weeks</span></div>
               <svg viewBox="0 0 200 72" preserveAspectRatio="none" focusable="false">
                 <line class="grid" x1="0" y1="18" x2="200" y2="18" vector-effect="non-scaling-stroke"/>
                 <line class="grid" x1="0" y1="44" x2="200" y2="44" vector-effect="non-scaling-stroke"/>
@@ -726,7 +731,7 @@ footer{padding-block:var(--s-16) var(--s-12);border-top:1px solid var(--line)}
           </ul>
         </div>
         <figure class="bands">
-          <div class="bands-head"><b>Essay report</b><span>Sample</span></div>
+          <div class="bands-head"><b>Essay report</b><span>Sample · 0–5</span></div>
           <ul class="band-list">
             <li class="band"><span class="band-name">Content</span><span class="band-val">4<small> / 5</small></span><span class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></li>
             <li class="band"><span class="band-name">Communicative Achievement</span><span class="band-val">3<small> / 5</small></span><span class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></li>
