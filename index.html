@@ -226,7 +226,10 @@ html{
   /* Runtime value: syncNavOffset() measures the sticky header stack and
      writes --nav-offset so anchored cards never hide under the nav. */
   scroll-padding-top:0;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
+html.sheet-open,body.sheet-open{overflow:hidden}
 body{
   background:var(--bg);
   color:var(--txt);
@@ -234,6 +237,7 @@ body{
   min-height:100vh;
   overflow-x:hidden;
 }
+.auth-card,.spx-overlay,.spx-tx,.ob-plan-preview,.table-wrap,.more-sheet-panel{overscroll-behavior-y:contain}
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
 a{color:var(--acc-text);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -307,6 +311,7 @@ input:focus,select:focus,textarea:focus{
 .topbar .brand{display:flex;align-items:center;gap:var(--s2);min-width:0}
 .topbar .brand img{height:28px;width:auto;object-fit:contain}
 .topbar .brand span{font-size:var(--t-sub);font-weight:600;letter-spacing:-.01em;color:var(--txt);white-space:nowrap}
+.topbar-view-title{display:none}
 .sync-badge{display:inline-flex;align-items:center;justify-content:center;width:var(--s2);height:var(--s2);border-radius:50%;flex:none;background:var(--on-surface-variant)}
 /* Only the offline/error state is shown: "saved" and "saving" stay silent. */
 .sync-badge.state-ok,.sync-badge.state-local{display:none}
@@ -1223,10 +1228,10 @@ tbody tr:hover{background:var(--surface-2)}
   outline:2px solid var(--acc);
   outline-offset:2px;
 }
-@media (max-width:767px){
+@media (max-width:768px){
   .content main:has(#v-hoy.active){padding-top:var(--s2)}
   #v-hoy .today-shell,#v-hoy .today-block,#v-hoy .today-grid{gap:var(--s3)}
-  #v-hoy #todaySession,#v-hoy #practiceNow{padding:var(--s4);gap:var(--s2)}
+  #v-hoy #todaySession,#v-hoy #practiceNow{padding:var(--s4);gap:var(--s3)}
   #v-hoy .ts-list,#v-hoy .ts-row{gap:var(--s2)}
   #v-hoy .ts-row .ts-main{gap:var(--s1)}
   #v-hoy .ts-row .ts-cta{gap:var(--s1)}
@@ -1885,13 +1890,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .topbar .user-chip .avatar{width:28px;height:28px}
   .topbar .top-streak{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);min-width:44px;padding:0 var(--s2);justify-content:center;white-space:nowrap}
 
-  /* bottom nav: 5 items + More, all labels always visible */
+  /* bottom nav: 5 items (Today, Exam, Practice, Progress, More), all labels always visible */
   #sideNav{
     position:fixed;left:0;right:0;bottom:0;top:auto;z-index:90;
     width:100%;max-width:100vw;
+    height:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+    min-height:calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
     flex-wrap:nowrap;justify-content:space-around;align-items:center;
     padding:var(--s1) var(--s1) calc(var(--s1) + env(safe-area-inset-bottom, 0px));
-    gap:var(--s1);box-shadow:0 -2px 12px oklch(0 0 0 / 0.10);
+    gap:0;box-shadow:0 -2px 12px oklch(0 0 0 / 0.10);
     overflow:visible;
   }
   #sideNav button[data-view],#navMoreBtn{
@@ -1899,7 +1906,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     flex-direction:column;align-items:center;justify-content:center;gap:2px;
     padding:var(--s1) 2px;height:var(--btn-h-secondary);min-height:var(--btn-h-secondary);
     font-size:var(--t-meta);text-align:center;overflow:visible;
+    position:relative;border:none;border-radius:var(--r-ctl);background:transparent;
+    color:var(--txt-2);font-family:var(--font);font-weight:600;cursor:pointer;
+    transition:transform 140ms ease, color 140ms ease;
   }
+  #sideNav button[data-view="hoy"]{order:1}
+  #sideNav button[data-view="exam"]{order:2}
+  #sideNav button[data-view="practice"]{order:3}
+  #sideNav button[data-view="prog"]{order:4}
+  #sideNav #navMoreBtn{order:5}
   #sideNav button[data-view] .nav-label,#navMoreBtn .nav-label{
     display:block;width:100%;min-width:0;
     font-size:10px;line-height:1.15;letter-spacing:0;text-transform:none;
@@ -1907,17 +1922,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   }
   #sideNav button[data-view] .nav-ico,#navMoreBtn .nav-ico{width:18px;height:18px;flex:none}
   #sideNav button[data-view].extra{display:none}
-  #sideNav.more-open{flex-wrap:wrap;gap:0;padding-left:0;padding-right:0}
-  #sideNav.more-open button[data-view]:not(.extra),
-  #sideNav.more-open #navMoreBtn{flex:0 0 calc(100% / 6);order:1}
-  #sideNav.more-open button[data-view].extra{
-    display:flex;flex:0 0 calc(100% / 3);order:0;min-width:0;
-    height:auto;min-height:var(--btn-h-secondary);padding:var(--s2) var(--s1);
-    border-bottom:1px solid var(--line);border-radius:0;
-  }
-  #sideNav.more-open button[data-view].extra .nav-label{
-    white-space:normal;line-height:1.2;overflow:visible;text-overflow:clip;
-  }
+  #sideNav button[data-view]:active,#navMoreBtn:active{transform:scale(.97)}
 
   /* page headers */
   .page-head{margin-bottom:var(--s4);gap:var(--s2);flex-direction:column;align-items:flex-start}
@@ -2013,6 +2018,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     animation-iteration-count:1 !important;
     transition-duration:0.01ms !important;
     scroll-behavior:auto !important;
+  }
+  .btn:active,.chip:active,.theme-toggle:active,#qlFab:active,.more-sheet-item:active,#sideNav button:active{
+    transform:none !important;
   }
 }
 
@@ -2212,9 +2220,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 /* B5 — active bottom-bar tab: colour and a 2px indicator, no filled block. */
 @media (max-width:768px){
-  #sideNav button[data-view]{position:relative}
-  #sideNav button[data-view].active{background:transparent;color:var(--acc-text)}
-  #sideNav button[data-view].active::after{
+  #sideNav button[data-view],#navMoreBtn{position:relative}
+  #sideNav button[data-view].active,#sideNav #navMoreBtn.active{background:transparent;color:var(--acc-text)}
+  #sideNav button[data-view].active::after,#sideNav #navMoreBtn.active::after{
     content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
     width:20px;height:2px;border-radius:2px;background:var(--acc);
   }
@@ -2250,6 +2258,136 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   }
   .gate-matrix .gate-name{grid-column:2;grid-row:1;margin:0;font-size:var(--t-body);line-height:1.35}
   .gate-matrix .gate-txt{display:none}
+}
+
+/* === F128: App-like mobile (<=768px only; >=1024px untouched) === */
+.more-sheet-overlay{
+  position:fixed;inset:0;z-index:120;
+  background:oklch(0 0 0 / 0.45);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity 180ms ease;
+}
+.more-sheet-overlay.is-open{opacity:1}
+.more-sheet-panel{
+  width:100%;max-width:600px;max-height:85vh;overflow-y:auto;
+  background:var(--surface);color:var(--txt);
+  border-radius:var(--r-modal) var(--r-modal) 0 0;
+  box-shadow:var(--shadow-3);
+  padding:var(--s2) var(--s4) calc(var(--s5) + env(safe-area-inset-bottom, 0px));
+  transform:translateY(24px);
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.more-sheet-overlay.is-open .more-sheet-panel{transform:translateY(0)}
+.more-sheet-handle{
+  width:36px;height:4px;border-radius:2px;background:var(--line);
+  margin:0 auto var(--s2);
+}
+.more-sheet-head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  margin-bottom:var(--s3);
+}
+.more-sheet-title{font-size:var(--t-title);font-weight:600;color:var(--txt)}
+.more-sheet-close{flex:none;color:var(--txt)}
+.more-sheet-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);
+}
+.more-sheet-item{
+  display:flex;flex-direction:column;align-items:flex-start;gap:var(--s1);
+  width:100%;min-width:0;min-height:88px;padding:var(--s3);
+  border:1px solid var(--line);border-radius:var(--r-panel);
+  background:var(--surface-2);color:var(--txt);text-align:left;cursor:pointer;
+  font-family:var(--font);transition:transform 140ms ease, opacity 140ms ease;
+}
+.more-sheet-item:active{transform:scale(.97)}
+.more-sheet-item.active{border-color:var(--acc-border);background:var(--acc-soft)}
+.more-sheet-item .nav-ico{width:22px;height:22px;color:var(--acc-text);flex:none}
+.more-sheet-label{font-size:var(--t-sub);font-weight:600;line-height:1.25;color:var(--txt)}
+.more-sheet-desc{
+  font-size:var(--t-meta);line-height:1.35;color:var(--txt-2);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+@media (max-width:768px){
+  /* Main & card rhythm: compact 12px/16px multiples of 4, thumb clear above FAB + bottom nav */
+  .content main{padding:var(--s3) var(--s3) calc(var(--s5) + 56px)}
+  footer{text-align:left;padding:var(--s3) 148px var(--s3) var(--s4)}
+  .page-head{margin-bottom:var(--s3);gap:var(--s2)}
+  .card{padding:var(--s4);margin-bottom:var(--s3)}
+  .stat-grid,.exam-select-grid,.grid-12{gap:var(--s3)}
+  .stat-grid,.prog-moved-grid,.u4-real-mocks,.u4-exam-sources{margin-bottom:var(--s3)}
+  .stat-card,.exam-card,.task,.next-session{padding:var(--s4);gap:var(--s2)}
+  .streak-card{padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
+  #v-hoy .today-aside{padding:var(--s4);gap:var(--s3)}
+  #v-hoy .today-rest-stats{gap:var(--s3)}
+
+  /* Compact sticky header on scroll > 64px (after 430/359px blocks so specificity/order wins) */
+  @keyframes topbarTitleIn{
+    from{opacity:0;transform:translateY(4px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .topbar{height:60px;min-height:60px;box-sizing:border-box}
+  .topbar-view-title{
+    display:none;flex:1 1 0;min-width:0;text-align:center;
+    font-size:14px;font-weight:600;line-height:1.2;color:var(--txt);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    pointer-events:none;
+  }
+  .topbar.is-compact{
+    height:48px;min-height:48px;
+    padding-top:2px;padding-bottom:2px;margin-bottom:12px;
+    box-shadow:var(--shadow-2);
+  }
+  .topbar.is-compact .brand span{display:none}
+  .topbar.is-compact .topbar-view-title{
+    display:block;animation:topbarTitleIn 160ms ease both;pointer-events:auto;
+  }
+
+  /* Primary view FAB in compact state: thumb-reachable above bottom bar on all 8 views */
+  #qlFab{
+    display:inline-flex;align-items:center;gap:var(--s2);
+    width:auto;min-width:var(--btn-h-tertiary);height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);
+    padding:0 var(--s4);border-radius:999px;
+    bottom:calc(var(--nav-bottom, var(--nav-h)) + env(safe-area-inset-bottom, 0px) + 12px);
+    right:var(--s4);
+    opacity:0;transform:translateY(8px) scale(.96);pointer-events:none;
+    transition:opacity 160ms ease, transform 160ms ease;
+  }
+  #qlFab .ql-fab-label{display:inline;font-size:var(--t-meta);font-weight:600;line-height:1}
+  body.topbar-compact #qlFab{
+    opacity:1;transform:translateY(0) scale(1);pointer-events:auto;
+  }
+  body.sheet-open #qlFab{opacity:0;pointer-events:none}
+
+  /* Tactile feedback */
+  .btn:active,.chip:active,.theme-toggle:active,#qlFab:active{transform:scale(.97)}
+
+  /* Clear single primary action per card / row; lighter secondary text actions */
+  #v-plan .plan-actions{display:flex;flex-wrap:wrap;gap:var(--s2)}
+  #v-plan .plan-actions .btn{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary)}
+  #v-plan .plan-actions .btn:first-child{flex:1 0 100%;width:100%}
+  #v-plan .plan-actions .btn:not(:first-child){flex:0 1 auto;width:auto;padding:0 var(--s2)}
+  #v-plan .plan-actions .btn:not(:first-child),
+  #v-plan #schedulesCard .btn.sm.gray,
+  #v-plan #wpRotationControls .btn.sm.gray,
+  #v-prog .btn.gray,
+  #v-exam #exActive .btn.gray:last-child{
+    background:transparent;border-color:transparent;color:var(--acc-text);box-shadow:none;
+    height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);
+  }
+  #v-exam #exActive .btn.gray:last-child{color:var(--txt-2)}
+
+  /* Deduplicate repeated streak & view headers/subtitles + single empty CTA */
+  #v-hoy .today-rest-streak,
+  #v-prog .prog-streak-card,
+  #v-prog .prog-metric-streak,
+  #v-practice #practiceParts > .sub,
+  #v-ia #iaCard > h2,
+  #v-err .card:has(> #errPills > .empty){display:none}
+}
+@media (max-width:359px){
+  .topbar.is-compact .top-actions{gap:var(--s1)}
+  .more-sheet-grid{gap:var(--s2)}
+  .more-sheet-item{padding:var(--s3) var(--s2)}
 }
 </style>
 </head>
@@ -2770,11 +2908,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
 <div class="shell">
   <!-- ============ TOP BAR ============ -->
-  <div class="topbar">
+  <div class="topbar" id="topbar">
     <div class="brand">
       <img src="/assets/logo-192.png" alt="B2 First logo" class="logo-img">
       <span>B2 FIRST</span>
     </div>
+    <span id="topbarViewTitle" class="topbar-view-title" aria-hidden="true"></span>
     <div class="top-actions">
       <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak">🔥 <b id="streakTopNum" class="tnum">0</b></span>
       <span id="syncBadge" class="sync-badge state-local" tabindex="0" role="status" title="Save status on the server" aria-label="Save status on the server" data-i18n-title="sync_status" data-i18n-aria-label="sync_status"></span>
@@ -2789,13 +2928,46 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <button data-view="hoy" class="active"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-today"/></svg><span class="nav-label" data-i18n="nav_today">Today</span></button>
     <button data-view="exam"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg><span class="nav-label" data-i18n="nav_exam">Exam</span></button>
     <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
-    <button data-view="plan"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
+    <button data-view="plan" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
     <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
     <button data-view="resources" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
     <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
     <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
-    <button id="navMoreBtn" type="button" aria-label="More sections" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
+    <button id="navMoreBtn" type="button" aria-label="More sections" aria-expanded="false" aria-controls="moreSheet" aria-haspopup="dialog" data-i18n-aria-label="nav_more_aria"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-more"/></svg><span class="nav-label" data-i18n="nav_more">More</span></button>
   </nav>
+
+  <!-- ============ MORE BOTTOM SHEET (mobile <= 768px) ============ -->
+  <div id="moreSheet" class="more-sheet-overlay" role="dialog" aria-modal="true" aria-labelledby="moreSheetTitle" style="display:none">
+    <div class="more-sheet-panel">
+      <div class="more-sheet-handle" aria-hidden="true"></div>
+      <div class="more-sheet-head">
+        <span class="more-sheet-title" id="moreSheetTitle" data-i18n="nav_more">More</span>
+        <button type="button" class="del more-sheet-close" id="moreSheetClose" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="more-sheet-grid">
+        <button type="button" class="more-sheet-item" data-view="plan">
+          <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg>
+          <span class="more-sheet-label" data-i18n="nav_plan">Plan</span>
+          <span class="more-sheet-desc" data-i18n="more_desc_plan">Schedule, intake and countdown</span>
+        </button>
+        <button type="button" class="more-sheet-item" data-view="resources">
+          <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg>
+          <span class="more-sheet-label" data-i18n="nav_resources">Resources</span>
+          <span class="more-sheet-desc" data-i18n="more_desc_resources">Samples, PDFs, audio &amp; links</span>
+        </button>
+        <button type="button" class="more-sheet-item" data-view="err">
+          <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg>
+          <span class="more-sheet-label" data-i18n="nav_errors">Errors</span>
+          <span class="more-sheet-desc" data-i18n="more_desc_err">Mistake taxonomy &amp; patterns</span>
+        </button>
+        <button type="button" class="more-sheet-item" data-view="ia">
+          <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg>
+          <span class="more-sheet-label" data-i18n="ai_title">Writing Corrector</span>
+          <span class="more-sheet-desc" data-i18n="more_desc_ia">Cambridge B2 rubric grading</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ============ CONTENT ============ -->
   <div class="content">
@@ -3791,7 +3963,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="metric-divider"></div>
               <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
               <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
+              <div class="metric-row prog-metric-streak"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
               <div class="metric-divider"></div>
               <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
             </div>
@@ -3824,7 +3996,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <span class="stat-card-val" id="gMocks">0</span>
             <span class="stat-card-sub" data-i18n="charts_mocks_sub">mocks logged</span>
           </div>
-          <div class="stat-card">
+          <div class="stat-card prog-streak-card">
             <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-today"/></svg>
             <span class="stat-card-label" data-i18n="charts_streak">Study Streak</span>
             <span class="stat-card-val" id="gRacha">0</span>
@@ -4383,6 +4555,12 @@ const I18N={
     nav_ai:'Writing',
     nav_more:'More',
     nav_more_aria:'More sections',
+    more_desc_plan:'Schedule, intake & countdown',
+    more_desc_resources:'Samples, PDFs, audio & links',
+    more_desc_err:'Mistake taxonomy & patterns',
+    more_desc_ia:'Cambridge B2 rubric grading',
+    plan_edit_intake_short:'Edit intake',
+    resources_filter_action:'Search library',
     practice_head_title:'Practice by part',
     practice_head_sub:'Every exercise of the four papers, in exam order. Each with its target time, a Start link and result logging.',
     practice_title:'Practice sources',
@@ -5164,6 +5342,12 @@ const I18N={
     nav_ai:'Corrector',
     nav_more:'Más',
     nav_more_aria:'Más secciones',
+    more_desc_plan:'Agenda, perfil y cuenta atrás',
+    more_desc_resources:'Modelos, PDFs, audio y enlaces',
+    more_desc_err:'Taxonomía de fallos y patrones',
+    more_desc_ia:'Corrección con rúbrica B2',
+    plan_edit_intake_short:'Editar perfil',
+    resources_filter_action:'Buscar material',
     practice_head_title:'Práctica por partes',
     practice_head_sub:'Todos los ejercicios de las cuatro pruebas, en orden de examen. Cada uno con su tiempo objetivo, un botón para empezar y registro de resultados.',
     practice_title:'Fuentes de práctica',
@@ -5989,6 +6173,8 @@ function applyI18n(){
   const esBtn=document.getElementById('langEsBtn');
   if(enBtn){enBtn.setAttribute('aria-pressed',LANG==='en'?'true':'false');enBtn.classList.toggle('active',LANG==='en')}
   if(esBtn){esBtn.setAttribute('aria-pressed',LANG==='es'?'true':'false');esBtn.classList.toggle('active',LANG==='es')}
+  if(typeof updateTopbarViewTitle==='function')updateTopbarViewTitle();
+  if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
 }
 function setLang(code){
   const next=normalizeLang(code);
@@ -15781,7 +15967,7 @@ function renderTodaySession(plan,todaySlots){
           <div class="today-meta-label">${esc(t('today_cycle_label'))}</div>
           <div class="today-meta-value">${esc(todayCycleText(plan,todaySlots))}</div>
         </div>
-        <div class="today-meta-block">
+        <div class="today-meta-block today-rest-streak">
           <div class="today-meta-label">${esc(t('metric_streak'))}</div>
           <div class="today-meta-value tnum">${streak.current} ${streak.current===1?'day':'days'}</div>
         </div>
@@ -17158,7 +17344,173 @@ function syncNavOffset(){
   document.documentElement.style.setProperty('--nav-offset',Math.ceil(bottom)+'px');
   document.documentElement.style.setProperty('--nav-bottom',navBottom+'px');
 }
-window.addEventListener('resize',syncNavOffset);
+window.addEventListener('resize',()=>{
+  syncNavOffset();
+  if(typeof closeMoreSheet==='function'&&window.innerWidth>768){
+    const s=document.getElementById('moreSheet');
+    if(s&&s.style.display!=='none')closeMoreSheet(false);
+  }
+  if(typeof syncTopbarCompact==='function')syncTopbarCompact();
+  if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
+});
+const MORE_SHEET_VIEWS=new Set(['plan','resources','err','ia']);
+let _moreSheetTrigger=null;
+function currentActiveViewId(){
+  const sec=document.querySelector('.view.active');
+  if(!sec||!sec.id)return 'hoy';
+  return sec.id.replace(/^view-/,'').replace(/^v-/,'');
+}
+function updateTopbarViewTitle(viewId){
+  const el=document.getElementById('topbarViewTitle');
+  if(!el)return;
+  const vid=viewId||currentActiveViewId();
+  const sec=document.getElementById('v-'+vid)||document.getElementById('view-'+vid);
+  let title='';
+  if(sec){
+    const h=sec.querySelector('h1.page-title, #userTitle, h1');
+    if(h)title=(h.textContent||'').trim();
+  }
+  if(!title){
+    const navBtn=document.querySelector(`nav button[data-view="${vid}"] .nav-label`);
+    if(navBtn)title=(navBtn.textContent||'').trim();
+  }
+  el.textContent=title;
+}
+function syncMoreActiveState(viewId){
+  const vid=viewId||currentActiveViewId();
+  const moreBtn=document.getElementById('navMoreBtn');
+  if(moreBtn)moreBtn.classList.toggle('active',MORE_SHEET_VIEWS.has(vid));
+  document.querySelectorAll('#moreSheet .more-sheet-item[data-view]').forEach(it=>{
+    it.classList.toggle('active',it.dataset.view===vid);
+  });
+}
+function mobilePrimaryConfig(viewId){
+  const vid=viewId||currentActiveViewId();
+  if(window.innerWidth>768){
+    return {label:t('fab_log_single'),run:()=>openSoloModal()};
+  }
+  switch(vid){
+    case 'exam':
+      return {
+        label:String(t('common_start')||'Start').replace(/^[^\p{L}\p{N}]+/u,'').trim()||t('common_start'),
+        run:()=>{
+          if(typeof exStart==='function')exStart();
+          const tgt=document.getElementById('exActive');
+          if(tgt)tgt.scrollIntoView({block:'start'});
+        }
+      };
+    case 'plan':
+      return {label:t('plan_edit_intake_short'),run:()=>openIntake()};
+    case 'resources':
+      return {
+        label:t('resources_filter_action'),
+        run:()=>{
+          const inp=document.getElementById('matFilter');
+          if(inp){inp.scrollIntoView({block:'center'});inp.focus();}
+        }
+      };
+    case 'err':
+      return {
+        label:String(t('err_log')||'Log error').replace(/^[^\p{L}\p{N}]+/u,'').trim()||t('err_log'),
+        run:()=>{
+          const inp=document.getElementById('errDesc2');
+          if(inp){inp.scrollIntoView({block:'center'});inp.focus();}
+        }
+      };
+    case 'ia':
+      return {
+        label:t('ai_submit'),
+        run:()=>{
+          const txt=document.getElementById('iaText');
+          if(txt&&txt.value.trim()){
+            if(typeof submitIaWriting==='function')submitIaWriting();
+          }else if(txt){
+            txt.scrollIntoView({block:'center'});txt.focus();
+          }
+        }
+      };
+    case 'hoy':
+    case 'practice':
+    case 'prog':
+    default:
+      return {label:t('fab_log_single'),run:()=>openSoloModal()};
+  }
+}
+function syncMobilePrimaryFab(viewId){
+  const fab=document.getElementById('qlFab');
+  if(!fab)return;
+  const cfg=mobilePrimaryConfig(viewId);
+  fab.setAttribute('title',cfg.label);
+  fab.setAttribute('aria-label',cfg.label);
+  const lbl=fab.querySelector('.ql-fab-label');
+  if(lbl)lbl.textContent=cfg.label;
+}
+function syncTopbarCompact(){
+  const bar=document.getElementById('topbar')||document.querySelector('.topbar');
+  if(!bar)return;
+  if(window.innerWidth>768){
+    bar.classList.remove('is-compact');
+    document.body.classList.remove('topbar-compact');
+    return;
+  }
+  const y=window.scrollY||window.pageYOffset||0;
+  const was=bar.classList.contains('is-compact');
+  const next=was?(y>48):(y>64);
+  if(next!==was){
+    bar.classList.toggle('is-compact',next);
+    document.body.classList.toggle('topbar-compact',next);
+  }
+  updateTopbarViewTitle();
+}
+function openMoreSheet(){
+  const sheet=document.getElementById('moreSheet');
+  const moreBtn=document.getElementById('navMoreBtn');
+  if(!sheet)return;
+  _moreSheetTrigger=document.activeElement;
+  syncMoreActiveState();
+  sheet.style.display='flex';
+  sheet.classList.add('is-open');
+  document.documentElement.classList.add('sheet-open');
+  document.body.classList.add('sheet-open');
+  if(moreBtn)moreBtn.setAttribute('aria-expanded','true');
+  const firstFocus=sheet.querySelector('.more-sheet-item.active, .more-sheet-item, #moreSheetClose');
+  if(firstFocus&&typeof firstFocus.focus==='function')firstFocus.focus();
+}
+function closeMoreSheet(restoreFocus){
+  const sheet=document.getElementById('moreSheet');
+  const moreBtn=document.getElementById('navMoreBtn');
+  if(!sheet)return;
+  const wasOpen=sheet.style.display!=='none';
+  sheet.classList.remove('is-open');
+  sheet.style.display='none';
+  document.documentElement.classList.remove('sheet-open');
+  document.body.classList.remove('sheet-open');
+  if(moreBtn)moreBtn.setAttribute('aria-expanded','false');
+  if(restoreFocus&&wasOpen){
+    const target=(moreBtn&&getComputedStyle(moreBtn).display!=='none')?moreBtn:_moreSheetTrigger;
+    if(target&&typeof target.focus==='function')target.focus();
+  }
+}
+function activateNavView(viewId,isUserClick){
+  if(viewId==='libros')viewId='resources';
+  const sec=document.getElementById('v-'+viewId)||document.getElementById('view-'+viewId);
+  if(!sec)return false;
+  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===viewId));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  sec.classList.add('active');
+  if(viewId==='diag')renderDiag();
+  if(viewId==='practice')renderPractice();
+  if(viewId==='resources'){renderPractice();renderResources()}
+  closeMoreSheet(false);
+  if(window.innerWidth<=768&&(window.scrollY||window.pageYOffset||0)>0)window.scrollTo(0,0);
+  syncMoreActiveState(viewId);
+  updateTopbarViewTitle(viewId);
+  syncMobilePrimaryFab(viewId);
+  syncTopbarCompact();
+  syncNavOffset();
+  TEV_VIEW=viewId;
+  return true;
+}
 function showView(viewId){
   /* U4 one-door decision: Books has no door of its own any more. Old links
      and calls keep working, but they land on Resources, where the library
@@ -17168,18 +17520,7 @@ function showView(viewId){
   if(btn){btn.click();return}
   // Views without a nav entry (the diagnostic) still open when the plan
   // or the onboarding links to them.
-  const sec=document.getElementById('v-'+viewId)||document.getElementById('view-'+viewId);
-  if(!sec)return;
-  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  sec.classList.add('active');
-  if(viewId==='diag')renderDiag();
-  if(viewId==='practice')renderPractice();
-  if(viewId==='resources'){renderPractice();renderResources()}
-  const nav=document.getElementById('sideNav');
-  if(nav)nav.classList.remove('more-open');
-  syncNavOffset();
-  TEV_VIEW=viewId;
+  if(!activateNavView(viewId,false))return;
   track('view_change',{view:viewId,ms:0});
 }
 document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
@@ -17189,24 +17530,76 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
     const resourcesBtn=document.querySelector("nav button[data-view='resources']");
     if(resourcesBtn){resourcesBtn.click();return}
   }
-  document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const sec=document.getElementById('v-'+b.dataset.view)||document.getElementById('view-'+b.dataset.view);
-  if(sec)sec.classList.add('active');
-  if(b.dataset.view==='diag')renderDiag();
-  if(b.dataset.view==='practice')renderPractice();
-  if(b.dataset.view==='resources'){renderPractice();renderResources()}
-  const nav=document.getElementById('sideNav');
-  if(nav)nav.classList.remove('more-open');
-  syncNavOffset();
-  TEV_VIEW=b.dataset.view;
+  activateNavView(b.dataset.view,true);
   track('view_change',{view:b.dataset.view,ms:Date.now()-_tevT0});
 });
 (function(){
   const more=document.getElementById('navMoreBtn');
-  const nav=document.getElementById('sideNav');
-  if(more&&nav)more.onclick=()=>{nav.classList.toggle('more-open');syncNavOffset();};
+  const sheet=document.getElementById('moreSheet');
+  const closeBtn=document.getElementById('moreSheetClose');
+  const fab=document.getElementById('qlFab');
+  if(more){
+    more.onclick=()=>{
+      const open=sheet&&sheet.style.display!=='none';
+      if(open)closeMoreSheet(true);
+      else openMoreSheet();
+    };
+  }
+  if(closeBtn)closeBtn.onclick=()=>closeMoreSheet(true);
+  if(sheet){
+    sheet.addEventListener('click',e=>{
+      if(e.target===sheet)closeMoreSheet(true);
+    });
+    sheet.querySelectorAll('.more-sheet-item[data-view]').forEach(item=>{
+      item.addEventListener('click',()=>{
+        showView(item.dataset.view);
+      });
+    });
+  }
+  document.addEventListener('keydown',e=>{
+    if(!sheet||sheet.style.display==='none')return;
+    if(e.key==='Escape'){
+      e.preventDefault();
+      e.stopPropagation();
+      closeMoreSheet(true);
+      return;
+    }
+    if(e.key==='Tab'){
+      const focusables=Array.from(sheet.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+        .filter(el=>{
+          const cs=getComputedStyle(el);
+          if(cs.display==='none'||cs.visibility==='hidden')return false;
+          const r=el.getBoundingClientRect();
+          return r.width>0&&r.height>0;
+        });
+      if(!focusables.length){e.preventDefault();return}
+      const first=focusables[0],last=focusables[focusables.length-1];
+      if(!sheet.contains(document.activeElement)){
+        e.preventDefault();(e.shiftKey?last:first).focus();return;
+      }
+      if(e.shiftKey&&document.activeElement===first){
+        e.preventDefault();last.focus();
+      }else if(!e.shiftKey&&document.activeElement===last){
+        e.preventDefault();first.focus();
+      }
+    }
+  });
+  if(fab){
+    fab.onclick=()=>mobilePrimaryConfig().run();
+  }
+  let scrollTick=false;
+  window.addEventListener('scroll',()=>{
+    if(scrollTick)return;
+    scrollTick=true;
+    requestAnimationFrame(()=>{
+      scrollTick=false;
+      syncTopbarCompact();
+    });
+  },{passive:true});
+  syncMoreActiveState();
+  updateTopbarViewTitle();
+  syncMobilePrimaryFab();
+  syncTopbarCompact();
 })();
 
 function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}

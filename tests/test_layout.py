@@ -220,13 +220,13 @@ SPEAKING_JS = """
 
 
 def goto_view(pg, name):
-    hidden = {"err", "libros", "ia", "diag"}
-    if name in hidden:
-        if pg.evaluate("getComputedStyle(document.getElementById('navMoreBtn')).display") != "none":
-            pg.evaluate("document.getElementById('navMoreBtn').click()")
-            pg.wait_for_timeout(60)
-    # Views without a nav entry (diagnostic) go through the app's own router.
-    if pg.evaluate(f"!!document.querySelector(\"nav button[data-view='{name}']\")"):
+    hidden = {"plan", "resources", "err", "libros", "ia", "diag"}
+    more_visible = pg.evaluate("getComputedStyle(document.getElementById('navMoreBtn')).display") != "none"
+    if more_visible and name in hidden and pg.evaluate(f"!!document.querySelector(\"#moreSheet button[data-view='{name}']\")"):
+        pg.evaluate("document.getElementById('navMoreBtn').click()")
+        pg.wait_for_timeout(80)
+        pg.click(f"#moreSheet button[data-view='{name}']")
+    elif pg.evaluate(f"!!document.querySelector(\"nav button[data-view='{name}']\") && getComputedStyle(document.querySelector(\"nav button[data-view='{name}']\")).display !== 'none'"):
         pg.click(f"nav button[data-view='{name}']")
     else:
         pg.evaluate(f"showView('{name}')")
