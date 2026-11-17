@@ -42,6 +42,7 @@ import socket
 import select
 import urllib.request, urllib.error
 import ipaddress
+import signal
 import traceback
 from collections import deque
 from datetime import date, timedelta
@@ -2357,16 +2358,308 @@ def save_users(users):
         store.create_user(uid, rec)
 
 
-_TOKENS_LOCK = threading.Lock()  # serializes read-modify-write of tokens.json
+# --- Session store: in-memory index with debounced persistence -------------
+#
+# Authenticated requests used to read *and* rewrite the whole data/tokens.json
+# just to slide `last_seen`/`exp`. At ~500 sessions that rewrite costs ~33.5 ms
+# on the SD card and serialises every authenticated request behind one lock, so
+# the file is now off the hot path:
+#
+#   * `_TOKENS` ({sha256(token): record}) is loaded once from TOKENS_FILE and
+#     resolved in memory under a short lock: a dict lookup plus the exp /
+#     absolute_exp checks. No read or write of the file per request.
+#   * Security mutations (new session, logout, revocation, account delete,
+#     legacy plaintext migration) are still written atomically before the
+#     response leaves, so a revocation is durable the moment it is answered.
+#   * `last_seen`/`exp` slides only mark the index dirty. A flusher thread
+#     persists them every B2_TOKENS_FLUSH_S seconds (default 60), sooner when
+#     more than TOKENS_FLUSH_MAX_CHANGES slides are pending, and on SIGTERM.
+#
+# TRADE-OFF: up to one flush interval of `last_seen` is lost in a hard crash.
+# The session itself stays valid for the `exp` already on disk, so a lost slide
+# can only make a session die *earlier*, never extend an old one; the 90-day
+# `absolute_exp` is never rewritten. Expired rows are in any case rejected both
+# from memory and from the persisted record, so nothing expired is ever
+# accepted. This is the price of removing an O(sessions) serialised write from
+# every authenticated request.
+#
+# MULTI-PROCESS: the server is a single process, but tooling may rewrite
+# tokens.json. One metadata-only stat per authenticated request (no file read,
+# no write) detects that and reloads the index, the same way the static-payload
+# cache does, so the flusher never overwrites an external change; whoever wrote
+# the file last wins.
+
+_TOKENS_LOCK = threading.Lock()         # guards the in-memory index (short hold)
+_TOKENS_WRITE_LOCK = threading.Lock()   # serialises reloads and whole-file writes
+TOKENS_FLUSH_MAX_CHANGES = 200          # persist at once past this many slides
+_TOKENS = {}                            # {sha256(token): record}
+_TOKENS_META = {
+    "path": None,      # TOKENS_FILE the index was loaded from
+    "loaded": False,
+    "mtime_ns": 0,     # st_mtime_ns of TOKENS_FILE as last read/written here
+    "gen": 0,          # bumped on every in-memory mutation
+    "pending": 0,      # slides since the last write
+    "dirty": False,
+}
+_TOKENS_FLUSH_S = max(1, _env_int("B2_TOKENS_FLUSH_S", 60))
+_TOKENS_FLUSHER = None
+
+
+def _tokens_file_ns(path=None):
+    """st_mtime_ns of tokens.json (0 when it does not exist)."""
+    try:
+        return os.stat(path or TOKENS_FILE).st_mtime_ns
+    except OSError:
+        return 0
+
+
+def _tokens_read_file(path):
+    """Return (records, mtime_ns); records is None when the file is unreadable/corrupt."""
+    ns = _tokens_file_ns(path)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return None, ns
+    return (data if isinstance(data, dict) else {}), ns
+
+
+def _tokens_load_locked():
+    """Replace the index with the on-disk file; keep it as-is when corrupt."""
+    path = TOKENS_FILE
+    data, ns = _tokens_read_file(path)
+    _TOKENS_META["path"] = path
+    _TOKENS_META["loaded"] = True
+    _TOKENS_META["mtime_ns"] = ns
+    if data is None:  # a half-written file must not wipe live sessions
+        return
+    _TOKENS.clear()
+    _TOKENS.update(data)
+    _TOKENS_META["gen"] = 0
+    _TOKENS_META["pending"] = 0
+    _TOKENS_META["dirty"] = False
+
+
+def _tokens_ensure_locked():
+    """Load the index lazily, and reload it when the data dir changed."""
+    if not _TOKENS_META["loaded"] or _TOKENS_META["path"] != TOKENS_FILE:
+        _tokens_load_locked()
+
+
+def _tokens_matches_locked():
+    """True when the index is loaded and unchanged since it was read/written."""
+    return (_TOKENS_META["loaded"]
+            and _TOKENS_META["path"] == TOKENS_FILE
+            and _tokens_file_ns() == _TOKENS_META["mtime_ns"])
+
+
+def _tokens_refresh():
+    """Pick up an external rewrite of tokens.json, with no lock held on entry.
+
+    Costs one metadata-only stat outside any lock (no file read, no write) --
+    the same kind of check the static-payload cache does per request. The file
+    is read only when it really changed. Reloading *replaces* the whole dict,
+    so it takes the write lock: a reload must never interleave with a mutation
+    that lives only in memory yet (that race produced spurious 401s under
+    concurrent registrations).
+    """
+    ns = _tokens_file_ns()
+    with _TOKENS_LOCK:
+        if (_TOKENS_META["loaded"] and _TOKENS_META["path"] == TOKENS_FILE
+                and ns == _TOKENS_META["mtime_ns"]):
+            return
+    with _TOKENS_WRITE_LOCK:
+        with _TOKENS_LOCK:
+            _tokens_ensure_locked()
+            if not _tokens_matches_locked():
+                _tokens_load_locked()
+
+
+def _tokens_touch_locked():
+    """Mark a debounced change; True when the pending threshold was crossed."""
+    _TOKENS_META["gen"] += 1
+    _TOKENS_META["pending"] += 1
+    _TOKENS_META["dirty"] = True
+    return _TOKENS_META["pending"] > TOKENS_FLUSH_MAX_CHANGES
+
+
+def _tokens_alive(rec, now):
+    """True while both expiry clocks are still in the future (auth's own rule)."""
+    if not isinstance(rec, dict):
+        return False
+    abs_exp = rec.get("absolute_exp")
+    if not isinstance(abs_exp, (int, float)):
+        abs_exp = rec.get("issued", now) + TOKEN_ABSOLUTE_TTL
+    return rec.get("exp", 0) >= now and now < abs_exp
+
+
+def _tokens_prune_expired_locked():
+    """Drop expired records from memory; return how many were dropped."""
+    now = time.time()
+    dead = [key for key, rec in _TOKENS.items() if not _tokens_alive(rec, now)]
+    for key in dead:
+        _TOKENS.pop(key, None)
+    if dead:
+        _TOKENS_META["gen"] += 1
+    return len(dead)
+
+
+def _tokens_snapshot_locked():
+    """Shallow-copy every record so the JSON write cannot race an in-place slide."""
+    return {key: dict(rec) if isinstance(rec, dict) else rec
+            for key, rec in _TOKENS.items()}
+
+
+def _tokens_take_snapshot_locked():
+    """Snapshot the index and mark the slides it contains as being written.
+
+    The counter is cleared *here*, at snapshot time, not after the write: under
+    load `gen` always moves on while the file is being written, so clearing only
+    when `gen` was stable left `pending` rising forever and every request past
+    TOKENS_FLUSH_MAX_CHANGES rewrote the whole file (measured: 23 writes in 8 s
+    with a 60 s interval). Slides that arrive during the write leave `dirty`
+    set again and are picked up by the next flush.
+    """
+    snapshot = _tokens_snapshot_locked()
+    gen = _TOKENS_META["gen"]
+    _TOKENS_META["dirty"] = False
+    _TOKENS_META["pending"] = 0
+    return snapshot, gen
+
+
+def _tokens_persist_locked(snapshot, gen):
+    """Write a snapshot atomically while the caller holds _TOKENS_WRITE_LOCK.
+
+    Recording the new mtime under the index lock is what lets a later
+    _tokens_matches_locked() tell "our own write" from "someone else's write".
+    """
+    path = TOKENS_FILE
+    try:
+        store.write_json_private(path, snapshot)
+    except OSError:
+        # The snapshot never landed: keep the index dirty so the flusher retries.
+        with _TOKENS_LOCK:
+            _TOKENS_META["dirty"] = True
+        raise
+    ns = _tokens_file_ns(path)
+    with _TOKENS_LOCK:
+        if _TOKENS_META["path"] == path:
+            _TOKENS_META["mtime_ns"] = ns
+
+
+def _tokens_mutate(change):
+    """Apply `change(index)` under WRITE+INDEX and persist it; return its result.
+
+    Both locks span the mutation and the write, so a concurrent reload can
+    never replace the dict in between: that race dropped a freshly minted
+    token and produced a spurious 401 under concurrent registrations. `change`
+    returns a (result, changed) pair; nothing is written when changed is False.
+    """
+    with _TOKENS_WRITE_LOCK:
+        with _TOKENS_LOCK:
+            _tokens_ensure_locked()
+            if not _tokens_matches_locked():
+                _tokens_load_locked()  # external write: that version wins
+            result, changed = change(_TOKENS)
+            if not changed:
+                return result
+            _TOKENS_META["gen"] += 1
+            snapshot, gen = _tokens_take_snapshot_locked()
+        _tokens_persist_locked(snapshot, gen)
+    return result
+
+
+def _tokens_commit():
+    """Persist the pending slides now (used when TOKENS_FLUSH_MAX_CHANGES is hit)."""
+    return flush_tokens()
+
+
+def flush_tokens():
+    """Persist the debounced `last_seen`/`exp` slides; return the row count written.
+
+    Does nothing when the index is clean, and drops the pending slides when
+    tokens.json was replaced by another process (that version wins).
+    """
+    with _TOKENS_WRITE_LOCK:
+        with _TOKENS_LOCK:
+            _tokens_ensure_locked()
+            if not _tokens_matches_locked():
+                _tokens_load_locked()
+                return 0
+            pruned = _tokens_prune_expired_locked()
+            if not _TOKENS_META["dirty"] and not pruned:
+                return 0
+            snapshot, gen = _tokens_take_snapshot_locked()
+        _tokens_persist_locked(snapshot, gen)
+        return len(snapshot)
+
+
+def _tokens_flusher_loop():
+    """Background loop: flush at most once every _TOKENS_FLUSH_S seconds.
+
+    Reads the interval on every tick so a test (or an operator) can change it
+    at runtime; a flusher failure must never take the server down.
+    """
+    last = time.time()
+    while True:
+        try:
+            time.sleep(1.0)
+            if time.time() - last < _TOKENS_FLUSH_S:
+                continue
+            last = time.time()
+            flush_tokens()
+        except Exception:  # noqa: BLE001 - best effort, retried next tick
+            continue
+
+
+def _start_tokens_flusher():
+    """Start the debounced-persistence thread once (daemon)."""
+    global _TOKENS_FLUSHER
+    with _TOKENS_LOCK:
+        if _TOKENS_FLUSHER is not None and _TOKENS_FLUSHER.is_alive():
+            return
+        _TOKENS_FLUSHER = threading.Thread(target=_tokens_flusher_loop,
+                                           name="tokens-flusher", daemon=True)
+        _TOKENS_FLUSHER.start()
+
+
+def _tokens_ready():
+    """Cheap per-request check that the flusher exists (no lock when it does)."""
+    if _TOKENS_FLUSHER is None:
+        _start_tokens_flusher()
+
+
+def install_token_flush_on_exit():
+    """Flush the token index on SIGTERM, then let the default handler stop us."""
+    def _handler(signum, _frame):
+        try:
+            flush_tokens()
+        finally:
+            signal.signal(signum, signal.SIG_DFL)
+            os.kill(os.getpid(), signum)
+    signal.signal(signal.SIGTERM, _handler)
 
 
 def load_tokens():
-    """Return {sha256(token): {user_id, exp, issued, last_seen, ua_hash}}."""
-    return _read_json(TOKENS_FILE, {})
+    """Return a copy of {sha256(token): {user_id, exp, issued, last_seen, ua_hash}}."""
+    _tokens_ready()
+    _tokens_refresh()
+    with _TOKENS_LOCK:
+        return _tokens_snapshot_locked()
 
 
 def save_tokens(tokens):
-    _write_json(TOKENS_FILE, tokens)
+    """Replace the whole index and write it atomically (tests and tooling)."""
+    _tokens_ready()
+    records = {key: dict(rec) if isinstance(rec, dict) else rec
+               for key, rec in (tokens or {}).items()}
+
+    def _replace(index):
+        index.clear()
+        index.update(records)
+        return None, True
+
+    _tokens_mutate(_replace)
 
 
 def _token_key(token):
@@ -2429,89 +2722,154 @@ def new_token(user_id, ua=""):
     Two expiry clocks: `exp` slides on activity (TOKEN_TTL, 30 days) and
     `absolute_exp` is a hard ceiling (TOKEN_ABSOLUTE_TTL, 90 days) that is
     never extended, so a stolen token cannot be kept alive forever.
+
+    A new session is a security mutation: it is written to disk before the
+    token is returned, exactly as before the index existed.
     """
-    with _TOKENS_LOCK:
-        tokens = load_tokens()
-        # Prune expired tokens
-        now = time.time()
-        tokens = {t: v for t, v in tokens.items()
-                  if v.get("exp", 0) > now
-                  and v.get("absolute_exp", now + 1) > now}
-        tok = secrets.token_hex(24)
-        tokens[_token_key(tok)] = {
+    _tokens_ready()
+    tok = secrets.token_hex(24)
+    now = time.time()
+
+    def _add(index):
+        # Prune expired tokens, then add the new session.
+        for key in [k for k, rec in index.items() if not _tokens_alive(rec, now)]:
+            del index[key]
+        index[_token_key(tok)] = {
             "user_id": user_id, "exp": now + TOKEN_TTL, "issued": now,
             "absolute_exp": now + TOKEN_ABSOLUTE_TTL,
             "last_seen": now, "ua_hash": _ua_hash(ua),
         }
-        save_tokens(tokens)
-    return tok
+        return tok, True
+
+    return _tokens_mutate(_add)
 
 
 def auth_from_token(token, ua="", ip="", rid=""):
     """Return (user_id, error) for a session token and extend its expiry (sliding).
 
     Tokens are stored hashed; a legacy plaintext record is migrated to its hash
-    on first use. The sliding expiry is capped by `absolute_exp`, which is set
-    once and never moved. A User-Agent change is logged as `ua_changed`
-    (never blocked).
+    on first use (that migration is written immediately). The sliding expiry is
+    capped by `absolute_exp`, which is set once and never moved. A User-Agent
+    change is logged as `ua_changed` (never blocked).
+
+    Resolved from the in-memory index: this is the hot path of every
+    authenticated request, so it only takes a short lock and never reads or
+    rewrites tokens.json. The slide is debounced into the flusher, and an
+    expired token is dropped from memory (the flusher removes the row on disk).
 
     error is None, "session expired" or "invalid session".
     """
     if not token:
         return None, "invalid session"
+    _tokens_ready()
     key = _token_key(token)
+    _tokens_refresh()  # reload only when tokens.json changed on disk (one stat)
     with _TOKENS_LOCK:
-        tokens = load_tokens()
-        v = tokens.get(key)
-        if v is None and token in tokens:  # legacy plaintext record → hash it
-            v = tokens.pop(token)
-            tokens[key] = v
-        if not v:
-            return None, "invalid session"
-        now = time.time()
-        abs_exp = v.get("absolute_exp")
+        if token in _TOKENS and key not in _TOKENS:
+            legacy = True  # plaintext record: handled below, off the fast path
+        else:
+            legacy = False
+            v = _TOKENS.get(key)
+            if not v:
+                return None, "invalid session"
+            now = time.time()
+            abs_exp = v.get("absolute_exp")
+            if not isinstance(abs_exp, (int, float)):
+                # Records written before the absolute ceiling existed: anchor it
+                # to `issued` so the token cannot gain a fresh 90 days per use.
+                abs_exp = v.get("issued", now) + TOKEN_ABSOLUTE_TTL
+                v["absolute_exp"] = abs_exp
+            if now >= abs_exp or v.get("exp", 0) < now:
+                _TOKENS.pop(key, None)
+                _TOKENS_META["gen"] += 1
+                _TOKENS_META["dirty"] = True
+                return None, "session expired"
+            v["exp"] = min(now + TOKEN_TTL, abs_exp)  # never past the ceiling
+            v["last_seen"] = now
+            ua_h = _ua_hash(ua)
+            audit = (v.get("user_id", ""), ip, rid) if (
+                v.get("ua_hash") and v["ua_hash"] != ua_h) else None
+            if ua_h:
+                v["ua_hash"] = ua_h
+            force = _tokens_touch_locked()
+            uid = v.get("user_id")
+    if legacy:
+        return _auth_migrate_legacy(token, key, ua, ip, rid)
+    # Outside the index lock: the audit append touches the disk and must not
+    # serialise other request threads behind it.
+    if audit:
+        _audit("ua_changed", audit[0], audit[1], audit[2])
+    if force:
+        _tokens_commit()
+    return uid, None
+
+
+def _auth_migrate_legacy(token, key, ua, ip, rid):
+    """One-off migration of a pre-hash plaintext record; persisted immediately."""
+    now = time.time()
+    outcome = {}
+
+    def _migrate(index):
+        record = index.pop(token, None)
+        if record is None:
+            return None, False
+        if not isinstance(record, dict):
+            return None, False
+        index[key] = record
+        abs_exp = record.get("absolute_exp")
         if not isinstance(abs_exp, (int, float)):
-            # Records written before the absolute ceiling existed: anchor it to
-            # `issued` so the token cannot gain a fresh 90 days on every use.
-            abs_exp = v.get("issued", now) + TOKEN_ABSOLUTE_TTL
-            v["absolute_exp"] = abs_exp
-        if now >= abs_exp or v.get("exp", 0) < now:
-            tokens.pop(key, None)
-            save_tokens(tokens)
-            return None, "session expired"
-        v["exp"] = min(now + TOKEN_TTL, abs_exp)  # sliding, never past the ceiling
-        v["last_seen"] = now
+            abs_exp = record.get("issued", now) + TOKEN_ABSOLUTE_TTL
+            record["absolute_exp"] = abs_exp
+        if now >= abs_exp or record.get("exp", 0) < now:
+            index.pop(key, None)
+            outcome["error"] = "session expired"
+            return None, True
+        record["exp"] = min(now + TOKEN_TTL, abs_exp)
+        record["last_seen"] = now
         ua_h = _ua_hash(ua)
-        if v.get("ua_hash") and v["ua_hash"] != ua_h:
-            _audit("ua_changed", v.get("user_id", ""), ip, rid)
+        if record.get("ua_hash") and record["ua_hash"] != ua_h:
+            outcome["audit"] = (record.get("user_id", ""), ip, rid)
         if ua_h:
-            v["ua_hash"] = ua_h
-        save_tokens(tokens)
-        return v.get("user_id"), None
+            record["ua_hash"] = ua_h
+        outcome["uid"] = record.get("user_id")
+        return outcome["uid"], True
+
+    uid = _tokens_mutate(_migrate)
+    if outcome.get("audit"):
+        _audit("ua_changed", outcome["audit"][0], outcome["audit"][1], outcome["audit"][2])
+    if outcome.get("error"):
+        return None, outcome["error"]
+    if uid is None:
+        return None, "invalid session"
+    return uid, None
 
 
 def revoke_token(token):
     """Delete one session; return the user id it belonged to ("" when unknown)."""
-    with _TOKENS_LOCK:
-        tokens = load_tokens()
+    _tokens_ready()
+
+    def _drop(index):
         key = _token_key(token)
-        rec = tokens.pop(key, None)
+        rec = index.pop(key, None)
         if rec is None:
-            rec = tokens.pop(token, None)
-        if rec is not None:
-            save_tokens(tokens)
-        return rec.get("user_id", "") if isinstance(rec, dict) else ""
+            rec = index.pop(token, None)
+        return (rec.get("user_id", "") if isinstance(rec, dict) else ""), rec is not None
+
+    return _tokens_mutate(_drop)
 
 
 def revoke_user_sessions(user_id):
     """Delete every session of one user; return how many were revoked."""
-    with _TOKENS_LOCK:
-        tokens = load_tokens()
-        kept = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
-        revoked = len(tokens) - len(kept)
-        if revoked:
-            save_tokens(kept)
-        return revoked
+    _tokens_ready()
+
+    def _drop_all(index):
+        keys = [key for key, rec in index.items()
+                if isinstance(rec, dict) and rec.get("user_id") == user_id]
+        for key in keys:
+            del index[key]
+        return len(keys), bool(keys)
+
+    return _tokens_mutate(_drop_all)
 
 
 def public_user(u):
@@ -3016,10 +3374,7 @@ def delete_user(user_id):
     # Phase 34: the Google link and any passkeys must not outlive the account.
     _oauth_forget_user(user_id)
     _webauthn_forget_user(user_id)
-    with _TOKENS_LOCK:
-        tokens = load_tokens()
-        tokens = {t: v for t, v in tokens.items() if v.get("user_id") != user_id}
-        save_tokens(tokens)
+    revoke_user_sessions(user_id)
 
 
 def migrate_legacy():
@@ -6635,6 +6990,10 @@ class B2HTTPServer(ThreadingHTTPServer):
 if __name__ == "__main__":
     if not _is_demo():
         migrate_legacy()
+    # Debounced token persistence: the index is loaded once here, flushed in the
+    # background and once more on SIGTERM (systemd stop/restart).
+    _start_tokens_flusher()
+    install_token_flush_on_exit()
     srv = B2HTTPServer((B2_HOST, PORT), H)
     print(f"B2First portal at http://{B2_HOST}:{srv.server_address[1]} (root={ROOT})")
     srv.serve_forever()
