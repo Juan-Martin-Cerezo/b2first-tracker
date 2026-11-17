@@ -207,20 +207,27 @@ check("14_no_user_data_writes", user_data(_tmp) == before, f"{user_data(_tmp)} !
 # 15. The bind address defaults to loopback
 check("15_bind_default_loopback", S.B2_HOST == "127.0.0.1", f"{S.B2_HOST!r}")
 
-# 16. With every connection permit held, the next request gets 503 + Retry-After
+# 16. With every connection permit held, the next request gets 503 + Retry-After.
+# API callers get the JSON body; a browser gets a minimal HTML page (no traceback).
 held = 0
 try:
     while S._CONN_SEM.acquire(blocking=False):
         held += 1
+    st_api, h_api, body_api = raw_req("GET", "/api/config")
     st, h, body = raw_req("GET", "/")
 finally:
     for _ in range(held):
         S._CONN_SEM.release()
-payload = json.loads(body) if body else {}
-check("16_connection_cap_503",
-      st == 503 and h.get("retry-after") == "1"
+payload = json.loads(body_api) if body_api else {}
+check("16_connection_cap_503_json",
+      st_api == 503 and h_api.get("retry-after") == "1"
       and payload.get("error") == "busy" and payload.get("retry_after") == 1,
-      f"{st} {h.get('retry-after')} {body[:120]}")
+      f"{st_api} {h_api.get('retry-after')} {body_api[:120]}")
+check("16_connection_cap_503_html",
+      st == 503 and h.get("retry-after") == "1"
+      and h.get("content-type", "").startswith("text/html")
+      and b"Busy right now" in body and b"Traceback" not in body,
+      f"{st} {h.get('content-type')} {body[:120]}")
 
 srv.shutdown()
 print("SERVER_HARDENING_EXIT", 1 if failed else 0)

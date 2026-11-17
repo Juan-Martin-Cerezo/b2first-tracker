@@ -143,7 +143,11 @@ def isolated_server(extra_env=None, data_dir=None):
     for k, v in (extra_env or {}).items():
         os.environ[str(k)] = str(v)
     S = _adopt_data_dir(path)
-    srv = S.ThreadingHTTPServer(("127.0.0.1", 0), S.H)
+    # The production subclass carries the real listen backlog; the plain
+    # ThreadingHTTPServer default (5) turns a 500-client burst into refused
+    # connections before the app ever sees it.
+    server_cls = getattr(S, "B2HTTPServer", S.ThreadingHTTPServer)
+    srv = server_cls(("127.0.0.1", 0), S.H)
     thread = threading.Thread(target=srv.serve_forever, daemon=True)
     thread.start()
 

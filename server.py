@@ -39,6 +39,7 @@ import base64, binascii
 import struct
 import calendar
 import socket
+import select
 import urllib.request, urllib.error
 import ipaddress
 import traceback
@@ -276,9 +277,17 @@ _RATE_STATS = {"user": 0, "ip": 0}  # cumulative 429s, exposed by /api/metrics
 # Per-user buckets for authenticated API traffic (a shared school/CGNAT IP must
 # never rate-limit 50 students as if they were one abuser). Anonymous traffic
 # and the credential endpoints stay IP-bucketed.
-RATE_USER_API = _env_int("B2_RATE_USER_API", 600)   # requests/min per user
-RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 30)      # login+register+password per IP/min
+#
+# NAT note: a classroom, a hackathon jury or any CGNAT reaches us through one
+# public IP, so IP buckets count many legitimate people together. They are
+# anti-flood ceilings only; the real brute-force protection is per account
+# (username lockout + exponential backoff below), which survives IP changes and
+# stays strict. All ceilings are env-tunable for the operator.
+RATE_USER_API = _env_int("B2_RATE_USER_API", 600)    # requests/min per user
+RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 120)      # login+register+password per IP/min
 RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
+REGISTER_PER_HOUR = _env_int("B2_REGISTER_PER_HOUR", 20)   # signups per IP/hour
+LOGIN_IP_PER_10MIN = _env_int("B2_LOGIN_IP_PER_10MIN", 60)  # login POSTs per IP/10min
 AUTH_RATE_PATHS = (
     "/api/login", "/api/register", "/api/password",
     "/api/password-reset/request",
@@ -3444,6 +3453,17 @@ _UNAVAILABLE_HTML = (
     b"Please retry in a moment.</p></body></html>"
 )
 
+# Overload page: a human asking for HTML never gets a JSON blob or a traceback.
+_BUSY_HTML = (
+    b"<!doctype html><html><head><meta charset=\"utf-8\">"
+    b"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+    b"<title>Busy</title></head><body style=\"font-family:system-ui;"
+    b"max-width:32rem;margin:3rem auto;padding:0 1rem;line-height:1.5\">"
+    b"<h1>Busy right now</h1>"
+    b"<p>Too many people are using the app at the same time. "
+    b"Please retry in a few seconds.</p></body></html>"
+)
+
 
 def _compressible(ctype):
     """True for text-shaped payloads worth gzipping (skip already-compressed ones)."""
@@ -3567,16 +3587,16 @@ class H(BaseHTTPRequestHandler):
         """Cap simultaneous connections; answer 503 when the semaphore is exhausted.
 
         Non-blocking acquire: an overloaded server fails fast with Retry-After
-        instead of parking the request thread until a slot frees up.
+        instead of parking the request thread until a slot frees up. The request
+        line has not been parsed here, so the target is peeked (bounded) only to
+        choose a JSON or an HTML busy body.
         """
         if not _CONN_SEM.acquire(blocking=False):
             self._begin()
+            self.path = self._peek_path()
             self.close_connection = True
             try:
-                self._send_json(503, {"error": "busy", "retry_after": 1},
-                                {"Retry-After": "1"})
-            except OSError:
-                pass
+                self._send_busy(503, 1)
             finally:
                 self._log_line()
             return
@@ -3584,6 +3604,24 @@ class H(BaseHTTPRequestHandler):
             super().handle()
         finally:
             _CONN_SEM.release()
+
+    def _peek_path(self):
+        """Request target from the socket buffer, without consuming or blocking.
+
+        Only used on the connection-cap path, where the request line has not
+        been parsed yet: it tells an /api/* caller (JSON error) from a browser
+        (small HTML page). An empty string when nothing is available.
+        """
+        try:
+            ready, _, _ = select.select([self.connection], [], [], 0.05)
+            if not ready:
+                return ""
+            head = self.connection.recv(256, socket.MSG_PEEK)
+        except (OSError, ValueError):
+            return ""
+        line = head.split(b"\n", 1)[0].decode("latin-1", "replace")
+        parts = line.split(" ")
+        return parts[1] if len(parts) > 1 else ""
 
     def _begin(self):
         """Initialize the per-request logging state.
@@ -3640,7 +3678,7 @@ class H(BaseHTTPRequestHandler):
         try:
             self._handle()
         except store.StoreBusy:
-            self._safe_json(429, {"error": "busy", "retry_after": 2}, {"Retry-After": "2"})
+            self._send_busy(429, 2)
         except (ConnectionResetError, BrokenPipeError):
             pass  # client went away: just close, never write
         except TimeoutError:
@@ -3656,6 +3694,23 @@ class H(BaseHTTPRequestHandler):
         """Best-effort JSON response (the client may already be gone)."""
         try:
             self._send_json(code, obj, extra)
+        except OSError:
+            pass
+
+    def _send_busy(self, code, retry):
+        """429/503 under load: JSON for /api/*, a minimal page for HTML, never a hang.
+
+        Both carry Retry-After and close the connection. The body shapes are the
+        documented ones (`{"error": "busy", "retry_after": N}` for the API), so a
+        client can back off without parsing HTML.
+        """
+        self.close_connection = True
+        extra = {"Retry-After": str(retry), "Cache-Control": "no-store"}
+        if (self.path or "").startswith("/api/"):
+            self._safe_json(code, {"error": "busy", "retry_after": retry}, extra)
+            return
+        try:
+            self._send(code, _BUSY_HTML, "text/html; charset=utf-8", extra)
         except OSError:
             pass
 
@@ -3897,12 +3952,35 @@ class H(BaseHTTPRequestHandler):
             return 0
 
     def _drain(self):
-        """Read and discard the request body (bounded) so the client can finish."""
+        """Read and discard the request body (bounded) so the client can finish.
+
+        Never blocks for a body that will not arrive: a reject path can run
+        after the handler already consumed the body (a per-account bucket is
+        checked once the JSON is parsed), and waiting for those bytes used to
+        turn a 429 into a 15 s socket timeout. When nothing is left on the
+        wire the connection is closed instead, which is the clean way out.
+        """
         remaining = min(self._clen(), 16 * 1024 * 1024)
+        if remaining <= 0:
+            return
+        deadline = time.time() + 0.25
         while remaining > 0:
+            if time.time() >= deadline:
+                self.close_connection = True
+                return
+            try:
+                ready, _, _ = select.select([self.connection], [], [], 0.05)
+            except (OSError, ValueError):
+                self.close_connection = True
+                return
+            if not ready:
+                # The body was already consumed (or the client stopped sending).
+                self.close_connection = True
+                return
             chunk = self.rfile.read(min(remaining, 65536))
             if not chunk:
-                break
+                self.close_connection = True
+                return
             remaining -= len(chunk)
 
     def _bearer(self):
@@ -4738,7 +4816,7 @@ class H(BaseHTTPRequestHandler):
             migrate_legacy()
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
-            if self._rate_limited("register:" + _real_ip(self), 5, 3600):
+            if self._rate_limited("register:" + _real_ip(self), REGISTER_PER_HOUR, 3600):
                 return
             if _register_mode() == "closed":
                 clen = int(self.headers.get("Content-Length", 0) or 0)
@@ -4780,7 +4858,7 @@ class H(BaseHTTPRequestHandler):
             if self.command != "POST":
                 self._send(405, b"method not allowed", "text/plain"); return
             ip = _real_ip(self)
-            if self._rate_limited("login-ip:" + ip, 10, 600):
+            if self._rate_limited("login-ip:" + ip, LOGIN_IP_PER_10MIN, 600):
                 return
             raw = self.rfile.read(self._clen())
             try:
