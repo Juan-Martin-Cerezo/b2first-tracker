@@ -1093,6 +1093,8 @@ tbody tr:hover{background:var(--surface-2)}
 #v-hoy .today-grid>.card{margin-bottom:0}
 #v-hoy #todaySession,#v-hoy #practiceNow{padding:var(--s5)}
 #v-hoy #todaySession{
+  container-type:inline-size;
+  width:100%;
   display:flex;
   flex-direction:column;
   justify-content:flex-start;
@@ -1181,6 +1183,10 @@ tbody tr:hover{background:var(--surface-2)}
   flex-wrap:wrap;
   align-items:center;
   gap:var(--s3);
+}
+@container (max-width:400px){
+  #v-hoy .ts-row .ts-actions{flex-direction:column;align-items:stretch}
+  #v-hoy .ts-row .ts-actions>.btn{width:100%}
 }
 #v-hoy .ts-microcopy{
   font-size:var(--today-fs-meta);
