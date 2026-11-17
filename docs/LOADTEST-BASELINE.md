@@ -301,3 +301,24 @@ python3 tools/loadtest.py --url http://127.0.0.1:9000 --scenario mixed \
 Never point the runner at the production port (8088) unless you really mean
 it: the runner refuses it without `--prod`, and `--prod` never seeds — it uses
 the credentials file you give it.
+
+## after C1
+
+2026-11-17, this machine, temporary `B2_DEMO=1` server on loopback with the new
+defaults (`B2_RATE_IP_AUTH=120/min`, `B2_REGISTER_PER_HOUR=20`,
+`B2_LOGIN_IP_PER_10MIN=60`, `B2_RATE_IP_ANON=300/min`), static cache warm:
+
+| metric | value |
+| --- | --- |
+| connections | 200 |
+| duration | 10.24 s |
+| requests | 6787 (662.6 req/s) |
+| statuses | `200: 6118`, `429: 669` |
+| transport errors | 0 |
+| p50 | 270.8 ms |
+| p95 | **404.7 ms** |
+| p99 | 433.4 ms |
+
+All 669 sheds are `/api/config` hits over the 300/min anonymous bucket; the
+landing and tracker keep answering 200 with no 5xx and no dropped connection.
+Re-test with `--json` for a machine-readable copy.

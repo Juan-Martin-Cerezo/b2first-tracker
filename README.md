@@ -241,8 +241,10 @@ Every setting is optional and read from the environment.
 | `B2_REQUEST_QUEUE_SIZE` | `256` | `listen()` backlog. |
 | `B2_NO_CACHE` | `0` | `1` disables the static gzip/ETag cache. |
 | `B2_RATE_USER_API` | `600` | Authenticated API requests per minute per account. |
-| `B2_RATE_IP_AUTH` | `30` | Login, register and password requests per minute per IP. |
+| `B2_RATE_IP_AUTH` | `120` | Login, register and password requests per minute per IP. |
 | `B2_RATE_IP_ANON` | `300` | Anonymous API requests per minute per IP. `B2_RATE_IP_API` is accepted as an alias. |
+| `B2_REGISTER_PER_HOUR` | `20` | Signups per IP per hour. |
+| `B2_LOGIN_IP_PER_10MIN` | `60` | Login POSTs per IP per 10 minutes. The per-username lockout is the primary brute-force guard. |
 | `B2_LICENSE_SECRET` | empty | 32+ byte secret that signs pro activation codes. Unset makes redemption answer `503`. |
 
 **AI writing**
