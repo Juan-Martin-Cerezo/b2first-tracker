@@ -248,6 +248,9 @@ SPK_TURN_HISTORY_TURNS = 6           # rolling window; never persisted
 SPK_TURN_HISTORY_CHARS = 500
 SPK_TURN_RATE_PER_MIN = 20           # turns per minute per account
 SPK_TURN_TIMEOUT = 20                # seconds per upstream call
+# Phase C2: one turn must never hold its thread longer than this, whatever the
+# upstream does. Each upstream call inside a turn is capped to what is left.
+SPK_TURN_DEADLINE = SPK_TURN_TIMEOUT + 5
 SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
 
 # Money guard. Google Cloud has no hard dollar cap: when the credit runs out the
@@ -266,6 +269,201 @@ SPK_TTS_VOICES = {"examiner": "Puck", "partner": "Kore"}
 SPK_TURN_MIMES = ("audio/pcm", "audio/wav", "audio/x-wav", "audio/wave", "audio/l16")
 SPK_TTS_CACHE_MAX = 40               # cached scripted lines, LRU by mtime
 SPK_WARM_MAX_LINES = 24              # lines one warm request may pre-generate
+
+# --- Phase C2: bounded concurrency towards the speaking upstream ------------
+# A Pi 5 serves one spoken turn per upstream request, and turn, TTS, report,
+# partner and PA all spend the same provider key. Without a gate, 20 parallel
+# mocks park 20 threads on the upstream until the timeout, which ends in
+# provider 429s and a CPU spike. One global gate bounds the whole instance;
+# a caller that cannot get a slot within B2_SPK_QUEUE_WAIT gets a clean 503 +
+# Retry-After instead of adding to the pile.
+SPK_MAX_INFLIGHT_DEFAULT = 4         # simultaneous upstream calls per instance
+SPK_QUEUE_WAIT_DEFAULT = 8           # seconds a caller may wait for a slot
+SPK_BUSY_RETRY_S = 5                 # Retry-After of the 503 busy
+_SPK_STATS_LOCK = threading.Lock()
+_SPK_UPSTREAM_STATS = {"busy_503": 0, "timeout_504": 0, "rate_limited_429": 0}
+
+
+class _SpeakingGate:
+    """Counting gate for the speaking upstream; only numbers are kept.
+
+    Capacity is read on every acquire, so the operator retunes the instance
+    with B2_SPK_MAX_INFLIGHT without a restart. Waiters are bounded by
+    `wait_s` (B2_SPK_QUEUE_WAIT): past it they are refused and counted, never
+    parked until the upstream gives up.
+    """
+
+    def __init__(self):
+        self._cond = threading.Condition()
+        self._active = 0
+        self._waiting = 0
+        self._peak = 0
+        self._rejected = 0
+
+    def acquire(self, limit, wait_s):
+        """True when a slot is held, False when the queue wait ran out."""
+        deadline = time.monotonic() + max(0.0, wait_s)
+        with self._cond:
+            while self._active >= limit:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    self._rejected += 1
+                    return False
+                self._waiting += 1
+                try:
+                    self._cond.wait(remaining)
+                finally:
+                    self._waiting -= 1
+            self._active += 1
+            if self._active > self._peak:
+                self._peak = self._active
+            return True
+
+    def release(self):
+        with self._cond:
+            if self._active > 0:
+                self._active -= 1
+            self._cond.notify()
+
+    def snapshot(self):
+        with self._cond:
+            return {
+                "inflight": self._active,
+                "waiting": self._waiting,
+                "peak_inflight": self._peak,
+                "queue_rejected": self._rejected,
+            }
+
+
+_SPK_GATE = _SpeakingGate()
+
+
+def _spk_max_inflight():
+    """Simultaneous upstream calls allowed on this instance (at least one)."""
+    return max(1, _env_int("B2_SPK_MAX_INFLIGHT", SPK_MAX_INFLIGHT_DEFAULT))
+
+
+def _spk_queue_wait():
+    """Seconds a caller may wait for a slot before the 503 busy."""
+    try:
+        value = float((os.environ.get("B2_SPK_QUEUE_WAIT")
+                       or str(SPK_QUEUE_WAIT_DEFAULT)).strip())
+    except ValueError:
+        return float(SPK_QUEUE_WAIT_DEFAULT)
+    return max(0.0, value)
+
+
+def _spk_stat(name):
+    """Count one speaking overload event (numbers only, never user data)."""
+    with _SPK_STATS_LOCK:
+        _SPK_UPSTREAM_STATS[name] = _SPK_UPSTREAM_STATS.get(name, 0) + 1
+
+
+def _spk_upstream_snapshot():
+    """Counters for /api/health: the gate plus the refusals it caused."""
+    out = _SPK_GATE.snapshot()
+    with _SPK_STATS_LOCK:
+        out.update(_SPK_UPSTREAM_STATS)
+    out["max_inflight"] = _spk_max_inflight()
+    out["queue_wait_s"] = round(_spk_queue_wait(), 1)
+    out["turn_deadline_s"] = SPK_TURN_DEADLINE
+    return out
+
+
+def _spk_upstream_wait(deadline):
+    """Queue wait for one upstream call: B2_SPK_QUEUE_WAIT, capped by the turn."""
+    if deadline is None:
+        return _spk_queue_wait()
+    return min(_spk_queue_wait(), max(0.0, deadline - time.monotonic()))
+
+
+def _spk_upstream_timeout(deadline):
+    """Per-call timeout: what is left of the turn budget, at most one call."""
+    if deadline is None:
+        return float(SPK_TURN_TIMEOUT)
+    return min(float(SPK_TURN_TIMEOUT), max(0.0, deadline - time.monotonic()))
+
+
+def _spk_enter(deadline):
+    """Hold one upstream slot. Returns (timeout_s, error); error means refused.
+
+    The socket timeout is what is left of the turn budget *after* the queue
+    wait, so queueing never pushes the call past the deadline. A refused
+    caller never reaches the provider: "busy" is the queue wait running out,
+    "upstream_timeout" is the turn deadline already gone.
+    """
+    if _spk_upstream_timeout(deadline) <= 0:
+        return 0.0, "upstream_timeout"
+    if not _SPK_GATE.acquire(_spk_max_inflight(), _spk_upstream_wait(deadline)):
+        return 0.0, "busy"
+    timeout = _spk_upstream_timeout(deadline)
+    if timeout <= 0:
+        _SPK_GATE.release()
+        return 0.0, "upstream_timeout"
+    return timeout, None
+
+
+def _spk_release():
+    """Drop the upstream slot taken by _spk_enter (safe to call in finally)."""
+    _SPK_GATE.release()
+
+
+def _spk_run(fn, deadline):
+    """Run one upstream call under the gate with a hard wall-clock deadline.
+
+    Returns ``(value, error)``. The queue wait happens here, in the handler
+    thread, so the 503 "busy" is decided without spawning anything. The socket
+    call itself runs on a daemon worker because a blocking stdlib read cannot
+    be interrupted: the handler stops waiting at ``deadline`` and answers 504,
+    while the worker releases its gate slot when the provider really answers or
+    its own socket timeout fires. No thread is parked past the turn budget and
+    no slot is leaked.
+    """
+    timeout, refused = _spk_enter(deadline)
+    if refused:
+        return None, refused
+    # The socket timeout stays just below the handler's wait so a provider that
+    # answers right at the boundary is delivered instead of being reported as a
+    # timeout on a race.
+    socket_timeout = max(0.1, timeout - 0.25)
+    box = {"value": None, "error": None, "done": threading.Event()}
+
+    def run():
+        try:
+            box["value"] = fn(socket_timeout)
+        except Exception:
+            traceback.print_exc()
+            box["error"] = "upstream_failed"
+        finally:
+            try:
+                _spk_release()
+            finally:
+                box["done"].set()
+
+    threading.Thread(target=run, name="spk-upstream", daemon=True).start()
+    if not box["done"].wait(timeout):
+        return None, "upstream_timeout"
+    if box["error"]:
+        return None, box["error"]
+    return box["value"], None
+
+
+def _spk_upstream_refusal(error, body):
+    """Map a refused/failed upstream call to ``(code, body, headers)``.
+
+    "busy" is the bounded queue: the caller gets a 503 with Retry-After and no
+    provider call. "upstream_timeout" is the turn deadline: a 504, never a
+    silent 502 that the client would retry into the same wall.
+    """
+    if error == "busy":
+        _spk_stat("busy_503")
+        return (503, {"error": "busy", "retry_after": SPK_BUSY_RETRY_S},
+                {"Retry-After": str(SPK_BUSY_RETRY_S)})
+    if error == "upstream_timeout":
+        _spk_stat("timeout_504")
+        return 504, {"error": "timeout", "reason": "upstream_timeout"}, None
+    return 502, body, None
+
 
 # --- In-memory rate limiting (stdlib only; the server is a ThreadingHTTPServer) ---
 _RATE_LOCK = threading.Lock()
@@ -1378,13 +1576,27 @@ def _spk_turn_contents(history):
     return contents
 
 
-def _spk_turn_understand(api_key, system, history, audio_b64, mime):
+def _spk_turn_understand(api_key, system, history, audio_b64, mime, deadline=None):
     """One Gemini call: transcribe the candidate's audio AND write the reply.
 
     Returns ``(transcript, reply, ms, error)``. One call instead of two is what
     keeps the stop-talking → first-audio latency inside the target; `ms` is the
     whole call, so the response reports stt as 0 and the cost under llm.
+    The call runs inside the instance gate and under the turn ``deadline``
+    (monotonic); a caller that cannot be served gets "busy" or
+    "upstream_timeout" without touching the provider.
     """
+    value, error = _spk_run(
+        lambda timeout: _spk_turn_understand_locked(
+            api_key, system, history, audio_b64, mime, timeout),
+        deadline)
+    if error:
+        return None, None, 0, error
+    return value
+
+
+def _spk_turn_understand_locked(api_key, system, history, audio_b64, mime,
+                                timeout):
     contents = _spk_turn_contents(history)
     spoken = [
         {"inlineData": {"mimeType": mime, "data": audio_b64}},
@@ -1409,7 +1621,7 @@ def _spk_turn_understand(api_key, system, history, audio_b64, mime):
     started = time.time()
     body, error = _provider_complete(_spk_turn_base(), api_key, _spk_turn_model(),
                                      payload, wire="gemini",
-                                     timeout=SPK_TURN_TIMEOUT)
+                                     timeout=timeout)
     ms = int((time.time() - started) * 1000)
     if error:
         return None, None, ms, error
@@ -1428,8 +1640,17 @@ def _spk_turn_understand(api_key, system, history, audio_b64, mime):
     return transcript.strip()[:2000], reply.strip()[:900], ms, None
 
 
-def _spk_tts(api_key, text, voice):
+def _spk_tts(api_key, text, voice, deadline=None):
     """One TTS call. Returns ``(wav_bytes, ms, error)``; PCM is wrapped as WAV."""
+    value, error = _spk_run(
+        lambda timeout: _spk_tts_locked(api_key, text, voice, timeout),
+        deadline)
+    if error:
+        return None, 0, error
+    return value
+
+
+def _spk_tts_locked(api_key, text, voice, timeout):
     payload = {
         "contents": [{"parts": [{"text": text}]}],
         "generationConfig": {
@@ -1441,7 +1662,7 @@ def _spk_tts(api_key, text, voice):
     started = time.time()
     body, error = _provider_complete(_spk_turn_base(), api_key, _spk_tts_model(),
                                      payload, wire="gemini",
-                                     timeout=SPK_TURN_TIMEOUT,
+                                     timeout=timeout,
                                      max_bytes=4 * 1024 * 1024)
     ms = int((time.time() - started) * 1000)
     if error:
@@ -1550,14 +1771,14 @@ def _spk_tts_cache_put(text, voice, wav):
         return
 
 
-def _spk_tts_cached(api_key, text, voice):
+def _spk_tts_cached(api_key, text, voice, deadline=None):
     """``(wav, ms, cached, error)``: cache first, upstream TTS on a miss."""
     started = time.time()
     with _SPK_TTS_LOCK:
         cached = _spk_tts_cache_get(text, voice)
     if cached is not None:
         return cached, int((time.time() - started) * 1000), True, None
-    wav, ms, error = _spk_tts(api_key, text, voice)
+    wav, ms, error = _spk_tts(api_key, text, voice, deadline=deadline)
     if error:
         return None, ms, False, error
     # One paid upstream call, one tick of the instance meter. A cache hit above
@@ -1909,7 +2130,9 @@ def _provider_complete(base, key, model, payload, wire="openai",
     Returns ``(parsed_body, error)``. The key is used only in the request
     headers: it is never logged, stored or returned. Redirects are refused,
     the read is capped and the timeout is fixed, so a hostile endpoint cannot
-    turn this into an unbounded request.
+    turn this into an unbounded request. A stalled provider is reported as
+    ``upstream_timeout`` (the speaking turn answers 504 for it), anything else
+    as ``upstream_failed``.
     """
     if wire == "gemini":
         url = base.rstrip("/") + "/models/" + model + ":generateContent"
@@ -1927,8 +2150,13 @@ def _provider_complete(base, key, model, payload, wire="openai",
     try:
         with opener.open(request, timeout=timeout) as response:
             raw = response.read(max_bytes + 1)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
-            OSError, ValueError):
+    except TimeoutError:              # socket.timeout is TimeoutError since 3.10
+        return None, "upstream_timeout"
+    except urllib.error.URLError as exc:   # also catches HTTPError (a subclass)
+        if isinstance(getattr(exc, "reason", None), TimeoutError):
+            return None, "upstream_timeout"
+        return None, "upstream_failed"
+    except (OSError, ValueError):
         return None, "upstream_failed"
     if len(raw) > max_bytes:
         return None, "upstream_failed"
@@ -1941,14 +2169,17 @@ def _provider_complete(base, key, model, payload, wire="openai",
     return body, None
 
 
-def _ai_text_complete(system, user_block, byo=None):
-    """One text-model call for the speaking report.
+def _ai_text_complete(system, user_block, byo=None, deadline=None):
+    """One text-model call for the speaking report or the partner line.
 
     With ``byo`` the call runs on the user's own key and base (OpenAI wire);
     without it, on the owner's key (DeepSeek or Gemini) and quota. Returns
     ``(content, error)``; the raw provider body is never returned, echoed or
-    logged.
+    logged. The call holds one slot of the instance speaking gate; without an
+    explicit ``deadline`` it gets one turn budget of its own.
     """
+    if deadline is None:
+        deadline = time.monotonic() + SPK_TURN_DEADLINE
     if byo:
         api_key, base, model, wire = byo["key"], byo["base"], byo["model"], "openai"
     else:
@@ -1980,7 +2211,13 @@ def _ai_text_complete(system, user_block, byo=None):
             "response_format": {"type": "json_object"},
             "temperature": 0.2,
         }
-    body, error = _provider_complete(base, api_key, model, payload, wire=wire)
+    result, run_err = _spk_run(
+        lambda timeout: _provider_complete(base, api_key, model, payload,
+                                           wire=wire, timeout=timeout),
+        deadline)
+    if run_err:
+        return None, run_err
+    body, error = result
     if error:
         return None, error
     try:
@@ -2891,6 +3128,9 @@ def _health_check():
         "data_dir": DATA_DIR if _public_health() else os.path.basename(DATA_DIR),
         "version": "1.0.0",
         "uptime_s": int(time.time() - _START_TS),
+        # Phase C2: instance-wide overload numbers only (no account, no
+        # content), so an operator can tell a slow provider from a full queue.
+        "speaking_upstream": _spk_upstream_snapshot(),
     }
 
 
@@ -3785,6 +4025,17 @@ class H(BaseHTTPRequestHandler):
         else:
             self._send_raw(200, entry["raw"], ctype, extra)
 
+    def _spk_refuse(self, error, body):
+        """Answer a refused/failed speaking upstream call, closing after a 504.
+
+        A timed-out turn is answered and its connection dropped: the client
+        must not reuse a socket whose handler just ran out of budget.
+        """
+        code, out, extra = _spk_upstream_refusal(error, body)
+        if code == 504:
+            self.close_connection = True
+        self._send_json(code, out, extra)
+
     def _send_json(self, code, obj, extra=None):
         """Helper: JSON response."""
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -3799,6 +4050,8 @@ class H(BaseHTTPRequestHandler):
         if _rate(key, limit, window_s):
             return False
         _rate_stat(kind)
+        if self.path.split("?", 1)[0].startswith("/api/speaking/"):
+            _spk_stat("rate_limited_429")
         if kind == "user":
             # No personal data, no content: just who hit the bucket and where.
             uid = key.split(":", 1)[1] if ":" in key else ""
@@ -3818,6 +4071,8 @@ class H(BaseHTTPRequestHandler):
         """
         _audit("plan_limit_hit", uid or "", _real_ip(self), self._rid,
                {"limit": limit, "plan": plan})
+        if limit == "speaking":
+            _spk_stat("rate_limited_429")
         self._send_json(429, {
             "error": "plan_limit",
             "limit": limit,
@@ -5307,11 +5562,16 @@ class H(BaseHTTPRequestHandler):
                 return
             if _spk_remaining_s(uid) <= 0:
                 reset = (date.today() + timedelta(days=1)).isoformat()
+                _spk_stat("rate_limited_429")
                 self._send_json(429, {"error": "daily speaking limit reached",
                                       "reset": reset})
                 return
 
             started = time.time()
+            # Phase C2: the whole turn has a hard budget. Both upstream calls
+            # (reply, then TTS) share it, so a stuck provider cannot hold the
+            # handler thread past this point.
+            deadline = time.monotonic() + SPK_TURN_DEADLINE
             say = req.get("say")
             if "audio_b64" not in req and isinstance(say, str) and say.strip():
                 text = say.strip()[:SPK_TURN_MAX_SAY]
@@ -5331,9 +5591,11 @@ class H(BaseHTTPRequestHandler):
                                "total": total, "cached": False},
                     })
                     return
-                wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, text, voice)
+                wav, tts_ms, cached, tts_err = _spk_tts_cached(
+                    api_key, text, voice, deadline=deadline)
                 if tts_err:
-                    self._send_json(502, {"error": "tts_failed", "reason": tts_err})
+                    self._spk_refuse(tts_err, {"error": "tts_failed",
+                                               "reason": tts_err})
                     return
                 if session_id and not known:
                     _spk_turn_session_mark(uid, session_id)
@@ -5380,9 +5642,10 @@ class H(BaseHTTPRequestHandler):
             stream = req.get("stream") is True
             system = _spk_turn_instruction(role, part, task)
             transcript, reply, llm_ms, llm_err = _spk_turn_understand(
-                api_key, system, history, audio_b64, mime)
+                api_key, system, history, audio_b64, mime, deadline=deadline)
             if llm_err:
-                self._send_json(502, {"error": "turn_failed", "reason": llm_err})
+                self._spk_refuse(llm_err, {"error": "turn_failed",
+                                           "reason": llm_err})
                 return
             # One upstream reply call, one tick of the instance meter. Fast mode
             # stops here (one call per turn); natural mode adds the TTS tick.
@@ -5433,7 +5696,8 @@ class H(BaseHTTPRequestHandler):
                     "type": "text", "transcript": transcript, "reply": reply,
                     "ms": {"stt": 0, "llm": llm_ms},
                 })
-                wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
+                wav, tts_ms, cached, tts_err = _spk_tts_cached(
+                    api_key, reply, voice, deadline=deadline)
                 if tts_err:
                     # The text is already on its way, so do not fail the turn:
                     # tell the client to use the device voice. A dead TTS quota
@@ -5457,7 +5721,8 @@ class H(BaseHTTPRequestHandler):
                 })
                 return
 
-            wav, tts_ms, cached, tts_err = _spk_tts_cached(api_key, reply, voice)
+            wav, tts_ms, cached, tts_err = _spk_tts_cached(
+                api_key, reply, voice, deadline=deadline)
             if tts_err:
                 # Same degrade as the streaming path: the turn happened, only the
                 # voice is missing. The client speaks the text itself.
@@ -5620,7 +5885,7 @@ class H(BaseHTTPRequestHandler):
                 return
             content, err = _ai_text_complete(system, user_block, byo)
             if err:
-                self._send_json(502, {"error": err})
+                self._spk_refuse(err, {"error": err})
                 return
             line = ""
             try:
@@ -5731,10 +5996,13 @@ class H(BaseHTTPRequestHandler):
             if not byo:
                 self._writing_consume(uid, _real_ip(self))
             content, ai_err = _ai_text_complete(
-                speaking_report.system_prompt(clean["interactive"]), user_block, byo=byo)
+                speaking_report.system_prompt(clean["interactive"]), user_block,
+                byo=byo)
             if ai_err:
-                code = 503 if ai_err == "ai_not_configured" else 502
-                self._send_json(code, {"error": ai_err})
+                if ai_err == "ai_not_configured":
+                    self._send_json(503, {"error": ai_err})
+                else:
+                    self._spk_refuse(ai_err, {"error": ai_err})
                 return
             if content is None or len(content.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
                 self._send_json(502, {"error": "bad_model_output"})
@@ -5896,14 +6164,34 @@ class H(BaseHTTPRequestHandler):
                 },
                 method="POST",
             )
+            # Phase C2: PA spends the same provider budget as every other
+            # speaking call, so it queues on the same instance gate.
+            timeout, refused = _spk_enter(time.monotonic() + SPK_TURN_DEADLINE)
+            if refused:
+                del audio
+                self._spk_refuse(refused, {"error": "upstream provider failed"})
+                return
             try:
                 # No retry on purpose: a second attempt is a second bill.
-                with urllib.request.urlopen(up_req, timeout=SPK_PA_TIMEOUT) as resp:
+                with urllib.request.urlopen(
+                        up_req, timeout=min(SPK_PA_TIMEOUT, timeout)) as resp:
                     up_raw = resp.read(1024 * 1024)
-            except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
+            except TimeoutError:
                 del audio
-                self._send_json(502, {"error": "upstream provider failed"})
+                self._spk_refuse("upstream_timeout", {"error": "upstream provider failed"})
                 return
+            except urllib.error.URLError as exc:   # HTTPError included
+                del audio
+                timed_out = isinstance(getattr(exc, "reason", None), TimeoutError)
+                self._spk_refuse("upstream_timeout" if timed_out else "",
+                                 {"error": "upstream provider failed"})
+                return
+            except OSError:
+                del audio
+                self._spk_refuse("", {"error": "upstream provider failed"})
+                return
+            finally:
+                _spk_release()
             del audio
             try:
                 up_json = json.loads(up_raw.decode("utf-8"))
