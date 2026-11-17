@@ -119,8 +119,7 @@ with sync_playwright() as p:
     pg.click("#obStepBody .btn.ok")  # -> plan step
     pg.wait_for_timeout(150)
     assert pg.text_content("#obStepCount").strip() == "4/5", "Did not reach the plan step"
-    # Choose 6 h/week and mon/wed/sat with the real chips.
-    pg.click(".chip-btn[data-hours='6']")
+    # Choose mon/wed/sat with the real chips.
     pg.evaluate(
         """() => {
         const target = ['mon','wed','sat'];
@@ -152,7 +151,7 @@ with sync_playwright() as p:
         return {
             onboarded: D.onboarded === true,
             examDate: p.examDate, targetGrade: p.targetGrade, skills: p.skills,
-            hoursWeek: p.hoursWeek, days: p.days, struggles: p.struggles,
+            days: p.days, struggles: p.struggles,
             declaredAt: typeof p.declaredAt === 'string' && p.declaredAt.length > 0
         };
     }"""
@@ -161,7 +160,6 @@ with sync_playwright() as p:
     assert res4["examDate"] == "2027-06-12", f"Bad examDate: {res4}"
     assert res4["targetGrade"] == "A", f"Bad targetGrade: {res4}"
     assert res4["skills"] == {"rue": 3, "w": 2, "l": 3, "sp": 3}, f"Bad skills: {res4}"
-    assert res4["hoursWeek"] == 6, f"Bad hoursWeek: {res4}"
     assert sorted(res4["days"]) == sorted(["mon", "wed", "sat"]), f"Bad days: {res4}"
     assert res4["struggles"] == [], f"Bad struggles: {res4}"
     assert res4["declaredAt"] is True, f"Bad declaredAt: {res4}"

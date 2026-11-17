@@ -4927,7 +4927,6 @@ const I18N={
     ob_diag_retake:'Take the check again',
     ob_plan_title:'Your week is ready',
     ob_plan_body:'This is the first week the app built from your date, your ratings and the check. You can change it any time in Plan.',
-    ob_hours:'Hours per week',
     ob_days:'Days you can study',
     ob_day_times_label:'Study times',
     ob_rotation_label:'Rotation mode',
@@ -5760,7 +5759,6 @@ const I18N={
     ob_diag_retake:'Repetir el chequeo',
     ob_plan_title:'Tu semana está lista',
     ob_plan_body:'Esta es la primera semana que armó la app con tu fecha, tus notas y el chequeo. Podés cambiarla cuando quieras en Plan.',
-    ob_hours:'Horas por semana',
     ob_days:'Días que podés estudiar',
     ob_day_times_label:'Horarios por día',
     ob_rotation_label:'Modo de rotación',
@@ -7198,7 +7196,6 @@ function obDefaultDraft(){
     examDate:'',
     targetGrade:'B',
     skills:{rue:3,w:3,l:3,sp:3},
-    hoursWeek:6,
     days:dt.days,
     dayTimes:dt.dayTimes,
     rotationMode:normalizeRotationMode(s.rotationMode),
@@ -7215,7 +7212,6 @@ function obDraftProfile(){
     examDate:d.examDate||null,
     targetGrade:d.targetGrade,
     skills:{rue:d.skills.rue,w:d.skills.w,l:d.skills.l,sp:d.skills.sp},
-    hoursWeek:d.hoursWeek,
     days:obOrderedDays(d.days),
     struggles:obCodes(d),
     strugglesDeclared:d.strugglesDeclared.slice(),
@@ -7229,7 +7225,6 @@ function obDraftFromProfile(p){
     examDate:p.examDate||'',
     targetGrade:p.targetGrade||'B',
     skills:Object.assign({rue:3,w:3,l:3,sp:3},p.skills||{}),
-    hoursWeek:Number(p.hoursWeek)||6,
     days:dt.days,
     dayTimes:dt.dayTimes,
     rotationMode:normalizeRotationMode(s.rotationMode),
@@ -7553,10 +7548,6 @@ function obStepHtml(){
   return `<h2 class="ob-title" id="obTitle">${t('ob_plan_title')}</h2>
     <p class="ob-body">${t('ob_plan_body')}</p>
     <div class="ob-summary" id="obPlanSummary">${obPlanSummaryHtml(plan)}</div>
-    <div class="ob-field"><span class="ob-field-label" id="obHoursLbl">${t('ob_hours')}</span>
-      <div class="ob-chips" role="group" aria-labelledby="obHoursLbl">${[[2,'2'],[4,'4'],[6,'6'],[10,'10+']].map(([v,l])=>`
-        <button type="button" class="chip-btn" data-hours="${v}" aria-pressed="${d.hoursWeek===v}" onclick="obSetHours(${v})">${l}</button>`).join('')}
-      </div></div>
     <div class="ob-field"><span class="ob-field-label" id="obDaysLbl">${t('ob_days')}</span>
       <div class="ob-day-chips" role="group" aria-labelledby="obDaysLbl">${OB_DAYS.map(([k])=>`
         <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay('${k}')">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
@@ -7676,11 +7667,6 @@ function obBack(){
 function obRate(k,n){
   OB.draft.skills[k]=n;
   document.querySelectorAll('.ob-rate-btn[data-skill="'+k+'"]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.val===n)));
-}
-function obSetHours(v){
-  OB.draft.hoursWeek=v;
-  document.querySelectorAll('.chip-btn[data-hours]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.hours===v)));
-  obRefreshPlan();
 }
 function obToggleDay(k){
   const d=OB.draft;
@@ -7817,7 +7803,6 @@ function obAcceptPlan(){
   const plan=obPlanFor(prof);
   prof.plan={
     generatedAt:new Date().toISOString(),
-    hoursWeek:prof.hoursWeek,
     days:prof.days.slice(),
     slots:(plan.slots||[]).map(sl=>({day:sl.day,type:sl.type,part:sl.part,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
   };
@@ -14860,7 +14845,6 @@ function buildWeeklyPlan(D){
   const mk=(extra)=>Object.assign({slots:[],reason:{},source:{}},extra||{});
   const s=(D&&D.settings)||{};
   const prof=(D&&D.profile)||null;
-  const hoursWeek=prof?(Number(prof.hoursWeek)||4):null;
   /* With no stored schedule the draft profile is the seed (the onboarding
      preview runs before the list exists); once it exists it is the only source. */
   const sessionDays=sessionDaysFromSchedule(
@@ -14891,7 +14875,7 @@ function buildWeeklyPlan(D){
       parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
     tax:tax,sessions14:sessions14,weekGoal:slotsPerWeek,
     profile:prof?{examDate:prof.examDate||null,targetGrade:prof.targetGrade||null,skills:prof.skills||null,
-      hoursWeek:hoursWeek,days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
+      days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
   };
   if(!useDiag&&!prof)return mk({source:source,needDiag:true});
   if(!dayN)return mk({source:source,slots:[],reason:{},rotationMode:rotationMode,noSessionDays:true});
@@ -14986,7 +14970,7 @@ function buildWeeklyPlan(D){
     usedParts[part]=true;
     const topN=ranked.length?ranked[0].n:0,topK=ranked.length?ranked[0].k:'';
     let fr;
-    if(!useDiag&&prof)fr=`${hoursWeek}h per week (your intake): part ${part} — ${partName(part).toLowerCase()} (weekly rotation)`;
+    if(!useDiag&&prof)fr=`your intake: part ${part} — ${partName(part).toLowerCase()} (weekly rotation)`;
     else if(fillMode==='lex'||fillMode==='gram'||fillMode==='text')fr=`most of your errors are ${topK} (${topN}): part ${part} — ${partName(part).toLowerCase()}`;
     else if(fillMode==='time')fr=`exam mode, timed: your ${topN} T-LIM errors call for part ${part} against the clock`;
     else fr=`no clear error majority: rueCycle rotation, part ${part} — ${partName(part).toLowerCase()}`;
