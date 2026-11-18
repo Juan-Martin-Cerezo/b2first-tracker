@@ -16,8 +16,10 @@ Scenarios:
   login  POST /api/login with valid credentials of the seeded users
   mixed  60% read / 20% api / 15% write / 5% login (the expected traffic)
 
-The server speaks HTTP/1.0 and closes every connection, so the client opens a
-fresh TCP connection per request: that is what the app really costs a browser.
+By default the client opens a fresh TCP connection per request (`Connection:
+close`), which is the HTTP/1.0 cost the baseline was measured with. `--keepalive`
+reuses one persistent HTTP/1.1 connection per worker instead, so the same ladder
+can be compared before and after the keep-alive change.
 
 Anti-abuse buckets: the per-IP credential limits are part of the product, not
 of its capacity. --xff-pool gives every synthetic request its own
@@ -74,11 +76,11 @@ def progress_doc(seq=0, log_entries=95):
             "lang": "en", "theme": "auto", "dailyMin": 45, "weekStart": 1,
             "notify": True, "updated": "2026-11-17T09:00:00Z",
         },
-        "stage": 3,
+        "stage": 2,
         "log": [],
         "errs": [],
         "examDates": ["2027-06-12"],
-        "overrides": {"2026-11-16": "writing", "2026-11-18": "listening"},
+        "overrides": {"2026-11-16": True, "2026-11-18": True},
         "weekOverrides": {"2026-W46": {"focus": "listening"}},
         "mat": {"done": ["unit-%02d" % i for i in range(1, 30)]},
         "diag": {"taken": "2026-10-02", "reading": 18, "listening": 17,
@@ -136,8 +138,12 @@ def fake_ip(index, pool):
 
 
 def base_headers(args, xff_index=None):
-    headers = {"User-Agent": UA, "Accept-Encoding": "gzip",
-               "Connection": "close"}
+    headers = {"User-Agent": UA, "Accept-Encoding": "gzip"}
+    # HTTP/1.0 forced one connection per request. --keepalive leaves the socket
+    # open so the client pool pays TCP setup once per worker instead of per
+    # request, which is what a browser does against an HTTP/1.1 server.
+    if not getattr(args, "keepalive", False):
+        headers["Connection"] = "close"
     if args.xff_pool and xff_index is not None:
         headers["X-Forwarded-For"] = fake_ip(xff_index, args.xff_pool)
     return headers
@@ -372,7 +378,17 @@ def _next_request(args, creds, worker, seq, pattern):
         "&download=1", None, headers
 
 
+def _close_quietly(conn):
+    if conn is not None:
+        try:
+            conn.close()
+        except OSError:
+            pass
+
+
 def run_worker(args, creds, worker, deadline, pattern, local, sequence, lock):
+    keepalive = getattr(args, "keepalive", False)
+    conn = None
     while True:
         if time.perf_counter() >= deadline:
             break
@@ -382,10 +398,10 @@ def run_worker(args, creds, worker, deadline, pattern, local, sequence, lock):
         op, method, path, body, headers = _next_request(
             args, creds, worker, seq, pattern)
         s = slot(local, op)
-        conn = None
         started = time.perf_counter()
         try:
-            conn = new_conn(args)
+            if conn is None:
+                conn = new_conn(args)
             conn.request(method, path, body=body, headers=headers)
             resp = conn.getresponse()
             timing = resp.getheader("Server-Timing")
@@ -400,16 +416,21 @@ def run_worker(args, creds, worker, deadline, pattern, local, sequence, lock):
                     s["server_ms"].append(float(match.group(1)))
         except (TimeoutError, socket.timeout):
             s["timeouts"] += 1
+            if keepalive:
+                _close_quietly(conn)
+                conn = None
         except (OSError, http.client.HTTPException) as exc:
             s["transport"] += 1
             kind = type(exc).__name__
             s["transport_kinds"][kind] = s["transport_kinds"].get(kind, 0) + 1
+            if keepalive:
+                _close_quietly(conn)
+                conn = None
         finally:
-            if conn is not None:
-                try:
-                    conn.close()
-                except OSError:
-                    pass
+            if not keepalive:
+                _close_quietly(conn)
+                conn = None
+    _close_quietly(conn)
 
 
 def merge_locals(locals_):
@@ -604,6 +625,7 @@ def run_load(args):
         "users_available": len(creds),
         "xff_pool": args.xff_pool,
         "write_bytes": len(args.write_body),
+        "keepalive": bool(getattr(args, "keepalive", False)),
         "started_at": started_at,
         "client_cpu_pct": round(cpu_pct, 1),
         "workers_alive_after_join": alive,
@@ -659,6 +681,9 @@ def parse_args(argv):
     parser.add_argument("--xff-pool", type=int, default=0,
                         help="size of the synthetic X-Forwarded-For pool; "
                              "0 = send no XFF")
+    parser.add_argument("--keepalive", action="store_true",
+                        help="reuse one persistent connection per worker "
+                             "(HTTP/1.1) instead of one connection per request")
     parser.add_argument("--seed", type=int, default=0, metavar="N",
                         help="create N accounts through the API and exit")
     parser.add_argument("--seed-threads", type=int, default=8,

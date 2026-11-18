@@ -322,3 +322,80 @@ defaults (`B2_RATE_IP_AUTH=120/min`, `B2_REGISTER_PER_HOUR=20`,
 All 669 sheds are `/api/config` hits over the 300/min anonymous bucket; the
 landing and tracker keep answering 200 with no 5xx and no dropped connection.
 Re-test with `--json` for a machine-readable copy.
+
+## after H
+
+Phase H: `server.py` now speaks HTTP/1.1, reuses connections, bounds the idle
+socket with `B2_KEEPALIVE_TIMEOUT` (5 s), caps a socket at
+`B2_KEEPALIVE_MAX_REQUESTS` (100), drains unread bodies before reuse, and sets
+`TCP_NODELAY` (without it, a reused connection paid a ~40 ms Nagle/delayed-ACK
+stall; the first +TCP_NODELAY point below is the before/after of that fix).
+
+Measured 2026-11-18 on the same host as the baseline (shared: other services and
+agents were active; the co-located load client shares the 4 cores). Method: the
+same `tools/loadtest_run.sh`, 20 s per step, 400 seeded accounts for `mixed`
+(reads need no accounts), alternating *before* (`Connection: close`, one
+connection per request, the old client contract) and *after*
+(`--keepalive`, one persistent socket per worker).
+
+### mixed 60/20/15/5 — 400 accounts, 20 s
+
+| conn | req/s before | req/s after | p50 before/after ms | p95 before/after ms | threads before/after |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 | 148.7 | 170.7 | 27.9 / 18.5 | 194.5 / 427.7 | 13 / 12 |
+| 50 | 128.5 | 160.1 | 257.7 / 252.1 | 930.7 / **767.6** | 52 / 52 |
+| 100 | 162.7 | 173.8 | 580.9 / 542.1 | 840.1 / 983.9 | 27 / 102 |
+| 200 | 167.3 | 176.9 | 1170.5 / 1078.4 | 1398.3 / 1652.1 | 25 / 202 |
+
+Consistent **1.06–1.25×** on throughput, with p50 lower at every rung. The
+`threads` column reads backwards on purpose: the old path created and destroyed
+one thread per request (the 1 Hz sampler usually caught only the live tail,
+13–52), while keep-alive keeps exactly one thread per connection alive
+(12/52/102/202). The win is that the ~120–170 threads/s of create/destroy churn
+and the 1/s connect+accept disappear, not that fewer threads exist at peak.
+
+### static `GET /` — no auth, 20 s
+
+| conn | req/s before | req/s after | p50 before/after ms | p95 before/after ms |
+| ---: | ---: | ---: | ---: | ---: |
+| 10 | 573.9 | 776.7 | 16.1 / 12.2 | 29.3 / 21.9 |
+| 50 | 597.0 | 659.2 | 79.7 / 67.2 | 110.4 / 129.9 |
+| 100 | 573.9 | 720.2 | 161.8 / 131.7 | 238.8 / 193.2 |
+| 200 | 505.4 | 449.5 | 343.3 / 380.0 | 677.2 / 725.1 |
+
+**The 2× criterion is not met on this host**: the static route gains 1.10–1.35×
+at 10–100 connections (regressing inside the noise at 200). The reason is visible
+in the same run: handler time stays at 5–7 ms and server CPU sits at 250–340 %
+of 400 %, so `GET /` is bound by re-reading and re-gzipping `landing.html` on
+every request, not by accept/thread. Connection setup on loopback is cheap; the
+phase removes it, but it was never the wall here. For reference, the cached
+route `GET /app` (gzip computed once) in an interleaved A/B moved 591→689 req/s
+at 10 connections, 436→673 at 50 and 462→675 at 100 (1.08–1.54×), which is the
+same ceiling: the co-located Python load client itself plateaus around
+650–700 req/s.
+
+Absolute numbers on this box vary ~2× between minutes (the baseline documents
+the same effect); the interleaved A/B is the reliable signal.
+
+### Correctness highlights
+
+* `tests/test_keepalive.py`: 50 sequential requests on one socket all `200` with
+  no reconnect; a 413 whose body is never read answers `Connection: close`; an
+  idle client is dropped after the timeout while new connections keep being
+  served; a conditional `304` has no body, `Content-Length: 0`, and the same
+  socket serves the next `200`.
+* `/api/health` now reports `keepalive.connections_open`, `keepalive.reused` and
+  `keepalive.requests_total` (numbers only).
+* Unchanged and re-run green: `test_server_hardening.py`, `test_security3.py`,
+  `test_spike.py`, `test_speaking_concurrency.py`, `test_sync.py`,
+  `test_layout.py` (Playwright via `uv run --with playwright`). All exited 0.
+
+Reproduce the keep-alive side of every table:
+
+```bash
+bash tools/loadtest_run.sh --users 400 --steps "10 50 100 200" \
+    --duration 20 --scenario mixed --keepalive --out /var/tmp/b2-results/H-mixed
+bash tools/loadtest_run.sh --users 50 --steps "10 50 100 200" \
+    --duration 20 --scenario read --keepalive --out /var/tmp/b2-results/H-read
+```
+
