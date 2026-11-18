@@ -108,7 +108,7 @@ MEASURE_JS = """
         const isPrimary = bg[3] > 0.1;
         return {
             text: (b.innerText || '').trim(),
-            onclick: b.getAttribute('onclick') || '',
+            action: b.getAttribute('data-action') || '',
             cls: b.className,
             isPrimary,
             bgAlpha: bg[3],
@@ -290,8 +290,8 @@ def main():
             assert primary["text"] == "Save date", (
                 f"{vw}px: primary button in #examCountdown should be 'Save date', got {primary}"
             )
-            assert len(tertiaries) == 1 and tertiaries[0]["onclick"] == "openIntake()", (
-                f"{vw}px: expected 'Set your exam date' as tertiary button (openIntake()), got {tertiaries}"
+            assert len(tertiaries) == 1 and tertiaries[0]["action"] == "openIntake", (
+                f"{vw}px: expected 'Set your exam date' as tertiary button (openIntake), got {tertiaries}"
             )
 
             # Label above input and aligned to its left edge

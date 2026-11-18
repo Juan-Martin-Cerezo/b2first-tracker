@@ -65,7 +65,7 @@ check("sp_exam_methods_declared", not missing, missing)
 
 # Cross-check: every handler in the markup resolves to a declared method. This
 # catches a rename on one side only, which is how this file could rot silently.
-handlers = sorted(set(re.findall(r"onclick=\"SP_EXAM\.(\w+)\(", index)))
+handlers = sorted(m for m in re.findall(r'data-action="SP_EXAM\.(\w+)"', index))
 unresolved = [n for n in handlers
               if not re.search(r"SP_EXAM\." + n + r"\s*=\s*(?:async\s+)?function", script)]
 check("markup_handlers_resolve", not unresolved, unresolved)

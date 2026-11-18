@@ -1,18 +1,15 @@
 """Phase 114 guard: no inline handler may point at a missing global.
 
-`index.html` wires many controls with inline attributes (`onclick=...`,
-`onchange=...`) and a few dynamically generated ones (the onboarding wizard).
-If one of those names is renamed, removed or left block-scoped, the browser
+`index.html` wires its controls through `data-action` / `data-change` /
+`data-input` / `data-keydown` attributes that one delegated listener resolves,
+plus a few handlers assigned as DOM0 properties. If a name in the ACTIONS table
+(or a DOM0 assignment) is renamed, removed or left block-scoped, the browser
 only finds out when a real user clicks: `ReferenceError: X is not defined`.
 
-This suite collects every handler — from the live DOM after the app has
+This suite collects every action name — from the live DOM after the app has
 rendered, and from the source (so markup that is generated later is covered
-too) — then asks the page for `typeof window[name]` for each function the
-handler calls. Anything that is not a function fails with its selector and
-its line in index.html.
-
-Handlers assigned as DOM0 properties (`el.onclick = fn`) are checked too: the
-named target must be a global function.
+too) — then asks the page for `typeof window[name]` for each global the entry
+calls. Anything that is not a function fails with its selector and its line.
 
 Run with:  uv run --with playwright python test_inline_handlers.py
 """
@@ -29,8 +26,7 @@ INDEX = os.path.join(REPO_ROOT, "index.html")
 URL = isolated_server() + "/"
 
 # Names that are not globals you must declare: language keywords, browser
-# built-ins, and the names an inline handler gets from its own scope chain
-# (element, form, document, window).
+# built-ins, and the names a handler gets from the element it is bound to.
 KEYWORDS = set(
     "if for while function return typeof new delete void in of instanceof else "
     "do switch case var let const try catch finally throw yield await async "
@@ -47,6 +43,10 @@ SCOPE = set("event this document window arguments navigator location history".sp
 IDENT = re.compile(r"(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(")
 STRING = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"|`(?:\\.|[^`\\])*`")
 
+ACTION_TABLE = re.compile(
+    r"^(?:click|change|input|keydown):\{(.*?)^\}", re.S | re.M)
+ACTION_ENTRY = re.compile(r"^'([^']+)':\s*(.+?),?$", re.M)
+
 
 def called_globals(code):
     """Function names a handler calls that must exist on `window`."""
@@ -60,22 +60,17 @@ def called_globals(code):
     return out
 
 
-def source_handlers():
-    """Every `on<event>="..."` in the file, with its 1-based line."""
+def source_table():
+    """Every ACTIONS entry in the file: its name and body, with a 1-based line."""
     src = open(INDEX, encoding="utf-8").read()
     found = []
-    for m in re.finditer(r'\bon([a-z]+)\s*=\s*"([^"]*)"', src):
-        found.append({
-            "attr": "on" + m.group(1),
-            "code": m.group(2),
-            "line": src.count("\n", 0, m.start()) + 1,
-        })
-    for m in re.finditer(r"\bon([a-z]+)\s*=\s*'([^']*)'", src):
-        found.append({
-            "attr": "on" + m.group(1),
-            "code": m.group(2),
-            "line": src.count("\n", 0, m.start()) + 1,
-        })
+    for group in ACTION_TABLE.finditer(src):
+        for m in ACTION_ENTRY.finditer(group.group(1)):
+            found.append({
+                "name": m.group(1),
+                "code": m.group(2),
+                "line": src.count("\n", 0, group.start(1)) + 1,
+            })
     return found
 
 
@@ -97,26 +92,23 @@ def source_dom0_targets():
 
 DOM_JS = """() => {
     const out = [];
-    for (const el of document.querySelectorAll('*')) {
-        for (const a of el.attributes) {
-            if (!/^on[a-z]+$/.test(a.name)) continue;
-            let sel = el.tagName.toLowerCase();
-            if (el.id) sel += '#' + el.id;
-            else {
-                const cls = (typeof el.className === 'string' ? el.className : '')
-                    .trim().split(/\\s+/).filter(Boolean).slice(0, 2);
-                if (cls.length) sel += '.' + cls.join('.');
-            }
-            out.push({selector: sel, attr: a.name, code: a.value});
-        }
+    for (const el of document.querySelectorAll(
+            '[data-action],[data-change],[data-input],[data-keydown]')) {
+        let sel = el.tagName.toLowerCase();
+        if (el.id) sel += '#' + el.id;
+        out.push({selector: sel, name: el.dataset.action || el.dataset.change
+            || el.dataset.input || el.dataset.keydown});
     }
     return out;
 }"""
 
 
 def main():
-    source = source_handlers()
+    table = source_table()
     dom0 = source_dom0_targets()
+
+    # Source-map of action name -> body, to know what each DOM action calls.
+    bodies = {t["name"]: t["code"] for t in table}
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -125,8 +117,6 @@ def main():
         login_owner(pg, URL)
         pg.wait_for_timeout(300)
 
-        # Render the markup that only exists after a render pass: onboarding
-        # wizard, exam player, today/plan/practice screens, quick log.
         pg.evaluate("""() => {
             for (const view of ['hoy','plan','prog','practice','exam','err','ia','diag']) {
                 try { showView(view); } catch (e) {}
@@ -139,23 +129,23 @@ def main():
         dom = pg.evaluate(DOM_JS)
 
         occurrences = {}  # name -> first place it appears
+
+        def note(name, where):
+            occurrences.setdefault(name, []).append(where)
+
+        for entry in table:
+            for name in called_globals(entry["code"]):
+                note(name, {"selector": "(ACTIONS)", "name": entry["name"],
+                            "line": entry["line"],
+                            "code": entry["code"].strip()[:60]})
         for h in dom:
-            for name in called_globals(h["code"]):
-                occurrences.setdefault(name, []).append(
-                    {"selector": h["selector"], "attr": h["attr"],
-                     "line": source_line(h, source), "code": h["code"].strip()[:60]}
-                )
-        for h in source:
-            for name in called_globals(h["code"]):
-                occurrences.setdefault(name, []).append(
-                    {"selector": "(source)", "attr": h["attr"],
-                     "line": h["line"], "code": h["code"].strip()[:60]}
-                )
+            body = bodies.get(h["name"], "")
+            for name in called_globals(body):
+                note(name, {"selector": h["selector"], "name": h["name"],
+                            "line": None, "code": body.strip()[:60]})
         for d in dom0:
-            occurrences.setdefault(d["name"], []).append(
-                {"selector": "(dom0 assignment)", "attr": "on*",
-                 "line": d["line"], "code": d["name"]}
-            )
+            note(d["name"], {"selector": "(dom0 assignment)", "name": "on*",
+                             "line": d["line"], "code": d["name"]})
 
         names = sorted(occurrences)
         kinds = pg.evaluate(
@@ -166,31 +156,22 @@ def main():
 
     orphans = sorted(n for n, kind in kinds.items() if kind != "function")
     if orphans:
-        print("Orphan inline handlers (referenced but not a global function):")
+        print("Orphan handler names (referenced but not a global function):")
         for name in orphans:
             for where in occurrences[name][:4]:
                 print(
-                    f"  {name}  [{where['attr']}]  {where['selector']}"
+                    f"  {name}  [{where['name']}]  {where['selector']}"
                     f"  line {where['line']}: {where['code']}"
                 )
         raise SystemExit(1)
 
     print(json.dumps({
-        "handlers_dom": len(dom),
-        "handlers_source": len(source),
+        "actions_in_table": len(table),
+        "actions_in_dom": len(dom),
         "dom0_assignments": len(dom0),
         "globals_checked": len(names),
         "orphans": 0,
     }, indent=1))
-
-
-def source_line(dom_handler, source):
-    """Line in index.html that holds this rendered handler, if it is literal."""
-    code = dom_handler["code"]
-    for h in source:
-        if h["code"] == code and h["attr"] == dom_handler["attr"]:
-            return h["line"]
-    return None
 
 
 if __name__ == "__main__":

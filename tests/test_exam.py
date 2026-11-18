@@ -25,11 +25,11 @@ with sync_playwright() as p:
     out["ex_w_timer"] = pg.evaluate("document.getElementById('exTimer').textContent")
     out["ex_w_links"] = pg.eval_on_selector_all("#exGuide a", "els => els.length")
     # start timer and verify the countdown
-    pg.click("button[onclick='exStart()']")
+    pg.click("button[data-action='exStart']")
     pg.wait_for_timeout(2100)
     out["ex_corriendo"] = pg.evaluate("exIv !== null")
     out["ex_timer_tras2s"] = pg.evaluate("document.getElementById('exTimer').textContent")
-    pg.evaluate("document.querySelector(\"button[onclick='exPause()']\").click()")
+    pg.evaluate("document.querySelector(\"button[data-action='exPause']\").click()")
     out["ex_pausado"] = pg.evaluate("exIv === null")
     pg.evaluate("exLeft = 590; exTick()")  # simular <10min -> rojo
     out["ex_color_warn"] = pg.evaluate("document.getElementById('exTimer').style.color")
