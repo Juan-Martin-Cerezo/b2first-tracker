@@ -3081,19 +3081,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   </div>
 </div>
 
-<<<<<<< HEAD
-<!-- ============ PLAN LIMIT MODAL (phase 31) ============
-     Shown when a request answers 429 + error:"plan_limit". It always offers the
-     three ways forward, so a limit never ends in a dead-end toast. -->
-<div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
-=======
 <!-- ============ USAGE LIMIT MODAL ============
      Shown when a request answers 429 + error:"limit_reached" (or the legacy
      "plan_limit"). It explains the daily limit and links to the meter; there is
-     nothing to buy and nothing to redeem. -->
-<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
->>>>>>> feat/hosted
-  <div class="auth-card" style="max-width:440px">
+     nothing to buy and nothing to redeem. modal-top keeps it above the speaking
+     overlay, which would otherwise cover it. -->
+<div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">  <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="usage_limit_title">You reached today's limit</h3>
       <button class="del" type="button" data-action="closePlanLimit" style="font-size:20px;padding:4px 8px" aria-label="Close">✕</button>
