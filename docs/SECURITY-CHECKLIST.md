@@ -11,7 +11,8 @@ Reproduce everything:
 ```bash
 bash tools/audit.sh            # 39 external checks, non-zero on regression
 python3 tools/verify_audit.py  # hash-chain integrity of data/audit.log
-cd tests && python3 test_security3.py   # 34 in-process assertions for this phase
+cd tests && python3 test_security3.py   # in-process assertions for this phase
+python3 tools/pentest.py --spawn        # self-pentest on an isolated server
 ```
 
 ## V2 — Authentication
@@ -19,9 +20,9 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 | Control | ASVS ref | Status | Implemented in | Verified by |
 | --- | --- | --- | --- | --- |
 | Passwords hashed with a slow KDF and per-user salt | 2.1.1 / 6.2.1 | PASS | `server.py`: `hash_password` (PBKDF2-HMAC-SHA256, 600k) | `test_security3.py` D1/D2; inspect `users.json` |
-| Password minimum length | 2.1.1 | **FAIL** | `server.py`: `PASSWORD_MIN_LEN = 10` | `test_security3.py` K2 — ASVS L2 asks for 12; product requirement is 10 (residual risk 5.6) |
+| Password minimum length | 2.1.1 | PASS | `server.py`: `PASSWORD_MIN_LEN = 12` (registration and change) | `test_password_policy.py` P1/P2/P11/P12; `test_security3.py` K2 |
 | No composition rules; all characters allowed; no truncation | 2.1.2 | PASS | `server.py`: `password_problem` | `test_security3.py` K2/K3 |
-| Password strength / blocklist | 2.1.7 | **FAIL** | `store.py`: `COMMON_PASSWORDS` (200 entries) | `test_security3.py` K1/K3 — 200 embedded entries, not the ASVS top 3,000 |
+| Password strength / blocklist | 2.1.7 | **PARTIAL** | `wordlist.py`: 1,000 sourced entries + deterministic derivatives (app words, suffixes, keyboard walks, repetitions; 22,492 total) | `test_password_policy.py` P3–P8 — still partial: no larger sourced list is embedded (ASVS asks the top ~3,000 breached passwords) |
 | Password strength notice at registration | 2.1.6 | PASS | `index.html`: `onRegPwInput` / `passwordStrength`; `server.py`: `password_strength` returns the level | `test_security3.py` K4 |
 | Anti-automation on login | 2.2.1 | PASS | `server.py`: `_rate`, `_login_locked`, `_login_failed`, `LOGIN_BACKOFF` (5/15/60 s) | `test_security3.py` F1/F2; `test_security2.py` 1/1b |
 | Legacy hashes upgraded without locking users out | 2.1.1 | PASS | `server.py`: `_needs_rehash`, `login_user` | `test_security3.py` D1 (200k→600k) / D2 (sha256→PBKDF2) |
@@ -41,7 +42,7 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 | Idle/absolute session timeout | 3.3.2 | PASS | `server.py`: `TOKEN_TTL` 30 d sliding + `TOKEN_ABSOLUTE_TTL` 90 d, `auth_from_token` | `test_security3.py` E1–E4 |
 | Password change terminates every session | 3.3.1 | PASS | `server.py`: `revoke_user_sessions`, `/api/password` returns a fresh token | `test_security3.py` J1; `test_security2.py` 13b |
 | Token↔user binding (no ambient authority) | 3.3.1 | PASS | `server.py`: `/api/progress` 403 on mismatch | `test_legacy_guard.py` 9; `test_multiuser.py` |
-| CSRF resistance | 3.5.1 | PASS | Bearer header, no cookies, CORS closed | `test_server_hardening.py` 11; `tools/audit.sh` |
+| CSRF resistance | 3.5.1 | PASS | Bearer header, no cookies, CORS closed; every mutating `/api/*` request checks `Origin`/`Referer` same host and, when a browser sends `Sec-Fetch-Site` without them, requires `X-Requested-With: b2first` | `test_security3.py` L1–L4; `tools/pentest.py` |
 | Cookie-based sessions | 3.4.1 | N/A | cookies are not used | code inspection |
 
 ## V4 — Access Control
@@ -60,7 +61,7 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 | Positive input validation | 5.1.1 | PASS | `server.py`: `_validate_progress`, `_safe_uid`, AI payload guards | `test_hardening.py` A; `test_security2.py` 5–8 |
 | Structured input (JSON) with schema checks | 5.1.2 | PASS | `server.py`: `_validate_progress`, `_validate_ai_payload`, `speaking_report.validate_payload` | `test_security2.py`; `test_speaking_pa.py` |
 | Input length/range/count limits | 5.1.3 | PASS | `server.py`: list/string/depth caps, `MAX_BODY_BYTES`, route caps | `test_security3.py` I1–I3; `test_server_hardening.py` 3 |
-| Body rejected from `Content-Length` before reading | 5.1.3 | PASS | `server.py`: `_handle` pre-checks + `_reject` | `test_security3.py` I1–I3 |
+| Body rejected from `Content-Length` before reading | 5.1.3 | PASS | `server.py`: `_handle` pre-checks, `_route_body_cap` (uniform `B2_MAX_BODY` 256 KB, larger documented route caps), `_reject` | `test_security3.py` I1–I3; `tools/pentest.py` (5 MB PUT → 413) |
 | HTML output encoding | 5.3.1 | PASS | `server.py`: `esc`; UI uses `textContent` for dynamic names | `test_hardening.py`; code inspection |
 | SQL / ORM injection | 5.3.4 | N/A | no database, no query language | code inspection |
 | Deserialization of untrusted data | 5.5.1 | PASS | `json.loads` only; no `pickle`/`eval` | code inspection; `tools/audit.sh` (no `unsafe-eval`) |
@@ -146,7 +147,7 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 | HSTS | 14.4.3 | PASS | `max-age=63072000; includeSubDomains; preload` | `tools/audit.sh` |
 | Cookie flags | 14.4.4 | N/A | no cookies | code inspection |
 | Cache control | 14.4.5 | PASS | `no-store` on `/api/*` | `tools/audit.sh` |
-| Content Security Policy | 14.4.6 | **FAIL** | `server.py`: CSP has `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'self'`, no `'unsafe-eval'`; `script-src` still needs `'unsafe-inline'` | `test_security3.py` A2; residual risk 5.1 (197 inline handlers) |
+| Content Security Policy | 14.4.6 | PASS | `server.py`: `CSP_TEMPLATE` + `tools/csp_hashes.py` — `script-src 'self' 'sha256-…' 'unsafe-hashes' 'strict-dynamic'`, zero `'unsafe-inline'`; hashes recomputed per document mtime | `test_csp.py` (0 violations across every view); `test_security3.py` A2; `tools/pentest.py` |
 | Referrer policy | 14.4.7 | PASS | `no-referrer` | `test_security3.py` A3 |
 | COOP / CORP | 14.4.1 | PASS | `same-origin` on both | `test_security3.py` A3 |
 | Permissions policy | 14.4.1 | PASS | minimal; `microphone=(self)` only on the tracker | `test_security3.py` A4 |
@@ -160,11 +161,12 @@ cd tests && python3 test_security3.py   # 34 in-process assertions for this phas
 
 | Status | Count |
 | --- | --- |
-| PASS | 70 |
-| FAIL | 3 |
+| PASS | 72 |
+| PARTIAL | 1 |
+| FAIL | 0 |
 | N/A | 8 |
 
-The three FAILs are deliberate and documented: password length 10 (ASVS asks 12), a 200-entry
-password blocklist (ASVS asks the top 3,000) and `'unsafe-inline'` in `script-src` (the UI has
-197 inline handlers). None is presented as a PASS. The 8 N/A rows are features this product does
-not have (database/ORM, cookies, file uploads, SOAP/GraphQL, email recovery, admin UI).
+The one PARTIAL row is deliberate: password length (12) and the CSP are now verified, but the
+embedded blocklist is still not a full sourced top-3,000 list (it is 1,000 sourced entries plus
+deterministic derivatives). It is reported as PARTIAL, not PASS. The 8 N/A rows are features this
+product does not have (database/ORM, cookies, file uploads, SOAP/GraphQL, email recovery, admin UI).

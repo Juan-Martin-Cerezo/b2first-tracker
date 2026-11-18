@@ -37,8 +37,9 @@ not to.
 
 - Passwords: PBKDF2-HMAC-SHA256, 600,000 iterations, unique 128-bit salt,
   constant-time comparison. Hashes below the current cost are upgraded on login.
-  The 1,000 most common passwords, passwords equal to the username, and anything
-  shorter than 10 characters are rejected.
+  The embedded password blocklist (1,000 sourced entries plus deterministic
+  derivations), passwords equal to the username, and anything shorter than 12
+  characters are rejected.
 - Sessions: 192-bit random tokens; only `sha256(token)` is stored; 30-day sliding
   expiry capped by a 90-day absolute ceiling; every session is revoked on a
   password change; a User-Agent change is logged but not blocked.

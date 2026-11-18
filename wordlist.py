@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""The 1,000 most common passwords (SecLists xato-net top-1000).
+"""Password blocklist: 1,000 common passwords plus deterministic derivatives.
 
-Generated once, embedded on purpose: the server keeps zero dependencies and
-never downloads a wordlist at runtime. Source:
+The 1,000 base entries are the SecLists xato-net top-1000. Generated once and
+embedded on purpose: the server keeps zero dependencies and never downloads a
+wordlist at runtime. Source:
 https://github.com/danielmiessler/SecLists
+
+On top of that base the module derives candidates from rules an attacker
+actually tries first: the product/app words ("b2first", "cambridge", ...) with
+common numeric/symbol suffixes, keyboard walks and repeated characters. This is
+still *partial* against ASVS 2.1.7 (which asks for the top ~3,000 breached
+passwords): there is no network access at runtime, so the real fix is to ship a
+larger sourced list. Until then these rules raise the cost of the obvious
+guesses without pretending the list is complete.
 """
 
-COMMON_PASSWORDS = frozenset("""
+_BASE = frozenset("""
 123456 password 12345678 qwerty 123456789 12345 1234 111111 1234567 dragon
 123123 baseball abc123 football monkey letmein 696969 shadow master 666666
 qwertyuiop 123321 mustang 1234567890 michael 654321 pussy superman 1qaz2wsx 7777777
@@ -109,3 +118,45 @@ bigcock a1b2c3 wolfpack spring phpbb lalala suckme spiderman eric darkside
 classic raptor 123456789q hendrix 1982 wombat avatar alpha zxc123 crazy
 hard england brazil 1978 01011980 wildcat polina 66666666 password12 password123
 """.split())
+
+# Common suffixes tried after a word ("password1", "cambridge2025", ...).
+_SUFFIXES = (
+    "", "1", "12", "123", "1234", "12345", "123456", "007",
+    "01", "07", "2000", "2023", "2024", "2025", "2026",
+    "!", "!!", "1!", "12!", "123!", "@123", "01!",
+)
+
+# Words this audience and this product attract first.
+_APP_WORDS = (
+    "b2first", "b2firsttracker", "b2first-tracker", "cambridge",
+    "cambridgeenglish", "firstcertificate", "firsttracker", "tracker",
+    "english", "examen", "b2", "b2first123",
+)
+
+# Keyboard walks that are not already in the base list.
+_KEYBOARD = (
+    "qwertyuiop", "asdfghjkl", "zxcvbnm", "1qaz2wsx", "qazwsx",
+    "1q2w3e4r", "qwer1234", "zaq12wsx", "qwerty123", "asdf1234",
+    "123qwe", "qweasd", "poiuytrewq", "mnbvcxz", "qwertz",
+)
+
+
+def _derive():
+    """Build the blocklist from the base list plus the deterministic rules."""
+    words = set(_BASE)
+    for word in _BASE:
+        for suffix in _SUFFIXES:
+            words.add(word + suffix)
+    for word in _APP_WORDS:
+        for suffix in _SUFFIXES:
+            for variant in (word, word.capitalize(), word.upper()):
+                words.add((variant + suffix).lower())
+    words.update(_KEYBOARD)
+    for char in "abcdefghijklmnopqrstuvwxyz0123456789":
+        for repeat in (3, 4, 5, 6, 8, 10, 12, 16, 20):
+            words.add(char * repeat)
+    return frozenset(words)
+
+
+COMMON_PASSWORDS = _derive()
+

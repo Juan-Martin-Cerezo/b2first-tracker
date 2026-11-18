@@ -67,7 +67,7 @@ how to get the data back after a disaster.
 
 | Control | Status | Notes |
 | --- | --- | --- |
-| Input validation | Implemented | `_validate_progress` (shape, list/string caps, depth, finite numbers), `_safe_uid` for ids, AI request and model-output schemas, password policy (10 characters, 200 common passwords, username check), diagnostic JSON validation |
+| Input validation | Implemented | `_validate_progress` (shape, list/string caps, depth, finite numbers), `_safe_uid` for ids, AI request and model-output schemas, password policy (12 characters, blocklist plus derived rules, username check), diagnostic JSON validation |
 | SQL injection | N/A (no database) | Storage is JSON read with `json.load`; there is no query language and no string-built SQL anywhere |
 | Password hashing | Implemented | PBKDF2-HMAC-SHA256, **600,000 iterations**, per-user salt, constant-time compare; SHA-256 and 200k PBKDF2 hashes upgraded transparently on the next login; TTL/rehash policy covered by `tests/test_security3.py` |
 | Session lifetime | Implemented | 30-day sliding `exp` capped by a 90-day `absolute_exp` per token; `auth_from_token` refuses and deletes tokens past either clock |
@@ -96,8 +96,8 @@ how to get the data back after a disaster.
 **External audit status.** `bash tools/audit.sh` passes **39/39** checks against the public
 instance as of 2026-10-30 (TLS and HTTP/2 included; against a plain `http://` target those two
 report N/A and 37/37 pass). The former open finding (the `Server` banner disclosing the runtime)
-is fixed: the banner is now `Server: B2First` with no version. The one control that is *not*
-claimed as PASS is the strict CSP without `'unsafe-inline'`; see section 5.
+is fixed: the banner is now `Server: B2First` with no version. The remaining non-PASS control is
+the password blocklist (PARTIAL); see section 5.6.
 
 ## 4. Backups and restore
 
@@ -166,27 +166,28 @@ $ curl -s http://127.0.0.1:8199/api/health
 These are known, accepted risks. They are listed so an auditor does not have to discover them,
 and so the migration work is explicit.
 
-### 5.1 CSP still needs `'unsafe-inline'` — **FAIL, not PASS**
+### 5.1 CSP: no `'unsafe-inline'`, but `'unsafe-hashes'` is still required
 
-The single-file UI (`index.html`, ~8,400 lines) has **197 inline event-handler attributes**:
-`onclick` ×179, `onchange` ×13, `oninput` ×4, `onkeydown` ×4, `onload` ×1, `onerror` ×2. It
-also uses inline `style` attributes, so `style-src` keeps `'unsafe-inline'` as well. Removing
-those means rewriting the UI from inline handlers to `addEventListener` wiring; that is a
-multi-day refactor, not something to fake with a header.
+`script-src` no longer contains `'unsafe-inline'`. The server hashes every inline `<script>` body
+and every inline event-handler value (`tools/csp_hashes.py`), caches the hashes by document mtime
+and emits `script-src 'self' 'sha256-…' 'unsafe-hashes' 'strict-dynamic'`. `tests/test_csp.py`
+walks every view in Chromium and requires zero `securitypolicyviolation` events.
 
-- **Impact:** if an attacker ever gets markup injected into the page, `'unsafe-inline'` lets
-  injected script run in the app origin, where the session token lives in `localStorage`.
-- **Mitigations already in place:** all dynamic names go through `html.escape`; student text
-  and AI output are rendered with `textContent`, never `innerHTML`; there are no third-party
-  scripts; `connect-src` is restricted (`'self'` + Gemini Live); `frame-ancestors 'none'`,
-  `base-uri 'none'`, `object-src 'none'`.
-- **What *is* enforced:** no `'unsafe-eval'`, no `object-src`, no `<base>` injection, no
-  framing, forms only post to `'self'`.
-- **Migration plan:** (1) extract the inline `<script>` to an external file; (2) replace each
-  `on*=` with a delegated `addEventListener` using `data-action`; (3) move inline styles to
-  classes; (4) switch to `script-src 'self'` and `style-src 'self'`; (5) add a CSP regression
-  check to `tools/audit.sh` that fails if `'unsafe-inline'` reappears. Until then, the checklist
-  row **CSP-1 (no unsafe-inline) is FAIL**.
+The honest limitation is `'unsafe-hashes'`: CSP Level 3 only allows hashed inline event handlers
+with that keyword. It does not re-enable arbitrary inline code — only the exact handler strings
+present in the served document match. Removing it needs event delegation (`data-*` attributes plus
+`addEventListener`, including the markup the UI builds with `innerHTML`) so that inline handlers
+disappear entirely. `style-src` still keeps `'unsafe-inline'` for the document's inline `style`
+attributes; that is a separate, smaller surface.
+
+- **Impact if bypassed:** an injected event-handler attribute whose exact source is not already in
+  the policy is blocked by the browser; a matching one would need to reproduce known code.
+- **Mitigations already in place:** all dynamic names go through `html.escape`; student text and
+  AI output are rendered with `textContent`; no third-party scripts; `connect-src` restricted;
+  `frame-ancestors 'none'`, `base-uri 'none'`, `object-src 'none'`.
+- **Migration plan:** replace the remaining `on*=` attributes with delegated `addEventListener`
+  wiring, then drop `'unsafe-hashes'` and keep only the inline `<script>` hashes (or move the
+  script to a file and use `script-src 'self'`).
 
 ### 5.2 Audit history written before the hash chain
 
@@ -215,13 +216,14 @@ request (user name plus an optional contact) and the operator runs `tools/reset_
 the host. Nothing is sent by email and the request endpoint never confirms whether an account
 exists. This is a deliberate consequence of not collecting personal data.
 
-### 5.6 Password policy is below the ASVS L2 baseline
+### 5.6 Password blocklist is still partial
 
 ASVS 4.0.3 asks for at least 12 characters (2.1.1) and a check against the top 3,000 breached
-passwords (2.1.7). This product enforces **10 characters** and a **200-entry embedded blocklist**
-(a deliberate constraint of phase 24: no downloaded wordlists, no dependencies). Both checklist
-rows are marked **FAIL**, not PASS. Raising `PASSWORD_MIN_LEN` to 12 and loading a larger list is
-a small, isolated change; it was not made here because the product requirement fixed 10/200.
+passwords (2.1.7). This product now enforces **12 characters** and ships a **1,000-entry sourced
+blocklist plus deterministic derivatives** (app words, common suffixes, keyboard walks,
+repetitions: 22,492 candidates). There is no downloaded wordlist and no dependency. The length row
+is PASS; the blocklist row stays **PARTIAL** because the embedded list is not the full ASVS top
+3,000. Loading a larger sourced list is a small, isolated change.
 
 ### 5.7 Rotated audit history keeps only one file
 

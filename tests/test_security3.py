@@ -159,10 +159,12 @@ csp = h.get("Content-Security-Policy", "")
 check("A1_hsts_preload",
       h.get("Strict-Transport-Security") == "max-age=63072000; includeSubDomains; preload",
       h.get("Strict-Transport-Security"))
+csp_script = csp.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in csp else ""
 check("A2_csp_hardened",
       all(x in csp for x in ("object-src 'none'", "base-uri 'none'",
                              "frame-ancestors 'none'", "form-action 'self'",
-                             "script-src 'self' 'unsafe-inline'"))
+                             "'sha256-", "'unsafe-hashes'", "'strict-dynamic'"))
+      and "'unsafe-inline'" not in csp_script
       and "'unsafe-eval'" not in csp,
       csp)
 check("A3_cross_origin_and_referrer",
@@ -444,22 +446,43 @@ check("K1_common_list_size", len(store.COMMON_PASSWORDS) >= 1000,
       f"{len(store.COMMON_PASSWORDS)}")
 S._RATE.clear()
 st_k2, body_k2, _ = req("POST", "/api/register",
-                        {"name": "Sec3-Short", "password": "NineChars"})
+                        {"name": "Sec3-Short", "password": "Short-pass1"})
 S._RATE.clear()
 st_k3, body_k3, _ = req("POST", "/api/register",
-                        {"name": "Sec3-Common", "password": "password123"})
-check("K2_min_length_10",
-      st_k2 == 400 and "10 characters" in json.loads(body_k2).get("error", ""),
+                        {"name": "Sec3-Common", "password": "password1234"})
+check("K2_min_length_12",
+      st_k2 == 400 and "12 characters" in json.loads(body_k2).get("error", ""),
       f"{st_k2} {body_k2[:80]}")
 check("K3_common_password_rejected",
       st_k3 == 400 and "common" in json.loads(body_k3).get("error", "").lower(),
       f"{st_k3} {body_k3[:80]}")
 check("K4_strength_levels",
       S.password_strength("abc") == 0
-      and S.password_strength("abcdefghij1") == 1
+      and S.password_strength("abcdefghij12") == 1
       and S.password_strength("Correct-Horse-Battery-9") == 2,
-      str([S.password_strength("abc"), S.password_strength("abcdefghij1"),
+      str([S.password_strength("abc"), S.password_strength("abcdefghij12"),
            S.password_strength("Correct-Horse-Battery-9")]))
+
+# ---------------------------------------------------------------------------
+# L. CSRF: Origin/Referer must name this host on mutating /api/* requests
+# ---------------------------------------------------------------------------
+S._RATE.clear()
+_csrf_user = register("Sec3-Csrf", "sec3-csrf-pass-123")
+st_l1, _b_l1, _ = req("PUT", "/api/progress?user=" + _csrf_user["id"],
+                      {"log": [], "errs": []}, token=_csrf_user["token"],
+                      headers={"Origin": "https://evil.example"})
+check("L1_cross_origin_rejected", st_l1 == 403, str(st_l1))
+st_l2, _b_l2, _ = req("POST", "/api/logout", {"token": _csrf_user["token"]},
+                      headers={"Origin": URL})
+check("L2_same_origin_allowed", st_l2 == 200, str(st_l2))
+_csrf_user = register("Sec3-Csrf2", "sec3-csrf-pass-123")
+st_l3, _b_l3, _ = req("POST", "/api/logout", {"token": _csrf_user["token"]},
+                      headers={"Sec-Fetch-Site": "same-origin"})
+check("L3_browser_without_proof_rejected", st_l3 == 403, str(st_l3))
+st_l4, _b_l4, _ = req("POST", "/api/logout", {"token": _csrf_user["token"]},
+                      headers={"Sec-Fetch-Site": "same-origin",
+                               "X-Requested-With": "b2first"})
+check("L4_browser_fallback_header_allowed", st_l4 == 200, str(st_l4))
 
 # ---------------------------------------------------------------------------
 srv.shutdown()
