@@ -38,11 +38,11 @@ def req(base, method, path, body=None, token=None):
         return e.code, e.read().decode("utf-8")
 
 
-# 1. /api/config -> register==="closed" and demo===false
+# 1. /api/config -> register==="closed", no demo mode key
 st_cfg, body_cfg = req(URL, "GET", "/api/config")
 cfg = json.loads(body_cfg)
-assert st_cfg == 200 and cfg.get("register") == "closed" and cfg.get("demo") is False, f"bad config: {cfg}"
-out["1_config_register_closed"] = {"register": cfg["register"], "demo": cfg["demo"]}
+assert st_cfg == 200 and cfg.get("register") == "closed" and "demo" not in cfg, f"bad config: {cfg}"
+out["1_config_register_closed"] = {"register": cfg["register"]}
 
 # 2. POST /api/register -> 403 {"error": "registration is closed"}
 st_reg, body_reg = req(URL, "POST", "/api/register", {"name": "mallory", "password": "password123"})

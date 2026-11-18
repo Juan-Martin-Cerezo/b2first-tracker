@@ -79,7 +79,6 @@ USERS_DIR  = os.path.join(DATA_DIR, "users")            # data/users/<id>/progre
 TOKEN_TTL  = 30 * 24 * 3600                             # session valid for 30 days (sliding)
 TOKEN_ABSOLUTE_TTL = 90 * 24 * 3600                     # hard ceiling: never extended
 OWNER_PASSWORD = os.environ.get("B2_OWNER_PASSWORD", "b2first")  # owner password used when migrating
-B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
 PROGRESS_MAX_BYTES = 2 * 1024 * 1024                    # max size of a progress payload (2 MB)
 AI_MAX_BYTES = 32 * 1024                                # max size of an AI request body (32 KB)
@@ -129,13 +128,6 @@ ALLOWED_METHODS = ("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
 ALLOW_HEADER = ", ".join(ALLOWED_METHODS)
 
 
-def _is_demo():
-    """Return True if the server is in public demo mode (B2_DEMO=1)."""
-    if isinstance(B2_DEMO, str):
-        return B2_DEMO.strip() in ("1", "true", "True")
-    return bool(B2_DEMO)
-
-
 def _no_cache():
     """Return True when the static payload cache is disabled (B2_NO_CACHE=1)."""
     if isinstance(B2_NO_CACHE, str):
@@ -151,9 +143,7 @@ def _public_health():
 
 
 def _register_mode():
-    """Return "open" or "closed" (B2_REGISTER). Demo always reports "closed"."""
-    if _is_demo():
-        return "closed"
+    """Return "open" or "closed" (B2_REGISTER)."""
     val = B2_REGISTER if isinstance(B2_REGISTER, str) else ("open" if B2_REGISTER else "closed")
     return "closed" if val.strip().lower() == "closed" else "open"
 
@@ -5051,9 +5041,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(500, json.dumps({"error": "invalid diagnostic"}).encode("utf-8"), "application/json")
             return
 
-        # Public server configuration (demo mode, version, AI support, registration)
+        # Public server configuration (version, AI support, registration)
         if path == "/api/config":
-            body = json.dumps({"demo": _is_demo(), "version": "1.0.0", "ai": True,
+            body = json.dumps({"version": "1.0.0", "ai": True,
                                "register": _register_mode(),
                                "google": bool(google_client_id())},
                               ensure_ascii=False).encode("utf-8")
@@ -5410,19 +5400,11 @@ class H(BaseHTTPRequestHandler):
             self._send_json(code, obj)
             return
 
-        # In demo mode accounts and sync are blocked (nobody reads or writes data/)
-        if _is_demo() and path in ("/api/register", "/api/login", "/api/logout", "/api/me",
-                                   "/api/users", "/api/progress", "/api/password",
-                                   "/api/account", "/api/export", "/api/audit"):
-            clen = int(self.headers.get("Content-Length", 0) or 0)
-            if clen > 0:
-                self.rfile.read(clen)
-            body = json.dumps({"error": "demo mode: no accounts or sync"}, ensure_ascii=False).encode("utf-8")
-            self._send(403, body, "application/json; charset=utf-8")
-            return
-
         # ---- User / auth API ----
         if path == "/api/users":
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
             migrate_legacy()
             users = [public_user(u) for u in store.list_users().values()]
             body = json.dumps(users, ensure_ascii=False).encode("utf-8")
@@ -5594,14 +5576,13 @@ class H(BaseHTTPRequestHandler):
             contact = "".join(ch for ch in contact if ch.isprintable()).strip()
             if len(contact) > 120:
                 self._send_json(422, {"error": "invalid contact"}); return
-            if not _is_demo():
-                store.append_pwreset({
-                    "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "name": name,
-                    "contact": contact,
-                    "ip_hash": _ip_hash(ip),
-                    "rid": self._rid,
-                })
+            store.append_pwreset({
+                "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "name": name,
+                "contact": contact,
+                "ip_hash": _ip_hash(ip),
+                "rid": self._rid,
+            })
             _audit("pwreset_request", "", ip, self._rid, {"name_len": len(name)})
             self._send_json(200, {"ok": True})
             return
@@ -5717,20 +5698,13 @@ class H(BaseHTTPRequestHandler):
                 self._drain()
                 self._send_json(400, {"error": "invalid user id"})
                 return
-            # Validate the session: a present token must be valid and belong to the
-            # user; with no token only a DIRECT local request may touch the owner's data
-            # (backwards compat for the owner's own machine). Any proxied request — the
-            # public Funnel always sets X-Forwarded-For — must authenticate, otherwise a
-            # stranger could read or overwrite the owner's progress with no credentials.
+            # Every progress request must carry a valid session that belongs to
+            # the user in the path. There is no anonymous or owner fallback.
             tok = self._bearer()
             uid, auth_err = self._auth() if tok else (None, None)
-            if tok and not uid:
-                self._send_json(401, {"error": auth_err or "invalid session"}); return
-            if not tok:
-                proxied = bool(self.headers.get("X-Forwarded-For") or self.headers.get("X-Real-IP"))
-                if user_id != "owner" or proxied:
-                    self._send_json(401, {"error": "session required"}); return
-            if uid is not None and uid != user_id:
+            if not tok or not uid:
+                self._send_json(401, {"error": auth_err or "session required"}); return
+            if uid != user_id:
                 self._send_json(403, {"error": "not authorized for this user"}); return
             if self.command == "GET":
                 if "download=1" in qs.split("&"):
@@ -6945,8 +6919,7 @@ class H(BaseHTTPRequestHandler):
                 parsed = _sanitize_event(ev)
                 if parsed:
                     clean.append(parsed)
-            # Demo mode writes nothing to data/: events are accepted and dropped.
-            if clean and not _is_demo():
+            if clean:
                 _append_events(clean, sid, uid, _ip_hash(_real_ip(self)))
             self._send_json(200, {"ok": True, "accepted": len(clean)})
             return
@@ -7001,8 +6974,7 @@ class B2HTTPServer(ThreadingHTTPServer):
 
 
 if __name__ == "__main__":
-    if not _is_demo():
-        migrate_legacy()
+    migrate_legacy()
     # Debounced token persistence: the index is loaded once here, flushed in the
     # background and once more on SIGTERM (systemd stop/restart).
     _start_tokens_flusher()
