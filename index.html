@@ -686,6 +686,10 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spk-report-title .t{font-size:var(--fs-xs);color:var(--txt-2);font-weight:400;margin-left:6px}
 .spk-report-actions{display:flex;gap:8px;flex-wrap:wrap}
 .spk-report .btn.sm,#spkReportBtn{min-height:44px;min-width:44px}
+/* While the assessment is in flight the result blocks are replaced by a
+   placeholder with the same height, so the panel never collapses. */
+.spk-report.is-loading> *:not(.spk-report-head):not(#spkReportSkeleton){display:none !important}
+.spk-report.is-loading #spkReportSkeleton{display:block !important;margin-top:12px}
 .spk-scales{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
 .spk-scale{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;border:1px solid var(--line)}
 .spk-scale .lbl{display:block;font-size:var(--fs-xs);letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
@@ -1644,6 +1648,43 @@ footer{
 .view table,.view .panel{scroll-margin-top:var(--nav-offset,0px)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
+/* ---------- SKELETON LOADING ----------
+   Placeholders that reserve the height of the real content, so a slow pull or
+   a heavy render never leaves a hole nor makes the layout jump. Surface tokens
+   only (light and dark follow the theme); motion is opt-out. */
+.sk{display:block;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl)}
+.sk-title{height:var(--t-title);width:min(280px,60%);border-radius:var(--r-ctl)}
+.sk-line{height:calc(var(--t-body) + 2px);width:100%;border-radius:var(--s2)}
+.sk-btn{height:var(--btn-h-primary);width:150px;max-width:100%;border-radius:var(--r-ctl)}
+.sk-block{height:160px;width:100%;border-radius:var(--r-panel)}
+.sk-result{height:320px;width:100%;border-radius:var(--r-panel)}
+.sk-w60{width:60%}
+.sk-w40{width:40%}
+.sk-stack{display:flex;flex-direction:column;gap:var(--s4);min-width:0}
+.sk-row{display:flex;gap:var(--s3);flex-wrap:wrap}
+.sk-card{display:flex;flex-direction:column;gap:var(--s3);min-width:0;padding:var(--s4);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel)}
+.sk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--s3);min-width:0}
+.sk-table{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.sk-table .sk-line{height:var(--btn-h-tertiary)}
+.sk-host{position:relative}
+.sk-layer{
+  position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none;
+  display:flex;flex-direction:column;gap:var(--s4);
+  padding:var(--s5);background:var(--bg);border-radius:inherit;
+}
+.sk-title,.sk-line,.sk-btn,.sk-block,.sk-result{
+  background:linear-gradient(90deg,var(--surface-2) 0%,var(--line) 50%,var(--surface-2) 100%);
+  background-size:200% 100%;
+  animation:skSweep 1.2s ease-in-out infinite;
+}
+@keyframes skSweep{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion: reduce){
+  .sk-title,.sk-line,.sk-btn,.sk-block,.sk-result{
+    animation:none !important;
+    background:var(--surface-2);
+  }
+}
+
 /* ---------- OVERLAYS / MODALS ---------- */
 .overlay{
   position:fixed;inset:0;z-index:200;background:var(--overlay-bg);
@@ -1892,11 +1933,6 @@ footer{
   margin:var(--s1) 0 0;padding-left:var(--s4);font-size:var(--t-meta);line-height:1.45;
   color:var(--warn-text);display:flex;flex-direction:column;gap:var(--s1);list-style:disc;
 }
-.ia-spinner{
-  width:18px;height:18px;border:2.5px solid var(--line);border-top-color:var(--acc);
-  border-radius:50%;display:inline-block;animation:iaSpin .75s linear infinite;flex:none;
-}
-@keyframes iaSpin{to{transform:rotate(360deg)}}
 details summary{cursor:pointer;font-weight:600;font-size:var(--t-body)}
 details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
@@ -3845,6 +3881,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                          the text model: it is the Azure PA band, or "not measured".
                          Interactive Communication is never a band — only proxies. -->
                     <div class="spk-report" id="spkReportPanel" style="display:none" aria-live="polite">
+                      <div id="spkReportSkeleton" aria-hidden="true" style="display:none">
+                        <div class="sk-stack">
+                          <div class="sk sk-result"></div>
+                          <div class="sk sk-line"></div>
+                          <div class="sk sk-line sk-w60"></div>
+                        </div>
+                      </div>
                       <div class="spk-report-head">
                         <div class="spk-report-title">Assessment report <span class="t">Cambridge speaking scales · 0–5</span></div>
                         <div class="spk-report-actions">
@@ -4600,8 +4643,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <span id="iaQuota" class="t-xs muted tnum" style="display:none"></span>
             </div>
 
-            <div id="iaLoading" class="panel" style="display:none;margin-top:var(--s4);align-items:center;gap:var(--s3)">
-              <span class="ia-spinner" aria-hidden="true"></span>
+            <div id="iaLoading" class="panel" role="status" aria-busy="true" style="display:none;margin-top:var(--s4);align-items:stretch;gap:var(--s3)">
+              <div aria-hidden="true" class="sk-stack">
+                <div class="sk sk-result"></div>
+                <div class="sk sk-line"></div>
+                <div class="sk sk-line sk-w60"></div>
+              </div>
               <span class="t-sm" style="font-weight:600" data-i18n="ai_correcting">correcting…</span>
             </div>
 
@@ -8202,8 +8249,133 @@ function syncPush(){
       .catch(()=>{if(SYNC_STATE!=='invalid')syncStatus('off')});
   },300);
 }
+/* ---------- SKELETON LOADING (runtime) ----------
+   Placeholders are only shown when something is really in flight: a pull that
+   takes longer than 150 ms, a view whose render took longer than 100 ms, or an
+   AI report. Each overlay is absolutely positioned inside its host, so the
+   host keeps the height the local data already painted: the layout never
+   jumps, and a fast path never flashes a skeleton. */
+const SK_HTML={
+  today:'<div class="sk-card"><div class="sk sk-title"></div>'
+    +'<div class="sk-stack"><div class="sk sk-line"></div><div class="sk sk-line sk-w60"></div>'
+    +'<div class="sk sk-line sk-w40"></div></div>'
+    +'<div class="sk-row"><div class="sk sk-btn"></div><div class="sk sk-btn"></div></div></div>',
+  plan:'<div class="sk-stack"><div class="sk sk-card"><div class="sk sk-title"></div>'
+    +'<div class="sk sk-line"></div><div class="sk sk-line sk-w60"></div></div>'
+    +'<div class="sk sk-card"><div class="sk sk-title"></div><div class="sk sk-line"></div></div>'
+    +'<div class="sk sk-block"></div></div>',
+  stats:'<div class="sk-grid"><div class="sk sk-block"></div><div class="sk sk-block"></div>'
+    +'<div class="sk sk-block"></div></div>'
+    +'<div class="sk-table"><div class="sk sk-line"></div><div class="sk sk-line"></div>'
+    +'<div class="sk sk-line"></div><div class="sk sk-line"></div></div>',
+  resources:'<div class="sk-grid"><div class="sk sk-card"><div class="sk sk-line"></div>'
+    +'<div class="sk sk-line sk-w60"></div></div>'
+    +'<div class="sk sk-card"><div class="sk sk-line"></div>'
+    +'<div class="sk sk-line sk-w60"></div></div></div><div class="sk sk-block"></div>',
+  table:'<div class="sk-table"><div class="sk sk-line"></div><div class="sk sk-line"></div>'
+    +'<div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-line"></div></div>',
+  result:'<div class="sk sk-result"></div><div class="sk sk-line"></div><div class="sk sk-line sk-w60"></div>',
+  default:'<div class="sk-stack"><div class="sk sk-title"></div><div class="sk sk-line"></div>'
+    +'<div class="sk sk-line"></div><div class="sk sk-block"></div></div>'
+};
+/* B2_SKELETON=0 (query or localStorage) and D.settings.skeleton=false all
+   turn this off without touching code. */
+function skEnabled(){
+  try{
+    const q=new URLSearchParams(location.search);
+    if(q.get('B2_SKELETON')==='0'||q.get('skeleton')==='0'||q.get('sk')==='0')return false;
+  }catch(e){}
+  try{if(localStorage.getItem('B2_SKELETON')==='0')return false}catch(e){}
+  const s=(D&&D.settings)||{};
+  if(s.skeleton===false||s.skeleton===0||s.skeleton==='0'||s.skeleton==='off')return false;
+  return true;
+}
+function skMarkupForHost(host){
+  const id=(host&&host.id)||'';
+  if(id==='v-hoy')return SK_HTML.today;
+  if(id==='v-plan')return SK_HTML.plan;
+  if(id==='v-prog')return SK_HTML.stats;
+  if(id==='v-resources'||id==='v-libros')return SK_HTML.resources;
+  if(id==='v-err')return SK_HTML.table;
+  return SK_HTML.default;
+}
+/* Attach an overlay and return its remover. The host carries aria-busy and
+   role=status while it lasts; the post-skeleton DOM is restored exactly. */
+function skAttach(host,markup){
+  if(!host)return null;
+  host.classList.add('sk-host');
+  const layer=document.createElement('div');
+  layer.className='sk-layer';
+  layer.setAttribute('aria-hidden','true');
+  layer.dataset.skeleton='1';
+  layer.innerHTML=markup;
+  const prevRole=host.getAttribute('role');
+  const prevBusy=host.getAttribute('aria-busy');
+  host.setAttribute('role','status');
+  host.setAttribute('aria-busy','true');
+  host.appendChild(layer);
+  let removed=false;
+  return function(){
+    if(removed)return;
+    removed=true;
+    if(layer.parentNode)layer.parentNode.removeChild(layer);
+    if(prevRole===null)host.removeAttribute('role');else host.setAttribute('role',prevRole);
+    if(prevBusy===null)host.removeAttribute('aria-busy');else host.setAttribute('aria-busy',prevBusy);
+    if(!host.querySelector('.sk-layer'))host.classList.remove('sk-host');
+  };
+}
+/* Pull in flight: wait 150 ms before showing (a warm pull must not blink) and
+   drop the skeleton at 4 s, whether or not the request ever answers. */
+function skPullStart(){
+  if(!skEnabled())return null;
+  const host=document.querySelector('.view.active');
+  if(!host)return null;
+  let shown=null,closed=false;
+  const showT=setTimeout(function(){
+    if(!closed)shown=skAttach(host,skMarkupForHost(host));
+  },150);
+  const stopT=setTimeout(function(){
+    if(closed)return;
+    if(shown){shown();shown=null}
+  },4000);
+  return function(){
+    if(closed)return;
+    closed=true;
+    clearTimeout(showT);clearTimeout(stopT);
+    if(shown){shown();shown=null}
+  };
+}
+/* Heavy view renders are measured against the next frame with rAF. The first
+   entry paints normally (no skeleton in front of a fast render); a view that
+   measured over 100 ms is marked slow and pre-empted with the skeleton on the
+   next entry, so the placeholder covers the real cost instead of flashing. */
+const SK_SLOW_VIEW={};
+function skMeasureRender(key,fn){
+  const t0=performance.now();
+  try{fn()}finally{
+    const ms=performance.now()-t0;
+    requestAnimationFrame(function(){
+      if(ms>100)SK_SLOW_VIEW[key]=true;
+    });
+  }
+}
+function skRenderView(key,fn){
+  const host=document.querySelector('.view.active');
+  if(typeof fn!=='function')return;
+  if(!skEnabled()||!host){fn();return}
+  /* First entry paints normally and only measures. Once the view is known to
+     cost over 100 ms, later entries get the skeleton before the work starts. */
+  if(!SK_SLOW_VIEW[key]){skMeasureRender(key,fn);return}
+  const detach=skAttach(host,skMarkupForHost(host));
+  requestAnimationFrame(function(){
+    try{fn()}finally{
+      requestAnimationFrame(function(){if(detach)detach()});
+    }
+  });
+}
 function syncPull(){
   if(DEMO&&DEMO.demo)return Promise.resolve(null);
+  const skPullDone=skPullStart();
   return fetch(apiUrl('/api/progress',{download:1}),{headers:authHeaders()})
     .then(r=>{if(r.status===401){sessionExpired();throw 0}if(!r.ok)throw 0;return r.json()})
     .then(d=>{
@@ -8241,7 +8413,10 @@ function syncPull(){
       }
       return null;
     })
-    .catch(()=>{syncStatus('off');return null;});
+    .catch(()=>{syncStatus('off');return null;})
+    /* The overlay goes away after the merged document has painted, in every
+       path: success, HTTP error, network failure or the 4 s bail-out. */
+    .finally(function(){if(skPullDone)skPullDone()});
 }
 function today(){return new Date().toLocaleDateString('sv-SE')}
 /* Visible dates use en-GB (dd/mm/yyyy). Storage keys keep sv-SE
@@ -10750,6 +10925,7 @@ function spkBuildPayload(){
 }
 
 function spkReportError(msg){
+  spkReportLoading(false);
   const panel=document.getElementById('spkReportPanel');
   if(panel)panel.style.display='block';
   const el=document.getElementById('spkReportErr');
@@ -10853,6 +11029,13 @@ async function spkReport(){
   if(retry)retry.disabled=true;
   const errEl=document.getElementById('spkReportErr');
   if(errEl)errEl.style.display='none';
+  /* The panel reserves the result height while the model answers: no spinner,
+     no collapsed card, and aria-busy until the report lands. */
+  if(skEnabled()){
+    const panel=document.getElementById('spkReportPanel');
+    if(panel)panel.style.display='block';
+    spkReportLoading(true);
+  }
   try{
     const r=await fetch(apiUrl('/api/speaking/report'),{
       method:'POST',headers:Object.assign({},authHeaders(),byoHeaders()),body:JSON.stringify(payload)});
@@ -10880,7 +11063,17 @@ async function spkReport(){
     return false;
   }finally{
     if(retry)retry.disabled=false;
+    spkReportLoading(false);
   }
+}
+/* One switch for the report's loading state: the skeleton and aria-busy are
+   set together and removed together, on success and on failure. */
+function spkReportLoading(on){
+  const panel=document.getElementById('spkReportPanel');
+  if(!panel)return;
+  panel.classList.toggle('is-loading',!!on);
+  if(on)panel.setAttribute('aria-busy','true');
+  else panel.removeAttribute('aria-busy');
 }
 
 function spkSaveReport(){
@@ -17403,7 +17596,11 @@ function setIaState(st,errMsg){
   const lbl=document.getElementById('iaStateLabel');
   if(lbl)lbl.textContent=t('ai_state_'+st);
   const loadEl=document.getElementById('iaLoading');
-  if(loadEl)loadEl.style.display=st==='loading'?'flex':'none';
+  if(loadEl){
+    loadEl.style.display=st==='loading'?'flex':'none';
+    if(st==='loading')loadEl.setAttribute('aria-busy','true');
+    else loadEl.removeAttribute('aria-busy');
+  }
   const errEl=document.getElementById('iaError');
   if(errEl)errEl.style.display=st==='error'?'block':'none';
   const msgEl=document.getElementById('iaErrorMsg');
@@ -18291,9 +18488,17 @@ function activateNavView(viewId,isUserClick){
   document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===viewId));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   sec.classList.add('active');
-  if(viewId==='diag')renderDiag();
-  if(viewId==='practice')renderPractice();
-  if(viewId==='resources'){renderPractice();renderResources()}
+  /* Views that recalculate on entry run through skRenderView: it measures the
+     render against the next frame and only pre-empts a view already known to
+     cost more than 100 ms, so a fast switch never flashes a placeholder. */
+  if(viewId==='diag')skRenderView('diag',renderDiag);
+  if(viewId==='practice')skRenderView('practice',renderPractice);
+  if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
+  if(viewId==='prog')skRenderView('prog',function(){
+    renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
+    renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();
+  });
+  if(viewId==='resources')skRenderView('resources',function(){renderPractice();renderResources()});
   closeMoreSheet(false);
   closeAccountSheet(false);
   if(window.innerWidth<=1023&&(window.scrollY||window.pageYOffset||0)>0)window.scrollTo(0,0);
