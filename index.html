@@ -18878,13 +18878,13 @@ function finishDiag(timedOut=false){
     if(!byPart[p])byPart[p]={ok:0,n:0};
     byPart[p].n++;
     const ans=DIAG_STATE.answers[i];
-    const hasAnswer=ans&&ans.choice!==null&&ans.choice!==undefined&&!ans.timedOut&&!timedOut;
+    const hasAnswer=ans&&ans.choice!==null&&ans.choice!==undefined&&!ans.timedOut;
     const isOk=hasAnswer&&Number(ans.choice)===Number(item.answer);
     if(isOk){
       correct++;
       byPart[p].ok++;
     }else{
-      const tax=(!hasAnswer||timedOut)?'T-LIM':(item.taxonomy||'G-ERR');
+      const tax=!hasAnswer?'T-LIM':(item.taxonomy||'G-ERR');
       D.errs.push({
         date,
         tax,
