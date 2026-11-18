@@ -5500,8 +5500,8 @@ class H(BaseHTTPRequestHandler):
             try:
                 session = billing.create_checkout_session(
                     uid, cfg["price_id"],
-                    cfg["public_url"] + "/?billing=success",
-                    cfg["public_url"] + "/?billing=cancel",
+                    cfg["public_url"] + "/app?billing=success",
+                    cfg["public_url"] + "/app?billing=cancel",
                     idem)
             except billing.BillingError:
                 _audit("billing_checkout_failed", uid, _real_ip(self), self._rid)
@@ -5536,7 +5536,7 @@ class H(BaseHTTPRequestHandler):
                 return
             try:
                 session = billing.create_portal_session(
-                    customer, billing.config()["public_url"] + "/?billing=portal")
+                    customer, billing.config()["public_url"] + "/app?billing=portal")
             except billing.BillingError:
                 _audit("billing_portal_failed", uid, _real_ip(self), self._rid)
                 self._send_json(502, {"error": "billing_provider_error"})

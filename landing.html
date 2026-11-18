@@ -7,7 +7,7 @@
 (function(){
   try{
     var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
-    if(u&&u.token)location.replace('/app');
+    if(u&&u.token)location.replace('/app'+location.search);
   }catch(e){}
 })();
 </script>
