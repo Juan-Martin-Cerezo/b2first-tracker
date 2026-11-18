@@ -2437,6 +2437,133 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 #progChartsGrid .col-6>.card{margin-bottom:0}
 
+/* === P1: Progress narrative hierarchy & SVG charts === */
+.pg-kpis{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s3);
+  margin-top:var(--s3);
+}
+.pg-kpi{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s3) var(--s4);min-width:0;display:flex;flex-direction:column;gap:var(--s1);
+}
+.pg-kpi-label{
+  font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.pg-kpi-val{
+  font-size:clamp(22px,2.4vw,28px);font-weight:700;line-height:1.1;
+  color:var(--txt);font-variant-numeric:tabular-nums;
+}
+.pg-kpi-unit{font-size:var(--t-body);font-weight:600;color:var(--txt-2)}
+.pg-kpi-sub{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
+.pg-skills{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);
+  margin-top:var(--s3);
+}
+.pg-skill{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s3) var(--s4);min-width:0;display:flex;flex-direction:column;gap:var(--s2);
+}
+.pg-skill-top{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+}
+.pg-skill-name{
+  font-size:var(--t-body);font-weight:600;color:var(--txt);
+  display:inline-flex;align-items:center;gap:var(--s2);min-width:0;
+}
+.pg-skill-dot{width:10px;height:10px;border-radius:999px;flex:none}
+.pg-skill-nums{
+  display:inline-flex;align-items:center;gap:var(--s2);font-variant-numeric:tabular-nums;
+}
+.pg-skill-val{font-size:var(--t-sub);font-weight:700;color:var(--txt)}
+.pg-skill-trend{
+  font-size:var(--t-meta);font-weight:600;padding:2px 8px;border-radius:999px;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.pg-skill-trend.up{background:var(--ok-soft);color:var(--ok-text)}
+.pg-skill-trend.down{background:var(--bad-soft);color:var(--bad-text)}
+.pg-skill-trend.flat{background:var(--surface);color:var(--txt-2);border:1px solid var(--line)}
+.pg-skill-track{
+  position:relative;height:10px;background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;overflow:visible;
+}
+.pg-skill-fill{
+  height:100%;border-radius:999px;
+  transition:width 360ms cubic-bezier(.2,.8,.2,1);
+}
+.pg-skill-target{
+  position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--txt);
+  border-radius:1px;transform:translateX(-1px);opacity:.75;pointer-events:none;
+}
+.pg-skill-meta{font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums}
+.pg-skill-empty{font-size:var(--t-meta);color:var(--txt-2);line-height:1.45}
+.pg-chart{position:relative;margin-top:var(--s3);width:100%;min-width:0}
+.pg-svg-wrap{position:relative;width:100%;min-width:0}
+.pg-svg-wrap svg{
+  width:100%;height:auto;display:block;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
+  overflow:hidden;touch-action:manipulation;
+}
+.pg-pt,.pg-bar-hit{cursor:pointer;outline:none}
+.pg-pt-halo{opacity:0;transition:opacity 120ms ease}
+.pg-pt.is-active .pg-pt-halo,.pg-pt:focus-visible .pg-pt-halo,.pg-pt:hover .pg-pt-halo{opacity:.9}
+.pg-bar-hit.is-active .pg-bar-shape,.pg-bar-hit:focus-visible .pg-bar-shape,.pg-bar-hit:hover .pg-bar-shape{
+  stroke:var(--txt);stroke-width:1.5;
+}
+.pg-tip{
+  margin-top:var(--s2);min-height:32px;padding:var(--s1) var(--s3);
+  display:flex;align-items:center;gap:var(--s2);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
+  font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums;
+  line-height:1.35;overflow-wrap:anywhere;
+}
+.pg-tip.has-val{
+  color:var(--txt);background:var(--acc-soft);border-color:var(--acc-border);font-weight:600;
+}
+.pg-legend{
+  display:flex;flex-wrap:wrap;gap:var(--s2) var(--s3);margin-top:var(--s2);
+  font-size:var(--t-meta);color:var(--txt-2);align-items:center;
+}
+.pg-leg-item{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pg-err-summary{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-bottom:var(--s2);
+}
+.pg-err-total{
+  font-size:var(--t-body);font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums;
+}
+.pg-detail summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  list-style:none;min-height:44px;
+}
+.pg-detail summary::-webkit-details-marker{display:none}
+.pg-detail summary::after{
+  content:'▸';font-size:var(--t-sub);color:var(--txt-2);flex:none;
+  transition:transform 150ms ease;
+}
+.pg-detail[open] > summary::after{transform:rotate(90deg)}
+.pg-detail[open] > summary{
+  margin-bottom:var(--s4);padding-bottom:var(--s3);border-bottom:1px solid var(--line);
+}
+.pg-detail-hint{
+  font-size:var(--t-meta);font-weight:400;color:var(--txt-2);margin-left:auto;padding-right:var(--s2);
+}
+.pg-detail-block + .pg-detail-block{margin-top:var(--s4)}
+@keyframes pgFadeIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion: no-preference){
+  .pg-chart svg .pg-anim{animation:pgFadeIn 260ms ease both}
+}
+@media (prefers-reduced-motion: reduce){
+  .pg-skill-fill,.pg-chart *,.pg-detail summary::after{animation:none !important;transition:none !important}
+}
+@media (max-width:767px){
+  .pg-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+  .pg-kpi{padding:var(--s3)}
+}
+@media (max-width:699px){
+  .pg-skills{grid-template-columns:1fr;gap:var(--s2)}
+  .pg-detail-hint{display:none}
+}
+
 /* === F129: Topbar 3-tier heights, sticky sub-bar, Account popover/sheet & 3 layout tiers === */
 @media (max-width:599px){
   .topbar{padding:0 var(--s4)}
@@ -4230,105 +4357,51 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
-        <div class="stat-grid">
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-prog"/></svg>
-            <span class="stat-card-label" data-i18n="prog_global_avg">Global Average</span>
-            <span class="stat-card-val" id="pGlobal">—</span>
-            <div class="stat-bar"><div class="stat-bar-fill" id="pGlobalBar" style="width:0%"></div></div>
-          </div>
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"/></svg>
-            <span class="stat-card-label" data-i18n="prog_best_part">Best Part Score</span>
-            <span class="stat-card-val" id="pBest">—</span>
-            <span class="stat-card-sub" id="pBestName">—</span>
-          </div>
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-exam"/></svg>
-            <span class="stat-card-label" data-i18n="prog_total_time">Total Study Time</span>
-            <span class="stat-card-val" id="pTime">0</span>
-            <span class="stat-card-sub" data-i18n="prog_logged_min">logged minutes</span>
-          </div>
-        </div>
-
-        <div class="grid-12 prog-moved-grid">
-          <div class="col-6">
-            <div class="card metrics-card">
-              <h2 class="metrics-title" data-i18n="metric_title">Weekly Metrics</h2>
-              <div class="metric-row"><span data-i18n="metric_hours">Total hours</span><span class="metric-val" id="mHoras">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_uoe">UoE accuracy</span><span class="metric-val" id="mUoe">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row prog-metric-streak"><span data-i18n="metric_streak">Daily streak</span><span class="metric-val" id="mRacha">—</span></div>
-              <div class="metric-divider"></div>
-              <div class="metric-row"><span data-i18n="metric_logs">Logs</span><span class="metric-val" id="mRegs">—</span></div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="today_recent">Recent sessions</h2>
-              <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
-              <div id="recentList"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card metrics-card" id="weekSummaryCard">
-          <h2 class="metrics-title" data-i18n="week_summary_title">Last 4 weeks</h2>
-          <div class="sub" data-i18n="week_summary_sub">Average minutes planned vs practised per skill, read from your log.</div>
-          <div id="weekSummaryBody" style="margin-top:var(--s3)"></div>
-        </div>
-
-        <div class="stat-grid">
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-charts"/></svg>
-            <span class="stat-card-label" data-i18n="charts_readiness">Overall Readiness</span>
-            <span class="stat-card-val" id="gReadiness">—</span>
-            <div class="stat-bar"><div class="stat-bar-fill" id="gReadinessBar" style="width:0%"></div></div>
-          </div>
-          <div class="stat-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"/></svg>
-            <span class="stat-card-label" data-i18n="charts_mocks">Mock Exams Taken</span>
-            <span class="stat-card-val" id="gMocks">0</span>
-            <span class="stat-card-sub" data-i18n="charts_mocks_sub">mocks logged</span>
-          </div>
-          <div class="stat-card prog-streak-card">
-            <svg class="stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-today"/></svg>
-            <span class="stat-card-label" data-i18n="charts_streak">Study Streak</span>
-            <span class="stat-card-val" id="gRacha">0</span>
-            <span class="stat-card-sub" data-i18n="charts_streak_sub">consecutive days</span>
-          </div>
+        <!-- a) Summary: four honest numbers -->
+        <div class="card pg-summary" id="progSummary">
+          <h2 data-i18n="pg_summary_title">At a glance</h2>
+          <div class="pg-kpis" id="pgKpis"></div>
         </div>
 
         <div class="card" id="progChartsEmpty" style="display:none">
-          <h2>Your charts unlock after your first session</h2>
-          <p class="sub">Temporal evolution · By part · Errors by type · Weekly consistency</p>
-          <button type="button" class="btn" data-action="openQuickLog">Log your first session</button>
+          <h2 data-i18n="pg_empty_title">Your charts unlock after your first session</h2>
+          <p class="sub" data-i18n="pg_empty_sub">Log one session and this page fills in: progress per skill, evolution over time, weakest parts, errors and weekly consistency.</p>
+          <button type="button" class="btn" data-action="openQuickLog" data-i18n="pg_empty_cta">Log your first session</button>
         </div>
 
+        <!-- b) Progress per skill -->
+        <div class="card" id="pgSkillsCard">
+          <h2 data-i18n="pg_skills_title">Progress by skill</h2>
+          <div class="sub" data-i18n="pg_skills_sub">Each bar is the average of your last 3 results; the arrow is the change across those 3. The tick marks the target.</div>
+          <div class="pg-skills" id="pgSkills"></div>
+        </div>
+
+        <!-- c) Evolution over time (main chart) -->
+        <div class="card" id="pgEvolCard">
+          <h2 data-i18n="charts_evolution">Evolution over time</h2>
+          <div class="sub" data-i18n="charts_evolution_sub">Accuracy per skill on one 0–100 % scale, one point per day with results.</div>
+          <div id="gEvol" class="pg-chart"></div>
+        </div>
+
+        <!-- d) weakest parts · e) errors · e) consistency -->
         <div class="grid-12" id="progChartsGrid">
           <div class="col-6">
             <div class="card">
-              <h2 data-i18n="charts_evolution">📈 Temporal Evolution</h2>
-              <div class="sub" data-i18n="charts_evolution_sub">Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.</div>
-              <div id="gEvol"></div>
-            </div>
-            <div class="card">
-              <h2 data-i18n="charts_errors">🧩 Errors by type</h2>
-              <div class="sub" data-i18n="charts_errors_sub">Accumulated root-cause taxonomy.</div>
-              <div id="gErr"></div>
+              <h2 data-i18n="charts_by_part">Weakest parts</h2>
+              <div class="sub" data-i18n="charts_by_part_sub">Reading &amp; Use of English parts 1–7: average of all your results, worst first.</div>
+              <div id="gPart" class="pg-chart"></div>
             </div>
           </div>
           <div class="col-6">
             <div class="card">
-              <h2 data-i18n="charts_by_part">📊 By Part &amp; Exercise</h2>
-              <div class="sub" data-i18n="charts_by_part_sub">Average % of each exam part — red bars are your weakest.</div>
-              <div id="gPart"></div>
+              <h2 data-i18n="charts_errors">Errors by type</h2>
+              <div class="sub" data-i18n="charts_errors_sub">Root causes you tagged, per week (last 8 weeks).</div>
+              <div id="gErr" class="pg-chart"></div>
             </div>
             <div class="card">
-              <h2 data-i18n="charts_consistency">🔥 Weekly Consistency</h2>
-              <div class="sub">Logs per week (last 12) · <span id="gStreak"></span></div>
-              <div id="gCons"></div>
+              <h2 data-i18n="charts_consistency">Weekly consistency</h2>
+              <div class="sub"><span data-i18n="pg_cons_sub">Logs per week, last 12 weeks</span> · <span id="gStreak"></span></div>
+              <div id="gCons" class="pg-chart"></div>
             </div>
           </div>
         </div>
@@ -4345,22 +4418,36 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <p style="font-size:var(--t-meta);color:var(--on-surface-variant);margin-top:var(--s2)" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
         </div>
 
-        <div class="grid-12" id="progHistoryGrid">
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="prog_history">History</h2>
-              <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
-              <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
+        <!-- f) Numeric detail, collapsed by default -->
+        <details class="card pg-detail" id="progDetail">
+          <summary><span data-i18n="pg_detail_title">Numeric detail</span> <span class="pg-detail-hint" data-i18n="pg_detail_sub">Every number behind the charts</span></summary>
+          <div class="grid-12" id="progHistoryGrid">
+            <div class="col-6">
+              <section class="pg-detail-block">
+                <h3 data-i18n="prog_stats">Stats by exercise</h3>
+                <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
+                <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
+              </section>
+              <section class="pg-detail-block metrics-card" id="weekSummaryCard">
+                <h3 class="metrics-title" data-i18n="week_summary_title">Last 4 weeks</h3>
+                <div class="sub" data-i18n="week_summary_sub">Average minutes planned vs practised per skill, read from your log.</div>
+                <div id="weekSummaryBody"></div>
+              </section>
+            </div>
+            <div class="col-6">
+              <section class="pg-detail-block">
+                <h3 data-i18n="prog_history">History</h3>
+                <div class="sub" data-i18n="prog_history_sub">Everything logged, newest to oldest.</div>
+                <div class="table-wrap"><table id="logTable"><thead><tr><th data-i18n="th_date">Date</th><th data-i18n="th_module">Module</th><th data-i18n="th_score">Score</th><th>%</th><th data-i18n="th_min">Min</th><th></th></tr></thead><tbody></tbody></table></div>
+              </section>
+              <section class="pg-detail-block">
+                <h3 data-i18n="today_recent">Recent sessions</h3>
+                <div class="sub" data-i18n="today_recent_sub">Your last logged entries, newest first.</div>
+                <div id="recentList"></div>
+              </section>
             </div>
           </div>
-          <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="prog_stats">📈 Stats by exercise</h2>
-              <div class="sub" data-i18n="prog_stats_sub">How many times you practiced each part and how you did. Only logged exercises appear.</div>
-              <div class="table-wrap"><table id="statsTable"><thead><tr><th data-i18n="th_exercise">Exercise</th><th data-i18n="th_times">Times</th><th data-i18n="th_average">Average</th><th data-i18n="th_best">Best</th><th data-i18n="th_last">Last</th></tr></thead><tbody></tbody></table></div>
-            </div>
-          </div>
-        </div>
+        </details>
       </section>
 
       <!-- ============ ERRORS ============ -->
@@ -4958,11 +5045,7 @@ const I18N={
     last_sp_parts:'{n} parts done',
     last_sp_parts_one:'1 part done',
     next_fast_forward:'Fast-forward (+1)',
-    metric_title:'Weekly Metrics',
-    metric_hours:'Total hours',
-    metric_uoe:'UoE accuracy',
     metric_streak:'Daily streak',
-    metric_logs:'Logs',
     recent_empty:'Nothing logged yet. Your first session takes 15 seconds.',
     recent_quick:'Quick log',
     exam_countdown:'Exam countdown',
@@ -5152,10 +5235,70 @@ const I18N={
     res_writing_guides:'Writing guides',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
-    prog_global_avg:'Global Average',
-    prog_best_part:'Best Part Score',
-    prog_total_time:'Total Study Time',
-    prog_logged_min:'logged minutes',
+    pg_summary_title:'At a glance',
+    pg_empty_title:'Your charts unlock after your first session',
+    pg_empty_sub:'Log one session and this page fills in: progress per skill, evolution over time, weakest parts, errors and weekly consistency.',
+    pg_empty_cta:'Log your first session',
+    pg_skills_title:'Progress by skill',
+    pg_skills_sub:'Each bar is the average of your last 3 results; the arrow is the change across those 3. The tick marks the target.',
+    pg_cons_sub:'Logs per week, last 12 weeks',
+    pg_detail_title:'Numeric detail',
+    pg_detail_sub:'Every number behind the charts',
+    pg_kpi_sessions_label:'Sessions (14d)',
+    pg_kpi_sessions_sub:'target {goal}/wk',
+    pg_kpi_streak_label:'Daily streak',
+    pg_kpi_days_unit:'d',
+    pg_kpi_streak_best:'best {best} d',
+    pg_kpi_streak_empty:'log today to start',
+    pg_kpi_avg_label:'Skill average',
+    pg_kpi_avg_sub:'across {n} of 4 skills',
+    pg_kpi_avg_empty:'no scored sessions',
+    pg_kpi_exam_label:'Days to exam',
+    pg_kpi_exam_today:'Today',
+    pg_kpi_exam_past:'exam date passed',
+    pg_kpi_exam_unset:'no date set',
+    pg_skill_rue:'Reading & UoE',
+    pg_skill_w:'Writing',
+    pg_skill_l:'Listening',
+    pg_skill_sp:'Speaking',
+    pg_skill_meta:'last {k} of {n} · target {target}%',
+    pg_skill_one:'1 result',
+    pg_skill_steady:'steady',
+    pg_skill_empty_rue:'No Reading & UoE scores yet — log a Part 1–7 exercise or full test.',
+    pg_skill_empty_w:'No Writing scores yet — log an essay, article, report, review or email.',
+    pg_skill_empty_l:'No Listening scores yet — log a Part 1–4 exercise or full test.',
+    pg_skill_empty_sp:'No Speaking bands yet — log a Speaking score (/5).',
+    pg_evol_empty:'No scored sessions yet — log a result to plot your curve.',
+    pg_evol_band:'B2–Grade A zone (60–80%)',
+    pg_evol_target:'Target {pct}%',
+    pg_evol_title:'Evolution over time: accuracy percentage by skill',
+    pg_evol_desc:'Line chart from 0 to 100 percent across {n} dates for {skills}.',
+    pg_part_empty:'No Reading & UoE Parts 1–7 logged yet — log any Part 1–7 to rank your weakest parts.',
+    pg_part_cta:'Log R&UE part',
+    pg_part_weakest:'Weakest',
+    pg_part_below:'Below target',
+    pg_part_ontarget:'On target',
+    pg_part_title:'Weakest parts: Reading & Use of English parts 1 to 7',
+    pg_part_desc:'Horizontal bars ordered from lowest to highest average percentage across {n} parts.',
+    pg_err_empty:'No errors tagged yet — log a mistake in Errors to see your root causes.',
+    pg_err_cta:'Go to Errors',
+    pg_err_total:'Total: {n}',
+    pg_err_trend_down:'{diff} vs prior 4 wks',
+    pg_err_trend_up:'+{diff} vs prior 4 wks',
+    pg_err_trend_same:'same as prior 4 wks',
+    pg_err_recent_only:'{n} in last 4 wks',
+    pg_err_title:'Errors by type over the last 8 weeks',
+    pg_err_desc:'Stacked weekly bars for L-GAP, G-ERR, T-MIS and T-LIM.',
+    pg_cons_streak:'Current streak: {n} wk',
+    pg_cons_goal:'Goal {goal}/wk',
+    pg_cons_met:'Met goal',
+    pg_cons_under:'Below goal',
+    pg_cons_title:'Weekly consistency over the last 12 ISO weeks',
+    pg_cons_desc:'Column chart of logged sessions per week compared against your weekly goal of {goal}.',
+    pg_tip_hint:'Tap or hover a point for details',
+    pg_tip_sessions:'{n} sessions (goal {goal})',
+    pg_tip_part:'Part {p} ({name}): {pct}% · {n} logs',
+    pg_tip_err_week:'{week}: {total} total',
     prog_matrix:'🧗 Progression Matrix',
     prog_matrix_sub:'Complete all gates within your current stage to unlock the next one automatically.',
     prog_achieved:'achieved',
@@ -5243,25 +5386,20 @@ const I18N={
     th_module:'Module',
     th_score:'Score',
     th_min:'Min',
-    prog_stats:'📈 Stats by exercise',
+    prog_stats:'Stats by exercise',
     prog_stats_sub:'How many times you practiced each part and how you did. Only logged exercises appear.',
     th_exercise:'Exercise',
     th_times:'Times',
     th_average:'Average',
     th_best:'Best',
     th_last:'Last',
-    charts_readiness:'Overall Readiness',
-    charts_mocks:'Mock Exams Taken',
-    charts_mocks_sub:'mocks logged',
-    charts_streak:'Study Streak',
-    charts_streak_sub:'consecutive days',
-    charts_evolution:'📈 Temporal Evolution',
-    charts_evolution_sub:'Your % over the weeks (Writing /20 · Listening /30 · UoE %). Each point is a log entry.',
-    charts_by_part:'📊 By Part & Exercise',
-    charts_by_part_sub:'Average % of each exam part — red bars are your weakest.',
-    charts_errors:'🧩 Errors by type',
-    charts_errors_sub:'Accumulated root-cause taxonomy.',
-    charts_consistency:'🔥 Weekly Consistency',
+    charts_evolution:'Evolution over time',
+    charts_evolution_sub:'Accuracy per skill on one 0–100 % scale, one point per day with results.',
+    charts_by_part:'Weakest parts',
+    charts_by_part_sub:'Reading & Use of English parts 1–7: average of all your results, worst first.',
+    charts_errors:'Errors by type',
+    charts_errors_sub:'Root causes you tagged, per week (last 8 weeks).',
+    charts_consistency:'Weekly consistency',
     err_title:'Error Taxonomy',
     err_sub:'Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.',
     err_root_log:'🔖 Root-Cause Log',
@@ -5852,11 +5990,7 @@ const I18N={
     last_sp_parts:'{n} partes hechas',
     last_sp_parts_one:'1 parte hecha',
     next_fast_forward:'Adelantar (+1)',
-    metric_title:'Métricas semanales',
-    metric_hours:'Horas totales',
-    metric_uoe:'Precisión UoE',
     metric_streak:'Racha diaria',
-    metric_logs:'Registros',
     recent_empty:'Todavía no registraste nada. Tu primera sesión dura 15 segundos.',
     recent_quick:'Registro rápido',
     exam_countdown:'Cuenta regresiva al examen',
@@ -6046,10 +6180,70 @@ const I18N={
     res_writing_guides:'Guías de writing',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
-    prog_global_avg:'Promedio global',
-    prog_best_part:'Mejor puntaje por parte',
-    prog_total_time:'Tiempo total de estudio',
-    prog_logged_min:'minutos registrados',
+    pg_summary_title:'En un vistazo',
+    pg_empty_title:'Tus gráficos se desbloquean tras la primera sesión',
+    pg_empty_sub:'Registrá una sesión y esta vista cobra vida: progreso por destreza, evolución, partes débiles, errores y constancia.',
+    pg_empty_cta:'Registrá tu primera sesión',
+    pg_skills_title:'Progreso por destreza',
+    pg_skills_sub:'Cada barra muestra el promedio de tus últimos 3 resultados; la flecha indica el cambio entre esos 3. La marca señala el objetivo.',
+    pg_cons_sub:'Registros por semana, últimas 12 semanas',
+    pg_detail_title:'Detalle numérico',
+    pg_detail_sub:'Todos los números detrás de los gráficos',
+    pg_kpi_sessions_label:'Sesiones (14d)',
+    pg_kpi_sessions_sub:'meta {goal}/sem',
+    pg_kpi_streak_label:'Racha diaria',
+    pg_kpi_days_unit:'d',
+    pg_kpi_streak_best:'récord {best} d',
+    pg_kpi_streak_empty:'registrá hoy para empezar',
+    pg_kpi_avg_label:'Media por destreza',
+    pg_kpi_avg_sub:'en {n} de 4 destrezas',
+    pg_kpi_avg_empty:'sin sesiones con nota',
+    pg_kpi_exam_label:'Días al examen',
+    pg_kpi_exam_today:'Hoy',
+    pg_kpi_exam_past:'fecha ya pasada',
+    pg_kpi_exam_unset:'sin fecha',
+    pg_skill_rue:'Reading y UoE',
+    pg_skill_w:'Writing',
+    pg_skill_l:'Listening',
+    pg_skill_sp:'Speaking',
+    pg_skill_meta:'últimos {k} de {n} · meta {target} %',
+    pg_skill_one:'1 resultado',
+    pg_skill_steady:'estable',
+    pg_skill_empty_rue:'Sin notas de Reading y UoE — registrá una parte 1–7 o un examen completo.',
+    pg_skill_empty_w:'Sin notas de Writing — registrá un essay, article, report, review o email.',
+    pg_skill_empty_l:'Sin notas de Listening — registrá una parte 1–4 o un examen completo.',
+    pg_skill_empty_sp:'Sin bandas de Speaking — registrá un puntaje de Speaking (/5).',
+    pg_evol_empty:'Aún no hay sesiones con nota — registrá un resultado para ver tu curva.',
+    pg_evol_band:'Zona B2–Nota A (60–80 %)',
+    pg_evol_target:'Objetivo {pct} %',
+    pg_evol_title:'Evolución en el tiempo: porcentaje de acierto por destreza',
+    pg_evol_desc:'Gráfico de líneas de 0 a 100 % en {n} fechas para {skills}.',
+    pg_part_empty:'Todavía no registraste partes 1–7 de Reading y UoE — registrá alguna para ver tus partes más débiles.',
+    pg_part_cta:'Registrar parte R&UE',
+    pg_part_weakest:'Más débil',
+    pg_part_below:'Bajo meta',
+    pg_part_ontarget:'En meta',
+    pg_part_title:'Partes débiles: Reading y Use of English partes 1 a 7',
+    pg_part_desc:'Barras horizontales ordenadas de menor a mayor porcentaje promedio en {n} partes.',
+    pg_err_empty:'Sin errores etiquetados aún — registrá un fallo en Errores para ver las causas raíz.',
+    pg_err_cta:'Ir a Errores',
+    pg_err_total:'Total: {n}',
+    pg_err_trend_down:'{diff} vs 4 sem previas',
+    pg_err_trend_up:'+{diff} vs 4 sem previas',
+    pg_err_trend_same:'igual que 4 sem previas',
+    pg_err_recent_only:'{n} en últimas 4 sem',
+    pg_err_title:'Errores por tipo en las últimas 8 semanas',
+    pg_err_desc:'Barras semanales apiladas para L-GAP, G-ERR, T-MIS y T-LIM.',
+    pg_cons_streak:'Racha actual: {n} sem',
+    pg_cons_goal:'Meta {goal}/sem',
+    pg_cons_met:'Meta cumplida',
+    pg_cons_under:'Bajo meta',
+    pg_cons_title:'Constancia semanal en las últimas 12 semanas ISO',
+    pg_cons_desc:'Gráfico de columnas con sesiones registradas por semana frente a tu meta de {goal}.',
+    pg_tip_hint:'Tocá o pasá por un punto para ver detalle',
+    pg_tip_sessions:'{n} sesiones (meta {goal})',
+    pg_tip_part:'Parte {p} ({name}): {pct} % · {n} reg.',
+    pg_tip_err_week:'{week}: {total} en total',
     prog_matrix:'🧗 Matriz de progresión',
     prog_matrix_sub:'Completá todos los criterios de tu etapa actual para desbloquear la siguiente automáticamente.',
     prog_achieved:'alcanzada',
@@ -6137,25 +6331,20 @@ const I18N={
     th_module:'Módulo',
     th_score:'Puntaje',
     th_min:'Min',
-    prog_stats:'📈 Estadísticas por ejercicio',
+    prog_stats:'Estadísticas por ejercicio',
     prog_stats_sub:'Cuántas veces practicaste cada parte y cómo te fue. Solo aparecen los ejercicios registrados.',
     th_exercise:'Ejercicio',
     th_times:'Veces',
     th_average:'Promedio',
     th_best:'Mejor',
     th_last:'Último',
-    charts_readiness:'Preparación general',
-    charts_mocks:'Simulacros realizados',
-    charts_mocks_sub:'simulacros registrados',
-    charts_streak:'Racha de estudio',
-    charts_streak_sub:'días consecutivos',
-    charts_evolution:'📈 Evolución temporal',
-    charts_evolution_sub:'Tu % a lo largo de las semanas (Writing /20 · Listening /30 · UoE %). Cada punto es un registro.',
-    charts_by_part:'📊 Por parte y ejercicio',
-    charts_by_part_sub:'Porcentaje promedio de cada parte — las barras rojas son tus puntos más débiles.',
-    charts_errors:'🧩 Errores por tipo',
-    charts_errors_sub:'Taxonomía de causa raíz acumulada.',
-    charts_consistency:'🔥 Constancia semanal',
+    charts_evolution:'Evolución en el tiempo',
+    charts_evolution_sub:'Acierto por destreza en una escala real de 0–100 %, un punto por día con resultados.',
+    charts_by_part:'Partes débiles',
+    charts_by_part_sub:'Reading y Use of English partes 1–7: promedio de tus resultados, de peor a mejor.',
+    charts_errors:'Errores por tipo',
+    charts_errors_sub:'Causas raíz que etiquetaste, por semana (últimas 8 semanas).',
+    charts_consistency:'Constancia semanal',
     err_title:'Taxonomía de errores',
     err_sub:'Registro de causa raíz: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo). Identificá patrones sistemáticos para optimizar el tiempo de estudio restante.',
     err_root_log:'🔖 Registro de causa raíz',
@@ -17124,143 +17313,639 @@ function renderMaterial(){
 function fmtSize(n){
   if(n<1024)return n+' B';n/=1024;if(n<1024)return n.toFixed(0)+' KB';n/=1024;return Number(n.toFixed(1)).toLocaleString(currentLocale())+' MB';
 }
-/* ---------- CHARTS ----------
-   The 4 panels are drawn with pure SVG (zero dependencies) and
-   re-render on every refreshAll():
-   - renderGrafEvol(): lines per series (Writing /20 → %, Listening /30,
-     UoE %) over time (X axis = log index).
-   - renderGrafPart(): horizontal bars with the average % per part
-     (UoE P1-7, Listening P1-4, Writing per kind, full R&UoE and full
-     Listening) — bars below the minimum threshold turn red.
-   - renderGrafErr(): bars with the accumulated error taxonomy.
-   - renderGrafCons(): bars of logs per ISO week (last 12)
-     + streak of weeks with >= 1 log. */
-function svgChart(w,h,inner,extra){
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);display:block;margin:0" ${extra||''}>${inner}</svg>`;
+/* ---------- PROGRESS & CHARTS (P1) ----------
+   Pure hand-rolled SVG charts (zero dependencies) with real 0–100% / integer
+   axes, faint grids, target bands, accessible <title>/<desc>, legends, and
+   tap/focus/hover tooltips. All helpers ignore dirty/malformed entries. */
+const PG_SKILLS=[
+  {id:'rue',nameKey:'pg_skill_rue',emptyKey:'pg_skill_empty_rue',color:'var(--acc-text)',dash:'',shape:'circle'},
+  {id:'w',nameKey:'pg_skill_w',emptyKey:'pg_skill_empty_w',color:'var(--ok-text)',dash:'6 3',shape:'square'},
+  {id:'l',nameKey:'pg_skill_l',emptyKey:'pg_skill_empty_l',color:'var(--warn-text)',dash:'2 3',shape:'diamond'},
+  {id:'sp',nameKey:'pg_skill_sp',emptyKey:'pg_skill_empty_sp',color:'var(--bad-text)',dash:'8 3 2 3',shape:'triangle'}
+];
+const PG_PART_SHORT_EN={1:'Cloze',2:'Open',3:'Word',4:'Key',5:'Read',6:'Gapped',7:'Match'};
+const PG_PART_SHORT_ES={1:'Cloze',2:'Open',3:'Word',4:'Key',5:'Lect.',6:'Huecos',7:'Relac.'};
+function pgValidDate(raw){
+  if(typeof raw!=='string')return null;
+  const m=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return null;
+  const y=+m[1],mo=+m[2],d=+m[3];
+  const dt=new Date(y,mo-1,d,12,0,0);
+  if(isNaN(dt.getTime())||dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==d)return null;
+  return raw;
 }
-function svgTxt(x,y,t,fill,size,anchor){
-  return `<text x="${x}" y="${y}" fill="${fill||'var(--txt-2)'}" font-size="12" text-anchor="${anchor||'start'}" font-family="system-ui,sans-serif">${esc(t)}</text>`;
+function pgShortDate(key){
+  return key.slice(8,10)+'/'+key.slice(5,7);
 }
-function svgBar(label,pct,min,color){
-  const c=pct>=min?'var(--ok)':(color||'var(--bad)');
-  return `<div style="display:flex;align-items:center;gap:var(--s2);margin:0">
-    <span style="flex:0 0 130px;font-size:var(--t-meta);color:var(--dim);text-align:right">${esc(label)}</span>
-    <div style="flex:1;background:var(--bg);border-radius:var(--s1);height:var(--s3);overflow:hidden"><div style="width:${Math.min(100,pct)}%;height:100%;background:${c};border-radius:var(--s1)"></div></div>
-    <span style="flex:0 0 40px;font-size:var(--t-meta);color:var(--txt);font-variant-numeric:tabular-nums">${Math.round(pct)}%</span></div>`;
+function pgPctOf(e){
+  if(!e||typeof e!=='object')return null;
+  let v=null;
+  if(e.type==='w'){
+    const sc=e.score!==undefined?Number(e.score):Number(e.total);
+    if(Number.isFinite(sc)&&sc>=0)v=sc/20*100;
+  }else if(e.type==='fw'){
+    const s1=Number(e.s1),s2=Number(e.s2);
+    if(Number.isFinite(s1)&&Number.isFinite(s2)&&s1>=0&&s2>=0)v=(s1+s2)/40*100;
+  }else if(e.type==='sp'){
+    if(typeof e.score==='number'&&Number.isFinite(e.score)&&e.score>=0)v=e.score/5*100;
+  }else if(e.type==='ue'||e.type==='rue'||e.type==='l'||e.type==='lp'||e.type==='r6'||e.type==='diag'){
+    const c=Number(e.correct),tot=Number(e.total);
+    if(Number.isFinite(c)&&Number.isFinite(tot)&&tot>0&&c>=0)v=c/tot*100;
+  }
+  if(v===null||!Number.isFinite(v))return null;
+  return Math.max(0,Math.min(100,v));
+}
+function pgSkillOf(e){
+  if(!e||typeof e!=='object')return null;
+  if(e.type==='ue'||e.type==='rue'||e.type==='r6')return 'rue';
+  if(e.type==='w'||e.type==='fw')return 'w';
+  if(e.type==='l'||e.type==='lp')return 'l';
+  if(e.type==='sp')return 'sp';
+  return null;
+}
+function pgWeeklyGoal(){
+  const s=(D&&D.settings)||SETTINGS_DEFAULT;
+  if(typeof s.weekGoal==='number'&&Number.isFinite(s.weekGoal)&&s.weekGoal>0)return Math.round(s.weekGoal);
+  const sched=storedSchedule(s);
+  return (sched&&sched.length)?sched.length:5;
+}
+/* Targets for the current stage, expressed as a percentage so the charts can
+   share one 0-100 axis. The numbers come from the same gate thresholds the
+   matrix uses (gateResolveThresholds); stage 0's Listening gate is 20/30 with
+   at most 3 part-2 misses, so its target percentage is 67. */
+function pgStageTargets(){
+  const idx=Math.min(2,Math.max(0,Math.round(Number(D&&D.stage)||0)));
+  const th=gateResolveThresholds(D&&D.settings);
+  const per=[
+    {rue:th.e0.u, w:th.e0.w/20*100, l:20/30*100, sp:3/5*100},
+    {rue:th.e1.u, w:th.e1.w/20*100, l:th.e1.l/30*100, sp:4/5*100},
+    {rue:th.e2.r, w:th.e2.w/20*100, l:th.e2.l/30*100, sp:4/5*100}
+  ];
+  const t=per[idx]||per[0];
+  return {
+    rue:Math.round(t.rue),
+    w:Math.round(t.w),
+    l:Math.round(t.l),
+    sp:Math.round(t.sp)
+  };
+}
+function pgTargetGradePct(){
+  const g=D&&D.profile&&D.profile.targetGrade;
+  if(g==='C')return 60;
+  if(g==='B')return 75;
+  return 80;
+}
+function pgCleanLogs(){
+  const raw=Array.isArray(D&&D.log)?D.log:[];
+  const out=[];
+  for(let i=0;i<raw.length;i++){
+    const e=raw[i];
+    if(!e||typeof e!=='object')continue;
+    const date=pgValidDate(e.date);
+    if(!date)continue;
+    out.push({e,date,idx:i,skill:pgSkillOf(e),pct:pgPctOf(e)});
+  }
+  out.sort((a,b)=>a.date.localeCompare(b.date)||a.idx-b.idx);
+  return out;
+}
+function pgIsoWeekMonday(d){
+  const dt=typeof d==='string'?_parseLocalDay(d):new Date(d);
+  dt.setHours(12,0,0,0);
+  const dow=(dt.getDay()+6)%7;
+  dt.setDate(dt.getDate()-dow);
+  return dt;
+}
+function pgIsoWeekInfo(d){
+  const mon=pgIsoWeekMonday(d);
+  const thu=new Date(mon);
+  thu.setDate(mon.getDate()+3);
+  const w=isoWeek(thu);
+  const key=thu.getFullYear()+'-W'+String(w).padStart(2,'0');
+  return {key,label:'W'+w,monday:mon,dateKey:dayKey(mon)};
+}
+function pgRecentWeeks(count,anchorDateKey){
+  const todayMon=pgIsoWeekMonday(new Date());
+  let endMon=todayMon;
+  if(anchorDateKey){
+    const ancMon=pgIsoWeekMonday(anchorDateKey);
+    const diffDays=Math.round((todayMon-ancMon)/86400000);
+    if(diffDays>=(count-1)*7)endMon=ancMon;
+  }
+  const out=[];
+  for(let i=count-1;i>=0;i--){
+    const dt=new Date(endMon);
+    dt.setDate(endMon.getDate()-i*7);
+    out.push(pgIsoWeekInfo(dt));
+  }
+  return out;
+}
+function pgChartWidth(el,desktopMax){
+  const w=el?el.clientWidth:0;
+  const narrow=typeof window!=='undefined'&&window.innerWidth<=520;
+  if(w>0)return Math.max(280,Math.min(desktopMax,Math.round(w)));
+  return narrow?300:desktopMax;
+}
+function svgTxt(x,y,txt,fill,size,anchor,extra){
+  return `<text x="${Number(x).toFixed(1)}" y="${Number(y).toFixed(1)}" fill="${fill||'var(--txt-2)'}" font-size="${size||11}" text-anchor="${anchor||'start'}" font-family="system-ui,sans-serif" ${extra||''}>${esc(txt)}</text>`;
+}
+function pgMarkerSvg(shape,cx,cy,r,fill){
+  const x=Number(cx),y=Number(cy),s=Number(r);
+  if(shape==='square')return `<rect x="${(x-s).toFixed(1)}" y="${(y-s).toFixed(1)}" width="${(s*2).toFixed(1)}" height="${(s*2).toFixed(1)}" rx="1.5" fill="${fill}"/>`;
+  if(shape==='diamond')return `<polygon points="${x.toFixed(1)},${(y-s*1.25).toFixed(1)} ${(x+s*1.25).toFixed(1)},${y.toFixed(1)} ${x.toFixed(1)},${(y+s*1.25).toFixed(1)} ${(x-s*1.25).toFixed(1)},${y.toFixed(1)}" fill="${fill}"/>`;
+  if(shape==='triangle')return `<polygon points="${x.toFixed(1)},${(y-s*1.25).toFixed(1)} ${(x+s*1.15).toFixed(1)},${(y+s).toFixed(1)} ${(x-s*1.15).toFixed(1)},${(y+s).toFixed(1)}" fill="${fill}"/>`;
+  return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.toFixed(1)}" fill="${fill}"/>`;
+}
+function pgLegendLine(color,dash,shape,label){
+  const line=`<line x1="1" y1="6" x2="21" y2="6" stroke="${color}" stroke-width="2"${dash?' stroke-dasharray="'+dash+'"':''}/>`;
+  const mk=shape?pgMarkerSvg(shape,11,6,3.2,color):'';
+  return `<span class="pg-leg-item"><svg width="22" height="12" viewBox="0 0 22 12" aria-hidden="true">${line}${mk}</svg><span>${esc(label)}</span></span>`;
+}
+function pgLegendSwatch(fill,label,border){
+  const st=border?`stroke="${border}" stroke-width="1"`:'';
+  return `<span class="pg-leg-item"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="10" rx="2" fill="${fill}" ${st}/></svg><span>${esc(label)}</span></span>`;
+}
+function pgSvgWrap(w,h,title,desc,inner,legendHtml,tipHint){
+  return `<div class="pg-svg-wrap"><svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title><desc>${esc(desc)}</desc>${inner}</svg></div>`
+    +(tipHint!==false?`<div class="pg-tip" aria-live="polite">${esc(tipHint||t('pg_tip_hint'))}</div>`:'')
+    +(legendHtml?`<div class="pg-legend">${legendHtml}</div>`:'');
+}
+function bindChartTips(el){
+  if(!el||el.dataset.tipBound)return;
+  el.dataset.tipBound='1';
+  const show=target=>{
+    const pt=target&&target.closest?target.closest('[data-tip]'):null;
+    const tip=el.querySelector('.pg-tip');
+    if(!pt||!tip)return;
+    el.querySelectorAll('.is-active').forEach(n=>n.classList.remove('is-active'));
+    pt.classList.add('is-active');
+    tip.textContent=pt.getAttribute('data-tip')||'';
+    tip.classList.add('has-val');
+  };
+  el.addEventListener('click',e=>{
+    const pt=e.target&&e.target.closest?e.target.closest('[data-tip]'):null;
+    if(pt)show(pt);
+  });
+  el.addEventListener('pointerover',e=>{
+    if(e.pointerType==='mouse')show(e.target);
+  });
+  el.addEventListener('focusin',e=>show(e.target));
+}
+function renderProgSummary(){
+  const el=document.getElementById('pgKpis');
+  if(!el)return;
+  const clean=pgCleanLogs();
+  const todayStr=dayKey(new Date());
+  const t14=_addDaysKey(todayStr,-13);
+  const sessions14=clean.filter(x=>x.date>=t14&&x.date<=todayStr).length;
+  const goal=pgWeeklyGoal();
+  const target14=goal*2;
+
+  const st=calcStreak();
+  const streakSub=st.longest>0?t('pg_kpi_streak_best',{best:st.longest}):t('pg_kpi_streak_empty');
+
+  const skillAvgs=[];
+  PG_SKILLS.forEach(sk=>{
+    const vals=clean.filter(x=>x.skill===sk.id&&x.pct!==null).map(x=>x.pct);
+    if(vals.length)skillAvgs.push(vals.reduce((a,b)=>a+b,0)/vals.length);
+  });
+  const avgAll=skillAvgs.length?Math.round(skillAvgs.reduce((a,b)=>a+b,0)/skillAvgs.length):null;
+
+  const profDate=(D&&D.profile&&D.profile.examDate)?pgValidDate(dayKey(D.profile.examDate)):null;
+  const examDates=(Array.isArray(D&&D.examDates)?D.examDates:[]).map(x=>pgValidDate(dayKey(x))).filter(Boolean).sort();
+  const nextExam=((profDate&&profDate>=todayStr)?profDate:null)||examDates.find(x=>x>=todayStr)||null;
+  let examVal='—',examSub=t('pg_kpi_exam_unset');
+  if(nextExam){
+    const days=Math.max(0,Math.round((_parseLocalDay(nextExam)-_parseLocalDay(todayStr))/86400000));
+    examVal=days===0?t('pg_kpi_exam_today'):(days+t('pg_kpi_days_unit'));
+    examSub=fmtDate(nextExam);
+  }else if(profDate&&profDate<todayStr){
+    examSub=t('pg_kpi_exam_past');
+  }
+
+  el.innerHTML=`
+    <div class="pg-kpi">
+      <span class="pg-kpi-label">${esc(t('pg_kpi_sessions_label'))}</span>
+      <span class="pg-kpi-val tnum">${sessions14}<span class="pg-kpi-unit"> / ${target14}</span></span>
+      <span class="pg-kpi-sub">${esc(t('pg_kpi_sessions_sub',{goal:goal}))}</span>
+    </div>
+    <div class="pg-kpi">
+      <span class="pg-kpi-label">${esc(t('pg_kpi_streak_label'))}</span>
+      <span class="pg-kpi-val tnum">${st.current}<span class="pg-kpi-unit"> ${esc(t('pg_kpi_days_unit'))}</span></span>
+      <span class="pg-kpi-sub">${esc(streakSub)}</span>
+    </div>
+    <div class="pg-kpi">
+      <span class="pg-kpi-label">${esc(t('pg_kpi_avg_label'))}</span>
+      <span class="pg-kpi-val tnum">${avgAll!==null?avgAll+'%':'—'}</span>
+      <span class="pg-kpi-sub">${esc(skillAvgs.length?t('pg_kpi_avg_sub',{n:skillAvgs.length}):t('pg_kpi_avg_empty'))}</span>
+    </div>
+    <div class="pg-kpi">
+      <span class="pg-kpi-label">${esc(t('pg_kpi_exam_label'))}</span>
+      <span class="pg-kpi-val tnum">${esc(examVal)}</span>
+      <span class="pg-kpi-sub">${esc(examSub)}</span>
+    </div>`;
+}
+function renderProgSkills(){
+  const el=document.getElementById('pgSkills');
+  if(!el)return;
+  const clean=pgCleanLogs();
+  const targets=pgStageTargets();
+  el.innerHTML=PG_SKILLS.map(sk=>{
+    const list=clean.filter(x=>x.skill===sk.id&&x.pct!==null);
+    const target=targets[sk.id]||70;
+    if(!list.length){
+      return `<div class="pg-skill">
+        <div class="pg-skill-top">
+          <span class="pg-skill-name"><span class="pg-skill-dot" style="background:${sk.color}"></span>${esc(t(sk.nameKey))}</span>
+          <span class="pg-skill-val tnum">—</span>
+        </div>
+        <div class="pg-skill-empty">${esc(t(sk.emptyKey))}</div>
+      </div>`;
+    }
+    const recent=list.slice(-3);
+    const avg3=Math.round(recent.reduce((a,b)=>a+b.pct,0)/recent.length);
+    let trendCls='flat',trendTxt=t('pg_skill_one');
+    if(recent.length>=2){
+      const delta=Math.round(recent[recent.length-1].pct-recent[0].pct);
+      if(delta>=2){trendCls='up';trendTxt='↗ +'+delta+'%'}
+      else if(delta<=-2){trendCls='down';trendTxt='↘ '+delta+'%'}
+      else{trendCls='flat';trendTxt='→ '+t('pg_skill_steady')}
+    }
+    return `<div class="pg-skill">
+      <div class="pg-skill-top">
+        <span class="pg-skill-name"><span class="pg-skill-dot" style="background:${sk.color}"></span>${esc(t(sk.nameKey))}</span>
+        <span class="pg-skill-nums">
+          <span class="pg-skill-val tnum">${avg3}%</span>
+          <span class="pg-skill-trend ${trendCls}">${esc(trendTxt)}</span>
+        </span>
+      </div>
+      <div class="pg-skill-track" role="progressbar" aria-valuenow="${avg3}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(t(sk.nameKey))}: ${avg3}%">
+        <div class="pg-skill-fill" style="width:${avg3}%;background:${sk.color}"></div>
+        <span class="pg-skill-target" style="left:${target}%" title="${esc(t('pg_evol_target',{pct:target}))}"></span>
+      </div>
+      <div class="pg-skill-meta">${esc(t('pg_skill_meta',{k:recent.length,n:list.length,target:target}))}</div>
+    </div>`;
+  }).join('');
 }
 function renderGrafEvol(){
-  const el=document.getElementById('gEvol'),log=D.log||[];
-  if(!log.length){el.innerHTML='';return}
-  /* A speaking entry has no correct/total: its band (0-5) is scaled to the
-     same 0-100 axis as the other series. Old "done" entries are skipped. */
-  const wVal=e=>(e.score!==undefined?e.score:e.total)/20*100;
-  const pctVal=e=>e.type==='w'?wVal(e):(e.type==='sp'?e.score/5*100:e.correct/e.total*100);
-  const series=[
-    {name:'Writing',color:'var(--acc)',es:log.filter(e=>e.type==='w')},
-    {name:'Listening',color:'var(--ok-text)',es:log.filter(e=>e.type==='l')},
-    {name:'UoE',color:'var(--fri)',es:log.filter(e=>e.type==='ue')},
-    {name:'Speaking',color:'var(--warn-text)',es:log.filter(e=>e.type==='sp'&&typeof e.score==='number')}
-  ];
-  const seriesOk=series.filter(s=>s.es.length);
-  if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" data-action="openQuickLog">Quick log</button></div>';return}
-  const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
-  const n=Math.max(...seriesOk.map(s=>s.es.length));
-  const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
-  const ys=v=>padT+(H-padT-padB)*(1-v/100);
-  const last=Math.max(...seriesOk.map(s=>s.es.map(pctVal)).flat());
-  const ymax=Math.ceil(Math.max(100,last)/10)*10;
-  let g='';
-  for(let v=0;v<=ymax;v+=ymax/4){
-    g+=`<line x1="${padL}" x2="${W-padR}" y1="${ys(v)}" y2="${ys(v)}" stroke="var(--line)" stroke-width="1"/>`;
-    g+=svgTxt(padL-4,ys(v)+3,Math.round(v)+'%','var(--dim)',10,'end');
+  const el=document.getElementById('gEvol');
+  if(!el)return;
+  const clean=pgCleanLogs().filter(x=>x.skill&&x.pct!==null);
+  if(!(D.log&&D.log.length)){el.innerHTML='';return}
+  if(!clean.length){
+    el.innerHTML=`<div class="empty">${esc(t('pg_evol_empty'))}<button type="button" class="btn sm ok" data-action="openQuickLog">${esc(t('pg_empty_cta'))}</button></div>`;
+    return;
   }
-  seriesOk.forEach((s,si)=>{
-    const pts=s.es.map((e,i)=>`${xs(i)},${ys(pctVal(e))}`).join(' ');
-    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
-    s.es.forEach((e,i)=>{g+=`<circle cx="${xs(i)}" cy="${ys(pctVal(e))}" r="3" fill="${s.color}"/>`});
-    g+=svgTxt(xs(s.es.length-1)+6,ys(pctVal(s.es[s.es.length-1]))+3,s.name,s.color,11,'start');
+  const bySkillDate={};
+  const dateSet=new Set();
+  clean.forEach(x=>{
+    dateSet.add(x.date);
+    bySkillDate[x.skill]=bySkillDate[x.skill]||{};
+    bySkillDate[x.skill][x.date]=bySkillDate[x.skill][x.date]||[];
+    bySkillDate[x.skill][x.date].push(x);
   });
-  g+=svgTxt(padL,H-4,'← older · more recent →','var(--dim)',10,'middle');
-  el.innerHTML=svgChart(W,H,g);
+  const dates=Array.from(dateSet).sort();
+  const activeSeries=PG_SKILLS.map(sk=>{
+    const map=bySkillDate[sk.id]||{};
+    const pts=dates.filter(d=>map[d]).map(d=>{
+      const arr=map[d];
+      const avg=arr.reduce((a,b)=>a+b.pct,0)/arr.length;
+      return {date:d,pct:avg,n:arr.length};
+    });
+    return Object.assign({},sk,{pts:pts,label:t(sk.nameKey)});
+  }).filter(s=>s.pts.length);
+
+  const W=pgChartWidth(el,760);
+  const H=W<420?220:250;
+  const padL=38,padR=14,padT=16,padB=28;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const dateIdx=Object.fromEntries(dates.map((d,i)=>[d,i]));
+  const xs=d=>{
+    if(dates.length<=1)return padL+plotW*0.5;
+    return padL+plotW*(dateIdx[d]/(dates.length-1));
+  };
+  const ys=v=>padT+plotH*(1-Math.max(0,Math.min(100,v))/100);
+
+  let g='';
+  const targetPct=pgTargetGradePct();
+  const y80=ys(80),y60=ys(60);
+  g+=`<rect x="${padL}" y="${y80.toFixed(1)}" width="${plotW}" height="${(y60-y80).toFixed(1)}" fill="var(--ok)" fill-opacity="0.09"/>`;
+  [0,25,50,75,100].forEach(v=>{
+    const y=ys(v).toFixed(1);
+    g+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(padL-6,ys(v)+4,v+'%','var(--txt-2)',10,'end');
+  });
+  const yt=ys(targetPct);
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${yt.toFixed(1)}" y2="${yt.toFixed(1)}" stroke="var(--ok-text)" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+  g+=svgTxt(padL+4,yt-4,targetPct+'%','var(--ok-text)',10,'start','paint-order="stroke" stroke="var(--surface)" stroke-width="3" stroke-linejoin="round" font-weight="600"');
+  g+=`<line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+
+  const tickIdxs=[];
+  if(dates.length===1){
+    tickIdxs.push(0);
+  }else{
+    const minGap=52;
+    let lastX=-Infinity;
+    for(let i=0;i<dates.length;i++){
+      const x=xs(dates[i]);
+      const isLast=i===dates.length-1;
+      if(i===0||isLast||(x-lastX>=minGap&&xs(dates[dates.length-1])-x>=minGap)){
+        tickIdxs.push(i);
+        lastX=x;
+      }
+    }
+  }
+  tickIdxs.forEach(i=>{
+    const x=xs(dates[i]);
+    const anchor=dates.length>1&&i===0?'start':(dates.length>1&&i===dates.length-1?'end':'middle');
+    g+=`<line x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${H-padB}" y2="${H-padB+4}" stroke="var(--txt-2)" stroke-width="1"/>`;
+    g+=svgTxt(x,H-8,pgShortDate(dates[i]),'var(--txt-2)',10,anchor);
+  });
+
+  const ptR=dates.length>18?3.2:4.2;
+  activeSeries.forEach(s=>{
+    if(s.pts.length>=2){
+      const dStr=s.pts.map((p,i)=>(i===0?'M':'L')+xs(p.date).toFixed(1)+' '+ys(p.pct).toFixed(1)).join(' ');
+      g+=`<path class="pg-anim" d="${dStr}" fill="none" stroke="${s.color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"${s.dash?' stroke-dasharray="'+s.dash+'"':''}/>`;
+    }
+    s.pts.forEach(p=>{
+      const cx=xs(p.date),cy=ys(p.pct),val=Math.round(p.pct);
+      const tip=`${fmtDate(p.date)} · ${s.label}: ${val}%`+(p.n>1?` (${p.n})`:'');
+      g+=`<g class="pg-pt" tabindex="0" role="button" data-tip="${esc(tip)}" aria-label="${esc(tip)}">`
+        +`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="13" fill="transparent"/>`
+        +`<circle class="pg-pt-halo" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="8" fill="none" stroke="var(--txt)" stroke-width="1.5"/>`
+        +pgMarkerSvg(s.shape,cx,cy,ptR,s.color)
+        +`</g>`;
+      if(dates.length===1){
+        g+=svgTxt(cx+10,cy+4,val+'%',s.color,11,'start','font-weight="600"');
+      }
+    });
+  });
+
+  const leg=activeSeries.map(s=>pgLegendLine(s.color,s.dash,s.shape,s.label)).join('')
+    +pgLegendSwatch('color-mix(in oklch, var(--ok) 22%, transparent)',t('pg_evol_band'),'var(--ok-text)');
+  const title=t('pg_evol_title');
+  const desc=t('pg_evol_desc',{n:dates.length,skills:activeSeries.map(s=>s.label).join(', ')});
+  el.innerHTML=pgSvgWrap(W,H,title,desc,g,leg);
+  bindChartTips(el);
 }
 function renderGrafPart(){
-  const el=document.getElementById('gPart'),log=D.log||[];
-  if(!log.length){el.innerHTML='';return}
-  const MIN=60;
+  const el=document.getElementById('gPart');
+  if(!el)return;
+  if(!(D.log&&D.log.length)){el.innerHTML='';return}
+  const clean=pgCleanLogs().filter(x=>x.e.type==='ue'&&Number(x.e.part)>=1&&Number(x.e.part)<=7&&x.pct!==null);
   const rows=[];
-  const push=(label,es,extra)=>{
-    if(!es.length)return;
-    const vals=es.map(e=>e.type==='w'?(e.score!==undefined?e.score:e.total)/20*100:e.correct/e.total*100);
-    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
-    rows.push({label,pct:avg,min:MIN});
-  };
-  for(let i=1;i<=7;i++)push('UoE P'+i,log.filter(e=>e.type==='ue'&&e.part===i));
-  for(let i=1;i<=4;i++)push('Listening P'+i,log.filter(e=>e.type==='lp'&&e.part===i));
-  ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
-  const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
-  const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
-  if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" data-action="openQuickLog">Quick log</button></div>';return}
-  rows.sort((a,b)=>a.pct-b.pct);
-  el.innerHTML='<div style="max-width:560px;display:flex;flex-direction:column;gap:var(--s2)">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
+  for(let p=1;p<=7;p++){
+    const items=clean.filter(x=>Number(x.e.part)===p);
+    if(!items.length)continue;
+    const avg=items.reduce((a,b)=>a+b.pct,0)/items.length;
+    rows.push({part:p,name:partName(p),pct:avg,n:items.length});
+  }
+  if(!rows.length){
+    el.innerHTML=`<div class="empty">${esc(t('pg_part_empty'))}<button type="button" class="btn sm ok" data-action="openQuickLog">${esc(t('pg_part_cta'))}</button></div>`;
+    return;
+  }
+  rows.sort((a,b)=>a.pct-b.pct||a.part-b.part);
+  const target=pgStageTargets().rue;
+  const W=pgChartWidth(el,520);
+  const shortMap=LANG==='es'?PG_PART_SHORT_ES:PG_PART_SHORT_EN;
+  const padL=W<400?74:94,padR=58,padT=12,padB=26,rowH=28;
+  const H=padT+rows.length*rowH+padB;
+  const plotW=W-padL-padR;
+  const xs=v=>padL+plotW*(Math.max(0,Math.min(100,v))/100);
+
+  let g='';
+  [0,25,50,75,100].forEach(v=>{
+    const x=xs(v).toFixed(1);
+    g+=`<line x1="${x}" x2="${x}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(x,H-8,v+'%','var(--txt-2)',10,'middle');
+  });
+  const tx=xs(target).toFixed(1);
+  g+=`<line x1="${tx}" x2="${tx}" y1="${padT}" y2="${H-padB}" stroke="var(--txt-2)" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+  g+=`<line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+
+  rows.forEach((r,i)=>{
+    const y=padT+i*rowH;
+    const barY=y+5,barH=18;
+    const isWorst=i===0;
+    const fill=isWorst?'var(--bad)':(r.pct>=target?'var(--ok)':'var(--warn)');
+    const bw=Math.max(2,plotW*(r.pct/100));
+    const lbl=W<400?('P'+r.part+' '+shortMap[r.part]):('P'+r.part+' · '+shortMap[r.part]);
+    const tip=t('pg_tip_part',{p:r.part,name:r.name,pct:Math.round(r.pct),n:r.n});
+    g+=`<g class="pg-bar-hit" tabindex="0" role="button" data-tip="${esc(tip)}" aria-label="${esc(tip)}">`
+      +`<rect x="${padL}" y="${barY}" width="${plotW}" height="${barH}" rx="4" fill="var(--surface-2)"/>`
+      +`<rect class="pg-bar-shape pg-anim" x="${padL}" y="${barY}" width="${bw.toFixed(1)}" height="${barH}" rx="4" fill="${fill}"${isWorst?' stroke="var(--bad-text)" stroke-width="1.2"':''}/>`
+      +(isWorst?`<circle cx="6" cy="${(barY+barH/2).toFixed(1)}" r="3" fill="var(--bad-text)"/>`:'')
+      +svgTxt(padL-6,barY+barH/2+4,lbl,isWorst?'var(--bad-text)':'var(--txt-2)',10.5,'end',isWorst?'font-weight="700"':'')
+      +svgTxt(padL+plotW+6,barY+barH/2+4,Math.round(r.pct)+'% ('+r.n+')',isWorst?'var(--bad-text)':'var(--txt)',10.5,'start',isWorst?'font-weight="700"':'')
+      +`</g>`;
+  });
+
+  const leg=pgLegendSwatch('var(--bad)',t('pg_part_weakest'))
+    +pgLegendSwatch('var(--warn)',t('pg_part_below'))
+    +pgLegendSwatch('var(--ok)',t('pg_part_ontarget'))
+    +pgLegendLine('var(--txt-2)','4 3','',t('pg_evol_target',{pct:target}));
+  el.innerHTML=pgSvgWrap(W,H,t('pg_part_title'),t('pg_part_desc',{n:rows.length}),g,leg);
+  bindChartTips(el);
 }
 function renderGrafErr(){
-  const el=document.getElementById('gErr'),errs=D.errs||[];
-  if(!(D.log||[]).length){el.innerHTML='';return}
-  if(!errs.length){el.innerHTML='<div class="empty">No errors logged yet — the taxonomy fills up when you log a mistake.</div>';return}
+  const el=document.getElementById('gErr');
+  if(!el)return;
+  if(!(D.log&&D.log.length)){el.innerHTML='';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const names={'L-GAP':'L-GAP · lexical','G-ERR':'G-ERR · grammar','T-MIS':'T-MIS · distractor','T-LIM':'T-LIM · time'};
-  const counts=codes.map(c=>({label:names[c],n:errs.filter(e=>(e.code||e.tax)===c).length}));
-  const max=Math.max(...counts.map(c=>c.n));
-  const W=340,H=140,padL=110,padB=18,padT=8,padR=8;
-  const bw=(H-padT-padB)/counts.length;
-  let g='';
-  counts.forEach((c,i)=>{
-    const y=padT+i*bw;
-    const bwid=(W-padL-padR)*(max?c.n/max:0);
-    g+=svgTxt(padL-6,y+bw/2+3,c.label,'var(--dim)',10.5,'end');
-    g+=`<rect x="${padL}" y="${y+2}" width="${bwid}" height="${bw-6}" rx="3" fill="var(--acc)"/>`;
-    g+=svgTxt(padL+bwid+4,y+bw/2+3,c.n,'var(--txt)',11,'start');
+  const rawErrs=Array.isArray(D&&D.errs)?D.errs:[];
+  const errs=rawErrs.filter(e=>e&&typeof e==='object'&&codes.includes(e.code||e.tax)&&pgValidDate(e.date))
+    .map(e=>({code:e.code||e.tax,date:e.date}));
+  if(!errs.length){
+    el.innerHTML=`<div class="empty">${esc(t('pg_err_empty'))}<button type="button" class="btn sm ok" data-action="showView" data-arg="err">${esc(t('pg_err_cta'))}</button></div>`;
+    return;
+  }
+  const latestDate=errs.map(e=>e.date).sort().slice(-1)[0];
+  const weeks=pgRecentWeeks(8,latestDate);
+  const byWeek={};
+  weeks.forEach(w=>{byWeek[w.key]={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0,total:0}});
+  const totals={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
+  errs.forEach(e=>{
+    totals[e.code]++;
+    const wk=pgIsoWeekInfo(e.date).key;
+    if(byWeek[wk]){byWeek[wk][e.code]++;byWeek[wk].total++}
   });
-  el.innerHTML=svgChart(W,H,g);
+  const prev4=weeks.slice(0,4).reduce((s,w)=>s+byWeek[w.key].total,0);
+  const last4=weeks.slice(4,8).reduce((s,w)=>s+byWeek[w.key].total,0);
+  let trendCls='flat',trendTxt=t('pg_err_recent_only',{n:last4});
+  if(prev4>0){
+    const diff=last4-prev4;
+    if(diff<0){trendCls='up';trendTxt=t('pg_err_trend_down',{diff:diff})}
+    else if(diff>0){trendCls='down';trendTxt=t('pg_err_trend_up',{diff:diff})}
+    else{trendCls='flat';trendTxt=t('pg_err_trend_same')}
+  }
+
+  const maxWeek=Math.max(1,...weeks.map(w=>byWeek[w.key].total));
+  const step=maxWeek<=4?1:Math.ceil(maxWeek/4);
+  const ymax=Math.max(step*2,Math.ceil(maxWeek/step)*step);
+  const W=pgChartWidth(el,520),H=W<400?195:210;
+  const padL=32,padR=10,padT=14,padB=26;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const ys=v=>padT+plotH*(1-v/ymax);
+
+  const fills={
+    'L-GAP':'var(--acc)',
+    'G-ERR':'url(#pgPatGerr)',
+    'T-MIS':'url(#pgPatTmis)',
+    'T-LIM':'url(#pgPatTlim)'
+  };
+  let g=`<defs>
+    <pattern id="pgPatGerr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="var(--bad)"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--surface)" stroke-width="1.6" stroke-opacity="0.45"/>
+    </pattern>
+    <pattern id="pgPatTmis" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="var(--warn)"/>
+      <circle cx="3" cy="3" r="1.1" fill="var(--surface)" fill-opacity="0.55"/>
+    </pattern>
+    <pattern id="pgPatTlim" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="var(--txt-2)"/>
+      <line x1="0" y1="3" x2="6" y2="3" stroke="var(--surface)" stroke-width="1.4" stroke-opacity="0.45"/>
+    </pattern>
+  </defs>`;
+  for(let v=0;v<=ymax;v+=step){
+    const y=ys(v).toFixed(1);
+    g+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(padL-5,ys(v)+4,v,'var(--txt-2)',10,'end');
+  }
+  g+=`<line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+
+  const sliceW=plotW/weeks.length;
+  const bw=Math.min(34,Math.max(14,sliceW*0.64));
+  const thin=W<380;
+  weeks.forEach((w,i)=>{
+    const counts=byWeek[w.key];
+    const x=padL+i*sliceW+(sliceW-bw)/2;
+    let curY=H-padB;
+    const parts=[];
+    let segs='';
+    codes.forEach(c=>{
+      const n=counts[c];
+      if(!n)return;
+      const h=plotH*(n/ymax);
+      curY-=h;
+      segs+=`<rect class="pg-bar-shape pg-anim" x="${x.toFixed(1)}" y="${curY.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" fill="${fills[c]}"/>`;
+      parts.push(c+' '+n);
+    });
+    const tip=t('pg_tip_err_week',{week:w.label+' ('+fmtDate(w.dateKey)+')',total:counts.total})+(parts.length?' · '+parts.join(', '):'');
+    g+=`<g class="pg-bar-hit" tabindex="0" role="button" data-tip="${esc(tip)}" aria-label="${esc(tip)}">`
+      +`<rect x="${(padL+i*sliceW).toFixed(1)}" y="${padT}" width="${sliceW.toFixed(1)}" height="${plotH}" fill="transparent"/>`
+      +segs+`</g>`;
+    if(!thin||i%2===0||i===weeks.length-1){
+      g+=svgTxt(x+bw/2,H-8,w.label,'var(--txt-2)',9.5,'middle');
+    }
+  });
+
+  const leg=codes.map(c=>pgLegendSwatch(fills[c],`${c} (${totals[c]})`)).join('');
+  const head=`<div class="pg-err-summary"><span class="pg-err-total">${esc(t('pg_err_total',{n:errs.length}))}</span><span class="pg-skill-trend ${trendCls}">${esc(trendTxt)}</span></div>`;
+  el.innerHTML=head+pgSvgWrap(W,H,t('pg_err_title'),t('pg_err_desc'),g,leg);
+  bindChartTips(el);
 }
 function renderGrafCons(){
-  const el=document.getElementById('gCons'),log=D.log||[];
-  if(!log.length){el.innerHTML='';return}
+  const el=document.getElementById('gCons');
+  if(!el)return;
+  const clean=pgCleanLogs();
+  if(!clean.length){el.innerHTML='';return}
   const byWeek={};
-  log.forEach(e=>{const w=isoWeek(new Date(e.date+'T12:00:00'));byWeek[w]=(byWeek[w]||0)+1});
-  const weeks=Object.keys(byWeek).map(Number).sort((a,b)=>a-b).slice(-12);
-  const max=Math.max(...weeks.map(w=>byWeek[w]));
-  const W=340,H=150,padL=24,padB=20,padT=8,padR=8;
-  const bwMax=48;
-  const sliceW=(W-padL-padR)/Math.max(weeks.length,1);
-  const bw=Math.min(bwMax,sliceW);
-  let g='';
-  weeks.forEach((w,i)=>{
-    const n=byWeek[w];
-    const h=(H-padT-padB)*(max?n/max:0);
-    const x=padL+i*sliceW+(sliceW-bw)/2;
-    g+=`<rect x="${x}" y="${H-padB-h}" width="${bw}" height="${h}" rx="3" fill="var(--acc)"/>`;
-    g+=svgTxt(x+bw/2,H-5,'W'+w,'var(--dim)',9,'middle');
+  clean.forEach(x=>{
+    const k=pgIsoWeekInfo(x.date).key;
+    byWeek[k]=(byWeek[k]||0)+1;
   });
-  // Streak: consecutive weeks (backwards from the current one) with >= 1 log
-  let streak=0,wCur=isoWeek(new Date());
-  while(byWeek[wCur]){streak++;wCur--}
-  document.getElementById('gStreak').textContent='Current streak: '+streak+' week'+(streak===1?'':'s');
-  el.innerHTML=svgChart(W,H,g);
+  const latestDate=clean[clean.length-1].date;
+  const weeks=pgRecentWeeks(12,latestDate);
+  const goal=pgWeeklyGoal();
+  const maxVal=Math.max(goal,...weeks.map(w=>byWeek[w.key]||0));
+  const step=maxVal<=5?1:Math.ceil(maxVal/4);
+  const ymax=Math.max(step*2,Math.ceil(maxVal/step)*step);
+
+  const W=pgChartWidth(el,520),H=W<400?195:210;
+  const padL=32,padR=10,padT=16,padB=26;
+  const plotW=W-padL-padR,plotH=H-padT-padB;
+  const ys=v=>padT+plotH*(1-v/ymax);
+
+  let g='';
+  for(let v=0;v<=ymax;v+=step){
+    const y=ys(v).toFixed(1);
+    g+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=svgTxt(padL-5,ys(v)+4,v,'var(--txt-2)',10,'end');
+  }
+  g+=`<line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+
+  const sliceW=plotW/weeks.length;
+  const bw=Math.min(26,Math.max(10,sliceW*0.64));
+  const labelEvery=W<380?3:2;
+  weeks.forEach((w,i)=>{
+    const n=byWeek[w.key]||0;
+    const x=padL+i*sliceW+(sliceW-bw)/2;
+    const h=n?Math.max(2,plotH*(n/ymax)):2;
+    const y=H-padB-h;
+    const fill=n===0?'var(--line)':(n>=goal?'var(--ok)':'var(--acc)');
+    const tip=`${w.label} (${fmtDate(w.dateKey)}) · `+t('pg_tip_sessions',{n:n,goal:goal});
+    g+=`<g class="pg-bar-hit" tabindex="0" role="button" data-tip="${esc(tip)}" aria-label="${esc(tip)}">`
+      +`<rect x="${(padL+i*sliceW).toFixed(1)}" y="${padT}" width="${sliceW.toFixed(1)}" height="${plotH}" fill="transparent"/>`
+      +`<rect class="pg-bar-shape pg-anim" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${fill}"/>`
+      +`</g>`;
+    if(i%labelEvery===0||i===weeks.length-1){
+      g+=svgTxt(x+bw/2,H-8,w.label,'var(--txt-2)',9.5,'middle');
+    }
+  });
+
+  const yg=ys(goal);
+  const goalLblY=yg-padT<14?yg+12:yg-4;
+  g+=`<line x1="${padL}" x2="${W-padR}" y1="${yg.toFixed(1)}" y2="${yg.toFixed(1)}" stroke="var(--ok-text)" stroke-width="1.3" stroke-dasharray="4 3"/>`;
+  g+=svgTxt(padL+4,goalLblY,t('pg_cons_goal',{goal:goal}),'var(--ok-text)',10,'start','paint-order="stroke" stroke="var(--surface)" stroke-width="3" stroke-linejoin="round" font-weight="600"');
+
+  let streak=0;
+  let curMon=pgIsoWeekMonday(new Date());
+  while(byWeek[pgIsoWeekInfo(curMon).key]){
+    streak++;
+    curMon.setDate(curMon.getDate()-7);
+  }
+  const stEl=document.getElementById('gStreak');
+  if(stEl)stEl.textContent=t('pg_cons_streak',{n:streak});
+
+  const leg=pgLegendSwatch('var(--ok)',t('pg_cons_met'))
+    +pgLegendSwatch('var(--acc)',t('pg_cons_under'))
+    +pgLegendLine('var(--ok-text)','4 3','',t('pg_cons_goal',{goal:goal}));
+  el.innerHTML=pgSvgWrap(W,H,t('pg_cons_title'),t('pg_cons_desc',{goal:goal}),g,leg);
+  bindChartTips(el);
 }
 /* One empty state instead of five: with no log the chart grid is not shown
    and a single card explains what unlocks after the first session. */
 function renderProgChartsState(){
   const has=!!(D.log&&D.log.length);
+  const skills=document.getElementById('pgSkillsCard');
+  const evol=document.getElementById('pgEvolCard');
   const grid=document.getElementById('progChartsGrid');
   const empty=document.getElementById('progChartsEmpty');
-  const history=document.getElementById('progHistoryGrid');
-  const summary=document.getElementById('weekSummaryCard');
+  const detail=document.getElementById('progDetail');
+  if(skills)skills.style.display=has?'':'none';
+  if(evol)evol.style.display=has?'':'none';
   if(grid)grid.style.display=has?'':'none';
   if(empty)empty.style.display=has?'none':'';
-  if(history)history.style.display=has?'':'none';
-  if(summary)summary.style.display=has?'':'none';
+  if(detail)detail.style.display=has?'':'none';
 }
+(function(){
+  let _pgResizeTimer=null, _pgLastW=0;
+  window.addEventListener('resize',()=>{
+    const v=document.getElementById('v-prog');
+    if(!v||!v.classList.contains('active'))return;
+    const w=window.innerWidth;
+    if(w===_pgLastW)return;
+    clearTimeout(_pgResizeTimer);
+    _pgResizeTimer=setTimeout(()=>{
+      _pgLastW=window.innerWidth;
+      renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();
+    },140);
+  });
+})();
 /* ---------- TODAY VIEW & SESSION ENGINE ---------- */
 const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const CORE_SESSIONS=[
@@ -18423,53 +19108,8 @@ function renderWeeklySummary(){
    Fills the metrics cards of TODAY, PROGRESS and CHARTS with data
    computed from D.log/D.errs. Called from refreshAll(). */
 function renderMetrics(){
-  const log=D.log||[],errs=D.errs||[];
-  // --- Weekly (TODAY sidebar) ---
-  const week=isoWeek(new Date());
-  const wLog=log.filter(e=>isoWeek(new Date(e.date+'T12:00:00'))===week);
-  const mins=wLog.reduce((a,e)=>a+(e.min||0),0);
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
-  set('mHoras',mins?Math.floor(mins/60)+':'+String(mins%60).padStart(2,'0'):'—');
-  const ue=log.filter(e=>e.type==='ue'||e.type==='rue');
-  const ueAvg=ue.length?Math.round(ue.reduce((a,e)=>a+e.correct/e.total,0)/ue.length*100):null;
-  set('mUoe',ueAvg!==null?ueAvg+'%':'—');
-  // Daily streak derived from calcStreak()
-  const streak=calcStreak().current;
-  set('mRacha',streak);
-  set('mRegs',log.length);
-  // --- Progress (stat cards) ---
-  const pctOf=e=>{
-    let v;
-    if(e.type==='w')v=(e.score!==undefined?e.score:e.total)/20*100;
-    else if(e.type==='fw')v=(e.s1+e.s2)/40*100;
-    else if(e.type==='sp')v=null;
-    else v=e.correct/e.total*100;
-    return (typeof v==='number'&&isFinite(v))?v:null;
-  };
-  const vals=log.map(pctOf).filter(v=>v!==null);
-  const gAvg=vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):null;
-  set('pGlobal',gAvg!==null?gAvg+'%':'—');
-  const gb=document.getElementById('pGlobalBar');if(gb)gb.style.width=(gAvg||0)+'%';
-  // Best part
-  const parts={};
-  log.forEach(e=>{
-    const key=e.type==='w'?('Writing '+e.kind):(e.type==='ue'?('UoE P'+e.part):(e.type==='lp'?('Listening P'+e.part):null));
-    if(!key)return;
-    const v=pctOf(e);if(v===null)return;
-    parts[key]=parts[key]?Math.max(parts[key],v):v;
-  });
-  const best=Object.entries(parts).sort((a,b)=>b[1]-a[1])[0];
-  set('pBest',best?Math.round(best[1])+'%':'—');
-  set('pBestName',best?best[0]:'—');
-  set('pRegs',log.length);
-  set('pTime',log.reduce((a,e)=>a+(e.min||0),0));
-  // --- Analytics (graf) ---
-  const gv=log.filter(e=>['w','l','ue'].includes(e.type)).map(pctOf).filter(v=>v!==null);
-  const rAvg=gv.length?Math.round(gv.reduce((a,b)=>a+b,0)/gv.length):null;
-  set('gReadiness',rAvg!==null?rAvg+'%':'—');
-  const rb=document.getElementById('gReadinessBar');if(rb)rb.style.width=(rAvg||0)+'%';
-  set('gMocks',log.filter(e=>['rue','fw'].includes(e.type)).length);
-  set('gRacha',streak);
+  renderProgSummary();
+  renderProgSkills();
 }
 
 /* ---------- IA WRITING CORRECTOR ---------- */
@@ -19389,6 +20029,7 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
   if(viewId==='prog')skRenderView('prog',function(){
     advanceStageIfReady();renderGates();renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
+    renderProgSummary();renderProgSkills();
     renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();
   });
   if(viewId==='resources')skRenderView('resources',function(){renderPractice();renderResources()});
