@@ -334,6 +334,13 @@ body.topbar-compact .sticky-view-bar{opacity:1;transform:translateY(0);pointer-e
 .sync-badge.state-local{background:var(--txt-2)}
 .sync-badge.state-off{background:var(--warn)}
 .sync-badge:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.topbar .sync-warn-pill{
+  display:none;align-items:center;gap:4px;flex:none;
+  background:transparent;border:1px solid var(--warn-border);color:var(--warn-text);
+  border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;line-height:1;
+  cursor:pointer;font-family:var(--font);white-space:nowrap;
+}
+.topbar .sync-warn-pill:hover{background:var(--warn-soft)}
 .topbar .top-actions{display:flex;align-items:center;gap:var(--s2);flex-shrink:0;flex-wrap:nowrap}
 .topbar .top-streak{
   display:inline-flex;align-items:center;gap:var(--s1);flex:none;
@@ -1742,6 +1749,9 @@ footer{
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;padding:16px;
 }
+/* Action modals reachable from inside a full-screen flow (Speaking exam
+   .spx-overlay sits at 1200) must stack above it. */
+.overlay.modal-top{z-index:1300}
 .auth-card{
   background:var(--surface);border-radius:var(--r-modal);
   box-shadow:var(--shadow-3);padding:24px;width:100%;max-width:380px;
@@ -2654,8 +2664,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div id="authRegister" style="display:none">
       <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" data-keydown="registerEnter"></div>
-      <div><label data-i18n="auth_password_min">Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" data-input="onRegPwInput" data-keydown="registerEnter"></div>
-      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">10+ characters. Avoid common passwords.</div>
+      <div><label data-i18n="auth_password_min">Password (12+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" data-input="onRegPwInput" data-keydown="registerEnter"></div>
+      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">12+ characters. Avoid common passwords.</div>
       <div><label data-i18n="auth_avatar_color">Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" data-action="doRegister" data-i18n="auth_create_enter">Create account &amp; enter</button>
@@ -2765,7 +2775,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <option value="other" data-i18n="solo_source_other">Other practice</option>
         </select>
       </div>
-      <div><label data-i18n="solo_ref">Reference / Notes</label><input type="text" id="soloRef" placeholder="e.g. Unit 3 / Test 2" data-i18n-placeholder="solo_ref_ph"></div>
+      <div><label data-i18n="solo_ref">Reference / Notes</label><input type="text" id="soloRef" maxlength="400" placeholder="e.g. Unit 3 / Test 2" data-i18n-placeholder="solo_ref_ph"></div>
     </div>
 
     <div style="margin-top:10px">
@@ -2785,7 +2795,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
           </select>
         </div>
-        <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
+        <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" maxlength="400" placeholder="e.g. Didn't spot inversion requirement"></div>
       </div>
     </div>
 
@@ -2823,7 +2833,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_change_pw">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="password" id="pwCurrent" placeholder="Current password" data-i18n-placeholder="user_current_pw" autocomplete="current-password">
-        <input type="password" id="pwNew" placeholder="New password (10+ characters)" data-i18n-placeholder="user_new_pw" autocomplete="new-password">
+        <input type="password" id="pwNew" placeholder="New password (12+ characters)" data-i18n-placeholder="user_new_pw" autocomplete="new-password">
         <input type="password" id="pwRepeat" placeholder="Repeat new password" data-i18n-placeholder="user_repeat_pw" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
@@ -2840,8 +2850,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
         <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
       </div>
-      <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
+      <div id="passkeyUnsupported" style="display:none;font-size:12px;color:var(--on-surface-variant);margin-top:8px" data-i18n="user_passkey_unsupported">Passkeys are not available in this browser.</div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" data-action="openDeleteAccount" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -2863,7 +2872,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </div>
 
 <!-- ============ SETTINGS PANEL ============ -->
-<div id="settingsModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" data-action="closeSettingsModalIfSelf">
+<div id="settingsModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" data-action="closeSettingsModalIfSelf">
   <div class="auth-card" style="max-width:680px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3 id="settingsTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="settings_title">Settings</h3>
@@ -2969,7 +2978,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <!-- ============ PLAN LIMIT MODAL (phase 31) ============
      Shown when a request answers 429 + error:"plan_limit". It always offers the
      three ways forward, so a limit never ends in a dead-end toast. -->
-<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
+<div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
   <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="license_limit_title">You reached your plan limit</h3>
@@ -3153,6 +3162,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <span>B2 FIRST</span>
       </div>
       <div class="top-actions">
+        <button type="button" class="sync-warn-pill" id="syncWarnPill" data-action="toggleAccountSheet" aria-live="polite"><span data-i18n="sync_warn_pill">Sync paused</span></button>
         <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak"><svg class="streak-flame" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-flame"/></svg><b id="streakTopNum" class="tnum">0</b></span>
         <button type="button" class="user-chip" id="userChip" data-action="toggleAccountSheet" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet" title="Account, theme &amp; settings" aria-label="Account, theme &amp; settings" data-i18n-title="acct_chip" data-i18n-aria-label="acct_chip"><span class="avatar">A</span></button>
       </div>
@@ -3369,7 +3379,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div class="row">
-                      <div><label>Test / Ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 / Test 2"></div>
+                      <div><label>Test / Ref.</label><input type="text" id="ueRef" maxlength="400" placeholder="e.g. Sample 1 / Test 2"></div>
                       <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
                       <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="75"></div>
@@ -3449,7 +3459,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         </select>
                       </div>
                     </div>
-                    <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
+                    <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" maxlength="400" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
                       <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live Writing →</button>
                     </div>
@@ -3532,9 +3542,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                           <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
                         </select>
                       </div>
-                      <div><label>What went wrong?</label><input type="text" id="errDesc" placeholder="e.g. didn't use inversion"></div>
+                      <div><label>What went wrong?</label><input type="text" id="errDesc" maxlength="400" placeholder="e.g. didn't use inversion"></div>
                     </div>
-                    <div><label>Corrective action</label><input type="text" id="errFix" placeholder="e.g. write 5 inversion sentences"></div>
+                    <div><label>Corrective action</label><input type="text" id="errFix" maxlength="400" placeholder="e.g. write 5 inversion sentences"></div>
                     <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" data-action="saveW">✔ Save Writing &amp; Progress</button>
                       <button class="btn gray" data-action="saveErr">🔖 Log error only</button>
@@ -4428,8 +4438,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </select>
                 </div>
               </div>
-              <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
-              <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
+              <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" maxlength="400" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
+              <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" maxlength="400" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
               <div style="margin-top:var(--s3)"><button class="btn" data-action="saveErr2" data-i18n="err_save">💾 Save error</button></div>
             </div>
           </div>
@@ -4654,7 +4664,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <div>
               <label for="iaText" data-i18n="ai_text">Your text in English</label>
-              <textarea id="iaText" class="writing-live-pad" rows="8" data-input="onIaTextChange" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
+              <textarea id="iaText" class="writing-live-pad" rows="8" maxlength="4000" data-input="onIaTextChange" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
               <div class="live-word-meter">
                 <span class="tnum"><span data-i18n="ai_words">Words:</span> <b id="iaWordCount">0</b> <span class="muted" data-i18n="ai_target_short">(target 140–190)</span></span>
                 <span id="iaWordStatus" class="tnum" style="font-weight:600">Target: 140–190 words</span>
@@ -4885,6 +4895,7 @@ const I18N={
     sync_off:'Offline — changes stay on this device',
     sync_invalid:'Not synced — the server rejected the document',
     sync_invalid_field:'Not synced — rejected field: {field}',
+    sync_warn_pill:'Sync paused',
     auth_login:'Log in',
     auth_register:'Create account',
     auth_closed:'Registration is closed. This instance is private.',
@@ -4906,8 +4917,8 @@ const I18N={
     auth_recover_ok:'Request received. The operator will review it.',
     auth_recover_error:'Enter a valid user name.',
     auth_new_username:'New username',
-    auth_password_min:'Password (10+ characters)',
-    auth_pw_hint:'10+ characters. Avoid common passwords.',
+    auth_password_min:'Password (12+ characters)',
+    auth_pw_hint:'12+ characters. Avoid common passwords.',
     auth_avatar_color:'Avatar color',
     auth_create_enter:'Create account & enter',
     auth_privacy_html:'By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
@@ -5457,7 +5468,7 @@ const I18N={
     ai_in_range:'✔ In range ({words}/140–190 words)',
     ai_short:'{n} words short (target 140–190)',
     ai_over:'{n} words over (max 190)',
-    ai_err_long:'The text is too long (max 6000 characters).',
+    ai_err_long:'The text is too long (max 4000 characters).',
     ai_err_words:'The text must be between 40 and 700 words.',
     ai_err_not_task:'That does not look like a B2 First writing task. Paste the task and your text.',
     ai_err_network:'Could not reach the corrector. Check your connection and try again.',
@@ -5521,12 +5532,13 @@ const I18N={
     user_export:'💾 Export my data',
     user_change_pw:'Change password',
     user_current_pw:'Current password',
-    user_new_pw:'New password (10+ characters)',
+    user_new_pw:'New password (12+ characters)',
     user_repeat_pw:'Repeat new password',
     user_update_pw:'Update password',
     user_security:'Security',
     user_no_password_warn:'This account has no password. Set one above as a fallback.',
     user_no_passkeys:'No passkeys on this account yet.',
+    user_passkey_unsupported:'Passkeys are not available in this browser. Use your password or Google sign-in.',
     user_passkey_label_ph:'Device name (e.g. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Your password (once)',
@@ -5777,6 +5789,7 @@ const I18N={
     sync_off:'Sin conexión — los cambios quedan en este dispositivo',
     sync_invalid:'Sin sincronizar — el servidor rechazó el documento',
     sync_invalid_field:'Sin sincronizar — campo rechazado: {field}',
+    sync_warn_pill:'Sync en pausa',
     auth_login:'Iniciar sesión',
     auth_register:'Crear cuenta',
     auth_closed:'El registro está cerrado. Esta instancia es privada.',
@@ -5798,8 +5811,8 @@ const I18N={
     auth_recover_ok:'Pedido recibido. El operador lo va a revisar.',
     auth_recover_error:'Escribí un nombre de usuario válido.',
     auth_new_username:'Nuevo usuario',
-    auth_password_min:'Contraseña (10+ caracteres)',
-    auth_pw_hint:'10+ caracteres. Evitá contraseñas comunes.',
+    auth_password_min:'Contraseña (12+ caracteres)',
+    auth_pw_hint:'12+ caracteres. Evitá contraseñas comunes.',
     auth_avatar_color:'Color del avatar',
     auth_create_enter:'Crear cuenta y entrar',
     auth_privacy_html:'Al crear una cuenta aceptás los <a href="/terms" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
@@ -6349,7 +6362,7 @@ const I18N={
     ai_in_range:'✔ En rango ({words}/140–190 palabras)',
     ai_short:'Faltan {n} palabras (objetivo 140–190)',
     ai_over:'Sobran {n} palabras (máx. 190)',
-    ai_err_long:'El texto es demasiado largo (máx. 6000 caracteres).',
+    ai_err_long:'El texto es demasiado largo (máx. 4000 caracteres).',
     ai_err_words:'El texto debe tener entre 40 y 700 palabras.',
     ai_err_not_task:'Eso no parece una consigna de writing del B2 First. Pegá la consigna y tu texto.',
     ai_err_network:'No se pudo contactar al corrector. Revisá tu conexión e intentá de nuevo.',
@@ -6413,12 +6426,13 @@ const I18N={
     user_export:'💾 Exportar mis datos',
     user_change_pw:'Cambiar contraseña',
     user_current_pw:'Contraseña actual',
-    user_new_pw:'Nueva contraseña (10+ caracteres)',
+    user_new_pw:'Nueva contraseña (12+ caracteres)',
     user_repeat_pw:'Repetir la nueva contraseña',
     user_update_pw:'Actualizar contraseña',
     user_security:'Seguridad',
     user_no_password_warn:'Esta cuenta no tiene contraseña. Configurá una arriba como respaldo.',
     user_no_passkeys:'Todavía no hay passkeys en esta cuenta.',
+    user_passkey_unsupported:'Las passkeys no están disponibles en este navegador. Usá tu contraseña o el ingreso con Google.',
     user_passkey_label_ph:'Nombre del dispositivo (ej. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Tu contraseña (una vez)',
@@ -7187,15 +7201,15 @@ function passwordStrength(pass){
   if(/[0-9]/.test(pass))classes++;
   if(/[^A-Za-z0-9]/.test(pass))classes++;
   if(pass.length>=14&&classes>=3)return 2;
-  if(pass.length>=10&&classes>=2)return 1;
+  if(pass.length>=12&&classes>=2)return 1;
   return 0;
 }
 function onRegPwInput(val){
   const el=document.getElementById('regPwHint');
   if(!el)return;
-  if(!val){el.textContent='10+ characters. Avoid common passwords.';el.style.color='var(--on-surface-variant)';return}
+  if(!val){el.textContent='12+ characters. Avoid common passwords.';el.style.color='var(--on-surface-variant)';return}
   const s=passwordStrength(val);
-  el.textContent=['Too weak: 10+ characters, letters and numbers','Fair strength','Strong password'][s];
+  el.textContent=['Too weak: 12+ characters, letters and numbers','Fair strength','Strong password'][s];
   el.style.color=s===0?'var(--bad-text)':(s===1?'var(--on-surface-variant)':'var(--ok-text)');
 }
 async function doRegister(){
@@ -8287,6 +8301,10 @@ function openUserModal(){
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
 
+  const pkSection=document.getElementById('passkeySection');
+  const pkUnsupported=document.getElementById('passkeyUnsupported');
+  if(pkSection)pkSection.style.display=window.PublicKeyCredential?'block':'none';
+  if(pkUnsupported)pkUnsupported.style.display=window.PublicKeyCredential?'none':'block';
   ov.style.display='flex';
   loadPasskeys();
 }
@@ -8387,6 +8405,13 @@ function syncStatus(s,field){
   const acctSync=document.getElementById('acctSyncText');
   if(acctSync){
     acctSync.textContent=(DEMO&&DEMO.demo)?t('acct_demo'):label;
+  }
+  const warnPill=document.getElementById('syncWarnPill');
+  if(warnPill){
+    const broken=(s==='invalid'||s==='off');
+    warnPill.style.display=broken?'inline-flex':'none';
+    warnPill.setAttribute('title',label);
+    warnPill.setAttribute('aria-label',label);
   }
 }
 function syncPush(){
@@ -8545,6 +8570,30 @@ function skRenderView(key,fn){
     }
   });
 }
+/* Stable identity for a log/err entry, used to merge instead of blindly
+   replacing. An explicit id wins; otherwise the whole entry is the key, so an
+   exact duplicate is kept once and genuinely different rows both survive. */
+function syncEntryKey(e){
+  if(e&&typeof e==='object'){
+    if(e.id!=null)return 'id:'+e.id;
+    try{return 'j:'+JSON.stringify(e)}catch(err){}
+  }
+  return 'v:'+String(e);
+}
+function mergeSyncList(local,server){
+  const out=[],seen={};
+  const add=list=>{
+    if(!Array.isArray(list))return;
+    list.forEach(e=>{
+      const k=syncEntryKey(e);
+      if(seen[k])return;
+      seen[k]=1;
+      out.push(e);
+    });
+  };
+  add(server);add(local);
+  return out;
+}
 function syncPull(){
   if(DEMO&&DEMO.demo)return Promise.resolve(null);
   const skPullDone=skPullStart();
@@ -8553,6 +8602,16 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
+          /* A local updated_at ahead of the server's is itself the pending
+             marker: a successful push stores the whole document, timestamp
+             included. Such newer local work must not be clobbered by an older
+             server copy — keep it and retry the push. */
+          const localTs=Number(D&&D.updated_at)||0;
+          const serverTs=Number(d.updated_at)||0;
+          if(serverTs>0&&localTs>serverTs){
+            syncPush();
+            return d;
+          }
           const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
           delete mergedSettings.aiKey;
           delete mergedSettings.byo;
@@ -8560,9 +8619,12 @@ function syncPull(){
           const nextStage=typeof d.stage==='number' ? gateClampStage(d.stage) : gateClampStage(D.stage);
           const rawHistory=Array.isArray(d.stageHistory) ? d.stageHistory : (d.stage!==undefined ? null : D.stageHistory);
           const nextLang=(mergedSettings&&mergedSettings.lang)||LANG;
+          const mergedLog=mergeSyncList(D.log,d.log);
+          mergedLog.sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||''))||((b.created_at||0)-(a.created_at||0)));
+          const mergedErrs=mergeSyncList(D.errs,d.errs);
           D = {
-            log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
-            errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
+            log: mergedLog,
+            errs: mergedErrs,
             examDates: Array.isArray(d.examDates) ? d.examDates : (Array.isArray(D.examDates) ? D.examDates : []),
             stage: nextStage,
             stageHistory: gateNormalizeStageHistory(rawHistory, nextStage, nextLang),
@@ -18543,7 +18605,7 @@ async function submitIaWriting(){
   const text=textEl?textEl.value.trim():'';
   const kind=kindEl?kindEl.value:'Essay';
   const words=countWords(text);
-  if(text.length>6000){
+  if(text.length>4000){
     setIaState('error',t('ai_err_long'));
     return;
   }
@@ -18870,13 +18932,13 @@ function finishDiag(timedOut=false){
     if(!byPart[p])byPart[p]={ok:0,n:0};
     byPart[p].n++;
     const ans=DIAG_STATE.answers[i];
-    const hasAnswer=ans&&ans.choice!==null&&ans.choice!==undefined&&!ans.timedOut&&!timedOut;
+    const hasAnswer=ans&&ans.choice!==null&&ans.choice!==undefined&&!ans.timedOut;
     const isOk=hasAnswer&&Number(ans.choice)===Number(item.answer);
     if(isOk){
       correct++;
       byPart[p].ok++;
     }else{
-      const tax=(!hasAnswer||timedOut)?'T-LIM':(item.taxonomy||'G-ERR');
+      const tax=!hasAnswer?'T-LIM':(item.taxonomy||'G-ERR');
       D.errs.push({
         date,
         tax,
@@ -19732,9 +19794,9 @@ keydown:{
   // flex, not block: the provider button is an icon + label row.
   if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'flex':'none';
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
-  if(passkeyBtn&&!window.PublicKeyCredential)passkeyBtn.style.display='none';
+  if(passkeyBtn)passkeyBtn.style.display=window.PublicKeyCredential?'block':'none';
   const altSep=document.getElementById('authAltSep');
-  if(altSep&&!(DEMO&&DEMO.google))altSep.style.display='none';
+  if(altSep&&!(DEMO&&DEMO.google)&&!window.PublicKeyCredential)altSep.style.display='none';
   track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
   if(DEMO&&DEMO.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
