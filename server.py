@@ -55,6 +55,7 @@ import speaking_report
 import legal
 import webauthn
 import oauth_google
+import mfa
 
 # ---------------------------------------------------------------------------
 # Constantes
@@ -503,7 +504,7 @@ RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 600))
 REGISTER_PER_HOUR = _env_int("B2_REGISTER_PER_HOUR", 30)   # signups per IP/hour
 LOGIN_IP_PER_10MIN = _env_int("B2_LOGIN_IP_PER_10MIN", 120)  # login POSTs per IP/10min
 AUTH_RATE_PATHS = (
-    "/api/login", "/api/register", "/api/password",
+    "/api/login", "/api/login/mfa", "/api/register", "/api/password",
     "/api/password-reset/request",
     "/api/auth/google/start", "/api/auth/google/callback",
     "/api/webauthn/login/begin", "/api/webauthn/login/finish",
@@ -942,6 +943,143 @@ def _login_succeeded(key):
 def _login_delay(count):
     """Exponential backoff: 0/0/5/15/60 s from the 3rd consecutive failure."""
     return LOGIN_BACKOFF[min(max(count, 1) - 1, len(LOGIN_BACKOFF) - 1)]
+
+
+# --- TOTP second factor (A.8.5 / R17) ---------------------------------------
+# A successful password check for an MFA-enabled account stops at a short-lived
+# ticket; only POST /api/login/mfa with a valid code mints a session token.
+MFA_TICKET_TTL = 5 * 60        # seconds a ticket stays usable
+MFA_TICKET_MAX_TRIES = 5       # wrong codes allowed per ticket
+_MFA_TICKETS_LOCK = threading.Lock()
+_MFA_TICKETS = {}              # {ticket: {user_id, name, exp, tries}}
+
+
+def _mfa_enabled(user):
+    """True when the account has a confirmed TOTP secret."""
+    return isinstance(user, dict) and isinstance(user.get("mfa"), dict) \
+        and bool(user["mfa"].get("secret"))
+
+
+def _mfa_issue_ticket(user_id, name):
+    """Mint a single-use, five-minute ticket for the second step."""
+    ticket = secrets.token_urlsafe(32)
+    now = time.time()
+    with _MFA_TICKETS_LOCK:
+        for key in [k for k, v in _MFA_TICKETS.items() if v.get("exp", 0) <= now]:
+            del _MFA_TICKETS[key]
+        _MFA_TICKETS[ticket] = {
+            "user_id": user_id, "name": name, "exp": now + MFA_TICKET_TTL,
+            "tries": 0,
+        }
+    return ticket
+
+
+def _mfa_peek_ticket(ticket):
+    """The live ticket record, or None when unknown/expired."""
+    if not isinstance(ticket, str) or not ticket:
+        return None
+    now = time.time()
+    with _MFA_TICKETS_LOCK:
+        rec = _MFA_TICKETS.get(ticket)
+        if rec is None or rec.get("exp", 0) <= now:
+            _MFA_TICKETS.pop(ticket, None)
+            return None
+        return dict(rec)
+
+
+def _mfa_ticket_failed(ticket):
+    """Count one wrong code against the ticket; drop it after the cap."""
+    with _MFA_TICKETS_LOCK:
+        rec = _MFA_TICKETS.get(ticket)
+        if rec is None:
+            return
+        rec["tries"] = rec.get("tries", 0) + 1
+        if rec["tries"] >= MFA_TICKET_MAX_TRIES:
+            _MFA_TICKETS.pop(ticket, None)
+
+
+def _mfa_consume_ticket(ticket):
+    """Delete the ticket; returns the record only for the caller that consumed it."""
+    with _MFA_TICKETS_LOCK:
+        return _MFA_TICKETS.pop(ticket, None)
+
+
+def _mfa_verify_code(user, code):
+    """Return "totp", "recovery" or None. A used recovery code is burned."""
+    enabled = user.get("mfa") if isinstance(user, dict) else None
+    if not isinstance(enabled, dict):
+        return None
+    secret = enabled.get("secret")
+    if isinstance(secret, str) and mfa.verify(secret, code):
+        return "totp"
+    candidate = mfa.hash_recovery_code(code)
+    recovery = enabled.get("recovery")
+    if not isinstance(recovery, list):
+        return None
+    for index, stored in enumerate(recovery):
+        if isinstance(stored, str) and hmac.compare_digest(stored, candidate):
+            record = dict(user)
+            record["mfa"] = dict(enabled)
+            record["mfa"]["recovery"] = recovery[:index] + recovery[index + 1:]
+            store.create_user(user["id"], record)
+            return "recovery"
+    return None
+
+
+def _mfa_enroll(user_id):
+    """Start enrolment: return (secret, uri, plaintext_codes, error)."""
+    user = store.get_user(user_id)
+    if not user:
+        return None, None, None, "user does not exist"
+    if _mfa_enabled(user):
+        return None, None, None, "MFA is already enabled"
+    secret = mfa.generate_secret()
+    codes = mfa.generate_recovery_codes()
+    record = dict(user)
+    record["mfa_pending"] = {
+        "secret": secret,
+        "recovery": [mfa.hash_recovery_code(c) for c in codes],
+        "created": int(time.time()),
+    }
+    store.create_user(user_id, record)
+    return secret, mfa.otpauth_uri(secret, user.get("name", user_id)), codes, None
+
+
+def _mfa_confirm(user_id, code):
+    """Activate the pending secret after the first valid code. Return (ok, error)."""
+    user = store.get_user(user_id)
+    pending = user.get("mfa_pending") if isinstance(user, dict) else None
+    if not isinstance(pending, dict) or not pending.get("secret"):
+        return False, "no pending enrolment"
+    if not mfa.verify(pending["secret"], code):
+        return False, "invalid code"
+    record = dict(user)
+    record["mfa"] = {
+        "secret": pending["secret"],
+        "recovery": list(pending.get("recovery") or []),
+        "enabled_at": int(time.time()),
+    }
+    record.pop("mfa_pending", None)
+    store.create_user(user_id, record)
+    return True, None
+
+
+def _mfa_disable(user_id, password, code):
+    """Disable MFA; requires the password when the account has one, plus a code."""
+    user = store.get_user(user_id)
+    if not _mfa_enabled(user):
+        return False, "MFA is not enabled"
+    if user.get("password_set", True) is not False:
+        if not verify_password(user_id, password):
+            return False, "wrong password"
+    if not _mfa_verify_code(user, code):
+        return False, "invalid code"
+    record = dict(store.get_user(user_id) or user)
+    record.pop("mfa", None)
+    record.pop("mfa_pending", None)
+    store.create_user(user_id, record)
+    return True, None
+
 
 
 # --- Daily AI quota ----------------------------------------------------------
@@ -5482,11 +5620,138 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(401, {"error": "Wrong username or password."}); return
             _login_succeeded(fkey)
             u = store.get_user(uid)
+            if _mfa_enabled(u):
+                # Password is correct, but no session yet: a five-minute,
+                # single-use ticket is the only thing this response carries.
+                ticket = _mfa_issue_ticket(uid, u.get("name", uid))
+                _audit("login_mfa_required", u.get("name", uid), ip, self._rid)
+                self._send_json(200, {"mfa_required": True, "ticket": ticket})
+                return
             _audit("login_ok", u.get("name", uid), ip, self._rid)
             tok = new_token(uid, self.headers.get("User-Agent", ""))
             body = json.dumps({"id": uid, "name": u["name"], "color": u["color"], "token": tok},
                               ensure_ascii=False).encode("utf-8")
             self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        if path == "/api/login/mfa":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            ip = _real_ip(self)
+            if self._rate_limited("login-mfa-ip:" + ip, LOGIN_IP_PER_10MIN, 600):
+                return
+            raw = self.rfile.read(self._clen())
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send_json(400, {"error": "invalid JSON"}); return
+            ticket = req.get("ticket")
+            rec = _mfa_peek_ticket(ticket)
+            if rec is None:
+                self._send_json(401, {"error": "invalid or expired ticket"}); return
+            name = rec.get("name", "")
+            fkey = _login_fail_key(name)
+            if self._rate_limited("login-mfa-user:" + fkey, 20, 3600):
+                return
+            locked, retry = _login_locked(fkey)
+            if locked:
+                self._send_json(429, {"error": "too many failed attempts", "retry_after": retry},
+                                {"Retry-After": str(retry)})
+                return
+            user = store.get_user(rec.get("user_id"))
+            used = _mfa_verify_code(user, req.get("code", "")) if user else None
+            if not used:
+                count, _just_locked = _login_failed(fkey)
+                _mfa_ticket_failed(ticket)
+                _audit("login_mfa_fail", name, ip, self._rid)
+                time.sleep(_login_delay(count))
+                self._send_json(401, {"error": "invalid code"}); return
+            _login_succeeded(fkey)
+            consumed = _mfa_consume_ticket(ticket)
+            if consumed is None:  # another thread used the same ticket first
+                self._send_json(401, {"error": "invalid or expired ticket"}); return
+            uid = consumed.get("user_id")
+            user = store.get_user(uid) or user
+            _audit("login_mfa_ok", name, ip, self._rid, {"method": used})
+            tok = new_token(uid, self.headers.get("User-Agent", ""))
+            body = json.dumps({"id": uid, "name": user.get("name", uid),
+                               "color": user.get("color", "#1b2b48"), "token": tok,
+                               "mfa_method": used}, ensure_ascii=False).encode("utf-8")
+            self._send(200, body, "application/json; charset=utf-8")
+            return
+
+        if path == "/api/mfa/status":
+            if self.command != "GET":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            user = store.get_user(uid) or {}
+            mfa_rec = user.get("mfa") if isinstance(user.get("mfa"), dict) else {}
+            pending = user.get("mfa_pending") if isinstance(user.get("mfa_pending"), dict) else {}
+            self._send_json(200, {
+                "enabled": _mfa_enabled(user),
+                "pending": bool(pending.get("secret")),
+                "recovery_remaining": len(mfa_rec.get("recovery") or []),
+            })
+            return
+
+        if path == "/api/mfa/enroll":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            if self._rate_limited("mfa-enroll:" + uid, 5, 3600, "user"):
+                return
+            secret, uri, codes, err = _mfa_enroll(uid)
+            if err:
+                code = 409 if "already enabled" in err else 404
+                self._send_json(code, {"error": err}); return
+            _audit("mfa_enroll_started", uid, _real_ip(self), self._rid)
+            # The plaintext codes leave exactly once; only their hashes are stored.
+            self._send_json(200, {"secret": secret, "otpauth_uri": uri,
+                                  "recovery_codes": codes})
+            return
+
+        if path == "/api/mfa/confirm":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            if self._rate_limited("mfa-confirm:" + uid, 10, 900, "user"):
+                return
+            raw = self.rfile.read(self._clen())
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send_json(400, {"error": "invalid JSON"}); return
+            ok, err = _mfa_confirm(uid, req.get("code", ""))
+            if not ok:
+                self._send_json(400, {"error": err}); return
+            _audit("mfa_enabled", uid, _real_ip(self), self._rid)
+            self._send_json(200, {"ok": True})
+            return
+
+        if path == "/api/mfa/disable":
+            if self.command != "POST":
+                self._send(405, b"method not allowed", "text/plain"); return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"}); return
+            if self._rate_limited("mfa-disable:" + uid, 5, 900, "user"):
+                return
+            raw = self.rfile.read(self._clen())
+            try:
+                req = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                self._send_json(400, {"error": "invalid JSON"}); return
+            ok, err = _mfa_disable(uid, req.get("password", ""), req.get("code", ""))
+            if not ok:
+                self._send_json(400 if err != "wrong password" else 401, {"error": err}); return
+            _audit("mfa_disabled", uid, _real_ip(self), self._rid)
+            self._send_json(200, {"ok": True})
             return
 
         if path == "/api/logout":

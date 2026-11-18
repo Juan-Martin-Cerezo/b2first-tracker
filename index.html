@@ -2806,6 +2806,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div id="recStatus" class="auth-ok"></div>
       <button type="button" class="auth-link" data-action="hidePasswordRecovery" data-i18n="auth_recover_back">Back to log in</button>
     </div>
+    <div id="authMfa" style="display:none">
+      <h3 class="auth-recover-title" data-i18n="auth_mfa_title">Two-step verification</h3>
+      <p class="auth-recover-note" data-i18n="auth_mfa_note">This account has two-step verification. Enter the 6-digit code from your authenticator app, or one of your recovery codes.</p>
+      <div><label data-i18n="auth_mfa_code">6-digit code</label><input type="text" id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="9" placeholder="123456" data-keydown="mfaEnter"></div>
+      <div class="auth-error" id="mfaError"></div>
+      <button class="btn" style="width:100%;margin-top:12px" data-action="doLoginMfa" data-i18n="auth_mfa_verify">Verify</button>
+      <button type="button" class="auth-link" data-action="cancelMfa" data-i18n="auth_mfa_cancel">Back to log in</button>
+    </div>
   </div>
 </div>
 
@@ -2972,6 +2980,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
       </div>
       <div id="passkeyUnsupported" style="display:none;font-size:12px;color:var(--on-surface-variant);margin-top:8px" data-i18n="user_passkey_unsupported">Passkeys are not available in this browser.</div>
+      <div id="mfaSection" style="margin-top:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:0 0 8px" data-i18n="user_mfa">Two-step verification (TOTP)</div>
+        <div id="mfaStatusText" style="font-size:12px;color:var(--on-surface-variant);min-height:16px" data-i18n="user_mfa_checking">Checking…</div>
+        <div id="mfaEnrollBox" style="display:none;margin-top:8px">
+          <div style="font-size:12px;color:var(--on-surface-variant);margin-bottom:6px" data-i18n="user_mfa_scan">Add this secret to your authenticator app (or paste the URI):</div>
+          <code id="mfaSecret" style="display:block;font-family:var(--mono);font-size:12px;word-break:break-all;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:8px"></code>
+          <input type="text" id="mfaUri" readonly style="margin-top:8px;font-family:var(--mono);font-size:11px" aria-label="otpauth URI">
+          <div style="font-size:12px;font-weight:600;margin:10px 0 4px" data-i18n="user_mfa_recovery">Recovery codes (shown once — store them offline):</div>
+          <pre id="mfaRecovery" style="font-size:12px;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:8px;white-space:pre-wrap;margin:0"></pre>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+            <input type="text" id="mfaConfirmCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code" data-i18n-placeholder="user_mfa_code_ph">
+          </div>
+          <div id="mfaStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+          <button class="btn" id="mfaConfirmBtn" style="width:100%;margin-top:8px" data-action="confirmMfa" data-i18n="user_mfa_confirm">Confirm and enable</button>
+        </div>
+        <button class="btn gray" id="mfaEnableBtn" style="width:100%;margin-top:8px" data-action="enrollMfa" data-i18n="user_mfa_enable">Enable two-step verification</button>
+        <div id="mfaDisableBox" style="display:none;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input type="password" id="mfaDisablePass" placeholder="Your password" data-i18n-placeholder="user_mfa_password_ph" autocomplete="current-password">
+            <input type="text" id="mfaDisableCode" inputmode="numeric" maxlength="9" placeholder="6-digit code or recovery code" data-i18n-placeholder="user_mfa_code_ph">
+          </div>
+          <div id="mfaDisableStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
+          <button class="btn gray" id="mfaDisableBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" data-action="disableMfa" data-i18n="user_mfa_disable">Disable two-step verification</button>
+        </div>
+      </div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" data-action="openDeleteAccount" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -3082,7 +3115,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <!-- ============ USAGE LIMIT MODAL ============
      Shown when a request answers 429 + error:"limit_reached" (or the legacy
      "plan_limit"). It explains the daily limit and links to the meter; there is
-     nothing to buy and nothing to redeem. modal-top keeps it above the speaking
+     no sales flow here. modal-top keeps it above the speaking
      overlay, which would otherwise cover it. -->
 <div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">  <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
@@ -4960,6 +4993,13 @@ const I18N={
     auth_recover_contact_ph:'Email or @telegram (optional)',
     auth_recover_send:'Send reset request',
     auth_recover_back:'Back to log in',
+    auth_mfa_title:'Two-step verification',
+    auth_mfa_note:'This account has two-step verification. Enter the 6-digit code from your authenticator app, or one of your recovery codes.',
+    auth_mfa_code:'6-digit code',
+    auth_mfa_verify:'Verify',
+    auth_mfa_cancel:'Back to log in',
+    auth_mfa_expired:'The verification ticket expired. Log in again.',
+    auth_mfa_invalid:'Invalid code.',
     auth_recover_ok:'Request received. The operator will review it.',
     auth_recover_error:'Enter a valid user name.',
     auth_new_username:'New username',
@@ -5598,6 +5638,21 @@ const I18N={
     user_no_password_warn:'This account has no password. Set one above as a fallback.',
     user_no_passkeys:'No passkeys on this account yet.',
     user_passkey_unsupported:'Passkeys are not available in this browser. Use your password or Google sign-in.',
+    user_mfa:'Two-step verification (TOTP)',
+    user_mfa_checking:'Checking…',
+    user_mfa_scan:'Add this secret to your authenticator app (or paste the URI):',
+    user_mfa_recovery:'Recovery codes (shown once — store them offline):',
+    user_mfa_code_ph:'6-digit code',
+    user_mfa_password_ph:'Your password',
+    user_mfa_confirm:'Confirm and enable',
+    user_mfa_enable:'Enable two-step verification',
+    user_mfa_disable:'Disable two-step verification',
+    user_mfa_on:'Enabled — {n} recovery codes left.',
+    user_mfa_off:'Not enabled. A 6-digit code from an authenticator app will be asked at login.',
+    user_mfa_unknown:'Could not read the two-step status.',
+    user_mfa_error:'Two-step verification request failed.',
+    user_mfa_enabled:'Two-step verification enabled.',
+    user_mfa_disabled:'Two-step verification disabled.',
     user_passkey_label_ph:'Device name (e.g. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Your password (once)',
@@ -5865,6 +5920,13 @@ const I18N={
     auth_recover_contact_ph:'Email o @telegram (opcional)',
     auth_recover_send:'Pedir restablecimiento',
     auth_recover_back:'Volvé a iniciar sesión',
+    auth_mfa_title:'Verificación en dos pasos',
+    auth_mfa_note:'Esta cuenta tiene verificación en dos pasos. Ingresá el código de 6 dígitos de tu app de autenticación, o uno de tus códigos de recuperación.',
+    auth_mfa_code:'Código de 6 dígitos',
+    auth_mfa_verify:'Verificar',
+    auth_mfa_cancel:'Volver al inicio de sesión',
+    auth_mfa_expired:'El ticket de verificación venció. Iniciá sesión de nuevo.',
+    auth_mfa_invalid:'Código inválido.',
     auth_recover_ok:'Pedido recibido. El operador lo va a revisar.',
     auth_recover_error:'Escribí un nombre de usuario válido.',
     auth_new_username:'Nuevo usuario',
@@ -6503,6 +6565,21 @@ const I18N={
     user_no_password_warn:'Esta cuenta no tiene contraseña. Configurá una arriba como respaldo.',
     user_no_passkeys:'Todavía no hay passkeys en esta cuenta.',
     user_passkey_unsupported:'Las passkeys no están disponibles en este navegador. Usá tu contraseña o el ingreso con Google.',
+    user_mfa:'Verificación en dos pasos (TOTP)',
+    user_mfa_checking:'Consultando…',
+    user_mfa_scan:'Agregá este secreto a tu app de autenticación (o pegá la URI):',
+    user_mfa_recovery:'Códigos de recuperación (se muestran una sola vez — guardalos fuera de línea):',
+    user_mfa_code_ph:'Código de 6 dígitos',
+    user_mfa_password_ph:'Tu contraseña',
+    user_mfa_confirm:'Confirmar y activar',
+    user_mfa_enable:'Activar verificación en dos pasos',
+    user_mfa_disable:'Desactivar verificación en dos pasos',
+    user_mfa_on:'Activada — quedan {n} códigos de recuperación.',
+    user_mfa_off:'No está activada. Al iniciar sesión se pedirá un código de 6 dígitos de una app de autenticación.',
+    user_mfa_unknown:'No se pudo leer el estado de dos pasos.',
+    user_mfa_error:'Falló la solicitud de verificación en dos pasos.',
+    user_mfa_enabled:'Verificación en dos pasos activada.',
+    user_mfa_disabled:'Verificación en dos pasos desactivada.',
     user_passkey_label_ph:'Nombre del dispositivo (ej. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Tu contraseña (una vez)',
@@ -7211,6 +7288,8 @@ function switchAuthTab(tab){
   document.querySelectorAll('#authOverlay .auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   const rec=document.getElementById('authRecover');
   if(rec)rec.style.display='none';
+  const mfaBox=document.getElementById('authMfa');
+  if(mfaBox)mfaBox.style.display='none';
   document.getElementById('authLogin').style.display=tab==='login'?'block':'none';
   document.getElementById('authRegister').style.display=tab==='register'?'block':'none';
 }
@@ -7258,6 +7337,49 @@ async function doLogin(){
   const err=document.getElementById('authError');
   try{
     const u=await apiLogin(name,pass);
+    if(u.mfa_required){
+      /* No token yet: the server stopped after the password and issued a
+         five-minute, single-use ticket for the second step. */
+      MFA_TICKET=u.ticket;
+      showAuthMfa();
+      return;
+    }
+    saveUserSession(u);
+    track('login');
+    hideAuthOverlay();
+    await afterAuth();
+  }catch(e){err.textContent='❌ '+e.message}
+}
+var MFA_TICKET=null;
+function showAuthMfa(){
+  const box=document.getElementById('authMfa');
+  document.getElementById('authLogin').style.display='none';
+  document.getElementById('authRegister').style.display='none';
+  const rec=document.getElementById('authRecover');
+  if(rec)rec.style.display='none';
+  const err=document.getElementById('mfaError');
+  if(err)err.textContent='';
+  if(box)box.style.display='block';
+  const code=document.getElementById('mfaCode');
+  if(code){code.value='';code.focus()}
+}
+function cancelMfa(){
+  MFA_TICKET=null;
+  const box=document.getElementById('authMfa');
+  if(box)box.style.display='none';
+  document.getElementById('authLogin').style.display='block';
+}
+async function doLoginMfa(){
+  const code=document.getElementById('mfaCode').value.trim();
+  const err=document.getElementById('mfaError');
+  if(!MFA_TICKET){err.textContent='❌ '+t('auth_mfa_expired');return}
+  if(!code){err.textContent='❌ '+t('auth_mfa_code');return}
+  try{
+    const r=await fetch('/api/login/mfa',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},
+      body:JSON.stringify({ticket:MFA_TICKET,code:code})});
+    if(!r.ok)throw await apiError(r,t('auth_mfa_invalid'));
+    const u=await r.json();
+    MFA_TICKET=null;
     saveUserSession(u);
     track('login');
     hideAuthOverlay();
@@ -7311,6 +7433,75 @@ function sessionExpired(){
   const err=document.getElementById('authError');
   if(err)err.textContent='❌ Session expired, please log in again.';
   showAuthOverlay();
+}
+async function loadMfaStatus(){
+  const text=document.getElementById('mfaStatusText');
+  if(!USER||!USER.token||!text)return;
+  try{
+    const r=await fetch('/api/mfa/status',{headers:authHeaders()});
+    if(!r.ok)throw new Error('status failed');
+    const st=await r.json();
+    text.textContent=st.enabled?t('user_mfa_on',{n:st.recovery_remaining}):t('user_mfa_off');
+    const enable=document.getElementById('mfaEnableBtn');
+    const disable=document.getElementById('mfaDisableBox');
+    if(enable)enable.style.display=st.enabled?'none':'block';
+    if(disable)disable.style.display=st.enabled?'block':'none';
+    if(!st.enabled){
+      const box=document.getElementById('mfaEnrollBox');
+      if(box)box.style.display='none';
+    }
+  }catch(e){text.textContent=t('user_mfa_unknown')}
+}
+async function enrollMfa(){
+  const st=document.getElementById('mfaStatus');
+  const setStatus=(msg,color)=>{if(st){st.textContent=msg;st.style.color=color||''}};
+  try{
+    const r=await fetch('/api/mfa/enroll',{method:'POST',headers:authHeaders(),body:'{}'});
+    if(!r.ok)throw await apiError(r,t('user_mfa_error'));
+    const data=await r.json();
+    document.getElementById('mfaSecret').textContent=data.secret;
+    const uri=document.getElementById('mfaUri');
+    if(uri)uri.value=data.otpauth_uri;
+    document.getElementById('mfaRecovery').textContent=(data.recovery_codes||[]).join('\n');
+    const box=document.getElementById('mfaEnrollBox');
+    if(box)box.style.display='block';
+    const btn=document.getElementById('mfaEnableBtn');
+    if(btn)btn.style.display='none';
+    setStatus('');
+    const code=document.getElementById('mfaConfirmCode');
+    if(code)code.focus();
+  }catch(e){setStatus('❌ '+e.message,'var(--bad-text)')}
+}
+async function confirmMfa(){
+  const code=document.getElementById('mfaConfirmCode').value.trim();
+  const st=document.getElementById('mfaStatus');
+  const setStatus=(msg,color)=>{if(st){st.textContent=msg;st.style.color=color||''}};
+  if(!code){setStatus('❌ '+t('user_mfa_code_ph'),'var(--bad-text)');return}
+  try{
+    const r=await fetch('/api/mfa/confirm',{method:'POST',headers:authHeaders(),body:JSON.stringify({code:code})});
+    if(!r.ok)throw await apiError(r,t('user_mfa_error'));
+    setStatus('✔ '+t('user_mfa_enabled'),'var(--ok-text)');
+    document.getElementById('mfaRecovery').textContent='';
+    document.getElementById('mfaSecret').textContent='';
+    const uri=document.getElementById('mfaUri');
+    if(uri)uri.value='';
+    await loadMfaStatus();
+  }catch(e){setStatus('❌ '+e.message,'var(--bad-text)')}
+}
+async function disableMfa(){
+  const password=document.getElementById('mfaDisablePass').value;
+  const code=document.getElementById('mfaDisableCode').value.trim();
+  const st=document.getElementById('mfaDisableStatus');
+  const setStatus=(msg,color)=>{if(st){st.textContent=msg;st.style.color=color||''}};
+  if(!code){setStatus('❌ '+t('user_mfa_code_ph'),'var(--bad-text)');return}
+  try{
+    const r=await fetch('/api/mfa/disable',{method:'POST',headers:authHeaders(),body:JSON.stringify({password:password,code:code})});
+    if(!r.ok)throw await apiError(r,t('user_mfa_error'));
+    document.getElementById('mfaDisablePass').value='';
+    document.getElementById('mfaDisableCode').value='';
+    setStatus('✔ '+t('user_mfa_disabled'),'var(--ok-text)');
+    await loadMfaStatus();
+  }catch(e){setStatus('❌ '+e.message,'var(--bad-text)')}
 }
 async function doChangePassword(){
   const cur=document.getElementById('pwCurrent').value;
@@ -8320,6 +8511,7 @@ function openUserModal(){
   if(pkUnsupported)pkUnsupported.style.display=window.PublicKeyCredential?'none':'block';
   ov.style.display='flex';
   loadPasskeys();
+  loadMfaStatus();
 }
 function closeUserModal(){
   const ov=document.getElementById('userModal');
@@ -15049,7 +15241,7 @@ async function testByoConnection(){
 /* ---------- USAGE LIMITS ----------
    The server owns the meter: GET /api/plan returns the service limits and the
    usage in the current window. PLAN_STATE is only a UI cache; it is refreshed
-   on boot and every time a 429 says limit_reached. There is no plan to buy. */
+   on boot and every time a 429 says limit_reached. There is no sales flow. */
 var PLAN_STATE=null;
 function planWindowLabel(w){
   if(w==='month')return t('usage_window_month');
@@ -19919,6 +20111,7 @@ click:{
 'answerDiagItem':el=>answerDiagItem(+el.dataset.opt),
 'applyPlanningReset':()=>applyPlanningReset(),
 'cancelGoogleLink':()=>{hideGoogleLink();showAuthOverlay()},
+'cancelMfa':()=>cancelMfa(),
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
 'clearResourcesFilter':()=>clearResourcesFilter(),
@@ -19938,11 +20131,15 @@ click:{
 'delErr':el=>delErr(+el.dataset.i),
 'delLog':el=>delLog(+el.dataset.i),
 'doChangePassword':()=>doChangePassword(),
+'confirmMfa':()=>confirmMfa(),
+'disableMfa':()=>disableMfa(),
 'doDeleteAccount':()=>doDeleteAccount(),
 'doExportAccount':()=>doExportAccount(),
 'doLogin':()=>doLogin(),
+'doLoginMfa':()=>doLoginMfa(),
 'doLogout':()=>doLogout(),
 'doRegister':()=>doRegister(),
+'enrollMfa':()=>enrollMfa(),
 'editLog':el=>editLog(+el.dataset.i),
 'endTour':()=>endTour(),
 'exPause':()=>exPause(),
@@ -20079,6 +20276,7 @@ input:{
 keydown:{
 'activate':(el,ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click()}},
 'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
+'mfaEnter':(el,ev)=>{if(ev.key==='Enter')doLoginMfa()},
 'registerEnter':(el,ev)=>{if(ev.key==='Enter')doRegister()}
 }
 };
