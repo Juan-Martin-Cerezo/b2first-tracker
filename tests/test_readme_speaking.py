@@ -2,9 +2,9 @@
 
 The section is documentation, so the test checks the claims that can drift:
 the part minutes against material/speaking.json, every path it names against
-the repository, every route against server.py, every B2_* variable against the
-Configuration table and the code, and the storage/privacy sentences against
-index.html, server.py and store.py. It boots nothing and reads no data/.
+the repository, every route against server.py, and the storage/privacy
+sentences against index.html, server.py and store.py. It also checks that the
+public README publishes no environment variable names. It boots nothing and reads no data/.
 
 Run: cd tests && python3 test_readme_speaking.py
 """
@@ -83,15 +83,9 @@ dead_routes = [r for r in sorted(routes) if ('"%s"' % r) not in server]
 check("routes_served", not dead_routes, dead_routes)
 check("bank_is_served", '"/material/speaking.json"' in server)
 
-# --- 5. Every B2_* variable named is documented and read by the code -----
-config = re.search(r"^## Configuration$(.*?)(?=^## )", readme, re.M | re.S)
-config = config.group(1) if config else ""
-envs = set(re.findall(r"\bB2_[A-Z0-9_]+\b", section))
-check("env_named", bool(envs), sorted(envs))
-undocumented = [v for v in sorted(envs) if ("| `%s` |" % v) not in config]
-check("env_in_config_table", not undocumented, undocumented)
-unread = [v for v in sorted(envs) if ('"%s"' % v) not in server]
-check("env_read_by_server", not unread, unread)
+# --- 5. No environment variable names are published ----------------------
+envs = set(re.findall(r"\bB2_[A-Z0-9_]+\b", readme))
+check("no_env_names_published", not envs, sorted(envs))
 
 # --- 6. The silence sentence matches the constant ------------------------
 words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,

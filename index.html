@@ -2224,10 +2224,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .ob-acct-row .k{color:var(--txt-2);flex:0 1 auto;max-width:54%}
 .ob-acct-row .v{font-weight:600;color:var(--txt);text-align:right;flex:1 1 auto;min-width:0}
 .ob-acct-meta{font-size:var(--fs-xs);color:var(--txt-2);margin-top:10px;line-height:1.45}
-.ob-acct-upgrade{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-ctl);padding:12px 14px;margin-top:12px}
-.ob-acct-upgrade-h{font-size:var(--fs-sm);font-weight:600;color:var(--txt);margin:0 0 4px}
-.ob-acct-upgrade-sub{font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;margin:0}
-.ob-acct-upgrade .ob-cta-row{margin-top:10px}
 .ob-acct-status{font-size:var(--fs-xs);color:var(--txt-2);min-height:16px;margin-top:8px}
 .ob-acct-status-ok{color:var(--ok-text);font-weight:600}
 .tour-spot{
@@ -3064,72 +3060,48 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <section id="subscriptionSection" style="margin-top:16px">
       <div class="card" id="planStatusCard">
         <div class="plan-card-head">
-          <h2 data-i18n="license_title">Subscription</h2>
+          <h2 data-i18n="usage_title">Usage limits</h2>
         </div>
-        <div class="sub" data-i18n="license_sub">Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.</div>
+        <div class="sub" data-i18n="usage_sub">Every account has the full service. These daily limits only keep provider costs predictable, and they reset on their own.</div>
         <div class="plan-usage">
           <div class="plan-usage-row">
-            <span class="plan-usage-label" data-i18n="license_write">Writing Corrector &amp; reports</span>
+            <span class="plan-usage-label" data-i18n="usage_write">Writing Corrector &amp; reports</span>
             <span class="plan-usage-count tnum" id="planWriteText">—</span>
           </div>
           <div class="usage-bar" role="progressbar" aria-labelledby="planWriteText"><i id="planWriteBar"></i></div>
           <div class="plan-usage-row">
-            <span class="plan-usage-label" data-i18n="license_speak">Speaking mocks</span>
+            <span class="plan-usage-label" data-i18n="usage_speak">Speaking mocks</span>
             <span class="plan-usage-count tnum" id="planSpeakText">—</span>
           </div>
           <div class="usage-bar" role="progressbar" aria-labelledby="planSpeakText"><i id="planSpeakBar"></i></div>
           <div class="plan-usage-reset" id="planResetText"></div>
         </div>
-        <div class="plan-code-row">
-          <div>
-            <span class="plan-usage-label" data-i18n="license_code_label">Have a code?</span>
-            <input type="text" id="planCode" autocomplete="off" spellcheck="false"
-                   placeholder="FT-PRO-3M-XXXX-XXXX-XXXX"
-                   data-i18n-placeholder="license_code_placeholder"
-                   aria-label="Activation code">
-          </div>
-          <button type="button" class="btn" id="planRedeemBtn" data-action="redeemPlanCode" data-i18n="license_redeem">Redeem</button>
-        </div>
-        <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button type="button" class="btn" id="planSubscribeBtn" data-action="startBillingCheckout" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
-          <button type="button" class="btn gray" id="planPortalBtn" data-action="openBillingPortal" style="display:none" data-i18n="billing_manage">Manage subscription</button>
-        </div>
-        <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
-        <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
       </div>
     </section>
   </div>
 </div>
 
+<<<<<<< HEAD
 <!-- ============ PLAN LIMIT MODAL (phase 31) ============
      Shown when a request answers 429 + error:"plan_limit". It always offers the
      three ways forward, so a limit never ends in a dead-end toast. -->
 <div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
+=======
+<!-- ============ USAGE LIMIT MODAL ============
+     Shown when a request answers 429 + error:"limit_reached" (or the legacy
+     "plan_limit"). It explains the daily limit and links to the meter; there is
+     nothing to buy and nothing to redeem. -->
+<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
+>>>>>>> feat/hosted
   <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="license_limit_title">You reached your plan limit</h3>
+      <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="usage_limit_title">You reached today's limit</h3>
       <button class="del" type="button" data-action="closePlanLimit" style="font-size:20px;padding:4px 8px" aria-label="Close">✕</button>
     </div>
-    <p class="sub" id="planLimitBody" style="margin-top:8px" data-i18n="license_limit_body">Your free plan is there to try the loop. Keep going in one of these ways:</p>
-    <div class="plan-limit-options">
-      <div class="plan-limit-option">
-        <b data-i18n="license_option_free">Free (you are here)</b>
-        <span data-i18n="license_option_free_desc">3 corrections with the Writing Corrector a day and 1 mock a week.</span>
-      </div>
-      <div class="plan-limit-option">
-        <b data-i18n="license_option_byo">Your own key</b>
-        <span data-i18n="license_option_byo_desc">Unlimited for this app: you pay your provider directly.</span>
-      </div>
-      <div class="plan-limit-option">
-        <b data-i18n="license_option_pro">Pro</b>
-        <span data-i18n="license_option_pro_desc">60 corrections a month and 6 speaking mocks. Redeem an activation code.</span>
-      </div>
-    </div>
+    <p class="sub" id="planLimitBody" style="margin-top:8px" data-i18n="usage_limit_body">This is a daily fair-use limit on the provider key. It resets on its own; your progress is untouched.</p>
     <div style="display:flex;gap:8px;flex-direction:column;margin-top:14px">
-      <button class="btn" type="button" data-action="planLimitUseKey" data-i18n="license_use_key">🔑 Use my own key</button>
-      <button class="btn ok" type="button" data-action="planLimitHaveCode" data-i18n="license_have_code">🎟️ I have a code</button>
-      <button class="btn gray" type="button" data-action="closePlanLimit" data-i18n="license_close">Not now</button>
+      <button class="btn" type="button" data-action="planLimitViewLimits" data-i18n="usage_view_limits">View my limits</button>
+      <button class="btn gray" type="button" data-action="closePlanLimit" data-i18n="usage_close">Close</button>
     </div>
   </div>
 </div>
@@ -4098,7 +4070,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div class="guide">
-                      🎙 <b>Upgrade checklist:</b><br>
+                      🎙 <b>C1 polish checklist:</b><br>
                       • Inject: <i>"Whereas the former illustrates..., the latter seems to convey..."</i><br>
                       • Negotiate: <i>"What if we were to prioritize..., given that...?"</i><br>
                       • Re-record the full 4 parts and assess fluency.
@@ -5129,17 +5101,9 @@ const I18N={
     ob_error_day:'Pick at least one study day.',
     ob_error_time:'Enter a valid time (HH:MM) for every selected day.',
     ob_warn_same_time:'Two or more days are set to the same time. You can keep it or adjust each day.',
-    ob_acct_title:'Your plan',
-    ob_acct_loading:'Checking your account plan…',
-    ob_acct_unavailable:'Your limits and plan are in Settings → Plan.',
-    ob_acct_badge_free:'Free',
-    ob_acct_badge_byo:'Your own key',
-    ob_acct_badge_pro:'Pro',
-    ob_acct_badge_owner:'Owner',
-    ob_acct_sub_free:'What your free account includes:',
-    ob_acct_sub_byo:'Unlimited with your own key. You pay your provider directly.',
-    ob_acct_sub_pro:'Your Pro plan is active.',
-    ob_acct_sub_owner:'Unlimited account.',
+    ob_acct_title:'Your account',
+    ob_acct_loading:'Checking your limits…',
+    ob_acct_unavailable:'Your limits are in Settings.',
     ob_acct_writing_label:'Writing Corrector',
     ob_acct_speaking_label:'Speaking mocks',
     ob_acct_pron_label:'Pronunciation',
@@ -5149,13 +5113,8 @@ const I18N={
     ob_acct_writing_val:'{n} per {unit}',
     ob_acct_speaking_val_one:'{n} mock · {min} min per {unit}',
     ob_acct_speaking_val_many:'{n} mocks · {min} min per {unit}',
-    ob_acct_byo_unlimited:'Unlimited (your key)',
     ob_acct_pron_full:'Full',
     ob_acct_pron_preview:'Preview',
-    ob_acct_no_card_no_ads:'No card required · No ads',
-    ob_acct_no_ads:'No ads',
-    ob_acct_upgrade_title:'Want higher limits?',
-    ob_acct_upgrade_sub:'Upgrade to Pro for higher monthly limits and full pronunciation.',
     ob_acct_byo_btn:'Configure provider key',
     week_a:'Week A',
     week_b:'Week B',
@@ -5531,47 +5490,23 @@ const I18N={
     byo_testing:'Testing…',
     byo_test_ok:'Connected · {model}',
     byo_test_fail:'Failed · {code}',
-    license_title:'Subscription',
-    license_sub:'Your plan decides how much you can use the Writing Corrector. Free is here to try the loop; a code lifts it.',
-    license_write:'Writing Corrector & reports',
-    license_speak:'Speaking mocks',
-    license_usage:'{n} of {limit} · {window}',
-    license_window_day:'today',
-    license_window_week:'this week',
-    license_window_month:'this month',
-    license_unlimited:'Unlimited',
-    license_reset:'Resets {date}',
-    license_code_label:'Have a code?',
-    license_code_placeholder:'FT-PRO-3M-XXXX-XXXX-XXXX',
-    license_redeem:'Redeem',
-    license_redeem_ok:'Activated · pro until {date}.',
-    license_redeem_bad:'That code is not valid.',
-    license_redeem_rate:'Too many attempts. Try again in {mins} min.',
-    license_code_needed:'Type your code first.',
-    billing_subscribe:'Subscribe — US$5/month',
-    billing_manage:'Manage subscription',
-    billing_copy:'US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.',
-    billing_renews:'Renews {date}.',
-    billing_grace:'Payment failed · {days} days of pro left.',
-    billing_cancelled:'Checkout cancelled. Nothing was charged.',
-    billing_checking:'Checking your subscription…',
-    billing_active:'Pro is active. Enjoy!',
-    billing_pending:'Payment received. Your plan will update in a moment.',
-    billing_not_configured:'Billing is not configured on this server yet.',
-    billing_error:'Could not reach the payment provider. Try again.',
-    license_limit_title:'You reached your plan limit',
-    license_limit_body:'Your free plan is there to try the loop. Keep going in one of these ways:',
-    license_limit_short:'Plan limit reached — open Plan to keep going.',
-    license_option_free:'Free (you are here)',
-    license_option_free_desc:'3 corrections with the Writing Corrector a day and 1 mock a week.',
-    license_option_byo:'Your own key',
-    license_option_byo_desc:'Unlimited for this app: you pay your provider directly.',
-    license_option_pro:'Pro',
-    license_option_pro_desc:'60 corrections a month and 6 speaking mocks. Redeem an activation code.',
-    license_use_key:'🔑 Use my own key',
-    license_have_code:'🎟️ I have a code',
-    license_close:'Not now',
-    license_ia_free:'{n} of {limit} free left · see Plan',
+    usage_title:'Usage limits',
+    usage_sub:'Every account has the full service. These daily limits only keep provider costs predictable, and they reset on their own.',
+    usage_write:'Writing Corrector & reports',
+    usage_speak:'Speaking mocks',
+    usage_count:'{n} of {limit} · {window}',
+    usage_window_day:'today',
+    usage_window_week:'this week',
+    usage_window_month:'this month',
+    usage_unlimited:'Unlimited',
+    usage_reset:'Resets {date}',
+    usage_limit_title:"You reached today's limit",
+    usage_limit_body:'This is a daily fair-use limit on the provider key. It resets on its own; your progress is untouched.',
+    usage_limit_short:'Daily limit reached — open Settings to see your usage.',
+    usage_view_limits:'View my limits',
+    usage_close:'Close',
+    usage_full_access:'Full service',
+    usage_left:'{n} of {limit} left today',
     books_online:'🌐 Online Practice (1-Click — Free)',
     books_online_sub:'Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).',
     books_material:'📥 Downloaded Material (PDFs & Audio)',
@@ -6074,17 +6009,9 @@ const I18N={
     ob_error_day:'Elegí al menos un día de estudio.',
     ob_error_time:'Ingresá una hora válida (HH:MM) para cada día elegido.',
     ob_warn_same_time:'Dos o más días tienen la misma hora. Podés dejarlo así o ajustar cada día.',
-    ob_acct_title:'Tu plan',
-    ob_acct_loading:'Consultando tu plan…',
-    ob_acct_unavailable:'Tus límites y tu plan están en Settings → Plan.',
-    ob_acct_badge_free:'Gratis',
-    ob_acct_badge_byo:'Tu propia clave',
-    ob_acct_badge_pro:'Pro',
-    ob_acct_badge_owner:'Propietario',
-    ob_acct_sub_free:'Qué incluye tu cuenta gratis:',
-    ob_acct_sub_byo:'Ilimitado con tu propia clave. Le pagás directo a tu proveedor.',
-    ob_acct_sub_pro:'Tu plan Pro está activo.',
-    ob_acct_sub_owner:'Cuenta ilimitada.',
+    ob_acct_title:'Tu cuenta',
+    ob_acct_loading:'Consultando tus límites…',
+    ob_acct_unavailable:'Tus límites están en Ajustes.',
     ob_acct_writing_label:'Writing Corrector',
     ob_acct_speaking_label:'Simulacros de speaking',
     ob_acct_pron_label:'Pronunciación',
@@ -6094,13 +6021,8 @@ const I18N={
     ob_acct_writing_val:'{n} por {unit}',
     ob_acct_speaking_val_one:'{n} simulacro · {min} min por {unit}',
     ob_acct_speaking_val_many:'{n} simulacros · {min} min por {unit}',
-    ob_acct_byo_unlimited:'Ilimitado (tu propia clave)',
     ob_acct_pron_full:'Completa',
     ob_acct_pron_preview:'Vista previa',
-    ob_acct_no_card_no_ads:'Sin tarjeta · Sin anuncios',
-    ob_acct_no_ads:'Sin anuncios',
-    ob_acct_upgrade_title:'¿Querés más margen?',
-    ob_acct_upgrade_sub:'Pasá a Pro para tener límites mensuales más altos y pronunciación completa.',
     ob_acct_byo_btn:'Configurar clave del proveedor',
     week_a:'Semana A',
     week_b:'Semana B',
@@ -6476,47 +6398,23 @@ const I18N={
     byo_testing:'Probando…',
     byo_test_ok:'Conectado · {model}',
     byo_test_fail:'Falló · {code}',
-    license_title:'Suscripción',
-    license_sub:'Tu plan define cuánto podés usar el Writing Corrector. El gratis sirve para probar el circuito; un código lo amplía.',
-    license_write:'Writing Corrector y reportes',
-    license_speak:'Simulacros de speaking',
-    license_usage:'{n} de {limit} · {window}',
-    license_window_day:'hoy',
-    license_window_week:'esta semana',
-    license_window_month:'este mes',
-    license_unlimited:'Sin límite',
-    license_reset:'Se renueva {date}',
-    license_code_label:'¿Tenés un código?',
-    license_code_placeholder:'FT-PRO-3M-XXXX-XXXX-XXXX',
-    license_redeem:'Canjear',
-    license_redeem_ok:'Activado · pro hasta {date}.',
-    license_redeem_bad:'Ese código no es válido.',
-    license_redeem_rate:'Demasiados intentos. Probá de nuevo en {mins} min.',
-    license_code_needed:'Escribí tu código primero.',
-    billing_subscribe:'Suscribirme — US$5/mes',
-    billing_manage:'Gestionar suscripción',
-    billing_copy:'US$5 por mes, cancelás cuando quieras desde Gestionar suscripción. La tarjeta la maneja Stripe; nunca la vemos.',
-    billing_renews:'Se renueva {date}.',
-    billing_grace:'El pago falló · te quedan {days} días de pro.',
-    billing_cancelled:'Checkout cancelado. No se cobró nada.',
-    billing_checking:'Consultando tu suscripción…',
-    billing_active:'Pro activo. ¡A darle!',
-    billing_pending:'Pago recibido. Tu plan se actualiza en un momento.',
-    billing_not_configured:'Este servidor todavía no tiene la facturación configurada.',
-    billing_error:'No pudimos contactar al proveedor de pagos. Probá de nuevo.',
-    license_limit_title:'Llegaste al límite de tu plan',
-    license_limit_body:'El plan gratis sirve para probar el circuito. Podés seguir de alguna de estas formas:',
-    license_limit_short:'Límite del plan alcanzado — abrí Plan para seguir.',
-    license_option_free:'Gratis (estás acá)',
-    license_option_free_desc:'3 correcciones con el Writing Corrector por día y 1 simulacro por semana.',
-    license_option_byo:'Tu propia clave',
-    license_option_byo_desc:'Sin límite en esta app: le pagás directo a tu proveedor.',
-    license_option_pro:'Pro',
-    license_option_pro_desc:'60 correcciones por mes y 6 simulacros. Canjeá un código de activación.',
-    license_use_key:'🔑 Usar mi propia clave',
-    license_have_code:'🎟️ Tengo un código',
-    license_close:'Ahora no',
-    license_ia_free:'{n} de {limit} gratis · ver Plan',
+    usage_title:'Límites de uso',
+    usage_sub:'Todas las cuentas tienen el servicio completo. Estos límites diarios solo mantienen previsibles los costos del proveedor y se reinician solos.',
+    usage_write:'Writing Corrector y reportes',
+    usage_speak:'Simulacros de speaking',
+    usage_count:'{n} de {limit} · {window}',
+    usage_window_day:'hoy',
+    usage_window_week:'esta semana',
+    usage_window_month:'este mes',
+    usage_unlimited:'Sin límite',
+    usage_reset:'Se reinicia {date}',
+    usage_limit_title:'Llegaste al límite de hoy',
+    usage_limit_body:'Es un límite diario de uso razonable sobre la clave del proveedor. Se reinicia solo; tu progreso no se toca.',
+    usage_limit_short:'Límite diario alcanzado — abrí Ajustes para ver tu uso.',
+    usage_view_limits:'Ver mis límites',
+    usage_close:'Cerrar',
+    usage_full_access:'Servicio completo',
+    usage_left:'{n} de {limit} disponibles hoy',
     books_online:'🌐 Práctica online (1 clic — gratis)',
     books_online_sub:'Ejercicios interactivos ilimitados por habilidad. Materiales oficiales de Cambridge + plataformas gratuitas (sin descargas).',
     books_material:'📥 Material descargado (PDF y audio)',
@@ -7793,35 +7691,21 @@ function obAcctUnitLabel(w){
   if(w==='week')return t('ob_acct_unit_week');
   return t('ob_acct_unit_day');
 }
-function obEffectiveAccountPlan(p){
+function obAccountKind(p){
   if(!p)return 'unavailable';
-  if(p.plan==='owner'||p.plan==='pro')return p.plan;
+  if(p.plan==='owner')return 'owner';
   if(p.plan==='byo'||loadByo().key)return 'byo';
-  return 'free';
+  return 'service';
 }
-function obToggleCodeBox(){
-  const wrap=document.getElementById('obPlanCodeWrap');
-  const btn=document.getElementById('obHaveCodeBtn');
-  if(!wrap)return;
-  const open=wrap.style.display==='none';
-  wrap.style.display=open?'':'none';
-  if(btn)btn.setAttribute('aria-expanded',String(open));
-  if(open){
-    const inp=document.getElementById('obPlanCode');
-    if(inp)inp.focus();
-  }
-}
-function obAccountRowsHtml(p,kind){
+function obAccountRowsHtml(p){
+  const kind=obAccountKind(p);
   const lim=(p&&p.limits)||{};
   const wLim=lim.writing;
   const sLim=lim.speaking;
   let wVal='—',sVal='—';
-  if(kind==='owner'){
-    wVal=t('license_unlimited');
-    sVal=t('license_unlimited');
-  }else if(kind==='byo'){
-    wVal=t('ob_acct_byo_unlimited');
-    sVal=t('ob_acct_byo_unlimited');
+  if(kind==='owner'||kind==='byo'){
+    wVal=t('usage_unlimited');
+    sVal=t('usage_unlimited');
   }else{
     if(wLim&&typeof wLim.limit==='number'){
       wVal=t('ob_acct_writing_val',{n:wLim.limit,unit:obAcctUnitLabel(wLim.window)});
@@ -7845,63 +7729,22 @@ function obRenderAccountPlanBody(p,statusNote){
     el.innerHTML=`<div class="ob-diag-box"><p class="ob-body" style="margin:0">${esc(t('ob_acct_unavailable'))}</p></div>`;
     return;
   }
-  const kind=obEffectiveAccountPlan(p);
-  const badgeMap={
-    free:t('ob_acct_badge_free'),
-    byo:t('ob_acct_badge_byo'),
-    pro:t('ob_acct_badge_pro'),
-    owner:t('ob_acct_badge_owner')
-  };
-  const subMap={
-    free:t('ob_acct_sub_free'),
-    byo:t('ob_acct_sub_byo'),
-    pro:t('ob_acct_sub_pro'),
-    owner:t('ob_acct_sub_owner')
-  };
-  const badgeCls=kind==='pro'||kind==='owner'?'badge ok':(kind==='byo'?'badge fri':'badge ob-acct-badge-neutral');
+  const kind=obAccountKind(p);
   const usage=p.usage||{};
   const when=usage.reset_at||p.reset_at;
   let meta='';
-  if(kind==='pro'){
-    const parts=[];
-    if(when)parts.push(t('license_reset',{date:planDate(when)}));
-    parts.push(t('ob_acct_no_ads'));
-    meta=`<div class="ob-acct-meta">${esc(parts.join(' · '))}</div>`;
-  }else if(kind==='free'||kind==='byo'){
-    meta=`<div class="ob-acct-meta">${esc(t('ob_acct_no_card_no_ads'))}</div>`;
-  }else if(kind==='owner'){
-    meta=`<div class="ob-acct-meta">${esc(t('ob_acct_no_ads'))}</div>`;
-  }
+  if(when)meta=`<div class="ob-acct-meta">${esc(t('usage_reset',{date:planDate(when)}))}</div>`;
   let extra='';
-  if(kind==='free'){
-    extra=`<div class="ob-acct-upgrade">
-      <div class="ob-acct-upgrade-h">${esc(t('ob_acct_upgrade_title'))}</div>
-      <p class="ob-acct-upgrade-sub">${esc(t('ob_acct_upgrade_sub'))}</p>
-      <div class="ob-cta-row">
-        <button type="button" class="btn sm" id="obPlanSubscribeBtn" data-action="startBillingCheckoutOnboarding">${esc(t('billing_subscribe'))}</button>
-        <button type="button" class="btn sm gray" id="obHaveCodeBtn" aria-expanded="false" data-action="obToggleCodeBox">${esc(t('license_have_code'))}</button>
-      </div>
-      <div id="obPlanCodeWrap" style="display:none">
-        <div class="plan-code-row">
-          <div>
-            <label class="plan-usage-label" for="obPlanCode">${esc(t('license_code_label'))}</label>
-            <input type="text" id="obPlanCode" autocomplete="off" spellcheck="false" placeholder="${esc(t('license_code_placeholder'))}" aria-label="${esc(t('license_code_label'))}">
-          </div>
-          <button type="button" class="btn sm ok" id="obPlanRedeemBtn" data-action="redeemPlanCodeOnboarding">${esc(t('license_redeem'))}</button>
-        </div>
-        <div id="obPlanRedeemStatus" class="ob-acct-status" role="status"></div>
-      </div>
-      <div id="obPlanBillingStatus" class="ob-acct-status" role="status"></div>
-    </div>`;
-  }else if(kind==='byo'){
+  if(kind==='byo'){
     extra=`<div class="ob-cta-row"><button type="button" class="btn sm gray" id="obByoManageBtn" data-action="focusByoCard">${esc(t('ob_acct_byo_btn'))}</button></div>`;
-  }else if(kind==='pro'&&statusNote){
-    extra=`<div id="obPlanRedeemStatus" class="ob-acct-status ob-acct-status-ok" role="status">${esc(statusNote)}</div>`;
+  }
+  if(statusNote){
+    extra+=`<div id="obPlanStatus" class="ob-acct-status ob-acct-status-ok" role="status">${esc(statusNote)}</div>`;
   }
   el.innerHTML=`<div class="ob-acct-card">
-    <div class="ob-acct-head"><span class="${badgeCls}">${esc(badgeMap[kind]||kind)}</span></div>
-    <p class="ob-acct-sub">${esc(subMap[kind]||'')}</p>
-    ${obAccountRowsHtml(p,kind)}
+    <div class="ob-acct-head"><span class="badge ob-acct-badge-neutral">${esc(t('usage_full_access'))}</span></div>
+    <p class="ob-acct-sub">${esc(t('usage_sub'))}</p>
+    ${obAccountRowsHtml(p)}
     ${meta}
   </div>${extra}`;
 }
@@ -7913,7 +7756,7 @@ async function obLoadAccountPlan(){
   if(timer){clearTimeout(timer);timer=null}
   if(!OB.active||OB.step!==6||OB.planReqId!==reqId)return;
   obRenderAccountPlanBody(plan);
-  track('onboarding_plan_step',{plan:obEffectiveAccountPlan(plan)});
+  track('onboarding_plan_step',{plan:obAccountKind(plan)});
 }
 function obStepHtml(){
   const d=OB.draft;
@@ -10442,7 +10285,7 @@ function makeTurnTransport(cfg){
         const ctype=(r.headers&&r.headers.get)?(r.headers.get('content-type')||''):'';
         if(!r.ok){
           return r.json().catch(function(){return null}).then(function(j){
-            if(isPlanLimit(j)){showPlanLimit();throw new Error(t('license_limit_short'))}
+            if(isPlanLimit(j)){showPlanLimit();throw new Error(t('usage_limit_short'))}
             throw new Error((j&&j.error)||('turn failed ('+r.status+')'));
           });
         }
@@ -11181,8 +11024,8 @@ async function spkStart(){
               let j=null;try{j=await r.json()}catch(e){}
               if(isPlanLimit(j)){
                 showPlanLimit();
-                spkSetStatus(t('license_limit_short'));
-                spkSetBadge(t('license_limit_short'));
+                spkSetStatus(t('usage_limit_short'));
+                spkSetBadge(t('usage_limit_short'));
               }
             }
           }catch(e){}
@@ -11477,7 +11320,7 @@ async function spkReport(){
     if(!r.ok||!j||!j.bands){
       if(isPlanLimit(j)){
         showPlanLimit();
-        throw new Error(t('license_limit_short'));
+        throw new Error(t('usage_limit_short'));
       }
       throw new Error((j&&j.error)||('report failed ('+r.status+')'));
     }
@@ -15216,16 +15059,15 @@ async function testByoConnection(){
     if(st)st.textContent=t('byo_test_fail',{code:'network'});
   }
 }
-/* ---------- SUBSCRIPTION PLAN (phase 31) ----------
-   The server owns the plan: GET /api/plan returns the active plan, its limits
-   and the usage in the current window. PLAN_STATE is only a UI cache; it is
-   refreshed on boot, after a redemption and every time a 429 says plan_limit.
-   The limits are rendered up front (the bars), never after failing. */
+/* ---------- USAGE LIMITS ----------
+   The server owns the meter: GET /api/plan returns the service limits and the
+   usage in the current window. PLAN_STATE is only a UI cache; it is refreshed
+   on boot and every time a 429 says limit_reached. There is no plan to buy. */
 var PLAN_STATE=null;
 function planWindowLabel(w){
-  if(w==='month')return t('license_window_month');
-  if(w==='week')return t('license_window_week');
-  return t('license_window_day');
+  if(w==='month')return t('usage_window_month');
+  if(w==='week')return t('usage_window_week');
+  return t('usage_window_day');
 }
 function planPct(used,limit){
   if(!(limit>0))return 0;
@@ -15251,9 +15093,7 @@ async function loadPlan(){
     if(!r.ok)throw 0;
     PLAN_STATE=await r.json();
   }catch(e){return null}
-  await loadBillingStatus();
   renderPlanCard();
-  handleBillingReturn();
   return PLAN_STATE;
 }
 function renderPlanCard(){
@@ -15277,156 +15117,23 @@ function renderPlanCard(){
   const wUsed=Number(usage.writing)||0;
   const sUsed=Number(usage.speaking_mocks)||0;
   if(wEl){
-    wEl.textContent=(byoKey||!wLim)?t('license_unlimited')
-      :t('license_usage',{n:wUsed,limit:wLim.limit,window:planWindowLabel(wLim.window)});
+    wEl.textContent=(byoKey||!wLim)?t('usage_unlimited')
+      :t('usage_count',{n:wUsed,limit:wLim.limit,window:planWindowLabel(wLim.window)});
   }
   if(sEl){
-    sEl.textContent=(byoKey||!sLim)?t('license_unlimited')
-      :t('license_usage',{n:sUsed,limit:sLim.mocks,window:planWindowLabel(sLim.window)});
+    sEl.textContent=(byoKey||!sLim)?t('usage_unlimited')
+      :t('usage_count',{n:sUsed,limit:sLim.mocks,window:planWindowLabel(sLim.window)});
   }
   setPlanBar('planWriteBar',(byoKey||!wLim)?0:planPct(wUsed,wLim.limit));
   setPlanBar('planSpeakBar',(byoKey||!sLim)?0:planPct(sUsed,sLim.mocks));
   if(resetEl){
     const when=usage.reset_at||p.reset_at;
-    resetEl.textContent=when?t('license_reset',{date:planDate(when)}):'';
+    resetEl.textContent=when?t('usage_reset',{date:planDate(when)}):'';
   }
 }
-/* ---------- BILLING (phase 33) ----------
-   Subscribe opens a provider-hosted Checkout page; the card is typed there,
-   never here. The plan lands through a signed webhook, so after returning from
-   Checkout the card polls /api/billing/status for up to 10 s. */
-var BILLING_STATE=null;
-async function loadBillingStatus(){
-  if(!USER||!USER.token)return null;
-  try{
-    const r=await fetch('/api/billing/status',{headers:authHeaders()});
-    if(!r.ok)return null;
-    BILLING_STATE=await r.json();
-  }catch(e){return null}
-  renderBillingCard();
-  return BILLING_STATE;
+function isPlanLimit(obj){
+  return !!(obj&&(obj.error==='limit_reached'||obj.error==='plan_limit'))
 }
-function billingDaysLeft(value){
-  const end=new Date(value);
-  if(isNaN(end.getTime()))return 0;
-  return Math.max(0,Math.ceil((end.getTime()-Date.now())/86400000));
-}
-function renderBillingCard(){
-  const sub=document.getElementById('planSubscribeBtn');
-  const portal=document.getElementById('planPortalBtn');
-  const st=document.getElementById('planBillingStatus');
-  const b=BILLING_STATE||{};
-  const pro=!!(PLAN_STATE&&PLAN_STATE.plan==='pro');
-  if(sub)sub.style.display=pro?'none':'';
-  if(portal)portal.style.display=b.portal_available?'':'none';
-  if(!st)return;
-  if(b.status==='past_due'&&b.grace_until){
-    st.textContent=t('billing_grace',{days:billingDaysLeft(b.grace_until)});
-  }else if(pro&&b.renews_at){
-    st.textContent=t('billing_renews',{date:planDate(b.renews_at)});
-  }else{
-    st.textContent='';
-  }
-}
-async function startBillingCheckout(opts){
-  const o=(opts&&typeof opts==='object')?opts:{};
-  const st=document.getElementById(o.statusId||'planBillingStatus');
-  const btn=document.getElementById(o.btnId||'planSubscribeBtn');
-  if(btn)btn.disabled=true;
-  if(st)st.textContent='…';
-  try{
-    const r=await fetch('/api/billing/checkout',{method:'POST',headers:authHeaders()});
-    let j=null;try{j=await r.json()}catch(e){}
-    if(r.status===401){sessionExpired();return;}
-    if(r.ok&&j&&j.url){window.location.href=j.url;return;}
-    if(st)st.textContent=(r.status===503)?t('billing_not_configured'):t('billing_error');
-  }catch(e){
-    if(st)st.textContent=t('billing_error');
-  }finally{
-    if(btn)btn.disabled=false;
-  }
-}
-async function openBillingPortal(){
-  const st=document.getElementById('planBillingStatus');
-  const btn=document.getElementById('planPortalBtn');
-  if(btn)btn.disabled=true;
-  if(st)st.textContent='…';
-  try{
-    const r=await fetch('/api/billing/portal',{method:'POST',headers:authHeaders()});
-    let j=null;try{j=await r.json()}catch(e){}
-    if(r.status===401){sessionExpired();return;}
-    if(r.ok&&j&&j.url){window.location.href=j.url;return;}
-    if(st)st.textContent=(r.status===503)?t('billing_not_configured'):t('billing_error');
-  }catch(e){
-    if(st)st.textContent=t('billing_error');
-  }finally{
-    if(btn)btn.disabled=false;
-  }
-}
-async function handleBillingReturn(){
-  let q=null;
-  try{q=new URLSearchParams(location.search)}catch(e){return}
-  if(!q)return;
-  const flag=q.get('billing');
-  if(!flag)return;
-  try{history.replaceState(null,'',location.pathname)}catch(e){}
-  const st=document.getElementById('planBillingStatus');
-  if(flag==='cancel'){
-    if(st)st.textContent=t('billing_cancelled');
-    return;
-  }
-  if(flag!=='success')return;
-  if(st)st.textContent=t('billing_checking');
-  for(let i=0;i<10;i++){
-    await new Promise(function(res){setTimeout(res,1000)});
-    const s=await loadBillingStatus();
-    if(s&&s.plan==='pro'){
-      await loadPlan();
-      const el=document.getElementById('planBillingStatus');
-      if(el)el.textContent=t('billing_active');
-      if(OB.active&&OB.step===6)obRenderAccountPlanBody(PLAN_STATE,t('billing_active'));
-      return;
-    }
-  }
-  if(st)st.textContent=t('billing_pending');
-}
-async function redeemPlanCode(opts){
-  const o=(opts&&typeof opts==='object')?opts:{};
-  const input=document.getElementById(o.inputId||'planCode');
-  const st=document.getElementById(o.statusId||'planRedeemStatus');
-  const btn=document.getElementById(o.btnId||'planRedeemBtn');
-  const code=input?input.value.trim():'';
-  if(!code){if(st)st.textContent=t('license_code_needed');return;}
-  if(btn)btn.disabled=true;
-  if(st)st.textContent='…';
-  try{
-    const r=await fetch('/api/plan/redeem',{method:'POST',headers:authHeaders(),
-      body:JSON.stringify({code:code})});
-    let j=null;try{j=await r.json()}catch(e){}
-    if(r.status===401){sessionExpired();return;}
-    if(r.ok&&j&&j.plan){
-      if(input)input.value='';
-      const okMsg=t('license_redeem_ok',{date:planDate(j.until)});
-      if(st)st.textContent=okMsg;
-      await loadPlan();
-      refreshAll();
-      if(OB.active&&OB.step===6)obRenderAccountPlanBody(PLAN_STATE,okMsg);
-      return;
-    }
-    if(st){
-      if(r.status===429&&j&&j.retry_after){
-        st.textContent=t('license_redeem_rate',{mins:Math.max(1,Math.ceil(j.retry_after/60))});
-      }else{
-        st.textContent=t('license_redeem_bad');
-      }
-    }
-  }catch(e){
-    if(st)st.textContent=t('license_redeem_bad');
-  }finally{
-    if(btn)btn.disabled=false;
-  }
-}
-function isPlanLimit(obj){return !!(obj&&obj.error==='plan_limit')}
 function showPlanLimit(){
   const ov=document.getElementById('planLimitModal');
   if(ov)ov.style.display='flex';
@@ -15435,6 +15142,12 @@ function showPlanLimit(){
 function closePlanLimit(){
   const ov=document.getElementById('planLimitModal');
   if(ov)ov.style.display='none';
+}
+function planLimitViewLimits(){
+  closePlanLimit();
+  openSettingsModal();
+  const card=document.getElementById('planStatusCard');
+  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function openSettingsModal(){
   const ov=document.getElementById('settingsModal');
@@ -15454,15 +15167,6 @@ function focusByoCard(){
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
   const key=document.getElementById('byoKey');
   if(key)key.focus();
-}
-function planLimitUseKey(){focusByoCard()}
-function planLimitHaveCode(){
-  closePlanLimit();
-  openSettingsModal();
-  const card=document.getElementById('planStatusCard');
-  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'center'});
-  const input=document.getElementById('planCode');
-  if(input)input.focus();
 }
 /* ---------- WEEKLY PLAN (buildWeeklyPlan) ----------
    Deterministic rules (NO AI) that derive the week from the diagnostic,
@@ -19167,8 +18871,8 @@ async function refreshIaQuota(){
     if(!r.ok)throw 0;
     const j=await r.json();
     const lim=PLAN_STATE&&PLAN_STATE.limits&&PLAN_STATE.limits.writing;
-    if(PLAN_STATE&&PLAN_STATE.plan==='free'&&lim){
-      el.textContent=t('license_ia_free',{n:Math.max(0,Number(j.ai_left_today)||0),
+    if(lim){
+      el.textContent=t('usage_left',{n:Math.max(0,Number(j.ai_left_today)||0),
         limit:lim.limit});
     }else{
       el.textContent=t('ai_quota_left',{n:Math.max(0,Number(j.ai_left_today)||0)});
@@ -19274,7 +18978,7 @@ async function submitIaWriting(){
       if(isPlanLimit(data)){
         track('ai_blocked',{code:429});
         showPlanLimit();
-        setIaState('error',t('license_limit_short'));
+        setIaState('error',t('usage_limit_short'));
         return;
       }
       const msg=data&&data.error?`${data.error}`:t('ai_err_generic');
@@ -20239,6 +19943,7 @@ click:{
 'clearResourcesFilter':()=>clearResourcesFilter(),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
+'planLimitViewLimits':()=>planLimitViewLimits(),
 'closePlanResetDialog':()=>closePlanResetDialog(),
 'closePlanResetDialogIfSelf':(el,ev)=>{if(ev.target===el)closePlanResetDialog()},
 'closeQuickLog':()=>closeQuickLog(),
@@ -20285,9 +19990,7 @@ click:{
 'obSetItemsPerSession':el=>obSetItemsPerSession(+el.dataset.items),
 'obSetLang':el=>obSetLang(el.dataset.arg),
 'obStartDiagnostic':()=>obStartDiagnostic(),
-'obToggleCodeBox':()=>obToggleCodeBox(),
 'obToggleDay':el=>obToggleDay(el.dataset.day),
-'openBillingPortal':()=>openBillingPortal(),
 'openDeleteAccount':()=>openDeleteAccount(),
 'openImportPicker':()=>document.getElementById('importFile').click(),
 'openIntake':()=>openIntake(),
@@ -20295,16 +19998,12 @@ click:{
 'openSoloModal':el=>openSoloModal(el.dataset.arg||undefined),
 'openSpeakingExam':()=>openSpeakingExam(),
 'openWritingCorrectorFromDraft':()=>openWritingCorrectorFromDraft(),
-'planLimitHaveCode':()=>planLimitHaveCode(),
-'planLimitUseKey':()=>planLimitUseKey(),
 'qlNext':()=>qlNext(),
 'qlPickNum':el=>qlPickNum(+el.dataset.arg),
 'qlPickRange':el=>{const r=el.dataset.qlRange.split('-');qlPickRange(+r[0],+r[1])},
 'qlSave':()=>qlSave(),
 'qlSetKind':el=>qlSetKind(el.dataset.qlKind),
 'qlSetType':el=>qlSetType(el.dataset.qlType),
-'redeemPlanCode':()=>redeemPlanCode(),
-'redeemPlanCodeOnboarding':()=>redeemPlanCode({inputId:'obPlanCode',statusId:'obPlanRedeemStatus',btnId:'obPlanRedeemBtn'}),
 'refreshAll':()=>refreshAll(),
 'regenWeeklyPlan':()=>regenWeeklyPlan(),
 'removeScheduleRow':el=>removeScheduleRow(+el.dataset.i),
@@ -20342,8 +20041,6 @@ click:{
 'spkStart':()=>spkStart(),
 'spkStop':()=>spkStop(),
 'stageDown':()=>stageDown(),
-'startBillingCheckout':()=>startBillingCheckout(),
-'startBillingCheckoutOnboarding':()=>startBillingCheckout({btnId:'obPlanSubscribeBtn',statusId:'obPlanBillingStatus'}),
 'startDiag':()=>startDiag(),
 'startFullMock':()=>startFullMock(),
 'startGoogleLogin':()=>startGoogleLogin(),

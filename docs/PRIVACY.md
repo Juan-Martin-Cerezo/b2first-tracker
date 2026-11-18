@@ -1,9 +1,11 @@
 # Privacy Policy — B2 First Tracker
 
-**Version 1.2** · Last updated: 2026-11-04 · Served live at `/privacy`
+**Version 1.3** · Last updated: 2026-11-18 · Served live at `/privacy`
 
 **Changelog**
 
+- 1.3 — 2026-11-18 · Hosted service: accounts and progress live on the provider's
+  server. Internal host details removed from the public policy.
 - 1.2 — 2026-11-04 · Speaking exam: recognition runs in the browser, the application
   uploads no audio, and the transcript leaves only when an AI provider is configured.
 - 1.1 — 2026-11-02 · Account-recovery requests: what the login form stores, who reads it,
@@ -11,53 +13,49 @@
 - 1.0 — 2026-10-30 · First complete version: data map, third parties, retention,
   self-service export and deletion, age policy.
 
-This policy describes what this instance of B2 First Tracker actually stores and
-what it sends to third parties. It is written against the code, not against an
-aspiration. If a claim here cannot be checked in this repository, it is marked
-as unverified.
+This policy describes what the B2 First Tracker service stores and what it sends to
+third parties. It is written against the code, not against an aspiration.
 
 ## 1. Who runs this service
 
-This is a self-hosted study application. The server is a Raspberry Pi at a
-private address in Argentina; the public entry point is
-`https://firsttracker.app`. There is no company, no cloud database and no
-analytics platform. The owner of the instance is the person who deployed it.
+B2 First Tracker is a hosted study service for the Cambridge B2 First. The public
+entry point is `https://firsttracker.app`. Accounts and progress live on the
+provider's server; there is no company, no cloud database and no analytics
+platform behind it. The operator of the service is the person who runs the
+server and answers the contact address below.
 
 ## 2. What is stored, and where
 
-Everything below lives on that Raspberry Pi, under the `data/` directory of the
-application. Files are readable only by the service user (`0600`; account
-directories `0700`).
+Everything below lives on the provider's server, attached to your account. Files
+are private to the service and are not served to anyone else.
 
-| Data | What it contains | Where |
-| --- | --- | --- |
-| Account | username, avatar colour, creation date, salt and PBKDF2-HMAC-SHA256 password hash (600,000 iterations) | `data/users.json` |
-| Sessions | `sha256(token)` and expiry timestamps — the token itself is never written | `data/tokens.json` |
-| Progress | practice log, error log, profile, settings, plan mirror | `data/users/<id>/progress.json` |
-| Backups | the last 20 versions of that progress file | `data/users/<id>/backups/` |
-| Speaking ledger | minutes spoken today (a number, no audio) | `data/users/<id>/speaking.json` |
-| Transcripts | only if you explicitly ask to save a session | `data/users/<id>/speaking/` |
-| Plan and usage | plan row, writing/speaking counters, last-seen date | `data/plans.json`, `data/usage.json` |
-| Licence rows | `sha256(code)`, never the code in readable form | `data/licenses.json` |
-| Security audit | event type, timestamp, request id, account name or id, hashed client address | `data/audit.log` |
-| Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash | `data/events/*.jsonl` |
-| Google link | Google's stable `sub` mapped to your local account id (no name, no address) | `data/oauth.json` |
-| Passkeys | credential id, public key (COSE), signature counter and the device label you choose | `data/webauthn/<id>.json` |
-| Recovery requests | user name, the optional contact you type, timestamp, 16-character hash of your address | `data/pwreset.jsonl` |
+| Data | What it contains |
+| --- | --- |
+| Account | username, avatar colour, creation date, salt and PBKDF2-HMAC-SHA256 password hash (600,000 iterations) |
+| Sessions | `sha256(token)` and expiry timestamps — the token itself is never written |
+| Progress | practice log, error log, profile, settings |
+| Backups | the last 20 versions of your progress |
+| Speaking ledger | minutes spoken today (a number, no audio) |
+| Transcripts | only if you explicitly ask to save a session |
+| Usage counters | writing and speaking counters for the current day |
+| Security audit | event type, timestamp, request id, account name or id, hashed client address |
+| Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash |
+| Google link | Google's stable `sub` mapped to your local account id (no name, no address) |
+| Passkeys | credential id, public key (COSE), signature counter and the device label you choose |
+| Recovery requests | user name, the optional contact you type, timestamp, 16-character hash of your address |
 
 The password itself is never stored. The raw session token is never stored. Raw
 IP addresses are not stored: the audit log and the access log keep only the
 first 12 hex characters of `sha256(IP)`, and product events keep 16 characters
 of a salted hash. There is no email address in readable form, no real name, no
 user agent string (only `sha256(user agent)` attached to a session) and no
-payment data anywhere in `data/`.
+payment data anywhere.
 
 **Optional email hash.** When you sign in with Google for the first time, the
 confirmation screen offers a checkbox to keep your email for account recovery.
 It is off by default. If you enable it, the server stores only
-`sha256(normalised email)` in `data/users.json`; the address itself is never
-written to disk, logged or sent anywhere else. Turning the checkbox off stores
-nothing.
+`sha256(normalised email)`; the address itself is never written to disk, logged
+or sent anywhere else. Turning the checkbox off stores nothing.
 
 **Account-recovery requests.** The *Forgot your password?* form on the login screen stores exactly
 this, per request:
@@ -69,43 +67,41 @@ this, per request:
 - a 16-character hash of your IP address (the raw address is never written).
 
 It exists so the operator can reset the password by hand and answer you. Only the operator reads
-it; it is never sent to a third party. Entries older than 90 days are deleted, and the file is
-capped at 500 lines.
+it; it is never sent to a third party. Entries older than 90 days are deleted, and the store is
+capped at 500 entries.
 
 ## 3. What is never stored
 
 - **Audio is never written to disk.** The live examiner streams microphone audio
-  from your browser directly to Google; it does not pass through this server.
+  from your browser directly to Google; it does not pass through our server.
   Pronunciation clips are held in memory for the single Azure request and are
-  deleted in the same handler (`del audio`). No audio file, temporary file or
-  log entry is created.
+  deleted in the same handler. No audio file, temporary file or log entry is
+  created.
 - No writing or answer is logged in the audit log or in product events. The AI
   request sends the text you chose to correct and receives feedback; the text is
-  not persisted by this server beyond the request (the accepted result is saved
+  not persisted by the service beyond the request (the accepted result is saved
   in your own progress).
 - No email, phone, address, age, or government identifier is collected. The only
   exceptions are the opt-in email hash described in §2 and the optional contact you type into a
   recovery request; neither is used for anything else.
 - No advertising identifiers, no tracking pixels, no third-party analytics
-  script. Cloudflare may inject its Web Analytics beacon at the edge; this
-  instance's Content-Security-Policy blocks `static.cloudflareinsights.com`, so
-  the beacon never executes. The owner is also expected to keep Web Analytics
-  disabled in the Cloudflare dashboard.
+  script. The edge proxy may inject its own analytics beacon, but this service's
+  Content-Security-Policy blocks it, so it never executes in the app.
 
 **Speech recognition in the Speaking exam.** The exam transcript is written by
 the browser's own speech recogniser (`SpeechRecognition` / `webkitSpeechRecognition`,
-`en-GB`), not by this server. The application never records your voice and
+`en-GB`), not by our server. The application never records your voice and
 never uploads audio for recognition: no recording is created, no audio file is
-written, and no audio passes through this server. The recogniser belongs to the
+written, and no audio passes through our server. The recogniser belongs to the
 browser, and a browser may use its vendor's speech service to turn speech into
 text; that path belongs to the browser, not to this application. With no AI
 provider configured, the recognised text stays in the browser and is discarded
-when the exam closes. With a provider configured (the server's text key or your
+when the exam closes. With a provider configured (the service's text key or your
 own), only text leaves the browser: the last recognised candidate line goes to
-`/api/speaking/partner` for one reaction, and the transcript with its timings
-goes to `/api/speaking/report` only when you ask for a report. Neither request
-carries audio. The only Speaking features that send audio are the optional
-voices listed in §4.
+the partner endpoint for one reaction, and the transcript with its timings goes
+to the report endpoint only when you ask for a report. Neither request carries
+audio. The only Speaking features that send audio are the optional voices listed
+in §4.
 
 ## 4. Third parties that receive data
 
@@ -114,27 +110,27 @@ voices listed in §4.
 | **Cloudflare, Inc.** | Every public request | the full HTTP request **in plaintext** (TLS terminates at Cloudflare's edge), including headers, path, cookies and request bodies; your IP address | global edge network |
 | **Google Identity (OAuth)** | Only if you press “Continue with Google” | the authorization request (`openid email profile`), your Google account choice and the authorization code; the code is exchanged server-side and never stored | Google infrastructure outside Argentina |
 | **Google (Gemini Live)** | Speaking Parts 1–4 with the live examiner/partner | your microphone audio (16 kHz PCM), the examiner script, and the session token | Google infrastructure outside Argentina |
-| **Google (Gemini API)** | If the owner configures Gemini as the text provider, or for speaking-report generation | the text you asked to correct or the transcript you chose to analyse | Google infrastructure |
+| **Google (Gemini API)** | If the operator configures Gemini as the text provider, or for speaking-report generation | the text you asked to correct or the transcript you chose to analyse | Google infrastructure |
 | **DeepSeek** | Writing corrections and speaking reports, by default | the text you explicitly submitted for correction, plus the task type | DeepSeek infrastructure |
-| **Microsoft Azure AI Speech** | Pronunciation assessment, only when the owner has configured it | at most 10 seconds of audio per turn and, optionally, the reference sentence | Microsoft regional speech endpoints |
+| **Microsoft Azure AI Speech** | Pronunciation assessment, only when the operator has configured it | at most 10 seconds of audio per turn and, optionally, the reference sentence | Microsoft regional speech endpoints |
 
 Cloudflare sees requests at the edge, so it can read them even though the hop
-from Cloudflare to the Pi is encrypted. This is a property of terminating TLS at
-a CDN, not a hidden feature.
+from Cloudflare to the origin is encrypted. This is a property of terminating
+TLS at a CDN, not a hidden feature.
 
-**Google Gemini free tier.** If this instance uses a free-tier Google API key,
+**Google Gemini free tier.** If the service uses a free-tier Google API key,
 Google's terms allow it to use the content it receives to improve its products.
 Paid-tier API usage is excluded from that training use. Which tier is active
-depends on the key the owner configured; the application cannot detect or change
-it. This statement reflects Google's published Gemini API terms and is not a
-guarantee about Google's internal processing.
+depends on the key the operator configured; the application cannot detect or
+change it. This statement reflects Google's published Gemini API terms and is
+not a guarantee about Google's internal processing.
 
 **DeepSeek.** DeepSeek receives the writing text and may retain it under its own
 API terms. This application sends no account identifier with the request, but
 the provider sees the request from the server's address.
 
-**Azure** is used only when the owner has configured a speech key and region. If
-it is not configured, the endpoint answers `speech not configured` and
+**Azure** is used only when the operator has configured a speech key and region.
+If it is not configured, the endpoint answers `speech not configured` and
 pronunciation is reported as *not measured*; the app never invents that score.
 
 ## 5. Why each piece exists
@@ -147,7 +143,8 @@ pronunciation is reported as *not measured*; the app never invents that score.
   abuse, and to let an account holder see their own security events.
 - **Product events** — to find crashes and slow views. They are counts and
   truncated error messages, never content.
-- **Usage counters** — to enforce the fair-use limits of your plan.
+- **Usage counters** — to enforce the daily fair-use limits described in the
+  Terms.
 - **Recovery requests** — so a forgotten password can be reset by hand when there is no
   email to send a reset link to.
 
@@ -155,33 +152,31 @@ pronunciation is reported as *not measured*; the app never invents that score.
 
 | Data | Retention |
 | --- | --- |
-| Security audit log | 90 days, then removed by `tools/retention.py` |
+| Security audit log | 90 days, then removed by the operator's retention job |
 | Product events | 7 days (older files are deleted on write) |
 | Usage counters | 13 months |
 | Progress backups | the last 20 versions per account |
-| Progress, account, plan | until you delete the account |
+| Progress, account, usage | until you delete the account |
 | Session tokens | 30 days sliding, with a 90-day absolute ceiling |
-| Recovery requests | 90 days, pruned on the next request; file capped at 500 lines |
+| Recovery requests | 90 days, pruned on the next request; capped at 500 entries |
 | Audio | never stored |
 | Transcripts | until you delete them or the account |
 
-The limits above are enforced by `tools/retention.py`, an idempotent, cron-safe
-script that prints every deletion. It is written to run daily from cron; the
-repository ships the tool, and the host schedules it.
+The retention limits are enforced by an idempotent daily job on the server. It is
+not something you need to run.
 
 ## 7. Your rights, all self-service
 
 - **Export everything.** Click your avatar / stage badge in the top-right corner,
-  open **Account**, and press **Export my data** (or call `GET /api/export` with
-  your session). The JSON file contains your progress, plan, usage counters and
-  your own audit events.
+  open **Account**, and press **Export my data** (or call the export endpoint with
+  your session). The JSON file contains your progress, usage counters and your
+  own audit events.
 - **Delete the account.** Same **Account** panel → **Delete my account** → enter
-  your password and type `DELETE` (or `DELETE /api/account`). This removes the
-  user record, every session, the progress directory including backups, the plan
-  and usage rows, your Google link (`data/oauth.json`) and your passkeys
-  (`data/webauthn/<id>.json`). A final audit event records that an
-  account was deleted; it contains the account id, never the username.
-- **Clear your own provider key.** Open the **AI** tab → the **✨ AI provider**
+  your password and type `DELETE`. This removes the account record, every
+  session, the progress directory including backups, the usage row, your Google
+  link and your passkeys. A final audit event records that an account was
+  deleted; it contains the account id, never the username.
+- **Clear your own provider key.** Open **Settings** → the **AI provider**
   card → **Clear key**. A BYO key lives only in your browser's localStorage and
   is sent per request; it is never stored on the server.
 - **Recovery requests.** A request you filed from the login screen is deleted after at most 90
@@ -190,8 +185,8 @@ repository ships the tool, and the host schedules it.
 
 Because there is no email on file, a deleted account cannot be recovered. Export
 first if you want a copy. Deletion is immediate; the only surviving trace is the
-non-identifying audit line described above and the daily host backup, which the
-owner rotates out within 14 days.
+non-identifying audit line described above and the operator's daily backup,
+which is rotated out within 14 days.
 
 ## 8. Age
 
@@ -223,10 +218,8 @@ sends no product events at all. Every feature keeps working.
   `id_token` is verified against Google's published JWKS (RS256, `iss`, `aud`,
   `exp`, `nonce`) before the account is touched.
 - Login lockout and exponential backoff; per-IP and per-account rate limits.
-- The audit log is a SHA-256 hash chain; `tools/verify_audit.py` detects edited
-  or deleted lines.
-- Data files are `0600`, account directories `0700`, and the service binds to
-  loopback behind the Cloudflare tunnel.
+- The audit log is a SHA-256 hash chain; an edited or deleted line is detectable.
+- Data files are private to the service, and TLS terminates in front of it.
 
 No system is perfectly secure. See `/security` for the disclosure policy.
 

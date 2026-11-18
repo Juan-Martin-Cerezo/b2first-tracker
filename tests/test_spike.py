@@ -65,11 +65,11 @@ def reset_login_guard():
 # ---------------------------------------------------------------------------
 # 0. Defaults are the conservative NAT-friendly ones.
 # ---------------------------------------------------------------------------
-check("default_rate_ip_auth_120", S.RATE_IP_AUTH == 120, S.RATE_IP_AUTH)
-check("default_register_per_hour_20", S.REGISTER_PER_HOUR == 20, S.REGISTER_PER_HOUR)
-check("default_login_ip_per_10min_60", S.LOGIN_IP_PER_10MIN == 60,
+check("default_rate_ip_auth_240", S.RATE_IP_AUTH == 240, S.RATE_IP_AUTH)
+check("default_register_per_hour_30", S.REGISTER_PER_HOUR == 30, S.REGISTER_PER_HOUR)
+check("default_login_ip_per_10min_120", S.LOGIN_IP_PER_10MIN == 120,
       S.LOGIN_IP_PER_10MIN)
-check("default_rate_ip_anon_300", S.RATE_IP_ANON == 300, S.RATE_IP_ANON)
+check("default_rate_ip_anon_600", S.RATE_IP_ANON == 600, S.RATE_IP_ANON)
 
 # The per-account backoff is the primary brute-force guard and must not drift.
 BACKOFF = tuple(S.LOGIN_BACKOFF)
@@ -171,7 +171,7 @@ try:
           and isinstance(obj.get("retry_after"), int) and obj["retry_after"] >= 1,
           body[:120])
 finally:
-    S.RATE_IP_ANON = 300
+    S.RATE_IP_ANON = 600
     clear_rate()
 
 # ---------------------------------------------------------------------------

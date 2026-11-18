@@ -1,18 +1,20 @@
 # Security Policy — B2 First Tracker
 
-**Version 1.0** · Last updated: 2026-10-30 · Served live at `/security`
+**Version 1.1** · Last updated: 2026-11-18 · Served live at `/security`
 
 **Changelog**
 
+- 1.1 — 2026-11-18 · Hosted service: accounts and data live on the provider's
+  server. Host, network and internal paths removed from the public policy.
 - 1.0 — 2026-10-30 · First published security policy and disclosure process.
 
 ## 1. What this service is
 
-A self-hosted study application running on a single Raspberry Pi in Argentina.
-Public traffic reaches it through a **Cloudflare** tunnel; TLS terminates at
-Cloudflare's edge and a QUIC tunnel carries the request to the origin on
-`127.0.0.1`. The application itself is Python's standard library HTTP server —
-no framework, no database, no container orchestration.
+A hosted study service for the Cambridge B2 First. Students create an account at
+`https://firsttracker.app` and use the tracker from a browser. Accounts, progress
+and the application data live on the provider's server; nothing is installed on
+the student's machine. The application itself is Python's standard library HTTP
+server — no framework and no external database.
 
 ## 2. Reporting a vulnerability
 
@@ -43,43 +45,43 @@ not to.
 - Sessions: 192-bit random tokens; only `sha256(token)` is stored; 30-day sliding
   expiry capped by a 90-day absolute ceiling; every session is revoked on a
   password change; a User-Agent change is logged but not blocked.
-- Storage: `data/users.json`, `data/tokens.json`, `data/usage.json`,
-  `data/licenses.json` and `data/audit.log` are `0600`; per-account directories
-  are `0700`; writes are atomic (temporary file + rename).
-- Audit: append-only JSON lines with a SHA-256 hash chain. `tools/verify_audit.py`
-  exits non-zero if a line is edited or deleted. Retention is 90 days.
+- Storage: account data, session records, usage counters and the audit log are
+  private to the service; per-account directories are more restrictive; writes
+  are atomic (temporary file + rename).
+- Audit: append-only JSON lines with a SHA-256 hash chain. An edited or deleted
+  line is detectable. Retention is 90 days.
 - Access log: method, path, status, duration, request id and a truncated hash of
   the client address. Never the raw IP, never a token, never a request body.
 - Rate limits: registration, login (per IP and per username, with lockout and
   backoff), progress writes, AI calls and speaking minutes.
 - Transport: HSTS, no version banner, restrictive CSP, `X-Frame-Options: DENY`,
   `nosniff`, `no-referrer`, closed CORS, Host allowlist and path traversal
-  checks. Cloudflare sees plaintext requests at the edge (see `/privacy`).
+  checks. TLS terminates at the edge network in front of the service (see
+  `/privacy`).
 
 ## 4. What is intentionally not protected
 
-- **The host is the trust boundary.** Anyone with root on the Pi can read the
-  data. Disk encryption is not enabled.
+- **The server is the trust boundary.** Anyone with administrative access to the
+  host can read the stored data. Disk encryption is not part of the application.
 - **The AI providers receive what you send them.** Writing text goes to
   DeepSeek (or the configured provider); live speaking audio goes from your
   browser directly to **Google**; pronunciation clips go to Azure when enabled.
   Their handling is governed by their own terms.
-- **Cloudflare is in the request path.** It terminates TLS and can see request
-  bodies in plaintext.
+- **The edge provider is in the request path.** It terminates TLS and can see
+  request bodies in plaintext.
 - **No email recovery.** There is no address to send a reset link to; a user can file a manual
-  request from the login screen, but the password is only reset by the operator with local access
-  to the host.
-- **Backups are daily and rotated.** A deleted account can persist in a host
-  backup for up to 14 days.
+  request from the login screen, but the password is only reset by the operator.
+- **Backups are daily and rotated.** A deleted account can persist in a backup
+  for up to 14 days.
 
 ## 5. Scope
 
 In scope: authentication and session handling, access control between accounts,
 path traversal, request smuggling, injection, CSP bypasses, data exposure through
-`/api/*`, and leaks of secrets into logs or the audit file.
+the API, and leaks of secrets into logs or the audit file.
 
-Out of scope: findings that require root on the host, physical access, a
-compromised Cloudflare account, social engineering, and automated scanners'
+Out of scope: findings that require administrative access to the host, physical
+access, a compromised edge account, social engineering, and automated scanners'
 informational output without a demonstrated impact.
 
 ## 6. Disclosure

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""B2 First study portal — serves the tracker + material (PDF/audio) from the Pi.
+"""B2 First Tracker — hosted study service for the Cambridge B2 First.
 
-Access: http://127.0.0.1:8088 by default (B2_HOST); the public entrypoint is a TLS
-proxy in front of it (Tailscale Funnel). LAN access requires B2_HOST=0.0.0.0 and the
-nftables firewall remains the real barrier.
-Dynamically scans ~/Descargas/b2-first: any PDF/MP3/ZIP you add to that folder
-shows up on /libros (catalog with a search box) and on /libros.json (consumed
-by the LIBROS tab of the tracker).
+The app is served to signed-in accounts from the operator's server. Accounts and
+progress live on that server, never on the student's machine.
+Material: any PDF/MP3/ZIP added to the material folder shows up on /libros
+(catalog with a search box) and on /libros.json (consumed by the LIBROS tab).
 
 Endpoints:
   GET /            → landing.html (the public product page)
@@ -27,12 +25,10 @@ Endpoints:
                      account exists; no email is sent)
   GET /favicon.ico → 204 (does not exist, don't log a 404)
 
-Persistence: progress lives in <repo>/data/progress.json. Each PUT
-automatically backs up the previous version in <repo>/data/backups/
-(latest wins + backups). Data stays ONLY on this Pi, no auth (private network).
+Persistence: progress is stored per account with an atomic write and a rotated
+backup. Data stays on the operator's server.
 
 Dependencies: stdlib ONLY (http.server, os, re, html, mimetypes).
-Deploy: systemd unit b2first.service (Restart=always) in this dir.
 """
 import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets, threading, gzip
 import base64, binascii
@@ -53,7 +49,6 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
 import plans
-import billing
 import speech
 import speaking_prompts
 import speaking_report
@@ -196,7 +191,7 @@ BYO_KEY_MAX = 512                        # max key characters
 BYO_MODEL_MAX = 200                      # max model-id characters
 _BYO_MODEL_RE = re.compile(r"^[A-Za-z0-9._:/@+-]{1,%d}$" % BYO_MODEL_MAX)
 # Exact operator-controlled origins allowed without the public-https checks
-# (self-hosted gateways and the local stubs used by the test suites). Empty by
+# (local gateways and the local stubs used by the test suites). Empty by
 # default: a client-supplied base can never be trusted on its own.
 BYO_TRUSTED_BASES = tuple(
     item.strip().rstrip("/")
@@ -228,8 +223,8 @@ SPK_PA_DAILY_DEFAULT = 60            # calls per day per user
 SPK_TOKEN_TTL_S = 30 * 60            # expireTime: the session may send for 30 min
 SPK_TOKEN_NEW_SESSION_S = 60         # newSessionExpireTime: open it within 1 min
 SPK_TOKEN_RATE_PER_MIN = 10          # token mints per minute per user
-SPK_MIN_DAILY_DEFAULT = 20           # minutes per user per day
-SPK_MIN_DAILY_TOTAL_DEFAULT = 120    # minutes per instance per day
+SPK_MIN_DAILY_DEFAULT = 60           # minutes per user per day
+SPK_MIN_DAILY_TOTAL_DEFAULT = 600    # minutes per instance per day
 SPK_MINUTE_MAX_BODY = 4096           # POST /api/speaking/minute body cap
 SPK_MINUTE_MAX_CALL_S = 300          # max seconds accepted in one report
 SPK_PARTNER_MAX_BODY = 8000          # POST /api/speaking/partner body cap
@@ -283,7 +278,6 @@ def _route_body_cap(path):
         "/api/speaking/minute": SPK_MINUTE_MAX_BODY,
         "/api/speaking/partner": SPK_PARTNER_MAX_BODY,
         "/api/progress": PROGRESS_MAX_BYTES,
-        "/api/billing/webhook": BILLING_WEBHOOK_MAX_BYTES,
     }.get(path, B2_MAX_BODY)
 
 # Money guard. Google Cloud has no hard dollar cap: when the credit runs out the
@@ -304,7 +298,7 @@ SPK_TTS_CACHE_MAX = 40               # cached scripted lines, LRU by mtime
 SPK_WARM_MAX_LINES = 24              # lines one warm request may pre-generate
 
 # --- Phase C2: bounded concurrency towards the speaking upstream ------------
-# A Pi 5 serves one spoken turn per upstream request, and turn, TTS, report,
+# One spoken turn needs one upstream call, and turn, TTS, report,
 # partner and PA all spend the same provider key. Without a gate, 20 parallel
 # mocks park 20 threads on the upstream until the timeout, which ends in
 # provider 429s and a CPU spike. One global gate bounds the whole instance;
@@ -513,11 +507,11 @@ _RATE_STATS = {"user": 0, "ip": 0}  # cumulative 429s, exposed by /api/metrics
 # anti-flood ceilings only; the real brute-force protection is per account
 # (username lockout + exponential backoff below), which survives IP changes and
 # stays strict. All ceilings are env-tunable for the operator.
-RATE_USER_API = _env_int("B2_RATE_USER_API", 600)    # requests/min per user
-RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 120)      # login+register+password per IP/min
-RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 300))
-REGISTER_PER_HOUR = _env_int("B2_REGISTER_PER_HOUR", 20)   # signups per IP/hour
-LOGIN_IP_PER_10MIN = _env_int("B2_LOGIN_IP_PER_10MIN", 60)  # login POSTs per IP/10min
+RATE_USER_API = _env_int("B2_RATE_USER_API", 1200)   # requests/min per user
+RATE_IP_AUTH = _env_int("B2_RATE_IP_AUTH", 240)      # login+register+password per IP/min
+RATE_IP_ANON = _env_int("B2_RATE_IP_ANON", _env_int("B2_RATE_IP_API", 600))
+REGISTER_PER_HOUR = _env_int("B2_REGISTER_PER_HOUR", 30)   # signups per IP/hour
+LOGIN_IP_PER_10MIN = _env_int("B2_LOGIN_IP_PER_10MIN", 120)  # login POSTs per IP/10min
 AUTH_RATE_PATHS = (
     "/api/login", "/api/register", "/api/password",
     "/api/password-reset/request",
@@ -525,10 +519,6 @@ AUTH_RATE_PATHS = (
     "/api/webauthn/login/begin", "/api/webauthn/login/finish",
 )
 
-# Phase 33: Stripe callbacks are capped before a single byte is read. Stripe
-# events are small; 64 KB is generous and keeps a hostile upload cheap to refuse.
-BILLING_WEBHOOK_MAX_BYTES = 64 * 1024
-_BILLING_EVENT_LOCK = threading.Lock()   # idempotency check + apply + record
 
 
 def _rate_stat(kind):
@@ -964,24 +954,17 @@ def _login_delay(count):
     return LOGIN_BACKOFF[min(max(count, 1) - 1, len(LOGIN_BACKOFF) - 1)]
 
 
-# --- Daily AI quota + plans (phase 31) -------------------------------------
-# Two meters guard the owner's key:
-#   * the per-account allowance comes from the plan (plans.py: free 3/day,
-#     pro 60/month, byo unlimited to us); it is persisted in data/usage.json so
-#     a restart cannot hand out a fresh quota;
-#   * B2_AI_DAILY_TOTAL is the instance-wide daily ceiling, still in memory, so
-#     50 pro accounts cannot burn the Pi.
-# B2_AI_DAILY_PER_USER survives only as an explicit operator override.
-LICENSE_SECRET_MIN = 32
-LICENSE_ATTEMPTS_PER_HOUR = 5
+# --- Daily AI quota ----------------------------------------------------------
+# Two meters guard the operator's provider key:
+#   * a generous per-account daily allowance, persisted so a restart cannot hand
+#     out a fresh quota;
+#   * an instance-wide daily ceiling in memory, so one busy account group cannot
+#     drain the key.
+# B2_AI_DAILY_PER_USER and B2_AI_DAILY_TOTAL are the operator knobs.
+AI_DAILY_PER_USER_DEFAULT = 200
+AI_DAILY_TOTAL_DEFAULT = 1200
 _AI_QUOTA_LOCK = threading.Lock()
 _AI_QUOTA = {}  # {date iso: {"total": int, "users": {ip key: int}}}
-
-
-def _license_secret():
-    """B2_LICENSE_SECRET when usable, else "". Read per call (tests inject it)."""
-    value = (os.environ.get("B2_LICENSE_SECRET") or "").strip()
-    return value if len(value) >= LICENSE_SECRET_MIN else ""
 
 
 def _plan_for(uid, byo=False):
@@ -989,160 +972,22 @@ def _plan_for(uid, byo=False):
     return plans.effective_plan(uid, byo=byo)
 
 
-# --- Billing events (phase 33) ---------------------------------------------
-# A verified Stripe event is reduced to the handful of ids and statuses this
-# server understands. Nothing from the payload beyond those fields is copied
-# to disk, so a body that carried card data could not persist it.
-def _billing_object(event):
-    """The `data.object` of an event, or {} when the shape is unexpected."""
-    data = event.get("data") if isinstance(event, dict) else None
-    obj = data.get("object") if isinstance(data, dict) else None
-    return obj if isinstance(obj, dict) else {}
-
-
-def _billing_user_for(obj):
-    """Resolve the account an event belongs to (client ref, sub id, customer)."""
-    ref = obj.get("client_reference_id")
-    if isinstance(ref, str) and ref:
-        return ref
-    metadata = obj.get("metadata")
-    if isinstance(metadata, dict):
-        stamped = metadata.get("user_id")
-        if isinstance(stamped, str) and stamped:
-            return stamped
-    for value in (obj.get("subscription"), obj.get("id")):
-        if isinstance(value, str) and value.startswith("sub_"):
-            uid, _row = billing.find_by_subscription(value)
-            if uid:
-                return uid
-    customer = obj.get("customer")
-    if isinstance(customer, str) and customer:
-        uid, _row = billing.find_by_customer(customer)
-        if uid:
-            return uid
-    return ""
-
-
-def _billing_iso(value):
-    """ISO timestamp for a Stripe epoch value, or None."""
-    stamp = billing.epoch(value)
-    return billing.iso(stamp) if stamp is not None else None
-
-
-def _apply_billing_event(event, now=None):
-    """Apply one verified event; returns (type, uid, applied).
-
-    Only the documented types are handled. The row written is built from
-    allow-listed fields (ids, status, period end, grace) — never the payload.
-    """
-    kind = event.get("type") if isinstance(event, dict) else ""
-    if not isinstance(kind, str) or not kind:
-        return "", "", False
-    obj = _billing_object(event)
-    ts = time.time() if now is None else float(now)
-    uid = _billing_user_for(obj)
-    if not uid:
-        return kind, "", False
-    row = billing.get_sub(uid)
-
-    if kind == "checkout.session.completed":
-        new = dict(row)
-        customer = obj.get("customer")
-        sub = obj.get("subscription")
-        if isinstance(customer, str) and customer:
-            new["customer_id"] = customer
-        if isinstance(sub, str) and sub:
-            new["subscription_id"] = sub
-        # Only the ids are trusted here: the period end arrives with
-        # `customer.subscription.*`, and granting pro before it is known could
-        # leave an account paid forever if that event never lands.
-        new.setdefault("status", "pending")
-        new.setdefault("since", billing.iso(ts))
-        billing.put_sub(uid, new)
-        return kind, uid, True
-
-    if kind in ("customer.subscription.updated",
-                "customer.subscription.deleted"):
-        status = obj.get("status")
-        if kind.endswith("deleted"):
-            status = "canceled"
-        if not isinstance(status, str) or not status:
-            status = "active"
-        end = _billing_iso(obj.get("current_period_end"))
-        new = dict(row)
-        customer = obj.get("customer")
-        sub = obj.get("id")
-        if isinstance(customer, str) and customer:
-            new["customer_id"] = customer
-        if isinstance(sub, str) and sub:
-            new["subscription_id"] = sub
-        new["status"] = status
-        if end:
-            new["current_period_end"] = end
-        new["plan"] = billing.plan_from_subscription(status, end, ts)
-        if new["plan"] == "pro" and status in ("active", "trialing"):
-            new.pop("grace_until", None)
-        new.setdefault("since", billing.iso(ts))
-        billing.put_sub(uid, new)
-        return kind, uid, True
-
-    if kind == "invoice.payment_failed":
-        new = dict(row)
-        customer = obj.get("customer")
-        sub = obj.get("subscription")
-        if isinstance(customer, str) and customer:
-            new["customer_id"] = customer
-        if isinstance(sub, str) and sub:
-            new["subscription_id"] = sub
-        new["status"] = "past_due"
-        new["plan"] = "pro"
-        new["grace_until"] = billing.iso(ts + billing.GRACE_DAYS * 86400)
-        new.setdefault("since", billing.iso(ts))
-        billing.put_sub(uid, new)
-        return kind, uid, True
-
-    return kind, uid, False
-
-
-def _apply_billing_event_once(event):
-    """Idempotent wrapper: (type, uid, applied, duplicate), serialized.
-
-    The check, the apply and the ledger write happen under one lock, so two
-    concurrent deliveries of the same event id cannot both grant time.
-    """
-    event_id = event.get("id") if isinstance(event, dict) else ""
-    with _BILLING_EVENT_LOCK:
-        if isinstance(event_id, str) and event_id and billing.event_seen(event_id):
-            return "", "", False, True
-        kind, uid, applied = _apply_billing_event(event)
-        if isinstance(event_id, str) and event_id:
-            billing.record_event(event_id)
-        return kind, uid, applied, False
-
-
-def _legacy_per_user_cap():
-    """B2_AI_DAILY_PER_USER when the operator set it explicitly, else None.
-
-    New deployments leave it unset and rely on the plans. It is kept because
-    older units (and a few test suites) use it as an emergency hard cap.
-    """
-    raw = os.environ.get("B2_AI_DAILY_PER_USER")
-    if raw is None:
-        return None
+def _env_cap(name, default):
+    """A non-negative integer from the environment, or `default`."""
     try:
-        return max(0, int(raw))
-    except ValueError:
-        return None
+        return max(0, int(os.environ.get(name, str(default))))
+    except (TypeError, ValueError):
+        return default
+
+
+def _ai_per_user_cap():
+    """Daily LLM calls allowed for one account (B2_AI_DAILY_PER_USER)."""
+    return _env_cap("B2_AI_DAILY_PER_USER", AI_DAILY_PER_USER_DEFAULT)
 
 
 def _ai_quota_limits():
-    """(legacy per-account cap or None, instance-wide daily total)."""
-    def _int(name, default):
-        try:
-            return max(0, int(os.environ.get(name, str(default))))
-        except ValueError:
-            return default
-    return _legacy_per_user_cap(), _int("B2_AI_DAILY_TOTAL", 80)
+    """(per-account daily cap, instance-wide daily total)."""
+    return _ai_per_user_cap(), _env_cap("B2_AI_DAILY_TOTAL", AI_DAILY_TOTAL_DEFAULT)
 
 
 def _ai_quota_today():
@@ -1156,7 +1001,7 @@ def _ai_quota_today():
 
 def _ai_total_left():
     """Calls left today for the whole instance."""
-    _legacy, total = _ai_quota_limits()
+    _per_user, total = _ai_quota_limits()
     with _AI_QUOTA_LOCK:
         return total - _ai_quota_today()["total"]
 
@@ -1167,12 +1012,11 @@ def _ai_total_consume():
 
 
 def _ai_quota_left(quota_key):
-    """Anonymous (per-IP) calls left today; the free allowance unless overridden."""
-    legacy, _total = _ai_quota_limits()
-    cap = legacy if legacy is not None else plans.LIMITS["free"]["writing"]["limit"]
+    """Anonymous (per-IP) calls left today, against the same daily cap."""
+    per_user, _total = _ai_quota_limits()
     with _AI_QUOTA_LOCK:
         day = _ai_quota_today()
-        return max(0, cap - day["users"].get(quota_key, 0))
+        return max(0, per_user - day["users"].get(quota_key, 0))
 
 
 def _ai_quota_consume(quota_key):
@@ -1183,14 +1027,13 @@ def _ai_quota_consume(quota_key):
 
 
 def _ai_left_for(uid):
-    """LLM calls left for an account in its current window (GET /api/account)."""
-    legacy = _legacy_per_user_cap()
-    if legacy is not None:
-        return max(0, legacy - plans.writing_used(uid, "day"))
-    limits = _plan_for(uid)["limits"]["writing"]
+    """LLM calls left for an account today (GET /api/account)."""
+    plan = _plan_for(uid)
+    limits = plan["limits"]["writing"]
     if limits is None:
         return 1000000  # byo: the user's key pays, we do not meter it
-    return max(0, limits["limit"] - plans.writing_used(uid, limits["window"]))
+    cap = limits["limit"] if plan["plan"] == "owner" else _ai_per_user_cap()
+    return max(0, cap - plans.writing_used(uid, "day"))
 
 
 # --- Daily PA quota (same shape as the AI quota; protects the Azure key) ---
@@ -3399,8 +3242,7 @@ def change_password(user_id, current, new_password):
 def delete_user(user_id):
     """Remove the account: data dir, users.json record and every session token."""
     store.remove_user(user_id)
-    # Phase 31: a closed account leaves no plan, no usage and no license link
-    # behind (the code stays burnt: only the hash row survives, detached).
+    # A closed account leaves no usage row behind.
     plans.forget_user(user_id)
     # Phase 34: the Google link and any passkeys must not outlive the account.
     _oauth_forget_user(user_id)
@@ -3444,18 +3286,9 @@ def migrate_legacy():
 
 
 def read_user_progress(user_id):
-    """Return a user's progress, or {} if it does not exist.
-
-    The `plan` mirror is derived here on every read: data/plans.json is the
-    source of truth, the document only carries a copy for the UI to render.
-    """
+    """Return a user's progress, or {} if it does not exist."""
     data = store.get_progress(user_id)
-    data = data if data is not None else {}
-    if isinstance(data, dict):
-        plan = _plan_for(user_id)
-        data["plan"] = {"plan": plan["plan"], "since": plan["since"],
-                        "until": plan["until"], "source": plan["source"]}
-    return data
+    return data if data is not None else {}
 
 
 def save_user_progress(user_id, data):
@@ -3915,7 +3748,7 @@ def _validate_progress(data):
 # ---------------------------------------------------------------------------
 # /.well-known/security.txt (RFC 9116)
 # ---------------------------------------------------------------------------
-PUBLIC_BASE = os.environ.get("B2_PUBLIC_URL", "https://vps-server.tail40095b.ts.net").rstrip("/")
+PUBLIC_BASE = os.environ.get("B2_PUBLIC_URL", "https://firsttracker.app").rstrip("/")
 
 
 def security_txt():
@@ -4797,28 +4630,22 @@ class H(BaseHTTPRequestHandler):
                         {"Retry-After": str(retry)})
         return True
 
-    def _plan_limit_429(self, limit, plan, value, window, reset, uid):
-        """429 that names the plan, the limit and what unlocks more.
-
-        Never a dead end: `unlock` tells the client that `pro` (or a BYO key)
-        lifts the limit, which is what the limit modal offers.
-        """
-        _audit("plan_limit_hit", uid or "", _real_ip(self), self._rid,
-               {"limit": limit, "plan": plan})
+    def _limit_429(self, limit, value, window, reset, uid):
+        """429 for a daily fair-use limit. No upsell: a limit is just a limit."""
+        _audit("usage_limit_hit", uid or "", _real_ip(self), self._rid,
+               {"limit": limit})
         if limit == "speaking":
             _spk_stat("rate_limited_429")
         self._send_json(429, {
-            "error": "plan_limit",
+            "error": "limit_reached",
             "limit": limit,
-            "plan": plan,
             "limit_value": value,
             "window": window,
             "reset": reset,
-            "unlock": "pro",
         })
 
-    def _legacy_quota_429(self):
-        """The pre-phase-31 body, kept when B2_AI_DAILY_PER_USER is the blocker."""
+    def _daily_quota_429(self):
+        """The instance-wide daily ceiling, shared by every account."""
         reset = (date.today() + timedelta(days=1)).isoformat()
         self._send_json(429, {"error": "daily AI quota reached", "reset": reset})
 
@@ -4828,31 +4655,21 @@ class H(BaseHTTPRequestHandler):
         Checks only; the caller consumes right before the upstream call so a
         failed validation never burns quota.
         """
-        legacy = _legacy_per_user_cap()
         if uid:
             plan = _plan_for(uid)
             limits = plan["limits"]["writing"]
             if limits is None:
                 return True  # byo: their key pays, the hourly cap still applies
-            if legacy is not None:
-                if plans.writing_used(uid, "day") >= legacy:
-                    self._legacy_quota_429()
-                    return False
-            elif plans.writing_used(uid, limits["window"]) >= limits["limit"]:
-                self._plan_limit_429("writing", plan["plan"], limits["limit"],
-                                     limits["window"],
-                                     plans.reset_at(limits["window"]), uid)
+            cap = limits["limit"] if plan["plan"] == "owner" else _ai_per_user_cap()
+            if plans.writing_used(uid, "day") >= cap:
+                self._limit_429("writing", cap, "day", plans.reset_at("day"), uid)
                 return False
         elif _ai_quota_left("ip:" + ip) <= 0:
-            if legacy is None:
-                free = plans.LIMITS["free"]["writing"]
-                self._plan_limit_429("writing", "free", free["limit"],
-                                     free["window"], plans.reset_at(free["window"]), "")
-            else:
-                self._legacy_quota_429()
+            cap = _ai_per_user_cap()
+            self._limit_429("writing", cap, "day", plans.reset_at("day"), "")
             return False
         if _ai_total_left() <= 0:
-            self._legacy_quota_429()
+            self._daily_quota_429()
             return False
         return True
 
@@ -4866,15 +4683,13 @@ class H(BaseHTTPRequestHandler):
 
     def _speaking_gate(self, uid):
         """May this account mint one more mock? Replies and returns False if not."""
-        plan = _plan_for(uid)
-        limits = plan["limits"]["speaking"]
+        limits = _plan_for(uid)["limits"]["speaking"]
         if limits is None:
             return True
         used = plans.speaking_used(uid, limits["window"])
         if used["mocks"] >= limits["mocks"] or used["seconds"] >= limits["minutes"] * 60:
-            self._plan_limit_429("speaking", plan["plan"], limits["mocks"],
-                                 limits["window"],
-                                 plans.reset_at(limits["window"]), uid)
+            self._limit_429("speaking", limits["mocks"], limits["window"],
+                            plans.reset_at(limits["window"]), uid)
             return False
         return True
 
@@ -4891,7 +4706,7 @@ class H(BaseHTTPRequestHandler):
         Browsers send Origin (or at least Referer) on POST/PUT/DELETE. When it
         is present it must name this host; a mismatch is a cross-site request
         and gets 403. Requests with neither header are non-browser clients
-        (CLI, Stripe webhook) and are allowed. A request that carries Fetch
+        (CLI clients) and are allowed. A request that carries Fetch
         Metadata (Sec-Fetch-Site) is a browser and must prove it is our own
         page with X-Requested-With: b2first, the documented fallback.
         """
@@ -5027,11 +4842,6 @@ class H(BaseHTTPRequestHandler):
             return
         if path == "/api/progress" and self.command == "PUT" and clen > PROGRESS_MAX_BYTES:
             self._reject(413, {"error": "progress too large"})
-            return
-        if path == "/api/billing/webhook" and clen > BILLING_WEBHOOK_MAX_BYTES:
-            _audit("billing_webhook_rejected", "", _real_ip(self), self._rid,
-                   {"reason": "too_large"})
-            self._reject(413, {"error": "payload too large"})
             return
 
         # Rate limits: authenticated traffic is bucketed by user_id, everything
@@ -5569,7 +5379,7 @@ class H(BaseHTTPRequestHandler):
             self._send_json(200, {"ok": True, "removed": len(items) - len(kept)})
             return
 
-        # Phase 31: the plan behind the current account (auth, read-only).
+        # Service level and usage for the current account (auth, read-only).
         if path == "/api/plan":
             if self.command != "GET":
                 self._send_json(405, {"error": "method not allowed"})
@@ -5579,189 +5389,19 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(401, {"error": auth_err or "invalid session"})
                 return
             plan = _plan_for(uid)
-            usage = plans.usage_snapshot(uid, plan["limits"])
+            limits = plan["limits"]
+            if plan["plan"] == "service" and limits.get("writing") is not None:
+                limits = dict(limits)
+                limits["writing"] = dict(limits["writing"])
+                limits["writing"]["limit"] = _ai_per_user_cap()
+            usage = plans.usage_snapshot(uid, limits)
             self._send_json(200, {
                 "plan": plan["plan"],
-                "since": plan["since"],
-                "until": plan["until"],
                 "source": plan["source"],
-                "limits": plan["limits"],
+                "limits": limits,
                 "usage": usage,
                 "reset_at": usage["reset_at"],
             })
-            return
-
-        # Phase 31: redeem an activation code (auth, 5 attempts/hour/account).
-        # Every failure answers the same bytes: a caller cannot learn whether a
-        # code is wrong, expired, unknown or already used.
-        if path == "/api/plan/redeem":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._rate_limited("plan:redeem:user:" + uid,
-                                  LICENSE_ATTEMPTS_PER_HOUR, 3600, "user"):
-                return
-            length = self._clen()
-            if length > 4096:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            raw = self.rfile.read(length) if length > 0 else b""
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                code = req.get("code") if isinstance(req, dict) else ""
-            except (ValueError, UnicodeDecodeError):
-                code = ""
-            secret = _license_secret()
-            if not secret:
-                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
-                        f"rid={self._rid} plan/redeem disabled: B2_LICENSE_SECRET "
-                        f"missing or shorter than {LICENSE_SECRET_MIN} bytes\n")
-                with _LOG_LOCK:
-                    print(line, end="", flush=True)
-                self._send_json(503, {"error": "licenses_not_configured"})
-                return
-            found = plans.verify_code(code, secret)
-            row = plans.license_row(code) if found else None
-            if not found or (isinstance(row, dict) and row.get("redeemed_at")):
-                self._send_json(400, {"error": "invalid_code"})
-                return
-            rec = plans.set_plan(uid, found["plan"], found["days"], "code",
-                                 plans.code_hash(code))
-            plans.mark_redeemed(code, uid, rec["until"])
-            _audit("plan_redeemed", uid, _real_ip(self), self._rid,
-                   {"plan": found["plan"], "days": found["days"]})
-            self._send_json(200, {"ok": True, "plan": rec["plan"],
-                                  "until": rec["until"], "source": rec["source"]})
-            return
-
-        # ---- Phase 33: billing (Stripe Checkout, portal, signed webhooks) ----
-        if path == "/api/billing/status":
-            if self.command != "GET":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            plan = _plan_for(uid)
-            row = billing.get_sub(uid)
-            self._send_json(200, {
-                "plan": plan["plan"],
-                "source": plan["source"],
-                "renews_at": row.get("current_period_end"),
-                "status": row.get("status") or (plan["source"] if plan["plan"] == "pro" else None),
-                "grace_until": row.get("grace_until"),
-                "portal_available": bool(row.get("customer_id")) and billing.portal_ready(),
-                "billing_mode": billing.mode(),
-            })
-            return
-
-        if path == "/api/billing/checkout":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            self._drain()
-            if not billing.checkout_ready():
-                self._send_json(503, {"error": "billing_not_configured"})
-                return
-            cfg = billing.config()
-            idem = "%s-%s" % (uid, time.strftime("%Y-%m-%d", time.gmtime()))
-            try:
-                session = billing.create_checkout_session(
-                    uid, cfg["price_id"],
-                    cfg["public_url"] + "/app?billing=success",
-                    cfg["public_url"] + "/app?billing=cancel",
-                    idem)
-            except billing.BillingError:
-                _audit("billing_checkout_failed", uid, _real_ip(self), self._rid)
-                self._send_json(502, {"error": "billing_provider_error"})
-                return
-            url = session.get("url")
-            if not isinstance(url, str) or not url.startswith(("https://", "http://")):
-                _audit("billing_checkout_failed", uid, _real_ip(self), self._rid)
-                self._send_json(502, {"error": "billing_provider_error"})
-                return
-            _audit("billing_checkout", uid, _real_ip(self), self._rid,
-                   {"session": str(session.get("id") or "")[:64]})
-            self._send_json(200, {"url": url, "id": session.get("id")})
-            return
-
-        if path == "/api/billing/portal":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            self._drain()
-            if not billing.portal_ready():
-                self._send_json(503, {"error": "billing_not_configured"})
-                return
-            customer = billing.get_sub(uid).get("customer_id")
-            if not customer:
-                self._send_json(400, {"error": "no_subscription"})
-                return
-            try:
-                session = billing.create_portal_session(
-                    customer, billing.config()["public_url"] + "/app?billing=portal")
-            except billing.BillingError:
-                _audit("billing_portal_failed", uid, _real_ip(self), self._rid)
-                self._send_json(502, {"error": "billing_provider_error"})
-                return
-            url = session.get("url")
-            if not isinstance(url, str) or not url.startswith(("https://", "http://")):
-                self._send_json(502, {"error": "billing_provider_error"})
-                return
-            _audit("billing_portal", uid, _real_ip(self), self._rid)
-            self._send_json(200, {"url": url})
-            return
-
-        # No auth here: the signature is the credential. The body is never
-        # echoed, never logged and never applied twice for the same event id.
-        if path == "/api/billing/webhook":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            length = self._clen()
-            if length > BILLING_WEBHOOK_MAX_BYTES:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            if not billing.webhook_ready():
-                self._drain()
-                self._send_json(503, {"error": "billing_not_configured"})
-                return
-            raw = self.rfile.read(length) if length > 0 else b""
-            ok, event = billing.verify_webhook(
-                raw, self.headers.get("Stripe-Signature", ""),
-                billing.config()["webhook_secret"], time.time())
-            if not ok:
-                _audit("billing_bad_signature", "", _real_ip(self), self._rid,
-                       {"bytes": len(raw)})
-                self._send_json(400, {"error": "invalid_signature"})
-                return
-            kind, event_uid, applied, duplicate = _apply_billing_event_once(event)
-            if applied and event_uid:
-                _audit("billing_event", event_uid, _real_ip(self), self._rid,
-                       {"type": kind[:60]})
-            if kind == "invoice.payment_failed" and event_uid:
-                # Audit the account only: never amounts, never the invoice.
-                _audit("billing_payment_failed", event_uid, _real_ip(self), self._rid,
-                       {"status": "past_due"})
-            self._send_json(200, {"ok": True})
             return
 
         # Storage health check (no auth): 200 sane / 503 broken
@@ -6126,8 +5766,7 @@ class H(BaseHTTPRequestHandler):
                     # aiKey and any stray BYO block are dropped server-side too.
                     data["settings"].pop("aiKey", None)
                     data["settings"].pop("byo", None)
-                # The plan mirror is read-only: plans.json is the source of truth,
-                # so a client can never grant itself pro by PUTting the document.
+                # A client cannot add its own plan or usage row by PUTting one.
                 data.pop("plan", None)
                 if len(json.dumps(data, ensure_ascii=False).encode("utf-8")) > PROGRESS_MAX_BYTES:
                     self._send_json(413, {"error": "progress too large"}); return
@@ -6263,7 +5902,7 @@ class H(BaseHTTPRequestHandler):
             if not charged:
                 # One mock per exam, not per voice: the examiner and the partner
                 # are two tokens of the same test, and charging each one made a
-                # free account (1 mock/week) unable to open the second voice.
+                # account unable to open the second voice.
                 plans.speaking_add_mock(uid)
                 if session_id:
                     _spk_turn_session_mark(uid, session_id)
@@ -6588,14 +6227,16 @@ class H(BaseHTTPRequestHandler):
             _spk_month_add(float(seconds))   # feeds the monthly money guard
             plans.speaking_add_seconds(uid, seconds)
             per_user_min, _total_min = _spk_min_limits()
-            plan_limits = _plan_for(uid)["limits"]["speaking"]
-            plan_used = plans.speaking_used(uid, plan_limits["window"])
+            service_limits = _plan_for(uid)["limits"]["speaking"]
+            service_used = plans.speaking_used(uid, service_limits["window"]) \
+                if service_limits else {"seconds": 0}
             self._send_json(200, {
                 "remaining_s": _spk_remaining_s(uid),
                 "used_s": int(round(rec["seconds"])),
                 "cap_s": per_user_min * 60,
-                "plan_remaining_s": max(0, int(plan_limits["minutes"] * 60
-                                           - plan_used["seconds"])),
+                "plan_remaining_s": max(0, int(service_limits["minutes"] * 60
+                                           - service_used["seconds"]))
+                if service_limits else 0,
             })
             return
 
@@ -6780,8 +6421,8 @@ class H(BaseHTTPRequestHandler):
                     # No shared text-model key: fail before spending a quota unit.
                     self._send_json(503, {"error": "ai_not_configured"})
                     return
-                # The report is an LLM call, so it shares the writing allowance
-                # (free: 3/day, pro: 60/month). No separate counter to drift.
+                # The report is an LLM call, so it shares the daily writing
+                # allowance. No separate counter to drift.
                 if not self._writing_gate(uid, _real_ip(self)):
                     return
             # Only the candidate's own turns are graded. Examiner and partner
@@ -7162,8 +6803,8 @@ class H(BaseHTTPRequestHandler):
                 if not api_key:
                     self._send_json(502, {"error": "missing provider key"})
                     return
-                # Phase 31: the plan decides the allowance (free 3/day, pro
-                # 60/month); B2_AI_DAILY_TOTAL still caps the whole instance.
+                # The per-account daily allowance and the instance ceiling
+                # guard the operator's key.
                 if not self._writing_gate(auth_uid, client_ip):
                     return
                 self._writing_consume(auth_uid, client_ip)
@@ -7350,7 +6991,7 @@ class H(BaseHTTPRequestHandler):
 # Startup
 # ---------------------------------------------------------------------------
 class B2HTTPServer(ThreadingHTTPServer):
-    """ThreadingHTTPServer tuned for hundreds of students on one Pi 5.
+    """ThreadingHTTPServer tuned for hundreds of concurrent students.
 
     daemon_threads=True so a restart never waits on idle keep-alive threads;
     a 256-deep accept backlog absorbs bursts above the 512 live-connection cap.

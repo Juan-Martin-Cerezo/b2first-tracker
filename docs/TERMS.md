@@ -1,24 +1,25 @@
 # Terms of Use — B2 First Tracker
 
-**Version 1.1** · Last updated: 2026-11-02 · Served live at `/terms`
+**Version 1.2** · Last updated: 2026-11-18 · Served live at `/terms`
 
 **Changelog**
 
+- 1.2 — 2026-11-18 · Hosted service: accounts live on the provider's server, there
+  is no purchase flow, and the fair-use limits are stated plainly.
 - 1.1 — 2026-11-02 · Account recovery: reset requests from the login screen, manual
   reset by the operator, 90-day retention of requests.
 - 1.0 — 2026-10-30 · First complete version: acceptable use, fair-use limits,
   provider costs, availability and liability.
 
-These terms govern your use of this self-hosted B2 First Tracker instance. By
-creating an account you accept them, together with the Privacy Policy at
-`/privacy`.
+These terms govern your use of the hosted B2 First Tracker service at
+`https://firsttracker.app`. By creating an account you accept them, together with
+the Privacy Policy at `/privacy`.
 
 ## 1. The service
 
-B2 First Tracker is a personal study tool for the Cambridge B2 First exam. It is
-hosted on a single Raspberry Pi in Argentina, reachable through a Cloudflare
-tunnel. It is provided free of charge and **as is**, with no service-level
-agreement.
+B2 First Tracker is a hosted study tool for the Cambridge B2 First exam. Accounts
+and progress live on the provider's server, and you use the app from a browser.
+The service is provided **as is**, with no service-level agreement.
 
 ## 2. No guarantee of a Cambridge score or result
 
@@ -44,16 +45,18 @@ authoritative result is the one issued by Cambridge.
 
 ## 4. Fair use and limits
 
-The free plan includes a limited number of AI writing corrections per day and
-one speaking mock per week, plus per-account and per-instance daily ceilings.
-The exact numbers are shown in the app and enforced on the server. Automated
-scraping, credential stuffing, deliberately exhausting quotas, or using the AI
-endpoint for anything other than your own study is prohibited.
+Every account has the full service. To keep the AI provider costs predictable,
+the service applies **reasonable daily limits** to writing corrections and
+speaking practice; the current meter is visible under **Settings → Usage
+limits**. Limits reset on their own and never change the work already saved in
+your account.
 
-The owner may change the limits, the available models or the plans with notice
-in the app or in this document. Continued use after a change means you accept
-the new limits. Paid plans, when offered, are governed by the purchase terms
-shown at the time of purchase.
+Automated scraping, credential stuffing, deliberately exhausting quotas, or using
+the AI endpoint for anything other than your own study is prohibited.
+
+The operator may change the limits or the available models with notice in the app
+or in this document. Continued use after a change means you accept the new
+limits.
 
 ## 5. Your own provider key (BYO)
 
@@ -65,15 +68,15 @@ If you connect your own AI provider key, you are solely responsible for:
   reimburse provider usage when a BYO key is in use.
 
 The key is kept in your browser's localStorage and sent only with your own
-requests. **Clear key** in the AI tab removes it from that browser; the server
-never stores it.
+requests. **Clear key** in the AI provider card removes it from that browser; the
+server never stores it.
 
 ## 6. Third-party services
 
-The app uses **Cloudflare** to terminate TLS and reach this host,
-**Google** for live speaking audio and, optionally, text generation,
+The app uses **Google** for live speaking audio and, optionally, text generation,
 **DeepSeek** for writing corrections by default, and **Microsoft Azure** for
-pronunciation only when the owner configures it. Their availability, pricing and
+pronunciation only when the operator configures it. The hosting and edge network
+providers deliver the HTTP request to the service. Their availability, pricing and
 policies are outside this service's control. An outage of any of them may disable
 the related feature.
 
@@ -87,9 +90,9 @@ personal data.
 
 ## 8. Availability, changes and termination
 
-- The host may be offline for maintenance, updates, power cuts or network
-  problems. There is no uptime commitment.
-- The owner may modify or discontinue features. Material changes are announced
+- The service may be offline for maintenance, updates or network problems. There
+  is no uptime commitment.
+- The operator may modify or discontinue features. Material changes are announced
   in the app.
 - You may stop using the service at any time. **Export my data** and **Delete my
   account** in the Account panel are immediate and self-service.
@@ -98,16 +101,16 @@ personal data.
 
 To the maximum extent permitted by Argentine law, the service is provided
 without warranties of any kind, express or implied, including fitness for a
-particular purpose and non-infringement. The owner is not liable for indirect,
+particular purpose and non-infringement. The operator is not liable for indirect,
 incidental or consequential damages, for lost study time, for an exam result, or
 for costs charged by a provider you connected yourself. Nothing in these terms
 excludes liability that cannot be excluded by law.
 
 ## 10. Privacy
 
-Data handling is described in the Privacy Policy at `/privacy`. In short: progress
-and account data stay on this host; audio is never stored; no data is sold and
-there is no advertising or tracking.
+Data handling is described in the Privacy Policy at `/privacy`. In short: account
+and progress data stay on the provider's server; audio is never stored; no data is
+sold and there is no advertising or tracking.
 
 ## 11. Governing law and contact
 

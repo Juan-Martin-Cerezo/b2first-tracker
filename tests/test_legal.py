@@ -105,9 +105,9 @@ check("L2_cache_5_min",
           for r in (privacy, terms, security)),
       str([r.headers.get("cache-control") for r in (privacy, terms, security)]))
 VERSIONS = {
-    "privacy": ("Version 1.2", "Last updated: 2026-11-04"),
-    "terms": ("Version 1.1", "Last updated: 2026-11-02"),
-    "security": ("Version 1.0", "Last updated: 2026-10-30"),
+    "privacy": ("Version 1.3", "Last updated: 2026-11-18"),
+    "terms": ("Version 1.2", "Last updated: 2026-11-18"),
+    "security": ("Version 1.1", "Last updated: 2026-11-18"),
 }
 for label, r in (("privacy", privacy), ("terms", terms), ("security", security)):
     body = r.text
@@ -115,8 +115,7 @@ for label, r in (("privacy", privacy), ("terms", terms), ("security", security))
     check(f"L3_{label}_version",
           version in body and updated in body,
           body[:120])
-    check(f"L4_{label}_names_cloudflare_google",
-          "Cloudflare" in body and "Google" in body)
+    check(f"L4_{label}_names_google", "Google" in body)
 
 pbody = privacy.text
 check("L5_privacy_deepseek", "DeepSeek" in pbody)
@@ -179,26 +178,21 @@ exp = req("GET", "/api/export", token=token)
 body = exp.json()
 check("S5_export_complete",
       exp.status_code == 200 and body.get("log") and "account" in body
-      and "usage" in body and "audit" in body and "plan" in body,
+      and "usage" in body and "audit" in body and "plan" not in body,
       f"{exp.status_code} keys={sorted(body)[:12]}")
 check("S6_export_no_secrets",
       "hash" not in body["account"] and "salt" not in body["account"]
       and token not in exp.text)
 
 # ---------------------------------------------------------------------------
-# 5. Plant usage + licence rows, then delete the account.
+# 5. Plant a usage row, then delete the account.
 # ---------------------------------------------------------------------------
 S.plans = __import__("plans")
 plans = S.plans
 plans.writing_consume(uid)
-code = "FT-PRO-1M-AAAA-BBBB-CCCC"
-plans.record_issue(code, "pro", 30)
-plans.mark_redeemed(code, uid, "2026-12-01T00:00:00Z")
 
 before_user_dir = os.path.join(_tmp, "users", uid)
-check("S7_fixtures_present",
-      os.path.isdir(before_user_dir)
-      and any(v.get("user_id") == uid for v in plans._licenses().values()))
+check("S7_fixtures_present", os.path.isdir(before_user_dir))
 
 deleted = req("DELETE", "/api/account", {"password": password}, token=token)
 check("S8_delete_200", deleted.status_code == 200, f"{deleted.status_code} {deleted.text[:120]}")
@@ -206,11 +200,8 @@ check("S8_delete_200", deleted.status_code == 200, f"{deleted.status_code} {dele
 check("S9_user_dir_gone", not os.path.exists(before_user_dir))
 tokens = json.load(open(os.path.join(_tmp, "tokens.json"), encoding="utf-8"))
 usage = json.load(open(os.path.join(_tmp, "usage.json"), encoding="utf-8"))
-licences = json.load(open(os.path.join(_tmp, "licenses.json"), encoding="utf-8"))
 check("S10_no_token", not any(v.get("user_id") == uid for v in tokens.values()))
 check("S11_no_usage", uid not in usage.get("accounts", {}))
-check("S12_no_license_link",
-      not any(v.get("user_id") == uid for v in licences.values()))
 
 hits = []
 for path, text in read_tree(_tmp):

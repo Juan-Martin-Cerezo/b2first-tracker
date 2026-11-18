@@ -1,9 +1,8 @@
-"""Phase 95: Language and Subscription moved into Settings.
+"""Language and usage limits live in Settings, and there is nothing to buy.
 
-Both cards keep their ids and all their behaviour, but they no longer live in
-PLAN. Switching language from the Settings panel still translates the UI, the
-activation code still redeems from there and the subscription button still
-opens the same checkout.
+The two cards keep their ids and their behaviour, but they no longer live in
+PLAN. Switching language from Settings still translates the UI, and the usage
+card shows the daily meter without any activation-code field or checkout button.
 """
 import json
 
@@ -51,10 +50,13 @@ with sync_playwright() as p:
     plan_text = pg.evaluate("document.getElementById('v-plan').innerText").lower()
     assert "language" not in plan_text, f"PLAN still shows Language: {plan_text[:120]}"
     assert "subscription" not in plan_text, f"PLAN still shows Subscription: {plan_text[:120]}"
+    assert "usage limits" not in plan_text, f"PLAN still shows usage limits: {plan_text[:120]}"
     OUT["2_plan_text"] = plan_text[:120]
 
     # 3. Open Settings: the language switch translates the UI as before.
-    pg.click("#settingsBtn")
+    pg.click("#userChip")
+    pg.wait_for_timeout(200)
+    pg.click("#acctSettingsBtn")
     pg.wait_for_timeout(200)
     assert pg.is_visible("#languageCard"), "the language card is not visible in Settings"
     pg.click("#langEsBtn")
@@ -73,50 +75,27 @@ with sync_playwright() as p:
     assert pg.eval_on_selector("#sideNav", "el => el.textContent").count("Today") >= 1
     OUT["3_language"] = "en<->es from Settings"
 
-    # 4. Redeeming a code answers from the Subscription card in Settings.
-    pg.route(
-        "**/api/plan/redeem",
-        lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            body=json.dumps({"plan": {"tier": "pro", "until": "2026-12-31"}}),
-        ),
+    # 4. The usage card has a meter and no purchase or redemption controls.
+    removed = pg.evaluate(
+        """() => ['planCode', 'planRedeemBtn', 'planSubscribeBtn', 'planPortalBtn',
+                   'planRedeemStatus', 'planBillingStatus']
+            .filter(id => !!document.getElementById(id))"""
     )
-    pg.fill("#planCode", "FT-PRO-TEST-CODE")
-    pg.click("#planRedeemBtn")
-    pg.wait_for_timeout(600)
-    status = pg.inner_text("#planRedeemStatus")
-    assert "Activated" in status, f"redeem did not answer from Settings: {status!r}"
-    pg.unroute("**/api/plan/redeem")
-    OUT["4_redeem"] = status
+    assert removed == [], f"purchase controls still in Settings: {removed}"
+    meters = pg.evaluate(
+        """() => ['planWriteBar', 'planSpeakBar']
+            .filter(id => !document.getElementById(id))"""
+    )
+    assert meters == [], f"usage meters are missing: {meters}"
+    OUT["4_usage_card"] = {"removed": removed, "meters": True}
 
-    # 5. The subscribe button opens the same checkout from Settings.
-    seen = {"called": False}
-
-    def checkout(route):
-        seen["called"] = True
-        route.fulfill(
-            status=503,
-            content_type="application/json",
-            body=json.dumps({"error": "billing_not_configured"}),
-        )
-
-    pg.route("**/api/billing/checkout", checkout)
-    pg.click("#planSubscribeBtn")
-    pg.wait_for_timeout(600)
-    billing = pg.inner_text("#planBillingStatus")
-    assert seen["called"], "the subscribe button did not call the checkout endpoint"
-    assert "not configured" in billing.lower(), f"no checkout answer in Settings: {billing!r}"
-    pg.unroute("**/api/billing/checkout")
-    OUT["5_checkout"] = billing
-
-    # 6. The panel still shows all three cards together after using them.
+    # 5. The panel still shows both cards together.
     still = pg.evaluate(
         """() => ['byoCard', 'languageCard', 'planStatusCard'].every(id =>
             document.getElementById('settingsModal').contains(document.getElementById(id)))"""
     )
-    assert still, "a card left the Settings panel after being used"
-    OUT["6_cards_together"] = True
+    assert still, "a card left the Settings panel"
+    OUT["5_cards_together"] = True
 
     assert page_errors == [], f"page errors: {page_errors}"
     OUT["errors"] = page_errors

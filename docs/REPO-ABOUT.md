@@ -3,10 +3,10 @@
 Paste these exact values into the repository's **About** settings. Do not call the API from a
 script; confirm them by hand.
 
-**Description** (136 characters, limit 160)
+**Description** (118 characters, limit 160)
 
 ```
-Self-hosted study system for the Cambridge B2 First: writing marked against the four Cambridge bands, a daily plan and visible progress.
+Hosted study system for the Cambridge B2 First: writing marked against the four Cambridge bands, a daily plan and visible progress.
 ```
 
 **Website**
@@ -23,7 +23,7 @@ b2-first
 fce
 english-learning
 exam-prep
-self-hosted
+hosted-service
 python
 vanilla-js
 single-file

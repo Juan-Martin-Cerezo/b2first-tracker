@@ -25,8 +25,9 @@ Phase 36 adds the turn-based voice contract, all against a stubbed Gemini:
      stop-talking → first-audio latency is printed (flagged when > 4000 ms).
  10. A 30 s payload is refused with 413 before any decoding or upstream call.
  11. Nothing is stored: the transcript text never appears anywhere under data/.
- 12. The free plan allows 1 mock a week (2nd session → 429 plan_limit); the
-     owner is never limited.
+ 12. The service allows a configurable number of mocks a day; with the cap
+     set to 1 the 2nd session gets 429 limit_reached and the owner is never
+     limited.
  13. The UI shows the turn note and never advertises "real-time" wording.
 
 Phase 38 adds the two voices (fast = device speech, natural = Gemini TTS):
@@ -429,23 +430,27 @@ def main():
     assert len(TextModelStub.calls) == before_calls, "a rejected payload reached Gemini"
     out["10_413"] = {"status": status, "error": body.get("error")}
 
-    # --- 12. Quota: free is 1 mock a week, the owner is never limited -------
+    # --- 12. Daily mock cap: with it set to 1 the second one is refused -----
     from helpers import _ensure_account, _api
 
     _ensure_account(URL + "/", "turn-free", "turn-free-pass-9")
     free = _api(URL + "/", "api/login",
                 {"name": "turn-free", "password": "turn-free-pass-9"})
     free_token = free["token"]
-    status, body = api("/api/speaking/turn", turn_body("free-a"), free_token)
-    assert status == 200, (status, body)
-    status, body = api("/api/speaking/turn", turn_body("free-b"), free_token)
-    assert status == 429, (status, body)
-    assert body.get("error") == "plan_limit" and body.get("limit") == "speaking", body
-    assert body.get("plan") == "free" and body.get("unlock") == "pro", body
+    _orig_mocks = S.plans.LIMITS["service"]["speaking"]["mocks"]
+    S.plans.LIMITS["service"]["speaking"]["mocks"] = 1
+    try:
+        status, body = api("/api/speaking/turn", turn_body("free-a"), free_token)
+        assert status == 200, (status, body)
+        status, body = api("/api/speaking/turn", turn_body("free-b"), free_token)
+        assert status == 429, (status, body)
+        assert body.get("error") == "limit_reached" and body.get("limit") == "speaking", body
+    finally:
+        S.plans.LIMITS["service"]["speaking"]["mocks"] = _orig_mocks
     for session in ("owner-a", "owner-b", "owner-c"):
         status, body = api("/api/speaking/turn", turn_body(session), owner_token)
         assert status == 200, "owner was limited on %s: %r %r" % (session, status, body)
-    out["12_quota"] = {"second_free": 429, "owner_sessions": 3}
+    out["12_quota"] = {"second_day": 429, "owner_sessions": 3}
 
     # --- 37A. It listens: two answers -> two answer-aware replies -----------
     # Eight turns in: only the last six may reach the model (rolling window).
