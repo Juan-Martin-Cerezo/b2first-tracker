@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <script>
-/* A visitor with a session skips the pitch and lands in the app. Runs before
-   first paint so the landing never flashes for a logged-in user. */
+/* A visitor with an active session skips the landing page and enters /app. */
 (function(){
   try{
     var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
@@ -13,11 +12,11 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>B2 First Tracker — writing marked, a plan for today</title>
-<meta name="description" content="Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Create an account and start.">
+<title>B2 First Tracker — Cambridge B2 First self-study</title>
+<meta name="description" content="Cambridge B2 First (FCE) preparation: 12-item diagnostic, prioritized daily sessions, writing marked on the four Cambridge bands, and 4-part speaking practice.">
 <link rel="canonical" href="https://firsttracker.app/">
-<meta property="og:title" content="B2 First Tracker — writing marked, a plan for today">
-<meta property="og:description" content="Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Create an account and start.">
+<meta property="og:title" content="B2 First Tracker — Cambridge B2 First self-study">
+<meta property="og:description" content="Cambridge B2 First (FCE) preparation: 12-item diagnostic, prioritized daily sessions, writing marked on the four Cambridge bands, and 4-part speaking practice.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://firsttracker.app/">
 <meta property="og:image" content="https://firsttracker.app/assets/og.png">
@@ -29,14 +28,13 @@
 <meta name="twitter:image" content="https://firsttracker.app/assets/og.png">
 <meta name="twitter:image:alt" content="B2 First Tracker — someone finally marks your writing.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Cambridge B2 First (FCE) self-study: AI-marked writing against the four Cambridge bands, a daily practice plan and progress charts. Create an account and start."}
+{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Cambridge B2 First (FCE) preparation: 12-item diagnostic, adaptive weekly plan, writing marked on the four Cambridge bands, and 4-part speaking practice."}
 </script>
 <link rel="icon" type="image/png" href="/assets/logo-512.png">
 <link rel="apple-touch-icon" href="/assets/logo-512.png">
 <meta name="theme-color" id="metaTheme" content="#fbfcfd">
 <script>
-/* Theme before first paint: an explicit choice wins, otherwise the OS
-   preference decides, so the landing never flashes the wrong palette. */
+/* Apply saved or OS theme before first paint. */
 (function(){
   try{
     var t=localStorage.getItem('b2first_theme');
@@ -53,107 +51,74 @@
 </script>
 <style>
 /* ================================================================
-   DESIGN TOKENS
-   Colour: oklch, two themes, every token defined in both blocks.
-   One accent (--acc) with three variants: --acc-soft (tinted
-   surface), --acc-line (tinted hairline), --acc-text (accent used
-   as text; equals --acc, kept as its own name so text use is
-   greppable). Contrast of every text token >= 4.5:1 on --bg,
-   --surface, --inset, --tint and --acc-soft, in both themes.
+   DESIGN TOKENS (matched to landing/app oklch system)
    ================================================================ */
 :root, :root[data-theme="light"]{
   color-scheme:light;
-  /* surfaces: base → card → inset */
   --bg: oklch(0.99 0.003 250);
   --surface: oklch(1 0 0);
   --inset: oklch(0.965 0.006 255);
-  /* hairlines: ink at 10 % / 16 % */
   --line: oklch(0.22 0.02 260 / 0.10);
   --line-2: oklch(0.22 0.02 260 / 0.16);
-  /* text: 16.8 / 7.2 / 5.8 :1 on --bg */
   --txt: oklch(0.22 0.015 260);
   --txt-2: oklch(0.45 0.015 260);
-  --txt-3: oklch(0.50 0.012 260);
-  /* the one accent: 5.5:1 on --bg, 4.9:1 on --acc-soft */
+  --txt-3: oklch(0.48 0.012 260);
   --acc: oklch(0.52 0.18 260);
   --acc-soft: oklch(0.95 0.03 260);
   --acc-line: oklch(0.80 0.08 260);
   --acc-text: var(--acc);
   --on-acc: oklch(1 0 0);
-  /* alternate section surface: --acc-soft at 40 % over --bg */
   --tint: color-mix(in oklch, var(--acc-soft) 40%, var(--bg));
-  /* hero atmosphere (decorative only) */
-  --glow-warm: oklch(0.88 0.08 65 / 0.55);
-  --glow-cold: oklch(0.84 0.09 260 / 0.55);
+  --glow-warm: oklch(0.88 0.08 65 / 0.45);
+  --glow-cold: oklch(0.84 0.09 260 / 0.45);
   --tex: oklch(0.22 0.02 260 / 0.045);
-  --hi: oklch(1 0 0 / 0.9);           /* 1px top highlight on raised cards */
-  --nav-bg: oklch(0.99 0.003 250 / 0.82);
-  /* elevation: e1 = hairline, e2 = hairline + soft two-layer shadow */
+  --hi: oklch(1 0 0 / 0.9);
+  --nav-bg: oklch(0.99 0.003 250 / 0.88);
   --e1: 0 0 0 1px var(--line);
   --e2:
     0 0 0 1px var(--line),
     0 2px 4px -2px oklch(0.3 0.04 260 / 0.10),
-    0 18px 40px -18px oklch(0.3 0.06 260 / 0.26);
-  --m-main-shadow:
-    inset 0 1px 0 var(--hi),
-    0 0 0 1px var(--line),
-    0 2px 8px -2px oklch(0.3 0.04 260 / 0.08);
-  --m-float-shadow:
-    inset 0 1px 0 var(--hi),
-    0 0 0 1px oklch(0 0 0 / 0.06),
-    0 12px 24px oklch(0 0 0 / 0.10);
+    0 18px 40px -18px oklch(0.3 0.06 260 / 0.22);
   --img-outline: oklch(0 0 0 / 0.1);
 }
 :root[data-theme="dark"]{
   color-scheme:dark;
-  /* dark is its own design: three lifted surfaces 0.18 / 0.22 / 0.26 */
   --bg: oklch(0.18 0.012 260);
   --surface: oklch(0.22 0.012 260);
   --inset: oklch(0.26 0.013 260);
-  /* hairlines: white at 12 % / 18 % */
   --line: oklch(1 0 0 / 0.12);
   --line-2: oklch(1 0 0 / 0.18);
   --txt: oklch(0.96 0.005 260);
-  --txt-2: oklch(0.80 0.012 260);
-  --txt-3: oklch(0.70 0.012 260);
-  /* accent gains luminosity in the dark */
+  --txt-2: oklch(0.82 0.012 260);
+  --txt-3: oklch(0.74 0.012 260);
   --acc: oklch(0.78 0.12 255);
   --acc-soft: oklch(0.30 0.06 260);
   --acc-line: oklch(0.50 0.10 260);
   --acc-text: var(--acc);
   --on-acc: oklch(0.18 0.02 260);
   --tint: color-mix(in oklch, var(--acc-soft) 40%, var(--bg));
-  --glow-warm: oklch(0.40 0.06 55 / 0.28);
-  --glow-cold: oklch(0.42 0.12 262 / 0.55);
+  --glow-warm: oklch(0.40 0.06 55 / 0.24);
+  --glow-cold: oklch(0.42 0.12 262 / 0.45);
   --tex: oklch(1 0 0 / 0.04);
   --hi: oklch(1 0 0 / 0.10);
-  --nav-bg: oklch(0.18 0.012 260 / 0.80);
+  --nav-bg: oklch(0.18 0.012 260 / 0.86);
   --e1: 0 0 0 1px var(--line);
   --e2:
     0 0 0 1px var(--line),
     0 2px 4px -2px oklch(0 0 0 / 0.40),
-    0 24px 48px -24px oklch(0 0 0 / 0.70);
-  --m-main-shadow:
-    inset 0 1px 0 var(--hi),
-    0 0 0 1px var(--line),
-    0 4px 12px -4px oklch(0 0 0 / 0.35);
-  --m-float-shadow:
-    inset 0 1px 0 var(--hi),
-    0 0 0 1px oklch(1 0 0 / 0.14),
-    0 12px 24px oklch(0 0 0 / 0.45);
+    0 24px 48px -24px oklch(0 0 0 / 0.65);
   --img-outline: oklch(1 0 0 / 0.1);
 }
 
 :root{
   --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* space: 4 / 8 / 12 / 16 / 24 / 32 / 48 / 64 / 96 / 128 */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
-  --sp-8: 32px; --sp-12: 48px; --sp-16: 64px; --sp-24: 96px; --sp-32: 128px;
-  --section-y: clamp(72px, 9vw, 144px);
+  --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+  --section-y: clamp(64px, 8vw, 112px);
 
-  /* type: 12 (eyebrow only) / 13 floor / 14 / 16 body / 18 / 20 / 24 / 32 / 40 / 56 / 72 */
   --fs-12: 0.75rem;
   --fs-13: 0.8125rem;
   --fs-14: 0.875rem;
@@ -163,22 +128,16 @@
   --fs-24: clamp(1.25rem, 1.12rem + 0.55vw, 1.5rem);
   --fs-32: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
   --fs-40: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
-  --fs-56: clamp(2rem, 1.3rem + 3vw, 3.5rem);
-  --fs-72: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
-  --fs-display: clamp(36px, 5.4vw, 76px);
+  --fs-display: clamp(34px, 4.8vw, 64px);
 
-  /* radii: 10 controls / 16 cards / 999 pills */
   --r-ctl: 10px;
   --r-card: 16px;
   --r-pill: 999px;
 
-  /* motion: 160–240 ms, transform/opacity only (meters: 600 ms) */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --t-fast: 160ms;
   --t-base: 200ms;
-  --t-slow: 240ms;
 
-  /* grid: 4 cols ≤767, 8 cols 768–1023, 12 cols ≥1024 */
   --cols: 4;
   --gap: 16px;
   --gutter: 16px;
@@ -213,8 +172,9 @@ ul,ol{list-style:none}
 ::selection{background:var(--acc-soft);color:var(--txt)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono);font-size:0.875em;font-weight:600}
 
-/* ---------- LAYOUT GRID ---------- */
+/* ---------- LAYOUT ---------- */
 .wrap{width:min(100% - 2 * var(--gutter), var(--content-max));margin-inline:auto}
 .grid{display:grid;grid-template-columns:repeat(var(--cols), minmax(0, 1fr));column-gap:var(--gap)}
 .grid > *{grid-column:1 / -1;min-width:0}
@@ -230,66 +190,84 @@ ul,ol{list-style:none}
 /* ---------- BUTTONS ---------- */
 .btn{
   position:relative;isolation:isolate;
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  flex-shrink:0;min-height:48px;padding:0 22px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  flex-shrink:0;min-height:48px;padding:0 20px;
   border:0;border-radius:var(--r-ctl);
   background:var(--acc);color:var(--on-acc);
-  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.18), 0 1px 2px oklch(0 0 0 / 0.12);
+  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.18), 0 1px 2px oklch(0.2 0.02 260 / 0.14);
   font:600 var(--fs-16)/1 var(--font);letter-spacing:-0.005em;
   white-space:nowrap;text-decoration:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
   transition:transform var(--t-fast) var(--ease-out);
 }
-/* hover = overlay opacity, so only opacity/transform ever animate */
 .btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:currentColor;opacity:0;transition:opacity var(--t-fast) var(--ease-out)}
 .btn:hover::after{opacity:0.10}
-.btn svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
-.btn:hover svg{transform:translateX(2px)}
 .btn:active{transform:scale(0.97)}
 .btn-secondary{background:var(--surface);color:var(--txt);box-shadow:var(--e1), inset 0 1px 0 var(--hi)}
 .btn-secondary:hover::after{opacity:0.05}
-.btn-ghost{background:transparent;color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-line)}
-.btn-ghost:hover::after{opacity:0.08}
-.btn.sm{min-height:44px;padding:0 var(--sp-4);font-size:0.9375rem}
+.btn.sm{min-height:44px;padding:0 var(--sp-4);font-size:var(--fs-14)}
+.btn svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
+.btn:hover svg{transform:translateX(2px)}
 
-/* ---------- NAV ---------- */
+/* ---------- HEADER ---------- */
 .nav{position:sticky;top:0;z-index:50}
 .nav::before,.nav::after{content:"";position:absolute;inset:0;pointer-events:none;transition:opacity var(--t-base) var(--ease-out)}
 .nav::before{background:var(--nav-bg);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
 .nav::after{box-shadow:0 1px 0 var(--line)}
 .nav[data-top]::before,.nav[data-top]::after{opacity:0}
-.nav-in{position:relative;display:flex;align-items:center;gap:var(--sp-6);min-height:var(--nav-h)}
+.nav-in{position:relative;display:flex;align-items:center;gap:var(--sp-4);min-height:var(--nav-h)}
 .brand{
   display:inline-flex;align-items:center;gap:var(--sp-3);min-height:44px;
   margin-inline-start:calc(var(--sp-1) * -1);padding-inline:var(--sp-1);border-radius:var(--r-ctl);
   color:var(--txt);font:650 var(--fs-16)/1 var(--font-display);letter-spacing:-0.015em;white-space:nowrap;
 }
 .brand img{width:28px;height:28px;border-radius:8px;object-fit:contain}
-.nav-links{display:flex;align-items:center;gap:var(--sp-1);margin-inline-start:auto}
+.nav-links{display:none;align-items:center;gap:var(--sp-1);margin-inline-start:var(--sp-4)}
 .nav-links a{
   display:inline-flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
-  border-radius:var(--r-ctl);color:var(--txt-2);font-size:var(--fs-14);font-weight:500;
+  border-radius:var(--r-ctl);color:var(--txt-2);font-size:var(--fs-14);font-weight:500;white-space:nowrap;
 }
 .nav-links a:hover{color:var(--txt);background:var(--inset)}
-.nav-cta{
-  display:inline-flex;align-items:center;gap:6px;min-height:44px;
-  margin-inline-start:var(--sp-2);padding:0 var(--sp-2);border-radius:var(--r-ctl);
-  color:var(--acc-text);font:600 var(--fs-14)/1 var(--font);white-space:nowrap;flex-shrink:0;
-  transition:color var(--t-fast) var(--ease-out);
+.nav-right{display:flex;align-items:center;gap:var(--sp-2);margin-inline-start:auto}
+.nav-signin{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
+  border-radius:var(--r-ctl);color:var(--txt);font-size:var(--fs-14);font-weight:600;white-space:nowrap;
 }
-.nav-cta:hover{color:var(--txt)}
-.nav-cta svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
-.nav-cta:hover svg{transform:translateX(2px)}
-@media (max-width:767px){
-  .nav-links{display:none}
-  .nav-cta{margin-inline-start:auto}
+.nav-signin:hover{background:var(--inset);color:var(--acc-text)}
+.nav-create{display:none}
+.icon-btn{
+  display:grid;place-items:center;width:44px;height:44px;flex:none;
+  border:0;border-radius:var(--r-ctl);background:transparent;color:var(--txt-2);cursor:pointer;
+}
+.icon-btn:hover{background:var(--inset);color:var(--txt)}
+.icon-btn svg{width:20px;height:20px}
+.theme-ico-sun{display:none}
+:root[data-theme="dark"] .theme-ico-moon{display:none}
+:root[data-theme="dark"] .theme-ico-sun{display:block}
+.mobile-drawer{
+  position:relative;z-index:49;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:var(--surface);padding-block:var(--sp-4);
+}
+.mobile-drawer[hidden]{display:none}
+.mobile-drawer-links{display:grid;gap:var(--sp-1)}
+.mobile-drawer-links a{
+  display:flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
+  border-radius:var(--r-ctl);color:var(--txt);font-size:var(--fs-16);font-weight:500;
+}
+.mobile-drawer-links a:hover{background:var(--inset)}
+.mobile-drawer-actions{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line)}
+.mobile-drawer-actions .btn{flex:1 1 auto}
+@media (min-width:960px){
+  .nav-links{display:flex}
+  .nav-create{display:inline-flex}
+  .nav-menu-btn,.mobile-drawer{display:none}
 }
 
-/* ---------- TYPE ---------- */
-/* One eyebrow pattern everywhere: number (txt-3) · 24px hairline · label (acc-text) */
+/* ---------- TYPOGRAPHY & SECTIONS ---------- */
 .eyebrow{
   display:flex;align-items:center;gap:var(--sp-3);
-  margin-bottom:var(--sp-6);
+  margin-bottom:var(--sp-4);
   font-size:var(--fs-12);font-weight:650;letter-spacing:0.12em;text-transform:uppercase;line-height:1.3;
   color:var(--acc-text);
 }
@@ -297,35 +275,27 @@ ul,ol{list-style:none}
 .eb-rule{flex:none;width:24px;height:1px;background:var(--line-2)}
 h1{
   font-size:var(--fs-display);line-height:1.06;letter-spacing:-0.03em;font-weight:650;
-  text-wrap:balance;margin-bottom:var(--sp-8);
+  margin-bottom:var(--sp-6);
 }
 .h1-em{color:var(--acc-text)}
-h2{font-size:var(--fs-56);line-height:1.04;letter-spacing:-0.03em;font-weight:640;max-width:18ch}
-h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
+h2{font-size:var(--fs-40);line-height:1.08;letter-spacing:-0.025em;font-weight:640;max-width:20ch}
+h3{font-size:var(--fs-20);line-height:1.25;letter-spacing:-0.015em}
 .lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:46ch}
-.sec-head h2{margin-bottom:var(--sp-6)}
-.sec-lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:48ch}
-.prose p{font-size:var(--fs-16);line-height:1.7;color:var(--txt-2);max-width:60ch}
-.prose p + p{margin-top:var(--sp-4)}
-
-/* ---------- SECTIONS ---------- */
+.sec-head{margin-bottom:clamp(32px, 4vw, 56px)}
+.sec-head h2{margin-bottom:var(--sp-4)}
+.sec-lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:54ch}
 .section{padding-block:var(--section-y);border-top:1px solid var(--line)}
 .section.tint{background:var(--tint)}
-
-/* card hover: lift 2px + one elevation level (shadow fades in on a pseudo) */
-.lift{position:relative;transition:transform var(--t-base) var(--ease-out)}
-.lift::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:var(--e2);opacity:0;pointer-events:none;transition:opacity var(--t-base) var(--ease-out)}
-@media (hover:hover){
-  .lift:hover{transform:translateY(-2px)}
-  .lift:hover::after{opacity:1}
+.card{
+  padding:var(--sp-6);border-radius:var(--r-card);
+  background:var(--surface);box-shadow:var(--e1);min-width:0;
 }
 
 /* ================= HERO ================= */
 .hero{
   position:relative;overflow:clip;isolation:isolate;
-  padding-block:clamp(48px, 7vw, 104px) 0;
+  padding-block:clamp(40px, 6vw, 88px) clamp(48px, 6vw, 88px);
 }
-/* texture: hairline grid, faded out by a radial mask */
 .hero::before{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
   background-image:
@@ -333,361 +303,177 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
     linear-gradient(to bottom, var(--tex) 1px, transparent 1px);
   background-size:48px 48px;
   background-position:center top;
-  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, #000 20%, transparent 75%);
-  mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, #000 20%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, oklch(0 0 0) 20%, transparent 75%);
+  mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, oklch(0 0 0) 20%, transparent 75%);
 }
-.hero-grid{align-items:center;row-gap:var(--sp-12)}
-.hero-copy{min-width:0}
+.hero-grid{align-items:center;row-gap:var(--sp-8)}
 .hero-ctas{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-8)}
 @media (max-width:440px){ .hero-ctas .btn{flex:1 1 100%} }
-@media (min-width:768px){
-  .hero-copy{grid-column:1 / -1}
-  .hero-visual{grid-column:2 / span 6}
-}
 @media (min-width:1024px){
-  .hero-copy{grid-column:1 / span 7}
-  .hero-visual{grid-column:8 / span 5}
+  .hero-copy{grid-column:1 / span 6}
+  .hero-visual{grid-column:7 / span 6}
 }
 
-/* trust ribbon */
-.trust{
-  margin-top:clamp(40px, 5vw, 72px);
-  border-top:1px solid var(--line);
-}
-.badges{display:flex;flex-wrap:wrap;gap:var(--sp-2);padding-block:var(--sp-4)}
-.badges li{
-  display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px 0 12px;
-  border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1), inset 0 1px 0 var(--hi);
-  font-size:var(--fs-13);font-weight:550;color:var(--txt);white-space:nowrap;
-}
-.badges svg{width:16px;height:16px;flex:none;color:var(--acc-text)}
-@media (max-width:767px){
-  .badges{gap:6px}
-  .badges li{min-height:32px;padding:0 10px 0 9px}
-}
-.trust-foot{padding-block:var(--sp-2);border-top:1px solid var(--line)}
-.trust-src{
-  display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;
-  font-size:var(--fs-14);font-weight:550;color:var(--txt-2);
-}
-.trust-src:hover{color:var(--acc-text)}
-.trust-src svg{width:14px;height:14px;transition:transform var(--t-fast) var(--ease-out)}
-.trust-src:hover svg{transform:translate(2px,-2px)}
-
-/* product mock */
 .hero-visual{position:relative;min-width:0}
-/* warm/cold atmosphere behind the cluster: pure CSS */
 .hero-visual::before{
-  content:"";position:absolute;inset:-18% -22% -24% -26%;z-index:0;pointer-events:none;
+  content:"";position:absolute;inset:-14% -16%;z-index:0;pointer-events:none;
   background:
     radial-gradient(closest-side at 72% 28%, var(--glow-cold), transparent),
     radial-gradient(closest-side at 26% 78%, var(--glow-warm), transparent);
   filter:blur(8px);
 }
-.mock{position:relative;z-index:1;display:grid}
-.m-card{
-  position:relative;min-width:0;
-  background:var(--surface);border-radius:var(--r-card);padding:20px;
+.today-card{
+  position:relative;z-index:1;
+  background:var(--surface);border-radius:var(--r-card);padding:var(--sp-6);
+  box-shadow:inset 0 1px 0 var(--hi), var(--e2);
 }
-.m-main{z-index:1;box-shadow:var(--m-main-shadow)}
-.m-float{
-  z-index:2;margin-top:-12px;margin-inline-start:22%;
-  transform:rotate(0.6deg);transform-origin:20% 0;
-  box-shadow:var(--m-float-shadow);
-}
-.m-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2) var(--sp-3);margin:2px 2px var(--sp-4) 0}
-.m-label{font-size:var(--fs-13);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);white-space:nowrap}
-.m-chip{
+.today-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
+.today-kicker{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2)}
+.chip{
   display:inline-flex;align-items:center;min-height:26px;padding:0 10px;
-  border-radius:var(--r-ctl);background:var(--acc-soft);color:var(--acc-text);
-  font-size:var(--fs-13);font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
+  border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);
+  box-shadow:inset 0 0 0 1px var(--acc-line);
+  font-size:var(--fs-12);font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-.m-plan{display:grid;gap:2px}
-.m-plan li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:start;gap:var(--sp-3);padding:12px 10px;border-radius:var(--r-ctl)}
-.m-plan li + li{box-shadow:0 -1px 0 var(--line)}
-.m-plan .is-next{background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc-line)}
-.m-plan .is-next + li{box-shadow:none}
-.m-tick{display:grid;place-items:center;width:24px;height:24px;border-radius:var(--r-pill);box-shadow:inset 0 0 0 1.5px var(--line-2);color:transparent}
-.m-tick svg{width:14px;height:14px}
-.m-plan .is-done .m-tick{background:var(--acc);box-shadow:none;color:var(--on-acc)}
-.m-plan .is-next .m-tick{box-shadow:inset 0 0 0 1.5px var(--acc)}
-.m-plan .is-next .m-tick::after{content:"";width:8px;height:8px;border-radius:var(--r-pill);background:var(--acc)}
-.m-task{min-width:0}
-.m-task b{display:block;font-size:0.9375rem;font-weight:600;line-height:1.3;color:var(--txt)}
-.m-task span{display:block;font-size:var(--fs-13);line-height:1.4;color:var(--txt-2)}
-.m-plan .is-done .m-task b{color:var(--txt-2);text-decoration:line-through;text-decoration-color:var(--line-2)}
-.m-min{font-size:var(--fs-13);font-weight:600;line-height:1.3;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.m-progress{display:flex;align-items:center;gap:var(--sp-3);margin-top:var(--sp-4)}
-.m-progress-label{flex:none;font-size:var(--fs-13);font-weight:600;color:var(--txt-2);font-variant-numeric:tabular-nums}
-.m-bar{flex:1;height:6px;border-radius:var(--r-pill);background:var(--inset);overflow:hidden}
-.m-bar span{display:block;width:33.3%;height:100%;border-radius:inherit;background:var(--acc)}
-.m-trend svg{width:100%;height:76px;color:var(--acc);overflow:visible}
-.m-trend .grid-l{stroke:var(--line-2);stroke-dasharray:2 4}
-.m-trend-foot{display:flex;justify-content:space-between;margin-top:var(--sp-2);font-size:var(--fs-13);color:var(--txt-2);font-variant-numeric:tabular-nums}
-.hero-cap{position:relative;z-index:1;margin-top:var(--sp-4);font-size:var(--fs-13);color:var(--txt-2)}
-@media (max-width:767px){
-  .m-float{margin-top:var(--sp-3);margin-inline-start:0;transform:none}
-  .m-card{padding:var(--sp-4)}
-  .hero-visual::before{inset:-10% -8%}
+.today-task{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2) var(--sp-4);align-items:start;margin-top:var(--sp-4)}
+.today-task h2{font-size:var(--fs-24);line-height:1.25;max-width:none}
+.today-meta{font-size:var(--fs-14);color:var(--txt-2);margin-top:var(--sp-1)}
+.today-mins{
+  padding:6px 12px;border-radius:var(--r-ctl);background:var(--inset);box-shadow:var(--e1);
+  font:650 var(--fs-18)/1.2 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap;
 }
+.today-why{
+  margin-top:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-ctl);
+  background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);
+}
+.today-why-lbl{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--acc-text);margin-bottom:var(--sp-1)}
+.today-why p{font-size:var(--fs-14);line-height:1.5;color:var(--txt)}
+.today-foot{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2) var(--sp-4);
+  margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line);
+  font-size:var(--fs-13);color:var(--txt-2);
+}
+.today-timer{font-family:var(--mono);font-weight:650;color:var(--txt);font-variant-numeric:tabular-nums}
+.hero-cap{position:relative;z-index:1;margin-top:var(--sp-3);font-size:var(--fs-13);color:var(--txt-2)}
 
-/* ================= 01 MARKING ================= */
-.mk-grid{row-gap:var(--sp-12);align-items:start}
-.facts{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-8)}
+/* ================= 01 SELF-STUDY TRAP ================= */
+.trap-grid{row-gap:var(--gap)}
+@media (min-width:768px){ .trap-grid > .card{grid-column:span 4} }
+@media (min-width:1024px){ .trap-grid > .card{grid-column:span 6} }
+.trap-tag{
+  display:inline-flex;align-items:center;min-height:26px;padding:0 10px;margin-bottom:var(--sp-4);
+  border-radius:var(--r-pill);background:var(--inset);box-shadow:var(--e1);
+  font-size:var(--fs-12);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);
+}
+.trap-card h3{margin-bottom:var(--sp-4);font-size:var(--fs-24)}
+.trap-list{display:grid;gap:var(--sp-3)}
+.trap-list li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:var(--sp-3);font-size:var(--fs-16);line-height:1.55;color:var(--txt-2)}
+.trap-list svg{width:18px;height:18px;margin-top:4px;color:var(--txt-3)}
+.trap-conclusion{
+  margin-top:var(--gap);padding:var(--sp-6);border-radius:var(--r-card);
+  background:var(--surface);box-shadow:inset 3px 0 0 var(--acc), var(--e1);
+}
+.trap-conclusion b{display:block;font:650 var(--fs-20)/1.3 var(--font-display);color:var(--txt);margin-bottom:var(--sp-2)}
+.trap-conclusion p{font-size:var(--fs-16);line-height:1.6;color:var(--txt-2);max-width:68ch}
+
+/* ================= 02 NINE BLOCKS ================= */
+.blocks-grid{row-gap:var(--gap)}
+@media (min-width:768px){ .blocks-grid > .block-card{grid-column:span 4} }
+@media (min-width:1024px){ .blocks-grid > .block-card{grid-column:span 4} }
+.block-card{display:flex;flex-direction:column;gap:var(--sp-3)}
+.block-top{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.ico{
+  display:grid;place-items:center;width:40px;height:40px;flex:none;
+  border-radius:var(--r-ctl);background:var(--acc-soft);color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-line);
+}
+.ico svg{width:20px;height:20px}
+.block-num{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-3);font-variant-numeric:tabular-nums}
+.block-card p{font-size:var(--fs-14);line-height:1.6;color:var(--txt-2)}
+
+/* ================= 03 WRITING & SPEAKING DEEP DIVE ================= */
+.dd-grid{row-gap:var(--sp-8);align-items:start}
+@media (min-width:1024px){
+  .dd-copy{grid-column:1 / span 5}
+  .dd-card{grid-column:6 / span 7}
+}
+.facts{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-6)}
 .facts li{
   display:inline-flex;align-items:center;min-height:32px;padding:0 var(--sp-3);
   border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1);
-  font-size:var(--fs-14);font-weight:550;color:var(--txt);
+  font-size:var(--fs-13);font-weight:600;color:var(--txt);
 }
+.prose p{font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:56ch}
+.prose p + p{margin-top:var(--sp-4)}
 .report{
-  padding:clamp(20px, 3vw, 36px);border-radius:var(--r-card);
+  padding:clamp(20px, 3vw, 32px);border-radius:var(--r-card);
   background:var(--surface);box-shadow:inset 0 1px 0 var(--hi), var(--e2);
 }
-.report-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:var(--sp-2) var(--sp-4);padding-bottom:var(--sp-4);margin-bottom:var(--sp-2);border-bottom:1px solid var(--line)}
-.report-head b{font:650 var(--fs-18)/1.3 var(--font-display);letter-spacing:-0.01em;color:var(--txt)}
-.report-head span{font-size:var(--fs-13);font-weight:600;color:var(--txt-2)}
-.meters{display:grid}
-.mt{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--sp-4);padding-block:var(--sp-4);border-bottom:1px solid var(--line)}
+.report-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
+.report-head b{font:650 var(--fs-18)/1.3 var(--font-display);color:var(--txt)}
+.sample-excerpt{
+  margin-top:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-ctl);
+  background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);
+  font-size:var(--fs-14);line-height:1.55;color:var(--txt);
+}
+.sample-excerpt span{display:block;font-size:var(--fs-12);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);margin-bottom:var(--sp-1)}
+.meters{display:grid;margin-top:var(--sp-2)}
+.mt{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--sp-4);padding-block:var(--sp-3);border-bottom:1px solid var(--line)}
 .mt:last-child{border-bottom:0}
 .mt-name{align-self:end;font-size:var(--fs-16);font-weight:600;color:var(--txt);line-height:1.3}
-.mt-val{grid-row:span 2;align-self:center;font:650 var(--fs-32)/1 var(--font-display);letter-spacing:-0.03em;color:var(--txt);font-variant-numeric:tabular-nums}
-.mt-val small{font-size:var(--fs-14);font-weight:550;letter-spacing:0;color:var(--txt-3)}
-.mt-say{grid-column:1;font-size:var(--fs-14);line-height:1.5;color:var(--txt-2);margin-top:2px}
-/* track = the 0–5 scale; inner ticks at each band step */
-.mt-track{
-  grid-column:1 / -1;position:relative;height:8px;margin-top:var(--sp-3);
-  border-radius:var(--r-pill);background:var(--inset);overflow:hidden;
-}
+.mt-val{grid-row:span 2;align-self:center;font:650 var(--fs-24)/1 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums}
+.mt-val small{font-size:var(--fs-13);font-weight:550;color:var(--txt-3)}
+.mt-say{grid-column:1;font-size:var(--fs-13);line-height:1.5;color:var(--txt-2);margin-top:2px}
+.mt-track{grid-column:1 / -1;position:relative;height:8px;margin-top:var(--sp-2);border-radius:var(--r-pill);background:var(--inset);overflow:hidden}
 .mt-track::after{
   content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(90deg, transparent 0 calc(20% - 1px), var(--surface) calc(20% - 1px) 20%);
 }
-.mt-fill{
-  display:block;height:100%;width:calc(var(--v) * 20%);border-radius:inherit;
-  background:linear-gradient(90deg, var(--acc-line), var(--acc));
-  transform-origin:left center;
-  transition:transform 600ms var(--ease-out) calc(var(--i) * 90ms + 80ms);
-}
-.rv-wait .mt-fill{transform:scaleX(0);transition:none}
-.mt-axis{display:flex;justify-content:space-between;margin-top:var(--sp-3);font-size:var(--fs-13);color:var(--txt-3);font-variant-numeric:tabular-nums}
-.report-cap{margin-top:var(--sp-4);font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
-.card{
-  padding:clamp(24px, 3vw, 36px);border-radius:var(--r-card);
-  background:var(--surface);box-shadow:var(--e1);min-width:0;
-}
-.ico{
-  display:grid;place-items:center;width:40px;height:40px;margin-bottom:var(--sp-6);
-  border-radius:var(--r-ctl);background:var(--acc-soft);color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-line);
-}
-.ico svg{width:20px;height:20px}
-.card h3{margin-bottom:var(--sp-3)}
-.card p{font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:52ch}
-.duo{row-gap:var(--gap);margin-top:var(--gap)}
-@media (min-width:768px){
-  .mk-head{grid-column:1 / span 7}
-  .duo > *{grid-column:span 4}
-}
-@media (min-width:1024px){
-  .mk-head{grid-column:1 / span 5;position:sticky;top:calc(var(--nav-h) + var(--sp-8))}
-  .mk-report{grid-column:7 / span 6}
-  .duo > *{grid-column:span 6}
-}
+.mt-fill{display:block;height:100%;width:calc(var(--v) * 20%);border-radius:inherit;background:linear-gradient(90deg, var(--acc-line), var(--acc))}
+.report-cap{margin-top:var(--sp-3);font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
 
-/* ================= 02 SPEAKING ================= */
-.sp-grid{row-gap:var(--sp-8);align-items:end}
-.ticks{display:grid;gap:var(--sp-3);margin-top:var(--sp-6)}
+.dd-divider{margin-block:clamp(40px, 5vw, 64px);border:0;border-top:1px solid var(--line)}
+.ticks{display:grid;gap:var(--sp-3);margin-top:var(--sp-4)}
 .ticks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--sp-3);font-size:var(--fs-16);line-height:1.5;color:var(--txt)}
 .ticks svg{width:20px;height:20px;margin-top:2px;color:var(--acc-text)}
-@media (min-width:768px){ .sp-head{grid-column:1 / span 7} .sp-copy{grid-column:1 / span 7} }
-@media (min-width:1024px){ .sp-head{grid-column:1 / span 6} .sp-copy{grid-column:8 / span 5} }
-
-.studio{
-  margin-top:clamp(40px, 5vw, 64px);
-  padding:clamp(16px, 3vw, 32px);border-radius:var(--r-card);
-  background:var(--surface);box-shadow:inset 0 1px 0 var(--hi), var(--e2);min-width:0;
-}
-.st-top{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-6)}
-.st-who{display:flex;align-items:center;gap:var(--sp-3);min-width:0}
-.avatar{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-line)}
-.avatar svg{width:20px;height:20px}
-.st-who b{display:block;font-size:var(--fs-16);line-height:1.3;color:var(--txt)}
-.st-who span{display:block;font-size:var(--fs-13);line-height:1.4;color:var(--txt-2)}
-.st-live{
-  display:inline-flex;align-items:center;gap:var(--sp-2);min-height:28px;padding:0 10px;
-  border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);
-  font-size:var(--fs-13);font-weight:650;
-}
-.st-live i{width:8px;height:8px;border-radius:var(--r-pill);background:var(--acc);animation:pulse 1.6s var(--ease-out) infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.timer{margin-inline-start:auto;font:650 var(--fs-32)/1 var(--font-display);letter-spacing:-0.02em;color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap}
-.timer small{font-size:var(--fs-16);font-weight:550;letter-spacing:0;color:var(--txt-3)}
-/* waveform: played (accent, fades in from the left) | playhead at 42/60 = 70 % | remaining */
-.wave{
-  position:relative;display:flex;align-items:center;height:120px;
-  padding-inline:var(--sp-4);border-radius:var(--r-ctl);
-  background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);
-}
-.w-played,.w-rest{display:flex;align-items:center;gap:3px;height:100%;overflow:hidden}
-.w-played{flex:0 0 70%;justify-content:flex-end;padding-inline-end:4px;
-  -webkit-mask-image:linear-gradient(90deg, transparent, #000 55%);mask-image:linear-gradient(90deg, transparent, #000 55%)}
-.w-rest{flex:1 1 0;justify-content:flex-start;padding-inline-start:4px;
-  -webkit-mask-image:linear-gradient(90deg, #000 30%, transparent);mask-image:linear-gradient(90deg, #000 30%, transparent)}
-.w-played i{flex:none;width:3px;height:calc(var(--h) * 0.84%);min-height:3px;border-radius:var(--r-pill);background:var(--acc)}
-.w-rest i{flex:none;width:3px;height:4px;border-radius:var(--r-pill);background:var(--txt-3);opacity:.45}
-.w-head{position:relative;flex:none;width:2px;height:76%;border-radius:var(--r-pill);background:var(--txt)}
-.w-head::before,.w-head::after{content:"";position:absolute;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:var(--r-pill);background:var(--txt)}
-.w-head::before{top:-4px}
-.w-head::after{bottom:-4px}
-/* parts timeline, widths proportional to minutes (2 / 4 / 4 / 4) */
-.parts{display:grid;grid-template-columns:2fr 4fr 4fr 4fr;gap:var(--sp-2);margin-top:var(--sp-4)}
+.parts{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
+@media (min-width:640px){ .parts{grid-template-columns:2fr 4fr 4fr 4fr} }
 .parts li{display:grid;gap:6px;min-width:0}
 .p-bar{height:6px;border-radius:var(--r-pill);background:var(--inset);box-shadow:inset 0 0 0 1px var(--line)}
-.parts .is-done .p-bar{background:var(--acc-line);box-shadow:none}
-.parts .is-on .p-bar{background:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
-.p-txt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);font-size:var(--fs-13);line-height:1.4;color:var(--txt-2)}
-.p-txt b{font-weight:650;color:var(--txt);white-space:nowrap}
-.parts .is-on .p-txt b{color:var(--acc-text)}
-.p-txt span{font-variant-numeric:tabular-nums;white-space:nowrap}
-.st-cap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-2) var(--sp-6);margin-top:var(--sp-6);padding-top:var(--sp-4);border-top:1px solid var(--line);font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
-@media (max-width:767px){
-  .parts{grid-template-columns:repeat(2, minmax(0,1fr));row-gap:var(--sp-4)}
-  .timer{font-size:var(--fs-24)}
-}
-/* limitation callout */
+.parts .is-on .p-bar{background:var(--acc)}
+.p-txt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);font-size:var(--fs-13);color:var(--txt-2)}
+.p-txt b{font-weight:650;color:var(--txt)}
+.p-txt span{font-variant-numeric:tabular-nums}
 .callout{
   display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-4);
-  margin-top:var(--sp-6);padding:var(--sp-6);
-  border-radius:0 var(--r-card) var(--r-card) 0;
-  background:var(--surface);box-shadow:inset 3px 0 0 var(--acc), var(--e1);
+  margin-top:var(--sp-6);padding:var(--sp-4);
+  border-radius:0 var(--r-ctl) var(--r-ctl) 0;
+  background:var(--inset);box-shadow:inset 3px 0 0 var(--acc), var(--e1);
 }
 .callout-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text)}
 .callout-ico svg{width:18px;height:18px}
-.callout-h{margin-bottom:var(--sp-1);font:650 var(--fs-18)/1.35 var(--font-display);letter-spacing:-0.01em;color:var(--txt)}
-.callout p:last-child{font-size:var(--fs-16);line-height:1.6;color:var(--txt-2);max-width:64ch}
+.callout-h{margin-bottom:var(--sp-1);font:650 var(--fs-16)/1.35 var(--font-display);color:var(--txt)}
+.callout p:last-child{font-size:var(--fs-14);line-height:1.6;color:var(--txt-2)}
 .callout b{color:var(--txt)}
-@media (min-width:1024px){ .callout{max-width:calc((100% - 11 * var(--gap)) / 12 * 8 + 7 * var(--gap))} }
 
-/* ================= 03 PRIVACY ================= */
-.schema{
-  position:relative;padding:clamp(20px, 4vw, 48px);border-radius:var(--r-card);
-  background-color:var(--surface);
-  background-image:radial-gradient(var(--line-2) 1px, transparent 1.4px);
-  background-size:16px 16px;background-position:8px 8px;
-  box-shadow:var(--e1);
-}
-.schema-tag{position:absolute;top:var(--sp-4);left:var(--sp-4);font-size:var(--fs-13);font-weight:600;color:var(--txt-3);font-variant-numeric:tabular-nums}
-.sch{display:grid;grid-template-columns:minmax(0,1fr) minmax(128px,0.85fr) minmax(0,1.15fr) minmax(128px,0.85fr) minmax(0,1fr);align-items:center;margin-top:var(--sp-6)}
-.node{
-  position:relative;display:flex;flex-direction:column;gap:var(--sp-1);
-  padding:20px;border-radius:var(--r-card);background:var(--surface);box-shadow:var(--e2);min-width:0;
-}
-.node-ico{display:grid;place-items:center;width:40px;height:40px;margin-bottom:var(--sp-3);border-radius:var(--r-pill);background:var(--inset);color:var(--txt-2);box-shadow:inset 0 0 0 1px var(--line)}
-.node-ico svg{width:20px;height:20px}
-.node b{font-size:var(--fs-16);font-weight:650;color:var(--txt)}
-.node > span:last-child{font-size:var(--fs-14);line-height:1.5;color:var(--txt-2)}
-.node.home{background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc-line), var(--e2)}
-.node.home .node-ico{background:var(--acc);color:var(--on-acc);box-shadow:none}
-.node-flag{
-  align-self:flex-start;display:inline-flex;align-items:center;min-height:24px;padding:0 var(--sp-2);margin-bottom:var(--sp-2);
-  border-radius:var(--r-pill);background:var(--surface);color:var(--acc-text);font-size:var(--fs-13);font-weight:650;
-  box-shadow:inset 0 0 0 1px var(--acc-line);
-}
-/* connector: dotted line + arrowhead, label of what travels above it */
-.link{position:relative;align-self:stretch;min-height:96px}
-.link::before{
-  content:"";position:absolute;top:50%;left:6px;right:10px;height:2px;margin-top:-1px;
-  background:radial-gradient(circle, var(--acc) 1px, transparent 1.4px) 0 50% / 8px 2px repeat-x;
-}
-.link::after{
-  content:"";position:absolute;top:50%;right:4px;margin-top:-5px;
-  border:5px solid transparent;border-left:7px solid var(--acc);border-right-width:0;
-}
-.link-lbl{
-  position:absolute;left:8px;right:8px;bottom:calc(50% + 10px);
-  font-size:var(--fs-13);font-weight:600;line-height:1.35;color:var(--txt);text-align:center;
-}
-.link-lbl small{display:block;font-size:var(--fs-13);font-weight:500;color:var(--txt-2)}
-.ledger{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:var(--gap);margin-top:var(--gap)}
-.ledger > div{padding:var(--sp-6);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--e1)}
-.ledger h3{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-4);font-size:var(--fs-18)}
-.ledger h3 svg{width:18px;height:18px;color:var(--acc-text)}
-.ledger li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:var(--sp-3);padding-block:10px;border-top:1px solid var(--line);font-size:var(--fs-16);line-height:1.5;color:var(--txt-2)}
-.ledger li:first-child{border-top:0}
-.ledger li svg{width:16px;height:16px;margin-top:4px;color:var(--txt-3)}
-.ledger li b{color:var(--txt)}
+/* ================= 04 PRIVACY & ENGINEERING ================= */
+.priv-grid{row-gap:var(--gap)}
+@media (min-width:768px){ .priv-grid > .card{grid-column:span 4} }
+@media (min-width:1024px){ .priv-grid > .card{grid-column:span 6} }
+.priv-card h3{margin-bottom:var(--sp-2)}
+.priv-card p{font-size:var(--fs-16);line-height:1.6;color:var(--txt-2)}
 .legal-links{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-8)}
 .legal-links a{
   display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);
   border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1);
   color:var(--txt);font-size:var(--fs-14);font-weight:550;
-  transition:transform var(--t-fast) var(--ease-out);
 }
 .legal-links a:hover{color:var(--acc-text)}
-.legal-links a:active{transform:scale(0.97)}
 .legal-links svg{width:14px;height:14px;color:var(--txt-2)}
-@media (max-width:1023px){
-  .sch{grid-template-columns:minmax(0,1fr);max-width:520px;margin-top:var(--sp-8)}
-  .link{min-height:80px}
-  .link::before{top:4px;bottom:12px;left:27px;right:auto;width:2px;height:auto;margin-top:0;
-    background:radial-gradient(circle, var(--acc) 1px, transparent 1.4px) 50% 0 / 2px 8px repeat-y}
-  .link::after{top:auto;bottom:4px;right:auto;left:23px;margin-top:0;border:5px solid transparent;border-top:7px solid var(--acc);border-bottom-width:0}
-  .link-lbl{left:52px;right:0;bottom:auto;top:50%;transform:translateY(-50%);text-align:start}
-}
-@media (max-width:767px){
-  .ledger{grid-template-columns:minmax(0,1fr)}
-  .node{padding:var(--sp-4)}
-  .link::before{left:calc(var(--sp-4) + 19px)}
-  .link::after{left:calc(var(--sp-4) + 15px)}
-  .link-lbl{left:calc(var(--sp-4) + 44px)}
-}
-
-/* ================= 04 START ================= */
-.steps{row-gap:0;counter-reset:step}
-.step{position:relative;display:grid;align-content:start;grid-template-columns:44px minmax(0,1fr);column-gap:var(--sp-4);padding-bottom:var(--sp-8);counter-increment:step}
-.step:last-child{padding-bottom:0}
-.step::before{
-  content:counter(step);grid-row:span 2;
-  display:grid;place-items:center;width:44px;height:44px;
-  border-radius:var(--r-pill);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--acc), 0 0 0 6px var(--bg);
-  font:650 var(--fs-16)/1 var(--font-display);font-variant-numeric:tabular-nums;color:var(--acc-text);
-  position:relative;z-index:1;
-}
-.step:first-child::before{background:var(--acc);color:var(--on-acc);box-shadow:0 0 0 6px var(--bg)}
-.step:not(:last-child)::after{content:"";position:absolute;left:21.5px;top:44px;bottom:0;width:1px;background:var(--line-2)}
-.step b{display:block;margin-bottom:var(--sp-2);padding-top:10px;font:650 var(--fs-20)/1.3 var(--font-display);letter-spacing:-0.015em;color:var(--txt)}
-.step span{display:block;font-size:var(--fs-16);line-height:1.6;color:var(--txt-2);max-width:36ch}
-@media (min-width:768px){
-  .steps{row-gap:0}
-  .step{grid-template-columns:minmax(0,1fr);padding-bottom:0}
-  .step::before{grid-row:auto;margin-bottom:var(--sp-6)}
-  .step b{padding-top:0}
-  .step:not(:last-child)::after{left:44px;right:calc(var(--gap) * -1);top:22px;bottom:auto;width:auto;height:1px}
-}
-@media (min-width:768px) and (max-width:1023px){
-  .steps{grid-template-columns:repeat(3, minmax(0,1fr))}
-  .steps > .step{grid-column:auto}
-}
-@media (min-width:1024px){ .steps > .step{grid-column:span 4} }
-.cta-band{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-6);
-  margin-top:clamp(56px, 7vw, 96px);padding:clamp(24px, 4vw, 48px);
-  border-radius:var(--r-card);background:var(--tint);box-shadow:inset 0 0 0 1px var(--acc-line);
-  position:relative;overflow:hidden;isolation:isolate;
-}
-.cta-band::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:radial-gradient(60% 120% at 100% 0%, var(--glow-cold), transparent 70%);
-}
-.cta-h{font:650 var(--fs-32)/1.15 var(--font-display);letter-spacing:-0.025em;color:var(--txt);max-width:22ch;text-wrap:balance}
-.cta-sub{margin-top:var(--sp-2);font-size:var(--fs-16);color:var(--txt-2)}
-.cta-btns{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
-@media (max-width:440px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
 
 /* ================= 05 FAQ ================= */
 .faq-grid{row-gap:var(--sp-8);align-items:start}
-@media (min-width:768px){ .faq-head{grid-column:1 / span 6} }
 @media (min-width:1024px){
-  .faq-head{grid-column:1 / span 5;position:sticky;top:calc(var(--nav-h) + var(--sp-8))}
+  .faq-head{grid-column:1 / span 5}
   .faq{grid-column:6 / span 7}
 }
 .faq{border-top:1px solid var(--line-2)}
@@ -705,22 +491,27 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em}
   transition:transform var(--t-base) var(--ease-out);
 }
 .chev svg{width:16px;height:16px}
-.faq summary:hover .chev{color:var(--acc-text)}
 .faq details[open] .chev{transform:rotate(180deg);color:var(--acc-text)}
-.faq details p{padding:0 var(--sp-12) var(--sp-6) 0;font-size:var(--fs-16);line-height:1.7;color:var(--txt-2);max-width:62ch}
+.faq details p{padding:0 var(--sp-8) var(--sp-4) 0;font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:62ch}
 @media (max-width:767px){ .faq details p{padding-inline-end:0} }
+
+/* ================= FINAL CTA ================= */
+.cta-band{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-6);
+  padding:clamp(24px, 4vw, 48px);
+  border-radius:var(--r-card);background:var(--tint);box-shadow:inset 0 0 0 1px var(--acc-line);
+}
+.cta-h{font:650 var(--fs-32)/1.15 var(--font-display);letter-spacing:-0.025em;color:var(--txt);max-width:22ch}
+.cta-sub{margin-top:var(--sp-2);font-size:var(--fs-16);color:var(--txt-2);max-width:48ch}
+.cta-btns{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
+@media (max-width:440px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
 
 /* ================= FOOTER ================= */
 footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
 .foot-grid{row-gap:var(--sp-8)}
-@media (max-width:767px){
-  .foot-col:nth-child(2){grid-column:1 / span 2;grid-row:2 / span 2}
-  .foot-col:nth-child(3){grid-column:3 / span 2;grid-row:2}
-  .foot-col:nth-child(4){grid-column:3 / span 2;grid-row:3}
-}
 @media (min-width:768px){ .foot-grid > *{grid-column:span 4} }
 @media (min-width:1024px){ .foot-grid > *{grid-column:span 3} }
-.foot-brand{display:flex;align-items:center;gap:var(--sp-3);font:650 var(--fs-16)/1 var(--font-display);letter-spacing:-0.015em;color:var(--txt)}
+.foot-brand{display:flex;align-items:center;gap:var(--sp-3);font:650 var(--fs-16)/1 var(--font-display);color:var(--txt)}
 .foot-brand img{width:32px;height:32px;border-radius:8px;object-fit:contain}
 .foot-about p{margin-top:var(--sp-4);font-size:var(--fs-14);line-height:1.6;color:var(--txt-2);max-width:34ch}
 .foot-h{min-height:44px;display:flex;align-items:center;font:650 var(--fs-13)/1.4 var(--font);letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2)}
@@ -731,31 +522,20 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
   color:var(--txt);font-size:var(--fs-14);
 }
 .foot-col a:hover{color:var(--acc-text)}
-.foot-col a svg{width:14px;height:14px;flex:none;color:var(--txt-2)}
 .foot-base{
-  display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-2) var(--sp-6);
+  display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-4);
   margin-top:var(--sp-12);padding-top:var(--sp-6);border-top:1px solid var(--line);
-  align-items:center;font-size:var(--fs-14);color:var(--txt-2);
+  align-items:center;font-size:var(--fs-13);color:var(--txt-2);
 }
-.foot-top{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;color:var(--txt-2);font-weight:550}
+.foot-base p{max-width:70ch;line-height:1.5}
+.foot-top{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;color:var(--txt);font-weight:600;white-space:nowrap}
 .foot-top:hover{color:var(--acc-text)}
-.foot-top svg{width:14px;height:14px;transition:transform var(--t-fast) var(--ease-out)}
-.foot-top:hover svg{transform:translateY(-2px)}
+.foot-top svg{width:14px;height:14px}
 
-/* ---------- REVEAL ---------- */
-.rv{transition-property:opacity,transform;transition-duration:var(--t-slow);transition-timing-function:var(--ease-out)}
-.rv-wait{opacity:0;transform:translateY(12px)}
-.meters.rv-wait{opacity:1;transform:none}
-
-/* ---------- MOTION SAFETY ---------- */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  .rv-wait{opacity:1;transform:none}
-  .rv-wait .mt-fill{transform:none}
-  *,*::before,*::after{transition-duration:0s !important;transition-delay:0s !important;animation:none !important}
-  .m-float{margin-top:var(--sp-3);transform:none}
-  .btn:active,.legal-links a:active,.lift:hover{transform:none}
-  .btn:hover svg,.nav-cta:hover svg,.trust-src:hover svg{transform:none}
+  *,*::before,*::after{transition-duration:0s !important;animation:none !important}
+  .btn:active,.btn:hover svg{transform:none}
 }
 </style>
 </head>
@@ -769,12 +549,36 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
       <span>B2 First Tracker</span>
     </a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#marking">Marking</a>
-      <a href="#speaking">Speaking</a>
+      <a href="#blocks">Features</a>
+      <a href="#deep-dive">Writing &amp; Speaking</a>
       <a href="#privacy">Privacy</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <a class="nav-cta" id="navCta" href="/app">Create an account<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+    <div class="nav-right">
+      <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle color theme" aria-pressed="false">
+        <svg class="theme-ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+        <svg class="theme-ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <a class="nav-signin" href="/app">Sign in</a>
+      <a class="btn sm nav-create" id="navCta" href="/app">Create an account</a>
+      <button type="button" class="icon-btn nav-menu-btn" id="navMenuBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-drawer" id="mobileMenu" hidden>
+    <div class="wrap">
+      <nav class="mobile-drawer-links" aria-label="Mobile sections">
+        <a href="#blocks">Features</a>
+        <a href="#deep-dive">Writing &amp; Speaking</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="mobile-drawer-actions">
+        <a class="btn sm btn-secondary" href="/app">Sign in</a>
+        <a class="btn sm" href="/app">Create an account</a>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -786,270 +590,306 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
         <div class="hero-copy">
           <p class="eyebrow"><span class="eb-n">FCE</span><span class="eb-rule" aria-hidden="true"></span>Cambridge B2 First · Self-study</p>
           <h1 id="hero-title">Someone finally marks your <span class="h1-em">writing.</span></h1>
-          <p class="lede">B2 First Tracker is a study system for preparing the Cambridge B2 First alone. It marks your writing against the four Cambridge bands, decides what to practise today, and shows the progress you cannot see on your own.</p>
+          <p class="lede">Start with a 12-item diagnostic. Follow one prioritized session per study day, score essays on the four Cambridge bands, and practise all four speaking parts with timed turns.</p>
           <div class="hero-ctas">
-            <a class="btn" id="heroCta" href="/app">Create an account<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-            <a class="btn btn-secondary" href="#marking">See how it marks</a>
+            <a class="btn" id="heroCta" href="/app">Start the 12-item diagnostic<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+            <a class="btn btn-secondary" href="#blocks">See all 9 modules</a>
           </div>
         </div>
 
         <figure class="hero-visual">
-          <div class="mock" role="img" aria-label="Product preview with sample data: today's session of three tasks — Use of English done, Writing next, Speaking — with 1 of 3 complete, and an eight-week band trend that rises from about 2.5 to 4.">
-            <div class="m-card m-main">
-              <div class="m-head">
-                <span class="m-label">Today’s session</span>
-                <span class="m-chip">45 min</span>
-              </div>
-              <ol class="m-plan">
-                <li class="is-done">
-                  <span class="m-tick"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-6.5"/></svg></span>
-                  <span class="m-task"><b>Use of English</b><span>Part 4 · Key word transformation</span></span>
-                  <span class="m-min">12 min</span>
-                </li>
-                <li class="is-next">
-                  <span class="m-tick"></span>
-                  <span class="m-task"><b>Writing</b><span>Essay · 140–190 words</span></span>
-                  <span class="m-min">25 min</span>
-                </li>
-                <li>
-                  <span class="m-tick"></span>
-                  <span class="m-task"><b>Speaking</b><span>Part 2 · Long turn</span></span>
-                  <span class="m-min">8 min</span>
-                </li>
-              </ol>
-              <div class="m-progress">
-                <span class="m-progress-label">1 of 3 today</span>
-                <div class="m-bar"><span></span></div>
-              </div>
+          <div class="today-card">
+            <div class="today-top">
+              <span class="today-kicker">Today's session</span>
+              <span class="chip">Example preview</span>
             </div>
-            <div class="m-card m-float m-trend">
-              <div class="m-head"><span class="m-label">Band trend</span><span class="m-chip">Sample · 8 weeks</span></div>
-              <svg viewBox="0 0 200 76" preserveAspectRatio="none" focusable="false">
-                <line class="grid-l" x1="0" y1="14" x2="200" y2="14" vector-effect="non-scaling-stroke"/>
-                <line class="grid-l" x1="0" y1="40" x2="200" y2="40" vector-effect="non-scaling-stroke"/>
-                <path d="M2 60 L30 54 L58 56 L86 44 L114 47 L142 32 L170 27 L198 15 L198 76 L2 76 Z" fill="currentColor" opacity=".12"/>
-                <polyline points="2,60 30,54 58,56 86,44 114,47 142,32 170,27 198,15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-              </svg>
-              <div class="m-trend-foot"><span>Week 1</span><span>Week 8</span></div>
+            <div class="today-task">
+              <div>
+                <h2>Reading part 4 · Key word transformation</h2>
+                <p class="today-meta">By-part queue · 6 items · Target 70%</p>
+              </div>
+              <span class="today-mins num">10 min</span>
+            </div>
+            <div class="today-why">
+              <p class="today-why-lbl">Why this task</p>
+              <p>Selected from your 12-item diagnostic because Part 4 scored lowest, and it is next in your Reading &amp; Use of English rotation.</p>
+            </div>
+            <div class="today-foot">
+              <span>Built-in timer: <span class="today-timer">10:00</span></span>
+              <span>Next in queue: Listening part 1 · 10 min</span>
             </div>
           </div>
-          <figcaption class="hero-cap">Product preview · sample data</figcaption>
+          <figcaption class="hero-cap">Example of the Today's session view inside the app.</figcaption>
         </figure>
-      </div>
-
-      <div class="trust">
-        <ul class="badges" aria-label="Facts you can check">
-          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="4" r="1.75"/><circle cx="5" cy="12" r="1.75"/><circle cx="11" cy="6" r="1.75"/><path d="M5 5.75v4.5M11 7.75c0 2.25-1.5 3-6 3"/></svg>Open source</li>
-          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2.5" width="12" height="4.5" rx="1.25"/><rect x="2" y="9" width="12" height="4.5" rx="1.25"/><path d="M4.75 4.75h.01M4.75 11.25h.01"/></svg>Hosted accounts</li>
-          <li><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 6.5h12M2.5 13.5l11-11"/></svg>No card</li>
-        </ul>
-        <div class="trust-foot">
-          <a class="trust-src" href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Read the source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
-        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ 01 MARKING ============ -->
-  <section class="section tint" id="marking" aria-labelledby="marking-title">
+  <!-- ============ 01 THE SELF-STUDY TRAP ============ -->
+  <section class="section tint" id="trap" aria-labelledby="trap-title">
     <div class="wrap">
-      <div class="grid mk-grid">
-        <div class="mk-head sec-head rv">
-          <p class="eyebrow"><span class="eb-n" aria-hidden="true">01</span><span class="eb-rule" aria-hidden="true"></span>Marking</p>
-          <h2 id="marking-title">Writing marked, not vibes</h2>
-          <p class="sec-lede">Every text is scored on the four Cambridge bands from 0 to 5. Each score quotes the evidence from your own words, and every weak spot comes with three rewritten sentences you can actually reuse.</p>
-          <ul class="facts" aria-label="Every report includes">
-            <li>Four bands, 0–5</li>
-            <li>Evidence quoted from your text</li>
-            <li>Three rewrites per weak spot</li>
+      <div class="sec-head">
+        <p class="eyebrow"><span class="eb-n" aria-hidden="true">01</span><span class="eb-rule" aria-hidden="true"></span>The self-study trap</p>
+        <h2 id="trap-title">Why studying alone stalls before exam day</h2>
+        <p class="sec-lede">Most candidates lose time between two options that both miss what the B2 First marks actually measure.</p>
+      </div>
+
+      <div class="grid trap-grid">
+        <article class="card trap-card">
+          <span class="trap-tag">Traditional language school</span>
+          <h3>Fixed group pace</h3>
+          <ul class="trap-list">
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Classes move through textbook units even when you already pass Reading.</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Writing feedback arrives days later, with little time spent on individual error patterns.</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Class calendars rarely match your own exam date or weekly hours.</span></li>
+          </ul>
+        </article>
+
+        <article class="card trap-card">
+          <span class="trap-tag">Studying blind alone</span>
+          <h3>Guessing without a rubric</h3>
+          <ul class="trap-list">
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Answer keys score multiple-choice gaps, while Writing and Speaking receive zero band feedback.</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Without an error log, you cannot tell vocabulary gaps apart from time-limit mistakes.</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Each study night starts with deciding what to open instead of working on a weak part.</span></li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="trap-conclusion">
+        <b>What is missing is exam criteria, not more hours.</b>
+        <p>B2 First Tracker maps your starting level in 12 questions, schedules one timed task per session around your weak parts, and applies the published Cambridge bands to your Writing and Speaking practice.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 THE 9 BLOCKS ============ -->
+  <section class="section" id="blocks" aria-labelledby="blocks-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow"><span class="eb-n" aria-hidden="true">02</span><span class="eb-rule" aria-hidden="true"></span>The product</p>
+        <h2 id="blocks-title">Nine modules around one log</h2>
+        <p class="sec-lede">Every part of the tracker reads the same practice history, so your daily session, error breakdown, and stage progress agree.</p>
+      </div>
+
+      <div class="grid blocks-grid">
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg></span>
+            <span class="block-num">01 · Diagnostic</span>
+          </div>
+          <h3>12-item entry diagnostic</h3>
+          <p>Ten-minute check across Reading and Use of English parts 1 to 7. Identifies your lowest-scoring parts before your first week starts.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 3h6"/></svg></span>
+            <span class="block-num">02 · Daily focus</span>
+          </div>
+          <h3>Today's session</h3>
+          <p>Shows one prioritized task for your scheduled study day, with its unit timer, target threshold, and the reason it was chosen.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span class="block-num">03 · Schedule</span>
+          </div>
+          <h3>Adaptive weekly plan</h3>
+          <p>Choose by-part rotation or full-paper rotation across your weekly study days. Queue order comes from what you have already logged.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span>
+            <span class="block-num">04 · Exam mode</span>
+          </div>
+          <h3>Official paper timings</h3>
+          <p>Run timed full-paper sittings with the real durations: 75 min Reading and Use of English, 80 min Writing, 40 min Listening, and 14 min Speaking.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+            <span class="block-num">05 · Writing</span>
+          </div>
+          <h3>Cambridge rubric corrector</h3>
+          <p>Scores essays, articles, reports, reviews, and emails (140 to 190 words) on all four 0 to 5 bands with quoted evidence and rewrites.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg></span>
+            <span class="block-num">06 · Speaking</span>
+          </div>
+          <h3>4-part voice examiner</h3>
+          <p>Practise Parts 1 to 4 with timed turns (2, 4, 4, and 4 minutes), a partner voice in Part 3, a full transcript, and a banded report.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 17.5A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.5L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+            <span class="block-num">07 · Errors</span>
+          </div>
+          <h3>Root-cause taxonomy</h3>
+          <p>Log misses as <span class="mono">L-GAP</span> (vocabulary), <span class="mono">G-ERR</span> (grammar), <span class="mono">T-MIS</span> (distractor), or <span class="mono">T-LIM</span> (time limit) with concrete fixes.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M3 21h18"/></svg></span>
+            <span class="block-num">08 · Progress</span>
+          </div>
+          <h3>Charts and stage gates</h3>
+          <p>Four charts track score history, part accuracy, error mix, and weekly consistency alongside three deterministic progression stages.</p>
+        </article>
+
+        <article class="card block-card">
+          <div class="block-top">
+            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a1.5 1.5 0 0 0-1.5-1.5H4zM20 5h-6a2 2 0 0 0-2 2v13a1.5 1.5 0 0 1 1.5-1.5H20z"/></svg></span>
+            <span class="block-num">09 · Library &amp; sync</span>
+          </div>
+          <h3>17 parts and 26 sources</h3>
+          <p>Guides for all 17 exam parts, 26 vetted practice links, optional local PDF and audio files, and multi-device account sync.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 03 WRITING & SPEAKING DEEP DIVE ============ -->
+  <section class="section tint" id="deep-dive" aria-labelledby="marking-title">
+    <div class="wrap">
+      <!-- Writing deep dive -->
+      <div class="grid dd-grid" id="marking">
+        <div class="dd-copy sec-head">
+          <p class="eyebrow"><span class="eb-n" aria-hidden="true">03</span><span class="eb-rule" aria-hidden="true"></span>Writing &amp; Speaking</p>
+          <h2 id="marking-title">Writing scored on the four Cambridge bands</h2>
+          <p class="sec-lede" style="margin-top:var(--sp-4)">Each draft is checked against the 0 to 5 scale from the B2 First Handbook, within the 140 to 190 word exam target.</p>
+          <div class="prose" style="margin-top:var(--sp-4)">
+            <p>You can paste the exam prompt so Content is checked against every point the question asks for. Every band cites quotes from your draft, names two weak spots, and provides three rewritten sentences you can study.</p>
+          </div>
+          <ul class="facts" aria-label="Writing corrector features">
+            <li>Target 140–190 words</li>
+            <li>4 bands, 0–5 each</li>
+            <li>Quoted draft evidence</li>
+            <li>3 sentence rewrites</li>
           </ul>
         </div>
 
-        <figure class="mk-report report">
-          <div class="report-head"><b>Essay report</b><span>Sample · each band 0–5</span></div>
-          <ul class="meters rv">
-            <li class="mt" style="--v:4;--i:0">
+        <figure class="dd-card report">
+          <div class="report-head">
+            <b>Writing report · Example</b>
+            <span class="chip">Example · Illustrative bands</span>
+          </div>
+          <div class="sample-excerpt">
+            <span>Example fictional candidate excerpt (Essay)</span>
+            "In my opinion, smartphones help families stay in touch across long distances. However, many teenagers check messages during dinner instead of talking."
+          </div>
+          <ul class="meters">
+            <li class="mt" style="--v:4">
               <span class="mt-name">Content</span>
-              <span class="mt-val">4<small> / 5</small></span>
-              <span class="mt-say">Did you answer the whole task? All the points, covered and developed.</span>
+              <span class="mt-val num">4<small> / 5</small></span>
+              <span class="mt-say">Addresses both sides of the prompt; target reader is informed.</span>
               <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
             </li>
-            <li class="mt" style="--v:3;--i:1">
+            <li class="mt" style="--v:3">
               <span class="mt-name">Communicative Achievement</span>
-              <span class="mt-val">3<small> / 5</small></span>
-              <span class="mt-say">Does it fit the reader? Register and format right for the task.</span>
+              <span class="mt-val num">3<small> / 5</small></span>
+              <span class="mt-say">Appropriate neutral essay register for straightforward ideas.</span>
               <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
             </li>
-            <li class="mt" style="--v:4;--i:2">
+            <li class="mt" style="--v:4">
               <span class="mt-name">Organisation</span>
-              <span class="mt-val">4<small> / 5</small></span>
-              <span class="mt-say">Does it hang together? Paragraphs and linking that guide the reader.</span>
+              <span class="mt-val num">4<small> / 5</small></span>
+              <span class="mt-say">Clear contrast with linking phrases and logical paragraph flow.</span>
               <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
             </li>
-            <li class="mt" style="--v:3;--i:3">
+            <li class="mt" style="--v:3">
               <span class="mt-name">Language</span>
-              <span class="mt-val">3<small> / 5</small></span>
-              <span class="mt-say">How wide and how accurate? Range of grammar and vocabulary, under control.</span>
+              <span class="mt-val num">3<small> / 5</small></span>
+              <span class="mt-say">Accurate everyday vocabulary; room for wider complex structures.</span>
               <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
             </li>
           </ul>
-          <div class="mt-axis" aria-hidden="true"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
-          <figcaption class="report-cap">Sample scores. The four Cambridge writing bands, each marked from 0 to 5.</figcaption>
+          <figcaption class="report-cap">Illustrative example with fictional candidate text. Actual reports depend on your draft and optional prompt.</figcaption>
         </figure>
       </div>
 
-      <div class="grid duo">
-        <article class="card lift rv">
-          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2.5"/></svg></span>
-          <h3>A plan for today, not someday</h3>
-          <p>It reads your practice log, finds the parts that are costing you marks and hands you today’s session: what to do, how long it takes and why it was chosen.</p>
-        </article>
-        <article class="card lift rv">
-          <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M3 21h18"/><path d="M20 4l-4 2 4 2z"/></svg></span>
-          <h3>Progress you can see</h3>
-          <p>Charts per part, per error type and per skill, plus your study streak and the countdown to exam day. The pattern behind a bad week stops being a mystery.</p>
-        </article>
-      </div>
-    </div>
-  </section>
+      <hr class="dd-divider">
 
-  <!-- ============ 02 SPEAKING ============ -->
-  <section class="section" id="speaking" aria-labelledby="speaking-title">
-    <div class="wrap">
-      <div class="grid sp-grid">
-        <div class="sp-head sec-head rv">
-          <p class="eyebrow"><span class="eb-n" aria-hidden="true">02</span><span class="eb-rule" aria-hidden="true"></span>Speaking</p>
-          <h2 id="speaking-title">A real-time examiner</h2>
-          <p class="sec-lede">The four parts of the Speaking exam, in the browser, with the timings of the real test.</p>
-        </div>
-        <div class="sp-copy prose rv">
-          <p>You hear the examiner, answer out loud and get a transcript of the exchange when the time is up. The report bands what Cambridge assesses: grammar and vocabulary, discourse management, pronunciation, and interactive communication. It is practice, not a certificate — the real examiner is still a person.</p>
+      <!-- Speaking deep dive -->
+      <div class="grid dd-grid" id="speaking">
+        <div class="dd-copy">
+          <h2 id="speaking-title" style="font-size:var(--fs-32)">Four-part Speaking with a voice examiner</h2>
+          <div class="prose" style="margin-top:var(--sp-4)">
+            <p>Run one part at a time or the full 14-minute sequence across Parts 1 to 4. You hear the examiner, answer out loud within each turn timer, and get a transcript and banded report at the end.</p>
+            <p>It is practice, not a certificate — the real examiner is still a person.</p>
+          </div>
           <ul class="ticks">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>Parts 1 to 4, with their real timings</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>A partner voice for Part 3</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>A transcript and a banded report at the end</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>Parts 1 to 4 with real exam timings (2, 4, 4, and 4 min)</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>A partner role for Parts 2, 3, and 4</span></li>
+            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>Transcript and banded assessment across Cambridge criteria</span></li>
           </ul>
         </div>
-      </div>
 
-      <figure class="studio rv">
-        <div class="st-top">
-          <div class="st-who" aria-hidden="true">
-            <span class="avatar"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="6" height="10" rx="3"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5"/></svg></span>
-            <span><b>Examiner</b><span>Part 2 · Long turn</span></span>
+        <div class="dd-card card">
+          <div class="report-head">
+            <b>Speaking timeline</b>
+            <span class="chip num">14 min total</span>
           </div>
-          <span class="st-live" aria-hidden="true"><i></i>Your turn</span>
-          <span class="timer"><span class="sr">Sample: Part 2 long turn, </span>0:42<small> / 1:00</small><span class="sr"> elapsed</span></span>
-        </div>
-        <div class="wave" aria-hidden="true">
-          <div class="w-played"><i style="--h:19"></i><i style="--h:57"></i><i style="--h:58"></i><i style="--h:35"></i><i style="--h:47"></i><i style="--h:56"></i><i style="--h:52"></i><i style="--h:11"></i><i style="--h:88"></i><i style="--h:88"></i><i style="--h:43"></i><i style="--h:47"></i><i style="--h:11"></i><i style="--h:72"></i><i style="--h:33"></i><i style="--h:8"></i><i style="--h:87"></i><i style="--h:71"></i><i style="--h:70"></i><i style="--h:76"></i><i style="--h:62"></i><i style="--h:38"></i><i style="--h:78"></i><i style="--h:85"></i><i style="--h:32"></i><i style="--h:52"></i><i style="--h:73"></i><i style="--h:37"></i><i style="--h:25"></i><i style="--h:34"></i><i style="--h:53"></i><i style="--h:21"></i><i style="--h:14"></i><i style="--h:36"></i><i style="--h:25"></i><i style="--h:19"></i><i style="--h:29"></i><i style="--h:30"></i><i style="--h:15"></i><i style="--h:29"></i><i style="--h:9"></i><i style="--h:28"></i><i style="--h:18"></i><i style="--h:44"></i><i style="--h:35"></i><i style="--h:23"></i><i style="--h:25"></i><i style="--h:49"></i><i style="--h:42"></i><i style="--h:23"></i><i style="--h:46"></i><i style="--h:59"></i><i style="--h:26"></i><i style="--h:44"></i><i style="--h:45"></i><i style="--h:52"></i><i style="--h:30"></i><i style="--h:48"></i><i style="--h:10"></i><i style="--h:23"></i><i style="--h:28"></i><i style="--h:43"></i><i style="--h:26"></i><i style="--h:13"></i><i style="--h:30"></i><i style="--h:29"></i><i style="--h:18"></i><i style="--h:13"></i><i style="--h:21"></i><i style="--h:13"></i><i style="--h:10"></i><i style="--h:14"></i><i style="--h:19"></i><i style="--h:10"></i><i style="--h:8"></i><i style="--h:17"></i><i style="--h:12"></i><i style="--h:11"></i><i style="--h:24"></i><i style="--h:31"></i><i style="--h:17"></i><i style="--h:30"></i><i style="--h:41"></i><i style="--h:40"></i><i style="--h:26"></i><i style="--h:57"></i><i style="--h:60"></i><i style="--h:34"></i><i style="--h:47"></i><i style="--h:72"></i><i style="--h:60"></i><i style="--h:48"></i><i style="--h:70"></i><i style="--h:80"></i><i style="--h:52"></i><i style="--h:12"></i><i style="--h:13"></i><i style="--h:54"></i><i style="--h:50"></i><i style="--h:96"></i><i style="--h:65"></i><i style="--h:43"></i><i style="--h:58"></i><i style="--h:77"></i><i style="--h:54"></i><i style="--h:42"></i><i style="--h:73"></i><i style="--h:53"></i><i style="--h:39"></i><i style="--h:39"></i><i style="--h:8"></i><i style="--h:50"></i><i style="--h:24"></i><i style="--h:43"></i><i style="--h:44"></i><i style="--h:24"></i><i style="--h:44"></i><i style="--h:46"></i><i style="--h:27"></i><i style="--h:21"></i><i style="--h:48"></i><i style="--h:9"></i><i style="--h:24"></i><i style="--h:48"></i><i style="--h:62"></i><i style="--h:51"></i><i style="--h:27"></i><i style="--h:62"></i><i style="--h:45"></i><i style="--h:35"></i><i style="--h:58"></i><i style="--h:9"></i><i style="--h:43"></i><i style="--h:43"></i><i style="--h:67"></i><i style="--h:56"></i><i style="--h:36"></i><i style="--h:62"></i><i style="--h:49"></i><i style="--h:44"></i><i style="--h:31"></i><i style="--h:59"></i><i style="--h:53"></i><i style="--h:22"></i><i style="--h:37"></i><i style="--h:39"></i><i style="--h:20"></i><i style="--h:21"></i><i style="--h:25"></i><i style="--h:17"></i><i style="--h:10"></i><i style="--h:10"></i><i style="--h:13"></i><i style="--h:14"></i><i style="--h:10"></i><i style="--h:10"></i><i style="--h:10"></i><i style="--h:10"></i><i style="--h:10"></i><i style="--h:13"></i><i style="--h:11"></i><i style="--h:11"></i><i style="--h:19"></i><i style="--h:24"></i><i style="--h:10"></i><i style="--h:31"></i><i style="--h:38"></i><i style="--h:32"></i><i style="--h:25"></i><i style="--h:48"></i><i style="--h:46"></i><i style="--h:11"></i><i style="--h:39"></i><i style="--h:62"></i><i style="--h:50"></i><i style="--h:43"></i><i style="--h:53"></i><i style="--h:59"></i><i style="--h:35"></i><i style="--h:61"></i><i style="--h:69"></i><i style="--h:57"></i><i style="--h:42"></i><i style="--h:72"></i><i style="--h:48"></i><i style="--h:20"></i><i style="--h:48"></i><i style="--h:55"></i><i style="--h:41"></i><i style="--h:42"></i><i style="--h:55"></i><i style="--h:40"></i><i style="--h:20"></i><i style="--h:43"></i><i style="--h:41"></i><i style="--h:34"></i><i style="--h:34"></i><i style="--h:52"></i><i style="--h:38"></i><i style="--h:24"></i></div>
-          <span class="w-head"></span>
-          <div class="w-rest"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        </div>
-        <ol class="parts" aria-label="Speaking parts and their timings">
-          <li class="is-done"><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 1</b><span>2 min</span></span></li>
-          <li class="is-on" aria-current="step"><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 2</b><span>4 min</span></span></li>
-          <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 3</b><span>4 min</span></span></li>
-          <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 4</b><span>4 min</span></span></li>
-        </ol>
-        <figcaption class="st-cap"><span>One part at a time, or the full fourteen minutes of Parts 1–4.</span><span>Sample session</span></figcaption>
-      </figure>
+          <ol class="parts" aria-label="Speaking exam parts and durations">
+            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 1</b><span>2 min · Interview</span></span></li>
+            <li class="is-on"><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 2</b><span>4 min · Long turn</span></span></li>
+            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 3</b><span>4 min · Collaborative</span></span></li>
+            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 4</b><span>4 min · Discussion</span></span></li>
+          </ol>
 
-      <div class="callout rv" role="note" aria-labelledby="limit-h">
-        <span class="callout-ico" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.25h.01"/></svg></span>
-        <div>
-          <p class="callout-h" id="limit-h">Limitation: pronunciation</p>
-          <p>Pronunciation is shown as <b>not measured</b> until the pronunciation service is configured on the server. The other scales work without it.</p>
+          <div class="callout" role="note" aria-labelledby="limit-h">
+            <span class="callout-ico" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.25h.01"/></svg></span>
+            <div>
+              <p class="callout-h" id="limit-h">Honesty rule: Pronunciation</p>
+              <p>If audio cannot be measured or speech assessment is not configured on the server, the report explicitly displays <b>not measured</b> for Pronunciation. It never invents a score from text alone.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ 03 PRIVACY ============ -->
-  <section class="section tint" id="privacy" aria-labelledby="privacy-title">
+  <!-- ============ 04 PRIVACY & ENGINEERING ============ -->
+  <section class="section" id="privacy" aria-labelledby="privacy-title">
     <div class="wrap">
-      <div class="grid">
-        <div class="sec-head rv pv-head">
-          <p class="eyebrow"><span class="eb-n" aria-hidden="true">03</span><span class="eb-rule" aria-hidden="true"></span>Privacy</p>
-          <h2 id="privacy-title">Your progress stays on the server</h2>
-          <p class="sec-lede">Your account and progress live on our server. No analytics, no ads, nothing sold.</p>
-        </div>
+      <div class="sec-head">
+        <p class="eyebrow"><span class="eb-n" aria-hidden="true">04</span><span class="eb-rule" aria-hidden="true"></span>Engineering &amp; privacy</p>
+        <h2 id="privacy-title">Built for study, without ad trackers</h2>
+        <p class="sec-lede">Your progress syncs across devices while keeping data collection minimal and reversible.</p>
       </div>
 
-      <figure class="schema rv" style="margin-top:clamp(40px, 5vw, 64px)">
-        <span class="schema-tag" aria-hidden="true">Where the data goes</span>
-        <div class="sch">
-          <div class="node">
-            <span class="node-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18M8 21h8"/></svg></span>
-            <b>Your browser</b>
-            <span>Where you practise, write and speak.</span>
-          </div>
-          <p class="link"><span class="link-lbl"><span class="sr">Sends to the server: </span>Answers &amp; practice log</span></p>
-          <div class="node home">
-            <span class="node-flag">Your data lives here</span>
-            <span class="node-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="7" rx="1.5"/><rect x="4" y="14" width="16" height="7" rx="1.5"/><path d="M8 6.5h.01M8 17.5h.01"/></svg></span>
-            <b>Our server</b>
-            <span>Your account and progress, kept on the service that runs the app.</span>
-          </div>
-          <p class="link"><span class="link-lbl"><span class="sr">Sends to the AI provider: </span>Text to mark<small>one request at a time</small></span></p>
-          <div class="node">
-            <span class="node-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13l2 2 4-4"/></svg></span>
-            <b>The AI provider</b>
-            <span>Sees your writing only to mark it. It is not stored.</span>
-          </div>
-        </div>
-        <figcaption class="sr">Where the data lives. Your progress is stored on the provider's server; the source code is open for inspection.</figcaption>
-      </figure>
-
-      <div class="ledger rv">
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h13M12 6l4 4-4 4"/></svg>What travels</h3>
-          <ul>
-            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h9M9 5l3 3-3 3"/></svg><span><b>Browser → server:</b> your answers, your writing and your practice log.</span></li>
-            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h9M9 5l3 3-3 3"/></svg><span><b>Server → AI provider:</b> only the text you ask to mark, per request.</span></li>
-          </ul>
-        </div>
-        <div>
-          <h3><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="9" width="12" height="8" rx="1.5"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9"/></svg>What stays put</h3>
-          <ul>
-            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="2"/><path d="M8 8h.01"/></svg><span><b>Your progress history</b> stays on our server, attached to your account.</span></li>
-            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="2"/><path d="M8 8h.01"/></svg><span><b>No analytics SDK, no ads, no selling.</b> Nothing is profiled and nothing is sold.</span></li>
-          </ul>
-        </div>
+      <div class="grid priv-grid">
+        <article class="card priv-card">
+          <h3>Multi-device account sync</h3>
+          <p>Sign in with a username and 12-character password, Google sign-in, or a passkey. Your weekly plan, study log, and error notes follow you from phone to desktop.</p>
+        </article>
+        <article class="card priv-card">
+          <h3>No advertising trackers</h3>
+          <p>The app runs without third-party analytics SDKs, tracking pixels, or ad networks. Nothing you practise is profiled or sold.</p>
+        </article>
+        <article class="card priv-card">
+          <h3>Audio is never stored</h3>
+          <p>Speaking audio is never written to the provider's disk. Only the writing draft or transcript you choose to evaluate is sent to the AI provider per request.</p>
+        </article>
+        <article class="card priv-card">
+          <h3>Export and permanent deletion</h3>
+          <p>Your data lives on the provider's server while your account is active. You can export everything as JSON or delete your account to remove your data from the server.</p>
+        </article>
       </div>
 
-      <div class="legal-links rv">
+      <div class="legal-links">
         <a href="/privacy">Privacy policy</a>
-        <a href="/terms">Terms</a>
-        <a href="/security">Security</a>
+        <a href="/terms">Terms of use</a>
+        <a href="/security">Security policy</a>
         <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 04 START ============ -->
-  <section class="section" id="how" aria-labelledby="start-title">
-    <div class="wrap">
-      <div class="grid">
-        <div class="sec-head rv" style="margin-bottom:clamp(40px, 5vw, 64px)">
-          <p class="eyebrow"><span class="eb-n" aria-hidden="true">04</span><span class="eb-rule" aria-hidden="true"></span>Start</p>
-          <h2 id="start-title">How it works</h2>
-          <p class="sec-lede">Three steps, then the plan takes it from there.</p>
-        </div>
-      </div>
-      <ol class="grid steps rv">
-        <li class="step"><b>Create an account</b><span>A username and a password. No email address needed.</span></li>
-        <li class="step"><b>Take the diagnostic</b><span>Twelve questions place you across the skills, so the plan starts from what you actually know.</span></li>
-        <li class="step"><b>Open today’s session</b><span>Do the work it asks for and log it. Tomorrow’s plan reads the result.</span></li>
-      </ol>
-      <div class="cta-band rv">
-        <div>
-          <p class="cta-h">Your first session is three steps away.</p>
-          <p class="cta-sub">Create an account with a username and a password. No card required.</p>
-        </div>
-        <div class="cta-btns">
-          <a class="btn" href="/app">Open the app<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-        </div>
       </div>
     </div>
   </section>
@@ -1057,32 +897,44 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
   <!-- ============ 05 FAQ ============ -->
   <section class="section tint" id="faq" aria-labelledby="faq-title">
     <div class="wrap grid faq-grid">
-      <div class="faq-head sec-head rv">
-        <p class="eyebrow"><span class="eb-n" aria-hidden="true">05</span><span class="eb-rule" aria-hidden="true"></span>Questions</p>
-        <h2 id="faq-title">Frequently asked questions</h2>
-        <p class="sec-lede">The short answers. The longer ones are in the privacy policy and the terms.</p>
+      <div class="faq-head sec-head">
+        <p class="eyebrow"><span class="eb-n" aria-hidden="true">05</span><span class="eb-rule" aria-hidden="true"></span>FAQ</p>
+        <h2 id="faq-title">Four direct answers</h2>
+        <p class="sec-lede">Short answers on the diagnostic, accounts, privacy, and scoring.</p>
       </div>
-      <div class="faq rv">
+      <div class="faq">
         <details open>
-          <summary>Do I need a card?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. An account is a username and a password, and there is no payment step anywhere in the app. Daily fair-use limits keep the AI provider costs predictable. If you connect an AI key of your own, you pay that provider directly.</p>
+          <summary>How does the 12-item diagnostic shape my plan?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>The diagnostic checks Reading and Use of English parts 1 to 7 in about 10 minutes. Your lowest-scoring parts move to the front of your weekly plan and appear in Today's session.</p>
         </details>
         <details>
-          <summary>Do I need an email address?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. An account is a username and a password. That is also why there is no email password link.</p>
+          <summary>Do I need an email address to sign up?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>No. You can create an account with a username and a password of at least 12 characters, or sign in with Google or a passkey.</p>
         </details>
         <details>
-          <summary>What if I forget my password?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>Use the recovery request on the login screen. The operator resets the password by hand and answers at the contact you leave there; there is no email link.</p>
+          <summary>What happens if I delete my account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>Deleting your account from the Account panel removes your user record, sessions, progress history, and error log from the provider's server. Export a JSON copy first if you want to keep your log.</p>
         </details>
         <details>
-          <summary>Who sees my writing?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>Only the AI provider used to mark it, and it is not stored.</p>
+          <summary>Are Writing and Speaking bands official Cambridge scores?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>No. They are practice estimates calibrated against the four published Cambridge scales. Only Cambridge Assessment issues official exam grades.</p>
         </details>
-        <details>
-          <summary>Which parts of the exam does it cover?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>Use of English and Reading, Writing, Listening, and Speaking.</p>
-        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 06 FINAL CTA ============ -->
+  <section class="section" id="start" aria-labelledby="cta-title">
+    <div class="wrap">
+      <div class="cta-band">
+        <div>
+          <h2 class="cta-h" id="cta-title">Take the 12-question diagnostic.</h2>
+          <p class="cta-sub">Create your account, measure your baseline in 10 minutes, and open Today's session.</p>
+        </div>
+        <div class="cta-btns">
+          <a class="btn" href="/app">Create an account<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          <a class="btn btn-secondary" href="/app">Sign in</a>
+        </div>
       </div>
     </div>
   </section>
@@ -1096,45 +948,42 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
           <img src="/assets/logo-512.png" alt="" width="32" height="32">
           <span>B2 First Tracker</span>
         </div>
-        <p>A hosted study service for the Cambridge B2 First. Your account and progress live on our server.</p>
+        <p>Self-study tracker for the Cambridge B2 First (FCE) exam.</p>
       </div>
-      <nav class="foot-col" aria-labelledby="foot-page">
-        <p class="foot-h" id="foot-page">On this page</p>
-        <a href="#marking">Marking</a>
-        <a href="#speaking">Speaking</a>
+      <nav class="foot-col" aria-labelledby="foot-sections">
+        <p class="foot-h" id="foot-sections">Sections</p>
+        <a href="#blocks">Nine modules</a>
+        <a href="#deep-dive">Writing &amp; Speaking</a>
         <a href="#privacy">Privacy</a>
-        <a href="#how">How it works</a>
         <a href="#faq">FAQ</a>
       </nav>
       <nav class="foot-col" aria-labelledby="foot-legal">
         <p class="foot-h" id="foot-legal">Legal</p>
-        <a href="/terms">Terms</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/security">Security</a>
+        <a href="/privacy">Privacy policy</a>
+        <a href="/terms">Terms of use</a>
+        <a href="/security">Security policy</a>
       </nav>
-      <nav class="foot-col" aria-labelledby="foot-src">
-        <p class="foot-h" id="foot-src">Product</p>
+      <nav class="foot-col" aria-labelledby="foot-account">
+        <p class="foot-h" id="foot-account">Account</p>
+        <a href="/app">Sign in</a>
         <a href="/app">Create an account</a>
-        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
+        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub</a>
       </nav>
     </div>
-    <div class="foot-base"><span>Built by a student in Buenos Aires · MIT</span><a class="foot-top" href="#main">Back to top<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4"/></svg></a></div>
+    <div class="foot-base">
+      <p>© 2026 B2 First Tracker. Cambridge and B2 First are trademarks of Cambridge University Press &amp; Assessment. This project is an independent study tool and is not affiliated with or endorsed by Cambridge.</p>
+      <a class="foot-top" href="#main">Back to top<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4"/></svg></a>
+    </div>
   </div>
 </footer>
 
 <script>
-/* A returning student should not read the pitch twice; the header gains
-   its edge once the page scrolls; sections ease in and the band meters
-   fill as they arrive (one IntersectionObserver, armed on first scroll and
-   only for blocks still below the fold, so nothing on screen blinks). */
 (function(){
   try{
     var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
     if(u&&u.id){
-      var nav=document.getElementById('navCta');
       var hero=document.getElementById('heroCta');
-      if(nav)nav.firstChild.nodeValue='Continue';
-      if(hero)hero.firstChild.nodeValue='Continue studying';
+      if(hero&&hero.firstChild)hero.firstChild.nodeValue='Continue studying';
     }
   }catch(e){}
 
@@ -1149,23 +998,43 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
     if(!ticking){ticking=true;requestAnimationFrame(edge);}
   },{passive:true});
 
-  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce||!('IntersectionObserver' in window))return;
-  var io=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){e.target.classList.remove('rv-wait');io.unobserve(e.target);}
+  var toggle=document.getElementById('themeToggle');
+  var meta=document.getElementById('metaTheme');
+  function syncThemeBtn(){
+    if(!toggle)return;
+    var dark=document.documentElement.getAttribute('data-theme')==='dark';
+    toggle.setAttribute('aria-pressed',dark?'true':'false');
+    if(meta)meta.setAttribute('content',dark?'#121416':'#fbfcfd');
+  }
+  syncThemeBtn();
+  if(toggle){
+    toggle.addEventListener('click',function(){
+      var dark=document.documentElement.getAttribute('data-theme')==='dark';
+      var next=dark?'light':'dark';
+      document.documentElement.setAttribute('data-theme',next);
+      try{localStorage.setItem('b2first_theme',next);}catch(e){}
+      syncThemeBtn();
     });
-  },{rootMargin:'0px 0px -12% 0px'});
-  window.addEventListener('scroll',function(){
-    var h=window.innerHeight;
-    document.querySelectorAll('.rv').forEach(function(el){
-      if(el.getBoundingClientRect().top>h){
-        el.classList.add('rv-wait');
-        void el.offsetWidth;
-        io.observe(el);
-      }
+  }
+
+  var menuBtn=document.getElementById('navMenuBtn');
+  var drawer=document.getElementById('mobileMenu');
+  if(menuBtn&&drawer){
+    function setOpen(open){
+      drawer.hidden=!open;
+      menuBtn.setAttribute('aria-expanded',open?'true':'false');
+      menuBtn.setAttribute('aria-label',open?'Close navigation menu':'Open navigation menu');
+    }
+    menuBtn.addEventListener('click',function(){
+      setOpen(drawer.hidden);
     });
-  },{passive:true,once:true});
+    drawer.querySelectorAll('a').forEach(function(link){
+      link.addEventListener('click',function(){setOpen(false);});
+    });
+    document.addEventListener('keydown',function(ev){
+      if(ev.key==='Escape'&&!drawer.hidden)setOpen(false);
+    });
+  }
 })();
 </script>
 </body>
