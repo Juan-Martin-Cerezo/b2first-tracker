@@ -6575,7 +6575,7 @@ function tevFlush(){
     if(!TEV_BUF.length)return;
     const body=JSON.stringify({sid:TEV_SID,events:TEV_BUF.splice(0,TEV_BUF.length)});
     if(navigator.sendBeacon&&navigator.sendBeacon('/api/events',new Blob([body],{type:'application/json'})))return;
-    fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:body,keepalive:true}).catch(function(){});
+    fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},body:body,keepalive:true}).catch(function(){});
   }catch(e){}
 }
 setInterval(tevFlush,TEV_FLUSH_MS);
@@ -6631,7 +6631,7 @@ function loadUser(){
 function saveUserSession(u){USER=u;localStorage.setItem(AUTH_KEY,JSON.stringify(u))}
 function clearUserSession(){USER=null;localStorage.removeItem(AUTH_KEY)}
 function authHeaders(){
-  const h={'Content-Type':'application/json'};
+  const h={'Content-Type':'application/json','X-Requested-With':'b2first'};
   if(USER&&USER.token)h['Authorization']='Bearer '+USER.token;
   return h;
 }
@@ -6650,18 +6650,18 @@ async function apiError(r,fallback){
   return new Error(msg||fallback);
 }
 async function apiLogin(name,password){
-  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password})});
+  const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},body:JSON.stringify({name,password})});
   if(!r.ok)throw await apiError(r,'login failed');
   return r.json();
 }
 async function apiRegister(name,password,color){
-  const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password,color})});
+  const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},body:JSON.stringify({name,password,color})});
   if(!r.ok)throw await apiError(r,'register failed');
   return r.json();
 }
 async function apiLogout(){
   if(USER&&USER.token){
-    try{await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:USER.token})})}catch(e){}
+    try{await fetch('/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},body:JSON.stringify({token:USER.token})})}catch(e){}
   }
 }
 
@@ -6711,7 +6711,7 @@ function showAltError(msg){
 function startGoogleLogin(){location.href='/api/auth/google/start'}
 async function passkeyLogin(){
   if(!window.PublicKeyCredential)throw new Error(t('auth_passkey_error'));
-  const begin=await fetch('/api/webauthn/login/begin',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  const begin=await fetch('/api/webauthn/login/begin',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},body:'{}'});
   if(!begin.ok)throw new Error(t('auth_passkey_error'));
   const pk=await begin.json();
   let cred;
@@ -6721,7 +6721,7 @@ async function passkeyLogin(){
     if(e&&(e.name==='NotAllowedError'||e.name==='AbortError'))throw new Error(t('auth_passkey_cancel'));
     throw new Error(t('auth_passkey_error'));
   }
-  const r=await fetch('/api/webauthn/login/finish',{method:'POST',headers:{'Content-Type':'application/json'},
+  const r=await fetch('/api/webauthn/login/finish',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},
     body:JSON.stringify({credential:pkCredentialJSON(cred)})});
   if(!r.ok){
     const err=new Error(t('auth_passkey_error'));
@@ -6875,7 +6875,7 @@ function hideGoogleLink(){
   if(ov)ov.style.display='none';
 }
 async function googleComplete(payload){
-  const r=await fetch('/api/auth/google/complete',{method:'POST',headers:{'Content-Type':'application/json'},
+  const r=await fetch('/api/auth/google/complete',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},
     body:JSON.stringify(Object.assign({ticket:GOOGLE_TICKET},payload))});
   if(!r.ok)throw new Error(t('google_link_error'));
   return r.json();
@@ -6956,7 +6956,7 @@ async function requestPasswordReset(){
   }
   const contact=contactEl?contactEl.value.trim():'';
   try{
-    const r=await fetch('/api/password-reset/request',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await fetch('/api/password-reset/request',{method:'POST',headers:{'Content-Type':'application/json','X-Requested-With':'b2first'},
       body:JSON.stringify({name:name,contact:contact})});
     if(!r.ok)throw await apiError(r,t('auth_recover_error'));
     st.className='auth-ok';
@@ -7004,7 +7004,7 @@ async function doRegister(){
   const pass=document.getElementById('regPass').value;
   const color=document.getElementById('regColor').value||'#1b2b48';
   const err=document.getElementById('regError');
-  if(pass.length<10){err.textContent='❌ Password must be at least 10 characters.';return}
+  if(pass.length<12){err.textContent='❌ Password must be at least 12 characters.';return}
   try{
     const u=await apiRegister(name,pass,color);
     saveUserSession(u);
@@ -7031,7 +7031,7 @@ async function doChangePassword(){
   const st=document.getElementById('pwStatus');
   const btn=document.getElementById('pwBtn');
   const setStatus=(msg,color)=>{st.textContent=msg;st.style.color=color||''};
-  if(nxt.length<10){setStatus('❌ New password must be at least 10 characters','var(--bad-text)');return}
+  if(nxt.length<12){setStatus('❌ New password must be at least 12 characters','var(--bad-text)');return}
   if(nxt!==rep){setStatus('❌ New passwords do not match','var(--bad-text)');return}
   btn.disabled=true;
   setStatus('Updating…','var(--on-surface-variant)');
@@ -7349,7 +7349,7 @@ function obDayTimesHtml(){
       const label=dayFull(OB_DAY_TO_JS[k]);
       return `<div class="ob-time-row" data-day="${k}">
         <label for="obTime_${k}">${esc(label)}</label>
-        <input type="time" id="obTime_${k}" data-day="${k}" value="${esc(val)}" oninput="obSetDayTime('${k}',this.value)" onchange="obSetDayTime('${k}',this.value)">
+        <input type="time" id="obTime_${k}" data-day="${k}" value="${esc(val)}" oninput="obSetDayTime(this.dataset.day,this.value)" onchange="obSetDayTime(this.dataset.day,this.value)">
       </div>`;
     }).join('');
 }
@@ -7523,7 +7523,7 @@ function obStepHtml(){
         return `<div class="ob-rate-row" role="group" aria-label="${esc(label)}">
           <span class="ob-rate-label">${esc(label)}</span>
           <div class="ob-rate">${[1,2,3,4,5].map(n=>`
-            <button type="button" class="ob-rate-btn" data-skill="${k}" data-val="${n}" aria-pressed="${d.skills[k]===n}" aria-label="${esc(label)}: ${n}" onclick="obRate('${k}',${n})">${n}</button>`).join('')}
+            <button type="button" class="ob-rate-btn" data-skill="${k}" data-val="${n}" aria-pressed="${d.skills[k]===n}" aria-label="${esc(label)}: ${n}" onclick="obRate(this.dataset.skill,+this.dataset.val)">${n}</button>`).join('')}
           </div>
         </div>`;
       }).join('')}
@@ -7556,7 +7556,7 @@ function obStepHtml(){
     <div class="ob-summary" id="obPlanSummary">${obPlanSummaryHtml(plan)}</div>
     <div class="ob-field"><span class="ob-field-label" id="obDaysLbl">${t('ob_days')}</span>
       <div class="ob-day-chips" role="group" aria-labelledby="obDaysLbl">${OB_DAYS.map(([k])=>`
-        <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay('${k}')">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
+        <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay(this.dataset.day)">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
       </div>
       <div class="ob-day-times" id="obDayTimes">${obDayTimesHtml()}</div>
       <div class="ob-warn" id="obTimeWarn" role="status" style="${dupWarn?'':'display:none'}">${dupWarn?esc(t('ob_warn_same_time')):''}</div>
@@ -7583,7 +7583,7 @@ function obStepHtml(){
     <div class="ob-field" id="obItemsField" style="${mode==='by-part'?'':'display:none'}">
       <span class="ob-field-label" id="obItemsLbl">${t('ob_items_per_session')}</span>
       <div class="ob-chips" role="group" aria-labelledby="obItemsLbl">${[1,2,3,4].map(n=>`
-        <button type="button" class="chip-btn" data-items="${n}" aria-pressed="${items===n}" onclick="obSetItemsPerSession(${n})">${n}</button>`).join('')}
+        <button type="button" class="chip-btn" data-items="${n}" aria-pressed="${items===n}" onclick="obSetItemsPerSession(+this.dataset.items)">${n}</button>`).join('')}
       </div>
     </div>
     <div class="ob-plan-preview" id="obPlanPreview">${obPlanRowsHtml(plan)}</div>
@@ -15258,7 +15258,7 @@ function renderWeeklyPlan(){
         <div class="wp-when tnum">${sl.time||''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <button type="button" class="btn sm ok wp-start" aria-label="${esc(t('plan_start_aria',{unit:unit}))}" onclick="wpStart(${i})">${t('common_start')}</button>
+      <button type="button" class="btn sm ok wp-start" data-i="${i}" aria-label="${esc(t('plan_start_aria',{unit:unit}))}" onclick="wpStart(+this.dataset.i)">${t('common_start')}</button>
     </div>`;
   }).join('');
 }
@@ -15607,18 +15607,18 @@ function renderParts(){
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p class="step-note">${p.note}</p>`:''}
       <div class="step-actions">
-        <button class="btn sm" onclick="startPart(${i})">${esc(t('part_start'))}</button>
-        <button class="btn sm gray" onclick="setResourcesFilter('${p.type}',${p.n})">${esc(t('part_resources'))}</button>
+        <button class="btn sm" data-i="${i}" onclick="startPart(+this.dataset.i)">${esc(t('part_start'))}</button>
+        <button class="btn sm gray" data-type="${p.type}" data-n="${p.n}" onclick="setResourcesFilter(this.dataset.type,+this.dataset.n)">${esc(t('part_resources'))}</button>
       </div>
-      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" onclick="savePart(${i})">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
+      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
         <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" onclick="savePart(${i})">✔ Save</button></div>
+        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ Save</button></div>
       </div>`:`<div class="step-log">
         <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" onclick="savePart(${i})">✔ Save</button></div>
+        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ Save</button></div>
       </div>`}
     </div>`;
   });
@@ -15666,7 +15666,7 @@ function renderLog(){
     <td class="tnum">${e.type==='w'?wSc+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total)}</td>
     <td class="tnum">${e.type==='w'?pct(wSc,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td class="tnum">${e.min??''}</td>
-    <td><button class="del" onclick="editLog(${i})" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-edit"/></svg></button> <button class="del" onclick="delLog(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>
+    <td><button class="del" data-i="${i}" onclick="editLog(+this.dataset.i)" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-edit"/></svg></button> <button class="del" data-i="${i}" onclick="delLog(+this.dataset.i)" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>
   </tr>`;}).join('');
 }
 function editLog(i){
@@ -15679,7 +15679,7 @@ function editLog(i){
   else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:12px">text 1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:12px">text 2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:12px">correct</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:12px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   tr.innerHTML=`<td><input type="date" id="edDate" value="${e.date}"></td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td><td>${fields}</td><td></td><td></td>
-    <td><button class="del" onclick="saveEdit(${i})" title="Save" aria-label="Save"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-check"/></svg></button> <button class="del" onclick="refreshAll()" title="Cancel" aria-label="Cancel"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>`;
+    <td><button class="del" data-i="${i}" onclick="saveEdit(+this.dataset.i)" title="Save" aria-label="Save"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-check"/></svg></button> <button class="del" onclick="refreshAll()" title="Cancel" aria-label="Cancel"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>`;
 }
 function saveEdit(i){
   const e=D.log[i];
@@ -15746,7 +15746,7 @@ function renderErrs(){
     return `<div class="err-item">
     <div class="err-head">
       <span class="pill ${tax}" title="${esc(title)}">${tax}</span> <span class="t-xs muted tnum">${fmtDate(e.date)}</span>
-      <button class="del" onclick="delErr(${i})" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      <button class="del" data-i="${i}" onclick="delErr(+this.dataset.i)" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
     </div>
     <div class="err-desc">${esc(desc)}</div>
     ${e.fix?`<div class="err-fix">→ ${esc(e.fix)}</div>`:''}
@@ -16347,7 +16347,7 @@ function renderScheduleRows(){
     <div class="sched-row">
       <div class="sched-head">
         <span class="sched-title">${t('plan_session',{n:i+1})}</span>
-        <button type="button" class="btn sm gray sched-del" onclick="removeScheduleRow(${i})" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
+        <button type="button" class="btn sm gray sched-del" data-i="${i}" onclick="removeScheduleRow(+this.dataset.i)" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
       </div>
       <div class="sched-fields">
         <div class="sched-field">
@@ -16680,7 +16680,7 @@ function renderTodaySession(plan,todaySlots){
         <div class="ts-main"><div class="ts-title tnum">${esc(todayTitleLabel(sl))}<span class="ts-title-min"> · ${esc(sl.min+' min')}</span></div><div class="ts-duration tnum">${esc(sl.min+' min')}</div><div class="ts-when tnum">${esc(sl.time||'')}</div><div class="ts-mode">${esc(todayModeLine(sl))}</div></div>
         <div class="ts-cta">
           <div class="ts-actions">
-            <button type="button" class="btn sm ok ts-start" onclick="todayStart(${idx})"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
+            <button type="button" class="btn sm ok ts-start" data-idx="${idx}" onclick="todayStart(+this.dataset.idx)"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
             <button type="button" class="btn sm gray ts-ff" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
           </div>
           ${slotPos===0?`<p class="ts-microcopy">${esc(t('today_start_microcopy'))}</p>`:''}
@@ -17927,7 +17927,7 @@ function renderDiag(){
       </div>
       <div id="diagStem" class="t-lg" style="font-weight:600;line-height:1.55;margin:14px 0 18px;color:var(--txt)">${esc(item.stem)}</div>
       <div id="diagOptions" style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px">
-        ${item.options.map((opt,oi)=>`<button type="button" class="btn gray diag-opt" data-opt="${oi}" onclick="answerDiagItem(${oi})">
+        ${item.options.map((opt,oi)=>`<button type="button" class="btn gray diag-opt" data-opt="${oi}" onclick="answerDiagItem(+this.dataset.opt)">
           <span class="opt-key">${['A','B','C','D'][oi]}.</span> ${esc(opt)}
         </button>`).join('')}
       </div>
@@ -17964,7 +17964,7 @@ function renderDiag(){
           <h3>#${wi+1} Weakness: Part ${p} — ${esc(partName(p))} <span class="t tnum">${bp.ok}/${bp.n} correct</span></h3>
           <p class="t-sm muted" style="margin-top:4px">${esc(rec)}</p>
         </div>
-        <button type="button" class="btn sm diag-go-part" data-part="${p}" onclick="goToPartFilter(${p})">Go to Part ${p} →</button>
+        <button type="button" class="btn sm diag-go-part" data-part="${p}" onclick="goToPartFilter(+this.dataset.part)">Go to Part ${p} →</button>
       </div>`;
     }).join('');
     const explainHtml=(DIAG_STATE.status==='done'&&DIAG_STATE.items&&DIAG_STATE.items.length)

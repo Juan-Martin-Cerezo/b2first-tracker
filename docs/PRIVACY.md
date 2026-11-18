@@ -215,8 +215,8 @@ sends no product events at all. Every feature keeps working.
 
 - PBKDF2-HMAC-SHA256 at 600,000 iterations, per-account salt, constant-time
   comparison; hashes below the current cost are re-hashed on the next login.
-- The 1,000 most common passwords are rejected, as are passwords equal to the
-  username and passwords shorter than 10 characters.
+- The embedded password blocklist is checked, as are passwords equal to the
+  username and passwords shorter than 12 characters.
 - Tokens are stored hashed, rotate on password change, and are capped at 90 days.
 - Passkey assertions are verified locally (P-256 ECDSA, RP-ID hash, challenge,
   origin); a signature counter that goes backwards is refused. A Google

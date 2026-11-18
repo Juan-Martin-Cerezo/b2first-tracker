@@ -38,6 +38,7 @@ import os, re, html, mimetypes, json, shutil, time, hashlib, hmac, math, secrets
 import base64, binascii
 import struct
 import calendar
+import importlib.util
 import socket
 import select
 import urllib.request, urllib.error
@@ -87,6 +88,9 @@ B2_DEMO   = os.environ.get("B2_DEMO", "0").strip() == "1"
 B2_REGISTER = (os.environ.get("B2_REGISTER", "open").strip().lower() or "open")
 PROGRESS_MAX_BYTES = 2 * 1024 * 1024                    # max size of a progress payload (2 MB)
 AI_MAX_BYTES = 32 * 1024                                # max size of an AI request body (32 KB)
+# Uniform ceiling for every mutating /api/* request that has no larger,
+# route-specific cap below. Decided from Content-Length before the body is read.
+B2_MAX_BODY = 256 * 1024
 B2_PUBLIC_HEALTH = os.environ.get("B2_PUBLIC_HEALTH", "0").strip() == "1"
 _START_TS = time.time()                                 # for /api/health uptime_s
 
@@ -254,6 +258,23 @@ SPK_TURN_TIMEOUT = 20                # seconds per upstream call
 # upstream does. Each upstream call inside a turn is capped to what is left.
 SPK_TURN_DEADLINE = SPK_TURN_TIMEOUT + 5
 SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
+
+
+def _route_body_cap(path):
+    """Hard body ceiling for one mutating request, decided from Content-Length.
+
+    Routes with a documented larger payload keep their own cap; every other
+    mutating /api/* request is limited to B2_MAX_BODY (256 KB).
+    """
+    return {
+        "/api/speaking/pa": SPK_PA_MAX_BODY,
+        "/api/speaking/turn": SPK_TURN_MAX_BODY,
+        "/api/speaking/report": SPK_REPORT_MAX_BODY,
+        "/api/speaking/minute": SPK_MINUTE_MAX_BODY,
+        "/api/speaking/partner": SPK_PARTNER_MAX_BODY,
+        "/api/progress": PROGRESS_MAX_BYTES,
+        "/api/billing/webhook": BILLING_WEBHOOK_MAX_BYTES,
+    }.get(path, B2_MAX_BODY)
 
 # Money guard. Google Cloud has no hard dollar cap: when the credit runs out the
 # card is charged. This process is the only client of the API key, so the ceiling
@@ -2888,13 +2909,13 @@ def user_bk_dir(user_id):
     return store._bk_dir(user_id)
 
 
-# --- Password policy (fase 12/24): embedded list, no dependencies, no downloads ---
+# --- Password policy (fase 12/24, fase E): embedded list, no dependencies ---
 COMMON_PASSWORDS = store.COMMON_PASSWORDS
-PASSWORD_MIN_LEN = 10
+PASSWORD_MIN_LEN = 12
 
 
 _PASSWORD_ERRORS = {
-    "password too short (min 10)": "Password must be at least 10 characters.",
+    "password too short (min 12)": "Password must be at least 12 characters.",
     "password too common": "Password is too common. Choose something harder to guess.",
     "password equals username": "Password must not be your username.",
 }
@@ -2903,7 +2924,7 @@ _PASSWORD_ERRORS = {
 def password_problem(name, password):
     """Return the error key when the password is too weak, else None."""
     if not isinstance(password, str) or len(password) < PASSWORD_MIN_LEN:
-        return "password too short (min 10)"
+        return "password too short (min 12)"
     if isinstance(name, str) and password.strip().lower() == name.strip().lower():
         return "password equals username"
     if password.strip().lower() in COMMON_PASSWORDS:
@@ -2935,7 +2956,7 @@ def register_user(name, password, color=None):
     if not name:
         return None, "name is empty"
     if not isinstance(password, str) or len(password) < PASSWORD_MIN_LEN:
-        return None, "password too short (min 10)"
+        return None, "password too short (min 12)"
     for u in users.values():
         if u.get("name", "").lower() == name.lower():
             return None, "username taken"
@@ -3886,17 +3907,113 @@ SECURITY_HEADERS = {
     # one page that captures audio. The landing and everything else get the
     # minimum.
     "Permissions-Policy": PERMISSIONS_NONE,
-    # 'unsafe-inline' is still required by the single-file UI (197 inline event
-    # handlers); 'unsafe-eval' is not present. object-src/base-uri close the
-    # plugin and <base> injection paths. See SECURITY.md §"Residual risks".
-    "Content-Security-Policy": (
-        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
-        "script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; "
-        "connect-src 'self' wss://generativelanguage.googleapis.com; "
-        "object-src 'none'; frame-ancestors 'none'; "
-        "base-uri 'none'; form-action 'self'"
-    ),
 }
+
+# CSP without 'unsafe-inline' in script-src. Inline <script> bodies and inline
+# event handlers are allowed only by their sha256 hash.
+#
+# Trade-off: CSP Level 3 requires 'unsafe-hashes' for hashed inline event
+# handlers, so it stays in script-src. It does not re-enable arbitrary inline
+# JS: only the exact handler values present in the served document match. To
+# remove it completely the 190+ on*="..." attributes must be replaced with
+# addEventListener/delegation (then only the <script> hashes are needed) and,
+# for markup built at runtime, with data-* attributes plus delegated listeners.
+# 'strict-dynamic' drops host allowlists in CSP3 browsers: the document loads no
+# external scripts, and the hashes cover its two inline blocks.
+CSP_TEMPLATE = (
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+    "script-src {script_src}; worker-src 'self' blob:; "
+    "connect-src 'self' wss://generativelanguage.googleapis.com; "
+    "object-src 'none'; frame-ancestors 'none'; "
+    "base-uri 'none'; form-action 'self'"
+)
+
+_CSP_MODULE = None
+_CSP_LOCK = threading.Lock()
+_CSP_CACHE = {}          # {"<key>": (validator, script_src)}
+_CSP_LEGAL_KEY = "legal-shell"
+
+
+def _csp_hashes():
+    """Load tools/csp_hashes.py once (stdlib only, no third-party import)."""
+    global _CSP_MODULE
+    if _CSP_MODULE is not None:
+        return _CSP_MODULE
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "tools", "csp_hashes.py")
+    spec = importlib.util.spec_from_file_location("_b2_csp_hashes", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    _CSP_MODULE = module
+    return module
+
+
+def _csp_script_src_from_html(key, html, validator):
+    """Cached, header-ready script-src for one document.
+
+    `validator` changes whenever the document changes (mtime_ns+size for a file,
+    a constant for generated pages), so a rewrite is picked up without a restart
+    and the hashes are computed once per version.
+    """
+    with _CSP_LOCK:
+        cached = _CSP_CACHE.get(key)
+        if cached is not None and cached[0] == validator:
+            return cached[1]
+        try:
+            value = _csp_hashes().script_src(html)
+        except Exception:
+            value = "'self'"
+        _CSP_CACHE[key] = (validator, value)
+        return value
+
+
+def _csp_script_src_for_file(path):
+    """script-src directive for one HTML file, revalidated by mtime_ns+size."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return "'self'"
+    validator = (st.st_mtime_ns, st.st_size)
+    cached = _CSP_CACHE.get(path)
+    if cached is not None and cached[0] == validator:
+        return cached[1]
+    try:
+        with open(path, encoding="utf-8") as handle:
+            html = handle.read()
+    except OSError:
+        return "'self'"
+    return _csp_script_src_from_html(path, html, validator)
+
+
+def _csp_script_src_legal():
+    """script-src for the generated legal pages (shared static shell)."""
+    cached = _CSP_CACHE.get(_CSP_LEGAL_KEY)
+    if cached is not None:
+        return cached[1]
+    try:
+        html = legal.legal_page("SECURITY", "Security Policy")
+    except Exception:
+        return "'self'"
+    return _csp_script_src_from_html(_CSP_LEGAL_KEY, html, "static")
+
+
+def _content_security_policy(path):
+    """Build the CSP for one request path.
+
+    Only documents that can contain inline script (the tracker, the landing and
+    the legal pages) carry hashes; everything else keeps the same policy with a
+    plain 'self' script-src.
+    """
+    clean = (path or "").split("?", 1)[0]
+    if clean in ("/app", "/index.html"):
+        script_src = _csp_script_src_for_file(TRACKER)
+    elif clean == "/":
+        script_src = _csp_script_src_for_file(LANDING)
+    elif clean in ("/privacy", "/terms", "/security"):
+        script_src = _csp_script_src_legal()
+    else:
+        script_src = "'self'"
+    return CSP_TEMPLATE.format(script_src=script_src)
 
 
 def _security_headers(path):
@@ -3906,6 +4023,7 @@ def _security_headers(path):
     response advertises no device capability at all.
     """
     headers = dict(SECURITY_HEADERS)
+    headers["Content-Security-Policy"] = _content_security_policy(path)
     if (path or "").split("?", 1)[0] in ("/app", "/index.html"):
         headers["Permissions-Policy"] = PERMISSIONS_MIC
     return headers
@@ -4561,6 +4679,36 @@ class H(BaseHTTPRequestHandler):
         except ValueError:
             return 0
 
+    def _csrf_ok(self):
+        """Same-origin proof for one mutating API request.
+
+        Browsers send Origin (or at least Referer) on POST/PUT/DELETE. When it
+        is present it must name this host; a mismatch is a cross-site request
+        and gets 403. Requests with neither header are non-browser clients
+        (CLI, Stripe webhook) and are allowed. A request that carries Fetch
+        Metadata (Sec-Fetch-Site) is a browser and must prove it is our own
+        page with X-Requested-With: b2first, the documented fallback.
+        """
+        host = (self.headers.get("Host") or "").strip().lower()
+        host_name = urlsplit("//" + host).hostname if host else None
+
+        def same_host(url):
+            try:
+                name = urlsplit(url).hostname
+            except ValueError:
+                return False
+            return bool(name) and (host_name is None or name.lower() == host_name)
+
+        origin = self.headers.get("Origin")
+        if origin:
+            return same_host(origin)
+        referer = self.headers.get("Referer")
+        if referer:
+            return same_host(referer)
+        if self.headers.get("Sec-Fetch-Site"):
+            return (self.headers.get("X-Requested-With") or "").strip().lower() == "b2first"
+        return True
+
     def _drain(self):
         """Read and discard the request body (bounded) so the client can finish.
 
@@ -4655,6 +4803,18 @@ class H(BaseHTTPRequestHandler):
         if clen > MAX_BODY_BYTES:
             self._reject(413, {"error": "payload too large"})
             return
+        if self.command in ("POST", "PUT", "DELETE") and path.startswith("/api/"):
+            # Before any handler reads the body: one uniform cap per route
+            # (B2_MAX_BODY unless the route documents a larger payload).
+            if clen > _route_body_cap(path):
+                self._reject(413, {"error": "payload too large"})
+                return
+            # CSRF defence in depth on every mutating API route, including
+            # /api/speaking/turn (it checks the token too, but a cross-site
+            # browser page must not get that far).
+            if not self._csrf_ok():
+                self._reject(403, {"error": "cross-site request rejected"})
+                return
         if path == "/api/speaking/pa" and clen > SPK_PA_MAX_BODY:
             _audit("pa_rejected", "", _real_ip(self), self._rid, {"reason": "too_large"})
             self._reject(413, {"error": "audio too large"})
@@ -5448,7 +5608,7 @@ class H(BaseHTTPRequestHandler):
             if err:
                 code, msg = {
                     "username taken": (409, "That username is taken."),
-                    "password too short (min 10)": (400, "Password must be at least 10 characters."),
+                    "password too short (min 12)": (400, "Password must be at least 12 characters."),
                     "name is empty": (400, "Username is required."),
                 }.get(err, (400, err))
                 self._send_json(code, {"error": msg})
