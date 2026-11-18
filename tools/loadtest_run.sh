@@ -11,7 +11,7 @@
 #
 # Usage:
 #   bash tools/loadtest_run.sh [--users 400] [--steps "10 25 50 100 200"] \
-#       [--duration 30] [--scenario mixed] [--out DIR] [--keep]
+#       [--duration 30] [--scenario mixed] [--out DIR] [--keepalive] [--keep]
 #
 # Every step starts from the same seeded snapshot, so the ladder is not
 # contaminated by tokens, backups or rate-limit state left by the previous one.
@@ -31,6 +31,7 @@ STEPS="10 25 50 100 200"
 SCENARIO="mixed"
 PROD=0
 KEEP=0
+KEEPALIVE=0
 OUT=""
 PASSWORD="${B2_LOADTEST_PASSWORD:-loadtest-pass-9}"
 PREFIX="load"
@@ -62,6 +63,7 @@ while [ $# -gt 0 ]; do
     --password)   PASSWORD="${2:-}"; shift 2 ;;
     --prefix)     PREFIX="${2:-}"; shift 2 ;;
     --prod)       PROD=1; shift ;;
+    --keepalive)  KEEPALIVE=1; shift ;;
     --keep)       KEEP=1; shift ;;
     -h|--help)    usage; exit 0 ;;
     *)            die "unknown argument: $1 (see --help)" ;;
@@ -72,6 +74,9 @@ case "$SCENARIO" in
   read|api|write|login|mixed) ;;
   *) die "unknown scenario: $SCENARIO" ;;
 esac
+
+KA_ARGS=()
+[ "$KEEPALIVE" = 1 ] && KA_ARGS+=(--keepalive)
 
 if [ "$PROD" = 1 ]; then
   URL="${URL:-http://127.0.0.1:8088}"
@@ -282,7 +287,7 @@ run_step() {
   "$PYTHON" "$LOADTEST" --url "$URL" --scenario "$SCENARIO" \
       --concurrency "$conc" --duration "$DURATION" \
       --creds "$CREDS" --users "$USERS" --password "$PASSWORD" \
-      --xff-pool 4096 --json "$RESULTS/step-$conc.json" \
+      --xff-pool 4096 "${KA_ARGS[@]}" --json "$RESULTS/step-$conc.json" \
       >> "$RUNLOG" 2>&1 || echo "warning: loadtest exited non-zero"
   stop_sampler
   cpu_summary "$RESULTS/step-$conc.cpu.txt" \
@@ -343,7 +348,7 @@ PY
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-echo "runner: scenario=$SCENARIO users=$USERS duration=${DURATION}s steps=[$STEPS]"
+echo "runner: scenario=$SCENARIO users=$USERS duration=${DURATION}s steps=[$STEPS] keepalive=$KEEPALIVE"
 echo "runner: python=$PYTHON root=$ROOT"
 "$PYTHON" -m py_compile "$LOADTEST"
 
@@ -354,7 +359,7 @@ if [ "$PROD" = 1 ]; then
     "$PYTHON" "$LOADTEST" --url "$URL" --scenario "$SCENARIO" \
         --concurrency "$conc" --duration "$DURATION" \
         --creds "$CREDS" --users "$USERS" --password "$PASSWORD" \
-        --xff-pool 4096 --json "$RESULTS/step-$conc.json" \
+        --xff-pool 4096 "${KA_ARGS[@]}" --json "$RESULTS/step-$conc.json" \
         >> "$RUNLOG" 2>&1 || echo "warning: loadtest exited non-zero"
     "$PYTHON" - "$RESULTS/step-$conc.json" <<'PY'
 import json, sys
