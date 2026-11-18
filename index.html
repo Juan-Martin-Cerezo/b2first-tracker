@@ -1622,22 +1622,73 @@ footer{
 .gates-tab.active{color:var(--acc-text);border-bottom-color:var(--acc)}
 
 /* ---------- PROGRESSION MATRIX ---------- */
-.gate-matrix{width:100%;border-collapse:collapse;font-size:var(--fs-xs)}
-.gate-matrix th,.gate-matrix td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
-.gate-matrix thead th{background:var(--surface-2);color:var(--txt-2);font-weight:600}
-.gate-matrix tbody th{white-space:nowrap;background:var(--surface-2);color:var(--txt)}
-.gate-matrix tbody tr.current{background:var(--acc-soft)}
-.gate-matrix td.gate{margin:0;padding:9px 10px;border-left:0;border-radius:0;background:transparent}
-.gate-matrix td.gate.pass{background:transparent}
-.gate-matrix .gate-name{color:var(--txt);font-weight:600;line-height:1.35}
-.gate-matrix .gate-txt{
-  display:inline-block;margin-top:5px;padding:1px 8px;border-radius:999px;
-  background:var(--bad-soft);color:var(--bad-text);font-size:var(--t-meta);font-weight:600;
+.gate-summary{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  padding:var(--s3) var(--s4);margin-bottom:var(--s4);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
 }
-.gate-matrix td.gate.pass .gate-txt{background:var(--ok-soft);color:var(--ok-text)}
-.gate-matrix .gate-status{display:inline-block;margin-top:5px;font-weight:700}
-.gate-matrix .gate-status.pass{color:var(--ok-text)}
-.gate-matrix .gate-status.fail{color:var(--bad-text)}
+.gate-summary-stage{font-size:var(--t-body);font-weight:600;color:var(--txt)}
+.gate-summary-next{font-size:var(--t-meta);color:var(--txt-2);margin-top:var(--s1)}
+.gate-history{margin-top:var(--s2);display:flex;flex-direction:column;gap:var(--s1);font-size:var(--t-meta);color:var(--txt-2)}
+.gate-cta-box{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);flex-wrap:wrap;
+  padding:var(--s3) var(--s4);margin-bottom:var(--s4);
+  background:var(--acc-soft);border:1px solid var(--acc-border);border-radius:var(--r-panel);
+}
+.gate-cta-text{font-size:var(--t-body);color:var(--txt);flex:1 1 220px}
+.gate-cta-actions{display:flex;gap:var(--s2);flex-wrap:wrap}
+.gate-stages{display:flex;flex-direction:column;gap:var(--s4)}
+.gate-stage-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s4);
+}
+.gate-stage-card.is-current{border-color:var(--acc-border);box-shadow:var(--shadow-1)}
+.gate-stage-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;
+  margin-bottom:var(--s2);padding-bottom:var(--s2);border-bottom:1px solid var(--line);
+}
+.gate-stage-head h3{margin:0}
+.gate-stage-meta{font-size:var(--t-meta);color:var(--txt-2);margin:0 0 var(--s3) 0}
+.gate-stage-pill{
+  display:inline-flex;align-items:center;padding:var(--s1) var(--s2);border-radius:999px;
+  font-size:var(--t-meta);font-weight:600;background:var(--surface-2);color:var(--txt-2);
+}
+.gate-stage-pill.current{background:var(--acc-soft);color:var(--acc-text)}
+.gate-stage-pill.pass{background:var(--ok-soft);color:var(--ok-text)}
+.gate-matrix{width:100%;display:flex;flex-direction:column;gap:var(--s2)}
+.gate-thead .gate-tr{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.7fr) minmax(0,1.8fr) minmax(0,.9fr) auto;
+  gap:var(--s3);padding:var(--s2) var(--s3);
+  background:var(--surface-2);border-radius:var(--r-ctl);
+  font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+}
+.gate-tbody{display:flex;flex-direction:column;gap:var(--s2)}
+.gate-matrix .gate{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.7fr) minmax(0,1.8fr) minmax(0,.9fr) auto;
+  align-items:center;gap:var(--s3);
+  margin:0;padding:var(--s3);
+  background:var(--surface-2);border:1px solid var(--line);border-left:4px solid var(--bad);
+  border-radius:var(--r-ctl);
+}
+.gate-matrix .gate.pass{border-left-color:var(--ok);background:var(--surface-2)}
+.gate-matrix .gate.manual{border-left-color:var(--warn);background:var(--surface-2)}
+.gate-matrix .gate.fail{border-left-color:var(--bad)}
+.gate-cell{min-width:0}
+.gate-cell-lbl{display:none;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);margin-right:var(--s1)}
+.gate-name{color:var(--txt);font-size:var(--t-body);font-weight:600;line-height:1.35}
+.gate-req{color:var(--txt-2);font-size:var(--t-meta);margin-top:var(--s1);line-height:1.4}
+.gate-ratio{font-size:var(--t-body);font-weight:600;color:var(--txt)}
+.gate-matrix .gate .bar{margin-top:var(--s1);height:6px;background:var(--line);border-radius:4px;overflow:hidden}
+.gate-matrix .gate.manual .fill{background:var(--warn)}
+.gate-evidence{font-size:var(--t-meta);color:var(--txt-2);line-height:1.4;overflow-wrap:anywhere}
+.gate-status{
+  display:inline-flex;align-items:center;padding:var(--s1) var(--s2);border-radius:999px;
+  font-size:var(--t-meta);font-weight:600;line-height:1.3;
+}
+.gate-status.pass{background:var(--ok-soft);color:var(--ok-text)}
+.gate-status.manual{background:var(--warn-soft);color:var(--warn-text)}
+.gate-status.fail{background:var(--bad-soft);color:var(--bad-text)}
+.gate-action-btn,.gate-cta-btn{white-space:nowrap;flex:none}
 
 /* ---------- VIEWS & ANIMATION ---------- */
 .view{display:none}
@@ -2295,36 +2346,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   }
 }
 
-/* A1 — below 768px each stage is its own card, one row per skill. */
+/* P2 — below 768px each stage renders as a 1-column card stack; gate rows stack cleanly. */
 @media (max-width:767px){
   #v-prog .card:has(> #gates){padding:var(--s3)}
-  .gate-wrap{overflow:visible;background:transparent;box-shadow:none;border-radius:0}
-  .gate-matrix{display:block;border-collapse:separate;border-spacing:0;font-size:var(--t-body)}
-  .gate-matrix thead{display:none}
-  .gate-matrix tbody{display:flex;flex-direction:column;gap:var(--s2)}
-  .gate-matrix tbody tr{
-    display:block;background:var(--surface-2);border:1px solid var(--line);
-    border-radius:var(--r-panel);padding:var(--s1) var(--s4);overflow:hidden;
+  .gate-stage-card{padding:var(--s3)}
+  .gate-thead{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
   }
-  .gate-matrix tbody tr.current{border-color:var(--acc-border)}
-  .gate-matrix tbody th{
-    display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);
-    height:auto;white-space:normal;background:transparent;border:0;padding:0 0 var(--s1);margin:0 0 var(--s1);
-    border-bottom:1px solid var(--line);font-size:var(--t-sub);font-weight:600;color:var(--txt);
+  .gate-matrix .gate{
+    grid-template-columns:1fr;gap:var(--s2);padding:var(--s3);align-items:stretch;
   }
-  .gate-matrix tbody th .gate-status{margin:0;font-size:var(--t-meta);font-weight:600}
-  .gate-matrix td.gate{
-    display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);
-    column-gap:var(--s3);padding:2px 0;height:auto;border:0;background:transparent;
-  }
-  .gate-matrix td.gate+td.gate{border-top:1px solid var(--line)}
-  .gate-matrix td.gate::before{
-    content:attr(data-label);grid-column:1;grid-row:1;align-self:start;
-    font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
-    overflow-wrap:normal;word-break:normal;
-  }
-  .gate-matrix .gate-name{grid-column:2;grid-row:1;margin:0;font-size:var(--t-body);line-height:1.35}
-  .gate-matrix .gate-txt{display:none}
+  .gate-cell-lbl{display:inline}
+  .gate-cell-actions{display:flex;justify-content:flex-start}
+  .gate-action-btn{min-height:44px;min-width:44px}
 }
 
 /* === F128: App-like mobile (<=768px only; >=1024px untouched) === */
@@ -4290,12 +4325,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="card">
           <h2 data-i18n="prog_matrix">🧗 Progression Matrix</h2>
-          <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance. Each cell is the requirement for every part of that skill.</div>
+          <div class="sub" data-i18n="prog_matrix_sub">Complete all gates within your current stage to unlock the next one automatically.</div>
           <div id="gates"></div>
-          <div style="margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap">
-            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
-            <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
-          </div>
           <div style="margin-top:var(--s4);border-top:1px solid var(--outline-variant);padding-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap">
             <button class="btn gray" onclick="exportData()" data-i18n="prog_export">💾 Export data</button>
             <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="prog_import">📥 Import data</button>
@@ -4742,9 +4773,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
              'sf'  = final 14' Speaking (ok: validated at C1 by the teacher)
    D.errs[]        → error log with taxonomy
        {date, code (L-GAP/G-ERR/T-MIS/T-LIM), detail}
-   D.stage         → current stage 0..2 (advances through the gates)
+   D.stage         → current stage 0..2 (monotonic; only advances via advanceStageIfReady())
+   D.stageHistory[]→ [{stage, at, reason}] stage transition audit log (at=null when migrated)
    D.overrides     → gates manually marked as achieved
-       {`${stage}-${idx}`: true}
+       {[gateId]: {manual: true, at: 'YYYY-MM-DD'}} (never changes numeric have/need)
    D.weekOverrides → weekly rotation picked by hand
        {rue: part, w: kind, l: part, sp: part}
        (Reset to defaults clears it along with the rotation settings)
@@ -4753,21 +4785,20 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
        cycles (rueCycle/wCycle/lCycle/spCycle) · numeric gate criteria
        (e0/e1/e2).
 
-   GATES  (stages → criteria in D.settings)
+   GATES  (stages → criteria in D.settings; see docs/PROGRESSION.md)
    ---------------------------------------------------------------------
-   Stage 0 — Foundations: 3 gates — Writing score >= e0.w · UoE Part 4 % >=
-             e0.u · Listening Part 2 errors <= e0.l
-   Stage 1 — Precision & Cohesion: 6 gates — Writing >= e1.w and min <=
-             e1.wm + Lexical Injection (4 phrasal verbs + 3 collocations) ·
-             UoE (Parts 1-4) >= e1.u in 4 mocks · Listening >= e1.l in 3 ·
-             Speaking P2 with no silences >3s · Reading P6 >= 4/6 in 3 ·
-             Speaking P3-4 with >= 3 negotiation structures in 4
-   Stage 2 — Mastery (Release Candidate): 4 gates — R&UoE % >= e2.r and
-             min <= e2.rm · full Writing >= e2.w · Listening >= e2.l in
-             e2.ln consecutive tests · final 14' Speaking validated at C1
-             by the teacher
-   Every gate has a manual override checkbox (D.overrides) for criteria
-   that do not apply (e.g. missing audio).
+   Stage 0 — Foundations: 5 gates — fresh D.diag (≤60d) · R&UE P1-7 ≥ e0.u% ·
+             Listening P1-4 ≥ 20/30 & P2 errors ≤ e0.l · Writing 5 kinds ≥ e0.w ·
+             Speaking P1-4 ≥ 3/5
+   Stage 1 — Precision & Cohesion: 5 gates — R&UE P1-7 ≥ e1.u% · Listening
+             P1-4 ≥ e1.l/30 · Writing 5 kinds ≥ e1.w & min ≤ e1.wm · Speaking
+             P1-4 ≥ 4/5 · ≥1 log & ≤2 T-LIM errors (30d)
+   Stage 2 — Mastery (Release Candidate): 5 gates — full R&UE ≥ e2.r% & min ≤
+             e2.rm · e2.ln consecutive full Listening ≥ e2.l/30 · full Writing
+             both texts ≥ e2.w in ≤80m · full Speaking ≥ 4/5 or C1 sf · ≥1 mock
+             & 0 unfixed T-LIM errors (30d)
+   Every gate can be overridden manually (D.overrides) with an Undo action.
+   calcGates() is pure; getProgression() feeds both Progress and Weekly Plan.
 
    WEEKLY ROTATION
    ---------------------------------------------------------------------
@@ -4956,9 +4987,6 @@ const I18N={
     stage_name_0:'Stage 0 — Foundations (Structural Acquisition)',
     stage_name_1:'Stage 1 — Precision & Cohesion (Pattern Mastery)',
     stage_name_2:'Stage 2 — Mastery (Target Grade A / C1) · Release Candidate',
-    advance_stage:'⬆ Advance to {stage}',
-    advance_done:'🎓 YOU COMPLETED EVERYTHING',
-    advance_wait:'⬆ Complete all gates to advance',
     demo_banner:'Demo mode · your progress is saved only in this browser and is erased if you clear site data',
     ob_language:'Language',
     ob_goal_title:'What are you preparing for?',
@@ -5118,22 +5146,83 @@ const I18N={
     prog_total_time:'Total Study Time',
     prog_logged_min:'logged minutes',
     prog_matrix:'🧗 Progression Matrix',
-    prog_matrix_sub:'Complete all criteria within a stage to advance. Each cell is the requirement for every part of that skill.',
-    prog_stage_row:'Stage {n}',
-    prog_stage_col:'Stage',
-    prog_col_rue:'R&UE',
-    prog_col_listening:'Listening',
-    prog_col_writing:'Writing',
-    prog_col_speaking:'Speaking',
+    prog_matrix_sub:'Complete all gates within your current stage to unlock the next one automatically.',
     prog_achieved:'achieved',
     prog_pending:'pending',
-    prog_cell_rue:'all parts 1–7 at ≥ {pct}%',
-    prog_cell_listening:'each part 1–4 at ≥ {score}/30',
-    prog_cell_writing:'each part (Essay, Article, Report, Review, Email) at ≥ {score}/20',
-    prog_cell_speaking:'each part 1–4 at ≥ {score}/5',
-    prog_cell_speaking_full:'each part 1–4 at ≥ {score}/5 in one full mock',
-    prog_advance:'⬆ Advance to the next stage',
-    prog_stage_down:'⬇ Go back a stage',
+    gate_col_gate:'Gate',
+    gate_col_progress:'Progress',
+    gate_col_evidence:'Evidence',
+    gate_col_status:'Status',
+    gate_col_action:'Action',
+    gate_stage_current:'Current',
+    gate_stage_upcoming:'Upcoming',
+    gate_manual_badge:'Manual override',
+    gate_manual_badge_at:'Manual override · {date}',
+    gate_action_override:'Mark done',
+    gate_action_undo:'Undo',
+    gate_summary_current:'Current stage: {stage}',
+    gate_summary_left:'{n} gates left to unlock {next}',
+    gate_summary_done:'All Stage 2 mastery gates completed',
+    gate_history_title:'Stage history',
+    gate_history_item:'{stage} · {when} — {reason}',
+    gate_history_unknown:'date unknown (migrated)',
+    gate_cta_empty:'No practice evidence yet. Take the 10-min diagnostic or log your first session to begin Stage 0.',
+    gate_cta_diag:'Start diagnostic',
+    gate_cta_log:'Log session',
+    gate_stage_reached:'Unlocked {when} · {reason}',
+    gate_stage_reached_unknown:'Unlocked (prior to history tracking)',
+    gate_s0_diag_label:'Diagnostic baseline',
+    gate_s0_diag_req:'Fresh diagnostic completed within ≤ 60 days',
+    gate_s0_rue_label:'R&UE foundations',
+    gate_s0_rue_req:'All 7 parts (1–7) at ≥ {pct}%',
+    gate_s0_l_label:'Listening foundations',
+    gate_s0_l_req:'Parts 1–4 at ≥ 20/30 and Part 2 ≤ {err} errors',
+    gate_s0_w_label:'Writing foundations',
+    gate_s0_w_req:'All 5 genres at ≥ {score}/20',
+    gate_s0_sp_label:'Speaking foundations',
+    gate_s0_sp_req:'Parts 1–4 at ≥ 3/5',
+    gate_s1_rue_label:'R&UE precision',
+    gate_s1_rue_req:'All 7 parts (1–7) at ≥ {pct}%',
+    gate_s1_l_label:'Listening precision',
+    gate_s1_l_req:'Parts 1–4 at ≥ {score}/30',
+    gate_s1_w_label:'Writing precision',
+    gate_s1_w_req:'All 5 genres at ≥ {score}/20 in ≤ {min} min',
+    gate_s1_sp_label:'Speaking precision',
+    gate_s1_sp_req:'Parts 1–4 at ≥ 4/5',
+    gate_s1_err_label:'Pacing & error control',
+    gate_s1_err_req:'≥ 1 session logged and ≤ 2 T-LIM errors (30d)',
+    gate_s2_rue_label:'Full R&UE exam',
+    gate_s2_rue_req:'Full R&UE ≥ {pct}% in ≤ {min} min',
+    gate_s2_l_label:'Listening consistency',
+    gate_s2_l_req:'{n} consecutive full tests ≥ {score}/30',
+    gate_s2_w_label:'Full Writing exam',
+    gate_s2_w_req:'Both texts ≥ {score}/20 in ≤ 80 min',
+    gate_s2_sp_label:'Full Speaking (C1)',
+    gate_s2_sp_req:'Full 4-part mock ≥ 4/5 or C1 validated',
+    gate_s2_err_label:'Exam error hygiene',
+    gate_s2_err_req:'≥ 1 full mock and 0 unfixed T-LIM errors (30d)',
+    gate_ev_none:'No qualifying sessions logged yet',
+    gate_ev_ignored:'No valid sessions yet ({reason})',
+    gate_ev_ignored_future:'future dates ignored',
+    gate_ev_ignored_zero:'zero-total entries ignored',
+    gate_ev_based_one:'Based on 1 session on {date}',
+    gate_ev_based_many:'Based on {n} sessions since {date}',
+    gate_ev_diag_none:'No diagnostic completed yet',
+    gate_ev_diag_future:'Diagnostic date {date} is in the future — ignored',
+    gate_ev_diag_zero:'Diagnostic with total: 0 is invalid — ignored',
+    gate_ev_diag_stale:'Diagnostic from {date} is {days} days old (>60 days) — stale, does not count',
+    gate_ev_diag_ok:'Diagnostic on {date} ({correct}/{total} · {days}d ago)',
+    gate_ev_err_summary:'{n} recent T-LIM errors in last 30d',
+    gate_ev_err_unfixed:'{n} unfixed T-LIM errors in last 30d',
+    gate_ev_missing:'missing: {list}',
+    gate_ev_all_met:'all criteria met',
+    gate_ev_best_mock:'best: {pct}% in {min} min',
+    gate_ev_streak:'best streak: {best}/{need}',
+    gate_ev_best_fw:'best: {s1}/{s2} in {min} min',
+    gate_ev_sp_full:'full mock or C1 sign-off',
+    gate_reason_all_data:'All Stage {n} gates met by logged evidence',
+    gate_reason_with_overrides:'All Stage {n} gates met ({k} manual override: {ids})',
+    gate_reason_migrated:'Migrated existing stage',
     prog_export:'💾 Export data',
     prog_import:'📥 Import data',
     prog_export_help:'Export the JSON to back up or transfer your data from PC to phone (and vice versa).',
@@ -5207,6 +5296,7 @@ const I18N={
     plan_regenerate:'Regenerate',
     plan_week_sub:'Your week follows your session days and the skill rotation. A refresh never moves it.',
     plan_need_diag:"Take the diagnostic (10 min) and I'll build your week.",
+    plan_diag_stale:'Your diagnostic is over 60 days old and no longer counts as fresh evidence. Retake the diagnostic to rebuild your week.',
     plan_go_diag:'Go to the diagnostic →',
     plan_session:'Session {n}',
     plan_day:'Day',
@@ -5789,9 +5879,6 @@ const I18N={
     stage_name_0:'Etapa 0 — Cimientos (Adquisición estructural)',
     stage_name_1:'Etapa 1 — Precisión y cohesión (Dominio de patrones)',
     stage_name_2:'Etapa 2 — Maestría (Meta: Grado A / C1) · Candidato a examen',
-    advance_stage:'⬆ Avanzar a {stage}',
-    advance_done:'🎓 COMPLETASTE TODO',
-    advance_wait:'⬆ Completá todas las puertas para avanzar',
     demo_banner:'Modo demo · tu progreso se guarda solo en este navegador y se borra si limpiás los datos del sitio',
     ob_language:'Idioma',
     ob_goal_title:'¿Para qué te preparás?',
@@ -5951,22 +6038,83 @@ const I18N={
     prog_total_time:'Tiempo total de estudio',
     prog_logged_min:'minutos registrados',
     prog_matrix:'🧗 Matriz de progresión',
-    prog_matrix_sub:'Completá todos los criterios de una etapa para avanzar. Cada celda es el requisito para todas las partes de esa destreza.',
-    prog_stage_row:'Etapa {n}',
-    prog_stage_col:'Etapa',
-    prog_col_rue:'R&UE',
-    prog_col_listening:'Listening',
-    prog_col_writing:'Writing',
-    prog_col_speaking:'Speaking',
+    prog_matrix_sub:'Completá todos los criterios de tu etapa actual para desbloquear la siguiente automáticamente.',
     prog_achieved:'alcanzada',
     prog_pending:'pendiente',
-    prog_cell_rue:'todas las partes 1–7 en ≥ {pct} %',
-    prog_cell_listening:'cada parte 1–4 con ≥ {score}/30',
-    prog_cell_writing:'cada parte (Essay, Article, Report, Review, Email) con ≥ {score}/20',
-    prog_cell_speaking:'cada parte 1–4 con ≥ {score}/5',
-    prog_cell_speaking_full:'cada parte 1–4 con ≥ {score}/5 en un mock completo',
-    prog_advance:'⬆ Avanzar a la siguiente etapa',
-    prog_stage_down:'⬇ Volver una etapa',
+    gate_col_gate:'Criterio',
+    gate_col_progress:'Progreso',
+    gate_col_evidence:'Evidencia',
+    gate_col_status:'Estado',
+    gate_col_action:'Acción',
+    gate_stage_current:'Actual',
+    gate_stage_upcoming:'Próxima',
+    gate_manual_badge:'Override manual',
+    gate_manual_badge_at:'Override manual · {date}',
+    gate_action_override:'Marcar',
+    gate_action_undo:'Deshacer',
+    gate_summary_current:'Etapa actual: {stage}',
+    gate_summary_left:'Faltan {n} criterios para desbloquear {next}',
+    gate_summary_done:'Completaste todos los criterios de maestría (Etapa 2)',
+    gate_history_title:'Historial de etapas',
+    gate_history_item:'{stage} · {when} — {reason}',
+    gate_history_unknown:'fecha desconocida (migrado)',
+    gate_cta_empty:'Todavía no hay evidencia de práctica. Hacé el diagnóstico de 10 min o registrá tu primera sesión para empezar la Etapa 0.',
+    gate_cta_diag:'Empezar chequeo',
+    gate_cta_log:'Registrar sesión',
+    gate_stage_reached:'Desbloqueada {when} · {reason}',
+    gate_stage_reached_unknown:'Desbloqueada (previa al historial de etapas)',
+    gate_s0_diag_label:'Diagnóstico inicial',
+    gate_s0_diag_req:'Diagnóstico reciente completado (≤ 60 días)',
+    gate_s0_rue_label:'Base de R&UE',
+    gate_s0_rue_req:'Las 7 partes (1–7) con ≥ {pct}%',
+    gate_s0_l_label:'Base de Listening',
+    gate_s0_l_req:'Partes 1–4 con ≥ 20/30 y Parte 2 ≤ {err} errores',
+    gate_s0_w_label:'Base de Writing',
+    gate_s0_w_req:'Los 5 géneros con ≥ {score}/20',
+    gate_s0_sp_label:'Base de Speaking',
+    gate_s0_sp_req:'Partes 1–4 con ≥ 3/5',
+    gate_s1_rue_label:'Precisión en R&UE',
+    gate_s1_rue_req:'Las 7 partes (1–7) con ≥ {pct}%',
+    gate_s1_l_label:'Precisión en Listening',
+    gate_s1_l_req:'Partes 1–4 con ≥ {score}/30',
+    gate_s1_w_label:'Precisión en Writing',
+    gate_s1_w_req:'Los 5 géneros con ≥ {score}/20 en ≤ {min} min',
+    gate_s1_sp_label:'Precisión en Speaking',
+    gate_s1_sp_req:'Partes 1–4 con ≥ 4/5',
+    gate_s1_err_label:'Ritmo y control de errores',
+    gate_s1_err_req:'≥ 1 sesión registrada y ≤ 2 errores T-LIM (30d)',
+    gate_s2_rue_label:'R&UE completo',
+    gate_s2_rue_req:'R&UE completo ≥ {pct}% en ≤ {min} min',
+    gate_s2_l_label:'Consistencia en Listening',
+    gate_s2_l_req:'{n} exámenes completos seguidos ≥ {score}/30',
+    gate_s2_w_label:'Writing completo',
+    gate_s2_w_req:'Ambos textos ≥ {score}/20 en ≤ 80 min',
+    gate_s2_sp_label:'Speaking completo (C1)',
+    gate_s2_sp_req:'Simulacro completo 4 partes ≥ 4/5 o validación C1',
+    gate_s2_err_label:'Higiene de errores de examen',
+    gate_s2_err_req:'≥ 1 simulacro completo y 0 errores T-LIM sin resolver (30d)',
+    gate_ev_none:'Sin sesiones válidas registradas aún',
+    gate_ev_ignored:'Sin sesiones válidas aún ({reason})',
+    gate_ev_ignored_future:'se ignoraron fechas futuras',
+    gate_ev_ignored_zero:'se ignoraron registros con total 0',
+    gate_ev_based_one:'Basado en 1 sesión del {date}',
+    gate_ev_based_many:'Basado en {n} sesiones desde el {date}',
+    gate_ev_diag_none:'Todavía no completaste el diagnóstico',
+    gate_ev_diag_future:'La fecha del diagnóstico ({date}) es futura — se ignora',
+    gate_ev_diag_zero:'Diagnóstico con total 0 inválido — se ignora',
+    gate_ev_diag_stale:'Diagnóstico del {date} tiene {days} días (>60 días) — viejo, no cuenta',
+    gate_ev_diag_ok:'Diagnóstico del {date} ({correct}/{total} · hace {days} días)',
+    gate_ev_err_summary:'{n} errores T-LIM recientes (30d)',
+    gate_ev_err_unfixed:'{n} errores T-LIM sin resolver (30d)',
+    gate_ev_missing:'faltan: {list}',
+    gate_ev_all_met:'todos los criterios cumplidos',
+    gate_ev_best_mock:'mejor: {pct}% en {min} min',
+    gate_ev_streak:'mejor racha: {best}/{need}',
+    gate_ev_best_fw:'mejor: {s1}/{s2} en {min} min',
+    gate_ev_sp_full:'mock completo o aval C1',
+    gate_reason_all_data:'Todos los criterios de Etapa {n} cumplidos con datos reales',
+    gate_reason_with_overrides:'Todos los criterios de Etapa {n} cumplidos ({k} override manual: {ids})',
+    gate_reason_migrated:'Etapa previa migrada',
     prog_export:'💾 Exportar datos',
     prog_import:'📥 Importar datos',
     prog_export_help:'Exportá el JSON para respaldar o pasar tus datos de la PC al celular (y viceversa).',
@@ -6040,6 +6188,7 @@ const I18N={
     plan_regenerate:'Regenerar',
     plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Un refresh no la mueve.',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
+    plan_diag_stale:'Tu diagnóstico tiene más de 60 días y ya no cuenta como evidencia fresca. Volvé a hacerlo para reconstruir tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
     plan_session:'Sesión {n}',
     plan_day:'Día',
@@ -8125,14 +8274,16 @@ function openUserModal(){
   const ov=document.getElementById('userModal');
   if(!ov||!USER)return;
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
+  const prog=typeof getProgression==='function'?getProgression(D):null;
   const stageNames=[t('stage_0'),t('stage_1'),t('stage_2')];
+  const st=prog?prog.stage:gateClampStage(D&&D.stage);
 
   const av=document.getElementById('modalAvatar');
   if(av){av.textContent=initial;av.style.background=USER.color||'var(--primary)';}
   const un=document.getElementById('modalUserName');
   if(un)un.textContent=USER.name||'Student';
   const us=document.getElementById('modalUserStage');
-  if(us)us.textContent=stageNames[D.stage]||t('stage_n',{n:D.stage||0});
+  if(us)us.textContent=stageNames[st]||t('stage_n',{n:st});
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
 
@@ -8163,13 +8314,16 @@ function load(){
     delete settings.byo;
     // The custom rotation mode is gone: a legacy document cannot bring it back.
     delete settings.customPlan;
+    const st=gateClampStage(d.stage);
+    const lang=(settings&&settings.lang)||'en';
     return {
       log: Array.isArray(d.log) ? d.log : [],
       errs: Array.isArray(d.errs) ? d.errs : [],
       examDates: Array.isArray(d.examDates) ? d.examDates : [],
-      stage: typeof d.stage==='number' ? d.stage : 0,
+      stage: st,
+      stageHistory: gateNormalizeStageHistory(d.stageHistory, st, lang),
       settings: settings,
-      overrides: d.overrides||{},
+      overrides: gateNormalizeOverrides(d.overrides),
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
       diag: d.diag||null,
@@ -8184,7 +8338,7 @@ function load(){
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0}}
+  }catch(e){return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0}}
 }
 function save(){
   D.updated_at=Date.now();
@@ -8403,17 +8557,26 @@ function syncPull(){
           delete mergedSettings.aiKey;
           delete mergedSettings.byo;
           delete mergedSettings.customPlan;
+          const nextStage=typeof d.stage==='number' ? gateClampStage(d.stage) : gateClampStage(D.stage);
+          const rawHistory=Array.isArray(d.stageHistory) ? d.stageHistory : (d.stage!==undefined ? null : D.stageHistory);
+          const nextLang=(mergedSettings&&mergedSettings.lang)||LANG;
           D = {
             log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
             errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
             examDates: Array.isArray(d.examDates) ? d.examDates : (Array.isArray(D.examDates) ? D.examDates : []),
-            stage: typeof d.stage==='number' ? d.stage : (D.stage||0),
+            stage: nextStage,
+            stageHistory: gateNormalizeStageHistory(rawHistory, nextStage, nextLang),
             settings: mergedSettings,
-            overrides: Object.assign({}, D.overrides||{}, d.overrides||{}),
+            overrides: d.overrides!==undefined ? gateNormalizeOverrides(d.overrides) : gateNormalizeOverrides(D.overrides),
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
             diag: d.diag!==undefined ? d.diag : (D.diag||null),
             profile: (d.profile&&typeof d.profile==='object') ? d.profile : (D.profile||null),
+            speaking: (d.speaking&&typeof d.speaking==='object')
+              ? {seen:(d.speaking.seen&&typeof d.speaking.seen==='object')?d.speaking.seen:{},
+                 last:(d.speaking.last&&typeof d.speaking.last==='object')?d.speaking.last:{},
+                 partnerRot:typeof d.speaking.partnerRot==='number'?d.speaking.partnerRot:0}
+              : (D.speaking||{seen:{},last:{},partnerRot:0}),
             onboarded: (d.onboarded!==undefined) ? !!d.onboarded : !!D.onboarded,
             onboardStep: (typeof d.onboardStep==='number') ? d.onboardStep : (D.onboardStep||1),
             sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
@@ -13703,6 +13866,7 @@ function log(e){
   const entry = Object.assign({date:today(), created_at:Date.now()}, e);
   D.log.push(entry);
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
+  advanceStageIfReady({save:false});
   save();
   refreshAll();
   track('session_save',{kind:(e&&e.type)||'?',part:(e&&e.part)||0});
@@ -13880,136 +14044,785 @@ function saveErr(){
   const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
   if(!desc){alert(t('alert_describe_error'));return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix').value});
+  advanceStageIfReady({save:false});
   save();refreshAll();
   document.getElementById('errDesc').value='';document.getElementById('errFix').value='';
 }
-function delLog(i){D.log.splice(i,1);save();refreshAll()}
-function delErr(i){D.errs.splice(i,1);save();refreshAll()}
+function delLog(i){D.log.splice(i,1);advanceStageIfReady({save:false});save();refreshAll()}
+function delErr(i){D.errs.splice(i,1);advanceStageIfReady({save:false});save();refreshAll()}
 function saveErr2(){
   const code=document.getElementById('errCode2').value,desc=document.getElementById('errDesc2').value;
   if(!desc){alert(t('alert_describe_error'));return}
   D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix2').value});
+  advanceStageIfReady({save:false});
   save();refreshAll();
   document.getElementById('errDesc2').value='';document.getElementById('errFix2').value='';
 }
 
-/* ---------- GATES (Progression Matrix) ----------
-   The matrix is the only place where the stage criteria live. Each row is a
-   stage and each column a skill; the requirement in every cell covers all the
-   parts of that skill. The thresholds are code constants (the defaults the app
-   used before PLAN stopped editing them), so there is one source of truth:
-   D.log. advanceStage()/stageDown() still move the manual stage pointer. */
-const GATE_STAGES=[
-  {rue:60,l:20,w:14,sp:3},
-  {rue:75,l:24,w:16,sp:4},
-  {rue:80,l:26,w:16,sp:4}
-];
-const GATE_SKILLS=['rue','l','w','sp'];
-const SP_PART_NAMES={1:'Interview',2:'Long turn',3:'Collaborative task',4:'Discussion'};
-function gateLog(){return Array.isArray(D.log)?D.log:[]}
-function gateBestByPart(entries,partOf,valueOf){
-  const best={};
-  entries.forEach(e=>{
-    const p=partOf(e);if(p==null)return;
-    const v=valueOf(e);if(v==null)return;
-    if(best[p]===undefined||v>best[p])best[p]=v;
-  });
-  return best;
+/* ---------- GATES & PROGRESSION (Single Source of Truth) ----------
+   Model specification (matches docs/PROGRESSION.md):
+   - Stages 0..2: 0 = Foundations, 1 = Precision & Cohesion, 2 = Mastery.
+   - Thresholds come from D.settings (e0/e1/e2) with SETTINGS_DEFAULT fallbacks.
+   - Data sources: D.log (ue, rue, r6, lp, l, w, fw, sp, sf), D.errs (T-LIM),
+     and D.diag (valid only when 0 <= ageDays <= 60; >60d is stale and ignored).
+   - Pure evaluation: calcGates(doc, now) is deterministic, side-effect-free,
+     never reads the DOM, ignores future dates and invalid/total<=0 entries.
+     Returns {stage, gates:[{id,label,need,have,pass,evidence,manual}], next, ...}.
+   - Single transition owner: advanceStageIfReady() advances D.stage by at most
+     +1 per transition, is idempotent, never regresses, and logs {stage,at,reason}
+     in D.stageHistory.
+   - Honest overrides: D.overrides[id]={manual:true,at} marks pass=true without
+     changing numeric have/need. Undo deletes the override without regressing stage.
+   - Unified selector: getProgression(doc, now) feeds both Progress & Weekly Plan.
+   - Legacy migration: docs without stageHistory initialize [] at stage 0 or
+     seed pre-existing stages with at:null so progress is never lost. */
+function gateT(lang,key,vars){
+  const code=lang==='es'?'es':'en';
+  const table=(typeof I18N!=='undefined'&&I18N[code])||(typeof I18N!=='undefined'&&I18N.en)||{};
+  let s=table[key];
+  if((s===undefined||s===null)&&typeof I18N!=='undefined'&&I18N.en)s=I18N.en[key];
+  if(s===undefined||s===null)return '';
+  s=String(s);
+  if(vars)for(const k in vars)s=s.split('{'+k+'}').join(vars[k]);
+  return s;
 }
-function gateSkillState(skill,th){
-  const log=gateLog();
-  if(skill==='rue'){
-    const best=gateBestByPart(log.filter(e=>e.type==='ue'&&e.part>=1&&e.part<=7),
-      e=>+e.part,e=>e.total?e.correct/e.total*100:null);
-    let covered=0;for(let p=1;p<=7;p++)if(best[p]!==undefined&&best[p]>=th.rue)covered++;
-    return {ok:covered===7,covered,total:7};
+function gateDayKey(raw){
+  if(raw instanceof Date){
+    if(isNaN(raw.getTime()))return null;
+    const y=raw.getFullYear(),m=raw.getMonth()+1,d=raw.getDate();
+    return String(y).padStart(4,'0')+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   }
-  if(skill==='l'){
-    const need=th.l/30*100;
-    const best={};
-    log.filter(e=>e.type==='lp'&&e.part>=1&&e.part<=4).forEach(e=>{
-      const v=e.total?e.correct/e.total*100:null;
-      if(v!==null&&(best[e.part]===undefined||v>best[e.part]))best[e.part]=v;
-    });
-    log.filter(e=>e.type==='l').forEach(e=>{
-      const v=e.total?e.correct/e.total*100:null;
-      if(v===null)return;
-      for(let p=1;p<=4;p++)if(best[p]===undefined||v>best[p])best[p]=v;
-    });
-    let covered=0;for(let p=1;p<=4;p++)if(best[p]!==undefined&&best[p]>=need)covered++;
-    return {ok:covered===4,covered,total:4};
+  if(typeof raw!=='string')return null;
+  const m=raw.trim().match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+  if(!m)return null;
+  const y=Number(m[1]),mo=Number(m[2]),da=Number(m[3]);
+  if(mo<1||mo>12||da<1||da>31)return null;
+  const dt=new Date(y,mo-1,da,12,0,0);
+  if(dt.getFullYear()!==y||dt.getMonth()!==mo-1||dt.getDate()!==da)return null;
+  return m[1]+'-'+m[2]+'-'+m[3];
+}
+function gateTodayKey(now){
+  if(now instanceof Date){
+    const k=gateDayKey(now);
+    if(k)return k;
+  }else if(typeof now==='string'){
+    const k=gateDayKey(now);
+    if(k)return k;
+  }else if(typeof now==='number'&&Number.isFinite(now)){
+    const k=gateDayKey(new Date(now));
+    if(k)return k;
   }
-  if(skill==='w'){
-    const kinds=QUEUE_CYCLES.w;
-    const best=gateBestByPart(log.filter(e=>e.type==='w'&&kinds.includes(e.kind)),
-      e=>e.kind,e=>typeof e.score==='number'?e.score:null);
-    let covered=0;kinds.forEach(k=>{if(best[k]!==undefined&&best[k]>=th.w)covered++});
-    return {ok:covered===kinds.length,covered,total:kinds.length};
-  }
-  const best={};
-  const add=(p,score)=>{if(p>=1&&p<=4&&typeof score==='number'&&(best[p]===undefined||score>best[p]))best[p]=score};
-  log.filter(e=>e.type==='sp'&&typeof e.score==='number').forEach(e=>{
-    if(e.full||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0)))[1,2,3,4].forEach(p=>add(p,e.score));
-    else add(+e.part,e.score);
+  return gateDayKey(new Date());
+}
+function gateDaysBetween(fromKey,toKey){
+  if(!fromKey||!toKey)return null;
+  const a=fromKey.split('-').map(Number),b=toKey.split('-').map(Number);
+  const ta=Date.UTC(a[0],a[1]-1,a[2]),tb=Date.UTC(b[0],b[1]-1,b[2]);
+  return Math.round((tb-ta)/86400000);
+}
+function gateFmtDate(key){
+  if(!key)return '';
+  const m=String(key).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m?(m[3]+'/'+m[2]+'/'+m[1]):String(key);
+}
+function gateNum(v){
+  if(v===null||v===undefined||v===''||typeof v==='boolean')return null;
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function gateRatio(correct,total){
+  const c=gateNum(correct),tVal=gateNum(total);
+  if(c===null||tVal===null||tVal<=0||c<0)return null;
+  return Math.min(c,tVal)/tVal;
+}
+function gateValidMinutes(minVal,maxLimit){
+  const m=gateNum(minVal);
+  return m!==null&&m>=0&&m<=maxLimit;
+}
+function gateClampStage(raw){
+  const n=Math.trunc(Number(raw));
+  if(!Number.isFinite(n)||n<0)return 0;
+  return Math.min(2,n);
+}
+function gateNormalizeOverrides(raw){
+  const out={};
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
+  Object.keys(raw).forEach(k=>{
+    const v=raw[k];
+    if(v===true){
+      out[k]={manual:true,at:null};
+    }else if(v&&typeof v==='object'&&v.manual===true){
+      out[k]={manual:true,at:gateDayKey(v.at)||null};
+    }
   });
-  let covered=0;for(let p=1;p<=4;p++)if(best[p]!==undefined&&best[p]>=th.sp)covered++;
-  const full=log.some(e=>e.type==='sp'&&e.full===true);
-  return {ok:covered===4,covered,total:4,full};
+  return out;
 }
-function gateCellText(skill,th,stageIdx){
-  if(skill==='rue')return t('prog_cell_rue',{pct:th.rue});
-  if(skill==='l')return t('prog_cell_listening',{score:th.l});
-  if(skill==='w')return t('prog_cell_writing',{score:th.w});
-  return t(stageIdx===2?'prog_cell_speaking_full':'prog_cell_speaking',{score:th.sp});
-}
-function calcGates(){
-  const stages=GATE_STAGES.map((th,i)=>{
-    const cells={};
-    let ok=true;
-    GATE_SKILLS.forEach(sk=>{
-      const st=gateSkillState(sk,th);
-      cells[sk]=Object.assign({},st,{text:gateCellText(sk,th,i)});
-      if(!st.ok)ok=false;
+function gateNormalizeStageHistory(raw,stage,lang){
+  const st=gateClampStage(stage);
+  const out=[];
+  if(Array.isArray(raw)){
+    raw.forEach(item=>{
+      if(!item||typeof item!=='object')return;
+      const sNum=gateNum(item.stage);
+      if(sNum===null)return;
+      const evStage=gateClampStage(sNum);
+      if(evStage!==Math.trunc(sNum))return;
+      const at=(item.at===null||item.at===undefined)?null:String(item.at);
+      const reason=typeof item.reason==='string'?item.reason:'';
+      out.push({stage:evStage,at:at,reason:reason});
     });
-    if(i===2&&!cells.sp.full)cells.sp.ok=false;
-    ok=GATE_SKILLS.every(sk=>cells[sk].ok);
-    return {n:i+1,cells,ok};
-  });
-  return {stages};
+  }
+  if(st>0&&!out.length){
+    const fallbackReason=gateT(lang,'gate_reason_migrated')||'Migrated existing stage';
+    for(let s=1;s<=st;s++)out.push({stage:s,at:null,reason:fallbackReason});
+  }
+  return out;
 }
-const STAGE_NAMES=['stage_name_0','stage_name_1','stage_name_2'];
+function gateResolveThresholds(settings){
+  const def=(typeof SETTINGS_DEFAULT!=='undefined'&&SETTINGS_DEFAULT)||
+    {e0:{w:14,u:60,l:3},e1:{w:16,wm:45,u:75,l:24},e2:{r:80,rm:50,w:16,l:26,ln:4}};
+  const s=(settings&&typeof settings==='object')?settings:{};
+  const s0=(s.e0&&typeof s.e0==='object')?s.e0:{};
+  const s1=(s.e1&&typeof s.e1==='object')?s.e1:{};
+  const s2=(s.e2&&typeof s.e2==='object')?s.e2:{};
+  const pick=(v,d,min,max)=>{const n=gateNum(v);return (n!==null&&n>=min&&n<=max)?n:d};
+  return {
+    e0:{
+      w:pick(s0.w,def.e0.w,1,20),
+      u:pick(s0.u,def.e0.u,1,100),
+      l:pick(s0.l,def.e0.l,0,10)
+    },
+    e1:{
+      w:pick(s1.w,def.e1.w,1,20),
+      wm:pick(s1.wm,def.e1.wm,1,240),
+      u:pick(s1.u,def.e1.u,1,100),
+      l:pick(s1.l,def.e1.l,1,30)
+    },
+    e2:{
+      r:pick(s2.r,def.e2.r,1,100),
+      rm:pick(s2.rm,def.e2.rm,1,240),
+      w:pick(s2.w,def.e2.w,1,20),
+      l:pick(s2.l,def.e2.l,1,30),
+      ln:Math.max(1,Math.trunc(pick(s2.ln,def.e2.ln,1,20)))
+    }
+  };
+}
+function gateFormatEvidence(lang,count,since,detail,ignoredFuture,ignoredZero){
+  if(count>0&&since){
+    const dStr=gateFmtDate(since);
+    const base=count===1
+      ?gateT(lang,'gate_ev_based_one',{date:dStr})
+      :gateT(lang,'gate_ev_based_many',{n:count,date:dStr});
+    return detail?(base+' · '+detail):base;
+  }
+  if(ignoredFuture>0||ignoredZero>0){
+    const why=ignoredFuture>0?gateT(lang,'gate_ev_ignored_future'):gateT(lang,'gate_ev_ignored_zero');
+    const base=gateT(lang,'gate_ev_ignored',{reason:why});
+    return detail?(base+' · '+detail):base;
+  }
+  const none=gateT(lang,'gate_ev_none');
+  return detail?(none+' · '+detail):none;
+}
+function calcGates(doc,now){
+  const src=(doc&&typeof doc==='object')?doc:((typeof D!=='undefined'&&D&&typeof D==='object')?D:{});
+  const lang=normalizeLang((src.settings&&src.settings.lang)||(typeof LANG==='string'?LANG:'en'));
+  const todayStr=gateTodayKey(now);
+  const th=gateResolveThresholds(src.settings);
+  const stage=gateClampStage(src.stage);
+  const overrides=gateNormalizeOverrides(src.overrides);
+  const wKinds=(typeof QUEUE_CYCLES!=='undefined'&&Array.isArray(QUEUE_CYCLES.w))
+    ?QUEUE_CYCLES.w.slice():['Essay','Article','Report','Review','Email'];
+
+  const rawLog=Array.isArray(src.log)?src.log:[];
+  const validLogs=[];
+  let globalFuture=0,globalZero=0,globalSince=null,globalLast=null;
+  const RATIO_TYPES={ue:1,rue:1,r6:1,lp:1,l:1};
+  rawLog.forEach((e,idx)=>{
+    if(!e||typeof e!=='object'||typeof e.type!=='string')return;
+    const dKey=gateDayKey(e.date);
+    if(!dKey)return;
+    if(dKey>todayStr){globalFuture++;return}
+    if(RATIO_TYPES[e.type]){
+      const tot=gateNum(e.total);
+      if(tot===null||tot<=0){globalZero++;return}
+      const cor=gateNum(e.correct);
+      if(cor===null||cor<0)return;
+    }
+    if(!globalSince||dKey<globalSince)globalSince=dKey;
+    if(!globalLast||dKey>globalLast)globalLast=dKey;
+    validLogs.push({e:e,date:dKey,created:gateNum(e.created_at)||0,idx:idx});
+  });
+
+  const rawErrs=Array.isArray(src.errs)?src.errs:[];
+  const tax={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
+  const tMisByPart={};
+  let errCount=0,errSince=null,recentTLim=0,unfixedRecentTLim=0;
+  rawErrs.forEach(e=>{
+    if(!e||typeof e!=='object')return;
+    const dKey=gateDayKey(e.date);
+    if(!dKey||dKey>todayStr)return;
+    errCount++;
+    if(!errSince||dKey<errSince)errSince=dKey;
+    const code=String(e.code||e.tax||'');
+    if(tax[code]!==undefined)tax[code]++;
+    if(code==='T-MIS'){
+      const p=Math.trunc(Number(e.part));
+      if(p>=1&&p<=4)tMisByPart[p]=(tMisByPart[p]||0)+1;
+    }
+    if(code==='T-LIM'){
+      const age=gateDaysBetween(dKey,todayStr);
+      if(age!==null&&age>=0&&age<=30){
+        recentTLim++;
+        const hasFix=typeof e.fix==='string'&&e.fix.trim().length>0;
+        if(!hasFix)unfixedRecentTLim++;
+      }
+    }
+  });
+
+  const rawDiag=(src.diag&&typeof src.diag==='object'&&!Array.isArray(src.diag))?src.diag:null;
+  const diagDateRaw=rawDiag?gateDayKey(rawDiag.date):null;
+  const diagCorrectRaw=rawDiag?gateNum(rawDiag.correct):null;
+  const diagTotalRaw=rawDiag?gateNum(rawDiag.total):null;
+  const diagFuture=!!(rawDiag&&diagDateRaw&&diagDateRaw>todayStr);
+  const diagZero=!!(rawDiag&&!diagFuture&&diagTotalRaw!==null&&diagTotalRaw<=0);
+  let diagInfo;
+  if(!rawDiag||!diagDateRaw||diagFuture||diagZero||diagCorrectRaw===null||diagCorrectRaw<0||diagTotalRaw===null||diagTotalRaw<=0){
+    diagInfo={
+      present:!!rawDiag,valid:false,fresh:false,stale:false,
+      future:diagFuture,zeroTotal:diagZero,ageDays:null,
+      date:diagDateRaw,correct:null,total:null,byPart:{},weakest:[]
+    };
+  }else{
+    const ageDays=gateDaysBetween(diagDateRaw,todayStr);
+    const fresh=ageDays!==null&&ageDays>=0&&ageDays<=60;
+    const stale=ageDays!==null&&ageDays>60;
+    const cleanByPart={};
+    const rawBp=(rawDiag.byPart&&typeof rawDiag.byPart==='object')?rawDiag.byPart:{};
+    for(let p=1;p<=7;p++){
+      const cell=rawBp[p]||rawBp[String(p)];
+      if(cell&&typeof cell==='object'){
+        const n=gateNum(cell.n),ok=gateNum(cell.ok);
+        cleanByPart[p]={ok:ok!==null&&ok>=0?ok:0,n:n!==null&&n>=0?n:0};
+      }
+    }
+    const cleanWeak=(Array.isArray(rawDiag.weakest)?rawDiag.weakest:[])
+      .map(Number).filter(p=>Number.isInteger(p)&&p>=1&&p<=7);
+    diagInfo={
+      present:true,valid:true,fresh:fresh,stale:stale,
+      future:false,zeroTotal:false,ageDays:ageDays,
+      date:diagDateRaw,correct:Math.min(diagCorrectRaw,diagTotalRaw),total:diagTotalRaw,
+      byPart:cleanByPart,weakest:cleanWeak
+    };
+  }
+
+  function mkGate(cfg){
+    const ov=overrides[cfg.id]||null;
+    const manual=!!(ov&&ov.manual===true);
+    const manualAt=manual?(ov.at||null):null;
+    const need=Math.max(1,gateNum(cfg.need)||1);
+    const have=Math.max(0,Math.min(need,gateNum(cfg.have)||0));
+    const dataPass=have>=need;
+    const pass=dataPass||manual;
+    const pct=Math.max(0,Math.min(100,Math.round((have/need)*100)));
+    const evidence=cfg.customEvidence!==undefined
+      ?cfg.customEvidence
+      :gateFormatEvidence(lang,cfg.count||0,cfg.since||null,cfg.detail||'',cfg.ignoredFuture||0,cfg.ignoredZero||0);
+    return {
+      id:cfg.id,
+      label:cfg.label,
+      requirement:cfg.requirement,
+      need:need,
+      have:have,
+      pass:pass,
+      dataPass:dataPass,
+      evidence:evidence,
+      manual:manual,
+      manualAt:manualAt,
+      pct:pct
+    };
+  }
+
+  function scanFutureZero(types){
+    let fut=0,zero=0;
+    rawLog.forEach(e=>{
+      if(!e||typeof e!=='object'||types.indexOf(e.type)<0)return;
+      const dKey=gateDayKey(e.date);
+      if(!dKey)return;
+      if(dKey>todayStr){fut++;return}
+      if(RATIO_TYPES[e.type]){
+        const tot=gateNum(e.total);
+        if(tot===null||tot<=0)zero++;
+      }
+    });
+    return {fut:fut,zero:zero};
+  }
+
+  function evalRue(minPct){
+    const passPart={};
+    let count=0,since=null;
+    validLogs.forEach(row=>{
+      const e=row.e;
+      if(e.type!=='ue'&&e.type!=='rue'&&e.type!=='r6')return;
+      const c=Math.min(gateNum(e.correct),gateNum(e.total)),tVal=gateNum(e.total);
+      count++;
+      if(!since||row.date<since)since=row.date;
+      const ok=c*100>=minPct*tVal;
+      if(e.type==='rue'){
+        for(let p=1;p<=7;p++)if(ok)passPart[p]=true;
+      }else if(e.type==='r6'){
+        if(ok)passPart[6]=true;
+      }else{
+        const p=Math.trunc(Number(e.part));
+        if(p>=1&&p<=7&&ok)passPart[p]=true;
+      }
+    });
+    const missing=[];
+    let covered=0;
+    for(let p=1;p<=7;p++){if(passPart[p])covered++;else missing.push('P'+p)}
+    const ig=scanFutureZero(['ue','rue','r6']);
+    const detail=count>0?(missing.length?gateT(lang,'gate_ev_missing',{list:missing.join(', ')}):gateT(lang,'gate_ev_all_met')):'';
+    return {have:covered,need:7,count:count,since:since,detail:detail,fut:ig.fut,zero:ig.zero};
+  }
+
+  function evalListeningParts(minScore30,maxP2Err){
+    const passPart={};
+    let count=0,since=null;
+    validLogs.forEach(row=>{
+      const e=row.e;
+      if(e.type!=='lp'&&e.type!=='l')return;
+      const c=Math.min(gateNum(e.correct),gateNum(e.total)),tVal=gateNum(e.total);
+      count++;
+      if(!since||row.date<since)since=row.date;
+      const scoreOk=c*30>=minScore30*tVal;
+      if(!scoreOk)return;
+      if(e.type==='lp'){
+        const p=Math.trunc(Number(e.part));
+        if(p>=1&&p<=4){
+          if(p===2&&maxP2Err!==null){
+            if((tVal-c)<=maxP2Err)passPart[2]=true;
+          }else{
+            passPart[p]=true;
+          }
+        }
+      }else{
+        [1,3,4].forEach(p=>{passPart[p]=true});
+        if(maxP2Err===null){
+          passPart[2]=true;
+        }else{
+          const p2Err=gateNum(e.p2);
+          if(p2Err!==null&&p2Err>=0&&p2Err<=maxP2Err)passPart[2]=true;
+        }
+      }
+    });
+    const missing=[];
+    let covered=0;
+    for(let p=1;p<=4;p++){if(passPart[p])covered++;else missing.push('P'+p)}
+    const ig=scanFutureZero(['lp','l']);
+    const detail=count>0?(missing.length?gateT(lang,'gate_ev_missing',{list:missing.join(', ')}):gateT(lang,'gate_ev_all_met')):'';
+    return {have:covered,need:4,count:count,since:since,detail:detail,fut:ig.fut,zero:ig.zero};
+  }
+
+  function evalWriting(minScore,maxMin){
+    const passKind={};
+    let count=0,since=null;
+    validLogs.forEach(row=>{
+      const e=row.e;
+      if(e.type==='w'&&wKinds.indexOf(e.kind)>=0){
+        const sc=gateNum(e.score!==undefined?e.score:e.total);
+        if(sc===null||sc<0)return;
+        count++;
+        if(!since||row.date<since)since=row.date;
+        const timeOk=(maxMin===null)||gateValidMinutes(e.min,maxMin);
+        if(sc>=minScore&&timeOk)passKind[e.kind]=true;
+      }else if(maxMin===null&&e.type==='fw'){
+        const s1=gateNum(e.s1);
+        if(s1===null||s1<0)return;
+        count++;
+        if(!since||row.date<since)since=row.date;
+        if(s1>=minScore)passKind.Essay=true;
+      }
+    });
+    const missing=[];
+    let covered=0;
+    wKinds.forEach(k=>{if(passKind[k])covered++;else missing.push(k)});
+    const ig=scanFutureZero(['w','fw']);
+    const detail=count>0?(missing.length?gateT(lang,'gate_ev_missing',{list:missing.join(', ')}):gateT(lang,'gate_ev_all_met')):'';
+    return {have:covered,need:wKinds.length,count:count,since:since,detail:detail,fut:ig.fut,zero:ig.zero};
+  }
+
+  function evalSpeakingParts(minBand){
+    const passPart={};
+    let count=0,since=null;
+    validLogs.forEach(row=>{
+      const e=row.e;
+      if(e.type==='sp'){
+        const sc=gateNum(e.score);
+        if(sc===null||sc<0)return;
+        count++;
+        if(!since||row.date<since)since=row.date;
+        if(sc<minBand)return;
+        const full=e.full===true||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0));
+        if(full){
+          [1,2,3,4].forEach(p=>{passPart[p]=true});
+        }else{
+          const p=Math.trunc(Number(e.part));
+          if(p>=1&&p<=4)passPart[p]=true;
+        }
+      }else if(e.type==='sf'&&e.ok===true){
+        count++;
+        if(!since||row.date<since)since=row.date;
+        if(4>=minBand)[1,2,3,4].forEach(p=>{passPart[p]=true});
+      }
+    });
+    const missing=[];
+    let covered=0;
+    for(let p=1;p<=4;p++){if(passPart[p])covered++;else missing.push('P'+p)}
+    const ig=scanFutureZero(['sp','sf']);
+    const detail=count>0?(missing.length?gateT(lang,'gate_ev_missing',{list:missing.join(', ')}):gateT(lang,'gate_ev_all_met')):'';
+    return {have:covered,need:4,count:count,since:since,detail:detail,fut:ig.fut,zero:ig.zero};
+  }
+
+  // Stage 0 gates
+  let diagEv;
+  if(diagInfo.fresh){
+    diagEv=gateT(lang,'gate_ev_diag_ok',{date:gateFmtDate(diagInfo.date),correct:diagInfo.correct,total:diagInfo.total,days:diagInfo.ageDays});
+  }else if(diagInfo.stale){
+    diagEv=gateT(lang,'gate_ev_diag_stale',{date:gateFmtDate(diagInfo.date),days:diagInfo.ageDays});
+  }else if(diagInfo.future){
+    diagEv=gateT(lang,'gate_ev_diag_future',{date:gateFmtDate(diagDateRaw)});
+  }else if(diagInfo.zeroTotal){
+    diagEv=gateT(lang,'gate_ev_diag_zero');
+  }else{
+    diagEv=gateT(lang,'gate_ev_diag_none');
+  }
+  const s0Rue=evalRue(th.e0.u);
+  const s0L=evalListeningParts(20,th.e0.l);
+  const s0W=evalWriting(th.e0.w,null);
+  const s0Sp=evalSpeakingParts(3);
+  const s0Gates=[
+    mkGate({id:'s0-diag',label:gateT(lang,'gate_s0_diag_label'),requirement:gateT(lang,'gate_s0_diag_req'),need:1,have:diagInfo.fresh?1:0,customEvidence:diagEv}),
+    mkGate({id:'s0-rue',label:gateT(lang,'gate_s0_rue_label'),requirement:gateT(lang,'gate_s0_rue_req',{pct:th.e0.u}),need:s0Rue.need,have:s0Rue.have,count:s0Rue.count,since:s0Rue.since,detail:s0Rue.detail,ignoredFuture:s0Rue.fut,ignoredZero:s0Rue.zero}),
+    mkGate({id:'s0-l',label:gateT(lang,'gate_s0_l_label'),requirement:gateT(lang,'gate_s0_l_req',{err:th.e0.l}),need:s0L.need,have:s0L.have,count:s0L.count,since:s0L.since,detail:s0L.detail,ignoredFuture:s0L.fut,ignoredZero:s0L.zero}),
+    mkGate({id:'s0-w',label:gateT(lang,'gate_s0_w_label'),requirement:gateT(lang,'gate_s0_w_req',{score:th.e0.w}),need:s0W.need,have:s0W.have,count:s0W.count,since:s0W.since,detail:s0W.detail,ignoredFuture:s0W.fut,ignoredZero:s0W.zero}),
+    mkGate({id:'s0-sp',label:gateT(lang,'gate_s0_sp_label'),requirement:gateT(lang,'gate_s0_sp_req'),need:s0Sp.need,have:s0Sp.have,count:s0Sp.count,since:s0Sp.since,detail:s0Sp.detail,ignoredFuture:s0Sp.fut,ignoredZero:s0Sp.zero})
+  ];
+
+  // Stage 1 gates
+  const s1Rue=evalRue(th.e1.u);
+  const s1L=evalListeningParts(th.e1.l,null);
+  const s1W=evalWriting(th.e1.w,th.e1.wm);
+  const s1Sp=evalSpeakingParts(4);
+  const s1ErrHave=(validLogs.length>=1&&recentTLim<=2)?1:0;
+  const s1ErrDetail=validLogs.length>=1?gateT(lang,'gate_ev_err_summary',{n:recentTLim}):'';
+  const s1Gates=[
+    mkGate({id:'s1-rue',label:gateT(lang,'gate_s1_rue_label'),requirement:gateT(lang,'gate_s1_rue_req',{pct:th.e1.u}),need:s1Rue.need,have:s1Rue.have,count:s1Rue.count,since:s1Rue.since,detail:s1Rue.detail,ignoredFuture:s1Rue.fut,ignoredZero:s1Rue.zero}),
+    mkGate({id:'s1-l',label:gateT(lang,'gate_s1_l_label'),requirement:gateT(lang,'gate_s1_l_req',{score:th.e1.l}),need:s1L.need,have:s1L.have,count:s1L.count,since:s1L.since,detail:s1L.detail,ignoredFuture:s1L.fut,ignoredZero:s1L.zero}),
+    mkGate({id:'s1-w',label:gateT(lang,'gate_s1_w_label'),requirement:gateT(lang,'gate_s1_w_req',{score:th.e1.w,min:th.e1.wm}),need:s1W.need,have:s1W.have,count:s1W.count,since:s1W.since,detail:s1W.detail,ignoredFuture:s1W.fut,ignoredZero:s1W.zero}),
+    mkGate({id:'s1-sp',label:gateT(lang,'gate_s1_sp_label'),requirement:gateT(lang,'gate_s1_sp_req'),need:s1Sp.need,have:s1Sp.have,count:s1Sp.count,since:s1Sp.since,detail:s1Sp.detail,ignoredFuture:s1Sp.fut,ignoredZero:s1Sp.zero}),
+    mkGate({id:'s1-err',label:gateT(lang,'gate_s1_err_label'),requirement:gateT(lang,'gate_s1_err_req'),need:1,have:s1ErrHave,count:validLogs.length,since:globalSince,detail:s1ErrDetail,ignoredFuture:globalFuture,ignoredZero:globalZero})
+  ];
+
+  // Stage 2 gates
+  let rueCount=0,rueSince=null,ruePass=false,rueBestPct=-1,rueBestMin=null;
+  validLogs.forEach(row=>{
+    const e=row.e;
+    if(e.type!=='rue')return;
+    const c=Math.min(gateNum(e.correct),gateNum(e.total)),tVal=gateNum(e.total);
+    rueCount++;
+    if(!rueSince||row.date<rueSince)rueSince=row.date;
+    const pctVal=Math.round(c/tVal*100);
+    const minVal=gateNum(e.min);
+    if(pctVal>rueBestPct){rueBestPct=pctVal;rueBestMin=minVal!==null?minVal:'—'}
+    if(c*100>=th.e2.r*tVal&&gateValidMinutes(e.min,th.e2.rm))ruePass=true;
+  });
+  const s2RueIg=scanFutureZero(['rue']);
+  const s2RueDetail=rueCount>0?gateT(lang,'gate_ev_best_mock',{pct:rueBestPct,min:rueBestMin}):'';
+
+  const lRows=validLogs.filter(row=>row.e.type==='l')
+    .sort((a,b)=>a.date.localeCompare(b.date)||(a.created-b.created)||(a.idx-b.idx));
+  let lStreak=0,lBestStreak=0,lSince=null;
+  lRows.forEach(row=>{
+    if(!lSince||row.date<lSince)lSince=row.date;
+    const c=Math.min(gateNum(row.e.correct),gateNum(row.e.total)),tVal=gateNum(row.e.total);
+    if(c*30>=th.e2.l*tVal){lStreak++;if(lStreak>lBestStreak)lBestStreak=lStreak}
+    else lStreak=0;
+  });
+  const s2LIg=scanFutureZero(['l']);
+  const s2LDetail=lRows.length>0?gateT(lang,'gate_ev_streak',{best:Math.min(th.e2.ln,lBestStreak),need:th.e2.ln}):'';
+
+  let fwCount=0,fwSince=null,fwPass=false,fwBestSum=-1,fwBestS1=0,fwBestS2=0,fwBestMin='—';
+  validLogs.forEach(row=>{
+    const e=row.e;
+    if(e.type!=='fw')return;
+    const s1=gateNum(e.s1),s2=gateNum(e.s2);
+    if(s1===null||s2===null||s1<0||s2<0)return;
+    fwCount++;
+    if(!fwSince||row.date<fwSince)fwSince=row.date;
+    const minVal=gateNum(e.min);
+    if((s1+s2)>fwBestSum){fwBestSum=s1+s2;fwBestS1=s1;fwBestS2=s2;fwBestMin=minVal!==null?minVal:'—'}
+    if(s1>=th.e2.w&&s2>=th.e2.w&&gateValidMinutes(e.min,80))fwPass=true;
+  });
+  const s2WIg=scanFutureZero(['fw']);
+  const s2WDetail=fwCount>0?gateT(lang,'gate_ev_best_fw',{s1:fwBestS1,s2:fwBestS2,min:fwBestMin}):'';
+
+  let spFullCount=0,spFullSince=null,spFullPass=false;
+  validLogs.forEach(row=>{
+    const e=row.e;
+    if(e.type==='sp'){
+      const isFull=e.full===true||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0));
+      const sc=gateNum(e.score);
+      if(!isFull||sc===null||sc<0)return;
+      spFullCount++;
+      if(!spFullSince||row.date<spFullSince)spFullSince=row.date;
+      if(sc>=4)spFullPass=true;
+    }else if(e.type==='sf'&&e.ok===true){
+      spFullCount++;
+      if(!spFullSince||row.date<spFullSince)spFullSince=row.date;
+      spFullPass=true;
+    }
+  });
+  const s2SpIg=scanFutureZero(['sp','sf']);
+  const s2SpDetail=spFullCount>0?gateT(lang,'gate_ev_sp_full'):'';
+
+  const mockRows=validLogs.filter(row=>{
+    const e=row.e;
+    if(e.type==='rue'||e.type==='fw'||e.type==='l')return true;
+    if(e.type==='sf'&&e.ok===true)return true;
+    if(e.type==='sp'&&(e.full===true||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0))))return true;
+    return false;
+  });
+  const mockSince=mockRows.reduce((m,r)=>(!m||r.date<m)?r.date:m,null);
+  const s2ErrHave=(mockRows.length>=1&&unfixedRecentTLim===0)?1:0;
+  const s2ErrDetail=mockRows.length>=1?gateT(lang,'gate_ev_err_unfixed',{n:unfixedRecentTLim}):'';
+
+  const s2Gates=[
+    mkGate({id:'s2-rue',label:gateT(lang,'gate_s2_rue_label'),requirement:gateT(lang,'gate_s2_rue_req',{pct:th.e2.r,min:th.e2.rm}),need:1,have:ruePass?1:0,count:rueCount,since:rueSince,detail:s2RueDetail,ignoredFuture:s2RueIg.fut,ignoredZero:s2RueIg.zero}),
+    mkGate({id:'s2-l',label:gateT(lang,'gate_s2_l_label'),requirement:gateT(lang,'gate_s2_l_req',{n:th.e2.ln,score:th.e2.l}),need:th.e2.ln,have:Math.min(th.e2.ln,lBestStreak),count:lRows.length,since:lSince,detail:s2LDetail,ignoredFuture:s2LIg.fut,ignoredZero:s2LIg.zero}),
+    mkGate({id:'s2-w',label:gateT(lang,'gate_s2_w_label'),requirement:gateT(lang,'gate_s2_w_req',{score:th.e2.w}),need:1,have:fwPass?1:0,count:fwCount,since:fwSince,detail:s2WDetail,ignoredFuture:s2WIg.fut,ignoredZero:s2WIg.zero}),
+    mkGate({id:'s2-sp',label:gateT(lang,'gate_s2_sp_label'),requirement:gateT(lang,'gate_s2_sp_req'),need:1,have:spFullPass?1:0,count:spFullCount,since:spFullSince,detail:s2SpDetail,ignoredFuture:s2SpIg.fut,ignoredZero:s2SpIg.zero}),
+    mkGate({id:'s2-err',label:gateT(lang,'gate_s2_err_label'),requirement:gateT(lang,'gate_s2_err_req'),need:1,have:s2ErrHave,count:mockRows.length,since:mockSince,detail:s2ErrDetail,ignoredFuture:globalFuture,ignoredZero:globalZero})
+  ];
+
+  const stageDefs=[s0Gates,s1Gates,s2Gates];
+  const stageNameKeys=['stage_name_0','stage_name_1','stage_name_2'];
+  const stages=stageDefs.map((gates,i)=>{
+    const pass=gates.every(g=>g.pass);
+    const dataPass=gates.every(g=>g.dataPass);
+    const missingIds=gates.filter(g=>!g.pass).map(g=>g.id);
+    const next=i<2?{stage:i+1,label:gateT(lang,stageNameKeys[i+1]),remaining:missingIds.length,missingIds:missingIds}:null;
+    return {stage:i,n:i+1,label:gateT(lang,stageNameKeys[i]),gates:gates,pass:pass,dataPass:dataPass,next:next};
+  });
+  const cur=stages[stage];
+  return {
+    stage:stage,
+    gates:cur.gates,
+    next:cur.next,
+    stages:stages,
+    diag:diagInfo,
+    errors:{total:errCount,since:errSince,tax:tax,tMisByPart:tMisByPart,recentTLim:recentTLim,unfixedRecentTLim:unfixedRecentTLim},
+    sessions:{total:validLogs.length,since:globalSince,lastDate:globalLast,ignoredFuture:globalFuture,ignoredZero:globalZero},
+    thresholds:th,
+    readyToAdvance:stage<2&&cur.pass
+  };
+}
+function getProgression(doc,now){
+  const src=(doc&&typeof doc==='object')?doc:((typeof D!=='undefined'&&D&&typeof D==='object')?D:{});
+  const lang=normalizeLang((src.settings&&src.settings.lang)||(typeof LANG==='string'?LANG:'en'));
+  const calc=calcGates(src,now);
+  const stageKeys=['stage_0','stage_1','stage_2'];
+  const history=gateNormalizeStageHistory(src.stageHistory,calc.stage,lang);
+  return {
+    stage:calc.stage,
+    stageLabel:gateT(lang,stageKeys[calc.stage])||gateT(lang,'stage_n',{n:calc.stage}),
+    gates:calc.gates,
+    next:calc.next,
+    stages:calc.stages,
+    readyToAdvance:calc.readyToAdvance,
+    history:history,
+    diag:calc.diag,
+    errors:calc.errors,
+    sessions:calc.sessions,
+    thresholds:calc.thresholds
+  };
+}
+function advanceStageIfReady(opts){
+  if(typeof D==='undefined'||!D||typeof D!=='object')return {advanced:false,stage:0};
+  const o=opts||{};
+  const curStage=gateClampStage(D.stage);
+  D.stage=curStage;
+  const lang=normalizeLang((D.settings&&D.settings.lang)||(typeof LANG==='string'?LANG:'en'));
+  D.overrides=gateNormalizeOverrides(D.overrides);
+  D.stageHistory=gateNormalizeStageHistory(D.stageHistory,curStage,lang);
+  if(curStage>=2)return {advanced:false,stage:curStage};
+  const calc=calcGates(D,o.now);
+  const stageObj=calc.stages[curStage];
+  if(!stageObj||!stageObj.pass)return {advanced:false,stage:curStage};
+  const nextStage=curStage+1;
+  const manualIds=stageObj.gates.filter(g=>g.manual&&!g.dataPass).map(g=>g.id);
+  const reason=manualIds.length
+    ?gateT(lang,'gate_reason_with_overrides',{n:curStage,k:manualIds.length,ids:manualIds.join(', ')})
+    :gateT(lang,'gate_reason_all_data',{n:curStage});
+  const at=o.at||(o.now instanceof Date?o.now.toISOString():new Date().toISOString());
+  D.stage=nextStage;
+  if(!D.stageHistory.some(ev=>ev&&ev.stage===nextStage)){
+    D.stageHistory.push({stage:nextStage,at:at,reason:reason});
+  }
+  if(o.save!==false&&typeof save==='function')save();
+  return {advanced:true,from:curStage,stage:nextStage,at:at,reason:reason};
+}
+function setGateOverride(gateId,on){
+  if(!D||typeof D!=='object'||!gateId)return;
+  D.overrides=gateNormalizeOverrides(D.overrides);
+  if(on){
+    D.overrides[gateId]={manual:true,at:gateTodayKey()};
+  }else{
+    delete D.overrides[gateId];
+  }
+  advanceStageIfReady({save:false});
+  save();
+  refreshAll();
+}
+function toggleGateOverride(gateId){
+  const ovs=gateNormalizeOverrides(D&&D.overrides);
+  setGateOverride(gateId,!ovs[gateId]);
+}
+function gateFormatHistoryAt(at){
+  if(!at)return t('gate_history_unknown');
+  const dKey=gateDayKey(String(at));
+  return dKey?fmtDate(dKey):String(at);
+}
 function renderGates(){
-  const calc=calcGates(),st=Math.min(D.stage||0,2);
   const el=document.getElementById('gates');
   if(!el)return;
-  const cols=[['rue','prog_col_rue'],['l','prog_col_listening'],['w','prog_col_writing'],['sp','prog_col_speaking']];
-  el.innerHTML=`<div class="table-wrap gate-wrap"><table class="gate-matrix">
-    <thead><tr><th>${t('prog_stage_col')}</th>${cols.map(c=>`<th>${t(c[1])}</th>`).join('')}</tr></thead>
-    <tbody>${calc.stages.map((s,i)=>`<tr class="${i===st?'current':''}">
-      <th>${t('prog_stage_row',{n:s.n})}<div class="gate-status ${s.ok?'pass':'fail'}">${t(s.ok?'prog_achieved':'prog_pending')}</div></th>
-      ${cols.map(c=>{
-        const cell=s.cells[c[0]];
-        return `<td class="gate ${cell.ok?'pass':'fail'}" data-label="${esc(t(c[1]))}">
-          <div class="gate-name">${esc(cell.text)}</div>
-          <div class="gate-txt">${cell.covered}/${cell.total} · ${t(cell.ok?'prog_achieved':'prog_pending')}</div>
-        </td>`;
-      }).join('')}
-    </tr>`).join('')}</tbody></table></div>`;
-  const cur=calc.stages[st];
-  const btn=document.getElementById('advanceBtn');
-  if(btn){
-    btn.disabled=!cur.ok;
-    btn.textContent=cur.ok?(st<2?t('advance_stage',{stage:t(STAGE_NAMES[st+1])}):t('advance_done')):t('advance_wait');
+  const prog=getProgression(D);
+  const st=prog.stage;
+  const stageShortKeys=['stage_0','stage_1','stage_2'];
+  const stageLabelFor=idx=>t(stageShortKeys[idx])||t('stage_n',{n:idx});
+  const histByStage={};
+  prog.history.forEach(ev=>{if(ev&&histByStage[ev.stage]===undefined)histByStage[ev.stage]=ev});
+
+  let nextSummary;
+  if(st<2&&prog.next){
+    nextSummary=t('gate_summary_left',{n:prog.next.remaining,next:stageLabelFor(st+1)});
+  }else if(prog.stages[2]&&prog.stages[2].pass){
+    nextSummary=t('gate_summary_done');
+  }else{
+    const rem=prog.stages[2]?prog.stages[2].gates.filter(g=>!g.pass).length:0;
+    nextSummary=rem?t('gate_summary_left',{n:rem,next:stageLabelFor(2)}):t('gate_summary_done');
   }
+
+  const historyHtml=prog.history.length
+    ?`<div class="gate-history" id="gateHistoryList"><div style="font-weight:600;color:var(--txt)">${esc(t('gate_history_title'))}</div>`
+      +prog.history.map(ev=>`<div>${esc(t('gate_history_item',{stage:stageLabelFor(ev.stage),when:gateFormatHistoryAt(ev.at),reason:ev.reason||t('gate_reason_migrated')}))}</div>`).join('')
+      +`</div>`
+    :'';
+
+  const summaryHtml=`<div class="gate-summary">
+    <div>
+      <div class="gate-summary-stage">${esc(t('gate_summary_current',{stage:stageLabelFor(st)}))}</div>
+      <div class="gate-summary-next">${esc(nextSummary)}</div>
+      ${historyHtml}
+    </div>
+  </div>`;
+
+  const needCta=prog.sessions.total===0&&!prog.diag.fresh;
+  const ctaHtml=needCta
+    ?`<div class="gate-cta-box" id="gateEmptyCta">
+        <div class="gate-cta-text">${esc(t('gate_cta_empty'))}</div>
+        <div class="gate-cta-actions">
+          <button type="button" class="btn sm ok gate-cta-btn" data-gate-cta="diag">${esc(t('gate_cta_diag'))}</button>
+          <button type="button" class="btn sm gray gate-cta-btn" data-gate-cta="log">${esc(t('gate_cta_log'))}</button>
+        </div>
+      </div>`
+    :'';
+
+  const stagesHtml=`<div class="gate-stages">${prog.stages.map(s=>{
+    const isCur=s.stage===st;
+    const reached=s.stage<st||(s.stage===st&&s.pass);
+    const pillCls=isCur?'current':(reached?'pass':'');
+    const pillText=isCur?t('gate_stage_current'):(reached?t('prog_achieved'):t('gate_stage_upcoming'));
+    const histEv=histByStage[s.stage]||null;
+    const histMeta=histEv
+      ?`<p class="gate-stage-meta">${esc(histEv.at?t('gate_stage_reached',{when:gateFormatHistoryAt(histEv.at),reason:histEv.reason||''}):t('gate_stage_reached_unknown'))}</p>`
+      :'';
+    const headingId='gateStageHeading'+s.stage;
+    const rowsHtml=s.gates.map(g=>{
+      const stateCls=g.manual?'manual':(g.pass?'pass':'fail');
+      const statusText=g.manual
+        ?(g.manualAt?t('gate_manual_badge_at',{date:fmtDate(g.manualAt)}):t('gate_manual_badge'))
+        :t(g.pass?'prog_achieved':'prog_pending');
+      let actionHtml='<span class="t-xs muted" aria-hidden="true">—</span>';
+      if(g.manual){
+        actionHtml=`<button type="button" class="btn sm gray gate-action-btn" data-gate-action="undo" data-gate-id="${esc(g.id)}">${esc(t('gate_action_undo'))}</button>`;
+      }else if(!g.dataPass){
+        actionHtml=`<button type="button" class="btn sm gray gate-action-btn" data-gate-action="override" data-gate-id="${esc(g.id)}">${esc(t('gate_action_override'))}</button>`;
+      }
+      return `<div class="gate-row gate ${stateCls}" role="row" data-gate-id="${esc(g.id)}" data-manual="${g.manual?'1':'0'}" data-pass="${g.pass?'1':'0'}">
+        <div class="gate-cell gate-cell-name" role="cell">
+          <div class="gate-name">${esc(g.label)}</div>
+          <div class="gate-req">${esc(g.requirement)}</div>
+        </div>
+        <div class="gate-cell gate-cell-progress" role="cell">
+          <span class="gate-cell-lbl">${esc(t('gate_col_progress'))}:</span>
+          <span class="gate-ratio tnum">${g.have}/${g.need}</span>
+          <div class="bar" aria-hidden="true"><div class="fill" style="width:${g.pct}%"></div></div>
+        </div>
+        <div class="gate-cell gate-cell-evidence" role="cell">
+          <span class="gate-cell-lbl">${esc(t('gate_col_evidence'))}:</span>
+          <span class="gate-evidence">${esc(g.evidence)}</span>
+        </div>
+        <div class="gate-cell gate-cell-status" role="cell">
+          <span class="gate-cell-lbl">${esc(t('gate_col_status'))}:</span>
+          <span class="gate-status ${stateCls}">${esc(statusText)}</span>
+        </div>
+        <div class="gate-cell gate-cell-actions" role="cell">
+          ${actionHtml}
+        </div>
+      </div>`;
+    }).join('');
+    return `<section class="gate-stage-card ${isCur?'is-current':''}" data-stage="${s.stage}" aria-labelledby="${headingId}">
+      <div class="gate-stage-head">
+        <h3 id="${headingId}">${esc(s.label)}</h3>
+        <span class="gate-stage-pill ${pillCls}">${esc(pillText)}</span>
+      </div>
+      ${histMeta}
+      <div class="gate-matrix" role="table" aria-labelledby="${headingId}">
+        <div class="gate-thead" role="rowgroup">
+          <div class="gate-tr" role="row">
+            <div role="columnheader">${esc(t('gate_col_gate'))}</div>
+            <div role="columnheader">${esc(t('gate_col_progress'))}</div>
+            <div role="columnheader">${esc(t('gate_col_evidence'))}</div>
+            <div role="columnheader">${esc(t('gate_col_status'))}</div>
+            <div role="columnheader">${esc(t('gate_col_action'))}</div>
+          </div>
+        </div>
+        <div class="gate-tbody" role="rowgroup">${rowsHtml}</div>
+      </div>
+    </section>`;
+  }).join('')}</div>`;
+
+  el.innerHTML=summaryHtml+ctaHtml+stagesHtml;
 }
-function advanceStage(){
-  if(D.stage<2)D.stage++;
-  save();refreshAll();
-}
-function stageDown(){
-  if(D.stage>0)D.stage--;
-  save();refreshAll();
-}
+(function(){
+  const el=document.getElementById('gates');
+  if(!el)return;
+  el.addEventListener('click',function(ev){
+    const btn=ev.target&&ev.target.closest?ev.target.closest('button'):null;
+    if(!btn)return;
+    const act=btn.getAttribute('data-gate-action');
+    const gid=btn.getAttribute('data-gate-id');
+    if(act==='override'&&gid){setGateOverride(gid,true);return}
+    if(act==='undo'&&gid){setGateOverride(gid,false);return}
+    const cta=btn.getAttribute('data-gate-cta');
+    if(cta==='diag'){if(typeof openDiagAndStart==='function')openDiagAndStart();else if(typeof showView==='function')showView('diag');return}
+    if(cta==='log'){if(typeof openSoloModal==='function')openSoloModal();else if(typeof openQuickLog==='function')openQuickLog()}
+  });
+})();
+window.calcGates=calcGates;
+window.getProgression=getProgression;
+window.advanceStageIfReady=advanceStageIfReady;
+window.setGateOverride=setGateOverride;
+window.toggleGateOverride=toggleGateOverride;
 function exportData(){
   track('export_data',{kind:'local'});
   const a=document.createElement('a');
@@ -14019,7 +14832,7 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.log||!d.errs)throw 0;D=d;syncLangFromD();save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||!Array.isArray(d.log)||!Array.isArray(d.errs))throw 0;d.stage=gateClampStage(d.stage);d.overrides=gateNormalizeOverrides(d.overrides);d.stageHistory=gateNormalizeStageHistory(d.stageHistory,d.stage,(d.settings&&d.settings.lang)||LANG);D=d;syncLangFromD();advanceStageIfReady({save:false});save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
   r.readAsText(f);ev.target.value='';
 }
 function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
@@ -15072,29 +15885,25 @@ function buildWeeklyPlan(D){
   const dayN=DAYS.length;
   const slotsPerWeek=dayN;
   const rotationMode=normalizeRotationMode(s.rotationMode);
-  const errs=Array.isArray(D&&D.errs)?D.errs:[];
   const log=Array.isArray(D&&D.log)?D.log:[];
-  const tax={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
-  const tMisByPart={};
-  errs.forEach(e=>{
-    const code=e.code||e.tax||'';
-    if(tax[code]!==undefined)tax[code]++;
-    if(code==='T-MIS'&&Number(e.part)>=1&&Number(e.part)<=4)tMisByPart[Number(e.part)]=(tMisByPart[Number(e.part)]||0)+1;
-  });
+  const prog=getProgression(D);
+  const tax=prog.errors.tax;
+  const tMisByPart=prog.errors.tMisByPart;
   const t0=dayKey(new Date());
   const t14=_addDaysKey(t0,-13);
   const sessions14=log.filter(e=>e&&e.date&&e.date>=t14&&e.date<=t0).length;
-  const diag=(D&&D.diag)||null;
-  const byPart=(diag&&diag.byPart)||{};
-  const useDiag=!!(diag&&Array.isArray(diag.weakest)&&diag.weakest.map(Number).filter(p=>p>=1&&p<=7).length);
+  const diag=prog.diag;
+  const byPart=diag.fresh?diag.byPart:{};
+  const useDiag=!!(diag.fresh&&Array.isArray(diag.weakest)&&diag.weakest.map(Number).filter(p=>p>=1&&p<=7).length);
   const source={
-    diag:diag?{date:diag.date||null,correct:(diag.correct!=null?diag.correct:null),total:(diag.total!=null?diag.total:null),
+    diag:diag.fresh?{date:diag.date||null,correct:(diag.correct!=null?diag.correct:null),total:(diag.total!=null?diag.total:null),
       parts:Object.keys(byPart).map(Number).sort((a,b)=>a-b).map(p=>({part:p,ok:(byPart[p]||{}).ok||0,n:(byPart[p]||{}).n||0}))}:null,
     tax:tax,sessions14:sessions14,weekGoal:slotsPerWeek,
+    progression:{stage:prog.stage,readyToAdvance:prog.readyToAdvance,diagFresh:diag.fresh,diagStale:diag.stale,next:prog.next},
     profile:prof?{examDate:prof.examDate||null,targetGrade:prof.targetGrade||null,skills:prof.skills||null,
       days:Array.isArray(prof.days)?prof.days:[],struggles:Array.isArray(prof.struggles)?prof.struggles:[]}:null
   };
-  if(!useDiag&&!prof)return mk({source:source,needDiag:true});
+  if(!useDiag&&!prof)return mk({source:source,needDiag:true,diagStale:!!diag.stale});
   if(!dayN)return mk({source:source,slots:[],reason:{},rotationMode:rotationMode,noSessionDays:true});
   const weakest=useDiag?diag.weakest.map(Number).filter(p=>p>=1&&p<=7).slice(0,3):[];
   const hasW=log.some(e=>e&&e.type==='w');
@@ -15452,7 +16261,7 @@ function renderWeeklyPlan(){
   const rows=document.getElementById('wpRows');
   renderRotationControls(plan);
   if(plan.needDiag){
-    rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t('plan_need_diag')}</div>
+    rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t(plan.diagStale?'plan_diag_stale':'plan_need_diag')}</div>
       <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">${t('plan_go_diag')}</button></div>`;
     return;
   }
@@ -15903,7 +16712,7 @@ function saveEdit(i){
   else if(e.type==='fw'){e.s1=v1;e.s2=v2;e.min=vm}
   else{e.correct=v1;e.total=v2;e.min=vm}
   if(vd)e.date=vd;
-  save();refreshAll();
+  advanceStageIfReady({save:false});save();refreshAll();
 }
 
 function renderStats(){
@@ -16109,8 +16918,9 @@ function renderPracticeNow(){
   /* Today only offers off-plan practice when the schedule has nothing for
      today. On a session day the card is not shown at all: no border, no gap. */
   if(hasSessionToday()){box.style.display='none';box.innerHTML='';return;}
-  const diag=D&&D.diag;
-  const weak=diag&&Array.isArray(diag.weakest)?Number(diag.weakest[0]):0;
+  const prog=getProgression(D);
+  const diag=prog.diag;
+  const weak=(diag.fresh&&Array.isArray(diag.weakest))?Number(diag.weakest[0]):0;
   let list=[],sub='',skill='';
   if(weak>=1&&weak<=7){
     const p=String(weak);
@@ -17455,6 +18265,7 @@ function qlSave(){
     entry.score=correct;
   }
   D.log.push(entry);
+  advanceStageIfReady({save:false});
   save();
   refreshAll();
   closeQuickLog();
@@ -17791,6 +18602,7 @@ async function submitIaWriting(){
     });
     D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||((b.created_at||0)-(a.created_at||0)));
     _iaQuotaAt=0;
+    advanceStageIfReady({save:false});
     save();
     refreshAll();
   }catch(err){
@@ -18094,6 +18906,7 @@ function finishDiag(timedOut=false){
     byPart,
     weakest
   };
+  advanceStageIfReady({save:false});
   save();
   refreshAll();
   track('diag_finish',{ok:!timedOut,count:correct});
@@ -18513,7 +19326,7 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='practice')skRenderView('practice',renderPractice);
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
   if(viewId==='prog')skRenderView('prog',function(){
-    renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
+    advanceStageIfReady();renderGates();renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
     renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();
   });
   if(viewId==='resources')skRenderView('resources',function(){renderPractice();renderResources()});
@@ -18603,7 +19416,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
