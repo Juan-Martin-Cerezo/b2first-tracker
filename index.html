@@ -1736,6 +1736,12 @@ footer{
 }
 
 /* ---------- OVERLAYS / MODALS ---------- */
+/* No session yet: the app shell is not in the flow at all, so nothing behind
+   the login overlay is readable or focusable. */
+body.auth-locked .shell,
+body.auth-locked #qlFab,
+body.auth-locked #toast,
+body.auth-locked .toast{display:none !important}
 .overlay{
   position:fixed;inset:0;z-index:200;background:var(--overlay-bg);
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
@@ -2754,6 +2760,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <body>
 
 <!-- ============ AUTH OVERLAY (login / register) ============ -->
+<!-- No session: the shell stays out of the DOM flow (see .auth-locked). -->
 <div id="authOverlay" class="overlay" style="display:none">
   <div class="auth-card">
     <div class="auth-brand">
@@ -7191,10 +7198,14 @@ async function googleLinkAccount(){
 function showAuthOverlay(){
   const ov=document.getElementById('authOverlay');
   if(ov)ov.style.display='flex';
+  /* No session: the app shell must not render behind the overlay, so nothing
+     is readable or clickable until there is an account. */
+  document.body.classList.add('auth-locked');
 }
 function hideAuthOverlay(){
   const ov=document.getElementById('authOverlay');
   if(ov)ov.style.display='none';
+  document.body.classList.remove('auth-locked');
 }
 function switchAuthTab(tab){
   document.querySelectorAll('#authOverlay .auth-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
