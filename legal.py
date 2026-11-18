@@ -205,7 +205,7 @@ _SHELL = """<!DOCTYPE html>
 <div class="legal-nav"><a href="/">← Back to the Tracker</a>
 <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/security">Security</a></div>
 {body}
-<footer>B2 First Tracker · self-hosted in Argentina · no advertising, no tracking ·
+<footer>B2 First Tracker · hosted service · no advertising, no tracking ·
 <a href="/.well-known/security.txt">security.txt</a></footer>
 </div></body></html>"""
 

@@ -4,17 +4,18 @@
 
 # B2 First Tracker
 
-A self-hosted study system for the Cambridge B2 First: writing marked against the four Cambridge
-bands, a plan for today, and progress you can see.
+A hosted study system for the Cambridge B2 First: writing marked against the four Cambridge
+bands, a plan for today, and progress you can see. Create an account on the service and use it
+from any browser; your progress lives on our server, not on your machine.
 
-**Live demo:** https://firsttracker.app
+**Live service:** https://firsttracker.app
 
 ![The landing page at firsttracker.app](docs/screenshots/landing.webp)
 
 ![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B-stdlib-3f3f46)
 ![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)
 ![License MIT](https://img.shields.io/badge/license-MIT-3f3f46)
-![Self-hosted](https://img.shields.io/badge/self--hosted-yes-3f3f46)
+![Hosted](https://img.shields.io/badge/hosted-accounts-3f3f46)
 
 ## Why it exists
 
@@ -66,8 +67,8 @@ countdown in view.
 | **Speaking** | Parts 1–4 with their real timings: a real-time examiner, a partner voice for Part 3, and a report that bands grammar and vocabulary, discourse management, pronunciation and interactive communication. |
 | **Plan** | The diagnostic ranks your weakest parts, the weekly plan turns that into sessions, the gates track the next stage, and the streak and countdown keep the week honest. |
 | **Charts** | Four SVG panels, no chart library: progress over time, accuracy per part, the mix of error types, and score consistency per skill. |
-| **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress under `data/users/<id>/`. Recovery works through Google, a passkey, or a manual operator reset. |
-| **Privacy** | Progress is JSON on your server. No analytics SDK, no ads, no external database. |
+| **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress on the service. Recovery works through Google, a passkey, or a manual operator reset. |
+| **Privacy** | Your progress is stored on our server. No analytics SDK, no ads, no external database. |
 
 ## How the plan works
 
@@ -129,44 +130,44 @@ it takes its turn, answers about your photographs, asks one question back and re
 Its lines come from the task bank; with a text model configured it can also react to what you
 actually said.
 
-**How a session is built.** `material/speaking.json` is the task bank: original tasks written for
-this app in the B2 First format — not past papers. Each part has its own task list, and selection
-is seeded and rotates, so a task is not presented again until that part's pool has been used. The
-chosen task and a countdown stay on screen while the exam runs; every turn has its own clock, and
-after five seconds of silence the examiner asks one short question from the task instead of
-waiting. The Part 2 photographs are from Wikimedia Commons, with their credits recorded in
-`assets/speaking/CREDITS.json`.
+**How a session is built.** The task bank, `material/speaking.json`, holds original tasks written
+for this app in the B2 First format — not past papers. Each part has its own task list, and
+selection is seeded and rotates, so a task is not presented again until that part's pool has been
+used. The chosen task and a countdown stay on screen while the exam runs; every turn has its own
+clock, and after five seconds of silence the examiner asks one short question from the task
+instead of waiting. The Part 2 photographs are from Wikimedia Commons, with their credits
+recorded in `assets/speaking/CREDITS.json`.
 
 **Optional AI.** With no provider key the exam still runs: the browser's own speech synthesis
 reads the examiner and partner lines, and the browser's speech recogniser (en-GB) writes your
 turns into the transcript. Keys add three things, independently:
 
-- **Live voice** — `POST /api/speaking/token` mints a single-use token and the browser talks to
-  the provider directly, so the audio never passes through this server.
-- **Turn-based voice** — `POST /api/speaking/turn` takes one recorded turn and returns the
-  examiner's reply as text and audio. The audio is forwarded to the provider and dropped: it is
-  never written to `data/` and never logged.
-- **A partner that listens** — `POST /api/speaking/partner` turns the last recognised line into
-  one sentence. Without a key (the server's or your own), the written partner lines are used.
+- **Live voice** — a short-lived token lets the browser talk to the provider directly, so the
+  audio never passes through our server.
+- **Turn-based voice** — one recorded turn is sent, and the examiner's reply comes back as text
+  and audio. The audio is forwarded to the provider and dropped: it is never written to disk and
+  never logged.
+- **A partner that listens** — the last recognised line becomes one sentence. Without a key, the
+  written partner lines are used.
 
-The text model is `B2_AI_KEY` or your own provider key from the app; the voices use
-`B2_SPK_GOOGLE_KEY`. The full list, with defaults, is in the Speaking table under
-[Configuration](#configuration).
+The text model and the voice model are configured by the operator of the service; you can also
+connect your own provider key from the app.
 
-**The report.** `POST /api/speaking/report` grades only the candidate's turns after a part.
-Grammar & Vocabulary and Discourse Management come from the text model. Pronunciation comes only
-from Azure Pronunciation Assessment (`POST /api/speaking/pa`), mapped to the Cambridge 0–5 scale;
-when Azure did not score the session the band says *not measured* instead of guessing. Interactive
-Communication is graded only when the session had a partner. Word and filler counts (`um`, `uh`,
-`like`, `you know`) are counted on the recognised text, with no score attached. The report needs a
-text model; the exam itself does not.
+**The report.** The report grades only the candidate's turns after a part. Grammar & Vocabulary
+and Discourse Management come from the text model. Pronunciation comes only from Azure
+Pronunciation Assessment, mapped to the Cambridge 0–5 scale; when Azure did not score the session
+the band says *not measured* instead of guessing. Interactive Communication is graded only when
+the session had a partner. Word and filler counts (`um`, `uh`, `like`, `you know`) are counted on
+the recognised text, with no score attached. The report needs a text model; the exam itself does
+not.
 
-**What is sent, and what is not.** The exam content never leaves your server: the task bank is a
+**What is sent, and what is not.** The exam content never leaves our server: the task bank is a
 static file and the voices come from the browser. When a text or voice key is configured, the
-browser sends the recognised candidate line for a partner reaction, one turn's audio in turn-based
-voice, and the transcript with its timings when you ask for the report. No audio is ever written
+browser sends the recognised candidate line to `POST /api/speaking/partner` for a reaction, one
+turn's audio to `POST /api/speaking/turn` in turn-based voice, and the transcript with its timings
+to `POST /api/speaking/report` when you ask for the report. No audio is ever written
 by the server. Nothing is added to your log until you press **Save report**; the exam does not
-store the transcript, and saving writes only the report row into `progress.json`.
+store the transcript, and saving writes only the report row into your progress.
 
 ## What it does not do
 
@@ -177,7 +178,7 @@ affiliated with or endorsed by Cambridge, and the tasks under `material/speaking
 ones written in the exam format, not past papers.
 
 - **No pronunciation feedback without Azure.** Pronunciation is graded only by Azure Pronunciation
-  Assessment (`POST /api/speaking/pa`, `B2_SPK_AZURE_KEY`). With no Azure key the endpoint answers
+  Assessment (`POST /api/speaking/pa`). With no Azure key the endpoint answers
   `503 speech_not_configured`; the report card says *not measured* and lists no mispronounced
   words. The text model is told never to grade pronunciation, and any band it writes is discarded.
 - **The live transcript depends on the browser.** It is written by the browser's Web Speech API
@@ -186,161 +187,42 @@ ones written in the exam format, not past papers.
   microphone the note under the transcript says so while the examiner keeps the written script.
   The server receives audio only for the optional turn-based voice and the Azure clip, and stores
   neither.
+- **You need an account.** The service is account-based: create one with a username and a password
+  on the landing page. There is no anonymous mode and no local-only mode.
 
 ## Quick start
 
-### Docker
+1. Open https://firsttracker.app and choose **Create an account**.
+2. Pick a username and a password. No email address is needed.
+3. Take the diagnostic and open today's session.
 
-```bash
-docker build -t b2first .
-docker run -p 8088:8088 -v "$PWD/data:/app/data" b2first
-```
-
-Open `http://127.0.0.1:8088`. The image listens on `8088`, binds `0.0.0.0` inside the container and
-declares `/app/data` as the volume; the command above mounts your checkout's `data/` there. The
-container needs no Python packages and no external database.
-
-### systemd
-
-The repository ships `b2first.service`. Copy it, change `User=` and `WorkingDirectory=` to match
-your checkout, and add the settings file as a drop-in so secrets stay outside the repository:
-
-```bash
-sudo cp b2first.service /etc/systemd/system/b2first.service
-sudo mkdir -p /etc/systemd/system/b2first.service.d
-sudo tee /etc/systemd/system/b2first.service.d/env.conf >/dev/null <<'EOF'
-[Service]
-EnvironmentFile=/etc/b2first.env
-EOF
-sudo systemctl daemon-reload
-sudo systemctl enable --now b2first
-```
-
-Put `B2_*` values in `/etc/b2first.env` (`chmod 600`). The unit binds `127.0.0.1` by default, which
-is the right choice behind a TLS proxy; set `B2_HOST=0.0.0.0` only if something else must reach the
-port directly. No pip install, no migrations, no database.
-
-## Configuration
-
-Every setting is optional and read from the environment.
-
-**Server**
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `PORT` | `8088` | TCP port. |
-| `B2_DATA_DIR` or `DATA_DIR` | `<repo>/data` | Where accounts, progress and backups live. |
-| `B2_HOST` | `127.0.0.1` | Bind address. |
-| `B2_ALLOWED_HOSTS` | empty | Comma-separated `Host` allowlist. Empty means no check; an unlisted host gets `421`. |
-| `B2_DEMO` | `0` | `1` answers `403` on account and sync routes and keeps state in `localStorage`. |
-| `B2_REGISTER` | `open` | `closed` blocks new registrations; existing accounts still log in. |
-| `B2_OWNER_PASSWORD` | `b2first` | Password for the owner account created when migrating old single-user data. |
-| `B2_OWNER_UIDS` | `owner` | Account ids that bypass plan caps. |
-| `B2_PUBLIC_HEALTH` | `0` | `1` lets `GET /api/health` report absolute paths. |
-| `B2_CONNECTION_LIMIT` | `512` | Simultaneous sockets; above it the server answers `503` with `Retry-After`. |
-| `B2_REQUEST_QUEUE_SIZE` | `256` | `listen()` backlog. |
-| `B2_NO_CACHE` | `0` | `1` disables the static gzip/ETag cache. |
-| `B2_RATE_USER_API` | `600` | Authenticated API requests per minute per account. |
-| `B2_RATE_IP_AUTH` | `120` | Login, register and password requests per minute per IP. |
-| `B2_RATE_IP_ANON` | `300` | Anonymous API requests per minute per IP. `B2_RATE_IP_API` is accepted as an alias. |
-| `B2_REGISTER_PER_HOUR` | `20` | Signups per IP per hour. |
-| `B2_LOGIN_IP_PER_10MIN` | `60` | Login POSTs per IP per 10 minutes. The per-username lockout is the primary brute-force guard. |
-| `B2_LICENSE_SECRET` | empty | 32+ byte secret that signs pro activation codes. Unset makes redemption answer `503`. |
-
-**AI writing**
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `B2_AI_PROVIDER` | `deepseek` | `deepseek` or `gemini`. |
-| `B2_AI_BASE` | provider default | Override the provider base URL. |
-| `B2_AI_MODEL` | provider default (`deepseek-chat` or `gemini-2.0-flash`) | Override the model name. |
-| `B2_AI_KEY` | empty | Server-side key. Users can still send their own key from the app. |
-| `B2_AI_DAILY_TOTAL` | `80` | LLM calls per day for the whole instance. |
-| `B2_AI_DAILY_PER_USER` | unset | Legacy per-account hard cap. Leave it unset to use the plan allowance. |
-| `B2_BYO_TRUSTED_BASES` | empty | Extra origins accepted for bring-your-own keys. |
-
-**Google sign-in and passkeys**
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `B2_GOOGLE_CLIENT_ID` | empty | Enables Google sign-in when set. |
-| `B2_GOOGLE_CLIENT_SECRET` | empty | Google sign-in secret. |
-| `B2_GOOGLE_AUTH_URL` | Google authorisation endpoint | Override for a stub or proxy. |
-| `B2_GOOGLE_TOKEN_URL` | Google token endpoint | Override for a stub or proxy. |
-| `B2_GOOGLE_JWKS_URL` | Google certificate endpoint | Override for a stub or proxy. |
-| `B2_PUBLIC_URL` | `https://firsttracker.app` | Public origin used by the Google redirect and WebAuthn. |
-| `B2_RP_ID` | `firsttracker.app` | WebAuthn relying-party id. |
-
-**Speaking**
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `B2_SPK_GOOGLE_KEY` | empty | Gemini key for the examiner and partner voices. |
-| `B2_SPK_GOOGLE_MODEL` | `gemini-3.8-live` | Live model name. |
-| `B2_SPK_GOOGLE_TOKEN_URL` | Google token endpoint | Ephemeral-token endpoint override. |
-| `B2_SPK_WS_URL` | Google Live WebSocket | WebSocket endpoint override. |
-| `B2_SPK_LIVE` | `0` | `1` forces the Live path when the key supports it. |
-| `B2_SPK_MIN_DAILY_PER_USER` | `20` | Speaking minutes per account per day. |
-| `B2_SPK_MIN_DAILY_TOTAL` | `120` | Speaking minutes per instance per day. |
-| `B2_SPK_MONTHLY_MINUTES` | `900` | Hard monthly ceiling for Live audio. |
-| `B2_SPK_TURN_BASE` | Gemini API base | Base URL for the turn-based examiner. |
-| `B2_SPK_TURN_MODEL` | `gemini-2.5-flash` | Turn-based examiner model. |
-| `B2_SPK_TTS_MODEL` | `gemini-2.5-flash-preview-tts` | Examiner and partner voice model. |
-| `B2_SPK_AZURE_KEY` | empty | Azure pronunciation key. |
-| `B2_SPK_AZURE_REGION` | empty | Azure region. |
-| `B2_SPK_AZURE_ENDPOINT` | empty | Azure endpoint override. |
-| `B2_SPK_PA_DAILY_PER_USER` | `60` | Pronunciation calls per account per day. |
-
-**Billing**
-
-| Variable | Default | Effect |
-| --- | --- | --- |
-| `B2_BILLING_MODE` | `off` | `live` or `test` enables Stripe; anything else is off. |
-| `B2_STRIPE_SECRET_KEY` | empty | Stripe API key. |
-| `B2_STRIPE_PRICE_ID` | empty | Stripe price used by Checkout. |
-| `B2_STRIPE_WEBHOOK_SECRET` | empty | Stripe webhook signing secret. |
-| `B2_STRIPE_API_BASE` | `https://api.stripe.com` | Stripe API base override. |
+Already have an account? Choose **Sign in** and continue where you left off. Sessions follow you
+between your phone and your computer because the progress is stored on the server.
 
 ## Architecture
 
-`landing.html` is the public page at `/`; `index.html` is the whole tracker at `/app`. `server.py` is
-a standard-library `ThreadingHTTPServer`: it serves those two files and the assets, handles accounts
-and sessions, persists progress, proxies the AI calls and mints the speaking tokens. `store.py` is
-the storage seam, so the JSON files could be replaced without changing the HTTP API. There is no
-database. Every per-account write is a temporary file followed by an atomic `os.replace`, under a
-per-account lock, with the previous version kept in a rotated backup. Security events land in
-`data/audit.log` as a SHA-256 hash chain, so an edited line is detectable.
-
-```
-┌────────────┐   GET /              ┌────────────────────────────────────────────────┐
-│  browser   │ ───────────────────► │ server.py — stdlib ThreadingHTTPServer          │
-│  /         │   GET /app          │  static: landing.html, index.html, /assets     │
-│  /app      │   /api/*            │  API: accounts · progress · plan · AI · speaking│
-└────────────┘ ◄─────────────────── └───────────────────────┬────────────────────────┘
-                                                           │ store.py
-                                                           ▼
-                                              data/
-                                              ├── users.json          0600
-                                              ├── tokens.json         0600 (sha256)
-                                              ├── audit.log           0600 (hash chain)
-                                              └── users/<id>/
-                                                  ├── progress.json   0600
-                                                  ├── backups/        0600, last 20
-                                                  └── speaking.json   0600
-
-                                        no database · every write is tmp + os.replace
-```
+`landing.html` is the public page at `/`; `index.html` is the whole tracker at `/app`. `server.py`
+is a standard-library `ThreadingHTTPServer`: it serves those two files and the assets, handles
+accounts and sessions, persists progress, proxies the AI calls and mints the speaking tokens.
+`store.py` is the storage seam, so the stored documents could be replaced without changing the
+HTTP API. There is no external database.
 
 The frontend is one HTML file on purpose. There is no build step, no `node_modules` and no bundled
-output that can drift from the source: the file the server sends is the file you edit. That keeps a
-two-hour install on a small server honest, and it means a fix can be made over SSH and picked up on
-the next request.
+output that can drift from the source: the file the server sends is the file you edit.
+
+```text
+browser ──HTTPS──► the service
+                   ├── landing page and tracker (static assets)
+                   ├── accounts and sessions
+                   ├── per-account progress and backups
+                   └── AI and speaking proxies ──► the configured provider
+```
 
 ## Tests
 
 The suites are standalone scripts, not pytest. Each one exits non-zero on failure and prints JSON,
-and every suite that boots its own server sets `B2_DATA_DIR` (and a free port) before importing
-`server.py`, so the real `data/` is never read or written.
+and every suite that boots its own server uses a throwaway data directory and a free port, so the
+real data is never read or written.
 
 ```bash
 cd tests
@@ -371,6 +253,7 @@ uv run --with httpx python test_capacity.py
 | `test_auth_methods.py` | Google sign-in and passkeys. |
 | `test_ai.py` | The writing proxy against a mock provider: schema validation, `422` on bad shape, rate limits, no key leakage. |
 | `test_ai_guard.py` | Injection and abuse guards on the writing endpoint. |
+| `test_no_purchase.py` | No view sells anything and every removed purchase route answers `404`. |
 | `test_legal.py` | `/privacy`, `/terms` and `/security` render from Markdown. |
 | `test_security2.py` | Login lockout, hashed tokens, payload schema and the audit log. |
 | `test_security3.py` | Additional authentication and secret-handling checks. |
@@ -380,11 +263,11 @@ uv run --with httpx python test_capacity.py
 
 ## Privacy and security
 
-Your progress is plain JSON on the machine that runs the app, and no analytics SDK, ad network or
-external database is loaded. The only outbound text is the writing you explicitly submit for
-correction, which goes to the configured provider and is not stored; speaking audio goes from the
-browser to the speaking provider and is never written to disk. Accounts use PBKDF2-HMAC-SHA256 with
-600,000 iterations, session tokens are stored hashed, and the audit log is a hash chain.
+Your progress is stored on our server, and no analytics SDK, ad network or external database is
+loaded. The only outbound text is the writing you explicitly submit for correction, which goes to
+the configured provider and is not stored; speaking audio goes from the browser to the speaking
+provider and is never written to disk. Accounts use PBKDF2-HMAC-SHA256 with 600,000 iterations,
+session tokens are stored hashed, and the audit log is a hash chain.
 
 Read the policies at [`/privacy`](https://firsttracker.app/privacy),
 [`/terms`](https://firsttracker.app/terms) and [`SECURITY.md`](SECURITY.md).

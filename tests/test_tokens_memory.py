@@ -1,6 +1,6 @@
 """Phase B1: the session store lives in memory and persists in the background.
 
-The measured baseline (docs/LOADTEST-BASELINE.md) showed every authenticated
+The measured baseline (docs/internal/LOADTEST-BASELINE.md) showed every authenticated
 request reading and rewriting the whole data/tokens.json just to slide
 `last_seen`/`exp`: 33.5 ms per request at ~500 sessions, serialised behind one
 lock. This suite proves the file is off the hot path and that the guarantees

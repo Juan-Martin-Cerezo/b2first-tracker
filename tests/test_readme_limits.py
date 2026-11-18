@@ -87,10 +87,9 @@ check("paths_exist", not missing, missing)
 # --- 4. The PA route and its Azure key are real -------------------------
 check("pa_route_claim", "/api/speaking/pa" in section)
 check("pa_route_served", '"/api/speaking/pa"' in server)
-config = re.search(r"^## Configuration$(.*?)(?=^## )", readme, re.M | re.S)
-config = config.group(1) if config else ""
-check("azure_key_documented", "| `B2_SPK_AZURE_KEY` |" in config)
-check("azure_key_read", '"B2_SPK_AZURE_KEY"' in server and "_spk_azure_key()" in server)
+envs = set(re.findall(r"\bB2_[A-Z0-9_]+\b", readme))
+check("no_env_names_published", not envs, sorted(envs))
+check("azure_key_read", "_spk_azure_key()" in server)
 
 # --- 5. No key -> 503 speech_not_configured, not a guessed band ---------
 check("no_key_claim", "503 speech_not_configured" in prose)
