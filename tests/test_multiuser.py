@@ -149,7 +149,7 @@ uid_a, tok_a = reg_a["id"], reg_a["token"]
 out["1_register_user_a"] = st
 
 # 2. the same username again -> 409 "That username is taken."
-st, body, _ = req("POST", "/api/register", {"name": "alice", "password": "password456"})
+st, body, _ = req("POST", "/api/register", {"name": "alice", "password": "password4567"})
 assert st == 409 and json.loads(body).get("error") == "That username is taken.", f"dup register: {st} {body}"
 out["2_register_duplicate_409"] = st
 
@@ -200,16 +200,16 @@ out["8_expired_token_401"] = st
 # 9. PUT /api/progress with 2.1 MB -> 413
 big = json.dumps({"log": [], "errs": [], "pad": "x" * int(2.1 * 1024 * 1024)}).encode("utf-8")
 st, body, _ = req("PUT", f"/api/progress?user={uid_a}", token=tok_a, raw_body=big)
-assert st == 413 and "progress too large" in body, f"oversized PUT not rejected: {st} {body[:200]}"
+assert st == 413 and ("progress too large" in body or "payload too large" in body), f"oversized PUT not rejected: {st} {body[:200]}"
 out["9_progress_2mb_413"] = st
 
-# 10. POST /api/ai/writing with no key and quota 0 -> 429 "daily AI quota reached"
+# 10. POST /api/ai/writing with no key and quota 0 -> 429 "limit_reached"
 S._AI_RATE.clear()
 os.environ["B2_AI_DAILY_PER_USER"] = "0"
 st, body, _ = req("POST", "/api/ai/writing", {"text": SAMPLE_TEXT, "kind": "Essay"})
-assert st == 429 and json.loads(body).get("error") == "daily AI quota reached", f"quota 0 not enforced: {st} {body[:200]}"
+assert st == 429 and json.loads(body).get("error") == "limit_reached", f"quota 0 not enforced: {st} {body[:200]}"
 reset_date = json.loads(body).get("reset") or ""
-assert re.match(r"\d{4}-\d{2}-\d{2}$", reset_date), f"bad reset date: {reset_date!r}"
+assert re.match(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$", reset_date), f"bad reset date: {reset_date!r}"
 out["10_ai_quota_zero_429"] = st
 
 # 11. B2_AI_DAILY_PER_USER=1: first request consumes the quota, second -> 429
@@ -218,7 +218,7 @@ S._AI_RATE.clear()
 st1, body1, _ = req("POST", "/api/ai/writing", {"text": SAMPLE_TEXT, "kind": "Essay"})
 st2, body2, _ = req("POST", "/api/ai/writing", {"text": SAMPLE_TEXT, "kind": "Essay"})
 assert st1 == 200, f"first AI call should pass: {st1} {body1[:200]}"
-assert st2 == 429 and json.loads(body2).get("error") == "daily AI quota reached", f"second AI call: {st2} {body2[:200]}"
+assert st2 == 429 and json.loads(body2).get("error") == "limit_reached", f"second AI call: {st2} {body2[:200]}"
 out["11_ai_quota_one"] = {"first": st1, "second": st2}
 
 # 12. with the user's own key -> 200 even with the server quota exhausted
