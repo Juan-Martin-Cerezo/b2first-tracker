@@ -8570,6 +8570,30 @@ function skRenderView(key,fn){
     }
   });
 }
+/* Stable identity for a log/err entry, used to merge instead of blindly
+   replacing. An explicit id wins; otherwise the whole entry is the key, so an
+   exact duplicate is kept once and genuinely different rows both survive. */
+function syncEntryKey(e){
+  if(e&&typeof e==='object'){
+    if(e.id!=null)return 'id:'+e.id;
+    try{return 'j:'+JSON.stringify(e)}catch(err){}
+  }
+  return 'v:'+String(e);
+}
+function mergeSyncList(local,server){
+  const out=[],seen={};
+  const add=list=>{
+    if(!Array.isArray(list))return;
+    list.forEach(e=>{
+      const k=syncEntryKey(e);
+      if(seen[k])return;
+      seen[k]=1;
+      out.push(e);
+    });
+  };
+  add(server);add(local);
+  return out;
+}
 function syncPull(){
   if(DEMO&&DEMO.demo)return Promise.resolve(null);
   const skPullDone=skPullStart();
@@ -8578,6 +8602,16 @@ function syncPull(){
     .then(d=>{
       if(d&&typeof d==='object'){
         if(Array.isArray(d.log)||Array.isArray(d.errs)||d.settings||d.onboarded!==undefined){
+          /* A local updated_at ahead of the server's is itself the pending
+             marker: a successful push stores the whole document, timestamp
+             included. Such newer local work must not be clobbered by an older
+             server copy — keep it and retry the push. */
+          const localTs=Number(D&&D.updated_at)||0;
+          const serverTs=Number(d.updated_at)||0;
+          if(serverTs>0&&localTs>serverTs){
+            syncPush();
+            return d;
+          }
           const mergedSettings=Object.assign({}, JSON.parse(JSON.stringify(SETTINGS_DEFAULT)), D.settings||{}, d.settings||{});
           delete mergedSettings.aiKey;
           delete mergedSettings.byo;
@@ -8585,9 +8619,12 @@ function syncPull(){
           const nextStage=typeof d.stage==='number' ? gateClampStage(d.stage) : gateClampStage(D.stage);
           const rawHistory=Array.isArray(d.stageHistory) ? d.stageHistory : (d.stage!==undefined ? null : D.stageHistory);
           const nextLang=(mergedSettings&&mergedSettings.lang)||LANG;
+          const mergedLog=mergeSyncList(D.log,d.log);
+          mergedLog.sort((a,b)=>(String(b.date||'')).localeCompare(String(a.date||''))||((b.created_at||0)-(a.created_at||0)));
+          const mergedErrs=mergeSyncList(D.errs,d.errs);
           D = {
-            log: Array.isArray(d.log) ? d.log : (Array.isArray(D.log) ? D.log : []),
-            errs: Array.isArray(d.errs) ? d.errs : (Array.isArray(D.errs) ? D.errs : []),
+            log: mergedLog,
+            errs: mergedErrs,
             examDates: Array.isArray(d.examDates) ? d.examDates : (Array.isArray(D.examDates) ? D.examDates : []),
             stage: nextStage,
             stageHistory: gateNormalizeStageHistory(rawHistory, nextStage, nextLang),
