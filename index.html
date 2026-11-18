@@ -334,6 +334,13 @@ body.topbar-compact .sticky-view-bar{opacity:1;transform:translateY(0);pointer-e
 .sync-badge.state-local{background:var(--txt-2)}
 .sync-badge.state-off{background:var(--warn)}
 .sync-badge:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.topbar .sync-warn-pill{
+  display:none;align-items:center;gap:4px;flex:none;
+  background:transparent;border:1px solid var(--warn-border);color:var(--warn-text);
+  border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;line-height:1;
+  cursor:pointer;font-family:var(--font);white-space:nowrap;
+}
+.topbar .sync-warn-pill:hover{background:var(--warn-soft)}
 .topbar .top-actions{display:flex;align-items:center;gap:var(--s2);flex-shrink:0;flex-wrap:nowrap}
 .topbar .top-streak{
   display:inline-flex;align-items:center;gap:var(--s1);flex:none;
@@ -2768,7 +2775,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <option value="other" data-i18n="solo_source_other">Other practice</option>
         </select>
       </div>
-      <div><label data-i18n="solo_ref">Reference / Notes</label><input type="text" id="soloRef" placeholder="e.g. Unit 3 / Test 2" data-i18n-placeholder="solo_ref_ph"></div>
+      <div><label data-i18n="solo_ref">Reference / Notes</label><input type="text" id="soloRef" maxlength="400" placeholder="e.g. Unit 3 / Test 2" data-i18n-placeholder="solo_ref_ph"></div>
     </div>
 
     <div style="margin-top:10px">
@@ -2788,7 +2795,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
           </select>
         </div>
-        <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" placeholder="e.g. Didn't spot inversion requirement"></div>
+        <div><label data-i18n="solo_err_desc">Mistake Description</label><input type="text" id="soloErrDesc" maxlength="400" placeholder="e.g. Didn't spot inversion requirement"></div>
       </div>
     </div>
 
@@ -3155,6 +3162,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <span>B2 FIRST</span>
       </div>
       <div class="top-actions">
+        <button type="button" class="sync-warn-pill" id="syncWarnPill" data-action="toggleAccountSheet" aria-live="polite"><span data-i18n="sync_warn_pill">Sync paused</span></button>
         <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak"><svg class="streak-flame" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-flame"/></svg><b id="streakTopNum" class="tnum">0</b></span>
         <button type="button" class="user-chip" id="userChip" data-action="toggleAccountSheet" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet" title="Account, theme &amp; settings" aria-label="Account, theme &amp; settings" data-i18n-title="acct_chip" data-i18n-aria-label="acct_chip"><span class="avatar">A</span></button>
       </div>
@@ -3371,7 +3379,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div class="row">
-                      <div><label>Test / Ref.</label><input type="text" id="ueRef" placeholder="e.g. Sample 1 / Test 2"></div>
+                      <div><label>Test / Ref.</label><input type="text" id="ueRef" maxlength="400" placeholder="e.g. Sample 1 / Test 2"></div>
                       <div><label>Correct</label><input type="number" id="ueOk" min="0" value="0"></div>
                       <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="75"></div>
@@ -3451,7 +3459,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         </select>
                       </div>
                     </div>
-                    <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
+                    <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" maxlength="400" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
                       <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live Writing →</button>
                     </div>
@@ -3534,9 +3542,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                           <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
                         </select>
                       </div>
-                      <div><label>What went wrong?</label><input type="text" id="errDesc" placeholder="e.g. didn't use inversion"></div>
+                      <div><label>What went wrong?</label><input type="text" id="errDesc" maxlength="400" placeholder="e.g. didn't use inversion"></div>
                     </div>
-                    <div><label>Corrective action</label><input type="text" id="errFix" placeholder="e.g. write 5 inversion sentences"></div>
+                    <div><label>Corrective action</label><input type="text" id="errFix" maxlength="400" placeholder="e.g. write 5 inversion sentences"></div>
                     <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" data-action="saveW">✔ Save Writing &amp; Progress</button>
                       <button class="btn gray" data-action="saveErr">🔖 Log error only</button>
@@ -4430,8 +4438,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </select>
                 </div>
               </div>
-              <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
-              <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
+              <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" maxlength="400" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
+              <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" maxlength="400" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
               <div style="margin-top:var(--s3)"><button class="btn" data-action="saveErr2" data-i18n="err_save">💾 Save error</button></div>
             </div>
           </div>
@@ -4656,7 +4664,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <div>
               <label for="iaText" data-i18n="ai_text">Your text in English</label>
-              <textarea id="iaText" class="writing-live-pad" rows="8" data-input="onIaTextChange" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
+              <textarea id="iaText" class="writing-live-pad" rows="8" maxlength="4000" data-input="onIaTextChange" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
               <div class="live-word-meter">
                 <span class="tnum"><span data-i18n="ai_words">Words:</span> <b id="iaWordCount">0</b> <span class="muted" data-i18n="ai_target_short">(target 140–190)</span></span>
                 <span id="iaWordStatus" class="tnum" style="font-weight:600">Target: 140–190 words</span>
@@ -4887,6 +4895,7 @@ const I18N={
     sync_off:'Offline — changes stay on this device',
     sync_invalid:'Not synced — the server rejected the document',
     sync_invalid_field:'Not synced — rejected field: {field}',
+    sync_warn_pill:'Sync paused',
     auth_login:'Log in',
     auth_register:'Create account',
     auth_closed:'Registration is closed. This instance is private.',
@@ -5459,7 +5468,7 @@ const I18N={
     ai_in_range:'✔ In range ({words}/140–190 words)',
     ai_short:'{n} words short (target 140–190)',
     ai_over:'{n} words over (max 190)',
-    ai_err_long:'The text is too long (max 6000 characters).',
+    ai_err_long:'The text is too long (max 4000 characters).',
     ai_err_words:'The text must be between 40 and 700 words.',
     ai_err_not_task:'That does not look like a B2 First writing task. Paste the task and your text.',
     ai_err_network:'Could not reach the corrector. Check your connection and try again.',
@@ -5780,6 +5789,7 @@ const I18N={
     sync_off:'Sin conexión — los cambios quedan en este dispositivo',
     sync_invalid:'Sin sincronizar — el servidor rechazó el documento',
     sync_invalid_field:'Sin sincronizar — campo rechazado: {field}',
+    sync_warn_pill:'Sync en pausa',
     auth_login:'Iniciar sesión',
     auth_register:'Crear cuenta',
     auth_closed:'El registro está cerrado. Esta instancia es privada.',
@@ -6352,7 +6362,7 @@ const I18N={
     ai_in_range:'✔ En rango ({words}/140–190 palabras)',
     ai_short:'Faltan {n} palabras (objetivo 140–190)',
     ai_over:'Sobran {n} palabras (máx. 190)',
-    ai_err_long:'El texto es demasiado largo (máx. 6000 caracteres).',
+    ai_err_long:'El texto es demasiado largo (máx. 4000 caracteres).',
     ai_err_words:'El texto debe tener entre 40 y 700 palabras.',
     ai_err_not_task:'Eso no parece una consigna de writing del B2 First. Pegá la consigna y tu texto.',
     ai_err_network:'No se pudo contactar al corrector. Revisá tu conexión e intentá de nuevo.',
@@ -8395,6 +8405,13 @@ function syncStatus(s,field){
   const acctSync=document.getElementById('acctSyncText');
   if(acctSync){
     acctSync.textContent=(DEMO&&DEMO.demo)?t('acct_demo'):label;
+  }
+  const warnPill=document.getElementById('syncWarnPill');
+  if(warnPill){
+    const broken=(s==='invalid'||s==='off');
+    warnPill.style.display=broken?'inline-flex':'none';
+    warnPill.setAttribute('title',label);
+    warnPill.setAttribute('aria-label',label);
   }
 }
 function syncPush(){
@@ -18551,7 +18568,7 @@ async function submitIaWriting(){
   const text=textEl?textEl.value.trim():'';
   const kind=kindEl?kindEl.value:'Essay';
   const words=countWords(text);
-  if(text.length>6000){
+  if(text.length>4000){
     setIaState('error',t('ai_err_long'));
     return;
   }
