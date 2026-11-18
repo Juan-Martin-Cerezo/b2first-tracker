@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""CSP enforcement test (fase E): the tracker must run with zero violations.
+"""CSP enforcement test (fase G): the tracker must run with zero violations.
 
-The server now emits ``script-src 'self' 'sha256-…' 'unsafe-hashes'
-'strict-dynamic'`` for /app, with one hash per inline <script> and per inline
-on* handler. If tools/csp_hashes.py misses a handler, the browser reports a
-``securitypolicyviolation`` event (and a console error) as soon as it runs.
+The server emits ``script-src 'self' 'sha256-…' 'strict-dynamic'`` for /app,
+with one hash per inline <script> body and no ``'unsafe-hashes'``: the document
+has no inline on* handler attributes left, because every control is wired
+through data-* attributes and one delegated listener. If tools/csp_hashes.py
+missed a script block, the browser reports a ``securitypolicyviolation`` event
+(and a console error) as soon as it runs.
 
 This suite loads the real app on an isolated server, walks every view (today,
 plan, log, stats, books/resources, speaking, exam, diagnostics, onboarding and
@@ -43,6 +45,28 @@ window.addEventListener('securitypolicyviolation', (e) => {
 VIEWS = ["hoy", "plan", "prog", "practice", "resources", "ia", "exam", "diag"]
 
 
+def header_check():
+    """The served /app CSP must be small and free of 'unsafe-hashes'.
+
+    Without inline handlers the directive only carries the two <script> hashes,
+    so it stays far below the proxy buffer that used to pressure the header.
+    """
+    import urllib.request
+
+    with urllib.request.urlopen(URL + "app") as r:
+        csp = r.headers.get("Content-Security-Policy", "")
+    script_src = csp.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in csp else ""
+    return {
+        "bytes": len(csp),
+        "unsafe_hashes": "'unsafe-hashes'" in csp,
+        "hashes": csp.count("'sha256-"),
+        "script_src": script_src.strip(),
+        "ok": (len(csp) < 1024
+               and "'unsafe-hashes'" not in csp
+               and "'unsafe-inline'" not in script_src),
+    }
+
+
 def main():
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -77,9 +101,11 @@ def main():
         "violations": VIOLATIONS,
         "console_csp": banner[:10],
         "views": VIEWS,
+        "header": header_check(),
     }
     print(json.dumps(payload, ensure_ascii=False, indent=1))
-    ok = not VIOLATIONS and not banner
+    ok = (not VIOLATIONS and not banner
+          and payload["header"]["ok"])
     print("CSP_EXIT", 0 if ok else 1)
     return 0 if ok else 1
 

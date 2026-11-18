@@ -3909,17 +3909,13 @@ SECURITY_HEADERS = {
     "Permissions-Policy": PERMISSIONS_NONE,
 }
 
-# CSP without 'unsafe-inline' in script-src. Inline <script> bodies and inline
-# event handlers are allowed only by their sha256 hash.
-#
-# Trade-off: CSP Level 3 requires 'unsafe-hashes' for hashed inline event
-# handlers, so it stays in script-src. It does not re-enable arbitrary inline
-# JS: only the exact handler values present in the served document match. To
-# remove it completely the 190+ on*="..." attributes must be replaced with
-# addEventListener/delegation (then only the <script> hashes are needed) and,
-# for markup built at runtime, with data-* attributes plus delegated listeners.
+# CSP without 'unsafe-inline' in script-src. The documents carry no inline
+# event handlers: every control uses a data-* attribute resolved by the single
+# delegated listener in index.html, so script-src only needs the sha256 hashes
+# of the inline <script> bodies. There is nothing for 'unsafe-hashes' to allow
+# and it is deliberately absent.
 # 'strict-dynamic' drops host allowlists in CSP3 browsers: the document loads no
-# external scripts, and the hashes cover its two inline blocks.
+# external scripts, and the hashes cover its inline blocks.
 CSP_TEMPLATE = (
     "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
     "script-src {script_src}; worker-src 'self' blob:; "

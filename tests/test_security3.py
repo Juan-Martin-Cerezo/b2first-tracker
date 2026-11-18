@@ -163,7 +163,8 @@ csp_script = csp.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in c
 check("A2_csp_hardened",
       all(x in csp for x in ("object-src 'none'", "base-uri 'none'",
                              "frame-ancestors 'none'", "form-action 'self'",
-                             "'sha256-", "'unsafe-hashes'", "'strict-dynamic'"))
+                             "'sha256-", "'strict-dynamic'"))
+      and "'unsafe-hashes'" not in csp
       and "'unsafe-inline'" not in csp_script
       and "'unsafe-eval'" not in csp,
       csp)

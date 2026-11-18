@@ -45,7 +45,7 @@ with sync_playwright() as p:
 
     # 3. Check session shift / fast-forward (+1) from Plan view
     offset_initial = pg.evaluate("D.sessionOffset || 0")
-    pg.click("#v-plan button[onclick='advanceSession(1)']")
+    pg.click("#v-plan button[data-action='advanceSession'][data-arg='1']")
     pg.wait_for_timeout(200)
     offset_after_1 = pg.evaluate("D.sessionOffset || 0")
     badge_text = pg.text_content("#planOffsetBadge")
@@ -59,7 +59,7 @@ with sync_playwright() as p:
     out["today_banner_visible"] = pg.is_visible("#nextBox")
     
     # Click shift (+1) from banner
-    shift_btn = pg.query_selector("#nextBox button[onclick*='advanceSession']")
+    shift_btn = pg.query_selector("#nextBox button[data-action='advanceSession']")
     if shift_btn and shift_btn.is_visible():
         shift_btn.click()
         pg.wait_for_timeout(200)

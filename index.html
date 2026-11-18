@@ -2602,28 +2602,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <h2>B2 First Tracker</h2>
     </div>
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')" data-i18n="auth_login">Log in</button>
-      <button class="auth-tab" data-tab="register" id="authRegisterTab" onclick="switchAuthTab('register')" data-i18n="auth_register">Create account</button>
+      <button class="auth-tab active" data-tab="login" data-action="switchAuthTab" data-i18n="auth_login">Log in</button>
+      <button class="auth-tab" data-tab="register" id="authRegisterTab" data-action="switchAuthTab" data-i18n="auth_register">Create account</button>
     </div>
     <div id="regClosedNote" class="auth-error" style="display:none" data-i18n="auth_closed">Registration is closed. This instance is private.</div>
     <div id="authLogin">
-      <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="e.g. Owner" data-i18n-placeholder="auth_ph_owner" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="e.g. Owner" data-i18n-placeholder="auth_ph_owner" autocomplete="username" data-keydown="loginEnter"></div>
+      <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" data-keydown="loginEnter"></div>
       <div class="auth-error" id="authError"></div>
-      <button type="button" class="auth-link" onclick="showPasswordRecovery()" data-i18n="auth_forgot">Forgot your password?</button>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="doLogin()" data-i18n="auth_enter">Enter</button>
+      <button type="button" class="auth-link" data-action="showPasswordRecovery" data-i18n="auth_forgot">Forgot your password?</button>
+      <button class="btn" style="width:100%;margin-top:12px" data-action="doLogin" data-i18n="auth_enter">Enter</button>
       <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
-      <button class="btn provider" id="googleLoginBtn" type="button" style="width:100%;display:none" onclick="startGoogleLogin()"><svg class="provider-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="auth_google">Continue with Google</span></button>
-      <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" onclick="startPasskeyLogin()" data-i18n="auth_passkey">Sign in with a passkey</button>
+      <button class="btn provider" id="googleLoginBtn" type="button" style="width:100%;display:none" data-action="startGoogleLogin"><svg class="provider-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="auth_google">Continue with Google</span></button>
+      <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" data-action="startPasskeyLogin" data-i18n="auth_passkey">Sign in with a passkey</button>
       <div class="auth-error" id="altAuthError"></div>
     </div>
     <div id="authRegister" style="display:none">
-      <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" onkeydown="if(event.key==='Enter')doRegister()"></div>
-      <div><label data-i18n="auth_password_min">Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" oninput="onRegPwInput(this.value)" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" data-keydown="registerEnter"></div>
+      <div><label data-i18n="auth_password_min">Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" data-input="onRegPwInput" data-keydown="registerEnter"></div>
       <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">10+ characters. Avoid common passwords.</div>
       <div><label data-i18n="auth_avatar_color">Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="doRegister()" data-i18n="auth_create_enter">Create account &amp; enter</button>
+      <button class="btn" style="width:100%;margin-top:12px" data-action="doRegister" data-i18n="auth_create_enter">Create account &amp; enter</button>
       <div style="font-size:11px;color:var(--on-surface-variant);margin-top:10px;text-align:center" data-i18n-html="auth_privacy_html">By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</div>
     </div>
     <div id="authRecover" style="display:none">
@@ -2636,9 +2636,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <p class="auth-recover-note" data-i18n="auth_recover_manual">Otherwise ask for a manual reset. The operator resets the password by hand and answers at the contact you leave here.</p>
       <div><label data-i18n="auth_username">User name</label><input type="text" id="recName" placeholder="Your user name" data-i18n-placeholder="auth_recover_name_ph" autocomplete="username"></div>
       <div><label data-i18n="auth_recover_contact_label">Contact</label><input type="text" id="recContact" maxlength="120" placeholder="Email or @telegram (optional)" data-i18n-placeholder="auth_recover_contact_ph" autocomplete="off"></div>
-      <button class="btn" style="width:100%;margin-top:12px" onclick="requestPasswordReset()" data-i18n="auth_recover_send">Send reset request</button>
+      <button class="btn" style="width:100%;margin-top:12px" data-action="requestPasswordReset" data-i18n="auth_recover_send">Send reset request</button>
       <div id="recStatus" class="auth-ok"></div>
-      <button type="button" class="auth-link" onclick="hidePasswordRecovery()" data-i18n="auth_recover_back">Back to log in</button>
+      <button type="button" class="auth-link" data-action="hidePasswordRecovery" data-i18n="auth_recover_back">Back to log in</button>
     </div>
   </div>
 </div>
@@ -2651,39 +2651,39 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <h3 style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0 0 8px" data-i18n="google_link_title">This Google account is new here</h3>
     <p class="sub" style="font-size:12px;margin:0 0 12px" data-i18n="google_link_body">Choose how to continue. Nothing is created until you confirm.</p>
     <div><label data-i18n="google_link_name">Choose a username</label><input type="text" id="googleName" placeholder="e.g. maria" data-i18n-placeholder="google_user_ph" autocomplete="username"></div>
-    <button class="btn ok" style="width:100%;margin-top:12px" onclick="googleCreateAccount()" data-i18n="google_create_btn">Create a new account</button>
+    <button class="btn ok" style="width:100%;margin-top:12px" data-action="googleCreateAccount" data-i18n="google_create_btn">Create a new account</button>
     <div style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
     <div><label data-i18n="google_link_existing">Link an existing account</label>
       <input type="text" id="googleLinkName" placeholder="User name" data-i18n-placeholder="auth_username" autocomplete="username">
       <input type="password" id="googleLinkPass" placeholder="Password" data-i18n-placeholder="auth_password" autocomplete="current-password">
     </div>
-    <button class="btn gray" style="width:100%;margin-top:8px" onclick="googleLinkAccount()" data-i18n="google_link_btn">Link and sign in</button>
+    <button class="btn gray" style="width:100%;margin-top:8px" data-action="googleLinkAccount" data-i18n="google_link_btn">Link and sign in</button>
     <div class="auth-error" id="googleLinkError"></div>
-    <button class="btn gray" style="width:100%;margin-top:10px" onclick="hideGoogleLink();showAuthOverlay()" data-i18n="common_cancel">Cancel</button>
+    <button class="btn gray" style="width:100%;margin-top:10px" data-action="cancelGoogleLink" data-i18n="common_cancel">Cancel</button>
   </div>
 </div>
 
 <!-- ============ ONBOARDING (mandatory setup: 4 steps) ============
      There is deliberately no skip control: the only exits are Back (to an
      earlier step), accepting the generated plan, or finishing the tour. -->
-<div id="onboardingOverlay" class="overlay" style="display:none" onclick="event.stopPropagation()">
+<div id="onboardingOverlay" class="overlay" style="display:none">
   <div class="auth-card ob-card" id="obDialog" role="dialog" aria-modal="true" aria-labelledby="obTitle">
     <div class="ob-lang" role="group" data-i18n-aria-label="ob_language">
-      <button type="button" id="obLangEn" onclick="obSetLang('en')" aria-pressed="true">EN</button>
-      <button type="button" id="obLangEs" onclick="obSetLang('es')" aria-pressed="false">ES</button>
+      <button type="button" id="obLangEn" data-action="obSetLang" data-arg="en" aria-pressed="true">EN</button>
+      <button type="button" id="obLangEs" data-action="obSetLang" data-arg="es" aria-pressed="false">ES</button>
     </div>
     <div class="ob-progress" aria-hidden="true"><div class="ob-progress-fill" id="obProgressFill"></div></div>
     <div class="ob-step-count tnum" id="obStepCount" aria-live="polite">1/5</div>
     <div id="obStepBody"></div>
     <div class="ob-actions">
-      <button type="button" class="btn gray" id="obBackBtn" onclick="obBack()" style="visibility:hidden" data-i18n="common_back">Back</button>
-      <button type="button" class="btn" id="obNextBtn" onclick="obNext()" data-i18n="common_continue">Continue</button>
+      <button type="button" class="btn gray" id="obBackBtn" data-action="obBack" style="visibility:hidden" data-i18n="common_back">Back</button>
+      <button type="button" class="btn" id="obNextBtn" data-action="obNext" data-i18n="common_continue">Continue</button>
     </div>
   </div>
 </div>
 
 <!-- ============ SOLO PRACTICE MODAL (individual part outside sessions) ============ -->
-<div id="soloModal" class="overlay" style="display:none" onclick="if(event.target===this)closeSoloModal()">
+<div id="soloModal" class="overlay" style="display:none" data-action="closeSoloModalIfSelf">
   <div class="auth-card" style="max-width:520px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px">
@@ -2693,12 +2693,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div style="font-size:12px;color:var(--on-surface-variant)" data-i18n="solo_sub">Extra practice done outside scheduled sessions</div>
         </div>
       </div>
-      <button class="del" onclick="closeSoloModal()" style="font-size:20px;padding:4px 8px">✕</button>
+      <button class="del" data-action="closeSoloModal" style="font-size:20px;padding:4px 8px">✕</button>
     </div>
 
     <div>
       <label data-i18n="solo_skill">Skill / Component</label>
-      <select id="soloSkill" onchange="onSoloSkillChange()">
+      <select id="soloSkill" data-change="onSoloSkillChange">
         <option value="ue" data-i18n="solo_ue">📖 Reading &amp; Use of English (Parts 1–7)</option>
         <option value="lp" data-i18n="solo_listening">🎧 Listening (Parts 1–4)</option>
         <option value="w" data-i18n="solo_writing">✍️ Writing (Individual Text / Genre)</option>
@@ -2708,7 +2708,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <div style="margin-top:10px" id="soloPartRow">
       <label data-i18n="solo_part">Part / Exercise</label>
-      <select id="soloPart" onchange="onSoloPartChange()"></select>
+      <select id="soloPart" data-change="onSoloPartChange"></select>
     </div>
 
     <div class="row" style="margin-top:10px" id="soloScoreRow">
@@ -2735,7 +2735,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <div style="margin-top:10px">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;text-transform:none">
-        <input type="checkbox" id="soloHasErr" style="width:auto" onchange="document.getElementById('soloErrBox').style.display=this.checked?'block':'none'">
+        <input type="checkbox" id="soloHasErr" style="width:auto" data-change="soloErrToggle">
         <span data-i18n="solo_log_error">Log an error for root-cause analysis</span>
       </label>
     </div>
@@ -2755,14 +2755,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div style="margin-top:16px;display:flex;gap:8px">
-      <button class="btn ok" style="flex:1" onclick="saveSoloPractice()" data-i18n="solo_save">✔ Save Solo Practice</button>
-      <button class="btn gray" onclick="closeSoloModal()" data-i18n="common_cancel">Cancel</button>
+      <button class="btn ok" style="flex:1" data-action="saveSoloPractice" data-i18n="solo_save">✔ Save Solo Practice</button>
+      <button class="btn gray" data-action="closeSoloModal" data-i18n="common_cancel">Cancel</button>
     </div>
   </div>
 </div>
 
 <!-- ============ USER PROFILE & ACCOUNT MODAL ============ -->
-<div id="userModal" class="overlay" style="display:none" onclick="if(event.target===this)closeUserModal()">
+<div id="userModal" class="overlay" style="display:none" data-action="closeUserModalIfSelf">
   <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:10px">
@@ -2772,7 +2772,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div style="font-size:12px;color:var(--on-surface-variant)" id="modalUserStage">Stage 0</div>
         </div>
       </div>
-      <button class="del" onclick="closeUserModal()" style="font-size:20px;padding:4px 8px">✕</button>
+      <button class="del" data-action="closeUserModal" style="font-size:20px;padding:4px 8px">✕</button>
     </div>
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
@@ -2784,7 +2784,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:6px;padding:12px;margin-bottom:14px">
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin-bottom:8px" data-i18n="user_account">Account</div>
-      <button class="btn gray" style="width:100%" onclick="doExportAccount()" data-i18n="user_export">💾 Export my data</button>
+      <button class="btn gray" style="width:100%" data-action="doExportAccount" data-i18n="user_export">💾 Export my data</button>
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_change_pw">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="password" id="pwCurrent" placeholder="Current password" data-i18n-placeholder="user_current_pw" autocomplete="current-password">
@@ -2792,7 +2792,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <input type="password" id="pwRepeat" placeholder="Repeat new password" data-i18n-placeholder="user_repeat_pw" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" onclick="doChangePassword()" data-i18n="user_update_pw">Update password</button>
+      <button class="btn" id="pwBtn" style="width:100%;margin-top:8px" data-action="doChangePassword" data-i18n="user_update_pw">Update password</button>
       <div id="passkeySection" style="display:none">
         <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_security">Security</div>
         <div id="passkeyWarn" class="auth-error" style="display:none;margin-bottom:8px" data-i18n="user_no_password_warn">This account has no password. Set one below as a fallback.</div>
@@ -2803,35 +2803,35 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <input type="password" id="passkeyPassword" placeholder="Your password (once)" data-i18n-placeholder="user_passkey_password_ph" autocomplete="current-password">
         </div>
         <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-        <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
+        <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
       </div>
       <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" onclick="addPasskey()" data-i18n="user_add_passkey">Add a passkey</button>
+      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
-      <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" onclick="openDeleteAccount()" data-i18n="user_delete_btn">Delete my account</button>
+      <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" data-action="openDeleteAccount" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
         <div style="display:flex;flex-direction:column;gap:8px">
           <input type="password" id="delPass" placeholder="Your password" data-i18n-placeholder="user_delete_pass" autocomplete="current-password">
-          <input type="text" id="delText" placeholder="Type DELETE to confirm" data-i18n-placeholder="user_delete_confirm" autocomplete="off" oninput="checkDeleteConfirm()">
+          <input type="text" id="delText" placeholder="Type DELETE to confirm" data-i18n-placeholder="user_delete_confirm" autocomplete="off" data-input="checkDeleteConfirm">
         </div>
         <div id="delStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-        <button class="btn" id="delBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" disabled onclick="doDeleteAccount()" data-i18n="user_delete_permanent">Permanently delete my account</button>
+        <button class="btn" id="delBtn" style="width:100%;margin-top:8px;color:var(--bad-text)" disabled data-action="doDeleteAccount" data-i18n="user_delete_permanent">Permanently delete my account</button>
       </div>
     </div>
 
     <div style="display:flex;gap:8px;flex-direction:column">
-      <button class="btn ok" style="width:100%" onclick="closeUserModal();showView('plan')" data-i18n="user_edit_plan">⚙️ Edit My Study Plan &amp; Schedule</button>
-      <button class="btn gray" style="width:100%;color:var(--bad-text)" onclick="doLogout()" data-i18n="user_logout">⇄ Switch User / Log Out</button>
+      <button class="btn ok" style="width:100%" data-action="userEditPlan" data-i18n="user_edit_plan">⚙️ Edit My Study Plan &amp; Schedule</button>
+      <button class="btn gray" style="width:100%;color:var(--bad-text)" data-action="doLogout" data-i18n="user_logout">⇄ Switch User / Log Out</button>
     </div>
   </div>
 </div>
 
 <!-- ============ SETTINGS PANEL ============ -->
-<div id="settingsModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" onclick="if(event.target===this)closeSettingsModal()">
+<div id="settingsModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" data-action="closeSettingsModalIfSelf">
   <div class="auth-card" style="max-width:680px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3 id="settingsTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="settings_title">Settings</h3>
-      <button class="del" type="button" onclick="closeSettingsModal()" style="font-size:20px;padding:4px 8px" aria-label="Close" data-i18n-aria-label="settings_close">✕</button>
+      <button class="del" type="button" data-action="closeSettingsModal" style="font-size:20px;padding:4px 8px" aria-label="Close" data-i18n-aria-label="settings_close">✕</button>
     </div>
     <section id="aiProviderSection">
       <h3 style="font-size:13px;font-weight:600;color:var(--on-surface);margin:0 0 8px" data-i18n="settings_ai_provider">AI provider</h3>
@@ -2843,7 +2843,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="row">
           <div>
             <label for="byoProvider" data-i18n="byo_provider">Provider</label>
-            <select id="byoProvider" onchange="onByoProviderChange()">
+            <select id="byoProvider" data-change="onByoProviderChange">
               <option value="deepseek">DeepSeek</option>
               <option value="openai">OpenAI</option>
               <option value="groq">Groq</option>
@@ -2854,24 +2854,24 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div>
             <label for="byoKey" data-i18n="byo_key">API key</label>
             <div style="display:flex;gap:8px;align-items:center">
-              <input type="password" id="byoKey" placeholder="sk-..." autocomplete="off" oninput="onByoKeyInput(this.value)" style="flex:1">
-              <button type="button" class="btn sm gray" id="byoKeyToggle" onclick="toggleByoKeyVisibility()" data-i18n="byo_show">Show</button>
+              <input type="password" id="byoKey" placeholder="sk-..." autocomplete="off" data-input="onByoKeyInput" style="flex:1">
+              <button type="button" class="btn sm gray" id="byoKeyToggle" data-action="toggleByoKeyVisibility" data-i18n="byo_show">Show</button>
             </div>
           </div>
         </div>
         <div class="row">
           <div>
             <label for="byoBase" data-i18n="byo_base">Base URL (optional)</label>
-            <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" oninput="onByoConfigInput()">
+            <input type="text" id="byoBase" placeholder="https://api.deepseek.com" autocomplete="off" data-input="onByoConfigInput">
           </div>
           <div>
             <label for="byoModel" data-i18n="byo_model">Model (optional)</label>
-            <input type="text" id="byoModel" placeholder="deepseek-chat" autocomplete="off" oninput="onByoConfigInput()">
+            <input type="text" id="byoModel" placeholder="deepseek-chat" autocomplete="off" data-input="onByoConfigInput">
           </div>
         </div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button type="button" class="btn" onclick="testByoConnection()" data-i18n="byo_test">Test connection</button>
-          <button type="button" class="btn gray" onclick="clearByoKey()" data-i18n="byo_clear">Clear key</button>
+          <button type="button" class="btn" data-action="testByoConnection" data-i18n="byo_test">Test connection</button>
+          <button type="button" class="btn gray" data-action="clearByoKey" data-i18n="byo_clear">Clear key</button>
           <span id="byoTestStatus" class="t-xs muted" role="status"></span>
         </div>
         <div style="margin-top:8px;font-size:12px;color:var(--on-surface-variant)" data-i18n="byo_hint">Only https endpoints that speak the OpenAI-compatible /chat/completions API are accepted.</div>
@@ -2884,8 +2884,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
         <div class="sub" data-i18n="plan_language_sub">English is the default. Switching to Spanish translates the interface and is saved to your account.</div>
         <div class="lang-switch" role="group" aria-label="Language" data-i18n-aria-label="plan_language">
-          <button type="button" id="langEnBtn" class="lang-btn active" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
-          <button type="button" id="langEsBtn" class="lang-btn" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
+          <button type="button" id="langEnBtn" class="lang-btn active" data-action="setLang" data-arg="en" aria-pressed="true" data-i18n="lang_en">English</button>
+          <button type="button" id="langEsBtn" class="lang-btn" data-action="setLang" data-arg="es" aria-pressed="false" data-i18n="lang_es">Español</button>
         </div>
       </div>
     </section>
@@ -2916,12 +2916,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                    data-i18n-placeholder="license_code_placeholder"
                    aria-label="Activation code">
           </div>
-          <button type="button" class="btn" id="planRedeemBtn" onclick="redeemPlanCode()" data-i18n="license_redeem">Redeem</button>
+          <button type="button" class="btn" id="planRedeemBtn" data-action="redeemPlanCode" data-i18n="license_redeem">Redeem</button>
         </div>
         <div id="planRedeemStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          <button type="button" class="btn" id="planSubscribeBtn" onclick="startBillingCheckout()" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
-          <button type="button" class="btn gray" id="planPortalBtn" onclick="openBillingPortal()" style="display:none" data-i18n="billing_manage">Manage subscription</button>
+          <button type="button" class="btn" id="planSubscribeBtn" data-action="startBillingCheckout" data-i18n="billing_subscribe">Subscribe — US$5/month</button>
+          <button type="button" class="btn gray" id="planPortalBtn" data-action="openBillingPortal" style="display:none" data-i18n="billing_manage">Manage subscription</button>
         </div>
         <div class="t-xs muted" style="margin-top:6px" data-i18n="billing_copy">US$5 per month, cancel anytime from Manage subscription. Card handled by Stripe; we never see it.</div>
         <div id="planBillingStatus" class="t-xs muted" role="status" style="min-height:16px;margin-top:6px"></div>
@@ -2933,11 +2933,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <!-- ============ PLAN LIMIT MODAL (phase 31) ============
      Shown when a request answers 429 + error:"plan_limit". It always offers the
      three ways forward, so a limit never ends in a dead-end toast. -->
-<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" onclick="if(event.target===this)closePlanLimit()">
+<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
   <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="license_limit_title">You reached your plan limit</h3>
-      <button class="del" type="button" onclick="closePlanLimit()" style="font-size:20px;padding:4px 8px" aria-label="Close">✕</button>
+      <button class="del" type="button" data-action="closePlanLimit" style="font-size:20px;padding:4px 8px" aria-label="Close">✕</button>
     </div>
     <p class="sub" id="planLimitBody" style="margin-top:8px" data-i18n="license_limit_body">Your free plan is there to try the loop. Keep going in one of these ways:</p>
     <div class="plan-limit-options">
@@ -2955,9 +2955,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-direction:column;margin-top:14px">
-      <button class="btn" type="button" onclick="planLimitUseKey()" data-i18n="license_use_key">🔑 Use my own key</button>
-      <button class="btn ok" type="button" onclick="planLimitHaveCode()" data-i18n="license_have_code">🎟️ I have a code</button>
-      <button class="btn gray" type="button" onclick="closePlanLimit()" data-i18n="license_close">Not now</button>
+      <button class="btn" type="button" data-action="planLimitUseKey" data-i18n="license_use_key">🔑 Use my own key</button>
+      <button class="btn ok" type="button" data-action="planLimitHaveCode" data-i18n="license_have_code">🎟️ I have a code</button>
+      <button class="btn gray" type="button" data-action="closePlanLimit" data-i18n="license_close">Not now</button>
     </div>
   </div>
 </div>
@@ -2966,7 +2966,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
      Replaces window.confirm for "Reset to defaults": it lists, field by
      field, the values that actually differ from the defaults, closes with
      Escape and keeps Tab inside the dialog while it is open. -->
-<div id="planResetModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planResetTitle" aria-describedby="planResetBody" onclick="if(event.target===this)closePlanResetDialog()">
+<div id="planResetModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planResetTitle" aria-describedby="planResetBody" data-action="closePlanResetDialogIfSelf">
   <div class="auth-card" style="max-width:460px">
     <h3 id="planResetTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="plan_reset_title">Reset rotation to defaults?</h3>
     <p class="sub" id="planResetBody" style="margin-top:8px" data-i18n="plan_reset_body">These settings differ from the defaults and will change:</p>
@@ -2974,14 +2974,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     <ul id="planResetDetail" class="plan-reset-detail"></ul>
     <p id="planResetHint" class="t-xs muted" style="margin:10px 0 0" data-i18n="plan_reset_hint">You can undo this right after with Undo.</p>
     <div class="plan-reset-actions">
-      <button type="button" class="btn gray" id="planResetCancel" onclick="closePlanResetDialog()" data-i18n="common_cancel">Cancel</button>
-      <button type="button" class="btn" id="planResetApply" onclick="applyPlanningReset()" data-i18n="plan_reset_apply">Reset</button>
+      <button type="button" class="btn gray" id="planResetCancel" data-action="closePlanResetDialog" data-i18n="common_cancel">Cancel</button>
+      <button type="button" class="btn" id="planResetApply" data-action="applyPlanningReset" data-i18n="plan_reset_apply">Reset</button>
     </div>
   </div>
 </div>
 
 <!-- ============ QUICK-LOG FAB, TOAST & 3-STEP MODAL ============ -->
-<button id="qlFab" type="button" onclick="openSoloModal()" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span class="ql-fab-label" data-i18n="fab_log_single">Log session</span></button>
+<button id="qlFab" type="button" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span class="ql-fab-label" data-i18n="fab_log_single">Log session</span></button>
 
 <!-- ============ FEATURE TOUR (7 anchored steps) ============ -->
 <div id="tourSpot" class="tour-spot" aria-hidden="true" style="display:none"></div>
@@ -2990,31 +2990,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   <h3 id="tourTitle"></h3>
   <p id="tourBody"></p>
   <div class="tour-actions">
-    <button type="button" class="btn sm gray" id="tourSkip" onclick="endTour()" data-i18n="tour_skip">Skip</button>
-    <button type="button" class="btn sm ok" id="tourNext" onclick="tourNext()" data-i18n="tour_next">Next</button>
+    <button type="button" class="btn sm gray" id="tourSkip" data-action="endTour" data-i18n="tour_skip">Skip</button>
+    <button type="button" class="btn sm ok" id="tourNext" data-action="tourNext" data-i18n="tour_next">Next</button>
   </div>
 </div>
 <div id="qlToast" class="ql-toast" role="status" aria-live="polite" data-i18n="ql_logged">Session logged</div>
 
-<div id="qlModal" class="overlay" style="display:none" onclick="if(event.target===this)closeQuickLog()">
+<div id="qlModal" class="overlay" style="display:none" data-action="closeQuickLogIfSelf">
   <div class="auth-card" style="max-width:440px;padding:18px">
     <div class="modal-head">
       <div>
         <h3 class="t-md" style="margin:0" data-i18n="ql_title">Session quick-log</h3>
         <div class="t-xs muted" data-i18n="ql_sub">Log your practice in 3 taps</div>
       </div>
-      <button class="del" type="button" onclick="closeQuickLog()" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      <button class="del" type="button" data-action="closeQuickLog" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
     </div>
 
     <!-- Step 1: type -->
     <div id="qlStep1" class="ql-step active">
       <div class="ql-step-head"><span data-i18n="ql_step1">Step 1 · Session type</span><span id="qlTypeLabel">Use of English</span></div>
       <div class="ql-chips" id="qlTypeChips">
-        <button type="button" class="chip on" data-ql-type="ue" onclick="qlSetType('ue')" data-i18n="ql_type_ue">Use of English</button>
-        <button type="button" class="chip" data-ql-type="lp" onclick="qlSetType('lp')" data-i18n="ql_type_listening">Listening</button>
-        <button type="button" class="chip" data-ql-type="w" onclick="qlSetType('w')" data-i18n="ql_type_writing">Writing</button>
-        <button type="button" class="chip" data-ql-type="sp" onclick="qlSetType('sp')" data-i18n="ql_type_speaking">Speaking</button>
-        <button type="button" class="chip" data-ql-type="rue" onclick="qlSetType('rue')" data-i18n="ql_type_full">Full exam</button>
+        <button type="button" class="chip on" data-ql-type="ue" data-action="qlSetType" data-i18n="ql_type_ue">Use of English</button>
+        <button type="button" class="chip" data-ql-type="lp" data-action="qlSetType" data-i18n="ql_type_listening">Listening</button>
+        <button type="button" class="chip" data-ql-type="w" data-action="qlSetType" data-i18n="ql_type_writing">Writing</button>
+        <button type="button" class="chip" data-ql-type="sp" data-action="qlSetType" data-i18n="ql_type_speaking">Speaking</button>
+        <button type="button" class="chip" data-ql-type="rue" data-action="qlSetType" data-i18n="ql_type_full">Full exam</button>
       </div>
     </div>
 
@@ -3023,28 +3023,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div class="ql-step-head"><span data-i18n="ql_step2">Step 2 · Result</span><span id="qlStep2Hint">correct / total</span></div>
       <div id="qlKindRow" style="display:none;margin-bottom:8px">
         <div class="ql-chips" id="qlKindChips">
-          <button type="button" class="chip on" data-ql-kind="Essay" onclick="qlSetKind('Essay')">Essay</button>
-          <button type="button" class="chip" data-ql-kind="Article" onclick="qlSetKind('Article')">Article</button>
-          <button type="button" class="chip" data-ql-kind="Report" onclick="qlSetKind('Report')">Report</button>
-          <button type="button" class="chip" data-ql-kind="Review" onclick="qlSetKind('Review')">Review</button>
-          <button type="button" class="chip" data-ql-kind="Email" onclick="qlSetKind('Email')">Email</button>
+          <button type="button" class="chip on" data-ql-kind="Essay" data-action="qlSetKind">Essay</button>
+          <button type="button" class="chip" data-ql-kind="Article" data-action="qlSetKind">Article</button>
+          <button type="button" class="chip" data-ql-kind="Report" data-action="qlSetKind">Report</button>
+          <button type="button" class="chip" data-ql-kind="Review" data-action="qlSetKind">Review</button>
+          <button type="button" class="chip" data-ql-kind="Email" data-action="qlSetKind">Email</button>
         </div>
       </div>
       <div class="ql-chips" id="qlRangeChips" style="margin-bottom:8px">
-        <button type="button" class="chip" data-ql-range="0-5" onclick="qlPickRange(0,5)">0-5</button>
-        <button type="button" class="chip" data-ql-range="6-10" onclick="qlPickRange(6,10)">6-10</button>
-        <button type="button" class="chip" data-ql-range="11-15" onclick="qlPickRange(11,15)">11-15</button>
-        <button type="button" class="chip" data-ql-range="16-20" onclick="qlPickRange(16,20)">16-20</button>
-        <button type="button" class="chip" data-ql-range="21-25" onclick="qlPickRange(21,25)">21-25</button>
-        <button type="button" class="chip" data-ql-range="26-30" onclick="qlPickRange(26,30)">26-30</button>
+        <button type="button" class="chip" data-ql-range="0-5" data-action="qlPickRange">0-5</button>
+        <button type="button" class="chip" data-ql-range="6-10" data-action="qlPickRange">6-10</button>
+        <button type="button" class="chip" data-ql-range="11-15" data-action="qlPickRange">11-15</button>
+        <button type="button" class="chip" data-ql-range="16-20" data-action="qlPickRange">16-20</button>
+        <button type="button" class="chip" data-ql-range="21-25" data-action="qlPickRange">21-25</button>
+        <button type="button" class="chip" data-ql-range="26-30" data-action="qlPickRange">26-30</button>
       </div>
       <div class="ql-chips" id="qlSpChips" style="display:none;margin-bottom:8px">
-        <button type="button" class="chip" onclick="qlPickNum(0)">0</button>
-        <button type="button" class="chip" onclick="qlPickNum(1)">1</button>
-        <button type="button" class="chip" onclick="qlPickNum(2)">2</button>
-        <button type="button" class="chip" onclick="qlPickNum(3)">3</button>
-        <button type="button" class="chip" onclick="qlPickNum(4)">4</button>
-        <button type="button" class="chip on" onclick="qlPickNum(5)">5</button>
+        <button type="button" class="chip" data-action="qlPickNum" data-arg="0">0</button>
+        <button type="button" class="chip" data-action="qlPickNum" data-arg="1">1</button>
+        <button type="button" class="chip" data-action="qlPickNum" data-arg="2">2</button>
+        <button type="button" class="chip" data-action="qlPickNum" data-arg="3">3</button>
+        <button type="button" class="chip" data-action="qlPickNum" data-arg="4">4</button>
+        <button type="button" class="chip on" data-action="qlPickNum" data-arg="5">5</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
@@ -3074,8 +3074,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
 
     <div style="display:flex;gap:8px;margin-top:12px">
-      <button type="button" class="btn gray" id="qlNextBtn" onclick="qlNext()" data-i18n="ql_next">Next →</button>
-      <button type="button" class="btn ok" id="qlSaveBtn" style="flex:1" onclick="qlSave()" data-i18n="ql_save">Save session</button>
+      <button type="button" class="btn gray" id="qlNextBtn" data-action="qlNext" data-i18n="ql_next">Next →</button>
+      <button type="button" class="btn ok" id="qlSaveBtn" style="flex:1" data-action="qlSave" data-i18n="ql_save">Save session</button>
     </div>
   </div>
 </div>
@@ -3118,7 +3118,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       </div>
       <div class="top-actions">
         <span class="top-streak" id="streakTopPill" title="Daily streak" aria-label="Daily streak" data-i18n-title="metric_streak" data-i18n-aria-label="metric_streak"><svg class="streak-flame" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-flame"/></svg><b id="streakTopNum" class="tnum">0</b></span>
-        <button type="button" class="user-chip" id="userChip" onclick="toggleAccountSheet()" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet" title="Account, theme &amp; settings" aria-label="Account, theme &amp; settings" data-i18n-title="acct_chip" data-i18n-aria-label="acct_chip"><span class="avatar">A</span></button>
+        <button type="button" class="user-chip" id="userChip" data-action="toggleAccountSheet" aria-haspopup="dialog" aria-expanded="false" aria-controls="accountSheet" title="Account, theme &amp; settings" aria-label="Account, theme &amp; settings" data-i18n-title="acct_chip" data-i18n-aria-label="acct_chip"><span class="avatar">A</span></button>
       </div>
     </div>
 
@@ -3193,21 +3193,21 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div class="acct-sheet-section">
         <span class="acct-sheet-label" data-i18n="acct_theme">Theme</span>
         <div class="acct-seg" role="group" data-i18n-aria-label="acct_theme" aria-label="Theme">
-          <button type="button" class="acct-seg-btn" id="acctThemeLight" onclick="setThemeMode('light')" aria-pressed="false" data-i18n="acct_theme_light">Light</button>
-          <button type="button" class="acct-seg-btn" id="acctThemeDark" onclick="setThemeMode('dark')" aria-pressed="false" data-i18n="acct_theme_dark">Dark</button>
-          <button type="button" class="acct-seg-btn" id="acctThemeSystem" onclick="setThemeMode('system')" aria-pressed="false" data-i18n="acct_theme_system">System</button>
+          <button type="button" class="acct-seg-btn" id="acctThemeLight" data-action="setThemeMode" data-arg="light" aria-pressed="false" data-i18n="acct_theme_light">Light</button>
+          <button type="button" class="acct-seg-btn" id="acctThemeDark" data-action="setThemeMode" data-arg="dark" aria-pressed="false" data-i18n="acct_theme_dark">Dark</button>
+          <button type="button" class="acct-seg-btn" id="acctThemeSystem" data-action="setThemeMode" data-arg="system" aria-pressed="false" data-i18n="acct_theme_system">System</button>
         </div>
       </div>
       <div class="acct-sheet-section">
         <span class="acct-sheet-label" data-i18n="plan_language">Language</span>
         <div class="acct-seg" role="group" data-i18n-aria-label="plan_language" aria-label="Language">
-          <button type="button" class="acct-seg-btn" id="acctLangEn" onclick="setLang('en')" aria-pressed="true" data-i18n="lang_en">English</button>
-          <button type="button" class="acct-seg-btn" id="acctLangEs" onclick="setLang('es')" aria-pressed="false" data-i18n="lang_es">Español</button>
+          <button type="button" class="acct-seg-btn" id="acctLangEn" data-action="setLang" data-arg="en" aria-pressed="true" data-i18n="lang_en">English</button>
+          <button type="button" class="acct-seg-btn" id="acctLangEs" data-action="setLang" data-arg="es" aria-pressed="false" data-i18n="lang_es">Español</button>
         </div>
       </div>
       <div class="acct-actions">
-        <button type="button" class="acct-action-btn" id="acctSettingsBtn" onclick="closeAccountSheet(false);openSettingsModal()" data-i18n="settings_title">Settings</button>
-        <button type="button" class="acct-action-btn" id="acctProfileBtn" onclick="closeAccountSheet(false);openUserModal()" data-i18n="acct_profile">Profile &amp; switch user</button>
+        <button type="button" class="acct-action-btn" id="acctSettingsBtn" data-action="accountSettings" data-i18n="settings_title">Settings</button>
+        <button type="button" class="acct-action-btn" id="acctProfileBtn" data-action="accountProfile" data-i18n="acct_profile">Profile &amp; switch user</button>
       </div>
     </div>
   </div>
@@ -3223,7 +3223,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="today-block">
             <div class="today-head">
               <h1 class="page-title" id="userTitle">Today</h1>
-              <button type="button" class="btn ok today-log-btn" onclick="openSoloModal()" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span data-i18n="fab_log_single">Log session</span></button>
+              <button type="button" class="btn ok today-log-btn" data-action="openSoloModal" title="Log session" aria-label="Log session" data-i18n-title="fab_log_single" data-i18n-aria-label="fab_log_single"><svg viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><use href="#ic-plus"/></svg><span data-i18n="fab_log_single">Log session</span></button>
             </div>
             <div class="next-session" id="nextBox"></div>
             <div class="today-grid" id="todayGrid">
@@ -3261,12 +3261,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="uePhaseStepper">
-                  <div class="phase-step active" data-phase="sprint" onclick="switchUePhase('sprint')">
+                  <div class="phase-step active" data-phase="sprint" data-action="switchUePhase">
                     <div class="ps-num">Phase 1</div>
                     <div class="ps-title" id="st1SprintTitle">⚡ Reading &amp; Use of English</div>
                     <div class="ps-time" id="st1SprintTime">—</div>
                   </div>
-                  <div class="phase-step" data-phase="score" onclick="switchUePhase('score')">
+                  <div class="phase-step" data-phase="score" data-action="switchUePhase">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">📊 Score &amp; Diagnosis</div>
                     <div class="ps-time" id="st1ScoreTime">Log the session</div>
@@ -3283,7 +3283,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="ueTimer">50:00</span></div>
-                        <button class="btn sm" onclick="ueTimer.start()">▶ / ⏸</button>
+                        <button class="btn sm" data-action="ueTimer.start">▶ / ⏸</button>
                       </div>
                     </div>
                     <div class="guide">
@@ -3294,7 +3294,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">—</b></p>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchUePhase('score')">Proceed to Phase 2: Log Score →</button>
+                      <button class="btn" data-action="switchUePhase" data-arg="score">Proceed to Phase 2: Log Score →</button>
                     </div>
                   </div>
                 </div>
@@ -3310,7 +3310,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div class="row">
                       <div><label>Mode</label>
-                        <select id="uePart" onchange="onUePartChange()">
+                        <select id="uePart" data-change="onUePartChange">
                           <option value="all" selected>All 7 parts (52 questions)</option>
                           <option value="1">Part 1 — Multiple-choice cloze (8)</option>
                           <option value="2">Part 2 — Open cloze (8)</option>
@@ -3339,8 +3339,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="75"></div>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" onclick="saveUE()">✔ Save R&amp;UoE Session</button>
-                      <button class="btn gray" onclick="openSoloModal('ue')">⚡ Log Single Part Instead</button>
+                      <button class="btn ok" data-action="saveUE">✔ Save R&amp;UoE Session</button>
+                      <button class="btn gray" data-action="openSoloModal" data-arg="ue">⚡ Log Single Part Instead</button>
                     </div>
                   </div>
                 </div>
@@ -3362,17 +3362,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="wPhaseStepper">
-                  <div class="phase-step active" data-phase="plan" onclick="switchWritingPhase('plan')">
+                  <div class="phase-step active" data-phase="plan" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 1</div>
                     <div class="ps-title">💡 Planning</div>
                     <div class="ps-time">05:00 · 4-paragraph outline</div>
                   </div>
-                  <div class="phase-step" data-phase="write" onclick="switchWritingPhase('write')">
+                  <div class="phase-step" data-phase="write" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">✍️ Live Writing</div>
                     <div class="ps-time">35:00 · 140–190 words</div>
                   </div>
-                  <div class="phase-step" data-phase="audit" onclick="switchWritingPhase('audit')">
+                  <div class="phase-step" data-phase="audit" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 3</div>
                     <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
                     <div class="ps-time">20:00 · 7-point rubric + Writing Corrector</div>
@@ -3389,7 +3389,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Plan Timer</span><span class="timer" id="wPlanTimer">05:00</span></div>
-                        <button class="btn sm" onclick="wPlan.start()">▶</button>
+                        <button class="btn sm" data-action="wPlan.start">▶</button>
                       </div>
                     </div>
                     <div class="guide">
@@ -3415,7 +3415,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('write')">Proceed to Phase 2: Live Writing →</button>
+                      <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live Writing →</button>
                     </div>
                   </div>
                 </div>
@@ -3430,14 +3430,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="wTimer">—</span></div>
-                        <button class="btn sm" onclick="wWrite.start()">▶</button>
+                        <button class="btn sm" data-action="wWrite.start">▶</button>
                       </div>
                     </div>
-                    <textarea class="writing-live-pad" id="wTextDraft" oninput="onWritingDraftChange()" placeholder="Write or draft your text here... Word count and formal register checks will update live in real-time."></textarea>
+                    <textarea class="writing-live-pad" id="wTextDraft" data-input="onWritingDraftChange" placeholder="Write or draft your text here... Word count and formal register checks will update live in real-time."></textarea>
                     <div class="live-word-meter">
                       <span>Live word count: <b id="wLiveWordCount">0 words</b></span>
                       <span id="wWordMeter" style="font-weight:600">Target: 140–190 words</span>
-                      <button class="btn sm" type="button" onclick="openWritingCorrectorFromDraft()"
+                      <button class="btn sm" type="button" data-action="openWritingCorrectorFromDraft"
                         title="Send this draft to the Writing Corrector">Check with Writing Corrector →</button>
                     </div>
                     <div class="contraction-alert" id="wContractionWarn" style="display:none"></div>
@@ -3446,7 +3446,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="40"></div>
                     </div>
                     <div style="margin-top:12px">
-                      <button class="btn" onclick="switchWritingPhase('audit')">Proceed to Phase 3: Audit &amp; Rubric →</button>
+                      <button class="btn" data-action="switchWritingPhase" data-arg="audit">Proceed to Phase 3: Audit &amp; Rubric →</button>
                     </div>
                   </div>
                 </div>
@@ -3460,7 +3460,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="task-title">Phase 3: Algorithmic C1 Audit &amp; Rubric <span class="t">20 min</span></div>
                       </div>
                       <div class="task-meta">
-                        <button class="btn sm gray" onclick="wRev.start()">▶ 20:00</button>
+                        <button class="btn sm gray" data-action="wRev.start">▶ 20:00</button>
                       </div>
                     </div>
                     <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px;margin-bottom:12px">
@@ -3475,7 +3475,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <label data-rub="6" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>140-190 exact words<span class="rub-reason t-xs"></span></span></label>
                       </div>
                       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-                        <button class="btn sm" type="button" id="rubAiBtn" onclick="checkRubricWithAI()" data-i18n="rub_ai_btn">Check with AI</button>
+                        <button class="btn sm" type="button" id="rubAiBtn" data-action="checkRubricWithAI" data-i18n="rub_ai_btn">Check with AI</button>
                         <span id="rubAiStatus" class="t-xs muted" role="status"></span>
                       </div>
                     </div>
@@ -3500,8 +3500,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div><label>Corrective action</label><input type="text" id="errFix" placeholder="e.g. write 5 inversion sentences"></div>
                     <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" onclick="saveW()">✔ Save Writing &amp; Progress</button>
-                      <button class="btn gray" onclick="saveErr()">🔖 Log error only</button>
+                      <button class="btn ok" data-action="saveW">✔ Save Writing &amp; Progress</button>
+                      <button class="btn gray" data-action="saveErr">🔖 Log error only</button>
                     </div>
                   </div>
                 </div>
@@ -3526,12 +3526,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="lPhaseStepper">
-                  <div class="phase-step active" data-phase="play" onclick="switchListeningPhase('play')">
+                  <div class="phase-step active" data-phase="play" data-action="switchListeningPhase">
                     <div class="ps-num">Phase 1</div>
                     <div class="ps-title" id="st3PlayTitle">🎧 Listening</div>
                     <div class="ps-time" id="st3PlayTime">—</div>
                   </div>
-                  <div class="phase-step" data-phase="pm" onclick="switchListeningPhase('pm')">
+                  <div class="phase-step" data-phase="pm" data-action="switchListeningPhase">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">🕵️ Auditory Post-Mortem</div>
                     <div class="ps-time" id="st3PmTime">Root Cause Analysis</div>
@@ -3548,7 +3548,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">40:00</span></div>
-                        <button class="btn sm" onclick="lTimer.start()">▶</button>
+                        <button class="btn sm" data-action="lTimer.start">▶</button>
                       </div>
                     </div>
                     <div class="guide">
@@ -3583,8 +3583,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" onclick="saveL()">✔ Save Listening</button>
-                      <button class="btn" onclick="switchListeningPhase('pm')">Proceed to Phase 2: Post-Mortem →</button>
+                      <button class="btn ok" data-action="saveL">✔ Save Listening</button>
+                      <button class="btn" data-action="switchListeningPhase" data-arg="pm">Proceed to Phase 2: Post-Mortem →</button>
                     </div>
                   </div>
                 </div>
@@ -3600,7 +3600,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <p style="font-size:14px">Open the tapescript ONLY for questions you got wrong. Identify why you fell for the distractor.</p>
                     <div><label>What caught you? (one per line, with error code: T-MIS, L-GAP)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
-                    <div style="margin-top:10px"><button class="btn ok" onclick="saveL()">✔ Save &amp; Finish</button></div>
+                    <div style="margin-top:10px"><button class="btn ok" data-action="saveL">✔ Save &amp; Finish</button></div>
                   </div>
                 </div>
               </div>
@@ -3621,12 +3621,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <!-- Phase Stepper -->
                 <div class="phase-stepper" id="spPhaseStepper">
-                  <div class="phase-step active" data-phase="mock" onclick="switchSpPhase('mock')">
+                  <div class="phase-step active" data-phase="mock" data-action="switchSpPhase">
                     <div class="ps-num">Phase 1</div>
                     <div class="ps-title" id="st4MockTitle">🎙️ Speaking</div>
                     <div class="ps-time" id="st4MockTime">—</div>
                   </div>
-                  <div class="phase-step" data-phase="upgrade" onclick="switchSpPhase('upgrade')">
+                  <div class="phase-step" data-phase="upgrade" data-action="switchSpPhase">
                     <div class="ps-num">Phase 2</div>
                     <div class="ps-title">🚀 C1 Polish &amp; Retake</div>
                     <div class="ps-time">Extra practice · optional</div>
@@ -3647,7 +3647,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="live-sub" data-i18n="spx_sub">Cambridge B2 First · part by part</div>
                       </div>
                       <div class="live-actions">
-                        <button class="btn sm gray" id="spxCloseBtn" onclick="SP_EXAM.close()" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
+                        <button class="btn sm gray" id="spxCloseBtn" data-action="SP_EXAM.close" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
                       </div>
                     </div>
 
@@ -3655,7 +3655,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                     <section class="spx-screen" data-spx-screen="choose">
                       <p class="spx-sentence" id="spxChooseSentence"></p>
-                      <button type="button" class="spx-full" id="spxFullBtn" onclick="SP_EXAM.startFull()" aria-pressed="false" aria-label="Choose the full exam" data-i18n-aria-label="spx_aria_full">
+                      <button type="button" class="spx-full" id="spxFullBtn" data-action="SP_EXAM.startFull" aria-pressed="false" aria-label="Choose the full exam" data-i18n-aria-label="spx_aria_full">
                         <span class="n" data-i18n="spx_full_exam">Full exam · Parts 1–4</span>
                         <span class="d" data-i18n="spx_full_desc">Examiner, partner and you, in the official order and timing.</span>
                         <span class="m" data-i18n="spx_full_meta">14 min · 4 parts</span>
@@ -3663,7 +3663,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-parts" id="spxParts" role="radiogroup" aria-labelledby="spxChooseSentence"></div>
                       <div class="spk-report-err" id="spxChooseErr" role="alert"></div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxStartBtn" onclick="SP_EXAM.start()" data-i18n="spx_start" aria-label="Start the exam" data-i18n-aria-label="spx_aria_start">Start</button>
+                        <button class="btn ok" id="spxStartBtn" data-action="SP_EXAM.start" data-i18n="spx_start" aria-label="Start the exam" data-i18n-aria-label="spx_aria_start">Start</button>
                       </div>
                     </section>
 
@@ -3679,8 +3679,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <p class="spx-rule" data-i18n="spx_rule">Speak in English. If you go quiet for 5 seconds I will ask you a question.</p>
                       <div class="spk-report-err" id="spxBriefErr" role="alert"></div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxReadyBtn" onclick="SP_EXAM.ready()" data-i18n="spx_ready" aria-label="Begin the part" data-i18n-aria-label="spx_aria_ready">I'm ready</button>
-                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
+                        <button class="btn ok" id="spxReadyBtn" data-action="SP_EXAM.ready" data-i18n="spx_ready" aria-label="Begin the part" data-i18n-aria-label="spx_aria_ready">I'm ready</button>
+                        <button class="btn gray" data-action="SP_EXAM.back" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
                       </div>
                     </section>
 
@@ -3709,8 +3709,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-tx" id="spxTx" aria-label="Transcript" aria-live="polite" data-exam-task data-i18n-aria-label="spx_transcript"></div>
                       <div class="spx-note spx-mic-note" id="spxMicNotice" role="status" style="display:none" data-i18n="spx_mic_denied">Microphone access was denied. The exam continues without speech recognition.</div>
                       <div class="spx-actions">
-                        <button class="btn gray" id="spxVoiceRetry" onclick="SPK.retryTurn()" style="display:none" data-i18n="spx_voice_retry" aria-label="Try the microphone again" data-i18n-aria-label="spx_aria_retry_voice">Retry the voice</button>
-                        <button class="btn gray" onclick="SP_EXAM.stopEarly()" data-i18n="spx_end_early" aria-label="End this part early" data-i18n-aria-label="spx_aria_end_part">End this part</button>
+                        <button class="btn gray" id="spxVoiceRetry" data-action="SPK.retryTurn" style="display:none" data-i18n="spx_voice_retry" aria-label="Try the microphone again" data-i18n-aria-label="spx_aria_retry_voice">Retry the voice</button>
+                        <button class="btn gray" data-action="SP_EXAM.stopEarly" data-i18n="spx_end_early" aria-label="End this part early" data-i18n-aria-label="spx_aria_end_part">End this part</button>
                       </div>
                     </section>
 
@@ -3729,9 +3729,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <p id="spxFbNext"></p>
                       </div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxFbSave" onclick="SP_EXAM.saveReport()" data-i18n="spx_save" aria-label="Save the report" data-i18n-aria-label="spx_aria_save">Save report</button>
-                        <button class="btn gray" id="spxFbRetry" onclick="SP_EXAM.retry()" data-i18n="spx_retry" aria-label="Ask for the report again" data-i18n-aria-label="spx_aria_retry_report">Try the report again</button>
-                        <button class="btn gray" onclick="SP_EXAM.back()" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
+                        <button class="btn ok" id="spxFbSave" data-action="SP_EXAM.saveReport" data-i18n="spx_save" aria-label="Save the report" data-i18n-aria-label="spx_aria_save">Save report</button>
+                        <button class="btn gray" id="spxFbRetry" data-action="SP_EXAM.retry" data-i18n="spx_retry" aria-label="Ask for the report again" data-i18n-aria-label="spx_aria_retry_report">Try the report again</button>
+                        <button class="btn gray" data-action="SP_EXAM.back" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
                       </div>
                       <div class="spk-report-err" id="spxFbErr" role="alert"></div>
                     </section>
@@ -3746,7 +3746,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-rp-tx" id="spxRpTxWrap" style="display:none">
                         <div class="spx-rp-tx-head">
                           <div class="spk-report-h" data-i18n="spx_rp_transcript">Full transcript</div>
-                          <button class="btn gray" id="spxRpCopy" onclick="SP_EXAM.copyTranscript()" data-i18n="spx_copy" aria-label="Copy the full transcript" data-i18n-aria-label="spx_aria_copy">Copy</button>
+                          <button class="btn gray" id="spxRpCopy" data-action="SP_EXAM.copyTranscript" data-i18n="spx_copy" aria-label="Copy the full transcript" data-i18n-aria-label="spx_aria_copy">Copy</button>
                         </div>
                         <div class="spx-tx spx-rp-tx-lines" id="spxRpTx" role="region" aria-label="Full transcript" data-exam-task data-i18n-aria-label="spx_rp_transcript"></div>
                       </div>
@@ -3755,9 +3755,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <p id="spxRpTip"></p>
                       </div>
                       <div class="spx-actions">
-                        <button class="btn ok" id="spxRepeatBtn" onclick="SP_EXAM.repeatPart()" data-i18n="spx_repeat_part" aria-label="Repeat this part" data-i18n-aria-label="spx_aria_repeat_part">Repeat this part</button>
-                        <button class="btn gray" onclick="SP_EXAM.restart()" data-i18n="spx_again" aria-label="Choose another part" data-i18n-aria-label="spx_aria_again">Practise another part</button>
-                        <button class="btn gray" onclick="SP_EXAM.close()" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
+                        <button class="btn ok" id="spxRepeatBtn" data-action="SP_EXAM.repeatPart" data-i18n="spx_repeat_part" aria-label="Repeat this part" data-i18n-aria-label="spx_aria_repeat_part">Repeat this part</button>
+                        <button class="btn gray" data-action="SP_EXAM.restart" data-i18n="spx_again" aria-label="Choose another part" data-i18n-aria-label="spx_aria_again">Practise another part</button>
+                        <button class="btn gray" data-action="SP_EXAM.close" data-i18n="common_close" aria-label="Close the speaking exam" data-i18n-aria-label="spx_aria_close">Close</button>
                       </div>
                     </section>
                   </div>
@@ -3770,8 +3770,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="spTimer">—</span></div>
-                        <button class="btn sm" onclick="sp1.start()">🎙 1:00 (P2)</button>
-                        <button class="btn sm gray" onclick="sp2.start()">🤝 3:00 (P3)</button>
+                        <button class="btn sm" data-action="sp1.start">🎙 1:00 (P2)</button>
+                        <button class="btn sm gray" data-action="sp2.start">🤝 3:00 (P3)</button>
                       </div>
                     </div>
                     <div class="guide">
@@ -3799,11 +3799,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" onclick="saveSP()">✔ Save Speaking</button>
-                      <button class="btn" onclick="switchSpPhase('upgrade')">Proceed to Phase 2: C1 Polish →</button>
-                      <button class="btn" id="liveOpenBtn" onclick="liveOpen()">🎧 Live studio</button>
-                      <button class="btn ok" id="spxOpenBtn" onclick="SP_EXAM.open()" data-i18n="spx_open">🎓 Speaking exam</button>
-                      <button class="btn" id="spkOpenBtn" onclick="spkStart()">🗣 Live examiner</button>
+                      <button class="btn ok" data-action="saveSP">✔ Save Speaking</button>
+                      <button class="btn" data-action="switchSpPhase" data-arg="upgrade">Proceed to Phase 2: C1 Polish →</button>
+                      <button class="btn" id="liveOpenBtn" data-action="liveOpen">🎧 Live studio</button>
+                      <button class="btn ok" id="spxOpenBtn" data-action="SP_EXAM.open" data-i18n="spx_open">🎓 Speaking exam</button>
+                      <button class="btn" id="spkOpenBtn" data-action="spkStart">🗣 Live examiner</button>
                     </div>
                   </div>
 
@@ -3815,8 +3815,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="live-sub" id="liveStatus" role="status">Microphone off</div>
                       </div>
                       <div class="live-actions">
-                        <button class="btn sm gray" id="liveStopBtn" onclick="liveStop()" disabled>■ Stop</button>
-                        <button class="btn sm gray" id="liveDiscardBtn" onclick="liveDiscard()">✕ Discard</button>
+                        <button class="btn sm gray" id="liveStopBtn" data-action="liveStop" disabled>■ Stop</button>
+                        <button class="btn sm gray" id="liveDiscardBtn" data-action="liveDiscard">✕ Discard</button>
                       </div>
                     </div>
                     <div class="live-grid">
@@ -3842,14 +3842,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="live-sub" id="spkStatus" role="status">Examiner off</div>
                       </div>
                       <div class="live-actions">
-                        <button class="btn sm gray" id="spkReportBtn" onclick="spkReport()" disabled>📊 Report</button>
-                        <button class="btn sm gray" id="spkStopBtn" onclick="spkStop()" disabled>■ Stop</button>
-                        <button class="btn sm gray" id="spkCloseBtn" onclick="spkDiscard()">✕ Close</button>
+                        <button class="btn sm gray" id="spkReportBtn" data-action="spkReport" disabled>📊 Report</button>
+                        <button class="btn sm gray" id="spkStopBtn" data-action="spkStop" disabled>■ Stop</button>
+                        <button class="btn sm gray" id="spkCloseBtn" data-action="spkDiscard">✕ Close</button>
                       </div>
                     </div>
                     <div class="spk-parts">
                       <label for="spkPart">Part</label>
-                      <select id="spkPart" onchange="spkSetPart(this.value)">
+                      <select id="spkPart" data-change="spkSetPart">
                         <option value="1">1 · Interview</option>
                         <option value="2">2 · Long turn</option>
                         <option value="3">3 · Collaborative</option>
@@ -3891,8 +3891,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spk-report-head">
                         <div class="spk-report-title">Assessment report <span class="t">Cambridge speaking scales · 0–5</span></div>
                         <div class="spk-report-actions">
-                          <button class="btn sm gray" id="spkReportRetryBtn" onclick="spkReport()">↻ Retry report</button>
-                          <button class="btn sm ok" id="spkReportSaveBtn" onclick="spkSaveReport()">✔ Save to log</button>
+                          <button class="btn sm gray" id="spkReportRetryBtn" data-action="spkReport">↻ Retry report</button>
+                          <button class="btn sm ok" id="spkReportSaveBtn" data-action="spkSaveReport">✔ Save to log</button>
                         </div>
                       </div>
                       <div class="spk-scales" id="spkScales"></div>
@@ -3930,7 +3930,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       • Negotiate: <i>"What if we were to prioritize..., given that...?"</i><br>
                       • Re-record the full 4 parts and assess fluency.
                     </div>
-                    <div style="margin-top:10px"><button class="btn ok" onclick="saveSP()">✔ Save Speaking Studio</button></div>
+                    <div style="margin-top:10px"><button class="btn ok" data-action="saveSP">✔ Save Speaking Studio</button></div>
                   </div>
                 </div>
               </div>
@@ -3978,7 +3978,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div><label>Total questions</label><input type="number" id="rueTotal" min="1" value="52"></div>
                     <div><label>Minutes used</label><input type="number" id="rueMin" min="0" value="75"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveRUE()">✔ Save Paper 1 (R&amp;UoE)</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" data-action="saveRUE">✔ Save Paper 1 (R&amp;UoE)</button></div>
                 </div>
 
                 <!-- Paper 2: Writing (80 min, 2 texts) -->
@@ -3997,7 +3997,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div><label>Text 2 score /20 (Choice)</label><input type="number" id="fw2" min="0" max="20" step="0.5"></div>
                     <div><label>Minutes used</label><input type="number" id="fwMin" min="0" value="80"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveFW()">✔ Save Paper 2 (Writing)</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" data-action="saveFW">✔ Save Paper 2 (Writing)</button></div>
                 </div>
 
                 <!-- Paper 3: Listening (40 min, 30 questions, Parts 1 to 4) -->
@@ -4027,7 +4027,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div><label>Part 2 errors</label><input type="number" id="mockLP2" min="0" value="0"></div>
                     <div><label>Minutes</label><input type="number" id="mockLMin" min="0" value="40"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveMockListening()">✔ Save Paper 3 (Listening)</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" data-action="saveMockListening">✔ Save Paper 3 (Listening)</button></div>
                 </div>
 
                 <!-- Paper 4: Speaking (14 min, Parts 1 to 4) -->
@@ -4047,7 +4047,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div><label>Examiner / Teacher ref.</label><input type="text" id="sfRef" placeholder="e.g. Teacher / Mock 1"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn ok" onclick="saveSF()">✔ Save Paper 4 (Speaking)</button></div>
+                  <div style="margin-top:10px"><button class="btn ok" data-action="saveSF">✔ Save Paper 4 (Speaking)</button></div>
                 </div>
 
                 <!-- Target Gate Drill: Reading Part 6 -->
@@ -4063,7 +4063,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div><label>Ref.</label><input type="text" id="r6Ref" placeholder="e.g. Sample 2 Part 6"></div>
                     <div><label>Minutes</label><input type="number" id="r6Min" min="0" value="20"></div>
                   </div>
-                  <div style="margin-top:10px"><button class="btn gray sm" onclick="saveR6()">✔ Save Part 6 Drill</button></div>
+                  <div style="margin-top:10px"><button class="btn gray sm" data-action="saveR6">✔ Save Part 6 Drill</button></div>
                 </div>
               </div>
             </div>
@@ -4088,10 +4088,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h2 data-i18n="exam_real_mocks">Real mocks</h2>
               <div class="sub" data-i18n="exam_real_mocks_sub">All four papers in one place. One click starts a real timed mock with the official duration.</div>
             </div>
-            <button class="btn ok u4-fullmock-btn" type="button" onclick="startFullMock()" data-i18n="exam_start_full">Start full mock</button>
+            <button class="btn ok u4-fullmock-btn" type="button" data-action="startFullMock" data-i18n="exam_start_full">Start full mock</button>
           </div>
           <div class="exam-select-grid" id="examSelectGrid">
-            <div class="exam-card" role="button" tabindex="0" data-paper="rue" onclick="startRealMock('rue')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <div class="exam-card" role="button" tabindex="0" data-paper="rue" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
                 <span class="exam-card-kicker">Paper 1 &amp; 2</span>
                 <span class="exam-card-min tnum"><span class="exam-card-parts">7 parts</span> · <span class="exam-card-dur">75 min</span></span>
@@ -4099,7 +4099,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h3 class="exam-card-title">Reading &amp; Use of English</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
             </div>
-            <div class="exam-card" role="button" tabindex="0" data-paper="w" onclick="startRealMock('w')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <div class="exam-card" role="button" tabindex="0" data-paper="w" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
                 <span class="exam-card-kicker">Paper 3</span>
                 <span class="exam-card-min tnum"><span class="exam-card-parts">2 parts</span> · <span class="exam-card-dur">80 min</span></span>
@@ -4107,7 +4107,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h3 class="exam-card-title">Writing</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
             </div>
-            <div class="exam-card" role="button" tabindex="0" data-paper="l" onclick="startRealMock('l')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <div class="exam-card" role="button" tabindex="0" data-paper="l" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
                 <span class="exam-card-kicker">Paper 4</span>
                 <span class="exam-card-min tnum"><span class="exam-card-parts">4 parts</span> · <span class="exam-card-dur">40 min</span></span>
@@ -4115,7 +4115,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <h3 class="exam-card-title">Listening</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
             </div>
-            <div class="exam-card" role="button" tabindex="0" data-paper="sp" onclick="openSpeakingExam()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+            <div class="exam-card" role="button" tabindex="0" data-paper="sp" data-action="openSpeakingExam" data-keydown="activate">
               <div class="exam-card-top">
                 <span class="exam-card-kicker">Paper 5 · AI</span>
                 <span class="exam-card-min tnum"><span class="exam-card-parts">4 parts</span> · <span class="exam-card-dur">14 min</span></span>
@@ -4132,13 +4132,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
           <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
           <div id="examSources" class="u4-sources"></div>
-          <div class="u4-source-all"><button class="btn sm gray" type="button" onclick="showView('resources')" data-i18n="exam_sources_all">Open the full source library</button></div>
+          <div class="u4-source-all"><button class="btn sm gray" type="button" data-action="showView" data-arg="resources" data-i18n="exam_sources_all">Open the full source library</button></div>
         </div>
 
         <!-- Advanced selector (test contract) -->
         <div style="margin:0 0 var(--s5);max-width:480px">
           <label data-i18n="exam_manual">Or pick the paper manually</label>
-          <select id="exPaper" onchange="renderEx()">
+          <select id="exPaper" data-change="renderEx">
             <option value="rue" data-i18n="exam_opt_rue">Reading &amp; Use of English — 75 min (52 questions)</option>
             <option value="w" data-i18n="exam_opt_w">Writing — 80 min (2 texts)</option>
             <option value="l" data-i18n="exam_opt_l">Listening — 40 min (30 questions)</option>
@@ -4161,15 +4161,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="exam-timer" id="exTimer">01:15:00</div>
             </div>
             <div style="text-align:center;margin:var(--s2) 0 var(--s4);display:flex;gap:var(--s3);justify-content:center;flex-wrap:wrap">
-              <button class="btn" onclick="exStart()" data-i18n="common_start">▶ Start</button>
-              <button class="btn gray" onclick="exPause()">⏸ <span data-i18n="exam_pause">Pause</span></button>
-              <button class="btn gray" onclick="exResetUser()">↺ <span data-i18n="exam_reset">Reset</span></button>
+              <button class="btn" data-action="exStart" data-i18n="common_start">▶ Start</button>
+              <button class="btn gray" data-action="exPause">⏸ <span data-i18n="exam_pause">Pause</span></button>
+              <button class="btn gray" data-action="exResetUser">↺ <span data-i18n="exam_reset">Reset</span></button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--r-ctl);padding:var(--s4);text-align:left">
               <h3 style="margin-bottom:var(--s2)" data-i18n="exam_log_result">📝 Log your result</h3>
               <div id="exRegFields" class="row"></div>
-              <div style="margin-top:var(--s3)"><button class="btn ok" onclick="exSave()" data-i18n="exam_save_result">✔ Save result</button></div>
+              <div style="margin-top:var(--s3)"><button class="btn ok" data-action="exSave" data-i18n="exam_save_result">✔ Save result</button></div>
             </div>
           </div>
         </div>
@@ -4257,7 +4257,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="progChartsEmpty" style="display:none">
           <h2>Your charts unlock after your first session</h2>
           <p class="sub">Temporal evolution · By part · Errors by type · Weekly consistency</p>
-          <button type="button" class="btn" onclick="openQuickLog()">Log your first session</button>
+          <button type="button" class="btn" data-action="openQuickLog">Log your first session</button>
         </div>
 
         <div class="grid-12" id="progChartsGrid">
@@ -4292,13 +4292,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="sub" data-i18n="prog_matrix_sub">Complete all criteria within a stage to advance. Each cell is the requirement for every part of that skill.</div>
           <div id="gates"></div>
           <div style="margin-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap">
-            <button class="btn" id="advanceBtn" disabled onclick="advanceStage()" data-i18n="prog_advance">⬆ Advance to the next stage</button>
-            <button class="btn gray" onclick="stageDown()" data-i18n="prog_stage_down">⬇ Go back a stage</button>
+            <button class="btn" id="advanceBtn" disabled data-action="advanceStage" data-i18n="prog_advance">⬆ Advance to the next stage</button>
+            <button class="btn gray" data-action="stageDown" data-i18n="prog_stage_down">⬇ Go back a stage</button>
           </div>
           <div style="margin-top:var(--s4);border-top:1px solid var(--outline-variant);padding-top:var(--s4);display:flex;gap:var(--s2);flex-wrap:wrap">
-            <button class="btn gray" onclick="exportData()" data-i18n="prog_export">💾 Export data</button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="prog_import">📥 Import data</button>
-            <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
+            <button class="btn gray" data-action="exportData" data-i18n="prog_export">💾 Export data</button>
+            <button class="btn gray" data-action="openImportPicker" data-i18n="prog_import">📥 Import data</button>
+            <input type="file" id="importFile" accept=".json,application/json" style="display:none" data-change="importData">
           </div>
           <p style="font-size:var(--t-meta);color:var(--on-surface-variant);margin-top:var(--s2)" data-i18n="prog_export_help">Export the JSON to back up or transfer your data from PC to phone (and vice versa).</p>
         </div>
@@ -4398,7 +4398,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
               <div><label data-i18n="err_description">Description</label><input type="text" id="errDesc2" placeholder="e.g. I didn't apply inversion with 'Seldom'" data-i18n-placeholder="err_desc_ph"></div>
               <div><label data-i18n="err_fix">Correction / Notes</label><input type="text" id="errFix2" placeholder="e.g. review inversion rule" data-i18n-placeholder="err_fix_ph"></div>
-              <div style="margin-top:var(--s3)"><button class="btn" onclick="saveErr2()" data-i18n="err_save">💾 Save error</button></div>
+              <div style="margin-top:var(--s3)"><button class="btn" data-action="saveErr2" data-i18n="err_save">💾 Save error</button></div>
             </div>
           </div>
         </div>
@@ -4413,10 +4413,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <p class="page-sub" data-i18n="plan_sub">Adjust your session schedules, language and subscription. Everything applies to the tracker instantly.</p>
           </div>
           <div class="plan-actions">
-            <button class="btn gray" onclick="openIntake()" data-i18n="plan_edit_intake"><span class="btn-ico" aria-hidden="true">✏️</span> <span class="btn-label">Edit my intake</span></button>
-            <button class="btn gray" id="tourReplayBtn" onclick="startTour()" data-i18n="tour_replay"><span class="btn-ico" aria-hidden="true">🎬</span> <span class="btn-label">Replay the app tour</span></button>
-            <button class="btn gray" onclick="exportData()" data-i18n="plan_export_json"><span class="btn-ico" aria-hidden="true">💾</span> <span class="btn-label">Export JSON</span></button>
-            <button class="btn gray" onclick="document.getElementById('importFile').click()" data-i18n="plan_import_backup"><span class="btn-ico" aria-hidden="true">📥</span> <span class="btn-label">Import Backup</span></button>
+            <button class="btn gray" data-action="openIntake" data-i18n="plan_edit_intake"><span class="btn-ico" aria-hidden="true">✏️</span> <span class="btn-label">Edit my intake</span></button>
+            <button class="btn gray" id="tourReplayBtn" data-action="startTour" data-i18n="tour_replay"><span class="btn-ico" aria-hidden="true">🎬</span> <span class="btn-label">Replay the app tour</span></button>
+            <button class="btn gray" data-action="exportData" data-i18n="plan_export_json"><span class="btn-ico" aria-hidden="true">💾</span> <span class="btn-label">Export JSON</span></button>
+            <button class="btn gray" data-action="openImportPicker" data-i18n="plan_import_backup"><span class="btn-ico" aria-hidden="true">📥</span> <span class="btn-label">Import Backup</span></button>
           </div>
         </div>
 
@@ -4425,7 +4425,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="weeklyPlanCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_week_plan">Week plan</h2>
-            <button type="button" class="btn sm gray btn-tertiary" id="wpRegenBtn" onclick="regenWeeklyPlan()" data-i18n="plan_regenerate">Regenerate</button>
+            <button type="button" class="btn sm gray btn-tertiary" id="wpRegenBtn" data-action="regenWeeklyPlan" data-i18n="plan_regenerate">Regenerate</button>
           </div>
           <div class="sub" data-i18n="plan_week_sub">Your week follows your session days and the skill rotation. A refresh never moves it.</div>
           <div id="wpSummary" class="sub" style="display:none"></div>
@@ -4433,17 +4433,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div id="wpRotationControls" style="margin-top:var(--s3)">
             <div class="wp-rotation-row">
               <label for="wpRotationMode"><b>Rotation</b></label>
-              <select id="wpRotationMode" onchange="onRotationModeChange(this.value)">
+              <select id="wpRotationMode" data-change="onRotationModeChange">
                 <option value="by-part" data-i18n="plan_rotation_by_part">By part</option>
                 <option value="full-section" data-i18n="plan_rotation_full_section">Full paper each session</option>
               </select>
-              <button type="button" class="btn sm gray" id="wpResetBtn" onclick="resetPlanningDefaults()" data-i18n="plan_reset_btn">Reset to defaults</button>
-              <button type="button" class="btn sm gray" id="wpUndoBtn" onclick="undoPlanningChange()" style="display:none" data-i18n="plan_undo_btn">Undo</button>
+              <button type="button" class="btn sm gray" id="wpResetBtn" data-action="resetPlanningDefaults" data-i18n="plan_reset_btn">Reset to defaults</button>
+              <button type="button" class="btn sm gray" id="wpUndoBtn" data-action="undoPlanningChange" style="display:none" data-i18n="plan_undo_btn">Undo</button>
             </div>
             <div class="sub" id="wpRotationHelp"></div>
             <div class="wp-rotation-row" style="margin-top:var(--s2)">
               <label for="wpItemsPerSession" data-i18n="plan_items_per_session">Exercises per session</label>
-              <select id="wpItemsPerSession" onchange="onItemsPerSessionChange(this.value)">
+              <select id="wpItemsPerSession" data-change="onItemsPerSessionChange">
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
@@ -4459,7 +4459,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card" id="schedulesCard">
           <div class="plan-card-head">
             <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
-            <button type="button" class="btn sm ok" onclick="addScheduleRow()" data-i18n="plan_add_day">+ Add Session Day</button>
+            <button type="button" class="btn sm ok" data-action="addScheduleRow" data-i18n="plan_add_day">+ Add Session Day</button>
           </div>
           <div class="sub" data-i18n="plan_sessions_sub">Set as many session days and times as you want. Each week works one pair of skills, and your days split them; nothing resets between weeks.</div>
 
@@ -4482,9 +4482,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sub" style="margin-top:var(--s1);font-size:var(--t-meta)" data-i18n="plan_shift_sub">Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.</div>
               </div>
               <div style="display:flex;gap:var(--s2);align-items:center">
-                <button type="button" class="btn sm ok" onclick="advanceSession(1)" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
-                <button type="button" class="btn sm gray" onclick="advanceSession(-1)" title="Shift sequence back by 1">⏪ -1</button>
-                <button type="button" class="btn sm gray" onclick="resetSessionOffset()" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
+                <button type="button" class="btn sm ok" data-action="advanceSession" data-arg="1" title="Advance sequence by 1" data-i18n="plan_advance1">⚡ +1 Advance</button>
+                <button type="button" class="btn sm gray" data-action="advanceSession" data-arg="-1" title="Shift sequence back by 1">⏪ -1</button>
+                <button type="button" class="btn sm gray" data-action="resetSessionOffset" title="Reset shift to 0" data-i18n="plan_reset0">↩ Reset (0)</button>
               </div>
             </div>
           </div>
@@ -4540,14 +4540,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <div class="sub" data-i18n="practice_sub">Legal, hand-checked places to practise each paper. Free resources first; paid or freemium tools are labelled.</div>
           <div class="practice-toolbar">
             <div class="chips" id="practiceFilter" role="group" aria-label="Filter practice sources by skill" data-i18n-aria-label="practice_filter_aria">
-              <button type="button" class="chip on" data-skill="all" onclick="setPracticeFilter('all')" data-i18n="practice_filter_all">All</button>
-              <button type="button" class="chip" data-skill="rue" onclick="setPracticeFilter('rue')" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
-              <button type="button" class="chip" data-skill="w" onclick="setPracticeFilter('w')" data-i18n="practice_filter_w">Writing</button>
-              <button type="button" class="chip" data-skill="l" onclick="setPracticeFilter('l')" data-i18n="practice_filter_l">Listening</button>
-              <button type="button" class="chip" data-skill="sp" onclick="setPracticeFilter('sp')" data-i18n="practice_filter_sp">Speaking</button>
+              <button type="button" class="chip on" data-skill="all" data-action="setPracticeFilter" data-i18n="practice_filter_all">All</button>
+              <button type="button" class="chip" data-skill="rue" data-action="setPracticeFilter" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+              <button type="button" class="chip" data-skill="w" data-action="setPracticeFilter" data-i18n="practice_filter_w">Writing</button>
+              <button type="button" class="chip" data-skill="l" data-action="setPracticeFilter" data-i18n="practice_filter_l">Listening</button>
+              <button type="button" class="chip" data-skill="sp" data-action="setPracticeFilter" data-i18n="practice_filter_sp">Speaking</button>
             </div>
             <label class="practice-free-toggle" for="practiceFreeOnly">
-              <input type="checkbox" id="practiceFreeOnly" onchange="togglePracticeFree(this.checked)">
+              <input type="checkbox" id="practiceFreeOnly" data-change="togglePracticeFree">
               <span data-i18n="practice_free_only">Free only</span>
             </label>
           </div>
@@ -4589,7 +4589,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div class="card">
           <h2 data-i18n="books_moved_title">Books &amp; PDFs are now inside Resources</h2>
           <p class="sub" data-i18n="books_moved_sub">The Books tab was merged into Resources. PDFs, audio and online practice are still one click away.</p>
-          <button class="btn" type="button" onclick="showView('resources')" data-i18n="books_moved_cta">Go to Resources</button>
+          <button class="btn" type="button" data-action="showView" data-arg="resources" data-i18n="books_moved_cta">Go to Resources</button>
         </div>
       </section>
 
@@ -4622,7 +4622,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <div>
               <label for="iaText" data-i18n="ai_text">Your text in English</label>
-              <textarea id="iaText" class="writing-live-pad" rows="8" oninput="onIaTextChange()" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
+              <textarea id="iaText" class="writing-live-pad" rows="8" data-input="onIaTextChange" placeholder="Write or paste your Essay, Article, Report, Review or Email here (140–190 words)..." data-i18n-placeholder="ai_text_ph"></textarea>
               <div class="live-word-meter">
                 <span class="tnum"><span data-i18n="ai_words">Words:</span> <b id="iaWordCount">0</b> <span class="muted" data-i18n="ai_target_short">(target 140–190)</span></span>
                 <span id="iaWordStatus" class="tnum" style="font-weight:600">Target: 140–190 words</span>
@@ -4637,7 +4637,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
 
             <div style="margin-top:var(--s4);display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap">
-              <button type="button" class="btn" id="iaSubmitBtn" onclick="submitIaWriting()" data-i18n="ai_submit">Correct it</button>
+              <button type="button" class="btn" id="iaSubmitBtn" data-action="submitIaWriting" data-i18n="ai_submit">Correct it</button>
               <span id="iaStateLabel" class="t-xs muted tnum">idle</span>
               <span id="iaByoBadge" class="badge ok" style="display:none" data-i18n="ai_byo_badge">using your key</span>
               <span id="iaQuota" class="t-xs muted tnum" style="display:none"></span>
@@ -4655,7 +4655,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div id="iaError" class="note" style="display:none;margin-top:var(--s4);background:var(--bad-soft);border-left-color:var(--bad);color:var(--bad-text)">
               <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--s3);flex-wrap:wrap">
                 <span id="iaErrorMsg">Failed to correct the text.</span>
-                <button type="button" class="btn sm" id="iaRetryBtn" onclick="submitIaWriting()" data-i18n="common_retry">Retry</button>
+                <button type="button" class="btn sm" id="iaRetryBtn" data-action="submitIaWriting" data-i18n="common_retry">Retry</button>
               </div>
             </div>
 
@@ -7396,7 +7396,7 @@ function obDayTimesHtml(){
       const label=dayFull(OB_DAY_TO_JS[k]);
       return `<div class="ob-time-row" data-day="${k}">
         <label for="obTime_${k}">${esc(label)}</label>
-        <input type="time" id="obTime_${k}" data-day="${k}" value="${esc(val)}" oninput="obSetDayTime(this.dataset.day,this.value)" onchange="obSetDayTime(this.dataset.day,this.value)">
+        <input type="time" id="obTime_${k}" data-day="${k}" value="${esc(val)}" data-input="obSetDayTime" data-change="obSetDayTime">
       </div>`;
     }).join('');
 }
@@ -7508,8 +7508,8 @@ function obRenderAccountPlanBody(p,statusNote){
       <div class="ob-acct-upgrade-h">${esc(t('ob_acct_upgrade_title'))}</div>
       <p class="ob-acct-upgrade-sub">${esc(t('ob_acct_upgrade_sub'))}</p>
       <div class="ob-cta-row">
-        <button type="button" class="btn sm" id="obPlanSubscribeBtn" onclick="startBillingCheckout({btnId:'obPlanSubscribeBtn',statusId:'obPlanBillingStatus'})">${esc(t('billing_subscribe'))}</button>
-        <button type="button" class="btn sm gray" id="obHaveCodeBtn" aria-expanded="false" onclick="obToggleCodeBox()">${esc(t('license_have_code'))}</button>
+        <button type="button" class="btn sm" id="obPlanSubscribeBtn" data-action="startBillingCheckoutOnboarding">${esc(t('billing_subscribe'))}</button>
+        <button type="button" class="btn sm gray" id="obHaveCodeBtn" aria-expanded="false" data-action="obToggleCodeBox">${esc(t('license_have_code'))}</button>
       </div>
       <div id="obPlanCodeWrap" style="display:none">
         <div class="plan-code-row">
@@ -7517,14 +7517,14 @@ function obRenderAccountPlanBody(p,statusNote){
             <label class="plan-usage-label" for="obPlanCode">${esc(t('license_code_label'))}</label>
             <input type="text" id="obPlanCode" autocomplete="off" spellcheck="false" placeholder="${esc(t('license_code_placeholder'))}" aria-label="${esc(t('license_code_label'))}">
           </div>
-          <button type="button" class="btn sm ok" id="obPlanRedeemBtn" onclick="redeemPlanCode({inputId:'obPlanCode',statusId:'obPlanRedeemStatus',btnId:'obPlanRedeemBtn'})">${esc(t('license_redeem'))}</button>
+          <button type="button" class="btn sm ok" id="obPlanRedeemBtn" data-action="redeemPlanCodeOnboarding">${esc(t('license_redeem'))}</button>
         </div>
         <div id="obPlanRedeemStatus" class="ob-acct-status" role="status"></div>
       </div>
       <div id="obPlanBillingStatus" class="ob-acct-status" role="status"></div>
     </div>`;
   }else if(kind==='byo'){
-    extra=`<div class="ob-cta-row"><button type="button" class="btn sm gray" id="obByoManageBtn" onclick="focusByoCard()">${esc(t('ob_acct_byo_btn'))}</button></div>`;
+    extra=`<div class="ob-cta-row"><button type="button" class="btn sm gray" id="obByoManageBtn" data-action="focusByoCard">${esc(t('ob_acct_byo_btn'))}</button></div>`;
   }else if(kind==='pro'&&statusNote){
     extra=`<div id="obPlanRedeemStatus" class="ob-acct-status ob-acct-status-ok" role="status">${esc(statusNote)}</div>`;
   }
@@ -7555,10 +7555,10 @@ function obStepHtml(){
     return `<h2 class="ob-title" id="obTitle">${t('ob_goal_title')}</h2>
       <p class="ob-body">${t('ob_goal_body')}</p>
       <div class="ob-field"><label for="obExamDate">${t('ob_exam_date')}</label>
-        <input type="date" id="obExamDate" min="${today()}" value="${esc(d.examDate)}" onchange="OB.draft.examDate=this.value"></div>
+        <input type="date" id="obExamDate" min="${today()}" value="${esc(d.examDate)}" data-change="obExamDate"></div>
       <fieldset class="ob-field" style="border:none;padding:0;margin:12px 0"><legend class="ob-field-label">${t('ob_target_grade')}</legend>
         <div class="ob-radio-cards">${[['A','ob_grade_a'],['B','ob_grade_b'],['C','ob_grade_c']].map(([v,key])=>`
-          <label class="ob-radio-card"><input type="radio" name="obGrade" value="${v}" ${d.targetGrade===v?'checked':''} onchange="OB.draft.targetGrade=this.value"><span>${t(key)}</span></label>`).join('')}
+          <label class="ob-radio-card"><input type="radio" name="obGrade" value="${v}" ${d.targetGrade===v?'checked':''} data-change="obTargetGrade"><span>${t(key)}</span></label>`).join('')}
         </div></fieldset>
       <p class="ob-error" id="obError" role="alert">${esc(OB.error||'')}</p>`;
   }
@@ -7570,7 +7570,7 @@ function obStepHtml(){
         return `<div class="ob-rate-row" role="group" aria-label="${esc(label)}">
           <span class="ob-rate-label">${esc(label)}</span>
           <div class="ob-rate">${[1,2,3,4,5].map(n=>`
-            <button type="button" class="ob-rate-btn" data-skill="${k}" data-val="${n}" aria-pressed="${d.skills[k]===n}" aria-label="${esc(label)}: ${n}" onclick="obRate(this.dataset.skill,+this.dataset.val)">${n}</button>`).join('')}
+            <button type="button" class="ob-rate-btn" data-skill="${k}" data-val="${n}" aria-pressed="${d.skills[k]===n}" aria-label="${esc(label)}: ${n}" data-action="obRate">${n}</button>`).join('')}
           </div>
         </div>`;
       }).join('')}
@@ -7584,14 +7584,14 @@ function obStepHtml(){
         <p class="ob-body">${t('ob_diag_done',{date:fmtDate(diag.date||today()),correct:diag.correct||0,total:diag.total||12})}</p>
         <div class="ob-diag-box"><div class="n">${esc(weak)}</div><div class="h">${t('ob_diag_weak_hint')}</div></div>
         <div class="ob-cta-row">
-          <button type="button" class="btn ok" onclick="obAfterDiagnostic()">${t('ob_diag_continue')}</button>
-          <button type="button" class="btn gray" onclick="obRetakeDiagnostic()">${t('ob_diag_retake')}</button>
+          <button type="button" class="btn ok" data-action="obAfterDiagnostic">${t('ob_diag_continue')}</button>
+          <button type="button" class="btn gray" data-action="obRetakeDiagnostic">${t('ob_diag_retake')}</button>
         </div>`;
     }
     return `<h2 class="ob-title" id="obTitle">${t('ob_diag_title')}</h2>
       <p class="ob-body">${t('ob_diag_body')}</p>
       <div class="ob-diag-box"><div class="n">${t('ob_diag_meta')}</div><div class="h">${t('ob_diag_time_hint')}</div></div>
-      <div class="ob-cta-row"><button type="button" class="btn ok" onclick="obStartDiagnostic()">${t('ob_diag_start')}</button></div>`;
+      <div class="ob-cta-row"><button type="button" class="btn ok" data-action="obStartDiagnostic">${t('ob_diag_start')}</button></div>`;
   }
   const prof=obDraftProfile();
   const plan=obPlanFor(prof);
@@ -7603,7 +7603,7 @@ function obStepHtml(){
     <div class="ob-summary" id="obPlanSummary">${obPlanSummaryHtml(plan)}</div>
     <div class="ob-field"><span class="ob-field-label" id="obDaysLbl">${t('ob_days')}</span>
       <div class="ob-day-chips" role="group" aria-labelledby="obDaysLbl">${OB_DAYS.map(([k])=>`
-        <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" onclick="obToggleDay(this.dataset.day)">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
+        <button type="button" class="chip-btn" data-day="${k}" aria-pressed="${d.days.indexOf(k)>=0}" data-action="obToggleDay">${dayShort(OB_DAY_TO_JS[k])}</button>`).join('')}
       </div>
       <div class="ob-day-times" id="obDayTimes">${obDayTimesHtml()}</div>
       <div class="ob-warn" id="obTimeWarn" role="status" style="${dupWarn?'':'display:none'}">${dupWarn?esc(t('ob_warn_same_time')):''}</div>
@@ -7612,14 +7612,14 @@ function obStepHtml(){
       <legend class="ob-field-label">${t('ob_rotation_label')}</legend>
       <div class="ob-radio-cards ob-rot-cards">
         <label class="ob-radio-card ob-rot-card">
-          <input type="radio" name="obRotationMode" value="by-part" ${mode==='by-part'?'checked':''} onchange="obSetRotationMode(this.value)">
+          <input type="radio" name="obRotationMode" value="by-part" ${mode==='by-part'?'checked':''} data-change="obSetRotationMode">
           <span class="ob-rot-copy">
             <span class="ob-rot-title">${t('ob_rot_by_part_title')}</span>
             <span class="ob-rot-desc">${t('ob_rot_by_part_desc')}</span>
           </span>
         </label>
         <label class="ob-radio-card ob-rot-card">
-          <input type="radio" name="obRotationMode" value="full-section" ${mode==='full-section'?'checked':''} onchange="obSetRotationMode(this.value)">
+          <input type="radio" name="obRotationMode" value="full-section" ${mode==='full-section'?'checked':''} data-change="obSetRotationMode">
           <span class="ob-rot-copy">
             <span class="ob-rot-title">${t('ob_rot_full_title')}</span>
             <span class="ob-rot-desc">${t('ob_rot_full_desc')}</span>
@@ -7630,13 +7630,13 @@ function obStepHtml(){
     <div class="ob-field" id="obItemsField" style="${mode==='by-part'?'':'display:none'}">
       <span class="ob-field-label" id="obItemsLbl">${t('ob_items_per_session')}</span>
       <div class="ob-chips" role="group" aria-labelledby="obItemsLbl">${[1,2,3,4].map(n=>`
-        <button type="button" class="chip-btn" data-items="${n}" aria-pressed="${items===n}" onclick="obSetItemsPerSession(+this.dataset.items)">${n}</button>`).join('')}
+        <button type="button" class="chip-btn" data-items="${n}" aria-pressed="${items===n}" data-action="obSetItemsPerSession">${n}</button>`).join('')}
       </div>
     </div>
     <div class="ob-plan-preview" id="obPlanPreview">${obPlanRowsHtml(plan)}</div>
     <p class="ob-note">${t('ob_plan_edit_hint')} ${t('ob_day_note')}</p>
     <p class="ob-error" id="obError" role="alert">${esc(OB.error||'')}</p>
-    <div class="ob-cta-row"><button type="button" class="btn ok" id="obAcceptBtn" onclick="obAcceptPlan()">${t('ob_plan_accept')}</button></div>`;
+    <div class="ob-cta-row"><button type="button" class="btn ok" id="obAcceptBtn" data-action="obAcceptPlan">${t('ob_plan_accept')}</button></div>`;
 }
 function obRender(){
   const body=document.getElementById('obStepBody');
@@ -15435,7 +15435,7 @@ function renderWeeklyPlan(){
   renderRotationControls(plan);
   if(plan.needDiag){
     rows.innerHTML=`<div class="empty" id="wpNeedDiag">${t('plan_need_diag')}</div>
-      <div><button type="button" class="btn ok" id="wpDiagBtn" onclick="showView('diag')">${t('plan_go_diag')}</button></div>`;
+      <div><button type="button" class="btn ok" id="wpDiagBtn" data-action="showView" data-arg="diag">${t('plan_go_diag')}</button></div>`;
     return;
   }
   if(plan.noSessionDays){
@@ -15451,7 +15451,7 @@ function renderWeeklyPlan(){
         <div class="wp-when tnum">${sl.time||''}</div>
         <div class="wp-reason">${esc(sl.reason)}</div>
       </div>
-      <button type="button" class="btn sm ok wp-start" data-i="${i}" aria-label="${esc(t('plan_start_aria',{unit:unit}))}" onclick="wpStart(+this.dataset.i)">${t('common_start')}</button>
+      <button type="button" class="btn sm ok wp-start" data-i="${i}" aria-label="${esc(t('plan_start_aria',{unit:unit}))}" data-action="wpStart">${t('common_start')}</button>
     </div>`;
   }).join('');
 }
@@ -15773,7 +15773,7 @@ function renderResources(){
   const papers=f?RES_PAPERS.filter(p=>p.type===f.type):RES_PAPERS;
   const head=f?`<div style="margin-bottom:var(--s3);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap">
       <span class="badge fri">${esc(t('resources_filter_active',{paper:t(RES_PAPERS.filter(p=>p.type===f.type)[0].key)}))}${f.part?` · Part ${f.part}`:''}</span>
-      <button type="button" class="btn sm gray" onclick="clearResourcesFilter()">${esc(t('resources_filter_clear'))}</button>
+      <button type="button" class="btn sm gray" data-action="clearResourcesFilter">${esc(t('resources_filter_clear'))}</button>
     </div>`:'';
   el.innerHTML=head+papers.map(function(p){
     let cards=paperCards(p.type);
@@ -15800,18 +15800,18 @@ function renderParts(){
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p class="step-note">${p.note}</p>`:''}
       <div class="step-actions">
-        <button class="btn sm" data-i="${i}" onclick="startPart(+this.dataset.i)">${esc(t('part_start'))}</button>
-        <button class="btn sm gray" data-type="${p.type}" data-n="${p.n}" onclick="setResourcesFilter(this.dataset.type,+this.dataset.n)">${esc(t('part_resources'))}</button>
+        <button class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
+        <button class="btn sm gray" data-type="${p.type}" data-n="${p.n}" data-action="setResourcesFilterFromEl">${esc(t('part_resources'))}</button>
       </div>
-      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
+      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
         <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ Save</button></div>
+        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
       </div>`:`<div class="step-log">
         <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" onclick="savePart(+this.dataset.i)">✔ Save</button></div>
+        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
       </div>`}
     </div>`;
   });
@@ -15859,7 +15859,7 @@ function renderLog(){
     <td class="tnum">${e.type==='w'?wSc+'/20':e.type==='fw'?(e.s1||'-')+'/'+(e.s2||'-'):e.type==='sp'?(typeof e.score==='number'?e.score+'/5':'done'):e.type==='sf'?(e.ok?'C1 ✓':'pending'):(e.correct+'/'+e.total)}</td>
     <td class="tnum">${e.type==='w'?pct(wSc,20)+'%':e.type==='fw'||e.type==='sp'||e.type==='sf'?'':pct(e.correct,e.total)+'%'}</td>
     <td class="tnum">${e.min??''}</td>
-    <td><button class="del" data-i="${i}" onclick="editLog(+this.dataset.i)" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-edit"/></svg></button> <button class="del" data-i="${i}" onclick="delLog(+this.dataset.i)" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>
+    <td><button class="del" data-i="${i}" data-action="editLog" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-edit"/></svg></button> <button class="del" data-i="${i}" data-action="delLog" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>
   </tr>`;}).join('');
 }
 function editLog(i){
@@ -15872,7 +15872,7 @@ function editLog(i){
   else if(e.type==='fw')fields=`<input type="number" id="ed1" min="0" max="20" step="0.5" value="${e.s1}"> <label style="font-size:12px">text 1</label><br><input type="number" id="ed2" min="0" max="20" step="0.5" value="${e.s2}"> <label style="font-size:12px">text 2</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   else fields=`<input type="number" id="ed1" min="0" value="${e.correct}"> <label style="font-size:12px">correct</label><br><input type="number" id="ed2" min="1" value="${e.total}"> <label style="font-size:12px">total</label><br><input type="number" id="edMin" min="0" value="${e.min??''}"> <label style="font-size:12px">min</label>`;
   tr.innerHTML=`<td><input type="date" id="edDate" value="${e.date}"></td><td>${MOD[e.type]?MOD[e.type](e):e.type}</td><td>${fields}</td><td></td><td></td>
-    <td><button class="del" data-i="${i}" onclick="saveEdit(+this.dataset.i)" title="Save" aria-label="Save"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-check"/></svg></button> <button class="del" onclick="refreshAll()" title="Cancel" aria-label="Cancel"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>`;
+    <td><button class="del" data-i="${i}" data-action="saveEdit" title="Save" aria-label="Save"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-check"/></svg></button> <button class="del" data-action="refreshAll" title="Cancel" aria-label="Cancel"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button></td>`;
 }
 function saveEdit(i){
   const e=D.log[i];
@@ -15929,7 +15929,7 @@ const ERR_CODE_INFO={
 };
 function renderErrs(){
   const el=document.getElementById('errList');
-  if(!D.errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
+  if(!D.errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" data-action="openSoloModal">Log an error</button></div>';return}
   const diagRunning=(typeof DIAG_STATE==='object'&&DIAG_STATE.status==='running');
   el.innerHTML=D.errs.map((e,i)=>{
     const tax=e.code||e.tax||'G-ERR';
@@ -15939,7 +15939,7 @@ function renderErrs(){
     return `<div class="err-item">
     <div class="err-head">
       <span class="pill ${tax}" title="${esc(title)}">${tax}</span> <span class="t-xs muted tnum">${fmtDate(e.date)}</span>
-      <button class="del" data-i="${i}" onclick="delErr(+this.dataset.i)" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      <button class="del" data-i="${i}" data-action="delErr" title="Delete" aria-label="Delete"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
     </div>
     <div class="err-desc">${esc(desc)}</div>
     ${e.fix?`<div class="err-fix">→ ${esc(e.fix)}</div>`:''}
@@ -15950,7 +15950,7 @@ function renderErrPills(){
   const el=document.getElementById('errPills');
   if(!el)return;
   const errs=D.errs||[];
-  if(!errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" onclick="openSoloModal()">Log an error</button></div>';return}
+  if(!errs.length){el.innerHTML='<div class="empty">No errors logged. Tag a miss after a practice test.<button class="btn sm ok" data-action="openSoloModal">Log an error</button></div>';return}
   const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
   const total=errs.length;
   el.innerHTML=codes.map(c=>{
@@ -16209,15 +16209,15 @@ function matCell(m){
   const badge=st?`<div class="meta tnum" style="text-align:right;color:var(--acc-text);font-weight:400">✓ ${st.n}×<br><span class="t-xs muted tnum">${fmtDate(st.last)}</span></div>`:`<div class="meta tnum" style="text-align:right;color:var(--txt-2)">0×</div>`;
   return `<div class="mat-cell">
     <div style="display:flex;gap:var(--s1)">
-      <button class="chip chip-ctl" onclick="matDone(this)" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
-      <button class="chip chip-ctl" onclick="matUndo(this)" data-rel="${esc(m.rel)}" title="Undo (-1)">↺</button>
+      <button class="chip chip-ctl" data-action="matDone" data-rel="${esc(m.rel)}" title="Mark as completed (+1)">✓</button>
+      <button class="chip chip-ctl" data-action="matUndo" data-rel="${esc(m.rel)}" title="Undo (-1)">↺</button>
     </div>${badge}</div>`;
 }
 function matDone(el){const r=el.dataset.rel;D.mat=D.mat||{};D.mat[r]=D.mat[r]||{n:0,last:''};D.mat[r].n++;D.mat[r].last=today();save();renderMaterial()}
 function matUndo(el){const r=el.dataset.rel;if(D.mat&&D.mat[r]&&D.mat[r].n>0){D.mat[r].n--;if(!D.mat[r].n)D.mat[r].last='';save();renderMaterial()}}
 function renderMaterial(){
   const el=document.getElementById('matList');
-  if(!MATERIALS.length){el.innerHTML='<div class="empty">Loading material… PDFs and audio assets load dynamically from the server.<button class="btn sm gray" onclick="loadMaterial()">Retry</button></div>';return}
+  if(!MATERIALS.length){el.innerHTML='<div class="empty">Loading material… PDFs and audio assets load dynamically from the server.<button class="btn sm gray" data-action="loadMaterial">Retry</button></div>';return}
   const q=(document.getElementById('matFilter').value||'').toLowerCase().trim();
   const groups={};
   MATERIALS.filter(m=>!q||m.name.toLowerCase().includes(q)||m.folder.toLowerCase().includes(q)).forEach(m=>{groups[m.folder]=groups[m.folder]||[];groups[m.folder].push(m)});
@@ -16272,7 +16272,7 @@ function renderGrafEvol(){
     {name:'Speaking',color:'var(--warn-text)',es:log.filter(e=>e.type==='sp'&&typeof e.score==='number')}
   ];
   const seriesOk=series.filter(s=>s.es.length);
-  if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  if(!seriesOk.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" data-action="openQuickLog">Quick log</button></div>';return}
   const W=700,H=220,padL=34,padB=22,padT=10,padR=8;
   const n=Math.max(...seriesOk.map(s=>s.es.length));
   const xs=i=>padL+(W-padL-padR)*(n===1?0.5:i/(n-1));
@@ -16309,7 +16309,7 @@ function renderGrafPart(){
   ['Essay','Article','Report','Review','Email'].forEach(k=>push('Writing '+k,log.filter(e=>e.type==='w'&&e.kind===k)));
   const rue=log.filter(e=>e.type==='rue');if(rue.length)push('Full R&UoE',rue);
   const l=log.filter(e=>e.type==='l');if(l.length)push('Full Listening',l);
-  if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" onclick="openQuickLog()">Quick log</button></div>';return}
+  if(!rows.length){el.innerHTML='<div class="empty">Charts appear after your first session.<button class="btn sm ok" data-action="openQuickLog">Quick log</button></div>';return}
   rows.sort((a,b)=>a.pct-b.pct);
   el.innerHTML='<div style="max-width:560px;display:flex;flex-direction:column;gap:var(--s2)">'+rows.map(r=>svgBar(r.label,r.pct,r.min)).join('')+'</div>';
 }
@@ -16540,18 +16540,18 @@ function renderScheduleRows(){
     <div class="sched-row">
       <div class="sched-head">
         <span class="sched-title">${t('plan_session',{n:i+1})}</span>
-        <button type="button" class="btn sm gray sched-del" data-i="${i}" onclick="removeScheduleRow(+this.dataset.i)" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
+        <button type="button" class="btn sm gray sched-del" data-i="${i}" data-action="removeScheduleRow" title="${t('plan_delete_day')}" aria-label="${t('plan_delete_day')}">🗑️</button>
       </div>
       <div class="sched-fields">
         <div class="sched-field">
           <label for="schedDay${i}">${t('plan_day')}</label>
-          <select id="schedDay${i}" class="sched-day-select" data-idx="${i}" onchange="updateScheduleFromUI()">
+          <select id="schedDay${i}" class="sched-day-select" data-idx="${i}" data-change="updateScheduleFromUI">
             ${Array.from({length:7},(_,dIdx)=>`<option value="${dIdx}" ${slot.day===dIdx?'selected':''}>${dayFull(dIdx)}</option>`).join('')}
           </select>
         </div>
         <div class="sched-field">
           <label for="schedTime${i}">${t('plan_time')}</label>
-          <input id="schedTime${i}" type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" onchange="updateScheduleFromUI()">
+          <input id="schedTime${i}" type="time" class="sched-time-input" data-idx="${i}" value="${slot.time||'15:30'}" data-change="updateScheduleFromUI">
         </div>
       </div>
     </div>
@@ -16873,8 +16873,8 @@ function renderTodaySession(plan,todaySlots){
         <div class="ts-main"><div class="ts-title tnum">${esc(todayTitleLabel(sl))}<span class="ts-title-min"> · ${esc(sl.min+' min')}</span></div><div class="ts-duration tnum">${esc(sl.min+' min')}</div><div class="ts-when tnum">${esc(sl.time||'')}</div><div class="ts-mode">${esc(todayModeLine(sl))}</div></div>
         <div class="ts-cta">
           <div class="ts-actions">
-            <button type="button" class="btn sm ok ts-start" data-idx="${idx}" onclick="todayStart(+this.dataset.idx)"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
-            <button type="button" class="btn sm gray ts-ff" onclick="advanceSession(1)" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
+            <button type="button" class="btn sm ok ts-start" data-idx="${idx}" data-action="todayStart"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
+            <button type="button" class="btn sm gray ts-ff" data-action="advanceSession" data-arg="1" title="${t('next_fast_forward')}">${t('next_fast_forward')}</button>
           </div>
           ${slotPos===0?`<p class="ts-microcopy">${esc(t('today_start_microcopy'))}</p>`:''}
         </div>
@@ -16884,7 +16884,7 @@ function renderTodaySession(plan,todaySlots){
     const u=QUEUE_PENDING.units[0];
     box.innerHTML+=`<div class="ts-row ts-next-unit" data-next-unit="${u.skill}:${u.value}">
       <div class="ts-main"><div class="ts-title tnum">${esc(queueUnitLabel(u))}</div><div class="ts-reason">${esc(t('plan_next_unit_reason'))}</div></div>
-      <button type="button" class="btn sm ok ts-start" onclick="startNextQueuedUnit()"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
+      <button type="button" class="btn sm ok ts-start" data-action="startNextQueuedUnit"><svg class="ts-play-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>${esc(t('common_start'))}</button>
     </div>`;
   }
   box.innerHTML+=sessionSummaryLine();
@@ -17118,9 +17118,9 @@ function renderExamCountdown(){
   el.innerHTML=`<h2>${t('exam_countdown')}</h2>
     <div class="sub">${t('exam_no_date')}</div>
     <div class="exam-date-row">
-      <button type="button" class="btn sm gray btn-tertiary exam-intake-btn" onclick="openIntake()">${t('exam_set_date')}</button>
+      <button type="button" class="btn sm gray btn-tertiary exam-intake-btn" data-action="openIntake">${t('exam_set_date')}</button>
       <div class="exam-date-field"><label for="examDateInput">${t('exam_date_label')}</label><input type="date" id="examDateInput"></div>
-      <button type="button" class="btn ok exam-save-btn" onclick="setExamDate()">${t('exam_save_date')}</button>
+      <button type="button" class="btn ok exam-save-btn" data-action="setExamDate">${t('exam_save_date')}</button>
     </div>`;
 }
 function setExamDate(){
@@ -18103,7 +18103,7 @@ function renderDiag(){
     el.innerHTML=`<div class="card" id="diagErrorCard" style="background:var(--bad-soft);color:var(--bad-text)">
       <h2>Could not load the diagnostic</h2>
       <p style="margin:8px 0 14px;font-size:14px">${esc(DIAG_STATE.errorMsg||'Could not fetch /diagnostico.json.')}</p>
-      <button type="button" class="btn sm" onclick="startDiag()">Retry</button>
+      <button type="button" class="btn sm" data-action="startDiag">Retry</button>
     </div>`;
     return;
   }
@@ -18124,13 +18124,13 @@ function renderDiag(){
       </div>
       <div id="diagStem" class="t-lg" style="font-weight:600;line-height:1.55;margin:14px 0 18px;color:var(--txt)">${esc(item.stem)}</div>
       <div id="diagOptions" style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:16px">
-        ${item.options.map((opt,oi)=>`<button type="button" class="btn gray diag-opt" data-opt="${oi}" onclick="answerDiagItem(+this.dataset.opt)">
+        ${item.options.map((opt,oi)=>`<button type="button" class="btn gray diag-opt" data-opt="${oi}" data-action="answerDiagItem">
           <span class="opt-key">${['A','B','C','D'][oi]}.</span> ${esc(opt)}
         </button>`).join('')}
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="t-xs muted">No feedback is shown during the test</span>
-        <button type="button" class="btn gray sm" id="diagSkipBtn" onclick="skipDiagItem()">Skip</button>
+        <button type="button" class="btn gray sm" id="diagSkipBtn" data-action="skipDiagItem">Skip</button>
       </div>
     </div>`;
     return;
@@ -18161,7 +18161,7 @@ function renderDiag(){
           <h3>#${wi+1} Weakness: Part ${p} — ${esc(partName(p))} <span class="t tnum">${bp.ok}/${bp.n} correct</span></h3>
           <p class="t-sm muted" style="margin-top:4px">${esc(rec)}</p>
         </div>
-        <button type="button" class="btn sm diag-go-part" data-part="${p}" onclick="goToPartFilter(+this.dataset.part)">Go to Part ${p} →</button>
+        <button type="button" class="btn sm diag-go-part" data-part="${p}" data-action="goToPartFilter">Go to Part ${p} →</button>
       </div>`;
     }).join('');
     const explainHtml=(DIAG_STATE.status==='done'&&DIAG_STATE.items&&DIAG_STATE.items.length)
@@ -18195,8 +18195,8 @@ function renderDiag(){
       <div id="diagWeakList" style="margin-bottom:16px">${weakHtml}</div>
       ${explainHtml}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-        <button type="button" class="btn" id="diagRepeatBtn" onclick="repeatDiag()">Retake diagnostic</button>
-        <button type="button" class="btn gray" id="diagPlanBtn" onclick="showView('plan')">View plan</button>
+        <button type="button" class="btn" id="diagRepeatBtn" data-action="repeatDiag">Retake diagnostic</button>
+        <button type="button" class="btn gray" id="diagPlanBtn" data-action="showView" data-arg="plan">View plan</button>
       </div>
     </div>`;
     return;
@@ -18204,7 +18204,7 @@ function renderDiag(){
   el.innerHTML=`<div class="card" id="diagIntroCard">
     <h2>Initial diagnostic · 10 min · 12 questions</h2>
     <p class="sub">Answer 12 original items across the 7 Reading &amp; Use of English parts to find your weak spots and populate your error log.</p>
-    <button type="button" class="btn ok" id="diagStartBtn" onclick="startDiag()">Start</button>
+    <button type="button" class="btn ok" id="diagStartBtn" data-action="startDiag">Start</button>
   </div>`;
 }
 
@@ -18668,6 +18668,219 @@ if(THEME_MQ&&typeof THEME_MQ.addEventListener==='function'){
 document.addEventListener('DOMContentLoaded',()=>{
   applyTheme(resolveTheme(currentThemeMode()));
   syncNavOffset();
+});
+
+/* ---------- DELEGATED EVENTS (CSP: no inline handlers) ----------
+   Every control carries data-action (click), data-change, data-input or
+   data-keydown instead of an on* attribute. One listener per event type on
+   document resolves the closest element with that attribute and runs the
+   matching entry of the table. Each entry receives the element as `this` and
+   reproduces the old attribute body exactly: same function, same argument. */
+const ACTIONS={
+click:{
+'SPK.retryTurn':()=>SPK.retryTurn(),
+'SP_EXAM.back':()=>SP_EXAM.back(),
+'SP_EXAM.close':()=>SP_EXAM.close(),
+'SP_EXAM.copyTranscript':()=>SP_EXAM.copyTranscript(),
+'SP_EXAM.open':()=>SP_EXAM.open(),
+'SP_EXAM.ready':()=>SP_EXAM.ready(),
+'SP_EXAM.repeatPart':()=>SP_EXAM.repeatPart(),
+'SP_EXAM.restart':()=>SP_EXAM.restart(),
+'SP_EXAM.retry':()=>SP_EXAM.retry(),
+'SP_EXAM.saveReport':()=>SP_EXAM.saveReport(),
+'SP_EXAM.start':()=>SP_EXAM.start(),
+'SP_EXAM.startFull':()=>SP_EXAM.startFull(),
+'SP_EXAM.stopEarly':()=>SP_EXAM.stopEarly(),
+'accountProfile':()=>{closeAccountSheet(false);openUserModal()},
+'accountSettings':()=>{closeAccountSheet(false);openSettingsModal()},
+'addPasskey':()=>addPasskey(),
+'addScheduleRow':()=>addScheduleRow(),
+'advanceSession':el=>advanceSession(+el.dataset.arg),
+'advanceStage':()=>advanceStage(),
+'answerDiagItem':el=>answerDiagItem(+el.dataset.opt),
+'applyPlanningReset':()=>applyPlanningReset(),
+'cancelGoogleLink':()=>{hideGoogleLink();showAuthOverlay()},
+'checkRubricWithAI':()=>checkRubricWithAI(),
+'clearByoKey':()=>clearByoKey(),
+'clearResourcesFilter':()=>clearResourcesFilter(),
+'closePlanLimit':()=>closePlanLimit(),
+'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
+'closePlanResetDialog':()=>closePlanResetDialog(),
+'closePlanResetDialogIfSelf':(el,ev)=>{if(ev.target===el)closePlanResetDialog()},
+'closeQuickLog':()=>closeQuickLog(),
+'closeQuickLogIfSelf':(el,ev)=>{if(ev.target===el)closeQuickLog()},
+'closeSettingsModal':()=>closeSettingsModal(),
+'closeSettingsModalIfSelf':(el,ev)=>{if(ev.target===el)closeSettingsModal()},
+'closeSoloModal':()=>closeSoloModal(),
+'closeSoloModalIfSelf':(el,ev)=>{if(ev.target===el)closeSoloModal()},
+'closeUserModal':()=>closeUserModal(),
+'closeUserModalIfSelf':(el,ev)=>{if(ev.target===el)closeUserModal()},
+'delErr':el=>delErr(+el.dataset.i),
+'delLog':el=>delLog(+el.dataset.i),
+'doChangePassword':()=>doChangePassword(),
+'doDeleteAccount':()=>doDeleteAccount(),
+'doExportAccount':()=>doExportAccount(),
+'doLogin':()=>doLogin(),
+'doLogout':()=>doLogout(),
+'doRegister':()=>doRegister(),
+'editLog':el=>editLog(+el.dataset.i),
+'endTour':()=>endTour(),
+'exPause':()=>exPause(),
+'exResetUser':()=>exResetUser(),
+'exSave':()=>exSave(),
+'exStart':()=>exStart(),
+'exportData':()=>exportData(),
+'focusByoCard':()=>focusByoCard(),
+'goToPartFilter':el=>goToPartFilter(+el.dataset.part),
+'googleCreateAccount':()=>googleCreateAccount(),
+'googleLinkAccount':()=>googleLinkAccount(),
+'hidePasswordRecovery':()=>hidePasswordRecovery(),
+'lTimer.start':()=>lTimer.start(),
+'liveDiscard':()=>liveDiscard(),
+'liveOpen':()=>liveOpen(),
+'liveStop':()=>liveStop(),
+'loadMaterial':()=>loadMaterial(),
+'matDone':el=>matDone(el),
+'matUndo':el=>matUndo(el),
+'obAcceptPlan':()=>obAcceptPlan(),
+'obAfterDiagnostic':()=>obAfterDiagnostic(),
+'obBack':()=>obBack(),
+'obNext':()=>obNext(),
+'obRate':el=>obRate(el.dataset.skill,+el.dataset.val),
+'obRetakeDiagnostic':()=>obRetakeDiagnostic(),
+'obSetItemsPerSession':el=>obSetItemsPerSession(+el.dataset.items),
+'obSetLang':el=>obSetLang(el.dataset.arg),
+'obStartDiagnostic':()=>obStartDiagnostic(),
+'obToggleCodeBox':()=>obToggleCodeBox(),
+'obToggleDay':el=>obToggleDay(el.dataset.day),
+'openBillingPortal':()=>openBillingPortal(),
+'openDeleteAccount':()=>openDeleteAccount(),
+'openImportPicker':()=>document.getElementById('importFile').click(),
+'openIntake':()=>openIntake(),
+'openQuickLog':()=>openQuickLog(),
+'openSoloModal':el=>openSoloModal(el.dataset.arg||undefined),
+'openSpeakingExam':()=>openSpeakingExam(),
+'openWritingCorrectorFromDraft':()=>openWritingCorrectorFromDraft(),
+'planLimitHaveCode':()=>planLimitHaveCode(),
+'planLimitUseKey':()=>planLimitUseKey(),
+'qlNext':()=>qlNext(),
+'qlPickNum':el=>qlPickNum(+el.dataset.arg),
+'qlPickRange':el=>{const r=el.dataset.qlRange.split('-');qlPickRange(+r[0],+r[1])},
+'qlSave':()=>qlSave(),
+'qlSetKind':el=>qlSetKind(el.dataset.qlKind),
+'qlSetType':el=>qlSetType(el.dataset.qlType),
+'redeemPlanCode':()=>redeemPlanCode(),
+'redeemPlanCodeOnboarding':()=>redeemPlanCode({inputId:'obPlanCode',statusId:'obPlanRedeemStatus',btnId:'obPlanRedeemBtn'}),
+'refreshAll':()=>refreshAll(),
+'regenWeeklyPlan':()=>regenWeeklyPlan(),
+'removeScheduleRow':el=>removeScheduleRow(+el.dataset.i),
+'repeatDiag':()=>repeatDiag(),
+'requestPasswordReset':()=>requestPasswordReset(),
+'resetPlanningDefaults':()=>resetPlanningDefaults(),
+'resetSessionOffset':()=>resetSessionOffset(),
+'saveEdit':el=>saveEdit(+el.dataset.i),
+'saveErr':()=>saveErr(),
+'saveErr2':()=>saveErr2(),
+'saveFW':()=>saveFW(),
+'saveL':()=>saveL(),
+'saveMockListening':()=>saveMockListening(),
+'savePart':el=>savePart(+el.dataset.i),
+'saveR6':()=>saveR6(),
+'saveRUE':()=>saveRUE(),
+'saveSF':()=>saveSF(),
+'saveSP':()=>saveSP(),
+'saveSoloPractice':()=>saveSoloPractice(),
+'saveUE':()=>saveUE(),
+'saveW':()=>saveW(),
+'setExamDate':()=>setExamDate(),
+'setLang':el=>setLang(el.dataset.arg),
+'setPracticeFilter':el=>setPracticeFilter(el.dataset.skill),
+'setResourcesFilterFromEl':el=>setResourcesFilter(el.dataset.type,+el.dataset.n),
+'setThemeMode':el=>setThemeMode(el.dataset.arg),
+'showPasswordRecovery':()=>showPasswordRecovery(),
+'showView':el=>showView(el.dataset.arg),
+'skipDiagItem':()=>skipDiagItem(),
+'sp1.start':()=>sp1.start(),
+'sp2.start':()=>sp2.start(),
+'spkDiscard':()=>spkDiscard(),
+'spkReport':()=>spkReport(),
+'spkSaveReport':()=>spkSaveReport(),
+'spkStart':()=>spkStart(),
+'spkStop':()=>spkStop(),
+'stageDown':()=>stageDown(),
+'startBillingCheckout':()=>startBillingCheckout(),
+'startBillingCheckoutOnboarding':()=>startBillingCheckout({btnId:'obPlanSubscribeBtn',statusId:'obPlanBillingStatus'}),
+'startDiag':()=>startDiag(),
+'startFullMock':()=>startFullMock(),
+'startGoogleLogin':()=>startGoogleLogin(),
+'startNextQueuedUnit':()=>startNextQueuedUnit(),
+'startPart':el=>startPart(+el.dataset.i),
+'startPasskeyLogin':()=>startPasskeyLogin(),
+'startRealMock':el=>startRealMock(el.dataset.paper),
+'startTour':()=>startTour(),
+'submitIaWriting':()=>submitIaWriting(),
+'switchAuthTab':el=>switchAuthTab(el.dataset.tab),
+'switchListeningPhase':el=>switchListeningPhase(el.dataset.phase||el.dataset.arg),
+'switchSpPhase':el=>switchSpPhase(el.dataset.phase||el.dataset.arg),
+'switchUePhase':el=>switchUePhase(el.dataset.phase||el.dataset.arg),
+'switchWritingPhase':el=>switchWritingPhase(el.dataset.phase||el.dataset.arg),
+'testByoConnection':()=>testByoConnection(),
+'todayStart':el=>todayStart(+el.dataset.idx),
+'toggleAccountSheet':()=>toggleAccountSheet(),
+'toggleByoKeyVisibility':()=>toggleByoKeyVisibility(),
+'tourNext':()=>tourNext(),
+'ueTimer.start':()=>ueTimer.start(),
+'undoPlanningChange':()=>undoPlanningChange(),
+'userEditPlan':()=>{closeUserModal();showView('plan')},
+'wPlan.start':()=>wPlan.start(),
+'wRev.start':()=>wRev.start(),
+'wWrite.start':()=>wWrite.start(),
+'wpStart':el=>wpStart(+el.dataset.i)
+},
+change:{
+'importData':(el,ev)=>importData(ev),
+'obExamDate':el=>{OB.draft.examDate=el.value},
+'obSetDayTime':el=>obSetDayTime(el.dataset.day,el.value),
+'obSetRotationMode':el=>obSetRotationMode(el.value),
+'obTargetGrade':el=>{OB.draft.targetGrade=el.value},
+'onByoProviderChange':()=>onByoProviderChange(),
+'onItemsPerSessionChange':el=>onItemsPerSessionChange(el.value),
+'onRotationModeChange':el=>onRotationModeChange(el.value),
+'onSoloPartChange':()=>onSoloPartChange(),
+'onSoloSkillChange':()=>onSoloSkillChange(),
+'onUePartChange':()=>onUePartChange(),
+'renderEx':()=>renderEx(),
+'soloErrToggle':el=>{document.getElementById('soloErrBox').style.display=el.checked?'block':'none'},
+'spkSetPart':el=>spkSetPart(el.value),
+'togglePracticeFree':el=>togglePracticeFree(el.checked),
+'updateScheduleFromUI':()=>updateScheduleFromUI()
+},
+input:{
+'checkDeleteConfirm':()=>checkDeleteConfirm(),
+'obSetDayTime':el=>obSetDayTime(el.dataset.day,el.value),
+'onByoConfigInput':()=>onByoConfigInput(),
+'onByoKeyInput':el=>onByoKeyInput(el.value),
+'onIaTextChange':()=>onIaTextChange(),
+'onRegPwInput':el=>onRegPwInput(el.value),
+'onWritingDraftChange':()=>onWritingDraftChange()
+},
+keydown:{
+'activate':(el,ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click()}},
+'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
+'registerEnter':(el,ev)=>{if(ev.key==='Enter')doRegister()}
+}
+};
+[['click','data-action',false],['change','data-change',true],
+ ['input','data-input',true],['keydown','data-keydown',false]].forEach(function(spec){
+  const type=spec[0],attr=spec[1],capture=spec[2];
+  document.addEventListener(type,function(ev){
+    const target=ev.target;
+    if(!target||typeof target.closest!=='function')return;
+    const el=target.closest('['+attr+']');
+    if(!el)return;
+    const fn=ACTIONS[type][el.getAttribute(attr)];
+    if(fn)fn.call(el,el,ev);
+  },capture);
 });
 
 /* ---------- SESSION START / DEMO MODE ---------- */
