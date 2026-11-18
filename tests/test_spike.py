@@ -196,42 +196,6 @@ try:
 finally:
     S._CONN_SEM = old_sem
 
-# ---------------------------------------------------------------------------
-# 5. B2_DEMO=1: the app is usable without an account and the contract holds.
-# ---------------------------------------------------------------------------
-clear_rate()
-S.B2_DEMO = True
-S.B2_REGISTER = "open"
-try:
-    st, _h, body = api("GET", "/api/config")
-    cfg = json.loads(body)
-    check("demo_config_true", st == 200 and cfg.get("demo") is True, body[:120])
-
-    st, _h, body = api("POST", "/api/register",
-                       {"name": "demo-juror", "password": "demo-pass-9x"})
-    check("demo_register_blocked",
-          st == 403 and "demo mode" in json.loads(body).get("error", ""),
-          (st, body[:120]))
-
-    st, _h, body = api("POST", "/api/login",
-                       {"name": "demo-juror", "password": "demo-pass-9x"})
-    check("demo_login_blocked",
-          st == 403 and "demo mode" in json.loads(body).get("error", ""),
-          (st, body[:120]))
-
-    st, _h, body = api("GET", "/")
-    check("demo_home_no_account", st == 200 and len(body) > 500, st)
-
-    st, _h, body = api("GET", "/app")
-    check("demo_app_banner", st == 200 and "Demo mode" in body, st)
-
-    # AI stays reachable (quota-gated), not swallowed by the demo account block.
-    st, _h, body = api("POST", "/api/ai/writing", {})
-    check("demo_ai_not_account_blocked",
-          st != 403 and "demo mode" not in body, (st, body[:120]))
-finally:
-    S.B2_DEMO = False
-
 print()
 if failed:
     print(f"{len(failed)} FAILED: " + ", ".join(failed))

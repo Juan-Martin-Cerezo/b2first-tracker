@@ -7,7 +7,7 @@
 A self-hosted study system for the Cambridge B2 First: writing marked against the four Cambridge
 bands, a plan for today, and progress you can see.
 
-**Live demo:** https://firsttracker.app
+**Live app:** https://firsttracker.app
 
 ![The landing page at firsttracker.app](docs/screenshots/landing.webp)
 
@@ -232,7 +232,6 @@ Every setting is optional and read from the environment.
 | `B2_DATA_DIR` or `DATA_DIR` | `<repo>/data` | Where accounts, progress and backups live. |
 | `B2_HOST` | `127.0.0.1` | Bind address. |
 | `B2_ALLOWED_HOSTS` | empty | Comma-separated `Host` allowlist. Empty means no check; an unlisted host gets `421`. |
-| `B2_DEMO` | `0` | `1` answers `403` on account and sync routes and keeps state in `localStorage`. |
 | `B2_REGISTER` | `open` | `closed` blocks new registrations; existing accounts still log in. |
 | `B2_OWNER_PASSWORD` | `b2first` | Password for the owner account created when migrating old single-user data. |
 | `B2_OWNER_UIDS` | `owner` | Account ids that bypass plan caps. |

@@ -936,14 +936,6 @@ tbody tr:hover{background:var(--surface-2)}
 .step-log input{min-width:0;padding:var(--s2)}
 .dl{font-size:var(--t-meta);font-weight:500;color:var(--acc-text);margin-left:var(--s2)}
 
-/* ---------- DEMO BANNER ---------- */
-.demo-banner{
-  background:var(--warn-soft);color:var(--warn-text);
-  font-size:var(--t-meta);font-weight:600;letter-spacing:.02em;
-  padding:var(--s2) clamp(16px,4vw,32px);text-align:center;
-  border-bottom:1px solid var(--warn-border);
-}
-
 /* ---------- NOTES ---------- */
 .note{
   background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:var(--r-panel);
@@ -1816,7 +1808,6 @@ footer{
 .ob-step-count{font-size:var(--fs-xs);color:var(--txt-2);margin-bottom:10px}
 .ob-title{font-size:var(--fs-lg);font-weight:600;color:var(--txt);margin:0 0 10px}
 .ob-body{font-size:var(--fs-sm);color:var(--txt-2);line-height:1.5;margin:0 0 12px}
-.ob-demo{font-size:var(--fs-xs);color:var(--warn-text);background:var(--warn-soft);padding:8px 10px;border-radius:var(--r-ctl);margin:0 0 12px}
 .ob-field{margin:12px 0}
 .ob-field>label,.ob-field-label{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-bottom:6px}
 .ob-radio-cards{display:flex;gap:8px;flex-wrap:wrap}
@@ -3387,8 +3378,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
   <!-- ============ CONTENT ============ -->
   <div class="content">
-    <div id="demoBanner" class="demo-banner" style="display:none" data-i18n="demo_banner">Demo mode · your progress is saved only in this browser and is erased if you clear site data</div>
-
     <main>
       <!-- ============ TODAY ============ -->
       <section id="v-hoy" class="view active">
@@ -4940,8 +4929,6 @@ const I18N={
     acct_theme_dark:'Dark',
     acct_theme_system:'System',
     acct_profile:'Profile & switch user',
-    acct_demo:'Demo mode · saved locally',
-    acct_demo_user:'Demo student',
     more_desc_plan:'Schedule, intake & countdown',
     more_desc_resources:'Samples, PDFs, audio & links',
     more_desc_err:'Mistake taxonomy & patterns',
@@ -5081,7 +5068,6 @@ const I18N={
     stage_name_0:'Stage 0 — Foundations (Structural Acquisition)',
     stage_name_1:'Stage 1 — Precision & Cohesion (Pattern Mastery)',
     stage_name_2:'Stage 2 — Mastery (Target Grade A / C1) · Release Candidate',
-    demo_banner:'Demo mode · your progress is saved only in this browser and is erased if you clear site data',
     ob_language:'Language',
     ob_goal_title:'What are you preparing for?',
     ob_goal_body:'Choose your exam date and the grade you want. Every session the app builds starts from these two answers.',
@@ -5885,8 +5871,6 @@ const I18N={
     acct_theme_dark:'Oscuro',
     acct_theme_system:'Sistema',
     acct_profile:'Perfil y cambiar usuario',
-    acct_demo:'Modo demo · guardado local',
-    acct_demo_user:'Estudiante demo',
     more_desc_plan:'Agenda, perfil y cuenta atrás',
     more_desc_resources:'Modelos, PDFs, audio y enlaces',
     more_desc_err:'Taxonomía de fallos y patrones',
@@ -6026,7 +6010,6 @@ const I18N={
     stage_name_0:'Etapa 0 — Cimientos (Adquisición estructural)',
     stage_name_1:'Etapa 1 — Precisión y cohesión (Dominio de patrones)',
     stage_name_2:'Etapa 2 — Maestría (Meta: Grado A / C1) · Candidato a examen',
-    demo_banner:'Modo demo · tu progreso se guarda solo en este navegador y se borra si limpiás los datos del sitio',
     ob_language:'Idioma',
     ob_goal_title:'¿Para qué te preparás?',
     ob_goal_body:'Elegí la fecha del examen y la nota que querés. Cada sesión que arma la app empieza con estas dos respuestas.',
@@ -7022,8 +7005,6 @@ window.addEventListener('unhandledrejection',function(e){
 
 const BASE_KEY='b2first_tracker_v1';
 const AUTH_KEY='b2first_user';
-var DEMO={demo:false};
-window.DEMO=DEMO;
 var USER=null; // {id, name, color, token}
 window.USER=USER;
 function userKey(){return USER?BASE_KEY+'_'+USER.id:BASE_KEY}
@@ -7317,7 +7298,6 @@ async function googleLinkAccount(){
 
 /* ---------- AUTH OVERLAY ---------- */
 function showAuthOverlay(){
-  if(DEMO&&DEMO.demo)return;
   const ov=document.getElementById('authOverlay');
   if(ov)ov.style.display='flex';
 }
@@ -7422,6 +7402,10 @@ async function doLogout(){
 }
 function sessionExpired(){
   clearUserSession();
+  /* Drop the in-memory document too: nothing from the lost session may stay
+     behind the login overlay. The stored copy is left untouched. */
+  D=blankDoc();
+  window.D=D;
   const err=document.getElementById('authError');
   if(err)err.textContent='❌ Session expired, please log in again.';
   showAuthOverlay();
@@ -8451,18 +8435,12 @@ async function afterAuth(){
   }
   applyTimers();
   refreshAll();
+  scheduleMaterial();
   maybeStartOnboarding();
 }
 function renderUserChip(){
   const el=document.getElementById('userChip');
   if(!el)return;
-  if(DEMO&&DEMO.demo){
-    el.innerHTML='<span class="avatar">A</span>';
-    el.style.cursor='pointer';
-    if(typeof syncAccountSheet==='function')syncAccountSheet();
-    renderGates();
-    return;
-  }
   if(USER){
     const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
     const avStyle=USER.color?`background:${USER.color};color:#fff`:'';
@@ -8473,7 +8451,6 @@ function renderUserChip(){
   }
 }
 function openUserModal(){
-  if(DEMO&&DEMO.demo)return;
   const ov=document.getElementById('userModal');
   if(!ov||!USER)return;
   const initial=(USER.name||'?').trim().charAt(0).toUpperCase();
@@ -8502,7 +8479,13 @@ function closeUserModal(){
   if(ov)ov.style.display='none';
 }
 /* ---------- LOAD / SAVE (per user) ---------- */
-var D=load();
+function blankDoc(){
+  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0};
+}
+/* Nothing is loaded until a session exists: an orphaned local document (a
+   deleted user, or the old guest era) stays on disk under its own key but is
+   never painted for an anonymous visitor. */
+var D=blankDoc();
 window.D=D;
 syncLangFromD();
 function load(){
@@ -8545,7 +8528,7 @@ function load(){
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
       updated_at: d.updated_at || 0
     };
-  }catch(e){return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0}}
+  }catch(e){return blankDoc()}
 }
 function save(){
   D.updated_at=Date.now();
@@ -8593,7 +8576,7 @@ function syncStatus(s,field){
   }
   const acctSync=document.getElementById('acctSyncText');
   if(acctSync){
-    acctSync.textContent=(DEMO&&DEMO.demo)?t('acct_demo'):label;
+    acctSync.textContent=label;
   }
   const warnPill=document.getElementById('syncWarnPill');
   if(warnPill){
@@ -8604,7 +8587,7 @@ function syncStatus(s,field){
   }
 }
 function syncPush(){
-  if(DEMO&&DEMO.demo)return;
+  if(!USER||!USER.token)return;
   if(syncT)clearTimeout(syncT);
   syncStatus('local');
   syncT=setTimeout(()=>{
@@ -8784,7 +8767,7 @@ function mergeSyncList(local,server){
   return out;
 }
 function syncPull(){
-  if(DEMO&&DEMO.demo)return Promise.resolve(null);
+  if(!USER||!USER.token)return Promise.resolve(null);
   const skPullDone=skPullStart();
   return fetch(apiUrl('/api/progress',{download:1}),{headers:authHeaders()})
     .then(r=>{if(r.status===401){sessionExpired();throw 0}if(!r.ok)throw 0;return r.json()})
@@ -15247,7 +15230,7 @@ async function loadPlan(){
   if(!USER||!USER.token)return null;
   try{
     const r=await fetch('/api/plan',{headers:authHeaders()});
-    if(r.status===401)return null;
+    if(r.status===401){sessionExpired();return null}
     if(!r.ok)throw 0;
     PLAN_STATE=await r.json();
   }catch(e){return null}
@@ -15300,6 +15283,7 @@ async function loadBillingStatus(){
   if(!USER||!USER.token)return null;
   try{
     const r=await fetch('/api/billing/status',{headers:authHeaders()});
+    if(r.status===401){sessionExpired();return null}
     if(!r.ok)return null;
     BILLING_STATE=await r.json();
   }catch(e){return null}
@@ -19931,20 +19915,17 @@ function syncAccountSheet(){
   const title=document.getElementById('acctSheetTitle');
   const av=document.getElementById('acctAvatar');
   const profBtn=document.getElementById('acctProfileBtn');
-  const isDemo=!!(DEMO&&DEMO.demo);
-  if(USER&&!isDemo){
+  if(USER){
     const name=(USER.name||'Student').trim()||'Student';
     const initial=name.charAt(0).toUpperCase();
     if(title)title.textContent=name;
     if(av){av.textContent=initial;av.style.background=USER.color||'var(--acc)';av.style.color=USER.color?'#fff':'';}
     if(profBtn)profBtn.style.display='';
   }else{
-    if(title)title.textContent=isDemo?t('acct_demo_user'):'Student';
+    if(title)title.textContent='Student';
     if(av){av.textContent='A';av.style.background='var(--acc)';av.style.color='';}
     if(profBtn)profBtn.style.display='none';
   }
-  const acctSync=document.getElementById('acctSyncText');
-  if(acctSync&&isDemo)acctSync.textContent=t('acct_demo');
   if(typeof syncThemeButtons==='function')syncThemeButtons();
   const acctEn=document.getElementById('acctLangEn');
   const acctEs=document.getElementById('acctLangEs');
@@ -20137,14 +20118,11 @@ function loadMaterial(){
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
 document.getElementById('uePart').addEventListener('change',renderGuides);
 document.getElementById('spPart').addEventListener('change',renderGuides);
-/* The material catalogue is not needed to paint the first screen: it costs a
-   request (and on the Funnel a full RTT) that competes with /api/config and the
-   progress pull. Defer it to idle time; refreshAll() renders an empty state until
-   it lands, and the Retry button covers a failed fetch. */
-if('requestIdleCallback' in window){requestIdleCallback(function(){loadMaterial()},{timeout:2500});}
-else{setTimeout(loadMaterial,1200);}
-applyTimers();
-refreshAll();
+function scheduleMaterial(){
+  /* The catalogue is only fetched once there is a session to render it for. */
+  if('requestIdleCallback' in window){requestIdleCallback(function(){loadMaterial()},{timeout:2500});}
+  else{setTimeout(loadMaterial,1200);}
+}
 syncNavOffset();
 
 /* ---------- DARK MODE (toggle + persistence) ----------
@@ -20417,29 +20395,22 @@ keydown:{
   },capture);
 });
 
-/* ---------- SESSION START / DEMO MODE ---------- */
+/* ---------- SESSION START ---------- */
 (async function initSession(){
+  let cfg={};
   try{
     const r=await fetch('/api/config');
-    if(r.ok){
-      const cfg=await r.json();
-      DEMO=(cfg&&typeof cfg==='object')?cfg:{demo:false};
-    }else{
-      DEMO={demo:false};
-    }
-  }catch(e){
-    DEMO={demo:false};
-  }
-  window.DEMO=DEMO;
+    if(r.ok)cfg=(await r.json())||{};
+  }catch(e){cfg={}}
   const googleBtn=document.getElementById('googleLoginBtn');
   // flex, not block: the provider button is an icon + label row.
-  if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'flex':'none';
+  if(googleBtn)googleBtn.style.display=cfg.google?'flex':'none';
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
   if(passkeyBtn)passkeyBtn.style.display=window.PublicKeyCredential?'block':'none';
   const altSep=document.getElementById('authAltSep');
-  if(altSep&&!(DEMO&&DEMO.google)&&!window.PublicKeyCredential)altSep.style.display='none';
-  track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
-  if(DEMO&&DEMO.register==='closed'){
+  if(altSep&&!cfg.google&&!window.PublicKeyCredential)altSep.style.display='none';
+  track('app_open',{ver:String(cfg.version||TEV_VER)});
+  if(cfg.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
     if(regTab)regTab.style.display='none';
     const regPanel=document.getElementById('authRegister');
@@ -20447,29 +20418,22 @@ keydown:{
     const regNote=document.getElementById('regClosedNote');
     if(regNote)regNote.style.display='block';
   }
-  if(DEMO&&DEMO.demo===true){
-    USER=null;
-    window.USER=null;
-    hideAuthOverlay();
-    hideOnboarding();
-    const db=document.getElementById('demoBanner');
-    if(db)db.style.display='block';
-    const sb=document.getElementById('syncBadge');
-    if(sb)sb.style.display='none';
-    const sideFoot=document.querySelector('.side-foot');
-    if(sideFoot)sideFoot.style.display='none';
-    D=load();
-    window.D=D;
-    syncLangFromD();
-    renderUserChip();
-    applyTimers();
-    refreshAll();
-    loadPlan();
-    return;
-  }
   USER=loadUser();
   window.USER=USER;
   if(USER&&USER.token){
+    /* Validate the session before painting anything: a rejected token must
+       never leave a half-drawn app behind the login overlay. */
+    let valid=false;
+    try{
+      const me=await fetch('/api/me',{headers:authHeaders()});
+      valid=!!me.ok;
+      try{await me.text()}catch(e){}
+    }catch(e){valid=false}
+    if(!valid){
+      clearUserSession();
+      showAuthOverlay();
+      return;
+    }
     D=load();
     window.D=D;
     syncLangFromD();
@@ -20478,6 +20442,7 @@ keydown:{
     applyTimers();
     refreshAll();
     loadPlan();
+    scheduleMaterial();
     maybeStartOnboarding();
   }else{
     clearUserSession();
