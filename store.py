@@ -52,7 +52,7 @@ PBKDF2_ITERATIONS = 600_000
 
 # The 1,000 most common passwords, embedded in wordlist.py so the server keeps
 # zero dependencies and never downloads a wordlist at runtime. Anything outside
-# this list is covered by the 10-character minimum.
+# this list is covered by the 12-character minimum.
 COMMON_PASSWORDS = wordlist.COMMON_PASSWORDS
 
 _SAFE_UID_RE = re.compile(r"[A-Za-z0-9._-]{1,64}")

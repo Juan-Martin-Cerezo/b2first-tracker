@@ -2657,8 +2657,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div id="authRegister" style="display:none">
       <div><label data-i18n="auth_new_username">New username</label><input type="text" id="regName" placeholder="e.g. maria" data-i18n-placeholder="auth_ph_maria" autocomplete="username" data-keydown="registerEnter"></div>
-      <div><label data-i18n="auth_password_min">Password (10+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" data-input="onRegPwInput" data-keydown="registerEnter"></div>
-      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">10+ characters. Avoid common passwords.</div>
+      <div><label data-i18n="auth_password_min">Password (12+ characters)</label><input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" data-input="onRegPwInput" data-keydown="registerEnter"></div>
+      <div id="regPwHint" style="font-size:11px;color:var(--on-surface-variant);margin-top:6px" data-i18n="auth_pw_hint">12+ characters. Avoid common passwords.</div>
       <div><label data-i18n="auth_avatar_color">Avatar color</label><input type="color" id="regColor" value="#0f2b5c"></div>
       <div class="auth-error" id="regError"></div>
       <button class="btn" style="width:100%;margin-top:12px" data-action="doRegister" data-i18n="auth_create_enter">Create account &amp; enter</button>
@@ -2826,7 +2826,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div style="font-size:12px;font-weight:600;color:var(--on-surface);margin:14px 0 8px" data-i18n="user_change_pw">Change password</div>
       <div style="display:flex;flex-direction:column;gap:8px">
         <input type="password" id="pwCurrent" placeholder="Current password" data-i18n-placeholder="user_current_pw" autocomplete="current-password">
-        <input type="password" id="pwNew" placeholder="New password (10+ characters)" data-i18n-placeholder="user_new_pw" autocomplete="new-password">
+        <input type="password" id="pwNew" placeholder="New password (12+ characters)" data-i18n-placeholder="user_new_pw" autocomplete="new-password">
         <input type="password" id="pwRepeat" placeholder="Repeat new password" data-i18n-placeholder="user_repeat_pw" autocomplete="new-password">
       </div>
       <div id="pwStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
@@ -4908,8 +4908,8 @@ const I18N={
     auth_recover_ok:'Request received. The operator will review it.',
     auth_recover_error:'Enter a valid user name.',
     auth_new_username:'New username',
-    auth_password_min:'Password (10+ characters)',
-    auth_pw_hint:'10+ characters. Avoid common passwords.',
+    auth_password_min:'Password (12+ characters)',
+    auth_pw_hint:'12+ characters. Avoid common passwords.',
     auth_avatar_color:'Avatar color',
     auth_create_enter:'Create account & enter',
     auth_privacy_html:'By creating an account you accept the <a href="/terms" target="_blank" rel="noopener">Terms</a> and the <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.',
@@ -5523,7 +5523,7 @@ const I18N={
     user_export:'💾 Export my data',
     user_change_pw:'Change password',
     user_current_pw:'Current password',
-    user_new_pw:'New password (10+ characters)',
+    user_new_pw:'New password (12+ characters)',
     user_repeat_pw:'Repeat new password',
     user_update_pw:'Update password',
     user_security:'Security',
@@ -5801,8 +5801,8 @@ const I18N={
     auth_recover_ok:'Pedido recibido. El operador lo va a revisar.',
     auth_recover_error:'Escribí un nombre de usuario válido.',
     auth_new_username:'Nuevo usuario',
-    auth_password_min:'Contraseña (10+ caracteres)',
-    auth_pw_hint:'10+ caracteres. Evitá contraseñas comunes.',
+    auth_password_min:'Contraseña (12+ caracteres)',
+    auth_pw_hint:'12+ caracteres. Evitá contraseñas comunes.',
     auth_avatar_color:'Color del avatar',
     auth_create_enter:'Crear cuenta y entrar',
     auth_privacy_html:'Al crear una cuenta aceptás los <a href="/terms" target="_blank" rel="noopener">Términos</a> y la <a href="/privacy" target="_blank" rel="noopener">Política de privacidad</a>.',
@@ -6416,7 +6416,7 @@ const I18N={
     user_export:'💾 Exportar mis datos',
     user_change_pw:'Cambiar contraseña',
     user_current_pw:'Contraseña actual',
-    user_new_pw:'Nueva contraseña (10+ caracteres)',
+    user_new_pw:'Nueva contraseña (12+ caracteres)',
     user_repeat_pw:'Repetir la nueva contraseña',
     user_update_pw:'Actualizar contraseña',
     user_security:'Seguridad',
@@ -7191,15 +7191,15 @@ function passwordStrength(pass){
   if(/[0-9]/.test(pass))classes++;
   if(/[^A-Za-z0-9]/.test(pass))classes++;
   if(pass.length>=14&&classes>=3)return 2;
-  if(pass.length>=10&&classes>=2)return 1;
+  if(pass.length>=12&&classes>=2)return 1;
   return 0;
 }
 function onRegPwInput(val){
   const el=document.getElementById('regPwHint');
   if(!el)return;
-  if(!val){el.textContent='10+ characters. Avoid common passwords.';el.style.color='var(--on-surface-variant)';return}
+  if(!val){el.textContent='12+ characters. Avoid common passwords.';el.style.color='var(--on-surface-variant)';return}
   const s=passwordStrength(val);
-  el.textContent=['Too weak: 10+ characters, letters and numbers','Fair strength','Strong password'][s];
+  el.textContent=['Too weak: 12+ characters, letters and numbers','Fair strength','Strong password'][s];
   el.style.color=s===0?'var(--bad-text)':(s===1?'var(--on-surface-variant)':'var(--ok-text)');
 }
 async function doRegister(){
