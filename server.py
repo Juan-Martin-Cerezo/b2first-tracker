@@ -3850,10 +3850,41 @@ def _validate_progress(data):
         for i, item in enumerate(v):
             if not isinstance(item, dict):
                 return f"{name}[{i}]"
-    for name in ("settings", "profile"):
+    for name in ("settings", "profile", "overrides"):
         v = data.get(name)
         if v is not None and not isinstance(v, dict):
             return name
+    if "stage" in data and data["stage"] is not None:
+        st = data["stage"]
+        if isinstance(st, bool) or not isinstance(st, int) or st < 0 or st > 2:
+            return "stage"
+    if "stageHistory" in data and data["stageHistory"] is not None:
+        sh = data["stageHistory"]
+        if not isinstance(sh, list) or len(sh) > PROGRESS_LIST_MAX:
+            return "stageHistory"
+        for i, item in enumerate(sh):
+            if not isinstance(item, dict):
+                return f"stageHistory[{i}]"
+            ist = item.get("stage")
+            if isinstance(ist, bool) or not isinstance(ist, int) or ist < 0 or ist > 2:
+                return f"stageHistory[{i}].stage"
+            iat = item.get("at")
+            if iat is not None and not isinstance(iat, str):
+                return f"stageHistory[{i}].at"
+            irs = item.get("reason")
+            if irs is not None and not isinstance(irs, str):
+                return f"stageHistory[{i}].reason"
+    ovs = data.get("overrides")
+    if isinstance(ovs, dict):
+        for k, val in ovs.items():
+            if isinstance(val, bool):
+                continue
+            if not isinstance(val, dict):
+                return f"overrides.{k}"
+            if "manual" in val and not isinstance(val["manual"], bool):
+                return f"overrides.{k}.manual"
+            if val.get("at") is not None and not isinstance(val.get("at"), str):
+                return f"overrides.{k}.at"
     for k, v in data.items():
         if _depth(v) > PROGRESS_DEPTH_MAX:
             return str(k)
