@@ -2812,6 +2812,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <div id="delConfirmBox" style="display:none;margin-top:8px">
         <div style="display:flex;flex-direction:column;gap:8px">
           <input type="password" id="delPass" placeholder="Your password" data-i18n-placeholder="user_delete_pass" autocomplete="current-password">
+          <div id="delNoPass" style="display:none;font-size:12px;color:var(--on-surface-variant)" data-i18n="user_delete_nopass">This account signs in with Google, so there is no password to type.</div>
           <input type="text" id="delText" placeholder="Type DELETE to confirm" data-i18n-placeholder="user_delete_confirm" autocomplete="off" oninput="checkDeleteConfirm()">
         </div>
         <div id="delStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
@@ -5448,6 +5449,7 @@ const I18N={
     user_delete:'Delete my account',
     user_delete_btn:'Delete my account',
     user_delete_pass:'Your password',
+    user_delete_nopass:'This account signs in with Google, so there is no password to type. The confirmation word is enough.',
     user_delete_confirm:'Type DELETE to confirm',
     user_delete_permanent:'Permanently delete my account',
     user_edit_plan:'⚙️ Edit My Study Plan & Schedule',
@@ -6280,6 +6282,7 @@ const I18N={
     user_delete:'Eliminar mi cuenta',
     user_delete_btn:'Eliminar mi cuenta',
     user_delete_pass:'Tu contraseña',
+    user_delete_nopass:'Esta cuenta entra con Google, así que no hay contraseña que escribir. Alcanza con la palabra de confirmación.',
     user_delete_confirm:'Escribí DELETE para confirmar',
     user_delete_permanent:'Eliminar mi cuenta definitivamente',
     user_edit_plan:'⚙️ Editar mi plan y horario',
@@ -7123,17 +7126,31 @@ async function doExportAccount(){
     if(st)st.textContent='❌ Export failed: '+e.message;
   }
 }
-function openDeleteAccount(){
+async function openDeleteAccount(){
   const btn=document.getElementById('delOpenBtn');
   if(btn)btn.style.display='none';
   const box=document.getElementById('delConfirmBox');
   if(box)box.style.display='block';
+  /* A Google-only account has no local password to type (server:
+     password_set:false). Ask the account endpoint instead of making the user
+     guess, and hide the password field in that case. */
+  let hasPass=true;
+  try{
+    const r=await fetch('/api/account',{headers:authHeaders()});
+    if(r.ok){const j=await r.json();if(j&&j.has_password===false)hasPass=false;}
+  }catch(e){}
+  const pw=document.getElementById('delPass');
+  const note=document.getElementById('delNoPass');
+  if(pw)pw.style.display=hasPass?'':'none';
+  if(note)note.style.display=hasPass?'none':'';
+  DEL_NEEDS_PASSWORD=hasPass;
 }
 function checkDeleteConfirm(){
   const ok=(document.getElementById('delText').value||'').trim().toUpperCase()==='DELETE';
   const btn=document.getElementById('delBtn');
   if(btn)btn.disabled=!ok;
 }
+let DEL_NEEDS_PASSWORD=true;
 async function doDeleteAccount(){
   const st=document.getElementById('delStatus');
   const btn=document.getElementById('delBtn');
@@ -7144,8 +7161,9 @@ async function doDeleteAccount(){
   btn.disabled=true;
   setStatus('Deleting…','var(--on-surface-variant)');
   try{
+    const payload=DEL_NEEDS_PASSWORD?{password:document.getElementById('delPass').value}:{};
     const r=await fetch('/api/account',{method:'DELETE',headers:authHeaders(),
-      body:JSON.stringify({password:document.getElementById('delPass').value})});
+      body:JSON.stringify(payload)});
     if(!r.ok)throw await apiError(r,'delete failed');
     track('delete_account');
     tevFlush();

@@ -5778,6 +5778,11 @@ class H(BaseHTTPRequestHandler):
                     "created": u.get("created", ""),
                     "progress_bytes": progress_bytes,
                     "ai_left_today": _ai_left_for(uid),
+                    # A Google-only account has no local password: the delete
+                    # dialog hides the password field instead of asking for one
+                    # that does not exist.
+                    "has_password": u.get("password_set", True) is not False,
+                    "oauth": bool(u.get("oauth")),
                 })
                 return
             if self.command == "DELETE":
