@@ -117,6 +117,16 @@ REQUEST_QUEUE_SIZE = _env_int("B2_REQUEST_QUEUE_SIZE", 256)  # listen() backlog
 # measuring the uncached baseline; production always runs with the cache on.
 B2_NO_CACHE = (os.environ.get("B2_NO_CACHE") or "").strip() in ("1", "true", "True")
 SOCKET_TIMEOUT = 15                                     # seconds (slowloris cut-off)
+# Phase H: keep-alive bounds. An idle client may hold its socket for at most
+# KEEPALIVE_TIMEOUT (env B2_KEEPALIVE_TIMEOUT) and a socket serves at most
+# KEEPALIVE_MAX_REQUESTS (env B2_KEEPALIVE_MAX_REQUESTS) before it is closed.
+KEEPALIVE_TIMEOUT = max(1, _env_int("B2_KEEPALIVE_TIMEOUT", 5))
+KEEPALIVE_MAX_REQUESTS = max(1, _env_int("B2_KEEPALIVE_MAX_REQUESTS", 100))
+# A body left unread at the end of a request is drained before the socket is
+# reused. Unknown or larger remainders close instead of stalling the thread.
+KEEPALIVE_DRAIN_MAX = 256 * 1024
+_KA_LOCK = threading.Lock()
+_KA_STATS = {"connections_open": 0, "reused": 0, "requests_total": 0}
 MAX_URI_LEN = 2048                                      # request-target characters
 MAX_HEADERS = 60                                        # request header count
 MAX_BODY_BYTES = 3 * 1024 * 1024                        # global request body ceiling
@@ -3475,6 +3485,12 @@ def list_user_backups(user_id):
 # ---------------------------------------------------------------------------
 # /api/health (storage check, no auth)
 # ---------------------------------------------------------------------------
+def _keepalive_snapshot():
+    """Connection-reuse counters for /api/health (numbers only, no user data)."""
+    with _KA_LOCK:
+        return dict(_KA_STATS)
+
+
 def _health_check():
     """Return (status, body): 200 only when the storage is sane, else 503.
 
@@ -3516,6 +3532,7 @@ def _health_check():
         # Phase C2: instance-wide overload numbers only (no account, no
         # content), so an operator can tell a slow provider from a full queue.
         "speaking_upstream": _spk_upstream_snapshot(),
+        "keepalive": _keepalive_snapshot(),
     }
 
 
@@ -4300,17 +4317,170 @@ def _static_entry(full, ctype, validator=None, rid="", no_cache=False):
     return entry
 
 
+class _CountingReader:
+    """BufferedReader proxy that counts body bytes read for one request.
+
+    Keep-alive needs to know whether a handler consumed the whole request body:
+    any byte left on the socket would be parsed as the next request line. Only
+    ``read``/``readinto`` count (that is how every body is read); ``readline`` is
+    the request line and headers path, which never counts as body.
+    """
+
+    def __init__(self, handler, raw):
+        self._handler = handler
+        self._raw = raw
+
+    def read(self, *args):
+        data = self._raw.read(*args)
+        self._handler._body_read += len(data)
+        return data
+
+    def readinto(self, *args):
+        count = self._raw.readinto(*args)
+        if count:
+            self._handler._body_read += count
+        return count
+
+    def readline(self, *args):
+        return self._raw.readline(*args)
+
+    def __getattr__(self, name):
+        return getattr(self._raw, name)
+
+
 class H(BaseHTTPRequestHandler):
     # No version banner: the default handler appends the Python version, which tells an
     # attacker which interpreter CVEs to try. Send a bare, unversioned product name.
     server_version = "B2First"
     sys_version = ""
+    # Phase H: HTTP/1.1 enables persistent connections. Every response carries an
+    # exact Content-Length (or is a no-body status), an unread body is drained
+    # before reuse, idle sockets are bounded by KEEPALIVE_TIMEOUT and a socket
+    # serves at most KEEPALIVE_MAX_REQUESTS requests.
+    protocol_version = "HTTP/1.1"
     # Slow clients (slowloris) are cut off after this many seconds of socket stall.
     timeout = SOCKET_TIMEOUT
+
+    def setup(self):
+        """Install the body-byte counter and disable Nagle before parsing.
+
+        Nagle plus the peer's delayed ACK adds ~40 ms to a request on a reused
+        connection when small segments are in flight; on a fresh connection it
+        never shows because the socket closes. Keep-alive needs NODELAY.
+        """
+        super().setup()
+        try:
+            self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+        self._body_read = 0
+        self._body_expected = 0
+        self._requests_on_conn = 0
+        self.rfile = _CountingReader(self, self.rfile)
+
+    def handle_one_request(self):
+        """Serve one request, then drain any unread body before the next one."""
+        if self._requests_on_conn >= KEEPALIVE_MAX_REQUESTS:
+            self.close_connection = True
+            return
+        self._requests_on_conn += 1
+        with _KA_LOCK:
+            _KA_STATS["requests_total"] += 1
+            if self._requests_on_conn > 1:
+                _KA_STATS["reused"] += 1
+        # Between requests the socket may idle: use the short keep-alive timeout
+        # for the request line, then restore the body timeout in parse_request.
+        try:
+            self.connection.settimeout(KEEPALIVE_TIMEOUT)
+        except OSError:
+            self.close_connection = True
+            return
+        super().handle_one_request()
+        if not self.close_connection:
+            self._drain_for_reuse()
+
+    def parse_request(self):
+        """Parse the request, then apply the per-connection close policy.
+
+        HTTP/1.0 clients are closed (the spec only keeps them alive when they
+        ask, and this server does not advertise keep-alive to 1.0), the request
+        cap forces a close on the last allowed request, and a chunked/unknown
+        body forces a close because its length cannot be drained safely.
+        """
+        self.connection.settimeout(SOCKET_TIMEOUT)
+        self._body_read = 0
+        self._body_expected = 0
+        if not super().parse_request():
+            return False
+        self._body_expected = self._clen()
+        if self.request_version == "HTTP/1.0":
+            self.close_connection = True
+        if self.headers.get("Transfer-Encoding"):
+            self.close_connection = True
+        if self._requests_on_conn >= KEEPALIVE_MAX_REQUESTS:
+            self.close_connection = True
+        return True
+
+    def _drain_for_reuse(self):
+        """Read and discard an unread request body so the socket can be reused.
+
+        A handler that rejects a request without reading its body would leave
+        those bytes to be parsed as the next request. Small remainders are read
+        (bounded); a large or still-arriving body closes the connection instead
+        of parking the thread.
+        """
+        remaining = self._body_expected - self._body_read
+        if remaining <= 0:
+            return
+        if remaining > KEEPALIVE_DRAIN_MAX:
+            self.close_connection = True
+            return
+        deadline = time.time() + KEEPALIVE_TIMEOUT
+        while remaining > 0:
+            if time.time() >= deadline:
+                self.close_connection = True
+                return
+            try:
+                ready, _, _ = select.select([self.connection], [], [], 0.1)
+            except (OSError, ValueError):
+                self.close_connection = True
+                return
+            if not ready:
+                continue
+            try:
+                chunk = self.rfile.read(min(remaining, 65536))
+            except OSError:
+                self.close_connection = True
+                return
+            if not chunk:
+                self.close_connection = True
+                return
+            remaining -= len(chunk)
 
     def version_string(self):
         """Bare product name: never expose the interpreter version."""
         return self.server_version
+
+    def send_response(self, code, message=None):
+        """Track whether this response already stated its Connection header."""
+        self._connection_header_sent = False
+        super().send_response(code, message)
+
+    def send_header(self, keyword, value):
+        if keyword.lower() == "connection":
+            self._connection_header_sent = True
+        super().send_header(keyword, value)
+
+    def end_headers(self):
+        """Emit `Connection: close` whenever the socket will not be reused.
+
+        HTTP/1.1 defaults to a persistent connection, so a closing response must
+        say so explicitly or the client will try to reuse a socket the server is
+        about to drop.
+        """
+        if self.close_connection and not getattr(self, "_connection_header_sent", False):
+            self.send_header("Connection", "close")
+        super().end_headers()
 
     def __getattr__(self, name):
         """Send 405 + Allow for any method the router does not implement.
@@ -4340,9 +4510,13 @@ class H(BaseHTTPRequestHandler):
             finally:
                 self._log_line()
             return
+        with _KA_LOCK:
+            _KA_STATS["connections_open"] += 1
         try:
             super().handle()
         finally:
+            with _KA_LOCK:
+                _KA_STATS["connections_open"] -= 1
             _CONN_SEM.release()
 
     def _peek_path(self):
@@ -4469,11 +4643,15 @@ class H(BaseHTTPRequestHandler):
         if self.path.startswith("/api/") and "Cache-Control" not in extra:
             self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(body)))
+        # 204/304 never carry a body, and HEAD advertises the length but sends
+        # nothing: a body left on the socket would poison the next keep-alive
+        # request. Every other response announces its exact Content-Length.
+        bodyless = code in (204, 304)
+        self.send_header("Content-Length", "0" if bodyless else str(len(body)))
         for k, v in extra.items():
             self.send_header(k, v)
         self.end_headers()
-        if body:
+        if body and not bodyless and self.command != "HEAD":
             self.wfile.write(body)
 
     def _send_ndjson_start(self):
@@ -4518,7 +4696,7 @@ class H(BaseHTTPRequestHandler):
         self._send_raw(code, body, ctype, extra)
 
     def _send_not_modified(self, etag, last_modified):
-        """304 with validators and no body (no Content-Length, so nothing is sent)."""
+        """304 with validators and no body; explicit zero length for reuse."""
         self._status = 304
         self.send_response(304)
         for k, v in _security_headers(self.path).items():
@@ -4529,6 +4707,7 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Last-Modified", last_modified)
         self.send_header("Vary", "Accept-Encoding")
         self.send_header("Cache-Control", "no-cache")
+        self.send_header("Content-Length", "0")
         self.end_headers()
 
     def _serve_cached_static(self, full, ctype, extra=None, validator=None,
@@ -5021,6 +5200,7 @@ class H(BaseHTTPRequestHandler):
                 self.send_header("X-Request-Id", self._rid)
                 self.send_header("ETag", etag)
                 self.send_header("Cache-Control", "public, max-age=300, stale-while-revalidate=86400")
+                self.send_header("Content-Length", "0")
                 self.end_headers()
                 return
             self._send(200, body, "application/json; charset=utf-8",
