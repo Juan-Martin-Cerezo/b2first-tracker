@@ -2840,8 +2840,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
         <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
       </div>
-      <div id="passkeyStatus" style="font-size:12px;margin-top:8px;min-height:16px"></div>
-      <button class="btn" id="passkeyAddBtn" style="width:100%;margin-top:8px" data-action="addPasskey" data-i18n="user_add_passkey">Add a passkey</button>
+      <div id="passkeyUnsupported" style="display:none;font-size:12px;color:var(--on-surface-variant);margin-top:8px" data-i18n="user_passkey_unsupported">Passkeys are not available in this browser.</div>
       <div style="font-size:12px;font-weight:600;color:var(--bad-text);margin:14px 0 8px" data-i18n="user_delete">Delete my account</div>
       <button class="btn gray" id="delOpenBtn" style="width:100%;color:var(--bad-text)" data-action="openDeleteAccount" data-i18n="user_delete_btn">Delete my account</button>
       <div id="delConfirmBox" style="display:none;margin-top:8px">
@@ -5527,6 +5526,7 @@ const I18N={
     user_security:'Security',
     user_no_password_warn:'This account has no password. Set one above as a fallback.',
     user_no_passkeys:'No passkeys on this account yet.',
+    user_passkey_unsupported:'Passkeys are not available in this browser. Use your password or Google sign-in.',
     user_passkey_label_ph:'Device name (e.g. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Your password (once)',
@@ -6419,6 +6419,7 @@ const I18N={
     user_security:'Seguridad',
     user_no_password_warn:'Esta cuenta no tiene contraseña. Configurá una arriba como respaldo.',
     user_no_passkeys:'Todavía no hay passkeys en esta cuenta.',
+    user_passkey_unsupported:'Las passkeys no están disponibles en este navegador. Usá tu contraseña o el ingreso con Google.',
     user_passkey_label_ph:'Nombre del dispositivo (ej. iPhone)',
     user_passkey_label_default:'Passkey',
     user_passkey_password_ph:'Tu contraseña (una vez)',
@@ -8287,6 +8288,10 @@ function openUserModal(){
   const ug=document.getElementById('modalUserSlug');
   if(ug)ug.textContent=USER.id||'—';
 
+  const pkSection=document.getElementById('passkeySection');
+  const pkUnsupported=document.getElementById('passkeyUnsupported');
+  if(pkSection)pkSection.style.display=window.PublicKeyCredential?'block':'none';
+  if(pkUnsupported)pkUnsupported.style.display=window.PublicKeyCredential?'none':'block';
   ov.style.display='flex';
   loadPasskeys();
 }
@@ -19732,9 +19737,9 @@ keydown:{
   // flex, not block: the provider button is an icon + label row.
   if(googleBtn)googleBtn.style.display=(DEMO&&DEMO.google)?'flex':'none';
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
-  if(passkeyBtn&&!window.PublicKeyCredential)passkeyBtn.style.display='none';
+  if(passkeyBtn)passkeyBtn.style.display=window.PublicKeyCredential?'block':'none';
   const altSep=document.getElementById('authAltSep');
-  if(altSep&&!(DEMO&&DEMO.google))altSep.style.display='none';
+  if(altSep&&!(DEMO&&DEMO.google)&&!window.PublicKeyCredential)altSep.style.display='none';
   track('app_open',{ver:String((DEMO&&DEMO.version)||TEV_VER)});
   if(DEMO&&DEMO.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');
