@@ -1742,6 +1742,9 @@ footer{
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;padding:16px;
 }
+/* Action modals reachable from inside a full-screen flow (Speaking exam
+   .spx-overlay sits at 1200) must stack above it. */
+.overlay.modal-top{z-index:1300}
 .auth-card{
   background:var(--surface);border-radius:var(--r-modal);
   box-shadow:var(--shadow-3);padding:24px;width:100%;max-width:380px;
@@ -2862,7 +2865,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 </div>
 
 <!-- ============ SETTINGS PANEL ============ -->
-<div id="settingsModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" data-action="closeSettingsModalIfSelf">
+<div id="settingsModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" data-action="closeSettingsModalIfSelf">
   <div class="auth-card" style="max-width:680px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <h3 id="settingsTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="settings_title">Settings</h3>
@@ -2968,7 +2971,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 <!-- ============ PLAN LIMIT MODAL (phase 31) ============
      Shown when a request answers 429 + error:"plan_limit". It always offers the
      three ways forward, so a limit never ends in a dead-end toast. -->
-<div id="planLimitModal" class="overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
+<div id="planLimitModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="planLimitTitle" data-action="closePlanLimitIfSelf">
   <div class="auth-card" style="max-width:440px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <h3 id="planLimitTitle" style="font-size:16px;font-weight:600;color:var(--on-surface);margin:0" data-i18n="license_limit_title">You reached your plan limit</h3>
