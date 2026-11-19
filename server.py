@@ -1306,6 +1306,8 @@ def _spk_today():
 
 def _spk_remaining_s(uid):
     """Seconds left today, the stricter of the per-user and instance budgets."""
+    if plans.is_owner(uid):
+        return 1_000_000 * 60
     per_user_min, total_min = _spk_min_limits()
     rec = store.speaking_read(uid, _spk_today())
     total_used = sum(store.speaking_read(other, _spk_today())["seconds"]
@@ -4805,12 +4807,14 @@ class H(BaseHTTPRequestHandler):
         Checks only; the caller consumes right before the upstream call so a
         failed validation never burns quota.
         """
+        if plans.is_owner(uid):
+            return True
         if uid:
             plan = _plan_for(uid)
             limits = plan["limits"]["writing"]
             if limits is None:
                 return True  # byo: their key pays, the hourly cap still applies
-            cap = limits["limit"] if plan["plan"] == "owner" else _ai_per_user_cap()
+            cap = _ai_per_user_cap()
             if plans.writing_used(uid, "day") >= cap:
                 self._limit_429("writing", cap, "day", plans.reset_at("day"), uid)
                 return False
@@ -4833,6 +4837,8 @@ class H(BaseHTTPRequestHandler):
 
     def _speaking_gate(self, uid):
         """May this account mint one more mock? Replies and returns False if not."""
+        if plans.is_owner(uid):
+            return True
         limits = _plan_for(uid)["limits"]["speaking"]
         if limits is None:
             return True

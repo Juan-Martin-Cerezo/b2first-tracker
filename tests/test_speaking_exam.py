@@ -447,17 +447,24 @@ def main():
         assert body.get("error") == "limit_reached" and body.get("limit") == "speaking", body
     finally:
         S.plans.LIMITS["service"]["speaking"]["mocks"] = _orig_mocks
-    # Owner is capped at 1 mock/day (api-owner-1 above already spent it); raise
-    # the in-memory test ceiling afterwards so sections 37A-38 can open fresh
-    # sessions without touching plans.py.
-    status, body = api("/api/speaking/turn", turn_body("owner-a"), owner_token)
-    assert status == 429, (status, body)
-    assert body.get("error") == "limit_reached" and body.get("limit") == "speaking", body
-    S.plans.LIMITS["owner"]["speaking"]["mocks"] = 50
+    # Owner is not subject to the daily mock cap: fresh sessions succeed right
+    # after api-owner-1 without touching plans.LIMITS.
     for session in ("owner-a", "owner-b", "owner-c"):
         status, body = api("/api/speaking/turn", turn_body(session), owner_token)
         assert status == 200, "owner failed on %s: %r %r" % (session, status, body)
-    out["12_quota"] = {"second_day": 429, "owner_capped_at_1": True, "owner_sessions": 3}
+    # The global monthly Live budget guard still applies to everyone, owner included.
+    spend_path = S._spk_spend_file()
+    S._spk_month_add(S.SPK_MONTH_MINUTES * 60)
+    try:
+        status, body = api("/api/speaking/token", {"part": 1, "role": "examiner"},
+                           owner_token)
+        assert status == 429, (status, body)
+        assert body.get("limit") == "voice_month", body
+    finally:
+        if os.path.exists(spend_path):
+            os.remove(spend_path)
+    out["12_quota"] = {"second_day": 429, "owner_unlimited": True,
+                       "owner_sessions": 3, "monthly_guard_429": True}
 
     # --- 37A. It listens: two answers -> two answer-aware replies -----------
     # Eight turns in: only the last six may reach the model (rolling window).

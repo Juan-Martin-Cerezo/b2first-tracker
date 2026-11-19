@@ -45,16 +45,15 @@ DAY_SPEAKING_MOCKS = 1
 DAY_SPEAKING_MINUTES = 15
 _DAY = 24 * 3600
 
-# The account(s) that run the product. Capped to protect the budget: USD 2.18
-# prepaid in DeepSeek (one-time, no top-up) and USD 10/month in Gemini
-# (writing USD 0.0011-0.0022, Live minute USD 0.0088, 14-min mock USD 0.123).
+# The account(s) that run the product are not capped per day (the global
+# monthly Gemini Live guard in server.py still applies to everyone).
 # B2_OWNER_UIDS overrides the default (comma separated user ids).
 OWNER_UID_DEFAULT = "owner"
 
-# One service level for every account, sized for the budget above (DeepSeek
-# USD 2.18 prepaid one-time, Gemini USD 10/month; writing USD 0.0011-0.0022,
-# Live minute USD 0.0088, 14-min mock USD 0.123) and enforced per UTC day;
-# the instance-wide AI ceiling lives in server.py.
+# One service level for every account, sized for the budget (DeepSeek USD 2.18
+# prepaid one-time, Gemini USD 10/month; writing USD 0.0011-0.0022, Live minute
+# USD 0.0088, 14-min mock USD 0.123) and enforced per UTC day; the instance-wide
+# AI ceiling lives in server.py.
 LIMITS = {
     "service": {
         "writing": {"limit": DAY_WRITING_LIMIT, "window": "day"},
@@ -69,9 +68,10 @@ LIMITS = {
         "pronunciation": "full",
     },
     "owner": {
-        # Capped to keep owner usage within the same DeepSeek/Gemini budget.
-        "writing": {"limit": 10, "window": "day"},
-        "speaking": {"mocks": 1, "minutes": 15, "window": "day"},
+        # The owner is not metered per day; the instance-wide knobs still
+        # exist for every other account.
+        "writing": {"limit": 1_000_000, "window": "day"},
+        "speaking": {"mocks": 1_000_000, "minutes": 1_000_000, "window": "day"},
         "pronunciation": "full",
     },
 }

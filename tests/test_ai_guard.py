@@ -20,13 +20,6 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO)
 import prompts  # noqa: E402
 
-MOCK_PORT = 8124
-APP_PORT = 8098
-os.environ["B2_AI_BASE"] = f"http://127.0.0.1:{MOCK_PORT}"
-os.environ["B2_AI_MODEL"] = "deepseek-chat"
-os.environ["B2_BYO_TRUSTED_BASES"] = f"http://127.0.0.1:{MOCK_PORT}"
-os.environ.pop("B2_AI_KEY", None)
-
 FAKE_KEY = "sk-guard-test-key-1122334455"
 SENTINEL = "ZeppelinQuokka"
 
@@ -114,8 +107,14 @@ class MockHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-mock_srv = ThreadingHTTPServer(("127.0.0.1", MOCK_PORT), MockHandler)
+mock_srv = ThreadingHTTPServer(("127.0.0.1", 0), MockHandler)
+MOCK_PORT = mock_srv.server_address[1]
 threading.Thread(target=mock_srv.serve_forever, daemon=True).start()
+
+os.environ["B2_AI_BASE"] = f"http://127.0.0.1:{MOCK_PORT}"
+os.environ["B2_AI_MODEL"] = "deepseek-chat"
+os.environ["B2_BYO_TRUSTED_BASES"] = f"http://127.0.0.1:{MOCK_PORT}"
+os.environ.pop("B2_AI_KEY", None)
 
 import server as S  # noqa: E402
 import store  # noqa: E402
@@ -128,13 +127,14 @@ S.BK_DIR = os.path.join(_tmp, "backups")
 S.USERS_FILE = os.path.join(_tmp, "users.json")
 S.TOKENS_FILE = os.path.join(_tmp, "tokens.json")
 S.USERS_DIR = os.path.join(_tmp, "users")
-S.PORT = APP_PORT
 S.B2_AI_BASE = f"http://127.0.0.1:{MOCK_PORT}"
 S.B2_AI_MODEL = "deepseek-chat"
 os.environ.pop("B2_AI_KEY", None)
 S.migrate_legacy()
 
-srv = S.ThreadingHTTPServer(("127.0.0.1", S.PORT), S.H)
+srv = S.ThreadingHTTPServer(("127.0.0.1", 0), S.H)
+APP_PORT = srv.server_address[1]
+S.PORT = APP_PORT
 threading.Thread(target=srv.serve_forever, daemon=True).start()
 URL = f"http://127.0.0.1:{APP_PORT}"
 
