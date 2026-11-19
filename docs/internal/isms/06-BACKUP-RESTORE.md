@@ -205,3 +205,29 @@ account/credential format. Record every run in the table above.
 - `tools/restore_drill.sh` tests the data contract with synthetic data, not the latest
   production archive. A production archive should also be restored into a scratch directory
   and checked with `tools/verify_audit.py` before it is needed.
+
+## Drill log (executed)
+
+**2026-11-19 10:50 UTC — first automated drill**
+
+- `tools/backup_offsite.sh` → `b2first-20261119T105037Z.tar.enc` (2.2 MB),
+  checksum `sha256 d2ec8d699db5637cb553624182962d1b16c72f5027571d83d707e104e74f97aa`,
+  AES-256-CBC with PBKDF2 (200 000 iterations), salted.
+- `tools/backup_verify.sh` → decrypts, checksum matches, file list read back:
+  `users.json`, `usage.json`, `audit.log`, `plans.json`, `users/<id>/progress.json`.
+- Result: **PASS**. The archive is usable; nothing was restored over the live data.
+
+**Scheduling (systemd user units, running now)**
+
+- `b2first-backup.timer` — daily at 04:30 with a 15-minute randomized delay,
+  `Persistent=true` (runs after a reboot if the window was missed), 14-day retention
+  (`B2_BACKUP_KEEP_DAYS`).
+- `b2first-backup-verify.timer` — Sundays at 05:30, decrypts and validates the newest
+  archive without touching `data/`.
+- The passphrase lives in `~/.config/b2first/backup.env` (0600) and is never in the
+  repository or in argv.
+
+**Still open (honest gap):** the destination is a local path
+(`/mnt/vps_data/backups`). The encrypted copy must be pushed off-host (rclone/ssh or a
+provider bucket) before this control can be called complete; that needs credentials and
+a destination the operator owns.

@@ -179,3 +179,61 @@ This worktree has no production `data/` directory (it is gitignored), so the fir
 review found zero accounts. It proves the report runs and prints only hashed ids; it
 does **not** constitute a review of the live instance. The next quarterly review must
 run on the host's real `B2_DATA_DIR` and its output must be attached here.
+
+## Review #1 (executed)
+
+**2026-11-19 10:51 UTC** — `python3 tools/access_review.py`, output reproduced below.
+
+Outcome: 34 accounts, 0 with MFA enabled, 0 inactive for 90+ days (oldest last access
+16 days ago). No account is due for deactivation at this time; the next review is due
+2027-02-19 (quarterly).
+
+Permissions were tightened in the same pass: `data/` and every subdirectory were at 0755
+and the JSON files at 0644 — readable by any local user. They are now 0700 directories
+and 0600 files, verified with `tools/check_perms.sh` (73 directories, 263 files, exit 0).
+
+```
+# Access review
+
+Generated (UTC): 2026-11-19T10:51:16Z
+
+| Account (id hash) | Created | Last access | MFA | Sessions | Plan | Inactive (d) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `3e461f0bb09c` | 2026-11-02 | 2026-11-02 | no | 4 | service | 16 |
+| `7e5c0e07a311` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `d28128ee4a22` | 2026-11-18 | 2026-11-18 | no | 1 | service | 0 |
+| `ab5e4d2b7fcf` | 2026-11-12 | 2026-11-12 | no | 35 | service | 6 |
+| `92e70440b8b6` | 2026-11-12 | 2026-11-12 | no | 5 | service | 6 |
+| `f04fa376c44b` | 2026-10-30 | 2026-10-31 | no | 21 | service | 18 |
+| `a8f727e2187c` | 2026-11-17 | 2026-11-19 | no | 1 | service | 0 |
+| `57cffdad3877` | 2026-11-02 | 2026-11-03 | no | 2 | service | 15 |
+| `6c35d739b378` | 2026-10-30 | 2026-10-30 | no | 1 | service | 19 |
+| `fe9d38a8f991` | 2026-10-30 | 2026-10-30 | no | 29 | service | 19 |
+| `d5ecb2aa898c` | 2026-10-30 | 2026-10-30 | no | 1 | service | 19 |
+| `08118f3ba0a2` | 2026-10-30 | 2026-10-30 | no | 1 | service | 19 |
+| `ac643bba3e29` | 2026-08-27 | 2026-10-30 | no | 1 | service | 20 |
+| `b78ca7523a92` | 2026-11-02 | 2026-11-03 | no | 4 | service | 16 |
+| `068bf529f387` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `4c1029697ee3` | 2026-08-21 | 2026-10-31 | no | 25 | owner | 18 |
+| `816693352607` | 2026-11-03 | 2026-11-03 | no | 4 | service | 15 |
+| `e2917b78f6cc` | 2026-11-13 | 2026-11-14 | no | 1 | service | 5 |
+| `b9382727aa13` | 2026-11-02 | 2026-11-03 | no | 2 | service | 16 |
+| `5757ce4aa7a5` | 2026-10-30 | 2026-10-30 | no | 1 | service | 20 |
+| `6363346068e9` | 2026-11-12 | 2026-11-12 | no | 9 | service | 6 |
+| `df5e0096be31` | 2026-11-02 | 2026-11-02 | no | 7 | service | 16 |
+| `de9c620bcbcc` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `fdd713b6ff55` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `e87a50d14628` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `cbb2538b0925` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `1cfe7c28f878` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `29ef62496d0d` | 2026-11-03 | 2026-11-03 | no | 3 | service | 15 |
+| `afdae6b64703` | 2026-11-03 | 2026-11-03 | no | 2 | service | 15 |
+| `dd58253d3dc6` | 2026-10-31 | 2026-10-31 | no | 1 | service | 18 |
+| `597fbc141b11` | 2026-10-30 | 2026-11-14 | no | 178 | service | 5 |
+| `087058a67d38` | 2026-10-30 | 2026-10-30 | no | 10 | service | 19 |
+| `ed87ff1bf65c` | 2026-10-30 | 2026-10-30 | no | 1 | service | 19 |
+| `2cd570551820` | 2026-10-30 | 2026-10-30 | no | 1 | service | 19 |
+
+- Accounts: 34; MFA enabled: 0; inactive >= 90 days: 0.
+- Tokens expiring within 7 days: 0.
+```

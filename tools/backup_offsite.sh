@@ -72,5 +72,10 @@ echo "source    $DATA"
 echo "encryption AES-256-CBC, PBKDF2 200000 iterations, salted"
 echo "NOTE: $DEST is a local path. An off-host copy (rclone/ssh) is pending"
 echo "      the provider; see docs/internal/isms/06-BACKUP-RESTORE.md."
+# Retention: keep two weeks of encrypted archives (override with
+# B2_BACKUP_KEEP_DAYS). Deleting only our own pattern, never anything else.
+KEEP="${B2_BACKUP_KEEP_DAYS:-14}"
+REMOVED="$(find "$DEST" -maxdepth 1 -name 'b2first-*.tar.enc*' -type f -mtime "+$KEEP" -print -delete | wc -l | tr -d ' ')"
+echo "retention kept ${KEEP}d, pruned ${REMOVED} old file(s)"
 echo "PASS: encrypted backup written"
 exit 0
