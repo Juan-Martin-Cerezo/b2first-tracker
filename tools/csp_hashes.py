@@ -70,7 +70,6 @@ def script_src(html):
     """The complete ``script-src`` directive value for ``html``."""
     parts = ["'self'"]
     parts.extend("'%s'" % value for value in script_hashes(html))
-    parts.append("'strict-dynamic'")
     return " ".join(parts)
 
 

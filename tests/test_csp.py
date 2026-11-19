@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """CSP enforcement test (fase G): the tracker must run with zero violations.
 
-The server emits ``script-src 'self' 'sha256-…' 'strict-dynamic'`` for /app,
-with one hash per inline <script> body and no ``'unsafe-hashes'``: the document
-has no inline on* handler attributes left, because every control is wired
+The server emits ``script-src 'self' 'sha256-…' https://static.cloudflareinsights.com``
+for /app, with one hash per inline <script> body, no ``'strict-dynamic'`` (so the
+Cloudflare Web Analytics beacon host allowlist is honoured), and no ``'unsafe-hashes'``:
+the document has no inline on* handler attributes left, because every control is wired
 through data-* attributes and one delegated listener. If tools/csp_hashes.py
 missed a script block, the browser reports a ``securitypolicyviolation`` event
 (and a console error) as soon as it runs.
@@ -56,14 +57,23 @@ def header_check():
     with urllib.request.urlopen(URL + "app") as r:
         csp = r.headers.get("Content-Security-Policy", "")
     script_src = csp.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in csp else ""
+    connect_src = csp.split("connect-src", 1)[1].split(";", 1)[0] if "connect-src" in csp else ""
     return {
         "bytes": len(csp),
         "unsafe_hashes": "'unsafe-hashes'" in csp,
+        "strict_dynamic": "'strict-dynamic'" in script_src,
         "hashes": csp.count("'sha256-"),
         "script_src": script_src.strip(),
+        "connect_src": connect_src.strip(),
         "ok": (len(csp) < 1024
                and "'unsafe-hashes'" not in csp
-               and "'unsafe-inline'" not in script_src),
+               and "'unsafe-inline'" not in script_src
+               and "'strict-dynamic'" not in script_src
+               and "'self'" in script_src
+               and "'sha256-" in script_src
+               and "https://static.cloudflareinsights.com" in script_src
+               and "https://cloudflareinsights.com" in connect_src
+               and "https://static.cloudflareinsights.com" in connect_src),
     }
 
 

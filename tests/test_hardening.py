@@ -163,10 +163,19 @@ st_opt, _, h_opt = req("OPTIONS", "/api/progress")
 check("C3_options_no_cors",
       st_opt in (200, 204) and not any(k.lower().startswith("access-control") for k in h_opt),
       f"{st_opt} {h_opt}")
+csp_root = h_root.get("Content-Security-Policy", "")
+script_src_root = csp_root.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in csp_root else ""
+connect_src_root = csp_root.split("connect-src", 1)[1].split(";", 1)[0] if "connect-src" in csp_root else ""
 check("C4_csp_allows_inline_js",
-      "script-src 'self' 'unsafe-inline'" in h_root.get("Content-Security-Policy", "")
+      all(x in script_src_root for x in ("'self'", "'sha256-",
+                                             "https://static.cloudflareinsights.com"))
+      and all(x in connect_src_root for x in ("'self'",
+                                              "https://cloudflareinsights.com",
+                                              "https://static.cloudflareinsights.com"))
+      and "'unsafe-inline'" not in script_src_root
+      and "'strict-dynamic'" not in script_src_root
       and "<script" in body_root,
-      f"csp={h_root.get('Content-Security-Policy', '')}")
+      f"csp={csp_root}")
 
 # ---------------------------------------------------------------------------
 # B. Concurrent writes (20 PUTs, same user)

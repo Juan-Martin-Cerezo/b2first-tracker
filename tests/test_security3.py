@@ -160,10 +160,16 @@ check("A1_hsts_preload",
       h.get("Strict-Transport-Security") == "max-age=63072000; includeSubDomains; preload",
       h.get("Strict-Transport-Security"))
 csp_script = csp.split("script-src", 1)[1].split(";", 1)[0] if "script-src" in csp else ""
+csp_connect = csp.split("connect-src", 1)[1].split(";", 1)[0] if "connect-src" in csp else ""
 check("A2_csp_hardened",
       all(x in csp for x in ("object-src 'none'", "base-uri 'none'",
-                             "frame-ancestors 'none'", "form-action 'self'",
-                             "'sha256-", "'strict-dynamic'"))
+                             "frame-ancestors 'none'", "form-action 'self'"))
+      and all(x in csp_script for x in ("'self'", "'sha256-",
+                                        "https://static.cloudflareinsights.com"))
+      and all(x in csp_connect for x in ("'self'",
+                                         "https://cloudflareinsights.com",
+                                         "https://static.cloudflareinsights.com"))
+      and "'strict-dynamic'" not in csp_script
       and "'unsafe-hashes'" not in csp
       and "'unsafe-inline'" not in csp_script
       and "'unsafe-eval'" not in csp,

@@ -68,7 +68,7 @@ countdown in view.
 | **Plan** | The diagnostic ranks your weakest parts, the weekly plan turns that into sessions, the gates track the next stage, and the streak and countdown keep the week honest. |
 | **Charts** | Four SVG panels, no chart library: progress over time, accuracy per part, the mix of error types, and score consistency per skill. |
 | **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress on the service. Recovery works through Google, a passkey, or a manual operator reset. |
-| **Privacy** | Your progress is stored on our server. No analytics SDK, no ads, no external database. |
+| **Privacy** | Your progress is stored on our server. Only cookie-free aggregate Cloudflare Web Analytics (page views, country, referrer); no ads, no tracking pixels, no external database. |
 
 ## How the plan works
 
@@ -283,8 +283,9 @@ uv run --with httpx python test_capacity.py
 
 ## Privacy and security
 
-Your progress is stored on our server, and no analytics SDK, ad network or external database is
-loaded. The only outbound text is the writing you explicitly submit for correction, which goes to
+Your progress is stored on our server; the only analytics is cookie-free aggregate Cloudflare Web
+Analytics (page views, country, and referrer, with no user profiling), and no ad network, tracking
+pixel, or external database is loaded. The only outbound text is the writing you explicitly submit for correction, which goes to
 the configured provider and is not stored; speaking audio goes from the browser to the speaking
 provider and is never written to disk. Accounts use PBKDF2-HMAC-SHA256 with 600,000 iterations,
 session tokens are stored hashed, and the audit log is a hash chain.
