@@ -187,6 +187,22 @@ def main():
     assert speaking_prompts.PART4_INSTRUCTION in sys_txt, sys_txt
     assert len((body.get("reply") or "").split()) <= 20, body
 
+    # (d) _SPK_TURN_RULE itself advances Part 1/4 questions, forbids rephrasing/chaining
+    # "Why?", keeps 10-word / REACT FIRST / silence rules, and leaves Part 2/3 as fallback.
+    turn_rule = sys_txt[sys_txt.index("VOICE LINE, TURN BY TURN"):]
+    assert "PART 1 and PART 4" in turn_rule, turn_rule
+    assert "next unasked question" in turn_rule.lower(), turn_rule
+    assert "never rephrase" in turn_rule.lower(), turn_rule
+    assert 'never chain "why?"' in turn_rule.lower(), turn_rule
+    assert "10 words" in turn_rule and "short version" in turn_rule.lower(), turn_rule
+    assert "closing line" in turn_rule.lower(), turn_rule
+    assert "REACT FIRST" in turn_rule, turn_rule
+    assert "empty" in turn_rule.lower() and "repeat" in turn_rule.lower(), turn_rule
+    assert "for part 2 and part 3" in turn_rule.lower(), turn_rule
+    assert "fallback for silence" in turn_rule.lower(), turn_rule
+    # Ensure the old "Bike — why is it healthier" chaining example is gone.
+    assert "why is it healthier" not in turn_rule.lower(), turn_rule
+
     # Part 1 uses the same sequence, non-repetition, and 20-word rules
     _ensure_account(BASE_URL + "/", "p1-seq-user", password)
     p1_user = _api(BASE_URL + "/", "api/login", {"name": "p1-seq-user", "password": password})

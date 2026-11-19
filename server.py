@@ -1531,21 +1531,30 @@ These rules override the part block above wherever they disagree.
   (English, no timestamps, no speaker labels). If there is no clear speech,
   use "" — NEVER guess, complete or invent words.
 - Then write your own next turn in `reply`: exactly the words you say out loud,
-  in English. Your reply is AT MOST 10 words (6-9 is ideal) — a long line costs seconds of speech. The exam rules
-  above still apply, except that this turn is a conversation, not a reading of
-  the question list.
+  in English. Your reply is AT MOST 10 words (6-9 is ideal) — a long line costs
+  seconds of speech. The exam rules above still apply.
 - REACT FIRST. Your reply must contain at least one concrete word or phrase
-  from `transcript` and show that you heard it. Example: candidate says
-  "I go by bike because it is healthier" → "Bike — why is it healthier for you?"
+  from `transcript` and show that you heard it.
 - If the transcript is empty: do not invent an answer. Say you could not hear
   the audio and ask the candidate to repeat it, in 10 words or fewer.
 - If the transcript has fewer than 4 words or is off-topic: ask a short
   follow-up ("Why?" / "Can you tell me more about X?") using a word they said.
   Do NOT advance to the next scripted question.
-- Only when the answer is on-topic and at least 4 words long may you move to
-  the next scripted question — and even then, refer to what they said first.
-- The scripted question list is a FALLBACK for silence, not a script to read.
-  Never ask a question that could have been asked without listening.
+- For PART 1 and PART 4 (when acting as the interlocutor with the numbered
+  question list above): if the candidate answered the current question on-topic
+  in at least 4 words, ADVANCE to the next unasked question in that numbered
+  list, strictly in order, phrased shortly. You may open with 2-3 words echoing
+  what they said (e.g. "Right, trips stick — should parents pay?").
+  NEVER rephrase or re-ask the question they just answered (for example, never
+  ask why something is useful/good after they already explained why), and
+  NEVER chain "Why?" on the same point.
+  If all questions in the list have already been asked and answered, close with
+  the part's closing line from above. Keep the 10-word limit: if the next
+  listed question does not fit, use a faithful short version of it.
+- For PART 2 and PART 3: this turn is a conversation, not a reading of the
+  question list. The scripted question list is a FALLBACK for silence, not a
+  script to read; never ask a question that could have been asked without
+  listening, and only move on after an on-topic answer of at least 4 words.
 - Never describe the audio, never mention transcription, never add JSON prose.
 Return only the JSON object.
 """
