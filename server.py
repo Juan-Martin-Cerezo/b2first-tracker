@@ -471,7 +471,9 @@ def _spk_upstream_refusal(error, body):
 
     "busy" is the bounded queue: the caller gets a 503 with Retry-After and no
     provider call. "upstream_timeout" is the turn deadline: a 504, never a
-    silent 502 that the client would retry into the same wall.
+    silent 502 that the client would retry into the same wall. "turn_truncated"
+    is a cut-off model reply (MAX_TOKENS or truncated JSON): a 422 with an
+    explicit error code so the client can ask the candidate to repeat.
     """
     if error == "busy":
         _spk_stat("busy_503")
@@ -480,6 +482,8 @@ def _spk_upstream_refusal(error, body):
     if error == "upstream_timeout":
         _spk_stat("timeout_504")
         return 504, {"error": "timeout", "reason": "upstream_timeout"}, None
+    if error == "turn_truncated":
+        return 422, {"error": "turn_truncated", "reason": "turn_truncated"}, None
     return 502, body, None
 
 
@@ -1506,6 +1510,16 @@ def _spk_gemini_text(body):
     return text or None
 
 
+def _spk_gemini_finish_reason(body):
+    """Return the first candidate's finishReason string, or None."""
+    try:
+        cand = body["candidates"][0]
+    except (KeyError, IndexError, TypeError):
+        return None
+    reason = cand.get("finishReason") if isinstance(cand, dict) else None
+    return reason if isinstance(reason, str) else None
+
+
 _SPK_TURN_REPEAT = "Sorry, I did not catch that. Could you say it again, please?"
 
 _SPK_TURN_RULE = """
@@ -1623,8 +1637,9 @@ def _spk_turn_understand_locked(api_key, system, history, audio_b64, mime,
         "contents": contents,
         "generationConfig": {
             "temperature": 0.4,
-            # The reply is 8-14 words: thinking adds ~2 s and buys nothing.
-            "maxOutputTokens": 60,
+            # Transcript (~25 s) + reply (8-14 words) + JSON wrapper fit with
+            # headroom in 320 tokens; thinking adds ~2 s and buys nothing.
+            "maxOutputTokens": 320,
             "thinkingConfig": {"thinkingBudget": 0},
             "responseMimeType": "application/json",
             "responseSchema": _SPK_TURN_SCHEMA,
@@ -1637,13 +1652,15 @@ def _spk_turn_understand_locked(api_key, system, history, audio_b64, mime,
     ms = int((time.time() - started) * 1000)
     if error:
         return None, None, ms, error
+    if _spk_gemini_finish_reason(body) == "MAX_TOKENS":
+        return None, None, ms, "turn_truncated"
     text = _spk_gemini_text(body)
     if text is None:
         return None, None, ms, "upstream_failed"
     try:
         obj = json.loads(text)
     except ValueError:
-        return None, None, ms, "upstream_failed"
+        return None, None, ms, "turn_truncated"
     if not isinstance(obj, dict):
         return None, None, ms, "upstream_failed"
     transcript, reply = obj.get("transcript"), obj.get("reply")

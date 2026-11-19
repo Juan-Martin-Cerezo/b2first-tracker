@@ -447,10 +447,17 @@ def main():
         assert body.get("error") == "limit_reached" and body.get("limit") == "speaking", body
     finally:
         S.plans.LIMITS["service"]["speaking"]["mocks"] = _orig_mocks
+    # Owner is capped at 1 mock/day (api-owner-1 above already spent it); raise
+    # the in-memory test ceiling afterwards so sections 37A-38 can open fresh
+    # sessions without touching plans.py.
+    status, body = api("/api/speaking/turn", turn_body("owner-a"), owner_token)
+    assert status == 429, (status, body)
+    assert body.get("error") == "limit_reached" and body.get("limit") == "speaking", body
+    S.plans.LIMITS["owner"]["speaking"]["mocks"] = 50
     for session in ("owner-a", "owner-b", "owner-c"):
         status, body = api("/api/speaking/turn", turn_body(session), owner_token)
-        assert status == 200, "owner was limited on %s: %r %r" % (session, status, body)
-    out["12_quota"] = {"second_day": 429, "owner_sessions": 3}
+        assert status == 200, "owner failed on %s: %r %r" % (session, status, body)
+    out["12_quota"] = {"second_day": 429, "owner_capped_at_1": True, "owner_sessions": 3}
 
     # --- 37A. It listens: two answers -> two answer-aware replies -----------
     # Eight turns in: only the last six may reach the model (rolling window).
@@ -509,9 +516,9 @@ def main():
         assert "Examiner: QUESTION MARKER" in json.dumps(body["contents"])
         generation = body["generationConfig"]
         assert generation["thinkingConfig"] == {"thinkingBudget": 0}, generation
-        # A 6-10 word reply: 60 tokens is the ceiling from phase 38's short
-        # examiner lines (80 was the old, longer prompt).
-        assert generation["maxOutputTokens"] == 60, generation
+        # A 25 s candidate transcript + short examiner reply + JSON wrapper need
+        # 320 tokens; 60 truncated real turns with finishReason MAX_TOKENS.
+        assert generation["maxOutputTokens"] == 320, generation
         assert generation["responseSchema"] == S._SPK_TURN_SCHEMA, generation
     out["37a_prompt"] = {"bodies": len(turn_bodies), "history": True, "task": True}
 
