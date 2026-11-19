@@ -169,6 +169,19 @@ to `POST /api/speaking/report` when you ask for the report. No audio is ever wri
 by the server. Nothing is added to your log until you press **Save report**; the exam does not
 store the transcript, and saving writes only the report row into your progress.
 
+## AI implementation
+
+| Component | Model / API | Role |
+| --- | --- | --- |
+| Real-time Speaking examiner | **Gemini 3.8 Live** (`gemini-3.8-live`, Live API) | Conducts the live voice exam. The server only mints ephemeral tokens (`POST /api/speaking/token`). Audio goes directly from the browser to Google and never passes through or is stored by the server. |
+| Turn-based Speaking fallback | **Gemini 2.5 Flash + 2.5 Flash TTS** | Used when Live is unavailable. One call per turn to transcribe and reply, and one call for the voice response. |
+| Writing & Speaking report | **DeepSeek V4.1 Flash** (OpenAI format) | Grades Writing drafts against the four Cambridge bands and generates the final Speaking report (strict JSON, output capped at 8 KB). |
+| Pronunciation band (optional) | **Azure Pronunciation Assessment** | Sole source of the Pronunciation band. Without a key, the report states `not measured` and the endpoint returns `503 speech_not_configured`. The text model never invents this band. |
+
+- **Keys and testing:** API keys live only in the server environment (`chmod 600` env file); none reach the browser or the repository. Tests run with stubs and no network access.
+- **Cost caps:** 5 Writing evaluations and 1 Speaking mock (15 min) per account per day; 20 text calls and 25 voice minutes per instance per day (enforced in `plans.py` and server daily cap settings).
+- **Honesty:** Bands are practice estimates calibrated against published Cambridge scales, not official Cambridge grades.
+
 ## What it does not do
 
 This is a practice tool, not an exam board. The Writing and Speaking bands are estimates against
@@ -189,6 +202,13 @@ ones written in the exam format, not past papers.
   neither.
 - **You need an account.** The service is account-based: create one with a username and a password
   on the landing page. There is no anonymous mode and no local-only mode.
+
+## How to try it in two minutes
+
+1. Open https://firsttracker.app and click **Create an account**.
+2. Pick a username and a password of 12+ characters. No email is required.
+3. In onboarding, set your exam date, enter your scores per skill, and click **Skip for now** on the 12-question check (you can take it later).
+4. To test the AI: submit a 140–190 word draft in Writing, or run a short Speaking mock. Daily caps are listed in [AI implementation](#ai-implementation).
 
 ## Quick start
 
