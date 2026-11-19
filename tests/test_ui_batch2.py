@@ -56,7 +56,7 @@ with sync_playwright() as p:
     anon.goto(URL, wait_until="networkidle")
     anon.wait_for_timeout(200)
     assert anon.url.rstrip("/") == URL.rstrip("/"), f"logged-out / redirected: {anon.url}"
-    assert "Someone finally marks your writing" in anon.inner_text("h1#hero-title"), "landing headline missing"
+    assert "AI rubric marking and live voice practice for B2 First." in anon.inner_text("h1#hero-title"), "landing headline missing"
     out["1_logged_out"] = anon.url
     ctx.close()
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <script>
-/* A visitor with an active session skips the landing page and enters /app. */
+/* Active sessions skip the public landing page and go straight to /app. */
 (function(){
   try{
     var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
@@ -12,29 +12,29 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>B2 First Tracker — Cambridge B2 First self-study</title>
-<meta name="description" content="Cambridge B2 First (FCE) preparation: 12-item diagnostic, prioritized daily sessions, writing marked on the four Cambridge bands, and 4-part speaking practice.">
+<title>B2 First Tracker — AI Writing Rubric &amp; Live Voice Examiner</title>
+<meta name="description" content="Cambridge B2 First (FCE) AI study platform: Writing scored on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive study plan.">
 <link rel="canonical" href="https://firsttracker.app/">
-<meta property="og:title" content="B2 First Tracker — Cambridge B2 First self-study">
-<meta property="og:description" content="Cambridge B2 First (FCE) preparation: 12-item diagnostic, prioritized daily sessions, writing marked on the four Cambridge bands, and 4-part speaking practice.">
+<meta property="og:title" content="B2 First Tracker — AI Writing Rubric &amp; Live Voice Examiner">
+<meta property="og:description" content="Cambridge B2 First (FCE) AI study platform: Writing scored on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive study plan.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://firsttracker.app/">
 <meta property="og:image" content="https://firsttracker.app/assets/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="B2 First Tracker — someone finally marks your writing.">
+<meta property="og:image:alt" content="B2 First Tracker — AI rubric marking and live voice practice for B2 First.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://firsttracker.app/assets/og.png">
-<meta name="twitter:image:alt" content="B2 First Tracker — someone finally marks your writing.">
+<meta name="twitter:image:alt" content="B2 First Tracker — AI rubric marking and live voice practice for B2 First.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Cambridge B2 First (FCE) preparation: 12-item diagnostic, adaptive weekly plan, writing marked on the four Cambridge bands, and 4-part speaking practice."}
+{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Cambridge B2 First (FCE) preparation with AI writing marking on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive weekly plan from a 12-item diagnostic."}
 </script>
 <link rel="icon" type="image/png" href="/assets/logo-512.png">
 <link rel="apple-touch-icon" href="/assets/logo-512.png">
-<meta name="theme-color" id="metaTheme" content="#fbfcfd">
+<meta name="theme-color" id="metaTheme" content="#101319">
 <script>
-/* Apply saved or OS theme before first paint. */
+/* Apply saved or system color theme before first paint. */
 (function(){
   try{
     var t=localStorage.getItem('b2first_theme');
@@ -42,72 +42,57 @@
       t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
     }
     document.documentElement.setAttribute('data-theme',t);
-    if(t==='dark'){
-      var mt=document.getElementById('metaTheme');
-      if(mt)mt.setAttribute('content','#121416');
-    }
+    var mt=document.getElementById('metaTheme');
+    if(mt)mt.setAttribute('content',t==='dark'?'#101319':'#f8f9fc');
   }catch(e){}
 })();
 </script>
 <style>
 /* ================================================================
-   DESIGN TOKENS (matched to landing/app oklch system)
+   DESIGN TOKENS — Dark-first oklch system, single Cambridge blue accent
    ================================================================ */
-:root, :root[data-theme="light"]{
-  color-scheme:light;
-  --bg: oklch(0.99 0.003 250);
-  --surface: oklch(1 0 0);
-  --inset: oklch(0.965 0.006 255);
-  --line: oklch(0.22 0.02 260 / 0.10);
-  --line-2: oklch(0.22 0.02 260 / 0.16);
-  --txt: oklch(0.22 0.015 260);
-  --txt-2: oklch(0.45 0.015 260);
-  --txt-3: oklch(0.48 0.012 260);
-  --acc: oklch(0.52 0.18 260);
-  --acc-soft: oklch(0.95 0.03 260);
-  --acc-line: oklch(0.80 0.08 260);
-  --acc-text: var(--acc);
-  --on-acc: oklch(1 0 0);
-  --tint: color-mix(in oklch, var(--acc-soft) 40%, var(--bg));
-  --glow-warm: oklch(0.88 0.08 65 / 0.45);
-  --glow-cold: oklch(0.84 0.09 260 / 0.45);
-  --tex: oklch(0.22 0.02 260 / 0.045);
-  --hi: oklch(1 0 0 / 0.9);
-  --nav-bg: oklch(0.99 0.003 250 / 0.88);
-  --e1: 0 0 0 1px var(--line);
-  --e2:
-    0 0 0 1px var(--line),
-    0 2px 4px -2px oklch(0.3 0.04 260 / 0.10),
-    0 18px 40px -18px oklch(0.3 0.06 260 / 0.22);
-  --img-outline: oklch(0 0 0 / 0.1);
-}
-:root[data-theme="dark"]{
+:root, :root[data-theme="dark"]{
   color-scheme:dark;
-  --bg: oklch(0.18 0.012 260);
-  --surface: oklch(0.22 0.012 260);
-  --inset: oklch(0.26 0.013 260);
-  --line: oklch(1 0 0 / 0.12);
-  --line-2: oklch(1 0 0 / 0.18);
-  --txt: oklch(0.96 0.005 260);
-  --txt-2: oklch(0.82 0.012 260);
-  --txt-3: oklch(0.74 0.012 260);
-  --acc: oklch(0.78 0.12 255);
-  --acc-soft: oklch(0.30 0.06 260);
-  --acc-line: oklch(0.50 0.10 260);
-  --acc-text: var(--acc);
-  --on-acc: oklch(0.18 0.02 260);
-  --tint: color-mix(in oklch, var(--acc-soft) 40%, var(--bg));
-  --glow-warm: oklch(0.40 0.06 55 / 0.24);
-  --glow-cold: oklch(0.42 0.12 262 / 0.45);
-  --tex: oklch(1 0 0 / 0.04);
-  --hi: oklch(1 0 0 / 0.10);
-  --nav-bg: oklch(0.18 0.012 260 / 0.86);
-  --e1: 0 0 0 1px var(--line);
-  --e2:
-    0 0 0 1px var(--line),
-    0 2px 4px -2px oklch(0 0 0 / 0.40),
-    0 24px 48px -24px oklch(0 0 0 / 0.65);
-  --img-outline: oklch(1 0 0 / 0.1);
+  --bg: oklch(0.145 0.012 258);
+  --bg-alt: oklch(0.172 0.013 258);
+  --surface: oklch(0.195 0.014 258);
+  --inset: oklch(0.235 0.015 258);
+  --line: oklch(0.96 0.008 258 / 0.11);
+  --line-2: oklch(0.96 0.008 258 / 0.19);
+  --txt: oklch(0.96 0.005 258);
+  --txt-2: oklch(0.81 0.012 258);
+  --txt-3: oklch(0.75 0.012 258);
+  --acc: oklch(0.51 0.16 258);
+  --acc-hover: oklch(0.56 0.16 258);
+  --acc-text: oklch(0.78 0.12 256);
+  --acc-soft: oklch(0.26 0.055 258);
+  --acc-line: oklch(0.52 0.11 258);
+  --on-acc: oklch(0.99 0.003 258);
+  --nav-bg: oklch(0.145 0.012 258 / 0.90);
+  --shadow-panel: 0 1px 2px oklch(0 0 0 / 0.35), 0 18px 40px -24px oklch(0 0 0 / 0.65);
+  --img-outline: oklch(1 0 0 / 0.12);
+}
+
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg: oklch(0.985 0.004 258);
+  --bg-alt: oklch(0.962 0.007 258);
+  --surface: oklch(1 0 0);
+  --inset: oklch(0.955 0.008 258);
+  --line: oklch(0.20 0.02 258 / 0.11);
+  --line-2: oklch(0.20 0.02 258 / 0.19);
+  --txt: oklch(0.18 0.018 258);
+  --txt-2: oklch(0.39 0.018 258);
+  --txt-3: oklch(0.44 0.016 258);
+  --acc: oklch(0.42 0.135 258);
+  --acc-hover: oklch(0.36 0.135 258);
+  --acc-text: oklch(0.41 0.135 258);
+  --acc-soft: oklch(0.94 0.028 258);
+  --acc-line: oklch(0.76 0.075 258);
+  --on-acc: oklch(0.99 0.003 258);
+  --nav-bg: oklch(0.985 0.004 258 / 0.90);
+  --shadow-panel: 0 1px 3px oklch(0.2 0.03 258 / 0.08), 0 16px 36px -22px oklch(0.2 0.05 258 / 0.16);
+  --img-outline: oklch(0 0 0 / 0.10);
 }
 
 :root{
@@ -115,27 +100,29 @@
   --font-display: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
-  --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
-  --section-y: clamp(64px, 8vw, 112px);
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
+  --section-y: clamp(56px, 7.5vw, 104px);
 
   --fs-12: 0.75rem;
   --fs-13: 0.8125rem;
   --fs-14: 0.875rem;
+  --fs-15: 0.9375rem;
   --fs-16: 1rem;
-  --fs-18: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --fs-18: clamp(1rem, 0.96rem + 0.25vw, 1.125rem);
   --fs-20: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
   --fs-24: clamp(1.25rem, 1.12rem + 0.55vw, 1.5rem);
-  --fs-32: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
-  --fs-40: clamp(1.75rem, 1.35rem + 1.8vw, 2.5rem);
-  --fs-display: clamp(34px, 4.8vw, 64px);
+  --fs-32: clamp(1.5rem, 1.22rem + 1.2vw, 2.05rem);
+  --fs-40: clamp(1.75rem, 1.32rem + 1.8vw, 2.5rem);
+  --fs-display: clamp(2rem, 1.35rem + 2.8vw, 3.5rem);
 
-  --r-ctl: 10px;
-  --r-card: 16px;
+  --r-sm: 6px;
+  --r-ctl: 9px;
+  --r-card: 14px;
   --r-pill: 999px;
 
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --t-fast: 160ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --t-fast: 150ms;
   --t-base: 200ms;
 
   --cols: 4;
@@ -145,9 +132,9 @@
   --nav-h: 64px;
 }
 @media (min-width:768px){ :root{ --cols: 8; --gap: 24px; --gutter: 32px; } }
-@media (min-width:1024px){ :root{ --cols: 12; --gap: 24px; --gutter: 40px; } }
+@media (min-width:1024px){ :root{ --cols: 12; --gap: 28px; --gutter: 40px; } }
 
-/* ---------- RESET & BASE ---------- */
+/* ---------- RESET & BROWSER SURFACES ---------- */
 *,*::before,*::after{box-sizing:border-box}
 *{margin:0;padding:0}
 html{
@@ -155,24 +142,25 @@ html{
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   scroll-behavior:smooth;
   scroll-padding-top:calc(var(--nav-h) + var(--sp-6));
+  scrollbar-color:var(--line-2) transparent;
 }
 body{
   background:var(--bg);color:var(--txt);
   font:400 var(--fs-16)/1.6 var(--font);
   font-optical-sizing:auto;min-height:100vh;
+  caret-color:var(--acc-text);
 }
 img,svg{display:block;max-width:100%}
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
-a{color:var(--acc-text);text-decoration:none;overflow-wrap:anywhere}
-h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;color:var(--txt)}
+a{color:var(--acc-text);text-decoration:none;text-underline-offset:3px;overflow-wrap:anywhere}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:650;text-wrap:balance;color:var(--txt)}
 p,li,figcaption,dd{text-wrap:pretty}
-b,strong{font-weight:600}
+b,strong{font-weight:650}
 ul,ol{list-style:none}
-:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:var(--r-ctl)}
+:focus-visible{outline:2px solid var(--acc-text);outline-offset:3px;border-radius:var(--r-ctl)}
 ::selection{background:var(--acc-soft);color:var(--txt)}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .num{font-variant-numeric:tabular-nums}
-.mono{font-family:var(--mono);font-size:0.875em;font-weight:600}
+.mono{font-family:var(--mono);font-size:0.86em;font-weight:600}
 
 /* ---------- LAYOUT ---------- */
 .wrap{width:min(100% - 2 * var(--gutter), var(--content-max));margin-inline:auto}
@@ -182,296 +170,431 @@ ul,ol{list-style:none}
 .skip{
   position:absolute;left:var(--sp-4);top:var(--sp-2);z-index:100;
   padding:var(--sp-3) var(--sp-4);border-radius:var(--r-ctl);
-  background:var(--txt);color:var(--bg);font-weight:600;font-size:var(--fs-14);
-  transform:translateY(-200%);
+  background:var(--txt);color:var(--bg);font-weight:650;font-size:var(--fs-14);
+  transform:translateY(-220%);
 }
 .skip:focus-visible{transform:none}
 
 /* ---------- BUTTONS ---------- */
 .btn{
-  position:relative;isolation:isolate;
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  flex-shrink:0;min-height:48px;padding:0 20px;
-  border:0;border-radius:var(--r-ctl);
+  flex-shrink:0;min-height:46px;padding:0 20px;
+  border:1px solid transparent;border-radius:var(--r-ctl);
   background:var(--acc);color:var(--on-acc);
-  box-shadow:inset 0 1px 0 oklch(1 0 0 / 0.18), 0 1px 2px oklch(0.2 0.02 260 / 0.14);
-  font:600 var(--fs-16)/1 var(--font);letter-spacing:-0.005em;
+  font:600 var(--fs-15)/1 var(--font);letter-spacing:-0.005em;
   white-space:nowrap;text-decoration:none;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  transition:transform var(--t-fast) var(--ease-out);
+  transition:background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
-.btn::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:currentColor;opacity:0;transition:opacity var(--t-fast) var(--ease-out)}
-.btn:hover::after{opacity:0.10}
-.btn:active{transform:scale(0.97)}
-.btn-secondary{background:var(--surface);color:var(--txt);box-shadow:var(--e1), inset 0 1px 0 var(--hi)}
-.btn-secondary:hover::after{opacity:0.05}
-.btn.sm{min-height:44px;padding:0 var(--sp-4);font-size:var(--fs-14)}
-.btn svg{width:14px;height:14px;flex:none;transition:transform var(--t-fast) var(--ease-out)}
+.btn:hover{background:var(--acc-hover)}
+.btn:active{transform:scale(0.98)}
+.btn-secondary{
+  background:var(--surface);color:var(--txt);
+  border-color:var(--line-2);
+}
+.btn-secondary:hover{background:var(--inset);border-color:var(--acc-line)}
+.btn.sm{min-height:40px;padding:0 14px;font-size:var(--fs-14)}
+.btn svg{width:15px;height:15px;flex:none;transition:transform var(--t-fast) var(--ease)}
 .btn:hover svg{transform:translateX(2px)}
 
-/* ---------- HEADER ---------- */
-.nav{position:sticky;top:0;z-index:50}
-.nav::before,.nav::after{content:"";position:absolute;inset:0;pointer-events:none;transition:opacity var(--t-base) var(--ease-out)}
-.nav::before{background:var(--nav-bg);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
-.nav::after{box-shadow:0 1px 0 var(--line)}
-.nav[data-top]::before,.nav[data-top]::after{opacity:0}
-.nav-in{position:relative;display:flex;align-items:center;gap:var(--sp-4);min-height:var(--nav-h)}
-.brand{
-  display:inline-flex;align-items:center;gap:var(--sp-3);min-height:44px;
-  margin-inline-start:calc(var(--sp-1) * -1);padding-inline:var(--sp-1);border-radius:var(--r-ctl);
-  color:var(--txt);font:650 var(--fs-16)/1 var(--font-display);letter-spacing:-0.015em;white-space:nowrap;
+/* ---------- HEADER / NAV ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:var(--nav-bg);
+  border-bottom:1px solid var(--line);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  transition:border-color var(--t-base) var(--ease);
 }
-.brand img{width:28px;height:28px;border-radius:8px;object-fit:contain}
-.nav-links{display:none;align-items:center;gap:var(--sp-1);margin-inline-start:var(--sp-4)}
+.nav[data-top]{border-bottom-color:transparent}
+.nav-in{display:flex;align-items:center;gap:var(--sp-3);min-height:var(--nav-h)}
+.brand{
+  display:inline-flex;align-items:center;gap:10px;min-height:44px;
+  color:var(--txt);font:700 var(--fs-15)/1 var(--font-display);letter-spacing:-0.02em;white-space:nowrap;
+  flex-shrink:0;
+}
+.brand img{width:28px;height:28px;border-radius:7px;object-fit:contain}
+.nav-links{display:none;align-items:center;gap:2px;margin-inline-start:var(--sp-3)}
 .nav-links a{
-  display:inline-flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
+  display:inline-flex;align-items:center;min-height:40px;padding:0 11px;
   border-radius:var(--r-ctl);color:var(--txt-2);font-size:var(--fs-14);font-weight:500;white-space:nowrap;
+  transition:color var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 .nav-links a:hover{color:var(--txt);background:var(--inset)}
-.nav-right{display:flex;align-items:center;gap:var(--sp-2);margin-inline-start:auto}
+.nav-right{display:flex;align-items:center;gap:6px;margin-inline-start:auto;flex-shrink:0}
 .nav-signin{
-  display:inline-flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
+  display:inline-flex;align-items:center;min-height:40px;padding:0 10px;
   border-radius:var(--r-ctl);color:var(--txt);font-size:var(--fs-14);font-weight:600;white-space:nowrap;
 }
 .nav-signin:hover{background:var(--inset);color:var(--acc-text)}
 .nav-create{display:none}
 .icon-btn{
-  display:grid;place-items:center;width:44px;height:44px;flex:none;
-  border:0;border-radius:var(--r-ctl);background:transparent;color:var(--txt-2);cursor:pointer;
+  display:grid;place-items:center;width:40px;height:40px;flex:none;
+  border:1px solid transparent;border-radius:var(--r-ctl);
+  background:transparent;color:var(--txt-2);cursor:pointer;
+  transition:background var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
-.icon-btn:hover{background:var(--inset);color:var(--txt)}
-.icon-btn svg{width:20px;height:20px}
+.icon-btn:hover{background:var(--inset);color:var(--txt);border-color:var(--line)}
+.icon-btn svg{width:19px;height:19px}
 .theme-ico-sun{display:none}
 :root[data-theme="dark"] .theme-ico-moon{display:none}
 :root[data-theme="dark"] .theme-ico-sun{display:block}
+
 .mobile-drawer{
-  position:relative;z-index:49;
   border-top:1px solid var(--line);border-bottom:1px solid var(--line);
   background:var(--surface);padding-block:var(--sp-4);
 }
 .mobile-drawer[hidden]{display:none}
-.mobile-drawer-links{display:grid;gap:var(--sp-1)}
+.mobile-drawer-links{display:grid;gap:2px}
 .mobile-drawer-links a{
   display:flex;align-items:center;min-height:44px;padding:0 var(--sp-3);
-  border-radius:var(--r-ctl);color:var(--txt);font-size:var(--fs-16);font-weight:500;
+  border-radius:var(--r-ctl);color:var(--txt);font-size:var(--fs-15);font-weight:550;
 }
 .mobile-drawer-links a:hover{background:var(--inset)}
-.mobile-drawer-actions{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line)}
-.mobile-drawer-actions .btn{flex:1 1 auto}
-@media (min-width:960px){
+.mobile-drawer-actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2);
+  margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line);
+}
+@media (min-width:1024px){
   .nav-links{display:flex}
   .nav-create{display:inline-flex}
   .nav-menu-btn,.mobile-drawer{display:none}
 }
 
-/* ---------- TYPOGRAPHY & SECTIONS ---------- */
+/* ---------- SHARED TYPOGRAPHY & SECTIONS ---------- */
 .eyebrow{
-  display:flex;align-items:center;gap:var(--sp-3);
+  display:inline-flex;align-items:center;gap:10px;
   margin-bottom:var(--sp-4);
-  font-size:var(--fs-12);font-weight:650;letter-spacing:0.12em;text-transform:uppercase;line-height:1.3;
+  font-size:var(--fs-12);font-weight:650;letter-spacing:0.1em;text-transform:uppercase;line-height:1.3;
   color:var(--acc-text);
 }
-.eb-n{color:var(--txt-3);font-variant-numeric:tabular-nums;letter-spacing:0.06em}
-.eb-rule{flex:none;width:24px;height:1px;background:var(--line-2)}
+.eb-dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--acc-text);flex:none}
 h1{
-  font-size:var(--fs-display);line-height:1.06;letter-spacing:-0.03em;font-weight:650;
-  margin-bottom:var(--sp-6);
+  font-size:var(--fs-display);line-height:1.06;letter-spacing:-0.03em;font-weight:700;
+  margin-bottom:var(--sp-5);
 }
-.h1-em{color:var(--acc-text)}
-h2{font-size:var(--fs-40);line-height:1.08;letter-spacing:-0.025em;font-weight:640;max-width:20ch}
-h3{font-size:var(--fs-20);line-height:1.25;letter-spacing:-0.015em}
-.lede{font-size:var(--fs-20);line-height:1.6;color:var(--txt-2);max-width:46ch}
-.sec-head{margin-bottom:clamp(32px, 4vw, 56px)}
-.sec-head h2{margin-bottom:var(--sp-4)}
-.sec-lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:54ch}
+.h1-accent{color:var(--acc-text)}
+h2{font-size:var(--fs-40);line-height:1.1;letter-spacing:-0.025em;font-weight:680;max-width:24ch}
+h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650}
+.lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:52ch}
 .section{padding-block:var(--section-y);border-top:1px solid var(--line)}
-.section.tint{background:var(--tint)}
-.card{
-  padding:var(--sp-6);border-radius:var(--r-card);
-  background:var(--surface);box-shadow:var(--e1);min-width:0;
+.section.alt{background:var(--bg-alt)}
+.sec-head{margin-bottom:clamp(28px, 4vw, 48px)}
+.sec-head h2{margin-bottom:var(--sp-3)}
+.sec-lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:58ch}
+
+.chip{
+  display:inline-flex;align-items:center;gap:6px;min-height:24px;padding:0 10px;
+  border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);
+  border:1px solid var(--acc-line);
+  font-size:var(--fs-12);font-weight:650;letter-spacing:0.01em;white-space:nowrap;
+}
+.chip-neutral{
+  background:var(--inset);color:var(--txt-2);border-color:var(--line-2);
 }
 
-/* ================= HERO ================= */
+/* ---------- HERO ---------- */
 .hero{
-  position:relative;overflow:clip;isolation:isolate;
-  padding-block:clamp(40px, 6vw, 88px) clamp(48px, 6vw, 88px);
-}
-.hero::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background-image:
-    linear-gradient(to right, var(--tex) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--tex) 1px, transparent 1px);
-  background-size:48px 48px;
-  background-position:center top;
-  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, oklch(0 0 0) 20%, transparent 75%);
-  mask-image:radial-gradient(ellipse 70% 80% at 60% 30%, oklch(0 0 0) 20%, transparent 75%);
+  position:relative;overflow:clip;
+  padding-block:clamp(36px, 5.5vw, 76px) clamp(40px, 5.5vw, 72px);
 }
 .hero-grid{align-items:center;row-gap:var(--sp-8)}
-.hero-ctas{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-8)}
-@media (max-width:440px){ .hero-ctas .btn{flex:1 1 100%} }
 @media (min-width:1024px){
   .hero-copy{grid-column:1 / span 6}
   .hero-visual{grid-column:7 / span 6}
 }
+.hero-ctas{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--sp-6)}
+@media (max-width:460px){ .hero-ctas .btn{flex:1 1 100%} }
+.hero-note{
+  margin-top:var(--sp-4);font-size:var(--fs-13);color:var(--txt-3);
+}
 
-.hero-visual{position:relative;min-width:0}
-.hero-visual::before{
-  content:"";position:absolute;inset:-14% -16%;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(closest-side at 72% 28%, var(--glow-cold), transparent),
-    radial-gradient(closest-side at 26% 78%, var(--glow-warm), transparent);
-  filter:blur(8px);
+/* Hero visual: compact 3-engine AI workspace summary */
+.panel{
+  background:var(--surface);border:1px solid var(--line-2);
+  border-radius:var(--r-card);box-shadow:var(--shadow-panel);
+  overflow:hidden;min-width:0;
 }
-.today-card{
-  position:relative;z-index:1;
-  background:var(--surface);border-radius:var(--r-card);padding:var(--sp-6);
-  box-shadow:inset 0 1px 0 var(--hi), var(--e2);
+.panel-bar{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2);
+  padding:12px var(--sp-5);border-bottom:1px solid var(--line);background:var(--inset);
 }
-.today-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
-.today-kicker{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2)}
-.chip{
-  display:inline-flex;align-items:center;min-height:26px;padding:0 10px;
-  border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text);
-  box-shadow:inset 0 0 0 1px var(--acc-line);
-  font-size:var(--fs-12);font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap;
+.panel-title{font-size:var(--fs-13);font-weight:650;color:var(--txt);letter-spacing:-0.01em}
+.hero-stack{display:grid;gap:0}
+.hs-row{
+  padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--line);
+  display:grid;gap:var(--sp-2);
 }
-.today-task{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp-2) var(--sp-4);align-items:start;margin-top:var(--sp-4)}
-.today-task h2{font-size:var(--fs-24);line-height:1.25;max-width:none}
-.today-meta{font-size:var(--fs-15);color:var(--txt-2);margin-top:var(--sp-2)}
-.today-mins{
-  padding:6px 12px;border-radius:var(--r-ctl);background:var(--inset);box-shadow:var(--e1);
-  font:650 var(--fs-18)/1.2 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums;white-space:nowrap;
+.hs-row:last-child{border-bottom:0}
+.hs-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.hs-label{font-size:var(--fs-12);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--acc-text)}
+.hs-meta{font-family:var(--mono);font-size:var(--fs-12);font-weight:600;color:var(--txt-2)}
+.hs-bands{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:var(--sp-2);margin-top:2px}
+@media (min-width:480px){ .hs-bands{grid-template-columns:repeat(4, minmax(0, 1fr))} }
+.hs-b{
+  padding:8px 10px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
+  display:flex;flex-direction:column;gap:4px;min-width:0;
 }
-.today-why{
-  margin-top:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-ctl);
-  background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);
-}
-.today-why-lbl{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--acc-text);margin-bottom:var(--sp-1)}
-.today-why p{font-size:var(--fs-15);line-height:1.55;color:var(--txt)}
-.today-foot{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2) var(--sp-4);
-  margin-top:var(--sp-4);padding-top:var(--sp-4);border-top:1px solid var(--line);
-  font-size:var(--fs-13);color:var(--txt-2);
-}
-.today-timer{font-family:var(--mono);font-weight:650;color:var(--txt);font-variant-numeric:tabular-nums}
-.hero-cap{position:relative;z-index:1;margin-top:var(--sp-3);font-size:var(--fs-13);color:var(--txt-2)}
+.hs-b span{font-size:11px;color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-b b{font-size:var(--fs-15);color:var(--txt);font-variant-numeric:tabular-nums}
+.hs-mini-bar{height:4px;border-radius:var(--r-pill);background:var(--bg);overflow:hidden}
+.hs-mini-bar i{display:block;height:100%;width:calc(var(--v) * 20%);background:var(--acc);border-radius:inherit}
+.hs-line{font-size:var(--fs-14);line-height:1.5;color:var(--txt-2)}
+.hs-line b{color:var(--txt)}
+.hs-wave{display:flex;align-items:center;gap:3px;height:16px}
+.hs-wave i{display:block;width:3px;border-radius:2px;background:var(--acc-text)}
+.hero-cap{margin-top:10px;font-size:var(--fs-13);color:var(--txt-3)}
 
-/* ================= 01 SELF-STUDY TRAP ================= */
-.trap-grid{row-gap:var(--gap)}
-@media (min-width:768px){ .trap-grid > .card{grid-column:span 4} }
-@media (min-width:1024px){ .trap-grid > .card{grid-column:span 6} }
-.trap-tag{
-  display:inline-flex;align-items:center;min-height:26px;padding:0 10px;margin-bottom:var(--sp-4);
-  border-radius:var(--r-pill);background:var(--inset);box-shadow:var(--e1);
-  font-size:var(--fs-12);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);
+/* ---------- PROOF STRIP ---------- */
+.proof{
+  border-top:1px solid var(--line);background:var(--bg-alt);
 }
-.trap-card h3{margin-bottom:var(--sp-4);font-size:var(--fs-24)}
-.trap-list{display:grid;gap:var(--sp-3)}
-.trap-list li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:var(--sp-3);font-size:var(--fs-16);line-height:1.55;color:var(--txt-2)}
-.trap-list svg{width:18px;height:18px;margin-top:4px;color:var(--txt-3)}
-.trap-conclusion{
-  margin-top:var(--gap);padding:var(--sp-6);border-radius:var(--r-card);
-  background:var(--surface);box-shadow:inset 3px 0 0 var(--acc), var(--e1);
+.proof-grid{
+  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));
 }
-.trap-conclusion b{display:block;font:650 var(--fs-20)/1.3 var(--font-display);color:var(--txt);margin-bottom:var(--sp-2)}
-.trap-conclusion p{font-size:var(--fs-16);line-height:1.6;color:var(--txt-2);max-width:68ch}
+@media (min-width:768px){
+  .proof-grid{grid-template-columns:repeat(4, minmax(0, 1fr))}
+}
+.proof-item{
+  padding:var(--sp-5) var(--sp-4);
+  border-bottom:1px solid var(--line);
+  border-right:1px solid var(--line);
+  min-width:0;
+}
+.proof-item:nth-child(2n){border-right:0}
+.proof-item:nth-last-child(-n+2){border-bottom:0}
+@media (min-width:768px){
+  .proof-item{border-bottom:0;border-right:1px solid var(--line);padding:var(--sp-6) var(--sp-5)}
+  .proof-item:nth-child(2n){border-right:1px solid var(--line)}
+  .proof-item:last-child{border-right:0}
+}
+.proof-val{
+  font:700 var(--fs-24)/1.15 var(--font-display);letter-spacing:-0.025em;
+  color:var(--txt);font-variant-numeric:tabular-nums;
+}
+.proof-lbl{margin-top:6px;font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
 
-/* ================= 02 NINE BLOCKS ================= */
-.blocks-grid{row-gap:var(--gap)}
-@media (min-width:768px){ .blocks-grid > .block-card{grid-column:span 4} }
-@media (min-width:1024px){ .blocks-grid > .block-card{grid-column:span 4} }
-.block-card{display:flex;flex-direction:column;gap:var(--sp-3)}
-.block-top{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
-.ico{
-  display:grid;place-items:center;width:40px;height:40px;flex:none;
-  border-radius:var(--r-ctl);background:var(--acc-soft);color:var(--acc-text);box-shadow:inset 0 0 0 1px var(--acc-line);
-}
-.ico svg{width:20px;height:20px}
-.block-num{font-size:var(--fs-12);font-weight:650;letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-3);font-variant-numeric:tabular-nums}
-.block-card p{font-size:var(--fs-14);line-height:1.6;color:var(--txt-2)}
-
-/* ================= 03 WRITING & SPEAKING DEEP DIVE ================= */
-.dd-grid{row-gap:var(--sp-8);align-items:start}
+/* ---------- AI PILLARS (#ai) ---------- */
+.pillar{padding-block:clamp(40px, 5vw, 68px);border-top:1px solid var(--line)}
+.pillar:first-of-type{border-top:0;padding-top:0}
+.pillar:last-of-type{padding-bottom:0}
+.pillar-grid{row-gap:var(--sp-6);align-items:start}
 @media (min-width:1024px){
-  .dd-copy{grid-column:1 / span 5}
-  .dd-card{grid-column:6 / span 7}
+  .pillar-copy{grid-column:1 / span 5}
+  .pillar-mock{grid-column:6 / span 7}
+  .pillar-flip .pillar-mock{grid-column:1 / span 7;grid-row:1}
+  .pillar-flip .pillar-copy{grid-column:8 / span 5;grid-row:1}
 }
-.facts{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-6)}
-.facts li{
-  display:inline-flex;align-items:center;min-height:32px;padding:0 var(--sp-3);
-  border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1);
-  font-size:var(--fs-13);font-weight:600;color:var(--txt);
+.pillar-tag{
+  display:inline-flex;align-items:center;gap:8px;margin-bottom:var(--sp-3);
+  font-family:var(--mono);font-size:var(--fs-12);font-weight:600;letter-spacing:0.04em;
+  color:var(--acc-text);
 }
-.prose p{font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:56ch}
-.prose p + p{margin-top:var(--sp-4)}
-.report{
-  padding:clamp(20px, 3vw, 32px);border-radius:var(--r-card);
-  background:var(--surface);box-shadow:inset 0 1px 0 var(--hi), var(--e2);
+.pillar-copy h3{font-size:var(--fs-32);line-height:1.12;letter-spacing:-0.025em;margin-bottom:var(--sp-4)}
+.pillar-copy > p{font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:50ch}
+.pillar-copy > p + p{margin-top:var(--sp-3)}
+.check-list{display:grid;gap:10px;margin-top:var(--sp-5)}
+.check-list li{
+  display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;
+  font-size:var(--fs-15);line-height:1.5;color:var(--txt);
 }
-.report-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-2);padding-bottom:var(--sp-4);border-bottom:1px solid var(--line)}
-.report-head b{font:650 var(--fs-18)/1.3 var(--font-display);color:var(--txt)}
-.sample-excerpt{
-  margin-top:var(--sp-4);padding:var(--sp-4);border-radius:var(--r-ctl);
-  background:var(--inset);box-shadow:inset 0 0 0 1px var(--line);
+.check-list svg{width:18px;height:18px;margin-top:3px;color:var(--acc-text)}
+.honesty-note{
+  margin-top:var(--sp-5);padding:12px 14px;border-radius:var(--r-ctl);
+  background:var(--inset);border:1px solid var(--line-2);
+  font-size:var(--fs-14);line-height:1.55;color:var(--txt-2);
+}
+.honesty-note b{color:var(--txt)}
+
+/* --- Mockup 1: Writing Rubric Panel --- */
+.mock-body{padding:var(--sp-5);display:grid;gap:var(--sp-4)}
+.draft-quote{
+  padding:12px 14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
   font-size:var(--fs-14);line-height:1.55;color:var(--txt);
 }
-.sample-excerpt span{display:block;font-size:var(--fs-12);font-weight:650;letter-spacing:0.06em;text-transform:uppercase;color:var(--txt-2);margin-bottom:var(--sp-1)}
-.meters{display:grid;margin-top:var(--sp-2)}
-.mt{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--sp-4);padding-block:var(--sp-3);border-bottom:1px solid var(--line)}
-.mt:last-child{border-bottom:0}
-.mt-name{align-self:end;font-size:var(--fs-16);font-weight:600;color:var(--txt);line-height:1.3}
-.mt-val{grid-row:span 2;align-self:center;font:650 var(--fs-24)/1 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums}
-.mt-val small{font-size:var(--fs-13);font-weight:550;color:var(--txt-3)}
-.mt-say{grid-column:1;font-size:var(--fs-13);line-height:1.5;color:var(--txt-2);margin-top:2px}
-.mt-track{grid-column:1 / -1;position:relative;height:8px;margin-top:var(--sp-2);border-radius:var(--r-pill);background:var(--inset);overflow:hidden}
-.mt-track::after{
-  content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(90deg, transparent 0 calc(20% - 1px), var(--surface) calc(20% - 1px) 20%);
+.draft-quote-lbl{
+  display:block;font-size:11px;font-weight:650;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--txt-3);margin-bottom:4px;
 }
-.mt-fill{display:block;height:100%;width:calc(var(--v) * 20%);border-radius:inherit;background:linear-gradient(90deg, var(--acc-line), var(--acc))}
-.report-cap{margin-top:var(--sp-3);font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
-
-.dd-divider{margin-block:clamp(40px, 5vw, 64px);border:0;border-top:1px solid var(--line)}
-.ticks{display:grid;gap:var(--sp-3);margin-top:var(--sp-4)}
-.ticks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--sp-3);font-size:var(--fs-16);line-height:1.5;color:var(--txt)}
-.ticks svg{width:20px;height:20px;margin-top:2px;color:var(--acc-text)}
-.parts{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:var(--sp-3);margin-top:var(--sp-4)}
-@media (min-width:640px){ .parts{grid-template-columns:2fr 4fr 4fr 4fr} }
-.parts li{display:grid;gap:6px;min-width:0}
-.p-bar{height:6px;border-radius:var(--r-pill);background:var(--inset);box-shadow:inset 0 0 0 1px var(--line)}
-.parts .is-on .p-bar{background:var(--acc)}
-.p-txt{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--sp-2);font-size:var(--fs-13);color:var(--txt-2)}
-.p-txt b{font-weight:650;color:var(--txt)}
-.p-txt span{font-variant-numeric:tabular-nums}
-.callout{
-  display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--sp-4);
-  margin-top:var(--sp-6);padding:var(--sp-4);
-  border-radius:0 var(--r-ctl) var(--r-ctl) 0;
-  background:var(--inset);box-shadow:inset 3px 0 0 var(--acc), var(--e1);
+.draft-hl{
+  background:var(--acc-soft);color:var(--txt);
+  padding:1px 4px;border-radius:4px;border-bottom:1px solid var(--acc-line);
 }
-.callout-ico{display:grid;place-items:center;width:32px;height:32px;border-radius:var(--r-pill);background:var(--acc-soft);color:var(--acc-text)}
-.callout-ico svg{width:18px;height:18px}
-.callout-h{margin-bottom:var(--sp-1);font:650 var(--fs-16)/1.35 var(--font-display);color:var(--txt)}
-.callout p:last-child{font-size:var(--fs-14);line-height:1.6;color:var(--txt-2)}
-.callout b{color:var(--txt)}
+.bands-list{display:grid;gap:10px}
+.band-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px var(--sp-3);
+  padding-block:10px;border-bottom:1px solid var(--line);
+}
+.band-row:first-child{padding-top:0}
+.band-row:last-child{padding-bottom:0;border-bottom:0}
+.band-name{font-size:var(--fs-14);font-weight:650;color:var(--txt)}
+.band-score{font:700 var(--fs-15)/1 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums}
+.band-score small{font-weight:500;color:var(--txt-3)}
+.band-ev{grid-column:1 / -1;font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
+.band-segs{
+  grid-column:1 / -1;display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:4px;margin-top:2px;
+}
+.band-segs i{display:block;height:6px;border-radius:3px;background:var(--inset);border:1px solid var(--line)}
+.band-segs i.on{background:var(--acc);border-color:var(--acc)}
 
-/* ================= 04 PRIVACY & ENGINEERING ================= */
+.writing-subgrid{
+  display:grid;gap:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line);
+}
+@media (min-width:640px){ .writing-subgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)} }
+.subbox{
+  padding:12px 14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
+  display:grid;gap:8px;align-content:start;
+}
+.subbox-h{
+  font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--acc-text);
+}
+.weak-list{display:grid;gap:6px;font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
+.weak-list li{padding-left:12px;position:relative}
+.weak-list li::before{
+  content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--acc-text);
+}
+.rw-list{display:grid;gap:8px}
+.rw-item{font-size:var(--fs-13);line-height:1.45;display:grid;gap:2px}
+.rw-old{color:var(--txt-3);text-decoration:line-through}
+.rw-new{color:var(--txt);font-weight:500}
+
+/* --- Mockup 2: Speaking Examiner Panel --- */
+.parts-bar{
+  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;
+}
+@media (min-width:560px){ .parts-bar{grid-template-columns:repeat(4, minmax(0, 1fr))} }
+.p-seg{
+  padding:8px 10px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
+  display:grid;gap:3px;min-width:0;
+}
+.p-seg.is-on{background:var(--acc-soft);border-color:var(--acc-line)}
+.p-seg b{font-size:var(--fs-12);color:var(--txt)}
+.p-seg span{font-size:11px;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.transcript{display:grid;gap:10px}
+.turn{
+  padding:10px 12px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
+  display:grid;gap:4px;
+}
+.turn-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.turn-role{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--acc-text)}
+.turn-role.is-user{color:var(--txt)}
+.turn-time{font-family:var(--mono);font-size:11px;color:var(--txt-3);font-variant-numeric:tabular-nums}
+.turn p{font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
+
+.spk-scores{
+  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;
+  padding-top:var(--sp-3);border-top:1px solid var(--line);
+}
+.spk-cell{
+  padding:10px 12px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
+  display:flex;flex-direction:column;gap:4px;min-width:0;
+}
+.spk-cell span{font-size:12px;color:var(--txt-2);line-height:1.3}
+.spk-cell b{font-size:var(--fs-15);color:var(--txt);font-variant-numeric:tabular-nums}
+.spk-cell .not-meas{
+  font-family:var(--mono);font-size:var(--fs-12);font-weight:700;color:var(--acc-text);
+}
+
+/* --- Mockup 3: Adaptive Plan Panel --- */
+.diag-bars{display:grid;gap:8px}
+.diag-row{
+  display:grid;grid-template-columns:minmax(0, 118px) minmax(0, 1fr) auto;align-items:center;gap:10px;
+  font-size:var(--fs-13);
+}
+.diag-lbl{color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.diag-row.is-weak .diag-lbl{color:var(--txt);font-weight:650}
+.diag-track{height:8px;border-radius:var(--r-pill);background:var(--inset);overflow:hidden;border:1px solid var(--line)}
+.diag-fill{display:block;height:100%;width:var(--pct);background:var(--txt-3);border-radius:inherit}
+.diag-row.is-weak .diag-fill{background:var(--acc)}
+.diag-pct{font-family:var(--mono);font-size:12px;color:var(--txt-2);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.diag-row.is-weak .diag-pct{color:var(--acc-text);font-weight:700}
+
+.today-box{
+  padding:14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--acc-line);
+  display:grid;gap:8px;
+}
+.today-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.today-title{font-size:var(--fs-16);font-weight:650;color:var(--txt)}
+.today-why{font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
+
+.rot-grid{
+  display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px;
+}
+@media (max-width:440px){ .rot-grid{grid-template-columns:1fr} }
+.rot-day{
+  padding:10px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
+  display:grid;gap:3px;
+}
+.rot-day.is-today{border-color:var(--acc-line);background:var(--acc-soft)}
+.rot-day span{font-family:var(--mono);font-size:11px;font-weight:650;color:var(--txt-3);text-transform:uppercase}
+.rot-day.is-today span{color:var(--acc-text)}
+.rot-day b{font-size:var(--fs-13);color:var(--txt);line-height:1.35}
+
+.mock-foot{
+  padding:10px var(--sp-5);border-top:1px solid var(--line);background:var(--inset);
+  font-size:var(--fs-12);color:var(--txt-2);
+}
+
+/* ---------- UNDER THE HOOD (#how) ---------- */
+.arch-flow{
+  display:grid;gap:12px;margin-bottom:var(--sp-6);
+  padding:var(--sp-5);border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--line-2);
+}
+@media (min-width:768px){
+  .arch-flow{grid-template-columns:1fr auto 1fr auto 1fr;align-items:center}
+}
+.arch-node{
+  padding:14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
+  display:grid;gap:4px;min-width:0;
+}
+.arch-node-k{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--acc-text);text-transform:uppercase}
+.arch-node b{font-size:var(--fs-15);color:var(--txt)}
+.arch-node p{font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
+.arch-arrow{
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:var(--fs-12);color:var(--txt-3);
+  padding:4px 6px;
+}
+.arch-arrow svg{width:18px;height:18px;transform:rotate(90deg)}
+@media (min-width:768px){ .arch-arrow svg{transform:none} }
+
+.spec-grid{
+  display:grid;grid-template-columns:1fr;gap:1px;
+  border:1px solid var(--line-2);border-radius:var(--r-card);
+  background:var(--line);overflow:hidden;
+}
+@media (min-width:640px){ .spec-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
+@media (min-width:1024px){ .spec-grid{grid-template-columns:repeat(3, minmax(0, 1fr))} }
+.spec-cell{
+  padding:var(--sp-5);background:var(--surface);
+  display:grid;gap:6px;align-content:start;
+}
+.spec-code{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--acc-text);letter-spacing:0.04em}
+.spec-cell h3{font-size:var(--fs-18);line-height:1.25}
+.spec-cell p{font-size:var(--fs-14);line-height:1.55;color:var(--txt-2)}
+.hood-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3);margin-top:var(--sp-6)}
+
+/* ---------- PRIVACY (#privacy) ---------- */
 .priv-grid{row-gap:var(--gap)}
-@media (min-width:768px){ .priv-grid > .card{grid-column:span 4} }
-@media (min-width:1024px){ .priv-grid > .card{grid-column:span 6} }
-.priv-card h3{margin-bottom:var(--sp-2)}
-.priv-card p{font-size:var(--fs-16);line-height:1.6;color:var(--txt-2)}
-.legal-links{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-8)}
+@media (min-width:768px){ .priv-grid > .priv-card{grid-column:span 4} }
+@media (min-width:1024px){ .priv-grid > .priv-card{grid-column:span 6} }
+.priv-card{
+  padding:var(--sp-5);border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--line-2);
+}
+.priv-card h3{font-size:var(--fs-18);margin-bottom:6px}
+.priv-card p{font-size:var(--fs-15);line-height:1.55;color:var(--txt-2)}
+.legal-links{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-6)}
 .legal-links a{
-  display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;padding:0 var(--sp-4);
-  border-radius:var(--r-pill);background:var(--surface);box-shadow:var(--e1);
+  display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;
+  border-radius:var(--r-pill);background:var(--surface);border:1px solid var(--line-2);
   color:var(--txt);font-size:var(--fs-14);font-weight:550;
 }
-.legal-links a:hover{color:var(--acc-text)}
-.legal-links svg{width:14px;height:14px;color:var(--txt-2)}
+.legal-links a:hover{border-color:var(--acc-line);color:var(--acc-text)}
 
-/* ================= 05 FAQ ================= */
-.faq-grid{row-gap:var(--sp-8);align-items:start}
+/* ---------- FAQ (#faq) ---------- */
+.faq-grid{row-gap:var(--sp-6);align-items:start}
 @media (min-width:1024px){
   .faq-head{grid-column:1 / span 5}
   .faq{grid-column:6 / span 7}
@@ -481,54 +604,57 @@ h3{font-size:var(--fs-20);line-height:1.25;letter-spacing:-0.015em}
 .faq summary{
   display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);
   min-height:56px;padding:var(--sp-4) 0;cursor:pointer;list-style:none;
-  font:600 var(--fs-18)/1.4 var(--font);color:var(--txt);border-radius:var(--r-ctl);
+  font:600 var(--fs-18)/1.4 var(--font);color:var(--txt);
 }
 .faq summary::-webkit-details-marker{display:none}
 .faq summary:hover{color:var(--acc-text)}
 .chev{
-  display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:var(--r-pill);
-  background:var(--surface);box-shadow:var(--e1);color:var(--txt-2);
-  transition:transform var(--t-base) var(--ease-out);
+  display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:var(--r-pill);
+  background:var(--surface);border:1px solid var(--line-2);color:var(--txt-2);
+  transition:transform var(--t-base) var(--ease);
 }
-.chev svg{width:16px;height:16px}
-.faq details[open] .chev{transform:rotate(180deg);color:var(--acc-text)}
-.faq details p{padding:0 var(--sp-8) var(--sp-4) 0;font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:62ch}
-@media (max-width:767px){ .faq details p{padding-inline-end:0} }
+.chev svg{width:15px;height:15px}
+.faq details[open] .chev{transform:rotate(180deg);color:var(--acc-text);border-color:var(--acc-line)}
+.faq details p{padding:0 0 var(--sp-4) 0;font-size:var(--fs-15);line-height:1.65;color:var(--txt-2);max-width:62ch}
 
-/* ================= FINAL CTA ================= */
+/* ---------- FINAL CTA (#start) ---------- */
+.cta-section{
+  padding-block:clamp(48px, 6vw, 80px);
+  border-top:1px solid var(--line);
+  background:var(--bg-alt);
+}
 .cta-band{
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-6);
-  padding:clamp(24px, 4vw, 48px);
-  border-radius:var(--r-card);background:var(--tint);box-shadow:inset 0 0 0 1px var(--acc-line);
+  padding:clamp(24px, 4vw, 44px);
+  border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--acc-line);
 }
-.cta-h{font:650 var(--fs-32)/1.15 var(--font-display);letter-spacing:-0.025em;color:var(--txt);max-width:22ch}
-.cta-sub{margin-top:var(--sp-2);font-size:var(--fs-16);color:var(--txt-2);max-width:48ch}
+.cta-h{font:700 var(--fs-32)/1.12 var(--font-display);letter-spacing:-0.025em;color:var(--txt);max-width:28ch}
+.cta-sub{margin-top:var(--sp-2);font-size:var(--fs-16);color:var(--txt-2);max-width:50ch}
 .cta-btns{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
-@media (max-width:440px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
+@media (max-width:460px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
 
-/* ================= FOOTER ================= */
-footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
+/* ---------- FOOTER ---------- */
+footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
 .foot-grid{row-gap:var(--sp-8)}
 @media (min-width:768px){ .foot-grid > *{grid-column:span 4} }
 @media (min-width:1024px){ .foot-grid > *{grid-column:span 3} }
-.foot-brand{display:flex;align-items:center;gap:var(--sp-3);font:650 var(--fs-16)/1 var(--font-display);color:var(--txt)}
-.foot-brand img{width:32px;height:32px;border-radius:8px;object-fit:contain}
-.foot-about p{margin-top:var(--sp-4);font-size:var(--fs-14);line-height:1.6;color:var(--txt-2);max-width:34ch}
-.foot-h{min-height:44px;display:flex;align-items:center;font:650 var(--fs-13)/1.4 var(--font);letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-2)}
+.foot-brand{display:flex;align-items:center;gap:10px;font:700 var(--fs-15)/1 var(--font-display);color:var(--txt)}
+.foot-brand img{width:28px;height:28px;border-radius:7px;object-fit:contain}
+.foot-about p{margin-top:var(--sp-3);font-size:var(--fs-14);line-height:1.55;color:var(--txt-2);max-width:34ch}
+.foot-h{min-height:36px;display:flex;align-items:center;font:650 var(--fs-12)/1.4 var(--font);letter-spacing:0.08em;text-transform:uppercase;color:var(--txt-3)}
 .foot-col a{
-  display:flex;align-items:center;gap:var(--sp-2);min-height:44px;
-  margin-inline-start:calc(var(--sp-2) * -1);padding-inline:var(--sp-2);
-  width:fit-content;max-width:100%;border-radius:var(--r-ctl);
-  color:var(--txt);font-size:var(--fs-14);
+  display:flex;align-items:center;gap:6px;min-height:40px;
+  color:var(--txt);font-size:var(--fs-14);width:fit-content;max-width:100%;
 }
 .foot-col a:hover{color:var(--acc-text)}
 .foot-base{
-  display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--sp-4);
-  margin-top:var(--sp-12);padding-top:var(--sp-6);border-top:1px solid var(--line);
-  align-items:center;font-size:var(--fs-13);color:var(--txt-2);
+  display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--sp-4);
+  margin-top:var(--sp-8);padding-top:var(--sp-6);border-top:1px solid var(--line);
+  font-size:var(--fs-13);color:var(--txt-2);
 }
-.foot-base p{max-width:70ch;line-height:1.5}
-.foot-top{display:inline-flex;align-items:center;gap:var(--sp-2);min-height:44px;color:var(--txt);font-weight:600;white-space:nowrap}
+.foot-base p{max-width:74ch;line-height:1.55}
+.foot-top{display:inline-flex;align-items:center;gap:6px;min-height:40px;color:var(--txt);font-weight:600;white-space:nowrap}
 .foot-top:hover{color:var(--acc-text)}
 .foot-top svg{width:14px;height:14px}
 
@@ -549,9 +675,10 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
       <span>B2 First Tracker</span>
     </a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#blocks">Features</a>
-      <a href="#deep-dive">Writing &amp; Speaking</a>
-      <a href="#privacy">Privacy</a>
+      <a href="#ai">AI features</a>
+      <a href="#writing">Writing</a>
+      <a href="#speaking">Speaking</a>
+      <a href="#how">Under the hood</a>
       <a href="#faq">FAQ</a>
     </nav>
     <div class="nav-right">
@@ -569,9 +696,10 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
   <div class="mobile-drawer" id="mobileMenu" hidden>
     <div class="wrap">
       <nav class="mobile-drawer-links" aria-label="Mobile sections">
-        <a href="#blocks">Features</a>
-        <a href="#deep-dive">Writing &amp; Speaking</a>
-        <a href="#privacy">Privacy</a>
+        <a href="#ai">AI features</a>
+        <a href="#writing">Writing</a>
+        <a href="#speaking">Speaking</a>
+        <a href="#how">Under the hood</a>
         <a href="#faq">FAQ</a>
       </nav>
       <div class="mobile-drawer-actions">
@@ -588,300 +716,417 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
     <div class="wrap">
       <div class="grid hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow"><span class="eb-n">FCE</span><span class="eb-rule" aria-hidden="true"></span>Cambridge B2 First · Self-study</p>
-          <h1 id="hero-title">Someone finally marks your <span class="h1-em">writing.</span></h1>
-          <p class="lede">Start with a 12-item diagnostic. Follow one prioritized session per study day, score essays on the four Cambridge bands, and practise all four speaking parts with timed turns.</p>
+          <p class="eyebrow"><span class="eb-dot" aria-hidden="true"></span>Cambridge B2 First · AI feedback</p>
+          <h1 id="hero-title">AI rubric marking and <span class="h1-accent">live voice practice</span> for B2 First.</h1>
+          <p class="lede">Score Writing drafts on all four Cambridge bands with quoted evidence, sit a timed 4-part Speaking exam with Gemini Live, and follow an adaptive plan built from a 12-item diagnostic.</p>
           <div class="hero-ctas">
-            <a class="btn" id="heroCta" href="/app">Start the 12-item diagnostic<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-            <a class="btn btn-secondary" href="#blocks">See all 9 modules</a>
+            <a class="btn" id="heroCta" href="/app">Start the free diagnostic<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+            <a class="btn btn-secondary" href="#ai">See how the AI works</a>
           </div>
+          <p class="hero-note">No email required · Open source · Built for independent B2 First candidates</p>
         </div>
 
         <figure class="hero-visual">
-          <div class="today-card">
-            <div class="today-top">
-              <span class="today-kicker">Today's session</span>
-              <span class="chip">Example preview</span>
+          <div class="panel">
+            <div class="panel-bar">
+              <span class="panel-title">B2 First AI Feedback Loop</span>
+              <span class="chip">Illustrative example</span>
             </div>
-            <div class="today-task">
-              <div>
-                <h2>Reading part 4 · Key word transformation</h2>
-                <p class="today-meta">By-part queue · 6 items · Target 70%</p>
+            <div class="hero-stack">
+              <div class="hs-row">
+                <div class="hs-head">
+                  <span class="hs-label">01 · Writing Corrector</span>
+                  <span class="hs-meta">14 / 20 · Essay (168w)</span>
+                </div>
+                <div class="hs-bands">
+                  <div class="hs-b"><span>Content</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
+                  <div class="hs-b"><span>Comm. Ach.</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
+                  <div class="hs-b"><span>Organis.</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
+                  <div class="hs-b"><span>Language</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
+                </div>
               </div>
-              <span class="today-mins num">10 min</span>
-            </div>
-            <div class="today-why">
-              <p class="today-why-lbl">Why this task</p>
-              <p>Selected from your 12-item diagnostic because Part 4 scored lowest, and it is next in your Reading &amp; Use of English rotation.</p>
-            </div>
-            <div class="today-foot">
-              <span>Built-in timer: <span class="today-timer">10:00</span></span>
-              <span>Next in queue: Listening part 1 · 10 min</span>
+
+              <div class="hs-row">
+                <div class="hs-head">
+                  <span class="hs-label">02 · Gemini Live Voice Examiner</span>
+                  <span class="hs-meta">Part 3 · 04:00</span>
+                </div>
+                <div class="hs-head">
+                  <p class="hs-line"><b>Examiner + Partner voice:</b> live timed turns, full transcript &amp; banded report.</p>
+                  <span class="hs-wave" aria-hidden="true">
+                    <i style="height:6px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:8px"></i>
+                  </span>
+                </div>
+              </div>
+
+              <div class="hs-row">
+                <div class="hs-head">
+                  <span class="hs-label">03 · Adaptive Session</span>
+                  <span class="hs-meta">From 12-item diagnostic</span>
+                </div>
+                <p class="hs-line"><b>Today:</b> Use of English Part 4 (10 min) — selected automatically as your lowest-scoring part.</p>
+              </div>
             </div>
           </div>
-          <figcaption class="hero-cap">Example of the Today's session view inside the app.</figcaption>
+          <figcaption class="hero-cap">Illustrative example of the three core loops inside the app.</figcaption>
         </figure>
       </div>
     </div>
   </section>
 
-  <!-- ============ 01 THE SELF-STUDY TRAP ============ -->
-  <section class="section tint" id="trap" aria-labelledby="trap-title">
+  <!-- ============ PROOF STRIP ============ -->
+  <section class="proof" aria-label="Product specifications">
     <div class="wrap">
-      <div class="sec-head">
-        <p class="eyebrow"><span class="eb-n" aria-hidden="true">01</span><span class="eb-rule" aria-hidden="true"></span>The self-study trap</p>
-        <h2 id="trap-title">Why studying alone stalls before exam day</h2>
-        <p class="sec-lede">Most candidates lose time between two options that both miss what the B2 First marks actually measure.</p>
-      </div>
-
-      <div class="grid trap-grid">
-        <article class="card trap-card">
-          <span class="trap-tag">Traditional language school</span>
-          <h3>Fixed group pace</h3>
-          <ul class="trap-list">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Classes move through textbook units even when you already pass Reading.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Writing feedback arrives days later, with little time spent on individual error patterns.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Class calendars rarely match your own exam date or weekly hours.</span></li>
-          </ul>
-        </article>
-
-        <article class="card trap-card">
-          <span class="trap-tag">Studying blind alone</span>
-          <h3>Guessing without a rubric</h3>
-          <ul class="trap-list">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Answer keys score multiple-choice gaps, while Writing and Speaking receive zero band feedback.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Without an error log, you cannot tell vocabulary gaps apart from time-limit mistakes.</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M5 10h10"/></svg><span>Each study night starts with deciding what to open instead of working on a weak part.</span></li>
-          </ul>
-        </article>
-      </div>
-
-      <div class="trap-conclusion">
-        <b>What is missing is exam criteria, not more hours.</b>
-        <p>B2 First Tracker maps your starting level in 12 questions, schedules one timed task per session around your weak parts, and applies the published Cambridge bands to your Writing and Speaking practice.</p>
+      <div class="proof-grid">
+        <div class="proof-item">
+          <div class="proof-val">4 bands · 0–5</div>
+          <p class="proof-lbl">Published Cambridge Writing &amp; Speaking scales</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-val">2 / 4 / 4 / 4 min</div>
+          <p class="proof-lbl">4 Speaking parts with real 14-minute timings</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-val">12-item check</div>
+          <p class="proof-lbl">Diagnostic maps weak parts in 10 minutes</p>
+        </div>
+        <div class="proof-item">
+          <div class="proof-val">17 exam parts</div>
+          <p class="proof-lbl">All four B2 First papers tracked in one log</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ 02 THE 9 BLOCKS ============ -->
-  <section class="section" id="blocks" aria-labelledby="blocks-title">
+  <!-- ============ AI FEATURES (#ai) ============ -->
+  <section class="section" id="ai" aria-labelledby="ai-title">
     <div class="wrap">
       <div class="sec-head">
-        <p class="eyebrow"><span class="eb-n" aria-hidden="true">02</span><span class="eb-rule" aria-hidden="true"></span>The product</p>
-        <h2 id="blocks-title">Nine modules around one log</h2>
-        <p class="sec-lede">Every part of the tracker reads the same practice history, so your daily session, error breakdown, and stage progress agree.</p>
+        <p class="eyebrow"><span class="eb-dot" aria-hidden="true"></span>Core AI &amp; Adaptive Engine</p>
+        <h2 id="ai-title">Three parts of the exam you cannot grade with an answer key</h2>
+        <p class="sec-lede">Multiple-choice sheets tell you right from wrong. B2 First Tracker focuses AI strictly where self-study breaks down: Writing rubrics, real-time Speaking turns, and deciding what to study next.</p>
       </div>
 
-      <div class="grid blocks-grid">
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg></span>
-            <span class="block-num">01 · Diagnostic</span>
+      <!-- 1. WRITING RUBRIC CORRECTOR -->
+      <article class="pillar" id="writing" aria-labelledby="writing-title">
+        <div class="grid pillar-grid">
+          <div class="pillar-copy">
+            <span class="pillar-tag">01 / WRITING RUBRIC CORRECTOR</span>
+            <h3 id="writing-title">Scored on the four Cambridge bands, with evidence from your draft</h3>
+            <p>Submit essays, articles, reports, reviews, or emails within the 140–190 word B2 First target. Paste the exam prompt so Content is checked against every point the question requires.</p>
+            <p>Instead of vague praise, the corrector scores each 0–5 band, quotes the lines that earned or cost marks, names two concrete weak spots, and provides three rewritten sentences you can study.</p>
+            <ul class="check-list">
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>4 named bands:</b> Content, Communicative Achievement, Organisation, and Language</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Quoted evidence:</b> every score ties back to exact phrases from your text</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Actionable output:</b> 2 weak spots and 3 targeted sentence rewrites per draft</span></li>
+            </ul>
           </div>
-          <h3>12-item entry diagnostic</h3>
-          <p>Ten-minute check across Reading and Use of English parts 1 to 7. Identifies your lowest-scoring parts before your first week starts.</p>
-        </article>
 
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 3h6"/></svg></span>
-            <span class="block-num">02 · Daily focus</span>
-          </div>
-          <h3>Today's session</h3>
-          <p>Shows one prioritized task for your scheduled study day, with its unit timer, target threshold, and the reason it was chosen.</p>
-        </article>
+          <figure class="pillar-mock">
+            <div class="panel">
+              <div class="panel-bar">
+                <span class="panel-title">Writing Report · Essay (168 words)</span>
+                <span class="chip">Illustrative example</span>
+              </div>
+              <div class="mock-body">
+                <div class="draft-quote">
+                  <span class="draft-quote-lbl">Quoted draft excerpt</span>
+                  "In my opinion, smartphones help families stay in touch across long distances. However, <span class="draft-hl">a lot of teenagers check messages</span> during dinner instead of talking."
+                </div>
 
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-            <span class="block-num">03 · Schedule</span>
-          </div>
-          <h3>Adaptive weekly plan</h3>
-          <p>Choose by-part rotation or full-paper rotation across your weekly study days. Queue order comes from what you have already logged.</p>
-        </article>
+                <ul class="bands-list" aria-label="Illustrative Cambridge writing bands">
+                  <li class="band-row">
+                    <span class="band-name">Content</span>
+                    <span class="band-score num">4 <small>/ 5</small></span>
+                    <span class="band-ev">Covers both prompt points and adds a clear third idea on family habits.</span>
+                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+                  </li>
+                  <li class="band-row">
+                    <span class="band-name">Communicative Achievement</span>
+                    <span class="band-score num">3 <small>/ 5</small></span>
+                    <span class="band-ev">Mostly neutral essay tone; informal phrasing ("a lot of") slips in paragraph two.</span>
+                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+                  </li>
+                  <li class="band-row">
+                    <span class="band-name">Organisation</span>
+                    <span class="band-score num">4 <small>/ 5</small></span>
+                    <span class="band-ev">Clear paragraphing and contrast linkers ("However", "As a result").</span>
+                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+                  </li>
+                  <li class="band-row">
+                    <span class="band-name">Language</span>
+                    <span class="band-score num">3 <small>/ 5</small></span>
+                    <span class="band-ev">Accurate simple clauses; needs wider complex structures for Band 4–5.</span>
+                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+                  </li>
+                </ul>
 
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span>
-            <span class="block-num">04 · Exam mode</span>
-          </div>
-          <h3>Official paper timings</h3>
-          <p>Run timed full-paper sittings with the real durations: 75 min Reading and Use of English, 80 min Writing, 40 min Listening, and 14 min Speaking.</p>
-        </article>
-
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
-            <span class="block-num">05 · Writing</span>
-          </div>
-          <h3>Cambridge rubric corrector</h3>
-          <p>Scores essays, articles, reports, reviews, and emails (140 to 190 words) on all four 0 to 5 bands with quoted evidence and rewrites.</p>
-        </article>
-
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg></span>
-            <span class="block-num">06 · Speaking</span>
-          </div>
-          <h3>4-part voice examiner</h3>
-          <p>Practise Parts 1 to 4 with timed turns (2, 4, 4, and 4 minutes), a partner voice in Part 3, a full transcript, and a banded report.</p>
-        </article>
-
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L2.5 17.5A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.5L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
-            <span class="block-num">07 · Errors</span>
-          </div>
-          <h3>Root-cause taxonomy</h3>
-          <p>Log misses as <span class="mono">L-GAP</span> (vocabulary), <span class="mono">G-ERR</span> (grammar), <span class="mono">T-MIS</span> (distractor), or <span class="mono">T-LIM</span> (time limit) with concrete fixes.</p>
-        </article>
-
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M3 21h18"/></svg></span>
-            <span class="block-num">08 · Progress</span>
-          </div>
-          <h3>Charts and stage gates</h3>
-          <p>Four charts track score history, part accuracy, error mix, and weekly consistency alongside three deterministic progression stages.</p>
-        </article>
-
-        <article class="card block-card">
-          <div class="block-top">
-            <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h6a2 2 0 0 1 2 2v13a1.5 1.5 0 0 0-1.5-1.5H4zM20 5h-6a2 2 0 0 0-2 2v13a1.5 1.5 0 0 1 1.5-1.5H20z"/></svg></span>
-            <span class="block-num">09 · Library &amp; sync</span>
-          </div>
-          <h3>17 parts and 26 sources</h3>
-          <p>Guides for all 17 exam parts, 26 vetted practice links, optional local PDF and audio files, and multi-device account sync.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 03 WRITING & SPEAKING DEEP DIVE ============ -->
-  <section class="section tint" id="deep-dive" aria-labelledby="marking-title">
-    <div class="wrap">
-      <!-- Writing deep dive -->
-      <div class="grid dd-grid" id="marking">
-        <div class="dd-copy sec-head">
-          <p class="eyebrow"><span class="eb-n" aria-hidden="true">03</span><span class="eb-rule" aria-hidden="true"></span>Writing &amp; Speaking</p>
-          <h2 id="marking-title">Writing scored on the four Cambridge bands</h2>
-          <p class="sec-lede" style="margin-top:var(--sp-4)">Each draft is checked against the 0 to 5 scale from the B2 First Handbook, within the 140 to 190 word exam target.</p>
-          <div class="prose" style="margin-top:var(--sp-4)">
-            <p>You can paste the exam prompt so Content is checked against every point the question asks for. Every band cites quotes from your draft, names two weak spots, and provides three rewritten sentences you can study.</p>
-          </div>
-          <ul class="facts" aria-label="Writing corrector features">
-            <li>Target 140–190 words</li>
-            <li>4 bands, 0–5 each</li>
-            <li>Quoted draft evidence</li>
-            <li>3 sentence rewrites</li>
-          </ul>
-        </div>
-
-        <figure class="dd-card report">
-          <div class="report-head">
-            <b>Writing report · Example</b>
-            <span class="chip">Example · Illustrative bands</span>
-          </div>
-          <div class="sample-excerpt">
-            <span>Example fictional candidate excerpt (Essay)</span>
-            "In my opinion, smartphones help families stay in touch across long distances. However, many teenagers check messages during dinner instead of talking."
-          </div>
-          <ul class="meters">
-            <li class="mt" style="--v:4">
-              <span class="mt-name">Content</span>
-              <span class="mt-val num">4<small> / 5</small></span>
-              <span class="mt-say">Addresses both sides of the prompt; target reader is informed.</span>
-              <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
-            </li>
-            <li class="mt" style="--v:3">
-              <span class="mt-name">Communicative Achievement</span>
-              <span class="mt-val num">3<small> / 5</small></span>
-              <span class="mt-say">Appropriate neutral essay register for straightforward ideas.</span>
-              <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
-            </li>
-            <li class="mt" style="--v:4">
-              <span class="mt-name">Organisation</span>
-              <span class="mt-val num">4<small> / 5</small></span>
-              <span class="mt-say">Clear contrast with linking phrases and logical paragraph flow.</span>
-              <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
-            </li>
-            <li class="mt" style="--v:3">
-              <span class="mt-name">Language</span>
-              <span class="mt-val num">3<small> / 5</small></span>
-              <span class="mt-say">Accurate everyday vocabulary; room for wider complex structures.</span>
-              <span class="mt-track" aria-hidden="true"><span class="mt-fill"></span></span>
-            </li>
-          </ul>
-          <figcaption class="report-cap">Illustrative example with fictional candidate text. Actual reports depend on your draft and optional prompt.</figcaption>
-        </figure>
-      </div>
-
-      <hr class="dd-divider">
-
-      <!-- Speaking deep dive -->
-      <div class="grid dd-grid" id="speaking">
-        <div class="dd-copy">
-          <h2 id="speaking-title" style="font-size:var(--fs-32)">Four-part Speaking with a voice examiner</h2>
-          <div class="prose" style="margin-top:var(--sp-4)">
-            <p>Run one part at a time or the full 14-minute sequence across Parts 1 to 4. You hear the examiner, answer out loud within each turn timer, and get a transcript and banded report at the end.</p>
-            <p>It is practice, not a certificate — the real examiner is still a person.</p>
-          </div>
-          <ul class="ticks">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>Parts 1 to 4 with real exam timings (2, 4, 4, and 4 min)</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>A partner role for Parts 2, 3, and 4</span></li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span>Transcript and banded assessment across Cambridge criteria</span></li>
-          </ul>
-        </div>
-
-        <div class="dd-card card">
-          <div class="report-head">
-            <b>Speaking timeline</b>
-            <span class="chip num">14 min total</span>
-          </div>
-          <ol class="parts" aria-label="Speaking exam parts and durations">
-            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 1</b><span>2 min · Interview</span></span></li>
-            <li class="is-on"><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 2</b><span>4 min · Long turn</span></span></li>
-            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 3</b><span>4 min · Collaborative</span></span></li>
-            <li><span class="p-bar" aria-hidden="true"></span><span class="p-txt"><b>Part 4</b><span>4 min · Discussion</span></span></li>
-          </ol>
-
-          <div class="callout" role="note" aria-labelledby="limit-h">
-            <span class="callout-ico" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v5M10 6.25h.01"/></svg></span>
-            <div>
-              <p class="callout-h" id="limit-h">Honesty rule: Pronunciation</p>
-              <p>If audio cannot be measured or speech assessment is not configured on the server, the report explicitly displays <b>not measured</b> for Pronunciation. It never invents a score from text alone.</p>
+                <div class="writing-subgrid">
+                  <div class="subbox">
+                    <span class="subbox-h">2 Weak spots</span>
+                    <ul class="weak-list">
+                      <li>Informal quantifier "a lot of" lowers essay register.</li>
+                      <li>Repeated subject-verb openings across consecutive sentences.</li>
+                    </ul>
+                  </div>
+                  <div class="subbox">
+                    <span class="subbox-h">3 Rewrites</span>
+                    <ul class="rw-list">
+                      <li class="rw-item">
+                        <span class="rw-old">"a lot of teenagers check messages"</span>
+                        <span class="rw-new">"many teenagers are drawn to notifications"</span>
+                      </li>
+                      <li class="rw-item">
+                        <span class="rw-old">"In my opinion, smartphones help..."</span>
+                        <span class="rw-new">"Undoubtedly, smartphones allow families..."</span>
+                      </li>
+                      <li class="rw-item">
+                        <span class="rw-old">"instead of talking."</span>
+                        <span class="rw-new">"rather than engaging in conversation."</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <figcaption class="mock-foot">Illustrative example with fictional candidate text. Actual bands depend on your draft and prompt.</figcaption>
             </div>
-          </div>
+          </figure>
         </div>
+      </article>
+
+      <!-- 2. VOICE EXAMINER (GEMINI LIVE) -->
+      <article class="pillar pillar-flip" id="speaking" aria-labelledby="speaking-title">
+        <div class="grid pillar-grid">
+          <div class="pillar-copy">
+            <span class="pillar-tag">02 / VOICE EXAMINER · GEMINI LIVE</span>
+            <h3 id="speaking-title">Four-part Speaking exam with real-time examiner and partner voices</h3>
+            <p>Run a single part or the complete 14-minute B2 First Speaking sequence directly in your browser. Gemini Live drives natural voice turns with official exam clocks: 2 minutes for Part 1, then 4 minutes each for Parts 2, 3, and 4.</p>
+            <p>In Part 3, a partner voice collaborates with you on the task card and asks follow-up questions so you practise real turn-taking. When the clock ends, you receive a full transcript and a banded report.</p>
+            <ul class="check-list">
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Exact exam timings:</b> Part 1 (2m), Part 2 (4m), Part 3 (4m), Part 4 (4m)</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Partner voice in Part 3:</b> interactive collaborative discussion and decision</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Transcript &amp; banded report:</b> scored across Cambridge Speaking criteria</span></li>
+            </ul>
+            <p class="honesty-note"><b>Practice, not a certificate:</b> this voice examiner prepares you for timing and interaction under pressure. Official B2 First Speaking grades are always awarded by human Cambridge examiners.</p>
+          </div>
+
+          <figure class="pillar-mock">
+            <div class="panel">
+              <div class="panel-bar">
+                <span class="panel-title">Speaking Studio · Gemini Live</span>
+                <span class="chip">Illustrative example</span>
+              </div>
+              <div class="mock-body">
+                <ol class="parts-bar" aria-label="Speaking exam parts">
+                  <li class="p-seg"><b>Part 1</b><span>2 min · Interview</span></li>
+                  <li class="p-seg"><b>Part 2</b><span>4 min · Photos</span></li>
+                  <li class="p-seg is-on"><b>Part 3</b><span>4 min · Partner</span></li>
+                  <li class="p-seg"><b>Part 4</b><span>4 min · Discuss</span></li>
+                </ol>
+
+                <div class="transcript" aria-label="Illustrative speaking transcript">
+                  <div class="turn">
+                    <div class="turn-meta">
+                      <span class="turn-role">EXAMINER · GEMINI LIVE</span>
+                      <span class="turn-time">02:10</span>
+                    </div>
+                    <p>"Talk together about how useful these ways of attracting visitors to a small town might be."</p>
+                  </div>
+                  <div class="turn">
+                    <div class="turn-meta">
+                      <span class="turn-role">PARTNER VOICE · PART 3</span>
+                      <span class="turn-time">02:34</span>
+                    </div>
+                    <p>"A food festival brings people in quickly, though it only lasts one weekend. What do you think about restoring historic buildings instead?"</p>
+                  </div>
+                  <div class="turn">
+                    <div class="turn-meta">
+                      <span class="turn-role is-user">CANDIDATE · TRANSCRIPT</span>
+                      <span class="turn-time">02:51</span>
+                    </div>
+                    <p>"I agree with your point about timing. Historic sites keep visitors coming all year round, provided there is good transport from the city."</p>
+                  </div>
+                </div>
+
+                <div class="spk-scores" aria-label="Illustrative speaking band report">
+                  <div class="spk-cell"><span>Grammar &amp; Vocabulary</span><b>4 / 5</b></div>
+                  <div class="spk-cell"><span>Discourse Management</span><b>4 / 5</b></div>
+                  <div class="spk-cell"><span>Interactive Comm.</span><b>4 / 5</b></div>
+                  <div class="spk-cell"><span>Pronunciation</span><span class="not-meas">not measured*</span></div>
+                </div>
+              </div>
+              <figcaption class="mock-foot">Illustrative example. *When server speech assessment is unconfigured, Pronunciation explicitly shows "not measured" instead of inventing a score.</figcaption>
+            </div>
+          </figure>
+        </div>
+      </article>
+
+      <!-- 3. ADAPTIVE PLAN -->
+      <article class="pillar" id="adaptive" aria-labelledby="adaptive-title">
+        <div class="grid pillar-grid">
+          <div class="pillar-copy">
+            <span class="pillar-tag">03 / ADAPTIVE PLAN</span>
+            <h3 id="adaptive-title">A 12-item diagnostic turns weak parts into today's session</h3>
+            <p>Start with a ten-minute baseline across Reading and Use of English parts 1 to 7. The tracker ranks your lowest-scoring parts and immediately places the weakest one at the front of your queue.</p>
+            <p>Every study day opens with a single prioritized task, its unit timer, and the exact reason it was selected. Behind it sits a weekly rotation that balances all four papers without letting you skip weak skills.</p>
+            <ul class="check-list">
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Weakest part first:</b> diagnostic scores directly order your initial queue</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>One clear task per day:</b> removes ten minutes of deciding what to open</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Two rotation modes:</b> by-part skill pairs or timed full-paper sittings</span></li>
+            </ul>
+          </div>
+
+          <figure class="pillar-mock">
+            <div class="panel">
+              <div class="panel-bar">
+                <span class="panel-title">Diagnostic → Today's Session → Weekly Rotation</span>
+                <span class="chip">Illustrative example</span>
+              </div>
+              <div class="mock-body">
+                <div class="diag-bars" aria-label="Illustrative diagnostic accuracy by part">
+                  <div class="diag-row" style="--pct:80%">
+                    <span class="diag-lbl">Part 1 · Cloze</span>
+                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
+                    <span class="diag-pct">80%</span>
+                  </div>
+                  <div class="diag-row" style="--pct:65%">
+                    <span class="diag-lbl">Part 2 · Open cloze</span>
+                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
+                    <span class="diag-pct">65%</span>
+                  </div>
+                  <div class="diag-row is-weak" style="--pct:40%">
+                    <span class="diag-lbl">Part 4 · Key word</span>
+                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
+                    <span class="diag-pct">40%</span>
+                  </div>
+                  <div class="diag-row" style="--pct:75%">
+                    <span class="diag-lbl">Part 5 · Reading</span>
+                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
+                    <span class="diag-pct">75%</span>
+                  </div>
+                </div>
+
+                <div class="today-box">
+                  <div class="today-top">
+                    <span class="chip">Today's session · Priority #1</span>
+                    <span class="mono num">10:00 timer</span>
+                  </div>
+                  <span class="today-title">Reading &amp; Use of English · Part 4</span>
+                  <p class="today-why">Chosen because Part 4 scored lowest in your 12-item diagnostic (40%) and leads your current Reading &amp; Use of English cycle.</p>
+                </div>
+
+                <div class="rot-grid" aria-label="Illustrative weekly rotation">
+                  <div class="rot-day is-today">
+                    <span>Mon · Active</span>
+                    <b>R&amp;UE Part 4 + Listening P1</b>
+                  </div>
+                  <div class="rot-day">
+                    <span>Wed · Next</span>
+                    <b>Writing Essay + Speaking P1</b>
+                  </div>
+                  <div class="rot-day">
+                    <span>Fri · Queued</span>
+                    <b>R&amp;UE Part 2 + Listening P2</b>
+                  </div>
+                </div>
+              </div>
+              <figcaption class="mock-foot">Illustrative example. Queue position is computed deterministically from your logged sessions.</figcaption>
+            </div>
+          </figure>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ UNDER THE HOOD (#how) ============ -->
+  <section class="section alt" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow"><span class="eb-dot" aria-hidden="true"></span>Under the hood</p>
+        <h2 id="how-title">Engineered for judges to inspect, not trust blindly</h2>
+        <p class="sec-lede">Every security boundary, AI call, and scheduling rule is explicit in the repository. No hidden keys, no audio storage, and no hallucinated scores.</p>
+      </div>
+
+      <div class="arch-flow" aria-label="Gemini Live ephemeral token flow">
+        <div class="arch-node">
+          <span class="arch-node-k">01 · Browser</span>
+          <b>Requests live session</b>
+          <p>Never holds provider API keys; captures mic only inside /app.</p>
+        </div>
+        <div class="arch-arrow" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
+        </div>
+        <div class="arch-node">
+          <span class="arch-node-k">02 · App Server</span>
+          <b>Mints ephemeral token</b>
+          <p>Issues a short-lived single-use Gemini Live token; audio never touches disk.</p>
+        </div>
+        <div class="arch-arrow" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
+        </div>
+        <div class="arch-node">
+          <span class="arch-node-k">03 · Gemini Live</span>
+          <b>Direct voice stream</b>
+          <p>Streams examiner &amp; partner turns directly; transcript feeds the banded report.</p>
+        </div>
+      </div>
+
+      <div class="spec-grid">
+        <div class="spec-cell">
+          <span class="spec-code">AUTH / EPHEMERAL</span>
+          <h3>Server-minted Gemini Live tokens</h3>
+          <p>The server mints short-lived ephemeral tokens for live voice sessions. Provider API keys stay strictly on the server and never reach the browser.</p>
+        </div>
+        <div class="spec-cell">
+          <span class="spec-code">AUDIO / ZERO DISK</span>
+          <h3>Audio is never written to disk</h3>
+          <p>Speaking audio is streamed directly or dropped immediately after forwarding. It is never stored on disk, archived, or logged.</p>
+        </div>
+        <div class="spec-cell">
+          <span class="spec-code">HONESTY / RUBRIC</span>
+          <h3>Pronunciation: not measured</h3>
+          <p>If speech pronunciation assessment is not configured on the server, the report explicitly shows <b>not measured</b> instead of guessing a band from text.</p>
+        </div>
+        <div class="spec-cell">
+          <span class="spec-code">PLANNER / DETERMINISTIC</span>
+          <h3>Deterministic weekly scheduler</h3>
+          <p>Today's session and queue order are derived deterministically from your diagnostic and logged history—not regenerated by an LLM on refresh.</p>
+        </div>
+        <div class="spec-cell">
+          <span class="spec-code">ZERO TRACKING</span>
+          <h3>No third-party trackers or CDNs</h3>
+          <p>Zero analytics SDKs, ad pixels, external font hosts, or third-party scripts. The public landing page ships as a single self-contained document.</p>
+        </div>
+        <div class="spec-cell">
+          <span class="spec-code">PORTABILITY</span>
+          <h3>JSON export &amp; full deletion</h3>
+          <p>Download your complete practice log and error history as JSON at any time, or permanently delete your account and server records in one action.</p>
+        </div>
+      </div>
+
+      <div class="hood-actions">
+        <a class="btn btn-secondary" href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Inspect source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
       </div>
     </div>
   </section>
 
-  <!-- ============ 04 PRIVACY & ENGINEERING ============ -->
+  <!-- ============ PRIVACY (#privacy) ============ -->
   <section class="section" id="privacy" aria-labelledby="privacy-title">
     <div class="wrap">
       <div class="sec-head">
-        <p class="eyebrow"><span class="eb-n" aria-hidden="true">04</span><span class="eb-rule" aria-hidden="true"></span>Engineering &amp; privacy</p>
-        <h2 id="privacy-title">Built for study, without ad trackers</h2>
-        <p class="sec-lede">Your progress syncs across devices while keeping data collection minimal and reversible.</p>
+        <p class="eyebrow"><span class="eb-dot" aria-hidden="true"></span>Privacy</p>
+        <h2 id="privacy-title">Minimal data, reversible by design</h2>
+        <p class="sec-lede">Your study log syncs across devices while keeping account requirements minimal and fully under your control.</p>
       </div>
 
       <div class="grid priv-grid">
-        <article class="card priv-card">
-          <h3>Multi-device account sync</h3>
-          <p>Sign in with a username and 12-character password, Google sign-in, or a passkey. Your weekly plan, study log, and error notes follow you from phone to desktop.</p>
+        <article class="priv-card">
+          <h3>Sign in without an email</h3>
+          <p>Create an account with a username and 12-character password, or use Google sign-in or a passkey. Your plan and error log stay synced across devices.</p>
         </article>
-        <article class="card priv-card">
-          <h3>No advertising trackers</h3>
-          <p>The app runs without third-party analytics SDKs, tracking pixels, or ad networks. Nothing you practise is profiled or sold.</p>
-        </article>
-        <article class="card priv-card">
-          <h3>Audio is never stored</h3>
-          <p>Speaking audio is never written to the provider's disk. Only the writing draft or transcript you choose to evaluate is sent to the AI provider per request.</p>
-        </article>
-        <article class="card priv-card">
-          <h3>Export and permanent deletion</h3>
-          <p>Your data lives on the provider's server while your account is active. You can export everything as JSON or delete your account to remove your data from the server.</p>
+        <article class="priv-card">
+          <h3>Per-request AI evaluation</h3>
+          <p>Only the writing draft or speaking transcript you explicitly choose to evaluate is sent to the AI provider. Speaking audio is never saved on our server.</p>
         </article>
       </div>
 
@@ -889,47 +1134,46 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
         <a href="/privacy">Privacy policy</a>
         <a href="/terms">Terms of use</a>
         <a href="/security">Security policy</a>
-        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
       </div>
     </div>
   </section>
 
-  <!-- ============ 05 FAQ ============ -->
-  <section class="section tint" id="faq" aria-labelledby="faq-title">
+  <!-- ============ FAQ (#faq) ============ -->
+  <section class="section alt" id="faq" aria-labelledby="faq-title">
     <div class="wrap grid faq-grid">
       <div class="faq-head sec-head">
-        <p class="eyebrow"><span class="eb-n" aria-hidden="true">05</span><span class="eb-rule" aria-hidden="true"></span>FAQ</p>
-        <h2 id="faq-title">Four direct answers</h2>
-        <p class="sec-lede">Short answers on the diagnostic, accounts, privacy, and scoring.</p>
+        <p class="eyebrow"><span class="eb-dot" aria-hidden="true"></span>FAQ</p>
+        <h2 id="faq-title">Direct answers</h2>
+        <p class="sec-lede">What the AI scores mean, how accounts work, and how your data is handled.</p>
       </div>
       <div class="faq">
         <details open>
-          <summary>How does the 12-item diagnostic shape my plan?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>The diagnostic checks Reading and Use of English parts 1 to 7 in about 10 minutes. Your lowest-scoring parts move to the front of your weekly plan and appear in Today's session.</p>
-        </details>
-        <details>
-          <summary>Do I need an email address to sign up?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. You can create an account with a username and a password of at least 12 characters, or sign in with Google or a passkey.</p>
-        </details>
-        <details>
-          <summary>What happens if I delete my account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>Deleting your account from the Account panel removes your user record, sessions, progress history, and error log from the provider's server. Export a JSON copy first if you want to keep your log.</p>
-        </details>
-        <details>
           <summary>Are Writing and Speaking bands official Cambridge scores?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. They are practice estimates calibrated against the four published Cambridge scales. Only Cambridge Assessment issues official exam grades.</p>
+          <p>No. They are practice estimates calibrated against the four published Cambridge B2 First assessment scales. Only Cambridge University Press &amp; Assessment issues official exam certificates and grades.</p>
+        </details>
+        <details>
+          <summary>Do I need an email address to create an account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>No. You can register with just a username and a password of at least 12 characters, or sign in with Google or a passkey.</p>
+        </details>
+        <details>
+          <summary>What happens when I delete my account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>Deleting your account from the Account panel permanently removes your user record, sessions, progress history, and error log from the server. Export a JSON copy first if you want to keep your history.</p>
+        </details>
+        <details>
+          <summary>How is AI used across the platform?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p>AI powers two practice loops: marking Writing drafts on the four Cambridge bands (with quoted evidence, two weak spots, and three rewrites) and running the 4-part Speaking voice examiner via Gemini Live ephemeral tokens. Your study plan, queue rotation, and stage gates are deterministic.</p>
         </details>
       </div>
     </div>
   </section>
 
-  <!-- ============ 06 FINAL CTA ============ -->
-  <section class="section" id="start" aria-labelledby="cta-title">
+  <!-- ============ FINAL CTA (#start) ============ -->
+  <section class="cta-section" id="start" aria-labelledby="cta-title">
     <div class="wrap">
       <div class="cta-band">
         <div>
-          <h2 class="cta-h" id="cta-title">Take the 12-question diagnostic.</h2>
-          <p class="cta-sub">Create your account, measure your baseline in 10 minutes, and open Today's session.</p>
+          <h2 class="cta-h" id="cta-title">Take the 12&#8209;item diagnostic.</h2>
+          <p class="cta-sub">Create your account, map your weakest B2 First parts in 10 minutes, and start practising with Cambridge-band AI feedback.</p>
         </div>
         <div class="cta-btns">
           <a class="btn" href="/app">Create an account<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
@@ -945,16 +1189,17 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
     <div class="grid foot-grid">
       <div class="foot-about">
         <div class="foot-brand">
-          <img src="/assets/logo-512.png" alt="" width="32" height="32">
+          <img src="/assets/logo-512.png" alt="" width="28" height="28">
           <span>B2 First Tracker</span>
         </div>
-        <p>Self-study tracker for the Cambridge B2 First (FCE) exam.</p>
+        <p>AI rubric feedback, live voice practice, and adaptive scheduling for the Cambridge B2 First (FCE) exam.</p>
       </div>
       <nav class="foot-col" aria-labelledby="foot-sections">
         <p class="foot-h" id="foot-sections">Sections</p>
-        <a href="#blocks">Nine modules</a>
-        <a href="#deep-dive">Writing &amp; Speaking</a>
-        <a href="#privacy">Privacy</a>
+        <a href="#ai">AI features</a>
+        <a href="#writing">Writing rubric</a>
+        <a href="#speaking">Voice examiner</a>
+        <a href="#how">Under the hood</a>
         <a href="#faq">FAQ</a>
       </nav>
       <nav class="foot-col" aria-labelledby="foot-legal">
@@ -964,7 +1209,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
         <a href="/security">Security policy</a>
       </nav>
       <nav class="foot-col" aria-labelledby="foot-account">
-        <p class="foot-h" id="foot-account">Account</p>
+        <p class="foot-h" id="foot-account">Account &amp; Code</p>
         <a href="/app">Sign in</a>
         <a href="/app">Create an account</a>
         <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub</a>
@@ -1004,7 +1249,7 @@ footer{padding-block:var(--sp-16) var(--sp-8);border-top:1px solid var(--line)}
     if(!toggle)return;
     var dark=document.documentElement.getAttribute('data-theme')==='dark';
     toggle.setAttribute('aria-pressed',dark?'true':'false');
-    if(meta)meta.setAttribute('content',dark?'#121416':'#fbfcfd');
+    if(meta)meta.setAttribute('content',dark?'#101319':'#f8f9fc');
   }
   syncThemeBtn();
   if(toggle){
