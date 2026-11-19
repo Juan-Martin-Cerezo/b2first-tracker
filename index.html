@@ -738,6 +738,19 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .spx-part .n{display:block;font-size:var(--fs-sm);font-weight:600}
 .spx-part .d{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px;line-height:1.4}
 .spx-part .m{display:block;font-size:var(--fs-xs);color:var(--acc-text);margin-top:6px;font-weight:600}
+.spx-custom-chip{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:700;padding:2px 9px;border-radius:999px;background:var(--acc-soft);color:var(--acc-text);border:1px solid var(--acc);white-space:nowrap}
+.spx-part-chip{margin-top:6px}
+.spx-custom{margin:10px 0 4px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);padding:10px 12px}
+.spx-custom-sum{cursor:pointer;font-size:var(--fs-sm);font-weight:600;color:var(--txt);display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:32px}
+.spx-custom-part{font-size:var(--fs-xs);font-weight:500;color:var(--txt-2)}
+.spx-custom-body{margin-top:10px;display:grid;gap:8px}
+.spx-custom-hint{margin:0;font-size:var(--fs-xs);color:var(--txt-2);line-height:1.45}
+.spx-custom-ta{width:100%;min-height:110px;padding:10px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--txt);font:inherit;font-size:var(--fs-sm);line-height:1.45;resize:vertical;box-sizing:border-box}
+.spx-custom-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spx-custom-status{font-size:var(--fs-xs);color:var(--ok-text);font-weight:600}
+.spx-brief-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spx-brief-head .spx-sentence{margin-bottom:6px}
+.spx-phase-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .spx-brief{display:grid;gap:8px;margin:10px 0;padding:0;list-style:none}
 .spx-brief li{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;font-size:var(--fs-sm);color:var(--txt);line-height:1.45}
 .spx-rule{font-size:var(--fs-sm);font-weight:600;color:var(--warn-text);background:var(--warn-soft);border:1px solid var(--warn-border);border-radius:var(--r-ctl);padding:10px 12px;margin:12px 0}
@@ -3836,6 +3849,23 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <span class="m" data-i18n="spx_full_meta">14 min · 4 parts</span>
                       </button>
                       <div class="spx-parts" id="spxParts" role="radiogroup" aria-labelledby="spxChooseSentence"></div>
+                      <details class="spx-custom" id="spxCustomDetails">
+                        <summary class="spx-custom-sum" id="spxCustomSummary">
+                          <span data-i18n="spx_custom_toggle">Use my own task</span>
+                          <span class="spx-custom-part" id="spxCustomPartLbl"></span>
+                          <span class="spx-custom-chip" id="spxCustomChooseChip" data-i18n="spx_custom_chip" style="display:none">Your task</span>
+                        </summary>
+                        <div class="spx-custom-body">
+                          <p class="spx-custom-hint" id="spxCustomHint"></p>
+                          <textarea id="spxCustomInput" class="spx-custom-ta" rows="5" data-exam-task aria-labelledby="spxCustomSummary" aria-describedby="spxCustomHint"></textarea>
+                          <div class="spk-report-err" id="spxCustomErr" role="alert"></div>
+                          <div class="spx-custom-actions">
+                            <button type="button" class="btn sm ok" id="spxCustomSaveBtn" data-action="SP_EXAM.saveCustom" data-i18n="spx_custom_save">Save my task</button>
+                            <button type="button" class="btn sm gray" id="spxCustomRemoveBtn" data-action="SP_EXAM.removeCustom" data-i18n="spx_custom_remove" style="display:none">Remove my task</button>
+                            <span class="spx-custom-status" id="spxCustomStatus" role="status"></span>
+                          </div>
+                        </div>
+                      </details>
                       <div class="spk-report-err" id="spxChooseErr" role="alert"></div>
                       <div class="spx-actions">
                         <button class="btn ok" id="spxStartBtn" data-action="SP_EXAM.start" data-i18n="spx_start" aria-label="Start the exam" data-i18n-aria-label="spx_aria_start">Start</button>
@@ -3843,7 +3873,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </section>
 
                     <section class="spx-screen" data-spx-screen="brief">
-                      <p class="spx-sentence" id="spxBriefSentence"></p>
+                      <div class="spx-brief-head">
+                        <p class="spx-sentence" id="spxBriefSentence"></p>
+                        <span class="spx-custom-chip" id="spxBriefCustomChip" data-i18n="spx_custom_chip" style="display:none">Your task</span>
+                      </div>
                       <ul class="spx-brief">
                         <li data-i18n="spx_brief_b1">The examiner asks the questions and you answer in English.</li>
                         <li data-i18n="spx_brief_b2">The task and a countdown stay on screen the whole time.</li>
@@ -3862,7 +3895,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <section class="spx-screen" data-spx-screen="exam">
                       <div class="spx-exam-head">
                         <div class="spx-phase">
-                          <span id="spxPhasePart"></span>
+                          <div class="spx-phase-top">
+                            <span id="spxPhasePart"></span>
+                            <span class="spx-custom-chip" id="spxExamCustomChip" data-i18n="spx_custom_chip" style="display:none">Your task</span>
+                          </div>
                           <b id="spxPhaseName"></b>
                         </div>
                         <div class="spx-clockwrap">
@@ -5852,7 +5888,25 @@ const I18N={
     spx_aria_again:'Choose another part',
     spx_aria_repeat_part:'Repeat this part',
     spx_aria_copy:'Copy the full transcript',
-    spx_aria_part:'Part {n}, {min} minutes'
+    spx_aria_part:'Part {n}, {min} minutes',
+    spx_custom_toggle:'Use my own task',
+    spx_custom_chip:'Your task',
+    spx_custom_save:'Save my task',
+    spx_custom_remove:'Remove my task',
+    spx_custom_saved:'Custom task saved for Part {n}.',
+    spx_custom_removed:'Custom task removed.',
+    spx_custom_hint_1:'Paste one question per line (up to 6 questions, max 300 characters each).',
+    spx_custom_hint_2:'Paste two prompts, one per line: comparison first, follow-up question second.',
+    spx_custom_hint_3:'Line 1: topic. Middle lines: options. Last line: decision question.',
+    spx_custom_hint_4:'Paste one discussion question per line (up to 5 questions, max 300 characters each).',
+    spx_custom_ph_1:'One question per line…',
+    spx_custom_ph_2:'Prompt 1 (comparison)\nPrompt 2 (follow-up question)',
+    spx_custom_ph_3:'Topic\nOption 1\nOption 2\nDecision question',
+    spx_custom_ph_4:'One discussion question per line…',
+    spx_custom_err_empty:'Enter at least one line for your task.',
+    spx_custom_err_max_items:'Too many items (maximum {max} lines).',
+    spx_custom_err_max_chars:'Each line must be {max} characters or fewer.',
+    spx_custom_err_html:'Plain text only — HTML tags are not allowed.'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -6783,7 +6837,25 @@ const I18N={
     spx_aria_again:'Elegir otra parte',
     spx_aria_repeat_part:'Repetir esta parte',
     spx_aria_copy:'Copiar la transcripción completa',
-    spx_aria_part:'Parte {n}, {min} minutos'
+    spx_aria_part:'Parte {n}, {min} minutos',
+    spx_custom_toggle:'Usar mi tarea',
+    spx_custom_chip:'Tu tarea',
+    spx_custom_save:'Guardar mi tarea',
+    spx_custom_remove:'Quitar mi tarea',
+    spx_custom_saved:'Tarea propia guardada para la Parte {n}.',
+    spx_custom_removed:'Tarea propia quitada.',
+    spx_custom_hint_1:'Pegá una pregunta por línea (hasta 6 preguntas, máximo 300 caracteres cada una).',
+    spx_custom_hint_2:'Pegá dos consignas, una por línea: primero la comparación y segundo la pregunta de seguimiento.',
+    spx_custom_hint_3:'Línea 1: tema. Líneas del medio: opciones. Última línea: pregunta de decisión.',
+    spx_custom_hint_4:'Pegá una pregunta de debate por línea (hasta 5 preguntas, máximo 300 caracteres cada una).',
+    spx_custom_ph_1:'Una pregunta por línea…',
+    spx_custom_ph_2:'Consigna 1 (comparación)\nConsigna 2 (pregunta de seguimiento)',
+    spx_custom_ph_3:'Tema\nOpción 1\nOpción 2\nPregunta de decisión',
+    spx_custom_ph_4:'Una pregunta de debate por línea…',
+    spx_custom_err_empty:'Escribí al menos una línea para tu tarea.',
+    spx_custom_err_max_items:'Demasiados ítems (máximo {max} líneas).',
+    spx_custom_err_max_chars:'Cada línea debe tener {max} caracteres o menos.',
+    spx_custom_err_html:'Solo texto plano — no se permiten etiquetas HTML.'
   }
 };
 let LANG='en';
@@ -8545,9 +8617,114 @@ function closeUserModal(){
   const ov=document.getElementById('userModal');
   if(ov)ov.style.display='none';
 }
+/* ---------- SPEAKING CUSTOM TASKS (per part, D.spxCustom + b2.spxCustom) --- */
+const SPX_CUSTOM_KEY='b2.spxCustom';
+const SPX_CUSTOM_MAX_ITEMS=16;
+const SPX_CUSTOM_MAX_CHARS=300;
+function spxHasHtml(text){
+  return /<\/?[a-zA-Z][^>]*>/.test(String(text||''));
+}
+function spxStripHtml(text){
+  return String(text||'').replace(/<[^>]*>/g,'').replace(/[\x00-\x1f\x7f]/g,' ').replace(/\s+/g,' ').trim();
+}
+function spxBuildCustomTask(part,lines){
+  const n=Math.max(1,Math.min(4,parseInt(part,10)||1));
+  const clean=lines.slice(0,SPX_CUSTOM_MAX_ITEMS).map(function(s){return String(s).slice(0,SPX_CUSTOM_MAX_CHARS)});
+  const raw=clean.join('\n');
+  if(n===1){
+    return {id:'custom-p1',custom:true,raw:raw,questions:clean.slice()};
+  }
+  if(n===2){
+    return {id:'custom-p2',custom:true,raw:raw,question:clean[0],prompts:clean.slice(),photos:[],photoAlt:[]};
+  }
+  if(n===3){
+    const topic=clean[0];
+    let opts,decision;
+    if(clean.length===1){
+      opts=[topic];
+      decision='Which two ideas would be best?';
+    }else if(clean.length===2){
+      opts=[clean[1]];
+      decision='Which two ideas would be best?';
+    }else{
+      opts=clean.slice(1,-1);
+      decision=clean[clean.length-1];
+    }
+    return {id:'custom-p3',custom:true,raw:raw,topic:topic,situation:topic,options:opts.slice(),prompts:opts.slice(),decision:decision};
+  }
+  return {id:'custom-p4',custom:true,raw:raw,questions:clean.slice()};
+}
+function spxParseCustomTask(part,rawText){
+  const src=String(rawText==null?'':rawText);
+  if(spxHasHtml(src))return {ok:false,error:t('spx_custom_err_html')};
+  const lines=src.split(/\r?\n/).map(function(line){
+    return line.replace(/[\x00-\x1f\x7f]/g,' ').replace(/\s+/g,' ').trim();
+  }).filter(Boolean);
+  if(!lines.length)return {ok:false,error:t('spx_custom_err_empty')};
+  if(lines.length>SPX_CUSTOM_MAX_ITEMS){
+    return {ok:false,error:t('spx_custom_err_max_items',{max:SPX_CUSTOM_MAX_ITEMS})};
+  }
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].length>SPX_CUSTOM_MAX_CHARS){
+      return {ok:false,error:t('spx_custom_err_max_chars',{max:SPX_CUSTOM_MAX_CHARS})};
+    }
+  }
+  return {ok:true,task:spxBuildCustomTask(part,lines)};
+}
+function spxSanitizeCustomTask(part,obj){
+  if(!obj||typeof obj!=='object')return null;
+  const n=Math.max(1,Math.min(4,parseInt(part,10)||1));
+  if(typeof obj.raw==='string'&&obj.raw.trim()){
+    const lines=obj.raw.split(/\r?\n/).map(spxStripHtml).filter(Boolean).slice(0,SPX_CUSTOM_MAX_ITEMS)
+      .map(function(s){return s.slice(0,SPX_CUSTOM_MAX_CHARS)});
+    if(lines.length)return spxBuildCustomTask(n,lines);
+  }
+  const rawList=n===2?(Array.isArray(obj.prompts)?obj.prompts:[])
+    :(n===3?[obj.topic].concat(Array.isArray(obj.prompts)?obj.prompts:(Array.isArray(obj.options)?obj.options:[])).concat(obj.decision?[obj.decision]:[])
+    :(Array.isArray(obj.questions)?obj.questions:[]));
+  const lines=rawList.map(spxStripHtml).filter(Boolean).slice(0,SPX_CUSTOM_MAX_ITEMS)
+    .map(function(s){return s.slice(0,SPX_CUSTOM_MAX_CHARS)});
+  if(!lines.length)return null;
+  return spxBuildCustomTask(n,lines);
+}
+function spxNormalizeCustomMap(raw){
+  const out={};
+  if(!raw||typeof raw!=='object')return out;
+  ['1','2','3','4'].forEach(function(k){
+    const clean=spxSanitizeCustomTask(Number(k),raw[k]||raw[Number(k)]);
+    if(clean)out[k]=clean;
+  });
+  return out;
+}
+function spxReadCustomLS(){
+  try{
+    const raw=localStorage.getItem(SPX_CUSTOM_KEY);
+    if(!raw)return {};
+    return spxNormalizeCustomMap(JSON.parse(raw));
+  }catch(e){return {}}
+}
+function spxWriteCustomLS(map){
+  const clean=spxNormalizeCustomMap(map);
+  try{
+    if(Object.keys(clean).length)localStorage.setItem(SPX_CUSTOM_KEY,JSON.stringify(clean));
+    else localStorage.removeItem(SPX_CUSTOM_KEY);
+  }catch(e){}
+  return clean;
+}
+function spxCustomMap(){
+  if(!D||typeof D!=='object')return spxReadCustomLS();
+  if(!D.spxCustom||typeof D.spxCustom!=='object')D.spxCustom=spxReadCustomLS();
+  return D.spxCustom;
+}
+function spxGetCustomTask(part){
+  const k=String(Math.max(1,Math.min(4,parseInt(part,10)||1)));
+  const map=spxCustomMap();
+  return (map&&map[k])||null;
+}
+
 /* ---------- LOAD / SAVE (per user) ---------- */
 function blankDoc(){
-  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},onboarded:false,onboardStep:1,sessionOffset:0};
+  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},spxCustom:spxReadCustomLS(),onboarded:false,onboardStep:1,sessionOffset:0};
 }
 /* Nothing is loaded until a session exists: an orphaned local document (a
    deleted user, or the old guest era) stays on disk under its own key but is
@@ -8590,6 +8767,7 @@ function load(){
            last:(d.speaking.last&&typeof d.speaking.last==='object')?d.speaking.last:{},
            partnerRot:typeof d.speaking.partnerRot==='number'?d.speaking.partnerRot:0}
         : {seen:{},last:{},partnerRot:0},
+      spxCustom: Object.assign({}, spxNormalizeCustomMap(d.spxCustom), spxReadCustomLS()),
       onboarded: !!d.onboarded,
       onboardStep: typeof d.onboardStep==='number' ? d.onboardStep : 1,
       sessionOffset: typeof d.sessionOffset==='number' ? d.sessionOffset : 0,
@@ -8680,7 +8858,7 @@ function syncPush(){
           syncStatus('invalid',field);
           throw 0;
         }
-        if(!r.ok)throw 0;syncStatus('ok')
+        if(!r.ok)throw 0;try{await r.text()}catch(e){}syncStatus('ok')
       })
       .catch(()=>{if(SYNC_STATE!=='invalid')syncStatus('off')});
   },300);
@@ -8878,6 +9056,9 @@ function syncPull(){
                  last:(d.speaking.last&&typeof d.speaking.last==='object')?d.speaking.last:{},
                  partnerRot:typeof d.speaking.partnerRot==='number'?d.speaking.partnerRot:0}
               : (D.speaking||{seen:{},last:{},partnerRot:0}),
+            spxCustom: (d.spxCustom&&typeof d.spxCustom==='object')
+              ? spxWriteCustomLS(d.spxCustom)
+              : spxNormalizeCustomMap(D.spxCustom||spxReadCustomLS()),
             onboarded: (d.onboarded!==undefined) ? !!d.onboarded : !!D.onboarded,
             onboardStep: (typeof d.onboardStep==='number') ? d.onboardStep : (D.onboardStep||1),
             sessionOffset: (typeof d.sessionOffset==='number') ? d.sessionOffset : (D.sessionOffset||0),
@@ -9255,8 +9436,11 @@ async function liveStart(){
     catch(e){ctx=new AC()}
     LIVE.ctx=ctx;LIVE.sampleRate=ctx.sampleRate;
     if(ctx.state==='suspended'&&ctx.resume)await ctx.resume();
-    const url=URL.createObjectURL(new Blob([SPK_VAD_SRC],{type:'application/javascript'}));
-    try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+    try{await ctx.audioWorklet.addModule('/assets/spk-vad.js')}
+    catch(_e){
+      const url=URL.createObjectURL(new Blob([SPK_VAD_SRC],{type:'application/javascript'}));
+      try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+    }
     const node=new AudioWorkletNode(ctx,'spkVad',{numberOfInputs:1,numberOfOutputs:1,channelCount:1});
     node.port.onmessage=e=>liveOnFrame(e.data);
     const src=ctx.createMediaStreamSource(stream);
@@ -10514,8 +10698,9 @@ function makeTurnTransport(cfg){
   function flush(){
     if(closed||busy||!listens||frameBytes<2)return;
     if(spokenMs<SPK_TURN_MIN_MS){resetTurn();return}
+    const activePart=SPK.examMode?(SP_EXAM.part||part):part;
     const payload={audio_b64:spkB64FromPcm(collect()),
-      mime:'audio/pcm;rate=16000',part:part,role:role,
+      mime:'audio/pcm;rate=16000',part:activePart,role:role,
       history:spkTurnHistory(),session_id:sessionId,
       task_id:spkTurnTaskId(),task:spkTurnTask()};
     resetTurn();
@@ -11081,8 +11266,11 @@ async function spkStartMic(){
   catch(e){ctx=new AC()}
   SPK.micCtx=ctx;
   if(ctx.state==='suspended'&&ctx.resume)await ctx.resume();
-  const url=URL.createObjectURL(new Blob([SPK_TX_SRC],{type:'application/javascript'}));
-  try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+  try{await ctx.audioWorklet.addModule('/assets/spk-tx.js')}
+  catch(_e){
+    const url=URL.createObjectURL(new Blob([SPK_TX_SRC],{type:'application/javascript'}));
+    try{await ctx.audioWorklet.addModule(url)}finally{URL.revokeObjectURL(url)}
+  }
   const node=new AudioWorkletNode(ctx,'spkTx',{numberOfInputs:1,numberOfOutputs:1,channelCount:1});
   node.port.onmessage=function(ev){
     if(!SPK.running)return;
@@ -11219,9 +11407,12 @@ async function spkStart(){
       if(!sim){
         if(caps&&caps.live){
           try{
+            const tokBody={role:role,part:part,
+              session_id:(typeof spkTurnSessionId==='function'?spkTurnSessionId():'')};
+            const activeTask=(typeof spkTurnTask==='function')?spkTurnTask():undefined;
+            if(activeTask)tokBody.task=activeTask;
             const r=await fetch('/api/speaking/token',{method:'POST',
-              headers:authHeaders(),body:JSON.stringify({role:role,part:part,
-                session_id:(typeof spkTurnSessionId==='function'?spkTurnSessionId():'')})});
+              headers:authHeaders(),body:JSON.stringify(tokBody)});
             if(r.ok){
               const j=await r.json();
               if(j&&j.token&&j.ws_url){mode='live';liveCfg=j}
@@ -12007,10 +12198,12 @@ async function spxPlanSession(seed){
   save();
   const name=SPX_PARTNER_NAMES[spxSeedNumber(seed)%SPX_PARTNER_NAMES.length];
   const parts=[1,2,3,4].map(function(part){
-    const task=spxTaskById(bank,part,picked.ids[part])||spxDefaultTask(part);
-    const phases=spxPhasesFor(part,task,seed,picked.ids[part]);
-    return {part:part,minutes:spxPartMinutes(bank,part),taskId:picked.ids[part],
-      task:task,turns:phases.length,
+    const custom=spxGetCustomTask(part);
+    const task=custom||spxTaskById(bank,part,picked.ids[part])||spxDefaultTask(part);
+    const taskId=custom?custom.id:picked.ids[part];
+    const phases=spxPhasesFor(part,task,seed,taskId);
+    return {part:part,minutes:spxPartMinutes(bank,part),taskId:taskId,
+      task:task,custom:!!custom,turns:phases.length,
       seconds:phases.reduce(function(total,ph){return total+(Number(ph.sec)||0)},0)};
   });
   return {seed:seed,partner:name,parts:parts,ids:picked.ids,seen:picked.seen,last:picked.last};
@@ -12027,7 +12220,9 @@ function spxPartnerLine(task,index){
 function spxPhasesPart1(task,seed){
   const all=(task&&Array.isArray(task.questions)&&task.questions.length)
     ?task.questions:spxDefaultTask(1).questions;
-  const n=Math.min(all.length,5+(spxSeedNumber(seed)%2));
+  const n=(task&&task.custom)
+    ?Math.min(all.length,6)
+    :Math.min(all.length,5+(spxSeedNumber(seed)%2));
   const out=[];
   /* Two minutes for five or six questions: the pair of turns is the budget,
      not a fixed answer length. */
@@ -12062,13 +12257,13 @@ function spxPhasesPart3(task){
     {key:'spx_listen',who:'examiner',sec:15,
       line:SPX_LINES.part3+' '+situation},
     {key:'spx_discuss',who:'both',sec:120,prompt:situation,events:[
-      {at:8,who:'partner',text:spxPartnerLine(t,0)},
-      {at:58,who:'partner',text:spxPartnerLine(t,1)}
+      {at:8,who:'partner',prompt:situation,text:spxPartnerLine(t,0)},
+      {at:58,who:'partner',prompt:situation,text:spxPartnerLine(t,1)}
     ]},
     {key:'spx_decide',who:'examiner',sec:15,
       line:SPX_LINES.part3decide.replace('{decision}',decision)},
-    {key:'spx_decide',who:'both',sec:60,events:[
-      {at:26,who:'partner',text:spxPartnerLine(t,2)}
+    {key:'spx_decide',who:'both',sec:60,prompt:decision,events:[
+      {at:26,who:'partner',prompt:decision,text:spxPartnerLine(t,2)}
     ]}
   ];
 }
@@ -12078,7 +12273,7 @@ function spxPhasesPart4(task){
     spxDefaultTask(4).questions;
   const name=spxPartnerName();
   const out=[];
-  const cycles=Math.max(4,Math.min(qs.length,4));
+  const cycles=t.custom?Math.max(1,Math.min(qs.length,5)):Math.max(4,Math.min(qs.length,4));
   for(let i=0;i<cycles;i++){
     const forYou=qs[i]||qs[qs.length-1];
     const forPartner=qs[i+1]||qs[i]||forYou;
@@ -12134,7 +12329,42 @@ function spxSetScreen(name){
 function spxPhaseHeader(){
   const partEl=spx$('spxPhasePart');
   if(partEl)partEl.textContent=t('spx_phase_part',{n:SP_EXAM.part});
+  const chip=spx$('spxExamCustomChip');
+  if(chip){
+    chip.textContent=t('spx_custom_chip');
+    chip.style.display=(SP_EXAM.task&&SP_EXAM.task.custom)?'inline-flex':'none';
+  }
   spxRenderTurn();
+}
+
+function spxRenderCustomPanel(resetInput){
+  const n=Math.max(1,Math.min(4,parseInt(SP_EXAM.part,10)||1));
+  const saved=spxGetCustomTask(n);
+  const partLbl=spx$('spxCustomPartLbl');
+  if(partLbl)partLbl.textContent='· '+t('spx_phase_part',{n:n});
+  const chip=spx$('spxCustomChooseChip');
+  if(chip){
+    chip.textContent=t('spx_custom_chip');
+    chip.style.display=saved?'inline-flex':'none';
+  }
+  const hint=spx$('spxCustomHint');
+  if(hint)hint.textContent=t('spx_custom_hint_'+n);
+  const ta=spx$('spxCustomInput');
+  if(ta){
+    ta.placeholder=t('spx_custom_ph_'+n);
+    if(resetInput||ta.dataset.part!==String(n)){
+      ta.value=saved&&typeof saved.raw==='string'?saved.raw:'';
+      ta.dataset.part=String(n);
+    }
+  }
+  const rm=spx$('spxCustomRemoveBtn');
+  if(rm)rm.style.display=saved?'inline-flex':'none';
+  if(resetInput){
+    const err=spx$('spxCustomErr');
+    if(err){err.textContent='';err.style.display='none'}
+    const st=spx$('spxCustomStatus');
+    if(st)st.textContent='';
+  }
 }
 
 function spxRenderChoose(){
@@ -12144,6 +12374,7 @@ function spxRenderChoose(){
   box.replaceChildren();
   [1,2,3,4].forEach(function(n){
     const meta=SPX_PART_META[n];
+    const hasCustom=!!spxGetCustomTask(n);
     const b=document.createElement('button');
     b.type='button';
     b.className='spx-part';
@@ -12153,7 +12384,8 @@ function spxRenderChoose(){
     b.dataset.part=String(n);
     b.innerHTML='<span class="n">'+esc(t('spx_part_title',{n:n,min:meta.minutes}))+'</span>'
       +'<span class="d">'+esc(t(meta.desc))+'</span>'
-      +'<span class="m">'+esc(t(meta.mode))+'</span>';
+      +'<span class="m">'+esc(t(meta.mode))+'</span>'
+      +(hasCustom?'<span class="spx-custom-chip spx-part-chip">'+esc(t('spx_custom_chip'))+'</span>':'');
     b.onclick=function(){SP_EXAM.select(n)};
     b.onkeydown=function(ev){
       let next=0;
@@ -12172,6 +12404,7 @@ function spxRenderChoose(){
     full.setAttribute('aria-pressed',SP_EXAM.selectedFull?'true':'false');
     full.classList.toggle('on',!!SP_EXAM.selectedFull);
   }
+  spxRenderCustomPanel(false);
   const err=spx$('spxChooseErr');
   if(err){err.textContent=SP_EXAM.error||'';err.style.display=SP_EXAM.error?'block':'none'}
 }
@@ -12182,6 +12415,14 @@ function spxRenderBrief(){
   spx$('spxBriefSentence').textContent=full
     ?t('spx_full_brief')
     :t('spx_brief_sentence',{n:SP_EXAM.part});
+  const briefChip=spx$('spxBriefCustomChip');
+  if(briefChip){
+    const hasCustom=!!(SP_EXAM.task&&SP_EXAM.task.custom)||
+      (full&&SP_EXAM.session&&SP_EXAM.session.plan&&
+        (SP_EXAM.session.plan.parts||[]).some(function(p){return !!(p&&p.custom)}));
+    briefChip.textContent=t('spx_custom_chip');
+    briefChip.style.display=hasCustom?'inline-flex':'none';
+  }
   spx$('spxBriefPartner').textContent=(!full&&SP_EXAM.part===1)
     ?t('spx_brief_part1')
     :t('spx_brief_partner',{name:spxPartnerName()});
@@ -12581,13 +12822,29 @@ function spxPartnerProviderWanted(){
   if(byoHeaders()['X-Provider-Key'])return true;
   return !!SPK.partnerAI;
 }
+function spxPartnerQuestionFallback(){
+  const ph=SP_EXAM.phases&&SP_EXAM.phases[SP_EXAM.phase];
+  const task=SP_EXAM.task||{};
+  return String(
+    (ph&&(ph.prompt||ph.line))||
+    SP_EXAM.lastAsked||
+    task.question||
+    (Array.isArray(task.prompts)&&task.prompts[0])||
+    (Array.isArray(task.questions)&&task.questions[0])||
+    task.situation||
+    task.decision||
+    task.topic||
+    'What do you think?'
+  ).replace(/\s+/g,' ').trim().slice(0,300);
+}
 function spxPartnerFromProvider(question,mode){
   mode=mode==='examiner'?'examiner':'partner';
   /* The recognised text is the only thing that would leave the browser here.
      The caller already checked that an AI key exists (spxPartnerProviderWanted),
      so without one this function is never reached. */
+  const q=String(question||'').replace(/\s+/g,' ').trim().slice(0,300)||spxPartnerQuestionFallback();
   const payload={
-    question:String(question||'').slice(0,300),
+    question:q,
     topic:String((SP_EXAM.task&&(SP_EXAM.task.topic||SP_EXAM.task.title))||'').slice(0,120),
     candidate_said:spxCandidateSaid(),
     candidate_context:Number(SP_EXAM.part)===4?spxCandidateContext():[],
@@ -12752,12 +13009,13 @@ function spxFireEvent(ev){
     spxCandidateLine(ev.text,ev.ms);
     return;
   }
-  if(!ev.text)return;
   if(ev.who==='partner'){
+    if(!ev.text&&!spxPartnerProviderWanted()&&!spxPartnerLine(SP_EXAM.task,SP_EXAM.partnerIdx))return;
     spxPartnerTurn(ev);
     if(ev.qi!==undefined)spxHighlight(ev.qi);
     return;
   }
+  if(!ev.text)return;
   const ms=ev.ms||spxSpeechMs(ev.text);
   spxSay('examiner',ev.text,ms);
   if(ev.qi!==undefined)spxHighlight(ev.qi);
@@ -13336,8 +13594,12 @@ SP_EXAM.open=async function(){
   if(panel)panel.style.display='block';
   SP_EXAM.error='';
   SP_EXAM.micMuted=false;
+  spxCustomMap();
+  const det=spx$('spxCustomDetails');
+  if(det)det.open=false;
   spxSetScreen('choose');
   spxRenderChoose();
+  spxRenderCustomPanel(true);
   try{
     await spxLoadBank();
     /* Opening the exam warms the first Part 2 task: by the time the candidate
@@ -13365,11 +13627,60 @@ SP_EXAM.select=function(part){
   }
   const full=spx$('spxFullBtn');
   if(full){full.setAttribute('aria-pressed','false');full.classList.remove('on')}
+  spxRenderCustomPanel(true);
+};
+
+SP_EXAM.saveCustom=function(){
+  const n=Math.max(1,Math.min(4,parseInt(SP_EXAM.part,10)||1));
+  const ta=spx$('spxCustomInput');
+  const err=spx$('spxCustomErr');
+  const st=spx$('spxCustomStatus');
+  const raw=ta?ta.value:'';
+  const parsed=spxParseCustomTask(n,raw);
+  if(!parsed.ok){
+    if(err){err.textContent=parsed.error;err.style.display='block'}
+    if(st)st.textContent='';
+    return false;
+  }
+  const map=spxCustomMap();
+  map[String(n)]=parsed.task;
+  D.spxCustom=spxWriteCustomLS(map);
+  save();
+  if(err){err.textContent='';err.style.display='none'}
+  if(ta){ta.value=parsed.task.raw;ta.dataset.part=String(n)}
+  if(st)st.textContent=t('spx_custom_saved',{n:n});
+  spxRenderChoose();
+  return true;
+};
+
+SP_EXAM.removeCustom=function(){
+  const n=Math.max(1,Math.min(4,parseInt(SP_EXAM.part,10)||1));
+  const map=spxCustomMap();
+  delete map[String(n)];
+  D.spxCustom=spxWriteCustomLS(map);
+  save();
+  const ta=spx$('spxCustomInput');
+  if(ta){ta.value='';ta.dataset.part=String(n)}
+  const err=spx$('spxCustomErr');
+  if(err){err.textContent='';err.style.display='none'}
+  const st=spx$('spxCustomStatus');
+  if(st)st.textContent=t('spx_custom_removed');
+  spxRenderChoose();
 };
 
 SP_EXAM.start=async function(){
   SP_EXAM.error='';
   SP_EXAM.selectedFull=false;
+  const det=spx$('spxCustomDetails');
+  const ta=spx$('spxCustomInput');
+  if(det&&det.open&&ta){
+    const raw=String(ta.value||'').trim();
+    const cur=spxGetCustomTask(SP_EXAM.part);
+    const curRaw=cur?String(cur.raw||'').trim():'';
+    if(raw&&raw!==curRaw){
+      if(!SP_EXAM.saveCustom())return;
+    }
+  }
   try{await spxLoadBank()}catch(e){
     SP_EXAM.error=t('spx_no_task');
     spxRenderChoose();
@@ -20130,9 +20441,11 @@ click:{
 'SP_EXAM.copyTranscript':()=>SP_EXAM.copyTranscript(),
 'SP_EXAM.open':()=>SP_EXAM.open(),
 'SP_EXAM.ready':()=>SP_EXAM.ready(),
+'SP_EXAM.removeCustom':()=>SP_EXAM.removeCustom(),
 'SP_EXAM.repeatPart':()=>SP_EXAM.repeatPart(),
 'SP_EXAM.restart':()=>SP_EXAM.restart(),
 'SP_EXAM.retry':()=>SP_EXAM.retry(),
+'SP_EXAM.saveCustom':()=>SP_EXAM.saveCustom(),
 'SP_EXAM.saveReport':()=>SP_EXAM.saveReport(),
 'SP_EXAM.start':()=>SP_EXAM.start(),
 'SP_EXAM.startFull':()=>SP_EXAM.startFull(),

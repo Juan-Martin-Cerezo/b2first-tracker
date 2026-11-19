@@ -79,6 +79,7 @@ PART2_INSTRUCTION = (
 )
 
 PART2_PARTNER_TURN = "Thank you. Your partner will answer in a moment."
+PART2_DEFAULT_FOLLOWUP = "Which of these two options would you prefer? Why?"
 
 PART3_INSTRUCTION = (
     "Now I'd like you to talk about something together for about two minutes. "
@@ -135,9 +136,10 @@ PART 2 — LONG TURN
 - Then show the task and say it, word for word:
   "{task}"
 - Let the candidate speak for about one minute. Do not interrupt and do not fill their pauses.
-- When the minute is over say exactly: "{partner}"
-- Let the partner answer for about thirty seconds. Do not speak for the partner.
-- Then ask the second question from the task, word for word, and let the candidate answer.
+- After the candidate finishes comparing the photographs, say "Thank you." and immediately ask
+  the second question from the task, word for word:
+  "{second}"
+- Ask the second question yourself and let the candidate answer. Do not wait for another speaker.
 """
 
 
@@ -148,6 +150,8 @@ PART 3 — COLLABORATIVE TASK
 - Read the card, word for word: "{task}"
 - Then STOP and stay silent. The candidate and the partner talk together.
 - Do not answer the task questions, do not summarise and do not take a side.
+- Stay strictly on the card options and decision question above; never drift back to Part 1
+  personal interview questions.
 - Re-enter with one short sentence only if the candidate addresses you by name.
 - When the controller gives you the decision question, ask it, word for word: "{decision}"
   and let the candidate and the partner agree on an answer. Do not decide for them.
@@ -160,6 +164,8 @@ PART 4 — DISCUSSION
 - Then ask these questions one at a time, in order, and wait for the answer before
   asking the next one:
 {questions}
+- Stay strictly on the discussion questions listed above; never revert to Part 1 personal
+  interview questions.
 - Choose who answers by naming nobody: ask "What do you think?" and let the candidate
   answer; the partner will join on its own. Never ask two questions in one turn.
 - Add at most ONE short follow-up ("Why?", "Can you tell me more about that?") per answer,
@@ -191,17 +197,14 @@ def examiner_instruction(part=1, task=None):
     elif part == 2:
         prompts = task.get("prompts") or [
             "Compare the photographs and say why the people might have chosen these things."]
-        title = task.get("title") or "Two photographs"
-        task_line = "These photographs show {}.".format(title)
-        if len(prompts) > 1:
-            task_line += " " + prompts[0]
-        else:
-            task_line += " " + prompts[0]
+        second = prompts[1] if len(prompts) > 1 else PART2_DEFAULT_FOLLOWUP
+        title = task.get("title") or task.get("topic") or "Two photographs"
+        task_line = "These photographs show {}. {}".format(title, prompts[0])
         blocks.append(_PART2_BLOCK.format(
-            instruction=PART2_INSTRUCTION, task=task_line, partner=PART2_PARTNER_TURN))
+            instruction=PART2_INSTRUCTION, task=task_line, second=second))
         blocks.append(
-            "\nTHE SECOND QUESTION (ask it after the partner has spoken):\n  \"{}\"\n"
-            .format(prompts[1] if len(prompts) > 1 else prompts[0]))
+            "\nTHE SECOND QUESTION (ask it right after the candidate's comparison):\n  \"{}\"\n"
+            .format(second))
         blocks.append(
             "\nTHE PHOTOGRAPHS (for your own reference only — never list them out loud):\n"
             + _bulleted(task.get("photos") or ["two photographs of people"]) + "\n")
@@ -266,10 +269,10 @@ def partner_instruction(part=1, task=None):
             "Compare the photographs and say why the people might have chosen these things."]
         blocks.append(
             "\nPART 2 — LONG TURN\n"
-            "- The candidate has just compared two photographs. When you are asked, respond\n"
-            "  for about thirty seconds about THEIR photographs: what you can see, what the\n"
-            "  people are doing, how the photos are similar or different, and one guess about\n"
-            "  how they feel. Then stop and give the turn back.\n"
+            "- The candidate has just compared two photographs. When the examiner signals your turn\n"
+            "  (\"" + PART2_PARTNER_TURN + "\"), respond for about thirty seconds about THEIR\n"
+            "  photographs: what you can see, what the people are doing, how the photos are similar\n"
+            "  or different, and one guess about how they feel. Then stop and give the turn back.\n"
             "- The task was: \"" + prompts[0] + "\"\n")
     elif part == 3:
         prompts = task.get("prompts") or ["two or three ideas"]
@@ -280,15 +283,24 @@ def partner_instruction(part=1, task=None):
             "- The card says:\n" + _bulleted(prompts) + "\n"
             "- Take turns. Ask one question from the card, listen, react (\"Right\", \"Mmm,\n"
             "  yes\", \"That's a good point\"), then hand the turn back.\n"
+            "- Stay strictly on the topic and card options above; never ask Part 1 personal\n"
+            "  interview questions.\n"
             "- You must NOT complete the task on your own. Never summarise the final answer by\n"
             "  yourself. The decision question is: \"" + (task.get("decision")
                                                          or "Which two ideas would be best?")
             + "\"\n")
     else:
+        questions = task.get("questions") or []
+        topic = task.get("topic") or ""
+        q_block = ("\n- Follow the discussion questions for this task:\n" + _numbered(questions)
+                   if questions else "")
+        t_line = ("\n- The discussion topic is: \"" + topic + "\"" if topic else "")
         blocks.append(
             "\nDISCUSSION\n"
             "- The examiner asks a discussion question. Answer it in one or two sentences,\n"
-            "  then ask the other candidate what they think. One short question only.\n")
+            "  then ask the other candidate what they think. One short question only."
+            + t_line + q_block + "\n"
+            "- Stay on the discussion topic; never revert to Part 1 personal interview questions.\n")
     blocks.append("\nStay in role for the whole exam. Be a good partner, not a second examiner.")
     return "\n".join(blocks)
 
@@ -310,7 +322,7 @@ def scripted_lines(part=1, task=None, role="examiner"):
     lines = []
     if role == "partner":
         if part == 2:
-            lines = [task.get("title") or "Two photographs"]
+            lines = [PART2_PARTNER_TURN, task.get("title") or task.get("topic") or "Two photographs"]
             lines += task.get("prompts") or []
         elif part == 3:
             lines = [task.get("topic") or ""] + (task.get("prompts") or [])
@@ -325,13 +337,12 @@ def scripted_lines(part=1, task=None, role="examiner"):
     elif part == 2:
         prompts = task.get("prompts") or [
             "Compare the photographs and say why the people might have chosen these things."]
-        title = task.get("title") or "Two photographs"
+        second = prompts[1] if len(prompts) > 1 else PART2_DEFAULT_FOLLOWUP
+        title = task.get("title") or task.get("topic") or "Two photographs"
         lines = [PART2_INSTRUCTION,
                  "These photographs show {}. {}".format(title, prompts[0]),
-                 prompts[0]]
-        if len(prompts) > 1:
-            lines.append(prompts[1])
-        lines.append(PART2_PARTNER_TURN)
+                 prompts[0],
+                 second]
     elif part == 3:
         prompts = task.get("prompts") or ["two or three ideas"]
         topic = task.get("topic") or "a task"
