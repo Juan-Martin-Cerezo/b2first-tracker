@@ -231,3 +231,36 @@ account/credential format. Record every run in the table above.
 (`/mnt/vps_data/backups`). The encrypted copy must be pushed off-host (rclone/ssh or a
 provider bucket) before this control can be called complete; that needs credentials and
 a destination the operator owns.
+
+## Off-host copy (Google Drive)
+
+The encrypted archive is pushed to a Google Drive folder by
+`tools/backup_push_gdrive.sh`, wired as `ExecStartPost` of `b2first-backup.service`.
+The script is deliberately soft: if `rclone` or the remote is missing it logs why and
+exits 0, so a broken destination never fails the local backup.
+
+| Setting | Default | Where |
+| --- | --- | --- |
+| Remote name | `gdrive` | `B2_GDRIVE_REMOTE` in `~/.config/b2first/backup.env` |
+| Folder | `b2first-backups` | `B2_GDRIVE_PATH` |
+| Remote retention | 14 days | `B2_BACKUP_KEEP_DAYS` |
+
+`rclone` is installed system-wide (`rclone v1.60.1`). The remote is created once, from a
+token obtained on a machine with a browser:
+
+```
+# on the machine with a browser
+rclone authorize "drive"          # prints a JSON token
+# on the host
+rclone config create gdrive drive scope=drive.file token '<json token>'
+chmod 600 ~/.config/rclone/rclone.conf
+rclone lsf gdrive:b2first-backups   # smoke test
+```
+
+Scope `drive.file` means rclone only sees the folder it creates: it cannot read the rest
+of the Drive. The archives stay encrypted (AES-256, PBKDF2) before they leave the host,
+so Drive never holds plaintext candidate data.
+
+**Status:** the push path is implemented and scheduled; it stays idle until the OAuth
+token is registered. Once a token exists, this row (A.8.13) has the off-host leg of the
+3-2-1 rule and can move to Implementado.
