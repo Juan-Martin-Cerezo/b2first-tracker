@@ -4587,7 +4587,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <h2 data-i18n="plan_sessions">🗓 Session Schedules &amp; Frequency</h2>
             <button type="button" class="btn sm ok" data-action="addScheduleRow" data-i18n="plan_add_day">+ Add Session Day</button>
           </div>
-          <div class="sub" data-i18n="plan_sessions_sub">Set as many session days and times as you want. Each week works one pair of skills, and your days split them; nothing resets between weeks.</div>
+          <div class="sub" data-i18n="plan_sessions_sub">Set as many session days and times as you want. Sessions keep moving through all four skills in order; nothing resets between weeks.</div>
 
           <div id="scheduleRowsContainer" style="display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s3)"></div>
 
@@ -5444,7 +5444,7 @@ const I18N={
     plan_offset:'Offset: {offset}',
     plan_sessions:'🗓 Session Schedules & Frequency',
     plan_add_day:'+ Add Session Day',
-    plan_sessions_sub:'Set as many session days and times as you want. Each week works one pair of skills, and your days split them; nothing resets between weeks.',
+    plan_sessions_sub:'Set as many session days and times as you want. Sessions keep moving through all four skills in order; nothing resets between weeks.',
     plan_no_session_days:'No session days configured. Add a day in Session Schedules & Frequency.',
     plan_shift:'Session Shift / Fast-Forward',
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
@@ -5466,7 +5466,7 @@ const I18N={
     plan_reset_field_weekOverrides:'Manual overrides this week',
     plan_rotation_by_part:'By part',
     plan_rotation_full_section:'Full paper each session',
-    plan_help_by_part:'One skill per session. Weeks alternate Reading & UoE + Listening with Writing + Speaking; your session days split the pair.',
+    plan_help_by_part:'One skill per session, moving through Reading & UoE, Listening, Writing and Speaking in order without resetting between weeks.',
     plan_week_block_summary:'This week: {now} — next week: {next}',
     plan_week_block_days:'This week: {days} — next week: {next}',
     plan_week_block_day:'{day} · {skill}',
@@ -6373,7 +6373,7 @@ const I18N={
     plan_offset:'Desfase: {offset}',
     plan_sessions:'🗓 Horarios y frecuencia de sesiones',
     plan_add_day:'+ Agregar día de sesión',
-    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. Cada semana trabaja un par de habilidades y tus días lo reparten; nada se reinicia entre semanas.',
+    plan_sessions_sub:'Configurá todos los días y horarios de sesión que quieras. Las sesiones siguen avanzando por las cuatro habilidades en orden; nada se reinicia entre semanas.',
     plan_no_session_days:'No hay días de sesión configurados. Agregá un día en Horarios y frecuencia de sesiones.',
     plan_shift:'Desplazamiento de sesiones / adelantar',
     plan_shift_sub:'Adelantá la cola si hacés una sesión futura antes de tiempo. Todas las fechas siguientes se corren un turno.',
@@ -6395,7 +6395,7 @@ const I18N={
     plan_reset_field_weekOverrides:'Ajustes manuales de esta semana',
     plan_rotation_by_part:'Por parte',
     plan_rotation_full_section:'Paper completo por sesión',
-    plan_help_by_part:'Una habilidad por sesión. Las semanas alternan Reading & UoE + Listening con Writing + Speaking; tus días reparten el par.',
+    plan_help_by_part:'Una habilidad por sesión: avanza en orden por Reading y UoE, Listening, Writing y Speaking sin reiniciarse entre semanas.',
     plan_week_block_summary:'Esta semana: {now} — la próxima: {next}',
     plan_week_block_days:'Esta semana: {days} — la próxima: {next}',
     plan_week_block_day:'{day} · {skill}',
@@ -15420,16 +15420,14 @@ function rotateByOffset(arr,offset){
   const k=((Math.trunc(offset)%n)+n)%n;
   return k?arr.slice(k).concat(arr.slice(0,k)):arr.slice();
 }
-/* ---------- WEEK BLOCKS (by-part) ----------
-   One continuous queue of work units shared by PLAN and TODAY. Weeks alternate
-   a pair of skills forever: week A (1st, 3rd, ...) is R&UE + Listening, week B
-   (2nd, 4th, ...) is Writing + Speaking. The days of a week split the pair in
-   order (day 1 -> first skill, day 2 -> second, day 3 -> first again), so a
-   session never mixes skills. Each skill's position continues across weeks.
-   The position comes from the units already logged, never from a stored
-   cursor, so a refresh cannot move it. */
+/* ---------- CONTINUOUS SESSION QUEUE (by-part) ----------
+   One continuous queue of work units shared by PLAN, TODAY and "What comes
+   next". Sessions cycle Reading & UoE -> Listening -> Writing -> Speaking
+   without ever resetting at a week boundary, so a session never mixes skills
+   and each skill's position continues across weeks. The position comes from
+   the units already logged plus D.sessionOffset, never from a stored cursor,
+   so a refresh cannot move it. */
 const QUEUE_SKILLS=['rue','l','w','sp'];
-const WEEK_SKILL_PAIRS=[['rue','l'],['w','sp']];
 function normalizeItemsPerSession(v){
   const n=Math.round(Number(v));
   return n>=1&&n<=4?n:1;
@@ -15452,31 +15450,21 @@ function queueUnitAt(skill,occ,cycles){
 function queueUnit(index,cycles){
   return queueUnitAt(QUEUE_SKILLS[queueMod(index,4)],Math.floor(index/4),cycles);
 }
-function weekPairFor(weekIndex){
-  return WEEK_SKILL_PAIRS[queueMod(weekIndex,2)];
-}
-function weekSkillAt(weekIndex,dayIndex){
-  const pair=weekPairFor(weekIndex);
-  return pair[queueMod(dayIndex,2)];
-}
-function sessionSkillFor(sessionIndex,daysPerWeek){
-  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
-  const week=Math.floor(sessionIndex/n);
-  return weekSkillAt(week,sessionIndex%n);
+function sessionSkillFor(sessionIndex){
+  return QUEUE_SKILLS[queueMod(sessionIndex,4)];
 }
 /* How many earlier sessions of the same skill exist before this index: the
-   skill's own position continues across weeks and blocks, it never resets. */
+   skill's own position continues across weeks, it never resets. */
 function sessionOccurrence(sessionIndex,daysPerWeek,skill){
-  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
+  const idx=Math.trunc(Number(sessionIndex))||0;
   let occ=0;
-  for(let i=0;i<sessionIndex;i++){if(sessionSkillFor(i,n)===skill)occ++}
+  for(let i=0;i<idx;i++){if(sessionSkillFor(i)===skill)occ++}
   return occ;
 }
 /* A session is one block of `per` consecutive units of the SAME skill. */
 function queueBlockUnit(sessionIndex,k,per,cycles,daysPerWeek){
-  const n=Math.max(1,Math.trunc(Number(daysPerWeek))||1);
-  const skill=sessionSkillFor(sessionIndex,n);
-  const occ=sessionOccurrence(sessionIndex,n,skill)*per;
+  const skill=sessionSkillFor(sessionIndex);
+  const occ=sessionOccurrence(sessionIndex,daysPerWeek,skill)*per;
   return queueUnitAt(skill,occ+k,cycles);
 }
 function queueUnitLabel(u){
@@ -15574,6 +15562,19 @@ function planProgressLines(){
 function queueStartSession(s,log,offset,per){
   const n=normalizeItemsPerSession(per);
   return Math.floor(queueLogCount(s,log)/n)+(Math.trunc(Number(offset))||0);
+}
+/* Completed whole-paper sessions in the log: one entry per official paper
+   (rue, l, fw, sf or full Speaking with all four parts), ignoring extras. */
+function fullSectionLogCount(log){
+  return (Array.isArray(log)?log:[]).filter(e=>{
+    if(!e||e.extra===true)return false;
+    if(e.type==='rue'||e.type==='l'||e.type==='fw'||e.type==='sf')return true;
+    if(e.type==='sp'&&(e.full===true||(Array.isArray(e.parts)&&[1,2,3,4].every(p=>e.parts.indexOf(p)>=0))))return true;
+    return false;
+  }).length;
+}
+function fullSectionStartSession(log,offset){
+  return fullSectionLogCount(log)+(Math.trunc(Number(offset))||0);
 }
 /* Minutes for one queue unit, straight from the table. A writing genre is a
    single writing task; a loose part is timed like that part, never like a
@@ -15681,9 +15682,10 @@ function planUpcomingRows(count){
   if(!days.length)return [];
   const offset=Math.trunc(Number(D.sessionOffset)||0);
   if(mode==='full-section'){
+    const start=fullSectionStartSession(D.log,offset);
     const out=[];
     for(let i=0;i<count;i++){
-      const sec=FULL_SECTION[queueMod(i+offset,4)];
+      const sec=FULL_SECTION[queueMod(start+i,4)];
       const d=days[i%days.length];
       out.push({day:d.key,time:d.time,
         label:FULL_SECTION_LABEL[sec[0]]+' ('+sec[1]+' min)',skill:sec[0]});
@@ -15699,7 +15701,7 @@ function planUpcomingRows(count){
   const out=[];
   for(let i=0;out.length<count;i++){
     const d=days[i%days.length];
-    const skill=sessionSkillFor(start+i,days.length);
+    const skill=sessionSkillFor(start+i);
     for(let k=0;k<per&&out.length<count;k++){
       const u=(pending[skill]||[]).shift();
       if(!u)break;
@@ -15717,29 +15719,37 @@ function planSessionStart(s){
   const per=normalizeItemsPerSession(s.itemsPerSession);
   return queueStartSession(s,D.log,D.sessionOffset||0,per);
 }
-/* Which skill pair is active and which comes next, in plain language. */
+function planWeekSkills(start,count){
+  const seen={},out=[];
+  for(let i=0;i<count;i++){
+    const sk=sessionSkillFor(start+i);
+    if(!seen[sk]){seen[sk]=true;out.push(sk)}
+  }
+  return out;
+}
+/* Which skills are active this week and which come next, in plain language. */
 function planBlockPairLine(){
   const days=getSessionDays();
   if(!days.length)return '';
+  const n=days.length;
   const start=planSessionStart();
-  const week=Math.floor(start/days.length);
   return t('plan_week_block_summary',{
-    now:weekPairFor(week).map(planSkillLabel).join(' + '),
-    next:weekPairFor(week+1).map(planSkillLabel).join(' + ')});
+    now:planWeekSkills(start,n).map(planSkillLabel).join(' + '),
+    next:planWeekSkills(start+n,n).map(planSkillLabel).join(' + ')});
 }
-/* Week plan line: the pair plus the real days of this schedule. */
+/* Week plan line: the week's skills plus the real days of this schedule. */
 function planWeekBlockLine(){
   const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
   if(mode!=='by-part')return '';
   const days=getSessionDays();
   if(!days.length)return '';
+  const n=days.length;
   const start=planSessionStart();
-  const week=Math.floor(start/days.length);
-  const next=weekPairFor(week+1).map(planSkillLabel).join(' + ');
-  if(days.length<=2)return t('plan_week_block_summary',{
-    now:weekPairFor(week).map(planSkillLabel).join(' + '),next:next});
+  const next=planWeekSkills(start+n,n).map(planSkillLabel).join(' + ');
+  if(n<=2)return t('plan_week_block_summary',{
+    now:planWeekSkills(start,n).map(planSkillLabel).join(' + '),next:next});
   const list=days.map((d,i)=>t('plan_week_block_day',{
-    day:planDayFull(d.key),skill:planSkillLabel(weekSkillAt(week,i))})).join(', ');
+    day:planDayFull(d.key),skill:planSkillLabel(sessionSkillFor(start+i))})).join(', ');
   return t('plan_week_block_days',{days:list,next:next});
 }
 /* Plain-language description of the active mode, used by Today and by the
@@ -15751,9 +15761,7 @@ function planModeLine(){
   const n=normalizeItemsPerSession(s.itemsPerSession);
   let detail=t('plan_mode_one');
   if(n!==1){
-    const days=getSessionDays();
-    const d=Math.max(1,days.length);
-    const skill=sessionSkillFor(planSessionStart(s),d);
+    const skill=sessionSkillFor(planSessionStart(s));
     detail=t('plan_mode_many',{n:planNumberWord(n),skill:planSkillLabel(skill)});
   }
   const base=planBlockPairLine();
@@ -15838,7 +15846,7 @@ function nextUnitSlotForSkill(skill){
   const start=planSessionStart(s);
   const d=Math.max(1,getSessionDays().length);
   for(let i=0;i<16;i++){
-    if(sessionSkillFor(start+i,d)!==skill)continue;
+    if(sessionSkillFor(start+i)!==skill)continue;
     const units=[];
     for(let k=0;k<per;k++)units.push(queueBlockUnit(start+i,k,per,cycles,d));
     return queueSlotForUnits(units);
@@ -15846,9 +15854,9 @@ function nextUnitSlotForSkill(skill){
   return null;
 }
 function nextSectionSlotForSkill(type){
-  const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
+  const start=fullSectionStartSession(D&&D.log,D&&D.sessionOffset);
   for(let i=0;i<4;i++){
-    const sec=FULL_SECTION[queueMod(i+offset,4)];
+    const sec=FULL_SECTION[queueMod(start+i,4)];
     if(sec[0]===type)return {part:null,parts:(PAPER_PARTS[type]||[]).slice(),type:type,min:sec[1],
       timed:false,section:true,full:true};
   }
@@ -16164,13 +16172,13 @@ function buildWeeklyPlan(D){
   const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
   let slots;
   if(rotationMode==='full-section'){
-    // One whole paper per chosen day, cycling the four official papers.
+    // One whole paper per chosen day, cycling the four official papers continuously.
+    const start=fullSectionStartSession(log,offset);
     slots=DAYS.map((day,i)=>{
-      const sec=FULL_SECTION[i%FULL_SECTION.length];
+      const sec=FULL_SECTION[queueMod(start+i,FULL_SECTION.length)];
       return {part:null,parts:(PAPER_PARTS[sec[0]]||[]).slice(),type:sec[0],min:sec[1],timed:false,section:true,full:true,
         reason:t('plan_full_reason',{paper:FULL_SECTION_LABEL[sec[0]],min:sec[1]})};
     });
-    slots=rotateByOffset(slots,offset);
   }else{
     // by-part: one continuous queue, `itemsPerSession` units of one skill per day.
     const per=normalizeItemsPerSession(s.itemsPerSession);
@@ -18245,8 +18253,8 @@ function todayNextSessionSlot(plan,todaySlots){
   const d=sessionDays[nextStep%dayN];
   const mode=normalizeRotationMode(s.rotationMode);
   if(mode==='full-section'){
-    const offset=Math.trunc(Number(D&&D.sessionOffset)||0);
-    const sec=FULL_SECTION[queueMod(nextStep+offset,FULL_SECTION.length)];
+    const start=fullSectionStartSession(D&&D.log,D&&D.sessionOffset);
+    const sec=FULL_SECTION[queueMod(start+nextStep,FULL_SECTION.length)];
     return {part:null,parts:(PAPER_PARTS[sec[0]]||[]).slice(),type:sec[0],min:sec[1],
       timed:false,section:true,full:true,day:PLAN_DAY_MAP[d.key],time:d.time};
   }
@@ -18273,8 +18281,7 @@ function todayCycleSkill(plan,todaySlots){
   const nextSk=todaySlotSkill(nextSl);
   if(nextSk)return nextSk;
   const s=(D&&D.settings)||{};
-  const d=Math.max(1,getSessionDays().length);
-  const qSk=sessionSkillFor(planSessionStart(s),d);
+  const qSk=sessionSkillFor(planSessionStart(s));
   return QUEUE_SKILLS.indexOf(qSk)>=0?qSk:'rue';
 }
 function todayCycleText(plan,todaySlots){

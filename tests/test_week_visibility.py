@@ -143,11 +143,11 @@ with sync_playwright() as p:
     # 4. More than two days: the line lists every real day with its skill.
     seed(pg, ["mon", "wed", "fri"], per=1)
     three = pg.evaluate(READ_JS)
-    expected_days = "Monday · Reading & UoE, Wednesday · Listening, Friday · Reading & UoE"
+    expected_days = "Monday · Reading & UoE, Wednesday · Listening, Friday · Writing"
     assert expected_days in three["block"], (
         f"the block line does not list the schedule days: {three['block']!r}"
     )
-    assert "next week: Writing + Speaking" in three["block"], three["block"]
+    assert "next week: Speaking + Reading & UoE + Listening" in three["block"], three["block"]
     OUT["4_three_days"] = three["block"]
 
     assert page_errors == [], f"page errors: {page_errors}"

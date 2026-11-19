@@ -107,20 +107,20 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='plan']")
     pg.wait_for_timeout(250)
 
-    # 1. By-part plan: four days of the rotation queue with no log, so the
-    #    queue opens Reading part 1 (8), Listening part 1 (10), Reading part 2
-    #    (8) and Listening part 2 (10) = 36 min.
+    # 1. By-part plan: four days of the continuous rotation queue with no log,
+    #    so the queue opens Reading part 1 (8), Listening part 1 (10), Writing
+    #    essay (40) and Speaking part 1 (2) = 60 min.
     pg.evaluate(SEED_BY_PART)
     pg.wait_for_timeout(300)
     a = pg.evaluate(READ_JS)
     text_a = assert_line_matches_plan(a, "by-part")
-    assert a["plan"]["total"] == 36 and a["plan"]["count"] == 4, (
+    assert a["plan"]["total"] == 60 and a["plan"]["count"] == 4, (
         f"the by-part plan is not the sum of its units: {a['plan']}"
     )
-    assert a["plan"]["bySkill"] == {"rue": 16, "l": 20}, (
+    assert a["plan"]["bySkill"] == {"rue": 8, "l": 10, "w": 40, "sp": 2}, (
         f"the by-part split is not the queue's: {a['plan']['bySkill']}"
     )
-    assert "This week: 36 min across 4 sessions" in text_a, (
+    assert "This week: 60 min across 4 sessions" in text_a, (
         f"unexpected summary line: {text_a!r}"
     )
     OUT["1_by_part"] = a

@@ -104,9 +104,9 @@ async def main():
         )
         out["2_sesiones_de_la_cola"] = f"OK: {[r['units'] for r in res2]}"
 
-        # 3. The position comes from the log: five days with no log interleave
-        #    R&UE and Listening; five logged Reading units move the same week
-        #    to Writing and Speaking.
+        # 3. The position comes from the log: sessions cycle continuously
+        #    through R&UE -> Listening -> Writing -> Speaking without resetting
+        #    at week boundaries; five logged units advance the queue by 5.
         res3 = await page.evaluate(
             """() => {
             const sched = n => [1,2,3,4,5,6,7].slice(0, n)
@@ -121,13 +121,13 @@ async def main():
             return {d5, d6, moved};
         }"""
         )
-        assert res3["d5"] == ["rue", "l", "rue", "l", "rue"], (
+        assert res3["d5"] == ["rue", "l", "w", "sp", "rue"], (
             f"the five-day week is not the queue from unit 1: {res3['d5']}"
         )
-        assert res3["d6"] == ["rue", "l", "rue", "l", "rue", "l"], (
+        assert res3["d6"] == ["rue", "l", "w", "sp", "rue", "l"], (
             f"the six-day week is not the queue from unit 1: {res3['d6']}"
         )
-        assert res3["moved"] == ["w", "sp", "w", "sp", "w"], (
+        assert res3["moved"] == ["l", "w", "sp", "rue", "l"], (
             f"five logged units did not move the queue: {res3['moved']}"
         )
         out["3_posicion_del_log"] = f"OK: {res3}"

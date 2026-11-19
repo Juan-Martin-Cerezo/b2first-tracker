@@ -61,11 +61,11 @@ def seed(pg, offset):
 def offset_for(paper_type):
     """Offset that puts `paper_type` on today's slot.
 
-    The seven-day plan is rotated as a whole; slot i starts at type
-    (i + offset) % 7 and the four papers cycle, so j = paper index works.
+    Full-section cycles the four papers continuously: slot i has paper
+    (start + i) % 4, so with an empty log offset = (j - TODAY_INDEX) % 4.
     """
     j = PAPERS.index(paper_type)
-    return (j - TODAY_INDEX) % 7
+    return (j - TODAY_INDEX) % 4
 
 
 def today_row(pg):

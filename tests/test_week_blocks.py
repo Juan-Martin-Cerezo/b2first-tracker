@@ -63,17 +63,17 @@ with sync_playwright() as p:
     )
     OUT["2_four_skills"] = skills
 
-    # 3. Three days: day 1 -> first skill, day 2 -> second, day 3 -> first
-    #    again, and the next week starts the other pair.
+    # 3. Three days: sessions rotate continuously through all four skills
+    #    without resetting at the week change.
     three = pg.evaluate(SESSIONS_JS, [["mon", "wed", "fri"], 1, 0, 6])
     assert [s["units"] for s in three] == [
         ["Reading part 1"],
         ["Listening part 1"],
-        ["Reading part 2"],
         ["Writing essay"],
         ["Speaking part 1"],
-        ["Writing article"],
-    ], f"the three-day split is wrong: {three}"
+        ["Reading part 2"],
+        ["Listening part 2"],
+    ], f"the three-day continuous rotation is wrong: {three}"
     assert all(len(s["skills"]) == 1 for s in three), (
         f"a three-day session mixed skills: {three}"
     )
@@ -88,7 +88,7 @@ with sync_playwright() as p:
     assert [s["units"] for s in pairs[:3]] == [
         ["Reading part 1", "Reading part 2"],
         ["Listening part 1", "Listening part 2"],
-        ["Reading part 3", "Reading part 4"],
+        ["Writing essay", "Writing article"],
     ], f"the per=2 split is wrong: {pairs[:3]}"
     OUT["4_per_two"] = pairs
 
