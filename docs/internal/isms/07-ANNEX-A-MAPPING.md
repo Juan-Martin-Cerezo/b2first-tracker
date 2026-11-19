@@ -15,8 +15,8 @@ column means the item could not be checked from this repository or host.
 
 | Status | Count |
 | --- | --- |
-| Implementado | 4 |
-| Parcial | 35 |
+| Implementado | 5 |
+| Parcial | 34 |
 | Gap | 27 |
 | **Total applicable** | **66** |
 
@@ -81,7 +81,7 @@ Non-applicable controls are listed separately in §4; they are excluded from the
 | A.8.10 Information deletion | Parcial | Account deletion removes user dir, tokens, plan, OAuth, passkeys (`server.py:2764-2776`, `4935-4954`); tests `test_multiuser.py` #15 | Host backups retain deleted data for up to 14 days (`unverified`); `data/errors/` never pruned; no secure-erase procedure |
 | A.8.11 Data masking | Parcial | Hashed IP (`server.py:367-369`), hashed UA (`server.py:2131-2133`), hashed email option (`docs/PRIVACY.md §2`), `sha256(code)` for licences (`plans.py:515-516`) | Submitted writing/transcript content is not masked before leaving to suppliers |
 | A.8.12 Data leakage prevention | Parcial | No content in audit/events (`server.py:3051-3069`; tests `test_security3.py` H5, `test_telemetry.py`); CSP restricts sources; no third-party scripts | No DLP tooling; CSP still allows `'unsafe-inline'` (R03) |
-| A.8.13 Information backup | Parcial | Per-save rotation (`store.py:293-304`, `417-439`); encrypted archive + checksum (`tools/backup_offsite.sh`, retention 14 d); weekly decrypt/checksum gate (`tools/backup_verify.sh`); **scheduled** by `b2first-backup.timer` (daily 04:30, persistent) and `b2first-backup-verify.timer` (Sun 05:30); drill 2026-11-19 PASS in `06-BACKUP-RESTORE.md` (Drill log) | No off-host copy yet (R08): destination is still a local path, so the 3-2-1 rule is not met |
+| A.8.13 Information backup | Implementado | Per-save rotation (`store.py:293-304`, `417-439`); encrypted archive + checksum (`tools/backup_offsite.sh`, retention 14 d); weekly decrypt/checksum gate (`tools/backup_verify.sh`); **scheduled** by `b2first-backup.timer` (daily 04:30, persistent) and `b2first-backup-verify.timer` (Sun 05:30); drill 2026-11-19 PASS in `06-BACKUP-RESTORE.md` (Drill log) | Encrypted copy reaches Google Drive on every run; off-host checksum matches local (2026-11-19, `06-BACKUP-RESTORE.md`). Residual: the Drive token uses the default scope instead of `drive.file`; restore drilled from the Drive copy 2026-11-19 (336 entries, 27 progress files) |
 | A.8.14 Redundancy | Gap | Single host (`b2first.service`) | No redundant host or database |
 | A.8.15 Logging | Implementado | Access log with `rid`, path without query (`SECURITY.md §3`); hash-chained audit (`server.py:3051-3090`); error log (`server.py:487-518`); retention (`tools/retention.py:87-166`); verifier (`tools/verify_audit.py`); tests G1–G3, H1–H5 | Central shipping and log-integrity protection against root remain gaps (R14/R15) |
 | A.8.16 Monitoring activities | Gap | None; no alerting or scheduled check | Add monitoring/alerting (R15) |

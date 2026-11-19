@@ -261,6 +261,31 @@ Scope `drive.file` means rclone only sees the folder it creates: it cannot read 
 of the Drive. The archives stay encrypted (AES-256, PBKDF2) before they leave the host,
 so Drive never holds plaintext candidate data.
 
-**Status:** the push path is implemented and scheduled; it stays idle until the OAuth
-token is registered. Once a token exists, this row (A.8.13) has the off-host leg of the
-3-2-1 rule and can move to Implementado.
+**Status: live.** The remote is registered and the off-host leg of the 3-2-1 rule is
+in place.
+
+**2026-11-19 11:15 UTC — first off-host run, executed end to end by
+`b2first-backup.service`**
+
+- Local archive `b2first-20261119T111539Z.tar.enc` written and checksummed.
+- `tools/backup_push_gdrive.sh` copied it to `gdrive:b2first-backups/` together with its
+  `.sha256`; the folder now holds 2 archives and 2 checksums.
+- Integrity verified independently: the checksum stored in Drive equals
+  `sha256sum` of the local archive (`d6f234b9…18ed`), so the remote copy is
+  byte-identical. `rclone size` reports 2.149 MiB.
+- Retention on the remote prunes at 14 days, same window as the local directory.
+
+**2026-11-19 11:20 UTC — restore drill from Drive**
+
+- `rclone copy gdrive:b2first-backups/` into a scratch directory on the host.
+- `openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000` with the stored passphrase:
+  the archive decrypts cleanly.
+- `tar -tf`: 336 entries, including `data/users.json`, `data/usage.json`, `data/plans.json`,
+  `data/audit.log` and 27 per-user `progress.json`.
+- The scratch copy was deleted right after the check; nothing was restored over `data/`.
+- Result: **PASS** — a backup that lives only in Drive is recoverable on this host.
+
+Note on scope: the token was produced by `rclone authorize "drive"`, which grants the
+default Drive scope, so the remote can see files the app did not create. Re-running the
+authorisation with `scope=drive.file` narrows it to rclone-created files only; it is a
+one-click change and is recorded as a hardening step, not a blocker.
