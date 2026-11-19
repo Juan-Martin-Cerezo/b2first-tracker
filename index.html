@@ -1837,7 +1837,7 @@ body.auth-locked .toast{display:none !important}
 .ob-preview-row{border:1px solid var(--line);border-radius:var(--r-ctl);padding:8px 10px}
 .ob-preview-row .t{font-size:var(--fs-sm);font-weight:600;color:var(--txt)}
 .ob-preview-row .r{font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px}
-.ob-cta-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.ob-cta-row{display:flex;align-items:center;gap:8px;margin-top:14px;flex-wrap:wrap}
 .tour-card{position:fixed;z-index:220;max-width:320px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-modal);box-shadow:var(--shadow-3);padding:16px}
 .tour-card h3{font-size:var(--fs-md);font-weight:600;color:var(--txt);margin:0 0 6px}
 .tour-card p{font-size:var(--fs-sm);color:var(--txt-2);margin:0;line-height:1.5}
@@ -2239,6 +2239,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .ob-card{padding:18px}
   .ob-title{font-size:var(--fs-md)}
   .ob-actions{flex-direction:row}
+  .ob-cta-row{flex-direction:column;align-items:stretch}
+  .ob-cta-row .btn{width:100%}
 }
 /* ---------- U8: turn-gap micrometer ---------- */
 .spx-gap{
@@ -2837,9 +2839,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   </div>
 </div>
 
-<!-- ============ ONBOARDING (mandatory setup: 4 steps) ============
-     There is deliberately no skip control: the only exits are Back (to an
-     earlier step), accepting the generated plan, or finishing the tour. -->
+<!-- ============ ONBOARDING (mandatory setup: 5 steps) ============
+     There is no global cancel/Esc exit from the wizard (only Back, accepting
+     the generated plan, and finishing the tour), though step 3 lets the user
+     skip the 12-question diagnostic check for now. -->
 <div id="onboardingOverlay" class="overlay" style="display:none">
   <div class="auth-card ob-card" id="obDialog" role="dialog" aria-modal="true" aria-labelledby="obTitle">
     <div class="ob-lang" role="group" data-i18n-aria-label="ob_language">
@@ -5096,6 +5099,8 @@ const I18N={
     ob_diag_body:'Answer 12 short questions. We use them to find your three weakest parts, so the first week is built around what you actually need.',
     ob_diag_meta:'12 questions · about 10 minutes · no answers shown during the check',
     ob_diag_start:'Start the check',
+    ob_diag_skip:'Skip for now',
+    ob_diag_skip_hint:'You can take the 12-question check later from the Diagnostic view.',
     ob_diag_done:'You finished the check on {date}: {correct}/{total} correct.',
     ob_diag_continue:'Continue to my plan',
     ob_diag_retake:'Take the check again',
@@ -6023,6 +6028,8 @@ const I18N={
     ob_diag_body:'Respondé 12 preguntas cortas. Las usamos para encontrar tus tres partes más débiles y armar la primera semana con lo que de verdad necesitás.',
     ob_diag_meta:'12 preguntas · unos 10 minutos · no se muestran respuestas durante el chequeo',
     ob_diag_start:'Empezar el chequeo',
+    ob_diag_skip:'Saltear por ahora',
+    ob_diag_skip_hint:'Podés hacer el chequeo de 12 preguntas después desde la vista Diagnostic.',
     ob_diag_done:'Terminaste el chequeo el {date}: {correct}/{total} correctas.',
     ob_diag_continue:'Seguir a mi plan',
     ob_diag_retake:'Repetir el chequeo',
@@ -7621,7 +7628,7 @@ async function doDeleteAccount(){
    obAfterDiagnostic() so the overlay reopens at step 4. The plan comes
    from buildWeeklyPlan(D) and a snapshot is stored in D.profile.plan.
    Only after step 6 does the guided tour start; when it ends D.onboarded=true.
-   There is no skip control and Escape intentionally does nothing.
+   Step 3 allows skipping the diagnostic check for now; Escape intentionally does nothing.
    Every transition saves D.onboardStep, so a closed tab resumes where
    it stopped. */
 const STRUGGLE_MAP=[['Vocabulary','L-GAP'],['Grammar accuracy','G-ERR'],['Reading speed','T-MIS'],['Listening speed','T-MIS'],['Writing structure','G-ERR'],['Speaking fluency','L-GAP']];
@@ -7983,7 +7990,11 @@ function obStepHtml(){
     return `<h2 class="ob-title" id="obTitle">${t('ob_diag_title')}</h2>
       <p class="ob-body">${t('ob_diag_body')}</p>
       <div class="ob-diag-box"><div class="n">${t('ob_diag_meta')}</div><div class="h">${t('ob_diag_time_hint')}</div></div>
-      <div class="ob-cta-row"><button type="button" class="btn ok" data-action="obStartDiagnostic">${t('ob_diag_start')}</button></div>`;
+      <div class="ob-cta-row">
+        <button type="button" class="btn ok" data-action="obStartDiagnostic">${t('ob_diag_start')}</button>
+        <button type="button" class="btn gray" data-action="obSkipDiagnostic">${t('ob_diag_skip')}</button>
+      </div>
+      <p class="ob-note">${t('ob_diag_skip_hint')}</p>`;
   }
   const prof=obDraftProfile();
   const plan=obPlanFor(prof);
@@ -8205,6 +8216,13 @@ function obRetakeDiagnostic(){
   if(typeof showView==='function')showView('diag');
   if(typeof repeatDiag==='function')repeatDiag();
 }
+function obSkipDiagnostic(){
+  if(!D||D.onboarded)return;
+  OB.awaitDiag=false;
+  if(!D.profile)D.profile=obDraftProfile();
+  D.profile.diagSkipped=true;
+  obAfterDiagnostic();
+}
 function obAfterDiagnostic(){
   if(!D||D.onboarded)return;
   OB.awaitDiag=false;
@@ -8252,6 +8270,7 @@ function obAcceptPlan(){
     slots:(plan.slots||[]).map(sl=>({day:sl.day,type:sl.type,part:sl.part,min:sl.min,timed:!!sl.timed,reason:sl.reason}))
   };
   if(D.profile&&D.profile.planStepSeen)prof.planStepSeen=true;
+  if(D.profile&&D.profile.diagSkipped)prof.diagSkipped=true;
   D.profile=prof;
   if(!D.settings)D.settings={};
   D.settings.rotationMode=normalizeRotationMode(d.rotationMode);
@@ -20167,6 +20186,7 @@ click:{
 'obRetakeDiagnostic':()=>obRetakeDiagnostic(),
 'obSetItemsPerSession':el=>obSetItemsPerSession(+el.dataset.items),
 'obSetLang':el=>obSetLang(el.dataset.arg),
+'obSkipDiagnostic':()=>obSkipDiagnostic(),
 'obStartDiagnostic':()=>obStartDiagnostic(),
 'obToggleDay':el=>obToggleDay(el.dataset.day),
 'openDeleteAccount':()=>openDeleteAccount(),

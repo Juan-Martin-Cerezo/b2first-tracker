@@ -375,6 +375,44 @@ with sync_playwright() as p:
     assert "Tag a miss after a practice test" in res_e["errors"], res_e["errors"]
     out["empty_states"] = "OK: Today / Charts / Errors copy"
 
+    # 14b. Step 3 allows skipping the 12-question diagnostic for now
+    pg.evaluate(
+        """() => {
+        delete D.profile;
+        D.diag = null;
+        D.onboarded = false;
+        D.onboardStep = 1;
+        save();
+        showOnboarding();
+    }"""
+    )
+    pg.wait_for_selector("#onboardingOverlay", state="visible", timeout=5000)
+    pg.fill("#obExamDate", "2027-06-12")
+    pg.click("#obNextBtn")  # 1 -> 2
+    pg.click("#obNextBtn")  # 2 -> 3
+    pg.wait_for_timeout(100)
+    assert pg.text_content("#obStepCount").strip() == "3/5", "Did not reach step 3/5 for skip test"
+    pg.click("#obStepBody button[data-action='obSkipDiagnostic']")
+    pg.wait_for_timeout(150)
+    res_skip = pg.evaluate(
+        """() => ({
+        visible: document.getElementById('onboardingOverlay').style.display === 'flex',
+        step: document.getElementById('obStepCount').textContent.trim(),
+        diag: D.diag ?? null,
+        diagSkipped: !!(D.profile && D.profile.diagSkipped === true),
+        onboarded: D.onboarded === true,
+        onboardStep: D.onboardStep
+    })"""
+    )
+    assert res_skip["visible"] is True, f"Overlay not visible after skip: {res_skip}"
+    assert res_skip["step"] == "4/5", f"Expected step 4/5 after skip, got {res_skip}"
+    assert res_skip["diag"] is None, f"D.diag should remain null after skip: {res_skip}"
+    assert res_skip["diagSkipped"] is True, f"D.profile.diagSkipped not true: {res_skip}"
+    assert res_skip["onboarded"] is False, f"D.onboarded should remain false after skip: {res_skip}"
+    assert res_skip["onboardStep"] == 4, f"D.onboardStep should be 4 after skip: {res_skip}"
+    pg.evaluate("obClose()")
+    out["14b_skip_diag"] = f"OK: {res_skip}"
+
     # 15. No JS errors across the whole run
     assert errs == [], f"JS errors: {errs}"
     out["15_errores_js"] = errs
