@@ -196,7 +196,7 @@ with sync_playwright() as p:
     assert pg.eval_on_selector_all("#gates .gate-stage-card", "els => els.length") == 3, (
         "the matrix does not have one card per stage"
     )
-    assert "Complete all criteria within a stage to advance." in pg.evaluate(
+    assert "Complete all gates within your current stage to unlock the next one automatically." in pg.evaluate(
         "document.querySelector('#gates').parentElement.innerText"
     )
     out["6_matrix_read_only"] = True
