@@ -608,6 +608,46 @@ with sync_playwright() as playwright:
     page_b.reload(wait_until="networkidle")
     page_b.wait_for_timeout(300)
 
+    # Verify visual order (Google -> separator -> username/password -> passkey centered)
+    # and mobile/desktop fit without horizontal overflow.
+    for vw, vh, label in ((390, 844, "mobile"), (1280, 800, "desktop")):
+        page_b.set_viewport_size({"width": vw, "height": vh})
+        page_b.wait_for_timeout(150)
+        layout = page_b.evaluate("""() => {
+          const box = id => document.getElementById(id).getBoundingClientRect();
+          const cs = id => getComputedStyle(document.getElementById(id));
+          const g = box('googleLoginBtn');
+          const sep = box('authAltSep');
+          const u = box('authName');
+          const eh = box('authEmailHint');
+          const sub = box('loginSubmitBtn');
+          const pk = box('passkeyLoginBtn');
+          const pkh = box('passkeyLoginHint');
+          const wrap = box('authLogin');
+          const card = document.querySelector('#authOverlay .auth-card').getBoundingClientRect();
+          return {
+            googlePrimary: document.getElementById('googleLoginBtn').className === 'btn',
+            googleVisible: cs('googleLoginBtn').display !== 'none',
+            sepVisible: cs('authAltSep').display !== 'none',
+            emailHintVisible: cs('authEmailHint').display !== 'none',
+            passkeyVisible: cs('passkeyLoginBtn').display !== 'none',
+            passkeyHintVisible: cs('passkeyLoginHint').display !== 'none',
+            ordered: g.bottom <= sep.top + 1 && sep.bottom <= u.top + 1
+              && eh.bottom <= sub.top + 1 && sub.bottom <= pk.top + 1
+              && pk.bottom <= pkh.top + 1,
+            googleFullWidth: Math.abs(g.width - wrap.width) <= 2,
+            passkeyNotFullWidth: pk.width > 0 && pk.width < wrap.width - 20,
+            passkeyCentered: Math.abs((pk.left + pk.width / 2) - (wrap.left + wrap.width / 2)) <= 2,
+            passkeyInsideCard: pk.left >= card.left + 8 && pk.right <= card.right - 8
+              && pkh.left >= card.left + 8 && pkh.right <= card.right - 8,
+            noOverflow: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+            singleH2: document.querySelectorAll('#authOverlay .auth-card h2').length === 1,
+          };
+        }""")
+        check(f"L1_{label}_order_and_center",
+              all(layout.values()),
+              str(layout))
+
     login_js = """async () => {
       try {
         const u = await passkeyLogin();

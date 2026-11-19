@@ -472,7 +472,7 @@ body.topbar-compact .sticky-view-bar{opacity:1;transform:translateY(0);pointer-e
 }
 .btn.provider:hover{background:var(--surface);color:var(--txt);box-shadow:var(--shadow-2);transform:translateY(-1px)}
 .btn.provider:active{transform:scale(0.96)}
-.btn.provider .provider-ico{width:18px;height:18px;flex:none;display:block}
+.btn .provider-ico,.btn.provider .provider-ico{width:18px;height:18px;flex:none;display:block}
 :root[data-theme="dark"] .btn.provider{background:var(--surface-2)}
 :root[data-theme="dark"] .btn.provider:hover{background:var(--line)}
 .btn.ok{background:var(--ok-strong);color:var(--on-ok);border-color:transparent}
@@ -2775,14 +2775,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
     </div>
     <div id="regClosedNote" class="auth-error" style="display:none" data-i18n="auth_closed">Registration is closed. This instance is private.</div>
     <div id="authLogin">
-      <div><label data-i18n="auth_username">User name</label><input type="text" id="authName" placeholder="Your name" data-i18n-placeholder="auth_ph_owner" autocomplete="username" data-keydown="loginEnter"></div>
+      <button class="btn" id="googleLoginBtn" type="button" style="width:100%;display:none" data-action="startGoogleLogin"><svg class="provider-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="currentColor" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="currentColor" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="currentColor" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="currentColor" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="auth_google">Continue with Google</span></button>
+      <div id="authAltSep" style="display:none;text-align:center;font-size:var(--fs-xs);color:var(--txt-2);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
+      <div>
+        <label data-i18n="auth_username">User name</label>
+        <input type="text" id="authName" placeholder="Your name" data-i18n-placeholder="auth_ph_owner" autocomplete="username" data-keydown="loginEnter">
+        <div id="authEmailHint" style="display:none;font-size:var(--fs-xs);color:var(--txt-2);margin:2px 0 6px" data-i18n="auth_email_google_hint">To sign in with email, use Google above.</div>
+      </div>
       <div><label data-i18n="auth_password">Password</label><input type="password" id="authPass" placeholder="••••••" autocomplete="current-password" data-keydown="loginEnter"></div>
       <div class="auth-error" id="authError"></div>
       <button type="button" class="auth-link" data-action="showPasswordRecovery" data-i18n="auth_forgot">Forgot your password?</button>
-      <button class="btn" style="width:100%;margin-top:12px" data-action="doLogin" data-i18n="auth_enter">Enter</button>
-      <div id="authAltSep" style="text-align:center;font-size:11px;color:var(--on-surface-variant);margin:14px 0 8px"><span data-i18n="auth_or">or</span></div>
-      <button class="btn provider" id="googleLoginBtn" type="button" style="width:100%;display:none" data-action="startGoogleLogin"><svg class="provider-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span data-i18n="auth_google">Continue with Google</span></button>
-      <button class="btn gray" id="passkeyLoginBtn" type="button" style="display:none" data-action="startPasskeyLogin" data-i18n="auth_passkey">Sign in with a passkey</button>
+      <button class="btn" id="loginSubmitBtn" style="width:100%;margin-top:12px" data-action="doLogin" data-i18n="auth_enter">Enter</button>
+      <button class="auth-link" id="passkeyLoginBtn" type="button" style="display:none;width:auto;margin:10px auto 0;text-align:center" data-action="startPasskeyLogin" data-i18n="auth_passkey">Sign in with a passkey</button>
+      <div id="passkeyLoginHint" style="display:none;text-align:center;font-size:var(--fs-xs);color:var(--txt-2);margin-top:2px" data-i18n="auth_passkey_hint">Use this device's passkey</div>
       <div class="auth-error" id="altAuthError"></div>
     </div>
     <div id="authRegister" style="display:none">
@@ -5014,8 +5019,10 @@ const I18N={
     auth_ph_owner:'Your name',
     auth_ph_maria:'e.g. maria',
     auth_or:'or',
+    auth_email_google_hint:'To sign in with email, use Google above.',
     auth_google:'Continue with Google',
     auth_passkey:'Sign in with a passkey',
+    auth_passkey_hint:'Use this device\'s passkey',
     auth_passkey_cancel:'Passkey sign-in was cancelled.',
     auth_passkey_error:'Passkey sign-in failed. Try again or use your password.',
     auth_google_error:'Google sign-in failed. Try again.',
@@ -5943,8 +5950,10 @@ const I18N={
     auth_ph_owner:'Tu nombre',
     auth_ph_maria:'ej. maria',
     auth_or:'o',
+    auth_email_google_hint:'Para entrar con tu mail, usá Google arriba.',
     auth_google:'Continuar con Google',
     auth_passkey:'Entrar con una passkey',
+    auth_passkey_hint:'Usá la passkey de este dispositivo',
     auth_passkey_cancel:'Se canceló el ingreso con passkey.',
     auth_passkey_error:'No se pudo entrar con la passkey. Probá de nuevo o usá tu contraseña.',
     auth_google_error:'No se pudo entrar con Google. Probá de nuevo.',
@@ -20330,10 +20339,16 @@ keydown:{
   const googleBtn=document.getElementById('googleLoginBtn');
   // flex, not block: the provider button is an icon + label row.
   if(googleBtn)googleBtn.style.display=cfg.google?'flex':'none';
+  const altSep=document.getElementById('authAltSep');
+  if(altSep)altSep.style.display=cfg.google?'block':'none';
+  const emailHint=document.getElementById('authEmailHint');
+  if(emailHint)emailHint.style.display=cfg.google?'block':'none';
+  const loginBtn=document.getElementById('loginSubmitBtn');
+  if(loginBtn)loginBtn.className=cfg.google?'btn gray':'btn';
   const passkeyBtn=document.getElementById('passkeyLoginBtn');
   if(passkeyBtn)passkeyBtn.style.display=window.PublicKeyCredential?'block':'none';
-  const altSep=document.getElementById('authAltSep');
-  if(altSep&&!cfg.google&&!window.PublicKeyCredential)altSep.style.display='none';
+  const passkeyHint=document.getElementById('passkeyLoginHint');
+  if(passkeyHint)passkeyHint.style.display=window.PublicKeyCredential?'block':'none';
   track('app_open',{ver:String(cfg.version||TEV_VER)});
   if(cfg.register==='closed'){
     const regTab=document.getElementById('authRegisterTab');

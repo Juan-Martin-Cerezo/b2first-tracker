@@ -42,8 +42,19 @@ def main():
         check("webauthn present", pg.evaluate("!!window.PublicKeyCredential"))
         check("login button visible",
               pg.evaluate("getComputedStyle(document.getElementById('passkeyLoginBtn')).display!=='none'"))
-        check("alt separator visible",
-              pg.evaluate("getComputedStyle(document.getElementById('authAltSep')).display!=='none'"))
+        check("passkey hint visible",
+              pg.evaluate("getComputedStyle(document.getElementById('passkeyLoginHint')).display!=='none'"))
+        check("alt separator hidden without google",
+              pg.evaluate("getComputedStyle(document.getElementById('authAltSep')).display==='none'"))
+        check("email hint hidden without google",
+              pg.evaluate("getComputedStyle(document.getElementById('authEmailHint')).display==='none'"))
+        check("passkey link centered and not full width",
+              pg.evaluate("""() => {
+                const b = document.getElementById('passkeyLoginBtn').getBoundingClientRect();
+                const p = document.getElementById('authLogin').getBoundingClientRect();
+                return b.width > 0 && b.width < p.width - 20
+                  && Math.abs((b.left + b.width / 2) - (p.left + p.width / 2)) <= 2;
+              }"""))
         login_user(pg, URL, "passkey-ui", "passkey-ui-pass-9")
         pg.evaluate("openUserModal()")
         pg.wait_for_timeout(400)
@@ -67,6 +78,8 @@ def main():
         check("webauthn absent", pg2.evaluate("!window.PublicKeyCredential"))
         check("login button hidden without webauthn",
               pg2.evaluate("getComputedStyle(document.getElementById('passkeyLoginBtn')).display==='none'"))
+        check("passkey hint hidden without webauthn",
+              pg2.evaluate("getComputedStyle(document.getElementById('passkeyLoginHint')).display==='none'"))
         check("alt separator hidden without providers",
               pg2.evaluate("getComputedStyle(document.getElementById('authAltSep')).display==='none'"))
         login_user(pg2, URL, "passkey-nopk", "passkey-nopk-pass-9")
