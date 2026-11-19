@@ -53,7 +53,8 @@ is an island; the owner is the only privileged account and is also the human ope
   `server.py:2399-2404`; test `tests/test_auth_methods.py`).
 - WebAuthn passkeys: P-256 ECDSA assertion, RP-ID hash, challenge, origin and signature
   counter checks (`webauthn.py:291-310`, `375`; test `tests/test_auth_methods.py`).
-- Both are optional. There is no policy that requires a second factor (R17).
+- Both are optional. TOTP MFA is now available per account (`mfa.py`, `/api/mfa/*`,
+  `tests/test_mfa.py`); there is no policy that **requires** a second factor yet (R17).
 
 ## 3. Authorisation
 
@@ -125,3 +126,56 @@ is an island; the owner is the only privileged account and is also the human ope
 - No disk encryption; root on the host reads everything (R12).
 - No documented rotation schedule for provider keys, licence secret, or OAuth secret.
 - Account recovery relies on the operator's judgement with no recorded identity check (R24).
+
+## 7. Periodic access review (quarterly)
+
+**Who reviews:** the single owner/operator. There is no delegated reviewer (A.5.2).
+
+**What is reviewed, every quarter:**
+
+1. Every account in `data/users.json`: creation date, last recorded access, whether
+   TOTP MFA is enabled, number of live sessions and internal plan.
+2. Every token expiring within 7 days.
+3. Every account with no recorded access in 90 days.
+
+**Tool:** `tools/access_review.py` (read-only). It prints user ids as
+`sha256(id)[:12]`, never the token, the full id, the password hash, the salt or
+another account's progress. `--json` produces a deterministic snapshot for diffing:
+
+```bash
+python3 tools/access_review.py > review-$(date -u +%Y-%m-%d).md
+python3 tools/access_review.py --json > review-$(date -u +%Y-%m-%d).json
+python3 tools/access_review.py --json --diff review-previous.json
+```
+
+**What is done with a finding:**
+
+- **Inactive account (90 days without access):** disable it for login by removing
+  its sessions and marking the record; do **not** delete it without notice. Account
+  deletion is irreversible and destroys progress, plan and backups, so it requires
+  the owner's explicit decision and, where possible, contact with the account holder.
+- **Token expiring within 7 days:** expected for idle sessions; no action unless the
+  account is inactive.
+- **MFA missing on an account that holds privileged access (the owner):** enable MFA
+  or record an accepted risk with a date.
+- **Unknown account:** investigate `data/audit.log` before changing anything.
+
+**First review — 2026-11-18 (real run in this worktree):**
+
+```
+$ python3 tools/access_review.py
+# Access review
+
+Generated (UTC): 2026-11-18T21:06:28Z
+
+| Account (id hash) | Created | Last access | MFA | Sessions | Plan | Inactive (d) |
+| --- | --- | --- | --- | --- | --- | --- |
+
+- Accounts: 0; MFA enabled: 0; inactive >= 90 days: 0.
+- Tokens expiring within 7 days: 0.
+```
+
+This worktree has no production `data/` directory (it is gitignored), so the first
+review found zero accounts. It proves the report runs and prints only hashed ids; it
+does **not** constitute a review of the live instance. The next quarterly review must
+run on the host's real `B2_DATA_DIR` and its output must be attached here.

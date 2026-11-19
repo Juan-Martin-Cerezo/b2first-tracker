@@ -15,9 +15,9 @@ column means the item could not be checked from this repository or host.
 
 | Status | Count |
 | --- | --- |
-| Implementado | 3 |
-| Parcial | 34 |
-| Gap | 29 |
+| Implementado | 4 |
+| Parcial | 35 |
+| Gap | 27 |
 | **Total applicable** | **66** |
 
 Non-applicable controls are listed separately in §4; they are excluded from the counts.
@@ -35,10 +35,10 @@ Non-applicable controls are listed separately in §4; they are excluded from the
 | A.5.12 Classification of information | Parcial | Classification scale and per-asset class in `01-ASSET-INVENTORY.md` | Not applied at runtime or to logs; no labelling |
 | A.5.13 Labelling of information | Gap | None | No labels in files, logs, or exports |
 | A.5.14 Information transfer | Parcial | TLS-only upstreams; privacy disclosure of transfers (`docs/PRIVACY.md §4`; `server.py:168`) | No transfer policy, DPA, or approved-channel list |
-| A.5.15 Access control | Parcial | Enforced token↔user check (`server.py:5033-5034`), owner-only routes (`server.py:6229-6231`), `03-ACCESS-CONTROL.md` | No formal access policy approval, periodic review, or role model beyond owner |
+| A.5.15 Access control | Parcial | Enforced token↔user check (`server.py:5033-5034`), owner-only routes (`server.py:6229-6231`), `03-ACCESS-CONTROL.md`; quarterly review procedure and read-only report (`03-ACCESS-CONTROL.md §7`, `tools/access_review.py:70`) | No formal access policy approval and no independent reviewer; review has not yet run against production data |
 | A.5.16 Identity management | Parcial | Account creation/deletion (`server.py:2327-2353`, `2764-2776`), unique ids, revocation | No identity lifecycle review; no joiner/mover/leaver process |
-| A.5.17 Authentication information | Parcial | PBKDF2-HMAC-SHA256 600k + per-account salt (`server.py:2139-2142`), hashed tokens (`server.py:2126-2128`), rehash on login (`server.py:2356-2392`), tests D1/D2 | Password policy below ASVS (10 chars/1,000 list); no key/secret rotation schedule |
-| A.5.18 Access rights | Parcial | Password change and deletion revoke sessions (`server.py:2247-2268`, `2764-2776`); tests J1 | No periodic access-rights review or record |
+| A.5.17 Authentication information | Parcial | PBKDF2-HMAC-SHA256 600k + per-account salt (`server.py:2139-2142`), hashed tokens (`server.py:2126-2128`), rehash on login (`server.py:2356-2392`), TOTP secrets and hashed recovery codes (`mfa.py:64-112`, `server.py:957-1082`), tests D1/D2 and `tests/test_mfa.py` | No key/secret rotation schedule for provider keys, licence secret or OAuth secret |
+| A.5.18 Access rights | Parcial | Password change and deletion revoke sessions (`server.py:2247-2268`, `2764-2776`); tests J1; quarterly rights report with inactive-account action (`03-ACCESS-CONTROL.md §7`, `tools/access_review.py:35-36`) | No completed production review or record of a disabled account yet |
 | A.5.19 Supplier relationships | Parcial | `05-SUPPLIERS.md`; technical mitigations (webhook HMAC, JWKS, PKCE) | No DPA, security questionnaire, or supplier review cadence |
 | A.5.20 Supplier agreements | Gap | None in the repository | No contracts or security clauses recorded |
 | A.5.21 ICT supply-chain security | Gap | None | No supply-chain policy; base image tag is mutable |
@@ -53,7 +53,7 @@ Non-applicable controls are listed separately in §4; they are excluded from the
 | A.5.30 ICT readiness for continuity | Gap | None | No readiness test or plan |
 | A.5.31 Legal requirements | Parcial | `docs/PRIVACY.md`, `docs/TERMS.md`, `legal.py`; Ley 25.326 referenced | Legal review and jurisdiction analysis `unverified` |
 | A.5.32 Intellectual property rights | Gap | `LICENSE` is MIT, but provenance of study `material/` is `unverified` | No IP inventory or licence review for third-party content |
-| A.5.33 Protection of records | Parcial | `0600`/`0700` files (`store.py:160-195`), retention tool (`tools/retention.py`) | Host backups not encrypted/off-host `unverified`; `data/errors/` has no retention |
+| A.5.33 Protection of records | Parcial | `0600`/`0700` files (`store.py:160-195`) verified by `tools/check_perms.sh` (exit 0 on 2026-11-18), encrypted archive (`tools/backup_offsite.sh:58`), retention tool (`tools/retention.py`) | Off-host copy still pending; host backup retention has no purge tool; `data/errors/` has no retention |
 | A.5.34 Privacy and PII protection | Parcial | Data minimisation, export and deletion (`docs/PRIVACY.md §3, §7`; `server.py:4914-5007`); tests `test_multiuser.py` #15/#16 | No DPA, DPIA, or verified legal basis; recovery contact is free text |
 | A.5.36 Compliance review | Gap | None | No periodic compliance review |
 
@@ -73,15 +73,15 @@ Non-applicable controls are listed separately in §4; they are excluded from the
 | A.8.1 User endpoint devices | Gap | None; endpoints are out of scope | State the endpoint responsibility or provide guidance |
 | A.8.2 Privileged access rights | Gap | Service runs as `juan` (`b2first.service:7-8`); no disk encryption; no sudo review | Dedicated service account, `ProtectSystem`, disk encryption, sudo inventory |
 | A.8.3 Information access restriction | Implementado | Token↔user 403 (`server.py:5033-5034`), audit/export filtered (`server.py:4968-4971`, `4992-4994`), owner-only metrics (`server.py:6229-6231`), `realpath` containment (`server.py:4062-4112`); tests `test_multiuser.py` #6/#7, `test_legacy_guard.py` | Keep the check on every new data route; add a regression test for each |
-| A.8.5 Secure authentication | Parcial | PBKDF2 600k, hashed tokens, 30/90-day TTL, passkeys and OAuth (`server.py:2126-2244`, `oauth_google.py`, `webauthn.py`); tests E1–E4, J1, `test_auth_methods.py` | No MFA requirement (R17) |
+| A.8.5 Secure authentication | Implementado | PBKDF2 600k, hashed tokens, 30/90-day TTL, passkeys and OAuth (`server.py:2126-2244`, `oauth_google.py`, `webauthn.py`); TOTP RFC 6238 with ±1 step, single-use 5-minute login ticket and one-time recovery codes (`mfa.py:64-112`, `server.py:951-1082`, `server.py:5622-5755`); tests E1–E4, J1, `test_auth_methods.py`, `tests/test_mfa.py` (31 checks) | MFA is per-account, not enforced: requiring it for the owner is an open decision under R17 |
 | A.8.6 Capacity management | Parcial | Connection semaphore and backlog (`server.py:107-109`), rate limits (`server.py:279-345`), body caps (`server.py:116`, `3964-3981`) | No resource monitoring or capacity review |
 | A.8.7 Protection against malware | Gap | None on the host; application is stdlib-only but that is not a malware control | Host malware/EDR posture `unverified`; define one |
-| A.8.8 Technical vulnerability management | Gap | `tools/audit.sh` and `tools/audit-host.sh` are manual; no CVE process or patch log | Scheduled scans, patch cadence, vulnerability register |
+| A.8.8 Technical vulnerability management | Parcial | Patch procedure and register (`docs/internal/SDLC.md §4`, `docs/internal/PATCH-LOG.md` with real commits and tests); release gate `tools/preflight.sh:109-114` | No scheduled CVE scan, no dependency/base-image rebuild cadence |
 | A.8.9 Configuration management | Parcial | Units (`b2first.service`, `b2first-demo.service`), env documented (`README.md:225-300`), `.gitignore` | No configuration baseline; production unit lacks `ProtectSystem`/`ProtectHome` |
 | A.8.10 Information deletion | Parcial | Account deletion removes user dir, tokens, plan, OAuth, passkeys (`server.py:2764-2776`, `4935-4954`); tests `test_multiuser.py` #15 | Host backups retain deleted data for up to 14 days (`unverified`); `data/errors/` never pruned; no secure-erase procedure |
 | A.8.11 Data masking | Parcial | Hashed IP (`server.py:367-369`), hashed UA (`server.py:2131-2133`), hashed email option (`docs/PRIVACY.md §2`), `sha256(code)` for licences (`plans.py:515-516`) | Submitted writing/transcript content is not masked before leaving to suppliers |
 | A.8.12 Data leakage prevention | Parcial | No content in audit/events (`server.py:3051-3069`; tests `test_security3.py` H5, `test_telemetry.py`); CSP restricts sources; no third-party scripts | No DLP tooling; CSP still allows `'unsafe-inline'` (R03) |
-| A.8.13 Information backup | Parcial | Per-save rotation (`store.py:293-304`, `417-439`); restore drill passes (`tools/restore_drill.sh`, output in `06-BACKUP-RESTORE.md`) | No shipped host backup job or off-host copy (R08) |
+| A.8.13 Information backup | Parcial | Per-save rotation (`store.py:293-304`, `417-439`); encrypted archive + checksum (`tools/backup_offsite.sh:58`, verified by `tools/backup_verify.sh:47`, run 2026-11-18 in `06-BACKUP-RESTORE.md §4.1`); restore drill passes (`tools/restore_drill.sh`) | No timer/scheduler and no off-host copy (R08); destination is a local path |
 | A.8.14 Redundancy | Gap | Single host (`b2first.service`) | No redundant host or database |
 | A.8.15 Logging | Implementado | Access log with `rid`, path without query (`SECURITY.md §3`); hash-chained audit (`server.py:3051-3090`); error log (`server.py:487-518`); retention (`tools/retention.py:87-166`); verifier (`tools/verify_audit.py`); tests G1–G3, H1–H5 | Central shipping and log-integrity protection against root remain gaps (R14/R15) |
 | A.8.16 Monitoring activities | Gap | None; no alerting or scheduled check | Add monitoring/alerting (R15) |
@@ -92,14 +92,14 @@ Non-applicable controls are listed separately in §4; they are excluded from the
 | A.8.21 Security of network services | Parcial | HSTS, closed CORS, no version banner (`server.py:3273-3295`; tests A1–A5, `test_server_hardening.py`) | TLS terminates at the edge, which sees plaintext; edge identity `unverified` |
 | A.8.22 Segregation of networks | Gap | Single host shared with other services (`tools/audit-host.sh` mentions Coolify/Immich) | No verified network segregation for this workload |
 | A.8.23 Web filtering | Gap | None | No egress/web filtering policy |
-| A.8.24 Use of cryptography | Parcial | PBKDF2-HMAC-SHA256, SHA-256, HMAC-SHA256, `secrets` (`server.py:2126-2142`, `plans.py:551`, `billing.py:332-368`), stdlib only; tests D/G | No cryptographic inventory or key-management/rotation policy; no encryption at rest |
-| A.8.25 Secure development life cycle | Gap | Tests and audit scripts exist, but no SDLC policy or gate | Define a lightweight SDLC and review gate |
-| A.8.26 Application security requirements | Parcial | ASVS 4.0.3 L2 checklist (`docs/SECURITY-CHECKLIST.md`) and threat model (`SECURITY.md §2`) | Requirements are not enforced in CI; 3 documented FAIL rows |
+| A.8.24 Use of cryptography | Parcial | PBKDF2-HMAC-SHA256, SHA-256, HMAC-SHA256, `secrets` (`server.py:2126-2142`, `plans.py:551`), TOTP HMAC-SHA1 (`mfa.py:52-60`), AES-256-CBC/PBKDF2 backup (`tools/backup_offsite.sh:58`); stdlib only; tests D/G, `tests/test_mfa.py` | No cryptographic inventory or key-management/rotation policy; no full-disk encryption (R12) |
+| A.8.25 Secure development life cycle | Parcial | `docs/internal/SDLC.md` (branch per change, mandatory gate, evidence rule, patch procedure) and executable gate `tools/preflight.sh:109-114` | No CI service and no separate approval; the same person writes and approves |
+| A.8.26 Application security requirements | Parcial | ASVS 4.0.3 L2 checklist (`docs/SECURITY-CHECKLIST.md`) and threat model (`SECURITY.md §2`); release gate includes `tools/pentest.py --spawn` (`tools/preflight.sh:114`) | Requirements are not mapped to every gate step; 3 documented FAIL rows |
 | A.8.27 Secure system architecture | Parcial | Single process, no database, documented trust boundary (`00-SCOPE.md §4`) | No formal architecture review or threat-model update cadence |
-| A.8.28 Secure coding | Parcial | Input validation (`server.py:3211`, `1646`), escaping, path containment (`server.py:3337-3362`), tests `test_hardening.py`, `test_server_hardening.py` | `'unsafe-inline'` remains (R03); no secure-coding standard document |
-| A.8.29 Security testing in development | Parcial | 123 test files (`tests/`), `tools/audit.sh`, `tools/audit-host.sh`, `tools/verify_audit.py` | No CI configuration in the repository; tests are run manually |
+| A.8.28 Secure coding | Parcial | Input validation (`server.py:3211`, `1646`), escaping, path containment (`server.py:3337-3362`), tests `test_hardening.py`, `test_server_hardening.py`; gate checks inline handlers and JS syntax (`tools/preflight.sh:37-76`) | `'unsafe-inline'` remains (R03); no secure-coding standard document |
+| A.8.29 Security testing in development | Parcial | 123 test files (`tests/`), `tools/audit.sh`, `tools/audit-host.sh`, `tools/verify_audit.py`; ordered release gate (compile, JS syntax, inline handlers, purchase copy, core suites, pentest) `tools/preflight.sh:109-114` | No CI configuration in the repository; the gate is run manually by the operator |
 | A.8.31 Separation of development/test/production | Gap | Demo unit exists (`b2first-demo.service`), but no staging environment | Define environments and separation |
-| A.8.32 Change management | Parcial | Git history with conventional commits; atomic writes and schema migration (`store.py:244-290`) | No change approval, rollback plan, or deployment record |
+| A.8.32 Change management | Parcial | Git history with conventional commits; atomic writes and schema migration (`store.py:244-290`); branch-per-change and rollback policy (`docs/internal/SDLC.md §1, §5`); real patch register (`docs/internal/PATCH-LOG.md`) | No separate change approval and no deployment record with approver |
 | A.8.33 Test information | Implementado | Every suite uses a throwaway `B2_DATA_DIR` and stubs (`tests/test_security3.py:31-38`, `tests/helpers.py:99-120`; `test_auth_methods.py`, `test_billing.py` use local stubs) | Keep the rule; add a check that no test writes to the repository `data/` |
 | A.8.34 Protection of information systems during audit testing | Parcial | `tools/audit.sh` is read-only by construction and probes the public instance | No audit-testing agreement or pre-notification |
 
@@ -122,6 +122,19 @@ Non-applicable controls are listed separately in §4; they are excluded from the
   `tests/test_server_hardening.py`, `tests/test_hardening.py`, `tests/test_register.py`,
   `tests/test_multiuser.py` (run through `uv` with playwright), and
   `bash tools/restore_drill.sh`.
+- Additional runs for this phase (2026-11-18, all exit 0): `tests/test_mfa.py`
+  (31 checks), `tests/test_auth_gate.py`, `tests/test_spike.py`,
+  `B2_BACKUP_PASSPHRASE=test-pass bash tools/backup_offsite.sh` followed by
+  `bash tools/backup_verify.sh`, `python3 tools/access_review.py`, and
+  `bash tools/check_perms.sh`.
+- The backup run used this worktree's empty `data/` (it is gitignored): it proves
+  encryption, checksum and decryption, not an off-host copy or production volume.
+  The access review likewise saw zero accounts. Neither is claimed as production
+  evidence.
+- MFA and the backup scripts are real artefacts with tests or recorded runs, but the
+  organisation-dependent rows remain `Gap`: authority contacts, threat intelligence,
+  supplier agreements, staff training, independent review and a real BCP/DR exercise
+  cannot be produced by this repository.
 - One documentation inconsistency was found while verifying: `docs/SECURITY-CHECKLIST.md`
   says the password blocklist has 200 entries, while `store.py:53-56` loads 1,000
   (`wordlist.COMMON_PASSWORDS`, counted on 2026-11-18). The code is the source of truth;
