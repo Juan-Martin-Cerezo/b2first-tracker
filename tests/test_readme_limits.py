@@ -63,7 +63,7 @@ check("two_bullets", len(bullets) >= 2, len(bullets))
 check("no_official_assessment_claim",
       "not an official" in prose and "not a certificate" in prose, prose[:200])
 check("not_affiliated_claim", "not affiliated" in prose and "Cambridge" in prose)
-check("landing_agrees", "It is practice, not a certificate" in landing)
+check("landing_agrees", "Practice, not a certificate" in landing)
 check("pronunciation_limit_claim",
       "No pronunciation feedback without Azure" in prose)
 check("recognition_limit_claim",
