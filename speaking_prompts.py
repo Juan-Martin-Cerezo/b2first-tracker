@@ -90,6 +90,7 @@ PART4_INSTRUCTION = (
     "Now we are going to talk about the task you have just done. "
     "I'd like you to answer some questions."
 )
+PART4_CLOSING = "Thank you. That is the end of the speaking test."
 
 
 _BASE = """You are the interlocutor in a Cambridge B2 First (FCE) Speaking test.
@@ -158,18 +159,37 @@ PART 3 — COLLABORATIVE TASK
 """
 
 
+_QUESTION_SEQUENCE_RULES = """- Track which questions below have already been asked in the conversation history:
+{questions}
+- Ask the next unasked question from the numbered list, strictly in order, one at a time,
+  and wait for the answer before moving on.
+- Once the candidate answers, move straight to the next unasked question. Never ask them
+  to justify something they already explained, and never rephrase or repeat a question
+  already asked.
+- If all questions in the list have already been asked and answered, close with:
+  "{closing}"
+  and do not invent a new question.
+- Keep every line to at most 20 words, with no praise and no corrections."""
+
+
+_PART1_BLOCK = """
+PART 1 — INTERVIEW
+- Open with: "Good morning. Can you tell me your name, please?" if that is the
+  first question, otherwise with the first question below (only at the start).
+{sequence}
+- Only if an answer is a single word, ask one short "Why?" or "Can you tell me more
+  about that?" and then move on to the next question.
+"""
+
+
 _PART4_BLOCK = """
 PART 4 — DISCUSSION
-- Say: "{instruction}"
-- Then ask these questions one at a time, in order, and wait for the answer before
-  asking the next one:
-{questions}
+- Open Part 4 by saying: "{instruction}" (only if you have not said it yet).
+{sequence}
 - Stay strictly on the discussion questions listed above; never revert to Part 1 personal
   interview questions.
 - Choose who answers by naming nobody: ask "What do you think?" and let the candidate
   answer; the partner will join on its own. Never ask two questions in one turn.
-- Add at most ONE short follow-up ("Why?", "Can you tell me more about that?") per answer,
-  then move to the next question.
 """
 
 
@@ -186,14 +206,11 @@ def examiner_instruction(part=1, task=None):
     blocks = [_BASE]
     if part == 1:
         questions = task.get("questions") or list(PART1_QUESTIONS)
-        blocks.append(
-            "\nPART 1 — INTERVIEW\n"
-            "- Open with: \"Good morning. Can you tell me your name, please?\" if that is the"
-            " first question, otherwise with the first question below.\n"
-            "- Ask these questions one at a time, in this exact order, and never repeat one:\n"
-            + _numbered(questions) + "\n"
-            "- If an answer is one word, ask one short \"Why?\" or \"Can you tell me more"
-            " about that?\" and move on to the next question.\n")
+        sequence = _QUESTION_SEQUENCE_RULES.format(
+            questions=_numbered(questions),
+            closing="Thank you, that is the end of Part 1.",
+        )
+        blocks.append(_PART1_BLOCK.format(sequence=sequence))
     elif part == 2:
         prompts = task.get("prompts") or [
             "Compare the photographs and say why the people might have chosen these things."]
@@ -219,8 +236,12 @@ def examiner_instruction(part=1, task=None):
     else:
         questions = task.get("questions") or [
             "What did you think about the task you have just done?"]
+        sequence = _QUESTION_SEQUENCE_RULES.format(
+            questions=_numbered(questions),
+            closing=PART4_CLOSING,
+        )
         blocks.append(_PART4_BLOCK.format(
-            instruction=PART4_INSTRUCTION, questions=_numbered(questions)))
+            instruction=PART4_INSTRUCTION, sequence=sequence))
     blocks.append(_RULES.format(part=part))
     return "\n".join(blocks)
 
