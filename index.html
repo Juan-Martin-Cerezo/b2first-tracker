@@ -2388,6 +2388,45 @@ body.auth-locked .toast{display:none !important}
   margin:var(--s1) 0 0;padding-left:var(--s4);font-size:var(--t-meta);line-height:1.45;
   color:var(--warn-text);display:flex;flex-direction:column;gap:var(--s1);list-style:disc;
 }
+.ia-loading{flex-direction:column;align-items:stretch;gap:var(--s3)}
+.ia-progress-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:wrap}
+.ia-progress-title{font-weight:600;color:var(--txt)}
+.ia-progress-row{display:flex;align-items:center;gap:var(--s3)}
+.ia-progress-track{
+  flex:1;min-width:0;height:8px;border-radius:999px;
+  background:var(--bg);border:1px solid var(--line);overflow:hidden;
+}
+.ia-progress-fill{
+  height:100%;width:0%;border-radius:999px;
+  background:var(--acc);
+  transition:width 350ms cubic-bezier(.22,1,.36,1);
+}
+.ia-elapsed{
+  flex:none;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+  min-width:3ch;text-align:right;
+}
+.ia-steps{
+  list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column;gap:var(--s2);
+}
+.ia-step{
+  display:flex;align-items:flex-start;gap:var(--s2);
+  font-size:var(--t-meta);line-height:1.45;color:var(--txt-2);
+}
+.ia-step-mark{
+  flex:none;width:1.1em;text-align:center;font-weight:700;color:var(--txt-2);
+}
+.ia-step[data-step-state="done"]{color:var(--txt)}
+.ia-step[data-step-state="done"] .ia-step-mark{color:var(--ok-text)}
+.ia-step[aria-current="step"]{color:var(--txt);font-weight:600}
+.ia-step[aria-current="step"] .ia-step-mark{color:var(--acc-text)}
+.ia-loading-note{
+  margin:0;padding-top:var(--s1);font-size:var(--t-meta);line-height:1.45;
+  color:var(--txt-2);
+}
+@media (prefers-reduced-motion: reduce){
+  .ia-progress-fill{transition:none !important;animation:none !important}
+}
 details summary{cursor:pointer;font-weight:600;font-size:var(--t-body)}
 details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
@@ -5420,13 +5459,28 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <span id="iaQuota" class="t-xs muted tnum" style="display:none"></span>
             </div>
 
-            <div id="iaLoading" class="panel" role="status" aria-busy="true" style="display:none;margin-top:var(--s4);align-items:stretch;gap:var(--s3)">
+            <div id="iaLoading" class="panel ia-loading" role="status" aria-busy="true" style="display:none;margin-top:var(--s4)">
               <div aria-hidden="true" class="sk-stack">
                 <div class="sk sk-result"></div>
                 <div class="sk sk-line"></div>
                 <div class="sk sk-line sk-w60"></div>
               </div>
-              <span class="t-sm" style="font-weight:600" data-i18n="ai_correcting">correcting…</span>
+              <div class="ia-progress-head">
+                <span class="t-sm ia-progress-title" data-i18n="ai_correcting">correcting…</span>
+              </div>
+              <div class="ia-progress-row">
+                <div id="iaProgressBar" class="ia-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Correction progress" data-i18n-aria-label="ai_progress_label">
+                  <div id="iaProgressFill" class="ia-progress-fill"></div>
+                </div>
+                <span id="iaElapsed" class="ia-elapsed tnum" aria-live="off">0:00</span>
+              </div>
+              <ol id="iaLoadingSteps" class="ia-steps">
+                <li class="ia-step" data-step="0" aria-current="step"><span class="ia-step-mark" aria-hidden="true">•</span><span data-i18n="ai_step_read">Reading your text</span></li>
+                <li class="ia-step" data-step="1"><span class="ia-step-mark" aria-hidden="true">·</span><span data-i18n="ai_step_task">Checking the task and content points</span></li>
+                <li class="ia-step" data-step="2"><span class="ia-step-mark" aria-hidden="true">·</span><span data-i18n="ai_step_bands">Scoring each band</span></li>
+                <li class="ia-step" data-step="3"><span class="ia-step-mark" aria-hidden="true">·</span><span data-i18n="ai_step_feedback">Writing the feedback</span></li>
+              </ol>
+              <p id="iaLoadingNote" class="ia-loading-note" style="display:none"></p>
             </div>
 
             <div id="iaError" class="note" style="display:none;margin-top:var(--s4);background:var(--bad-soft);border-left-color:var(--bad);color:var(--bad-text)">
@@ -6272,6 +6326,13 @@ const I18N={
     ai_target_short:'(target 140–190)',
     ai_submit:'Correct it',
     ai_correcting:'correcting…',
+    ai_progress_label:'Correction progress',
+    ai_step_read:'Reading your text',
+    ai_step_task:'Checking the task and content points',
+    ai_step_bands:'Scoring each band',
+    ai_step_feedback:'Writing the feedback',
+    ai_wait_long:'Long texts can take up to a minute — your draft is safe.',
+    ai_wait_still:'Still working…',
     ai_failed:'Failed to correct the text.',
     ai_result:'Cambridge B2 First result',
     ai_quotes:'Student quotes',
@@ -7338,6 +7399,13 @@ const I18N={
     ai_target_short:'(objetivo 140–190)',
     ai_submit:'Corregirlo',
     ai_correcting:'corrigiendo…',
+    ai_progress_label:'Progreso de la corrección',
+    ai_step_read:'Leyendo tu texto',
+    ai_step_task:'Revisando la consigna y los puntos',
+    ai_step_bands:'Puntuando cada criterio',
+    ai_step_feedback:'Escribiendo el feedback',
+    ai_wait_long:'Los textos largos pueden tardar hasta un minuto — tu borrador está a salvo.',
+    ai_wait_still:'Sigue trabajando…',
     ai_failed:'No se pudo corregir el texto.',
     ai_result:'Resultado Cambridge B2 First',
     ai_quotes:'Citas del texto',
@@ -7766,6 +7834,7 @@ function applyI18n(){
   if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
   if(typeof syncAccountSheet==='function')syncAccountSheet();
   if(typeof renderOwnMaterialUI==='function')renderOwnMaterialUI();
+  if(typeof updateIaLoadingProgress==='function'&&IA_STATE==='loading')updateIaLoadingProgress();
 }
 function setLang(code){
   const next=normalizeLang(code);
@@ -21181,13 +21250,112 @@ function renderMetrics(){
 
 /* ---------- IA WRITING CORRECTOR ---------- */
 let IA_STATE='idle';
+let _iaLoadStart=0;
+let _iaLoadTimer=null;
 const IA_CRITERIA=[
   {key:'content',label:'Content'},
   {key:'communicative_achievement',label:'Communicative Achievement'},
   {key:'organisation',label:'Organisation'},
   {key:'language',label:'Language'}
 ];
+function calcIaProgress(elapsedMs){
+  const s=Math.max(0,elapsedMs/1000);
+  if(s<3)return Math.round(5+30*(s/3));
+  if(s<8)return Math.round(35+25*((s-3)/5));
+  if(s<15)return Math.round(60+20*((s-8)/7));
+  if(s<30)return Math.min(92,Math.round(80+12*((s-15)/15)));
+  return 92;
+}
+function calcIaStep(sec){
+  if(sec<3)return 0;
+  if(sec<8)return 1;
+  if(sec<15)return 2;
+  return 3;
+}
+function formatIaElapsed(sec){
+  const m=Math.floor(sec/60);
+  const r=sec%60;
+  return m+':'+(r<10?'0':'')+r;
+}
+function updateIaLoadingProgress(){
+  if(IA_STATE!=='loading'||!_iaLoadStart)return;
+  const elapsedMs=Math.max(0,Date.now()-_iaLoadStart);
+  const sec=Math.floor(elapsedMs/1000);
+  const pct=calcIaProgress(elapsedMs);
+  const bar=document.getElementById('iaProgressBar');
+  const fill=document.getElementById('iaProgressFill');
+  if(bar)bar.setAttribute('aria-valuenow',String(pct));
+  if(fill)fill.style.width=pct+'%';
+  const elEl=document.getElementById('iaElapsed');
+  if(elEl){
+    const txt=formatIaElapsed(sec);
+    if(elEl.textContent!==txt)elEl.textContent=txt;
+  }
+  const active=calcIaStep(sec);
+  document.querySelectorAll('#iaLoadingSteps .ia-step').forEach((li,idx)=>{
+    const mark=li.querySelector('.ia-step-mark');
+    if(idx<active){
+      li.removeAttribute('aria-current');
+      li.setAttribute('data-step-state','done');
+      if(mark&&mark.textContent!=='✓')mark.textContent='✓';
+    }else if(idx===active){
+      li.setAttribute('aria-current','step');
+      li.setAttribute('data-step-state','active');
+      if(mark&&mark.textContent!=='•')mark.textContent='•';
+    }else{
+      li.removeAttribute('aria-current');
+      li.setAttribute('data-step-state','pending');
+      if(mark&&mark.textContent!=='·')mark.textContent='·';
+    }
+  });
+  const note=document.getElementById('iaLoadingNote');
+  if(note){
+    if(sec>=45){
+      const msg=t('ai_wait_still');
+      if(note.textContent!==msg)note.textContent=msg;
+      note.style.display='block';
+    }else if(sec>=20){
+      const msg=t('ai_wait_long');
+      if(note.textContent!==msg)note.textContent=msg;
+      note.style.display='block';
+    }else{
+      if(note.textContent)note.textContent='';
+      note.style.display='none';
+    }
+  }
+}
+function startIaLoadingProgress(){
+  if(_iaLoadTimer){
+    clearInterval(_iaLoadTimer);
+    _iaLoadTimer=null;
+  }
+  _iaLoadStart=Date.now();
+  updateIaLoadingProgress();
+  _iaLoadTimer=setInterval(updateIaLoadingProgress,250);
+}
+function stopIaLoadingProgress(){
+  if(_iaLoadTimer){
+    clearInterval(_iaLoadTimer);
+    _iaLoadTimer=null;
+  }
+  _iaLoadStart=0;
+  const bar=document.getElementById('iaProgressBar');
+  const fill=document.getElementById('iaProgressFill');
+  if(bar)bar.setAttribute('aria-valuenow','0');
+  if(fill)fill.style.width='0%';
+  const elEl=document.getElementById('iaElapsed');
+  if(elEl)elEl.textContent='0:00';
+  document.querySelectorAll('#iaLoadingSteps .ia-step').forEach((li,idx)=>{
+    li.removeAttribute('aria-current');
+    li.removeAttribute('data-step-state');
+    const mark=li.querySelector('.ia-step-mark');
+    if(mark)mark.textContent=idx===0?'•':'·';
+  });
+  const note=document.getElementById('iaLoadingNote');
+  if(note){note.textContent='';note.style.display='none';}
+}
 function setIaState(st,errMsg){
+  const prev=IA_STATE;
   IA_STATE=st;
   const card=document.getElementById('iaCard');
   if(card)card.setAttribute('data-state',st);
@@ -21199,6 +21367,11 @@ function setIaState(st,errMsg){
     if(st==='loading')loadEl.setAttribute('aria-busy','true');
     else loadEl.removeAttribute('aria-busy');
   }
+  if(st==='loading'){
+    if(prev!=='loading'||!_iaLoadStart)startIaLoadingProgress();
+  }else{
+    stopIaLoadingProgress();
+  }
   const errEl=document.getElementById('iaError');
   if(errEl)errEl.style.display=st==='error'?'block':'none';
   const msgEl=document.getElementById('iaErrorMsg');
@@ -21208,7 +21381,12 @@ function setIaState(st,errMsg){
 function renderIa(){
   const hasKey=!!loadByo().key;
   const btn=document.getElementById('iaSubmitBtn');
-  if(btn)btn.disabled=IA_STATE==='loading';
+  if(btn){
+    const busy=IA_STATE==='loading';
+    btn.disabled=busy;
+    if(busy)btn.setAttribute('aria-busy','true');
+    else btn.removeAttribute('aria-busy');
+  }
   const badge=document.getElementById('iaByoBadge');
   if(badge)badge.style.display=hasKey?'inline-flex':'none';
   const quota=document.getElementById('iaQuota');
