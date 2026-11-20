@@ -908,6 +908,98 @@ a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var
   .es-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 }
 
+/* ---------- PRACTICE VARIETY (non-repeating exercise picker + Exam local materials) ---------- */
+.pv-box{margin:0 0 8px;width:100%;min-width:0;box-sizing:border-box}
+.sp-today .pv-box{margin:0}
+.pv-trigger{
+  width:100%;min-height:44px;justify-content:center;
+  font-weight:600;box-sizing:border-box;
+}
+.pv-result[hidden]{display:none}
+.pv-card{
+  display:flex;flex-direction:column;gap:6px;
+  padding:8px 10px;width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+  background:var(--surface);border:1px solid var(--acc-border);border-radius:var(--r-panel);
+  transition:border-color 140ms ease,background-color 140ms ease;
+}
+:root[data-theme="dark"] .pv-card{background:var(--surface-2)}
+.pv-card-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;
+}
+.pv-card-info{
+  flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;
+}
+.pv-card-meta{
+  display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0;
+  font-size:11px;line-height:16px;color:var(--txt-2);
+}
+.pv-badge{
+  display:inline-flex;align-items:center;padding:1px 6px;border-radius:999px;
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  flex:none;background:var(--acc-soft);color:var(--acc-text);border:1px solid var(--acc-border);
+}
+.pv-badge[data-pv-type="paper"]{background:var(--surface-2);color:var(--txt);border-color:var(--line)}
+.pv-badge[data-pv-type="lesson"]{background:var(--warn-soft);color:var(--warn-text);border-color:var(--warn-border,var(--line))}
+.pv-mins{white-space:nowrap;flex:none}
+.pv-done-pill{
+  display:inline-flex;align-items:center;padding:1px 6px;border-radius:999px;
+  font-size:10px;font-weight:600;background:var(--ok-soft);color:var(--ok-text);
+  white-space:nowrap;flex:none;
+}
+.pv-card-title{
+  font-size:14px;font-weight:600;color:var(--txt);line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.pv-open-link{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  min-height:44px;min-width:44px;padding:0 12px;border-radius:var(--r-ctl);
+  background:var(--acc);color:var(--on-primary);font-size:13px;font-weight:600;
+  text-decoration:none;white-space:nowrap;box-sizing:border-box;
+  transition:filter 140ms ease,background-color 140ms ease;
+}
+.pv-open-link:hover{filter:brightness(1.06);text-decoration:none}
+.pv-open-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.pv-card-hint{
+  margin:0;font-size:12.5px;line-height:17px;color:var(--txt-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.pv-actions{display:flex;align-items:center;gap:6px;min-width:0}
+.pv-actions .btn{
+  flex:1 1 0;min-height:44px;min-width:0;padding:6px 8px;
+  font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  justify-content:center;
+}
+.pv-actions .btn.is-done{background:var(--ok-soft);color:var(--ok-text);border-color:var(--ok-border)}
+.pv-empty{margin:0;padding:8px 10px;font-size:13px;color:var(--txt-2);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
+.pv-exam-card{margin-top:0;margin-bottom:var(--s5)}
+.pv-exam-card h2{margin-bottom:var(--s1)}
+.pv-exam-controls{
+  display:grid;grid-template-columns:1fr;gap:var(--s3);margin-top:var(--s3);
+  align-items:end;min-width:0;
+}
+.pv-exam-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pv-exam-field label{margin:0}
+.pv-exam-field select{min-height:44px;width:100%;box-sizing:border-box}
+.pv-exam-go{min-height:44px;width:100%;justify-content:center}
+.pv-exam-card .pv-result{margin-top:var(--s3)}
+.pv-exam-card .pv-card{padding:12px}
+.pv-exam-card .pv-card-title{white-space:normal;overflow-wrap:anywhere}
+.pv-exam-card .pv-card-hint{white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+.u4-exam-materials{margin-top:0;margin-bottom:var(--s5)}
+.u4-exam-materials h2{margin-bottom:var(--s1)}
+.u4-exam-mat-stack{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s3);min-width:0}
+.u4-exam-mat-stack .wtf-section{margin:0}
+@media (min-width:720px){
+  .pv-exam-controls{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) auto}
+  .pv-exam-go{width:auto;padding-left:20px;padding-right:20px}
+}
+@media (max-width:768px){
+  .pv-exam-card,.u4-exam-materials{margin-bottom:var(--s4)}
+}
+@media (prefers-reduced-motion: reduce){
+  .pv-card,.pv-open-link{transition:none !important;animation:none !important}
+}
+
 /* ---------- LIVE STUDIO (S1: mic -> VAD -> HUD) ---------- */
 .live-panel{margin-top:12px;padding:16px;border-radius:var(--r-panel);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
 .live-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -3994,6 +4086,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="ueTimer.start">▶ / ⏸</button>
                       </div>
                     </div>
+                    <div class="pv-box" id="pvBoxRue" data-pv-ctx="today" data-pv-skill="rue">
+                      <button type="button" class="btn pv-trigger" id="pvBtnRue" data-action="pvPickToday" data-pv-skill="rue" data-i18n="pv_cta">Practise a real exercise</button>
+                      <div class="pv-result" id="pvResRue" aria-live="polite" hidden></div>
+                    </div>
                     <div class="wtf-section" id="wtfSectionRue" data-wtf-skill="rue">
                       <button type="button" class="wtf-toggle" id="wtfToggleRue" data-action="toggleWtfSection" data-wtf-skill="rue" aria-expanded="false" aria-controls="wtfPanelRue">
                         <span class="wtf-toggle-summary" id="wtfSummaryRue">Materials</span>
@@ -4107,6 +4203,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="task-timer"><span class="lbl">Plan Timer</span><span class="timer" id="wPlanTimer">05:00</span></div>
                         <button class="btn sm" data-action="wPlan.start">▶</button>
                       </div>
+                    </div>
+                    <div class="pv-box" id="pvBoxW" data-pv-ctx="today" data-pv-skill="w">
+                      <button type="button" class="btn pv-trigger" id="pvBtnW" data-action="pvPickToday" data-pv-skill="w" data-i18n="pv_cta">Practise a real exercise</button>
+                      <div class="pv-result" id="pvResW" aria-live="polite" hidden></div>
                     </div>
                     <div class="wtf-section" id="wtfSectionW" data-wtf-skill="w">
                       <button type="button" class="wtf-toggle" id="wtfToggleW" data-action="toggleWtfSection" data-wtf-skill="w" aria-expanded="false" aria-controls="wtfPanelW">
@@ -4276,6 +4376,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="lTimer">40:00</span></div>
                         <button class="btn sm" data-action="lTimer.start">▶</button>
                       </div>
+                    </div>
+                    <div class="pv-box" id="pvBoxL" data-pv-ctx="today" data-pv-skill="l">
+                      <button type="button" class="btn pv-trigger" id="pvBtnL" data-action="pvPickToday" data-pv-skill="l" data-i18n="pv_cta">Practise a real exercise</button>
+                      <div class="pv-result" id="pvResL" aria-live="polite" hidden></div>
                     </div>
                     <div class="wtf-section" id="wtfSectionL" data-wtf-skill="l">
                       <button type="button" class="wtf-toggle" id="wtfToggleL" data-action="toggleWtfSection" data-wtf-skill="l" aria-expanded="false" aria-controls="wtfPanelL">
@@ -4584,6 +4688,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
 
                 <div class="sp-today" id="spTodayStack">
+                  <div class="pv-box" id="pvBoxSp" data-pv-ctx="today" data-pv-skill="sp">
+                    <button type="button" class="btn pv-trigger" id="pvBtnSp" data-action="pvPickToday" data-pv-skill="sp" data-i18n="pv_cta">Practise a real exercise</button>
+                    <div class="pv-result" id="pvResSp" aria-live="polite" hidden></div>
+                  </div>
                   <!-- Materials: quiet reference surface, visually distinct from actions -->
                   <section class="sp-materials wtf-section" id="wtfSectionSp" data-wtf-skill="sp" aria-labelledby="spMaterialsTitle">
                     <button type="button" class="wtf-toggle" id="wtfToggleSp" data-action="toggleWtfSection" data-wtf-skill="sp" aria-expanded="false" aria-controls="wtfPanelSp">
@@ -4918,6 +5026,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           </div>
         </div>
 
+        <!-- Practice variety: non-repeating real exercise picker using pickExercise -->
+        <div class="card pv-exam-card" id="examPracticePicker">
+          <h2 data-i18n="pv_cta">Practise a real exercise</h2>
+          <div class="sub" data-i18n="pv_exam_sub">Pick a paper and get a real exercise without repeating recent ones.</div>
+          <div class="pv-exam-controls">
+            <div class="pv-exam-field">
+              <label for="exPickSkill" data-i18n="pv_exam_paper_lbl">Paper</label>
+              <select id="exPickSkill" data-change="onExamPickSkillChange">
+                <option value="rue" data-i18n="exam_sources_group_rue_title">Reading &amp; Use of English</option>
+                <option value="w" data-i18n="exam_sources_group_w_title">Writing</option>
+                <option value="l" data-i18n="exam_sources_group_l_title">Listening</option>
+                <option value="sp" data-i18n="exam_sources_group_sp_title">Speaking</option>
+              </select>
+            </div>
+            <div class="pv-exam-field">
+              <label for="exPickPart" data-i18n="pv_exam_part_lbl">Part (optional)</label>
+              <select id="exPickPart" data-change="onExamPickPartChange">
+                <option value="all" data-i18n="pv_part_all">All parts</option>
+              </select>
+            </div>
+            <button type="button" class="btn pv-exam-go" id="exPickBtn" data-action="pvPickExam" data-i18n="pv_give_one">Give me one</button>
+          </div>
+          <div id="exPickResult" class="pv-result" aria-live="polite" hidden></div>
+        </div>
+
         <!-- U4: Real mocks. The four papers, one click each, with the same
              countdown; the full mock chains the written papers and ends in
              the SP_EXAM speaking test. -->
@@ -4964,6 +5097,50 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
+        </div>
+
+        <!-- Local materials per paper (reuses Today's collapsible renderWhereToFind renderer) -->
+        <div class="card u4-exam-materials" id="examMaterialsCard">
+          <h2 data-i18n="exam_materials_title">Local materials by paper</h2>
+          <div class="sub" data-i18n="exam_materials_sub">Sample papers with answer keys, full tests and online practice — collapsed until you need them.</div>
+          <div class="u4-exam-mat-stack" id="examMaterialsStack">
+            <div class="wtf-section" id="wtfSectionExamRue" data-wtf-skill="exam-rue">
+              <button type="button" class="wtf-toggle" id="wtfToggleExamRue" data-action="toggleWtfSection" data-wtf-skill="exam-rue" aria-expanded="false" aria-controls="wtfPanelExamRue">
+                <span class="wtf-toggle-summary" id="wtfSummaryExamRue">Reading &amp; Use of English</span>
+                <span class="wtf-caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="wtf-panel" id="wtfPanelExamRue" hidden>
+                <div class="wtf-list wtf-compact" id="exMatRue"></div>
+              </div>
+            </div>
+            <div class="wtf-section" id="wtfSectionExamW" data-wtf-skill="exam-w">
+              <button type="button" class="wtf-toggle" id="wtfToggleExamW" data-action="toggleWtfSection" data-wtf-skill="exam-w" aria-expanded="false" aria-controls="wtfPanelExamW">
+                <span class="wtf-toggle-summary" id="wtfSummaryExamW">Writing</span>
+                <span class="wtf-caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="wtf-panel" id="wtfPanelExamW" hidden>
+                <div class="wtf-list wtf-compact" id="exMatW"></div>
+              </div>
+            </div>
+            <div class="wtf-section" id="wtfSectionExamL" data-wtf-skill="exam-l">
+              <button type="button" class="wtf-toggle" id="wtfToggleExamL" data-action="toggleWtfSection" data-wtf-skill="exam-l" aria-expanded="false" aria-controls="wtfPanelExamL">
+                <span class="wtf-toggle-summary" id="wtfSummaryExamL">Listening</span>
+                <span class="wtf-caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="wtf-panel" id="wtfPanelExamL" hidden>
+                <div class="wtf-list wtf-compact" id="exMatL"></div>
+              </div>
+            </div>
+            <div class="wtf-section" id="wtfSectionExamSp" data-wtf-skill="exam-sp">
+              <button type="button" class="wtf-toggle" id="wtfToggleExamSp" data-action="toggleWtfSection" data-wtf-skill="exam-sp" aria-expanded="false" aria-controls="wtfPanelExamSp">
+                <span class="wtf-toggle-summary" id="wtfSummaryExamSp">Speaking</span>
+                <span class="wtf-caret" aria-hidden="true">▾</span>
+              </button>
+              <div class="wtf-panel" id="wtfPanelExamSp" hidden>
+                <div class="wtf-list wtf-compact" id="exMatSp"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- U4: full practice source catalogue grouped by paper in Today's block style -->
@@ -5988,6 +6165,31 @@ const I18N={
     wtf_full_online_cambridge:'Cambridge official sample papers',
     wtf_full_online_write:'Write & Improve (Cambridge)',
     wtf_full_online_listen:'Exam English — 2 full listening tests',
+    pv_cta:'Practise a real exercise',
+    pv_give_one:'Give me one',
+    pv_another:'Give me another',
+    pv_mark_done:'Mark as done',
+    pv_marked:'Done · {n}×',
+    pv_open:'Open',
+    pv_type_paper:'Paper',
+    pv_type_lesson:'Lesson',
+    pv_type_online:'Online',
+    pv_exam_sub:'Pick a paper and get a real exercise without repeating recent ones.',
+    pv_exam_paper_lbl:'Paper',
+    pv_exam_part_lbl:'Part (optional)',
+    pv_part_all:'All parts',
+    pv_empty:'No exercises available for this filter yet.',
+    pv_hint_key:'Check your answers with this key and log every mistake.',
+    pv_hint_examiner:'Read the examiner comments and compare with your own turn.',
+    pv_hint_lesson:'Work through the strategy steps, then do the practice task.',
+    pv_hint_audio:'Listen twice without pausing, then check with the key or script.',
+    pv_hint_rue_paper:'Time yourself strictly, then check with the answer key.',
+    pv_hint_w_paper:'5 min plan, 35 min write (140–190 words), then audit.',
+    pv_hint_l_paper:'Preview the questions, play the audio once, then check.',
+    pv_hint_sp_paper:'Practise aloud with a timer and review against examiner notes.',
+    pv_hint_self_study:'Complete this self-study activity and review the tips.',
+    exam_materials_title:'Local materials by paper',
+    exam_materials_sub:'Sample papers with answer keys, full tests and online practice — collapsed until you need them.',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     pg_summary_title:'At a glance',
@@ -7061,6 +7263,31 @@ const I18N={
     wtf_full_online_cambridge:'Exámenes oficiales de Cambridge',
     wtf_full_online_write:'Write & Improve (Cambridge)',
     wtf_full_online_listen:'Exam English — 2 tests completos de listening',
+    pv_cta:'Practicá un ejercicio real',
+    pv_give_one:'Dame uno',
+    pv_another:'Dame otro',
+    pv_mark_done:'Marcar hecho',
+    pv_marked:'Hecho · {n}×',
+    pv_open:'Abrir',
+    pv_type_paper:'Examen',
+    pv_type_lesson:'Lección',
+    pv_type_online:'En línea',
+    pv_exam_sub:'Elegí una prueba y recibí un ejercicio real sin repetir los recientes.',
+    pv_exam_paper_lbl:'Prueba',
+    pv_exam_part_lbl:'Parte (opcional)',
+    pv_part_all:'Todas las partes',
+    pv_empty:'Todavía no hay ejercicios disponibles para este filtro.',
+    pv_hint_key:'Corregí tus respuestas con esta clave y anotá cada error.',
+    pv_hint_examiner:'Leé los comentarios del examinador y comparalos con tu turno.',
+    pv_hint_lesson:'Seguí los pasos de estrategia y después hacé la actividad.',
+    pv_hint_audio:'Escuchá dos veces sin pausar y corregí con las respuestas o transcripción.',
+    pv_hint_rue_paper:'Hacelo con reloj estricto y corregí con las respuestas.',
+    pv_hint_w_paper:'5 min plan, 35 min escritura (140–190 palabras) y auditoría.',
+    pv_hint_l_paper:'Leé las preguntas antes, escuchá sin pausar y corregí.',
+    pv_hint_sp_paper:'Practicá en voz alta con reloj y compará con las notas del examinador.',
+    pv_hint_self_study:'Completá esta actividad de autoestudio y revisá los consejos.',
+    exam_materials_title:'Materiales locales por prueba',
+    exam_materials_sub:'Exámenes de muestra con respuestas, tests completos y práctica en línea — plegados hasta que los necesites.',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     pg_summary_title:'En un vistazo',
@@ -9638,7 +9865,7 @@ function spxGetCustomTask(part){
 
 /* ---------- LOAD / SAVE (per user) ---------- */
 function blankDoc(){
-  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},spxCustom:spxReadCustomLS(),onboarded:false,onboardStep:1,sessionOffset:0};
+  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},pick:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},spxCustom:spxReadCustomLS(),onboarded:false,onboardStep:1,sessionOffset:0};
 }
 /* Nothing is loaded until a session exists: an orphaned local document (a
    deleted user, or the old guest era) stays on disk under its own key but is
@@ -9674,6 +9901,7 @@ function load(){
       overrides: gateNormalizeOverrides(d.overrides),
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
+      pick: (d.pick&&typeof d.pick==='object'&&!Array.isArray(d.pick)) ? d.pick : {},
       diag: d.diag||null,
       profile: (d.profile&&typeof d.profile==='object') ? d.profile : null,
       speaking: (d.speaking&&typeof d.speaking==='object')
@@ -9963,6 +10191,7 @@ function syncPull(){
             overrides: d.overrides!==undefined ? gateNormalizeOverrides(d.overrides) : gateNormalizeOverrides(D.overrides),
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
+            pick: Object.assign({}, (D.pick&&typeof D.pick==='object'&&!Array.isArray(D.pick))?D.pick:{}, (d.pick&&typeof d.pick==='object'&&!Array.isArray(d.pick))?d.pick:{}),
             diag: d.diag!==undefined ? d.diag : (D.diag||null),
             profile: (d.profile&&typeof d.profile==='object') ? d.profile : (D.profile||null),
             speaking: (d.speaking&&typeof d.speaking==='object')
@@ -18460,6 +18689,8 @@ function renderEx(){
   else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
   else f.innerHTML=`<div><label>R&UoE correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
+  if(typeof renderExamPickParts==='function')renderExamPickParts();
+  if(typeof renderExamMaterials==='function')renderExamMaterials();
   renderExamSources();
 }
 /* Exam sources: renders all PRACTICE_SOURCES grouped by paper in Today's
@@ -19222,10 +19453,12 @@ function toggleWtfSection(el){
   if(!skill)return;
   setWtfOpen(skill,!isWtfOpen(skill));
 }
-function wtfSummaryLabel(n){
-  return t('sp_materials_title')+' · '+t(n===1?'wtf_res_one':'wtf_res_many',{n});
+function wtfSummaryLabel(n,prefix){
+  const head=prefix||t('sp_materials_title');
+  return head+' · '+t(n===1?'wtf_res_one':'wtf_res_many',{n});
 }
-/* Shared block renderer for Today's 4 "Where to find" sections.
+/* Shared block renderer for Today's 4 "Where to find" sections and Exam's
+   local materials section.
    rows: [{title?, left, right?, extra?, hint}]
    online: {label, href, hint}
    fullPaper?: {links, extra?, hint}
@@ -19273,134 +19506,118 @@ function renderWhereToFind(rows,online,fullPaper,opts){
   }
   return parts.join('');
 }
-/* renderGuides(): fills Today's 4 "Where to find" sections (R&UoE, Writing,
-   Listening, Speaking) using the shared block renderer and existing MAT links. */
-function renderGuides(){
-  const mount=(id,skill,rows,online,fullPaper,opts)=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    el.innerHTML=renderWhereToFind(rows,online,fullPaper,opts);
-    const count=el.querySelectorAll(':scope > .wtf-block').length;
-    const sec=el.closest('.wtf-section');
-    if(sec){
-      const sum=sec.querySelector('.wtf-toggle-summary');
-      if(sum)sum.textContent=wtfSummaryLabel(count);
-      applyWtfOpenState(skill,isWtfOpen(skill));
+/* Shared spec builder for both Today's 4 studios and Exam's local materials. */
+function buildWtfSpec(skill,partOpt){
+  if(skill==='rue'){
+    const ueVal=partOpt!=null?String(partOpt):'all';
+    const ueNum=Number(ueVal);
+    const ueRows=[
+      {left:wtfLink('R&UoE S1','rueS1'),right:wtfLink('Keys S1','keyS1'),hint:t('wtf_hint_rue_paper')},
+      {left:wtfLink('R&UoE S2','rueS2'),right:wtfLink('Keys S2','keyS2'),hint:t('wtf_hint_rue_paper')},
+      {left:wtfLink('R&UoE FS1','rueFS1'),right:wtfLink('Keys FS1','keyFS1'),hint:t('wtf_hint_rue_paper')},
+      {left:wtfLink('R&UoE FS2','rueFS2'),right:wtfLink('Keys FS2','keyFS2'),hint:t('wtf_hint_rue_paper')}
+    ];
+    if(ueNum>=1&&ueNum<=7){
+      ueRows.push({left:wtfLink('Lesson plan P'+ueNum,'lpR'+ueNum),hint:t('wtf_hint_lesson')});
+      ueRows.push({left:wtfLink('Lesson FS P'+ueNum,'fR'+ueNum),hint:t('wtf_hint_lesson')});
     }
-  };
-
-  /* 1. Reading & Use of English */
-  const ueVal=document.getElementById('uePart')?String(document.getElementById('uePart').value):'1';
-  const ueNum=Number(ueVal);
-  const ueRows=[
-    {left:wtfLink('R&UoE S1','rueS1'),right:wtfLink('Keys S1','keyS1'),hint:t('wtf_hint_rue_paper')},
-    {left:wtfLink('R&UoE S2','rueS2'),right:wtfLink('Keys S2','keyS2'),hint:t('wtf_hint_rue_paper')},
-    {left:wtfLink('R&UoE FS1','rueFS1'),right:wtfLink('Keys FS1','keyFS1'),hint:t('wtf_hint_rue_paper')},
-    {left:wtfLink('R&UoE FS2','rueFS2'),right:wtfLink('Keys FS2','keyFS2'),hint:t('wtf_hint_rue_paper')}
-  ];
-  if(ueNum>=1&&ueNum<=7){
-    ueRows.push({left:wtfLink('Lesson plan P'+ueNum,'lpR'+ueNum),hint:t('wtf_hint_lesson')});
-    ueRows.push({left:wtfLink('Lesson FS P'+ueNum,'fR'+ueNum),hint:t('wtf_hint_lesson')});
+    if(ueNum>=5||ueVal==='all'){
+      ueRows.push(
+        {left:wtfLink('Self-study R','rAct1'),hint:t('wtf_hint_self_study')},
+        {left:wtfLink('R Act P1','rAct1b'),hint:t('wtf_hint_self_study')},
+        {left:wtfLink('Further R','rAct2'),hint:t('wtf_hint_self_study')},
+        {left:wtfLink('Reading guide','rGuide'),hint:t('wtf_hint_self_study')}
+      );
+    }
+    const ueFullPair=[['Full R&UoE S1','rueS1','Keys S1','keyS1'],['Full R&UoE S2','rueS2','Keys S2','keyS2'],['Full R&UoE FS1','rueFS1','Keys FS1','keyFS1'],['Full R&UoE FS2','rueFS2','Keys FS2','keyFS2']].find(p=>MAT[p[1]]);
+    const ueFullLinks=[];
+    if(ueFullPair){
+      ueFullLinks.push(wtfLink(ueFullPair[0],ueFullPair[1]));
+      if(MAT[ueFullPair[3]])ueFullLinks.push(wtfLink(ueFullPair[2],ueFullPair[3]));
+    }
+    ueFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
+    const ueOnline=ueNum>=5
+      ?{label:'Exam English — FCE Reading',href:'https://www.examenglish.com/FCE/fce_reading.html',hint:t('wtf_online_rue')}
+      :{label:'Flo-Joe — FCE Use of English',href:'https://www.flo-joe.co.uk/fce/students/tests/',hint:t('wtf_online_rue')};
+    return {rows:ueRows,online:ueOnline,fullPaper:{links:ueFullLinks,hint:t('wtf_full_rue_hint')},opts:null};
   }
-  if(ueNum>=5||ueVal==='all'){
-    ueRows.push(
-      {left:wtfLink('Self-study R','rAct1'),hint:t('wtf_hint_self_study')},
-      {left:wtfLink('R Act P1','rAct1b'),hint:t('wtf_hint_self_study')},
-      {left:wtfLink('Further R','rAct2'),hint:t('wtf_hint_self_study')},
-      {left:wtfLink('Reading guide','rGuide'),hint:t('wtf_hint_self_study')}
-    );
+  if(skill==='w'){
+    const wPart=(partOpt===1||partOpt==='1'||partOpt==='Essay')?1:2;
+    const wRows=[
+      {left:wtfLink('Writing S1','wS1'),hint:t('wtf_hint_w_paper')},
+      {left:wtfLink('Writing S2','wS2'),right:wtfLink('Keys S2','keyS2'),hint:t('wtf_hint_w_paper')},
+      {left:wtfLink('Writing FS1','wFS1'),hint:t('wtf_hint_w_paper')},
+      {left:wtfLink('Writing FS2','wFS2'),right:wtfLink('Keys FS2','keyFS2'),hint:t('wtf_hint_w_paper')},
+      {left:wtfLink('Lesson W'+wPart,'lpW'+wPart),hint:t('wtf_hint_lesson')},
+      {left:wtfLink('Lesson FS W'+wPart,'fW'+wPart),hint:t('wtf_hint_lesson')},
+      {left:wtfLink('Self-study W'+wPart,'wAct'+wPart),hint:t('wtf_hint_self_study')},
+      {left:wtfLink('Checklist','wCheck'),hint:t('wtf_hint_self_study')},
+      {left:wtfLink('Teacher guide','wGuide'),hint:t('wtf_hint_self_study')}
+    ];
+    const wFullPick=[['Full Writing S1','wS1'],['Full Writing S2','wS2'],['Full Writing FS1','wFS1'],['Full Writing FS2','wFS2']].find(p=>MAT[p[1]]);
+    const wFullLinks=[];
+    if(wFullPick)wFullLinks.push(wtfLink(wFullPick[0],wFullPick[1]));
+    wFullLinks.push(wtfLink(t('wtf_full_online_write'),'https://writeandimprove.com/'));
+    return {rows:wRows,online:{label:'Exam English — FCE Writing',href:'https://www.examenglish.com/FCE/fce_writing.html',hint:t('wtf_online_w')},fullPaper:{links:wFullLinks,hint:t('wtf_full_w_hint')},opts:null};
   }
-  const ueFullPair=[['Full R&UoE S1','rueS1','Keys S1','keyS1'],['Full R&UoE S2','rueS2','Keys S2','keyS2'],['Full R&UoE FS1','rueFS1','Keys FS1','keyFS1'],['Full R&UoE FS2','rueFS2','Keys FS2','keyFS2']].find(p=>MAT[p[1]]);
-  const ueFullLinks=[];
-  if(ueFullPair){
-    ueFullLinks.push(wtfLink(ueFullPair[0],ueFullPair[1]));
-    if(MAT[ueFullPair[3]])ueFullLinks.push(wtfLink(ueFullPair[2],ueFullPair[3]));
-  }
-  ueFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
-  const ueOnline=ueNum>=5
-    ?{label:'Exam English — FCE Reading',href:'https://www.examenglish.com/FCE/fce_reading.html',hint:t('wtf_online_rue')}
-    :{label:'Flo-Joe — FCE Use of English',href:'https://www.flo-joe.co.uk/fce/students/tests/',hint:t('wtf_online_rue')};
-  mount('gUeChips','rue',ueRows,ueOnline,{links:ueFullLinks,hint:t('wtf_full_rue_hint')});
-
-  /* 2. Writing */
-  const wTipo=document.getElementById('wTipo')?String(document.getElementById('wTipo').value):'Essay';
-  const wPart=wTipo==='Essay'?1:2;
-  const wRows=[
-    {left:wtfLink('Writing S1','wS1'),hint:t('wtf_hint_w_paper')},
-    {left:wtfLink('Writing S2','wS2'),right:wtfLink('Keys S2','keyS2'),hint:t('wtf_hint_w_paper')},
-    {left:wtfLink('Writing FS1','wFS1'),hint:t('wtf_hint_w_paper')},
-    {left:wtfLink('Writing FS2','wFS2'),right:wtfLink('Keys FS2','keyFS2'),hint:t('wtf_hint_w_paper')},
-    {left:wtfLink('Lesson W'+wPart,'lpW'+wPart),hint:t('wtf_hint_lesson')},
-    {left:wtfLink('Lesson FS W'+wPart,'fW'+wPart),hint:t('wtf_hint_lesson')},
-    {left:wtfLink('Self-study W'+wPart,'wAct'+wPart),hint:t('wtf_hint_self_study')},
-    {left:wtfLink('Checklist','wCheck'),hint:t('wtf_hint_self_study')},
-    {left:wtfLink('Teacher guide','wGuide'),hint:t('wtf_hint_self_study')}
-  ];
-  const wFullPick=[['Full Writing S1','wS1'],['Full Writing S2','wS2'],['Full Writing FS1','wFS1'],['Full Writing FS2','wFS2']].find(p=>MAT[p[1]]);
-  const wFullLinks=[];
-  if(wFullPick)wFullLinks.push(wtfLink(wFullPick[0],wFullPick[1]));
-  wFullLinks.push(wtfLink(t('wtf_full_online_write'),'https://writeandimprove.com/'));
-  mount('gWChips','w',wRows,{label:'Exam English — FCE Writing',href:'https://www.examenglish.com/FCE/fce_writing.html',hint:t('wtf_online_w')},{links:wFullLinks,hint:t('wtf_full_w_hint')});
-
-  /* 3. Listening */
-  const lPartVal=document.getElementById('lPart')?String(document.getElementById('lPart').value):'all';
-  const lPartNum=Number(lPartVal);
-  const lRows=[];
-  lRows.push({
-    title:t('lt_test_1'),
-    left:wtfLink(t('res_questions'),'lS1'),
-    right:wtfLink(t('res_answer_key'),'lkS1'),
-    extra:[
-      wtfLink(t('res_audio'),'auS1'),
-      wtfLink(t('res_tapescript'),'tsS1'),
-      wtfLink(t('res_teacher_guide'),'lGuide')
-    ],
-    hint:t('wtf_hint_l_test')
-  });
-  const lParts=(lPartNum>=1&&lPartNum<=4)?[lPartNum]:[1,2,3,4];
-  lParts.forEach(n=>{
+  if(skill==='l'){
+    const lPartVal=partOpt!=null?String(partOpt):'all';
+    const lPartNum=Number(lPartVal);
+    const lRows=[];
     lRows.push({
-      title:t('lt_test_2_part',{n}),
-      left:wtfLink(t('res_questions'),'lS2'),
-      right:wtfLink(t('res_answer_key'),'lkS2'),
+      title:t('lt_test_1'),
+      left:wtfLink(t('res_questions'),'lS1'),
+      right:wtfLink(t('res_answer_key'),'lkS1'),
       extra:[
-        wtfLink(t('res_audio'),'auS2p'+n,'Part '+n),
-        wtfLink(t('res_lesson_plan'),'lpL'+n,'Part '+n)
+        wtfLink(t('res_audio'),'auS1'),
+        wtfLink(t('res_tapescript'),'tsS1'),
+        wtfLink(t('res_teacher_guide'),'lGuide')
       ],
-      hint:t('wtf_hint_l_part')
+      hint:t('wtf_hint_l_test')
     });
-  });
-  const hbExtra=(lPartNum>=1&&lPartNum<=4)
-    ?[wtfLink(t('res_audio')+' · Sample 2','hbA2p'+lPartNum,'Sample 2 · part '+lPartNum),wtfLink(t('res_audio')+' · For Schools','hbFSp'+lPartNum,'For Schools · part '+lPartNum)]
-    :[wtfLink(t('res_audio')+' · Sample 1','hbA1','Sample 1'),wtfLink(t('res_audio')+' · FS 2','hbFS2','For Schools · sample 2')];
-  lRows.push({
-    title:t('lt_handbook'),
-    left:wtfLink('B2 First handbook','hb','B2 First handbook: tapescripts and answer keys'),
-    right:wtfLink('For Schools handbook','hbFS','For Schools handbook: tapescripts and answer keys'),
-    extra:hbExtra,
-    hint:t('wtf_hint_l_hb')
-  });
-  const lFullLinks=[];
-  const lFullExtra=[];
-  if(MAT.lFS2){
-    lFullLinks.push(wtfLink(t('lt_full_2'),'lFS2'));
-    if(MAT.lkFS2)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS2'));
-    if(MAT.auFS2)lFullLinks.push(wtfLink(t('res_audio'),'auFS2'));
-  }else if(MAT.lFS1){
-    lFullLinks.push(wtfLink(t('lt_full_1'),'lFS1'));
-    if(MAT.lkFS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS1'));
-    if(MAT.tsFS1)lFullExtra.push(wtfLink(t('res_tapescript'),'tsFS1'));
-    for(let n=1;n<=4;n++){if(MAT['auFS1p'+n])lFullExtra.push(wtfLink(t('res_audio')+' '+n,'auFS1p'+n,'Part '+n));}
-  }else if(MAT.lS1){
-    lFullLinks.push(wtfLink(t('lt_test_1'),'lS1'));
-    if(MAT.lkS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkS1'));
-    if(MAT.auS1)lFullLinks.push(wtfLink(t('res_audio'),'auS1'));
+    const lParts=(lPartNum>=1&&lPartNum<=4)?[lPartNum]:[1,2,3,4];
+    lParts.forEach(n=>{
+      lRows.push({
+        title:t('lt_test_2_part',{n}),
+        left:wtfLink(t('res_questions'),'lS2'),
+        right:wtfLink(t('res_answer_key'),'lkS2'),
+        extra:[
+          wtfLink(t('res_audio'),'auS2p'+n,'Part '+n),
+          wtfLink(t('res_lesson_plan'),'lpL'+n,'Part '+n)
+        ],
+        hint:t('wtf_hint_l_part')
+      });
+    });
+    const hbExtra=(lPartNum>=1&&lPartNum<=4)
+      ?[wtfLink(t('res_audio')+' · Sample 2','hbA2p'+lPartNum,'Sample 2 · part '+lPartNum),wtfLink(t('res_audio')+' · For Schools','hbFSp'+lPartNum,'For Schools · part '+lPartNum)]
+      :[wtfLink(t('res_audio')+' · Sample 1','hbA1','Sample 1'),wtfLink(t('res_audio')+' · FS 2','hbFS2','For Schools · sample 2')];
+    lRows.push({
+      title:t('lt_handbook'),
+      left:wtfLink('B2 First handbook','hb','B2 First handbook: tapescripts and answer keys'),
+      right:wtfLink('For Schools handbook','hbFS','For Schools handbook: tapescripts and answer keys'),
+      extra:hbExtra,
+      hint:t('wtf_hint_l_hb')
+    });
+    const lFullLinks=[];
+    const lFullExtra=[];
+    if(MAT.lFS2){
+      lFullLinks.push(wtfLink(t('lt_full_2'),'lFS2'));
+      if(MAT.lkFS2)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS2'));
+      if(MAT.auFS2)lFullLinks.push(wtfLink(t('res_audio'),'auFS2'));
+    }else if(MAT.lFS1){
+      lFullLinks.push(wtfLink(t('lt_full_1'),'lFS1'));
+      if(MAT.lkFS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS1'));
+      if(MAT.tsFS1)lFullExtra.push(wtfLink(t('res_tapescript'),'tsFS1'));
+      for(let n=1;n<=4;n++){if(MAT['auFS1p'+n])lFullExtra.push(wtfLink(t('res_audio')+' '+n,'auFS1p'+n,'Part '+n));}
+    }else if(MAT.lS1){
+      lFullLinks.push(wtfLink(t('lt_test_1'),'lS1'));
+      if(MAT.lkS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkS1'));
+      if(MAT.auS1)lFullLinks.push(wtfLink(t('res_audio'),'auS1'));
+    }
+    lFullLinks.push(wtfLink(t('wtf_full_online_listen'),'https://www.examenglish.com/FCE/fce_listening.html'));
+    return {rows:lRows,online:{label:'Test-English — B2 Listening',href:'https://test-english.com/listening/b2/',hint:t('wtf_online_l')},fullPaper:{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')},opts:{rowClass:'listen-test'}};
   }
-  lFullLinks.push(wtfLink(t('wtf_full_online_listen'),'https://www.examenglish.com/FCE/fce_listening.html'));
-  mount('gLChips','l',lRows,{label:'Test-English — B2 Listening',href:'https://test-english.com/listening/b2/',hint:t('wtf_online_l')},{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')},{rowClass:'listen-test'});
-
-  /* 4. Speaking */
-  const spPart=String((typeof SP_TODAY!=='undefined'&&SP_TODAY.part)?SP_TODAY.part:2);
+  const spPart=String((partOpt&&Number(partOpt)>=1&&Number(partOpt)<=4)?Number(partOpt):2);
   const spRows=[
     {left:wtfLink('Speaking S1','spS1'),right:wtfLink(t('wtf_examiner_notes'),'exC0'),hint:t('wtf_hint_sp_visuals')},
     {left:wtfLink('Speaking S2','spS2'),right:[wtfLink(t('wtf_notes_short')+' 2','exC1',t('wtf_examiner_notes')+' 2'),wtfLink(t('wtf_notes_short')+' 3','exC2',t('wtf_examiner_notes')+' 3')],hint:t('wtf_hint_sp_visuals')},
@@ -19415,7 +19632,378 @@ function renderGuides(){
   const spFullLinks=[];
   if(spFullPick)spFullLinks.push(wtfLink(spFullPick[0],spFullPick[1]));
   spFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
-  mount('gSpChips','sp',spRows,{label:'Exam English — FCE Speaking',href:'https://www.examenglish.com/FCE/fce_speaking.html',hint:t('wtf_online_sp')},{links:spFullLinks,hint:t('wtf_full_sp_hint')});
+  return {rows:spRows,online:{label:'Exam English — FCE Speaking',href:'https://www.examenglish.com/FCE/fce_speaking.html',hint:t('wtf_online_sp')},fullPaper:{links:spFullLinks,hint:t('wtf_full_sp_hint')},opts:null};
+}
+function mountWtfSection(containerId,storageSkill,spec,summaryPrefix){
+  const el=document.getElementById(containerId);
+  if(!el||!spec)return;
+  el.innerHTML=renderWhereToFind(spec.rows,spec.online,spec.fullPaper,spec.opts);
+  const count=el.querySelectorAll(':scope > .wtf-block').length;
+  const sec=el.closest('.wtf-section');
+  if(sec){
+    const sum=sec.querySelector('.wtf-toggle-summary');
+    if(sum)sum.textContent=wtfSummaryLabel(count,summaryPrefix);
+    applyWtfOpenState(storageSkill,isWtfOpen(storageSkill));
+  }
+}
+/* renderGuides(): fills Today's 4 "Where to find" sections (R&UoE, Writing,
+   Listening, Speaking) using the shared block renderer and existing MAT links. */
+function renderGuides(){
+  const ueVal=document.getElementById('uePart')?String(document.getElementById('uePart').value):'1';
+  const wTipo=document.getElementById('wTipo')?String(document.getElementById('wTipo').value):'Essay';
+  const lPartVal=document.getElementById('lPart')?String(document.getElementById('lPart').value):'all';
+  const spPart=(typeof SP_TODAY!=='undefined'&&SP_TODAY.part)?SP_TODAY.part:2;
+  mountWtfSection('gUeChips','rue',buildWtfSpec('rue',ueVal));
+  mountWtfSection('gWChips','w',buildWtfSpec('w',wTipo==='Essay'?1:2));
+  mountWtfSection('gLChips','l',buildWtfSpec('l',lPartVal));
+  mountWtfSection('gSpChips','sp',buildWtfSpec('sp',spPart));
+  renderExamMaterials();
+  if(typeof refreshPickedCards==='function')refreshPickedCards();
+}
+/* Exam local materials: reuses the exact same buildWtfSpec + mountWtfSection
+   (-> renderWhereToFind) collapsible block renderer as Today. */
+function renderExamMaterials(){
+  const defs=[
+    {id:'exMatRue',key:'exam-rue',skill:'rue',part:'all',titleKey:'exam_sources_group_rue_title'},
+    {id:'exMatW',key:'exam-w',skill:'w',part:1,titleKey:'exam_sources_group_w_title'},
+    {id:'exMatL',key:'exam-l',skill:'l',part:'all',titleKey:'exam_sources_group_l_title'},
+    {id:'exMatSp',key:'exam-sp',skill:'sp',part:2,titleKey:'exam_sources_group_sp_title'}
+  ];
+  defs.forEach(d=>mountWtfSection(d.id,d.key,buildWtfSpec(d.skill,d.part),t(d.titleKey)));
+}
+/* ---------- PRACTICE VARIETY: shared pool + non-repeating selector ---------- */
+const PV_TYPE_KEYS={paper:'pv_type_paper',lesson:'pv_type_lesson',online:'pv_type_online'};
+const PV_SKILL_PARTS={rue:[1,2,3,4,5,6,7],w:[1,2],l:[1,2,3,4],sp:[1,2,3,4]};
+let PV_SEEN_SEQ=0;
+const PV_SEEN_AT={};
+const PV_ACTIVE={today:{},exam:null};
+function pvHash(str){
+  let h=2166136261>>>0;
+  const s=String(str||'');
+  for(let i=0;i<s.length;i++){
+    h^=s.charCodeAt(i);
+    h=Math.imul(h,16777619)>>>0;
+  }
+  return h;
+}
+function pvInferSkill(path){
+  if(/speaking|examiner[-_\s]comments/i.test(path))return 'sp';
+  if(/listening|tapescript|audio/i.test(path))return 'l';
+  if(/writing/i.test(path))return 'w';
+  if(/\brue\b|reading|use[-_\s]of[-_\s]english/i.test(path))return 'rue';
+  if(/answer[-_\s]?keys?/i.test(path))return 'rue';
+  return null;
+}
+function pvInferPart(path,skill){
+  if(/\bpart[-_\s]*(\d)[-_\s]+(\d)\b/i.test(path))return 'all';
+  let p=null;
+  const m1=path.match(/\bpart[-_\s]*([1-7])\b/i);
+  if(m1)p=Number(m1[1]);
+  if(p===null){
+    const m2=path.match(/listening[-_\s]audio[-_\s]([1-4])(?:[-_\s]\d+)?\.mp3$/i);
+    if(m2)p=Number(m2[1]);
+  }
+  if(p===null)return 'all';
+  const allowed=PV_SKILL_PARTS[skill]||[1,2,3,4];
+  return allowed.includes(p)?p:'all';
+}
+function pvMaterialLabel(m){
+  const raw=String((m&&m.name)||'').replace(/^\d{5,6}[-_\s]+/,'').replace(/\.(pdf|mp3|zip)$/i,'').replace(/\bv2\b/ig,'');
+  let clean=raw.replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim();
+  clean=clean.replace(/^cambridge english\s+/i,'Cambridge ');
+  clean=clean.replace(/\bfirst for schools\b/i,'B2 First For Schools');
+  clean=clean.replace(/\bb2 first\b/i,'B2 First');
+  if(!clean)clean=String((m&&m.rel)||'Material');
+  return clean.charAt(0).toUpperCase()+clean.slice(1);
+}
+function pvMaterialType(path){
+  if(/10-Lesson-Plans|lesson[-_\s]plan/i.test(path))return 'lesson';
+  return 'paper';
+}
+function pvMaterialMins(path,skill,part,type){
+  if(type==='lesson')return /overview/i.test(path)?15:20;
+  if(/answer[-_\s]?key|tapescript|checklist|examiner[-_\s]comments/i.test(path))return 15;
+  if(/self[-_\s]study|teacher[-_\s]guide|developing[-_\s]reading/i.test(path))return 20;
+  if(skill==='l'){
+    if(/extract[-_\s]*\d|audio[-_\s]1[-_\s]\d/i.test(path))return 5;
+    if(part!=='all')return 10;
+    return 40;
+  }
+  if(skill==='rue')return part==='all'?45:12;
+  if(skill==='w')return 40;
+  return 14;
+}
+function pvMaterialHint(path,skill,type,ext){
+  if(type==='lesson')return t('pv_hint_lesson');
+  if(/examiner[-_\s]comments/i.test(path))return t('pv_hint_examiner');
+  if(/answer[-_\s]?key|tapescript/i.test(path))return t('pv_hint_key');
+  if(ext==='AUDIO'||/\.mp3$/i.test(path))return t('pv_hint_audio');
+  if(/self[-_\s]study|teacher[-_\s]guide|developing[-_\s]reading|checklist/i.test(path))return t('pv_hint_self_study');
+  if(skill==='rue')return t('pv_hint_rue_paper');
+  if(skill==='w')return t('pv_hint_w_paper');
+  if(skill==='l')return t('pv_hint_l_paper');
+  return t('pv_hint_sp_paper');
+}
+function exercisePool(skill,part){
+  const wantSkill=(skill&&skill!=='all')?String(skill):null;
+  const wantPart=(part!==null&&part!==undefined&&part!==''&&part!=='all'&&Number.isInteger(Number(part))&&Number(part)>0)?Number(part):null;
+  const raw=[];
+  const mats=(typeof MATERIALS!=='undefined'&&Array.isArray(MATERIALS))?MATERIALS:[];
+  mats.forEach(m=>{
+    if(!m||!m.href)return;
+    const rel=String(m.rel||((m.folder?m.folder+'/':'')+(m.name||'')));
+    if(!rel)return;
+    if(/13-C1-Advanced|\bc1[\s_-]*advanced\b/i.test(rel))return;
+    if(/Answer[-_\s]?Sheet/i.test(rel))return;
+    if(/12-Para-Imprimir\/0[2-5]-Examen/i.test(rel))return;
+    if(/^(?:05-Handbooks|11-Guias)\b/i.test(rel))return;
+    const sk=pvInferSkill(rel);
+    if(!sk)return;
+    const pt=pvInferPart(rel,sk);
+    const type=pvMaterialType(rel);
+    const label=pvMaterialLabel(m);
+    raw.push({
+      id:rel,
+      kind:'local',
+      type:type,
+      skill:sk,
+      part:pt,
+      parts:[],
+      mins:pvMaterialMins(rel,sk,pt,type),
+      label:label,
+      href:m.href,
+      hint:pvMaterialHint(rel,sk,type,m.ext||'')
+    });
+  });
+  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))?PRACTICE_SOURCES:[];
+  sources.forEach(s=>{
+    if(!s||!s.url||!s.skill)return;
+    const pNums=Array.isArray(s.part)?s.part.map(Number).filter(n=>Number.isInteger(n)&&n>0):[];
+    const pt=pNums.length===1?pNums[0]:'all';
+    const hint=(typeof examSourceHint==='function')?examSourceHint(s):(s.what||'');
+    raw.push({
+      id:'online:'+s.url,
+      kind:'online',
+      type:'online',
+      skill:s.skill,
+      part:pt,
+      parts:pNums,
+      mins:Number(s.mins)||20,
+      label:String(s.n||s.url),
+      href:s.url,
+      hint:hint||String(s.what||'')
+    });
+  });
+  const seenHL=new Set();
+  const seenId=new Set();
+  const deduped=[];
+  raw.forEach(item=>{
+    const hlKey=String(item.href).trim()+'\0'+String(item.label).trim().toLowerCase();
+    if(seenHL.has(hlKey)||seenId.has(item.id))return;
+    seenHL.add(hlKey);
+    seenId.add(item.id);
+    deduped.push(item);
+  });
+  return deduped.filter(e=>{
+    if(wantSkill&&e.skill!==wantSkill)return false;
+    if(wantPart!==null){
+      if(e.part===wantPart)return true;
+      if(e.part==='all'){
+        if(e.parts&&e.parts.length)return e.parts.includes(wantPart);
+        return true;
+      }
+      return false;
+    }
+    return true;
+  });
+}
+function pvPickKey(skill,part){
+  const sk=(skill&&skill!=='all')?String(skill):'all';
+  const pt=(part!==null&&part!==undefined&&part!==''&&part!=='all'&&Number.isInteger(Number(part))&&Number(part)>0)?String(Number(part)):'all';
+  return sk+':'+pt;
+}
+function pickExercise(skill,part){
+  const pool=exercisePool(skill,part);
+  if(!pool.length)return null;
+  const key=pvPickKey(skill,part);
+  D.pick=(D.pick&&typeof D.pick==='object'&&!Array.isArray(D.pick))?D.pick:{};
+  const recent=Array.isArray(D.pick[key])?D.pick[key].slice(-5):[];
+  const seenMap=PV_SEEN_AT[key]||(PV_SEEN_AT[key]={});
+  recent.forEach((id,idx)=>{
+    if(seenMap[id]===undefined)seenMap[id]=idx-100;
+  });
+  const matMap=(D&&D.mat&&typeof D.mat==='object')?D.mat:{};
+  const cmp=(a,b)=>{
+    const ma=matMap[a.id]||{n:0,last:''};
+    const mb=matMap[b.id]||{n:0,last:''};
+    const dn=(Number(ma.n)||0)-(Number(mb.n)||0);
+    if(dn!==0)return dn;
+    const dl=String(ma.last||'').localeCompare(String(mb.last||''));
+    if(dl!==0)return dl;
+    const sa=seenMap[a.id]!==undefined?seenMap[a.id]:0;
+    const sb=seenMap[b.id]!==undefined?seenMap[b.id]:0;
+    if(sa!==sb)return sa-sb;
+    return pvHash(a.id+'|'+key)-pvHash(b.id+'|'+key);
+  };
+  const recentSet=new Set(recent);
+  const lastId=recent.length?recent[recent.length-1]:null;
+  let candidates=pool.filter(e=>!recentSet.has(e.id));
+  if(!candidates.length){
+    candidates=pool.length>1?pool.filter(e=>e.id!==lastId):pool.slice();
+  }
+  candidates.sort(cmp);
+  const chosen=candidates[0];
+  if(!chosen)return null;
+  seenMap[chosen.id]=++PV_SEEN_SEQ;
+  const nextRecent=recent.filter(id=>id!==chosen.id);
+  nextRecent.push(chosen.id);
+  D.pick[key]=nextRecent.slice(-5);
+  save();
+  return chosen;
+}
+function pvTodayPart(skill){
+  if(skill==='rue'){
+    const el=document.getElementById('uePart');
+    const v=el?String(el.value):'all';
+    return v==='all'?null:Number(v);
+  }
+  if(skill==='w'){
+    const el=document.getElementById('wTipo');
+    return (el&&el.value==='Essay')?1:2;
+  }
+  if(skill==='l'){
+    const el=document.getElementById('lPart');
+    const v=el?String(el.value):'all';
+    return v==='all'?null:Number(v);
+  }
+  if(skill==='sp'){
+    return (typeof SP_TODAY!=='undefined'&&SP_TODAY.mode==='part'&&SP_TODAY.part)?Number(SP_TODAY.part):null;
+  }
+  return null;
+}
+function renderPickedExerciseCard(ex,ctx,skill){
+  if(!ex){
+    return `<p class="pv-empty">${esc(t('pv_empty'))}</p>`;
+  }
+  const typeKey=PV_TYPE_KEYS[ex.type]||'pv_type_paper';
+  const typeLabel=t(typeKey);
+  const minsLabel=t('practice_mins',{mins:ex.mins});
+  const st=(D&&D.mat&&D.mat[ex.id])||null;
+  const doneCount=st&&Number(st.n)>0?Number(st.n):0;
+  const donePill=doneCount?`<span class="pv-done-pill tnum">${esc(t('pv_marked',{n:doneCount}))}</span>`:'';
+  const openRel=ex.kind==='online'?'noopener noreferrer':'noopener';
+  const openSuffix=ex.kind==='online'?' ↗':'';
+  const doneBtnCls='btn sm gray'+(doneCount?' is-done':'');
+  return `<div class="pv-card" data-pv-id="${esc(ex.id)}" data-pv-kind="${esc(ex.kind)}" data-pv-type="${esc(ex.type)}" data-pv-skill="${esc(ex.skill)}">`+
+    `<div class="pv-card-top">`+
+      `<div class="pv-card-info">`+
+        `<div class="pv-card-meta"><span class="pv-badge" data-pv-type="${esc(ex.type)}">${esc(typeLabel)}</span><span class="pv-mins tnum">${esc(minsLabel)}</span>${donePill}</div>`+
+        `<div class="pv-card-title" title="${esc(ex.label)}">${esc(ex.label)}</div>`+
+      `</div>`+
+      `<a class="pv-open-link" href="${esc(ex.href)}" target="_blank" rel="${openRel}">${esc(t('pv_open'))}${openSuffix}</a>`+
+    `</div>`+
+    `<p class="pv-card-hint" title="${esc(ex.hint)}">${esc(ex.hint)}</p>`+
+    `<div class="pv-actions">`+
+      `<button type="button" class="btn sm gray" data-action="pvAnother" data-pv-ctx="${esc(ctx)}" data-pv-skill="${esc(skill)}">${esc(t('pv_another'))}</button>`+
+      `<button type="button" class="${doneBtnCls}" data-action="pvMarkDone" data-rel="${esc(ex.id)}" data-pv-id="${esc(ex.id)}" data-pv-kind="${esc(ex.kind)}" data-pv-ctx="${esc(ctx)}" data-pv-skill="${esc(skill)}">${esc(t('pv_mark_done'))}</button>`+
+    `</div>`+
+  `</div>`;
+}
+function pvMountTodayCard(skill,ex){
+  const cap=skill==='rue'?'Rue':skill==='w'?'W':skill==='l'?'L':'Sp';
+  const btn=document.getElementById('pvBtn'+cap);
+  const res=document.getElementById('pvRes'+cap);
+  if(!res)return;
+  if(btn)btn.style.display='none';
+  res.hidden=false;
+  res.innerHTML=renderPickedExerciseCard(ex,'today',skill);
+}
+function pvPickToday(skill){
+  if(!skill)return;
+  if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
+  const part=pvTodayPart(skill);
+  const ex=pickExercise(skill,part);
+  PV_ACTIVE.today[skill]={id:ex?ex.id:null,skill,part};
+  pvMountTodayCard(skill,ex);
+}
+function pvExamSelected(){
+  const skEl=document.getElementById('exPickSkill');
+  const ptEl=document.getElementById('exPickPart');
+  const skill=(skEl&&skEl.value)||'rue';
+  const rawPt=(ptEl&&ptEl.value)||'all';
+  const part=rawPt==='all'?null:Number(rawPt);
+  return {skill,part};
+}
+function renderExamPickParts(){
+  const skEl=document.getElementById('exPickSkill');
+  const ptEl=document.getElementById('exPickPart');
+  if(!skEl||!ptEl)return;
+  const skill=skEl.value||'rue';
+  const prev=ptEl.value||'all';
+  const parts=PV_SKILL_PARTS[skill]||[1,2,3,4];
+  const opts=[`<option value="all">${esc(t('pv_part_all'))}</option>`];
+  parts.forEach(n=>{
+    opts.push(`<option value="${n}">${esc(t('exam_sources_part_one',{part:n}))}</option>`);
+  });
+  ptEl.innerHTML=opts.join('');
+  ptEl.value=(prev!=='all'&&parts.includes(Number(prev)))?prev:'all';
+}
+function onExamPickSkillChange(){
+  renderExamPickParts();
+}
+function onExamPickPartChange(){
+  /* Selection ready for the next Give me one click */
+}
+function pvPickExam(){
+  if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
+  const sel=pvExamSelected();
+  const ex=pickExercise(sel.skill,sel.part);
+  PV_ACTIVE.exam={id:ex?ex.id:null,skill:sel.skill,part:sel.part};
+  const res=document.getElementById('exPickResult');
+  if(res){
+    res.hidden=false;
+    res.innerHTML=renderPickedExerciseCard(ex,'exam',sel.skill);
+  }
+}
+function pvAnother(el){
+  if(!el)return;
+  const ctx=el.dataset.pvCtx||'today';
+  if(ctx==='exam'){pvPickExam();return;}
+  pvPickToday(el.dataset.pvSkill||'rue');
+}
+function pvMarkDone(el){
+  if(!el)return;
+  const id=el.dataset.pvId||el.dataset.rel||'';
+  const kind=el.dataset.pvKind||'';
+  if(!id)return;
+  if(kind==='local'&&typeof matDone==='function'){
+    matDone(el);
+  }else{
+    D.mat=D.mat||{};
+    D.mat[id]=D.mat[id]||{n:0,last:''};
+    D.mat[id].n++;
+    D.mat[id].last=today();
+    save();
+  }
+  refreshPickedCards();
+}
+function refreshPickedCards(){
+  const allPool=exercisePool(null,null);
+  const byId={};
+  allPool.forEach(e=>{byId[e.id]=e;});
+  ['rue','w','l','sp'].forEach(sk=>{
+    const cur=PV_ACTIVE.today[sk];
+    if(!cur||!cur.id)return;
+    const ex=byId[cur.id];
+    if(ex)pvMountTodayCard(sk,ex);
+  });
+  if(PV_ACTIVE.exam&&PV_ACTIVE.exam.id){
+    const ex=byId[PV_ACTIVE.exam.id];
+    const res=document.getElementById('exPickResult');
+    if(ex&&res&&!res.hidden){
+      res.innerHTML=renderPickedExerciseCard(ex,'exam',PV_ACTIVE.exam.skill);
+    }
+  }
 }
 let MATERIALS=[];
 /* matDone/matUndo: mark a Material exercise as done (counter of
@@ -22371,10 +22959,14 @@ function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday()
     finally{const ms=Date.now()-t0;if(ms>800)track('slow_view',{ms:ms})}
   };
 })();
+let _matLoading=false;
 function loadMaterial(){
+  if(_matLoading)return;
+  _matLoading=true;
   fetch('/libros.json').then(r=>r.json()).then(data=>{
+    _matLoading=false;
     MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();renderResources();
-  }).catch(()=>{ /* local file mode: no dynamic material */ });
+  }).catch(()=>{_matLoading=false; /* local file mode: no dynamic material */ });
 }
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
 document.getElementById('uePart').addEventListener('change',renderGuides);
@@ -22546,6 +23138,10 @@ click:{
 'openSpeakingExam':()=>openSpeakingExam(),
 'openWritingCorrectorFromDraft':()=>openWritingCorrectorFromDraft(),
 'playOwnScript':()=>playOwnScript(),
+'pvAnother':el=>pvAnother(el),
+'pvMarkDone':el=>pvMarkDone(el),
+'pvPickExam':()=>pvPickExam(),
+'pvPickToday':el=>pvPickToday(el.dataset.pvSkill),
 'qlNext':()=>qlNext(),
 'qlPickNum':el=>qlPickNum(+el.dataset.arg),
 'qlPickRange':el=>{const r=el.dataset.qlRange.split('-');qlPickRange(+r[0],+r[1])},
@@ -22626,6 +23222,8 @@ change:{
 'obSetRotationMode':el=>obSetRotationMode(el.value),
 'obTargetGrade':el=>{OB.draft.targetGrade=el.value},
 'onByoProviderChange':()=>onByoProviderChange(),
+'onExamPickPartChange':()=>onExamPickPartChange(),
+'onExamPickSkillChange':()=>onExamPickSkillChange(),
 'onItemsPerSessionChange':el=>onItemsPerSessionChange(el.value),
 'onLFuenteChange':()=>onLFuenteChange(),
 'onLOwnAudioChange':()=>onLOwnAudioChange(),
