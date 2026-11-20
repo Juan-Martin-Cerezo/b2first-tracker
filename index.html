@@ -561,13 +561,13 @@ label{
   display:block;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
   margin:var(--s2) 0 var(--s1);letter-spacing:.06em;text-transform:uppercase;
 }
-select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
+select,input[type=number],input[type=text],input[type=search],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
   width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
   color:var(--txt);padding:var(--s2) var(--s3);font-size:var(--t-body);font-family:var(--font);
   min-height:var(--btn-h-secondary);
   transition:border-color 150ms ease, box-shadow 150ms ease;
 }
-select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password]{
+select,input[type=number],input[type=text],input[type=search],input[type=time],input[type=date],input[type=password]{
   height:var(--btn-h-secondary);
 }
 input[type=number],.tnum{font-variant-numeric:tabular-nums}
@@ -733,6 +733,34 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   background:var(--surface);border-color:var(--acc-border);
 }
 .wtf-online .wtf-hint{color:var(--txt)}
+
+/* ---------- EXAM SOURCES (reuses Today .wtf-list / .wtf-block language) ---------- */
+.es-toolbar{display:flex;flex-direction:column;gap:var(--s3);margin:var(--s3) 0 var(--s4);min-width:0}
+.es-search-row{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.es-search-input{flex:1;min-width:0;min-height:var(--btn-h-tertiary)}
+.es-clear-btn{flex:none;white-space:nowrap}
+.es-chips{margin:0}
+.es-chip{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);white-space:nowrap}
+.es-count{font-size:var(--t-meta);color:var(--txt-2);line-height:1.4}
+.es-groups{display:flex;flex-direction:column;gap:var(--s4);margin-top:var(--s2);min-width:0}
+.es-group{display:flex;flex-direction:column;gap:var(--s2);min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3)}
+.es-group-head{display:flex;flex-direction:column;gap:4px;min-width:0}
+.es-group-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;min-width:0}
+.es-group-title{margin:0;color:var(--txt)}
+.es-group-count{font-size:var(--t-meta);color:var(--txt-2);flex:none}
+.es-group-sub{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45;overflow-wrap:anywhere}
+.es-group .wtf-list{margin:4px 0 0}
+a.wtf-block.wtf-source{text-decoration:none;color:inherit;min-height:var(--btn-h-tertiary);cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease}
+a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var(--acc-soft);border-color:var(--acc-border);text-decoration:none}
+.wtf-source-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;min-width:0}
+.wtf-source-name{color:var(--acc-text);font-size:13px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.wtf-source-arrow{white-space:nowrap;font-weight:600}
+.wtf-part-tag{background:var(--surface-2);border:1px solid var(--line);color:var(--txt-2);flex:none}
+.wtf-source-what{display:block;font-size:var(--t-meta);color:var(--txt);line-height:1.45;overflow-wrap:anywhere}
+.es-empty{padding:var(--s3);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
+@media (min-width:900px){
+  .es-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+}
 
 /* ---------- LIVE STUDIO (S1: mic -> VAD -> HUD) ---------- */
 .live-panel{margin-top:12px;padding:16px;border-radius:var(--r-panel);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
@@ -4728,11 +4756,32 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
         </div>
 
-        <!-- U4: short official source list, built from PRACTICE_SOURCES -->
+        <!-- U4: full practice source catalogue grouped by paper in Today's block style -->
         <div class="card u4-exam-sources">
           <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
           <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
-          <div id="examSources" class="u4-sources"></div>
+          <div class="es-toolbar">
+            <div class="es-search-row">
+              <label class="sr" for="examSourcesSearch" data-i18n="exam_sources_search_label">Search practice sources</label>
+              <input type="search" id="examSourcesSearch" class="es-search-input" autocomplete="off"
+                placeholder="Search by source, skill or topic…" data-i18n-placeholder="exam_sources_search_ph"
+                aria-label="Search practice sources" data-i18n-aria-label="exam_sources_search_label"
+                data-input="onExamSourcesSearch" data-keydown="examSourcesSearchKey">
+              <button type="button" id="examSourcesClear" class="btn sm gray es-clear-btn" style="display:none"
+                data-action="clearExamSourcesSearch" data-i18n="exam_sources_clear">Clear</button>
+            </div>
+            <div class="chips es-chips" id="examSourcesFilter" role="group"
+              aria-label="Filter exam practice sources" data-i18n-aria-label="exam_sources_filter_aria">
+              <button type="button" class="chip es-chip on" data-es-filter="all" aria-pressed="true" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_all">All</button>
+              <button type="button" class="chip es-chip" data-es-filter="free" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_free">Free</button>
+              <button type="button" class="chip es-chip" data-es-filter="rue" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_rue">Reading</button>
+              <button type="button" class="chip es-chip" data-es-filter="w" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_w">Writing</button>
+              <button type="button" class="chip es-chip" data-es-filter="l" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_l">Listening</button>
+              <button type="button" class="chip es-chip" data-es-filter="sp" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_sp">Speaking</button>
+            </div>
+            <div class="es-count tnum" id="examSourcesCount" aria-live="polite"></div>
+          </div>
+          <div id="examSources" class="es-groups"></div>
           <div class="u4-source-all"><button class="btn sm gray" type="button" data-action="showView" data-arg="resources" data-i18n="exam_sources_all">Open the full source library</button></div>
         </div>
 
@@ -5611,6 +5660,37 @@ const I18N={
     exam_sources_title:'Official sources, one click',
     exam_sources_sub:'Hand-checked official resources to practise each paper without leaving the exam.',
     exam_sources_all:'Open the full source library',
+    exam_sources_search_label:'Search practice sources',
+    exam_sources_search_ph:'Search by source, skill or topic…',
+    exam_sources_clear:'Clear',
+    exam_sources_filter_aria:'Filter exam practice sources',
+    exam_sources_chip_all:'All',
+    exam_sources_chip_free:'Free',
+    exam_sources_chip_rue:'Reading',
+    exam_sources_chip_w:'Writing',
+    exam_sources_chip_l:'Listening',
+    exam_sources_chip_sp:'Speaking',
+    exam_sources_count:'Showing {shown} of {total} sources',
+    exam_sources_group_count:'{n} sources',
+    exam_sources_group_count_one:'1 source',
+    exam_sources_empty:'No sources match this filter. Clear the search or switch to All.',
+    exam_sources_group_rue_title:'Reading & Use of English',
+    exam_sources_group_rue_sub:'7 parts · grammar, vocabulary, cloze, word formation and reading comprehension.',
+    exam_sources_group_w_title:'Writing',
+    exam_sources_group_w_sub:'2 parts · Part 1 essay plus Part 2 article, email, letter, report or review.',
+    exam_sources_group_l_title:'Listening',
+    exam_sources_group_l_sub:'4 parts · short extracts, sentence completion, multiple matching and interviews.',
+    exam_sources_group_sp_title:'Speaking',
+    exam_sources_group_sp_sub:'4 parts · interview, photo comparison, collaborative task and follow-up discussion.',
+    exam_sources_part_one:'Part {part}',
+    exam_sources_parts_range:'Parts {from}–{to}',
+    exam_sources_parts_list:'Parts {parts}',
+    exam_sources_hint_rue_instant:'{mins} min · {kind} · marked instantly — do one set, then log it.',
+    exam_sources_hint_rue:'{mins} min · {kind} — time one set, check the key, then log it.',
+    exam_sources_hint_w:'{mins} min · {kind} — read the model answer and compare structure.',
+    exam_sources_hint_l_instant:'{mins} min · {kind} · marked instantly — play without pausing, then log it.',
+    exam_sources_hint_l:'{mins} min · {kind} — listen once without pausing, then check transcript.',
+    exam_sources_hint_sp:'{mins} min · {kind} — practise aloud with a timer, then log the session.',
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
@@ -6643,6 +6723,37 @@ const I18N={
     exam_sources_title:'Fuentes oficiales a un clic',
     exam_sources_sub:'Recursos oficiales verificados para practicar cada prueba sin salir del examen.',
     exam_sources_all:'Abrir la biblioteca completa',
+    exam_sources_search_label:'Buscar fuentes de práctica',
+    exam_sources_search_ph:'Buscar por fuente, prueba o tema…',
+    exam_sources_clear:'Limpiar',
+    exam_sources_filter_aria:'Filtrar fuentes de práctica del examen',
+    exam_sources_chip_all:'Todas',
+    exam_sources_chip_free:'Gratis',
+    exam_sources_chip_rue:'Reading',
+    exam_sources_chip_w:'Writing',
+    exam_sources_chip_l:'Listening',
+    exam_sources_chip_sp:'Speaking',
+    exam_sources_count:'Mostrando {shown} de {total} fuentes',
+    exam_sources_group_count:'{n} fuentes',
+    exam_sources_group_count_one:'1 fuente',
+    exam_sources_empty:'Ninguna fuente coincide con este filtro. Limpiá la búsqueda o cambiá a Todas.',
+    exam_sources_group_rue_title:'Reading y Use of English',
+    exam_sources_group_rue_sub:'7 partes · gramática, vocabulario, cloze, formación de palabras y comprensión lectora.',
+    exam_sources_group_w_title:'Writing',
+    exam_sources_group_w_sub:'2 partes · essay en Parte 1 más artículo, email, carta, informe o reseña en Parte 2.',
+    exam_sources_group_l_title:'Listening',
+    exam_sources_group_l_sub:'4 partes · extractos breves, completar oraciones, emparejamiento y entrevistas.',
+    exam_sources_group_sp_title:'Speaking',
+    exam_sources_group_sp_sub:'4 partes · entrevista, comparación de fotos, tarea colaborativa y discusión.',
+    exam_sources_part_one:'Parte {part}',
+    exam_sources_parts_range:'Partes {from}–{to}',
+    exam_sources_parts_list:'Partes {parts}',
+    exam_sources_hint_rue_instant:'{mins} min · {kind} · corrección al instante — hacé una serie y registrala.',
+    exam_sources_hint_rue:'{mins} min · {kind} — hacé una serie con reloj, corregí y registrala.',
+    exam_sources_hint_w:'{mins} min · {kind} — leé la respuesta modelo y compará la estructura.',
+    exam_sources_hint_l_instant:'{mins} min · {kind} · corrección al instante — escuchá sin pausar y registralo.',
+    exam_sources_hint_l:'{mins} min · {kind} — escuchá una vez sin pausar y revisá la transcripción.',
+    exam_sources_hint_sp:'{mins} min · {kind} — practicá en voz alta con reloj y registrá la sesión.',
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
@@ -18105,21 +18216,111 @@ function renderEx(){
   reg.style.display='none';
   renderExamSources();
 }
-/* U4: a short, official list for the Exam screen. It is a subset of
-   PRACTICE_SOURCES (already checked, all https) so the catalogue stays in
-   one place; the full list lives in Practice. */
+/* Exam sources: renders all PRACTICE_SOURCES grouped by paper in Today's
+   .wtf-list / .wtf-block visual language with live search and quick filter chips. */
+const EXAM_SOURCE_GROUPS=[
+  {skill:'rue',titleKey:'exam_sources_group_rue_title',subKey:'exam_sources_group_rue_sub',en:'Reading & Use of English'},
+  {skill:'w',titleKey:'exam_sources_group_w_title',subKey:'exam_sources_group_w_sub',en:'Writing'},
+  {skill:'l',titleKey:'exam_sources_group_l_title',subKey:'exam_sources_group_l_sub',en:'Listening'},
+  {skill:'sp',titleKey:'exam_sources_group_sp_title',subKey:'exam_sources_group_sp_sub',en:'Speaking'}
+];
+let EXAM_SOURCES_FILTER='all';
+let EXAM_SOURCES_QUERY='';
+function examSourcePartTag(part){
+  if(!Array.isArray(part)||!part.length)return '';
+  if(part.length===1)return t('exam_sources_part_one',{part:part[0]});
+  const nums=part.map(Number);
+  let consecutive=nums.every(n=>Number.isInteger(n));
+  if(consecutive){
+    for(let i=1;i<nums.length;i++){if(nums[i]!==nums[i-1]+1){consecutive=false;break}}
+  }
+  if(consecutive)return t('exam_sources_parts_range',{from:nums[0],to:nums[nums.length-1]});
+  return t('exam_sources_parts_list',{parts:part.join(', ')});
+}
+function examSourceHint(s){
+  const kind=t('practice_kind_'+s.kind).toLowerCase();
+  const vars={mins:s.mins,kind};
+  const instant=/marked|answers shown|automatic scoring|automatic|comprehension questions|answers/i.test(s.what||'');
+  if(s.skill==='rue')return t(instant?'exam_sources_hint_rue_instant':'exam_sources_hint_rue',vars);
+  if(s.skill==='w')return t('exam_sources_hint_w',vars);
+  if(s.skill==='l')return t(instant?'exam_sources_hint_l_instant':'exam_sources_hint_l',vars);
+  return t('exam_sources_hint_sp',vars);
+}
+function setExamSourcesFilter(filter){
+  EXAM_SOURCES_FILTER=filter||'all';
+  renderExamSources();
+}
+function onExamSourcesSearch(val){
+  EXAM_SOURCES_QUERY=String(val||'');
+  renderExamSources();
+}
+function clearExamSourcesSearch(){
+  EXAM_SOURCES_QUERY='';
+  const inp=document.getElementById('examSourcesSearch');
+  if(inp){inp.value='';inp.focus();}
+  renderExamSources();
+}
+function examSourcesSearchKey(el,ev){
+  if(ev&&ev.key==='Escape'&&el.value){
+    ev.preventDefault();
+    clearExamSourcesSearch();
+  }
+}
 function renderExamSources(){
   const el=document.getElementById('examSources');
   if(!el)return;
-  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))?PRACTICE_SOURCES:[];
-  const groups=[['rue','practice_skill_rue'],['w','practice_skill_w'],['l','practice_skill_l'],['sp','practice_skill_sp']];
-  el.innerHTML=groups.map(function(g){
-    const picks=sources.filter(function(s){return s.skill===g[0]&&/^https?:\/\//.test(s.url)}).slice(0,2);
-    if(!picks.length)return '';
-    return `<div class="u4-source-group"><span class="badge ${g[0]==='rue'||g[0]==='sp'?'mon':'fri'}">${esc(t(g[1]))}</span>`+
-      picks.map(function(s){return `<a class="u4-source-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.n)} <span>${esc(t('practice_mins',{mins:s.mins}))}</span> ↗</a>`}).join('')+
-      `</div>`;
+  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
+    ?PRACTICE_SOURCES.filter(s=>s&&/^https?:\/\//.test(s.url))
+    :[];
+  const inp=document.getElementById('examSourcesSearch');
+  if(inp&&inp.value!==EXAM_SOURCES_QUERY)inp.value=EXAM_SOURCES_QUERY;
+  const clearBtn=document.getElementById('examSourcesClear');
+  if(clearBtn)clearBtn.style.display=EXAM_SOURCES_QUERY.trim()?'':'none';
+  document.querySelectorAll('#examSourcesFilter [data-es-filter]').forEach(b=>{
+    const on=b.getAttribute('data-es-filter')===EXAM_SOURCES_FILTER;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+  const q=EXAM_SOURCES_QUERY.trim().toLowerCase();
+  let shown=0;
+  const html=EXAM_SOURCE_GROUPS.map(g=>{
+    if(EXAM_SOURCES_FILTER!=='all'&&EXAM_SOURCES_FILTER!=='free'&&EXAM_SOURCES_FILTER!==g.skill)return '';
+    const groupTitle=t(g.titleKey);
+    const items=sources.filter(s=>{
+      if(s.skill!==g.skill)return false;
+      if(EXAM_SOURCES_FILTER==='free'&&s.kind!=='free')return false;
+      if(q){
+        const partTxt=examSourcePartTag(s.part);
+        const hay=[s.n,s.what,s.kind,t('practice_kind_'+s.kind),g.en,groupTitle,partTxt].join(' ').toLowerCase();
+        if(hay.indexOf(q)===-1)return false;
+      }
+      return true;
+    });
+    if(!items.length)return '';
+    shown+=items.length;
+    const countTxt=items.length===1
+      ?t('exam_sources_group_count_one')
+      :t('exam_sources_group_count',{n:items.length});
+    const blocks=items.map(s=>{
+      const partTxt=examSourcePartTag(s.part);
+      const partHtml=partTxt?`<span class="wtf-tag wtf-part-tag">${esc(partTxt)}</span>`:'';
+      return `<a class="wtf-block wtf-source" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" data-skill="${esc(s.skill)}" data-kind="${esc(s.kind)}">`+
+        `<span class="wtf-source-top"><span class="wtf-source-name">${esc(s.n)} <span class="wtf-source-arrow" aria-hidden="true">↗</span></span>${partHtml}</span>`+
+        `<span class="wtf-source-what">${esc(s.what)}</span>`+
+        `<span class="wtf-hint">${esc(examSourceHint(s))}</span>`+
+        `</a>`;
+    }).join('');
+    return `<section class="es-group" data-skill="${esc(g.skill)}">`+
+      `<div class="es-group-head">`+
+      `<div class="es-group-title-row"><h3 class="es-group-title">${esc(groupTitle)}</h3><span class="es-group-count tnum">${esc(countTxt)}</span></div>`+
+      `<p class="es-group-sub">${esc(t(g.subKey))}</p>`+
+      `</div>`+
+      `<div class="wtf-list es-list">${blocks}</div>`+
+      `</section>`;
   }).join('');
+  el.innerHTML=html||`<p class="wtf-hint es-empty">${esc(t('exam_sources_empty'))}</p>`;
+  const countEl=document.getElementById('examSourcesCount');
+  if(countEl)countEl.textContent=t('exam_sources_count',{shown,total:sources.length});
 }
 function exStart(){
   if(exIv){exPause();return}
@@ -21882,6 +22083,7 @@ click:{
 'checkOwnAnswers':()=>checkOwnAnswers(),
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
+'clearExamSourcesSearch':()=>clearExamSourcesSearch(),
 'clearResourcesFilter':()=>clearResourcesFilter(),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
@@ -21977,6 +22179,7 @@ click:{
 'saveW':()=>saveW(),
 'selectOwnMaterial':el=>selectOwnMaterial(el.dataset.id),
 'setExamDate':()=>setExamDate(),
+'setExamSourcesFilter':el=>setExamSourcesFilter(el.dataset.esFilter),
 'setLang':el=>setLang(el.dataset.arg),
 'setPracticeFilter':el=>setPracticeFilter(el.dataset.skill),
 'setResourcesFilterFromEl':el=>setResourcesFilter(el.dataset.type,+el.dataset.n),
@@ -22043,12 +22246,14 @@ input:{
 'obSetDayTime':el=>obSetDayTime(el.dataset.day,el.value),
 'onByoConfigInput':()=>onByoConfigInput(),
 'onByoKeyInput':el=>onByoKeyInput(el.value),
+'onExamSourcesSearch':el=>onExamSourcesSearch(el.value),
 'onIaTextChange':()=>onIaTextChange(),
 'onRegPwInput':el=>onRegPwInput(el.value),
 'onWritingDraftChange':()=>onWritingDraftChange()
 },
 keydown:{
 'activate':(el,ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click()}},
+'examSourcesSearchKey':(el,ev)=>examSourcesSearchKey(el,ev),
 'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
 'mfaEnter':(el,ev)=>{if(ev.key==='Enter')doLoginMfa()},
 'registerEnter':(el,ev)=>{if(ev.key==='Enter')doRegister()}
