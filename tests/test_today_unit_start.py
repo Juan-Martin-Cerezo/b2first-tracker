@@ -35,7 +35,7 @@ SKILLS = {
     "rue": ("ue", "studioMonA", "uePart"),
     "l": ("lp", "studioFriA", "lPart"),
     "w": ("w", "studioMonB", "wTipo"),
-    "sp": ("sp", "studioFriB", "spPart"),
+    "sp": ("sp", "studioFriB", "spPartPicker"),
 }
 
 # The offset scan asks the app's own queue which exercise TODAY gets with each
@@ -93,7 +93,12 @@ STUDIO_JS = """() => {
         uePart: val('uePart'), ueTotal: val('ueTotal'), ueMin: val('ueMin'),
         lPart: val('lPart'), lMin: val('lMin'),
         wTipo: val('wTipo'), wMin: val('wMin'),
-        spPart: val('spPart'),
+        spPart: (document.querySelector('#spPartPicker [aria-checked="true"]') || {}).dataset
+            ? document.querySelector('#spPartPicker [aria-checked="true"]').dataset.spPart
+            : null,
+        spModePart: (document.getElementById('spModePart') || {}).getAttribute
+            ? document.getElementById('spModePart').getAttribute('aria-checked')
+            : null,
         unitTag: typeof PLAN_UNIT_START === 'undefined' ? null : PLAN_UNIT_START,
     };
 }"""
@@ -204,6 +209,9 @@ def check_case(pg, label, expected):
             f"{label}: the writing studio has {studio['wMin']} min instead of {expected['min']}"
         )
     else:
+        assert studio["spModePart"] == "true", (
+            f"{label}: the speaking studio did not select One part mode: {studio}"
+        )
         assert studio["spPart"] == part, (
             f"{label}: the speaking studio opens part {studio['spPart']} instead of {part}"
         )

@@ -245,7 +245,7 @@ def main():
             "the transport interface is missing"
 
         os.environ["B2_SPK_MIN_DAILY_PER_USER"] = "20"
-        pg.click("#spkOpenBtn")
+        pg.evaluate("spkStart()")
         assert wait_until(pg, "!!(window.SPK && SPK.running === true)", 20), \
             "sim session did not start"
         assert pg.evaluate("SPK.mode") == "sim", pg.evaluate("SPK.mode")

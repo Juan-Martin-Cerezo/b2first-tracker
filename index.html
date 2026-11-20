@@ -665,6 +665,124 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .live-list .live-pause.long{background:var(--warn-soft);color:var(--warn-text)}
 .live-list .live-pause.frozen{background:var(--bad-soft);color:var(--bad-text)}
 
+/* ---------- SPEAKING TODAY (minimalist: materials + 2 separate cards) ---------- */
+.sp-today{display:flex;flex-direction:column;gap:var(--s5);margin-top:var(--s3)}
+.sp-materials{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s3) var(--s4);
+}
+:root[data-theme="dark"] .sp-materials{background:var(--bg)}
+.card .sp-materials-title{
+  display:block;margin:0 0 var(--s2) 0;font-size:var(--t-meta);font-weight:600;
+  color:var(--txt-2);text-transform:uppercase;letter-spacing:.05em;line-height:1.3;
+}
+.sp-materials-chips{gap:4px 8px;margin:0}
+.sp-materials-chips .chip{
+  background:transparent;border:1px solid color-mix(in oklch, var(--line) 85%, transparent);
+  color:var(--txt-2);font-size:var(--t-meta);font-weight:500;
+  padding:6px 10px;min-height:44px;border-radius:var(--r-ctl);
+}
+.sp-materials-chips .chip:hover{color:var(--txt);border-color:var(--acc-border);background:var(--surface)}
+
+.sp-option-card{
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s5);display:flex;flex-direction:column;gap:var(--s4);
+  box-shadow:var(--shadow-1);
+}
+:root[data-theme="dark"] .sp-option-card{background:var(--surface-2)}
+.sp-option-head{display:flex;flex-direction:column;gap:var(--s1)}
+.card .sp-option-title{display:block;margin:0;font-size:var(--t-title);font-weight:600;color:var(--txt);line-height:1.25}
+.sp-option-sub{margin:0;font-size:var(--t-body);color:var(--txt-2);line-height:1.45}
+
+.sp-exam-modes{display:flex;flex-direction:column;gap:var(--s2)}
+.sp-mode-row{
+  display:flex;align-items:center;gap:var(--s3);width:100%;box-sizing:border-box;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
+  padding:var(--s3) var(--s4);min-height:52px;font:inherit;color:var(--txt);
+  text-align:left;cursor:pointer;
+  transition:border-color 150ms ease, background-color 150ms ease;
+}
+.sp-mode-row:hover{border-color:var(--acc-border)}
+.sp-mode-row.is-selected,.sp-mode-row[aria-checked="true"]{
+  border-color:var(--acc);background:var(--acc-soft);
+}
+.sp-mode-row:focus-visible,.sp-mode-trigger:focus-visible,.sp-part-btn:focus-visible{
+  outline:2px solid var(--acc);outline-offset:2px;
+}
+.sp-mode-dot{
+  width:18px;height:18px;border-radius:50%;flex:none;box-sizing:border-box;
+  border:2px solid var(--txt-2);background:transparent;position:relative;
+  transition:border-color 150ms ease;
+}
+.sp-mode-row.is-selected .sp-mode-dot,.sp-mode-row[aria-checked="true"] .sp-mode-dot{
+  border-color:var(--acc);
+}
+.sp-mode-row.is-selected .sp-mode-dot::after,.sp-mode-row[aria-checked="true"] .sp-mode-dot::after{
+  content:"";position:absolute;inset:3px;border-radius:50%;background:var(--acc);
+}
+.sp-mode-label{font-size:var(--t-body);font-weight:600;color:var(--txt)}
+.sp-mode-meta{margin-left:auto;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);white-space:nowrap}
+.sp-mode-row.is-selected .sp-mode-meta,.sp-mode-row[aria-checked="true"] .sp-mode-meta{color:var(--acc-text)}
+
+.sp-mode-part-row{
+  flex-wrap:wrap;justify-content:space-between;cursor:default;padding:var(--s2) var(--s3) var(--s2) var(--s4);
+}
+.sp-mode-trigger{
+  display:inline-flex;align-items:center;gap:var(--s3);flex:1 1 auto;min-height:44px;
+  background:transparent;border:0;padding:0;font:inherit;color:var(--txt);text-align:left;cursor:pointer;
+}
+.sp-part-seg{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sp-part-btn{
+  min-width:44px;min-height:44px;padding:0 var(--s2);border-radius:var(--r-ctl);
+  border:1px solid var(--line);background:var(--bg);color:var(--txt);
+  font:inherit;font-size:var(--t-body);font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:border-color 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+:root[data-theme="dark"] .sp-part-btn{background:var(--surface-2)}
+.sp-part-btn:hover{border-color:var(--acc)}
+:root[data-theme="dark"] .sp-part-btn.is-selected,
+:root[data-theme="dark"] .sp-part-btn[aria-checked="true"],
+.sp-part-btn.is-selected,
+.sp-part-btn[aria-checked="true"]{
+  background:var(--acc);border-color:var(--acc);color:var(--on-primary);
+}
+
+.sp-option-foot{display:flex;align-items:center}
+.sp-option-foot .btn{min-height:48px}
+@media (max-width:480px){
+  .sp-option-card{padding:var(--s4)}
+  .sp-option-foot .btn{width:100%}
+  .sp-mode-part-row{flex-direction:column;align-items:stretch;gap:var(--s2);padding:var(--s3)}
+  .sp-part-seg{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s2)}
+  .sp-part-btn{width:100%}
+}
+
+/* Compact session log block inside Speaking Exam & Live Studio */
+.sp-log-box{
+  margin-top:var(--s4);padding:var(--s3) var(--s4);border-radius:var(--r-ctl);
+  background:var(--surface-2);border:1px solid var(--line);
+}
+.sp-log-head{display:flex;justify-content:space-between;align-items:center;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s2)}
+.sp-log-title{font-size:var(--t-meta);font-weight:600;color:var(--txt)}
+.sp-log-status{font-size:var(--t-meta);font-weight:600;color:var(--ok-text)}
+.sp-log-fields{display:grid;grid-template-columns:minmax(130px,1.4fr) repeat(2,minmax(76px,1fr)) auto;gap:var(--s2);align-items:end}
+.sp-log-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.sp-log-field label{font-size:var(--t-meta);font-weight:600;color:var(--txt-2)}
+.sp-log-field select,.sp-log-field input{
+  min-height:44px;width:100%;box-sizing:border-box;padding:0 var(--s2);
+  border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface);
+  color:var(--txt);font:inherit;font-size:var(--t-body);
+}
+.sp-log-act{display:flex;align-items:flex-end}
+.sp-log-act .btn{min-height:44px;white-space:nowrap}
+@media (max-width:560px){
+  .sp-log-fields{grid-template-columns:1fr 1fr}
+  .sp-log-field:first-child{grid-column:1 / -1}
+  .sp-log-act{grid-column:1 / -1}
+  .sp-log-act .btn{width:100%}
+}
+
 /* ---------- LIVE EXAMINER (S3: Gemini Live + sim transport) ---------- */
 .live-stat .val[data-on="1"]{color:var(--ok-text)}
 .spk-transcript{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
@@ -3958,28 +4076,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                 </div>
 
-                <!-- Phase Stepper -->
-                <div class="phase-stepper" id="spPhaseStepper">
-                  <div class="phase-step active" data-phase="mock" data-action="switchSpPhase">
-                    <div class="ps-num">Phase 1</div>
-                    <div class="ps-title" id="st4MockTitle">🎙️ Speaking</div>
-                    <div class="ps-time" id="st4MockTime">—</div>
-                  </div>
-                  <div class="phase-step" data-phase="upgrade" data-action="switchSpPhase">
-                    <div class="ps-num">Phase 2</div>
-                    <div class="ps-title">🚀 C1 Polish &amp; Retake</div>
-                    <div class="ps-time">Extra practice · optional</div>
-                  </div>
-                </div>
-
-                <!-- Phase 1: Mock -->
-                <div id="spPhase1">
-
-                  <!-- PHASE 35: the Cambridge Speaking test, part by part.
-                       Five screens, in order: choose → brief → exam → feedback → report.
-                       The task comes from material/speaking.json; every chrome string
-                       is an I18N key, and the exam text stays in English on purpose. -->
-                  <div class="live-panel spx" id="spxPanel" style="display:none" aria-labelledby="spxTitle">
+                <!-- PHASE 35: the Cambridge Speaking test, part by part.
+                     Five screens, in order: choose → brief → exam → feedback → report.
+                     The task comes from material/speaking.json; every chrome string
+                     is an I18N key, and the exam text stays in English on purpose. -->
+                <div class="live-panel spx" id="spxPanel" style="display:none" aria-labelledby="spxTitle">
                     <div class="spx-head">
                       <div>
                         <div class="live-title" id="spxTitle" data-i18n="spx_title">Speaking exam</div>
@@ -4095,6 +4196,35 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn gray" id="spxFbRetry" data-action="SP_EXAM.retry" data-i18n="spx_retry" aria-label="Ask for the report again" data-i18n-aria-label="spx_aria_retry_report">Try the report again</button>
                         <button class="btn gray" data-action="SP_EXAM.back" data-i18n="common_back" aria-label="Go back" data-i18n-aria-label="spx_aria_back">Back</button>
                       </div>
+                      <div class="sp-log-box" id="spxLogBox" style="display:none">
+                        <div class="sp-log-head">
+                          <span class="sp-log-title" data-i18n="sp_log_title">Log this session</span>
+                          <span class="sp-log-status" id="spxLogStatus" role="status" aria-live="polite"></span>
+                        </div>
+                        <div class="sp-log-fields">
+                          <div class="sp-log-field">
+                            <label for="spxLogPart" data-i18n="sp_log_part">Part</label>
+                            <select id="spxLogPart">
+                              <option value="0" data-i18n="sp_log_part_full">Full exam (1–4)</option>
+                              <option value="1" data-i18n="sp_log_part_1">Part 1</option>
+                              <option value="2" selected data-i18n="sp_log_part_2">Part 2</option>
+                              <option value="3" data-i18n="sp_log_part_3">Part 3</option>
+                              <option value="4" data-i18n="sp_log_part_4">Part 4</option>
+                            </select>
+                          </div>
+                          <div class="sp-log-field">
+                            <label for="spxLogMin" data-i18n="sp_log_min">Minutes</label>
+                            <input type="number" id="spxLogMin" min="1" max="120" value="4">
+                          </div>
+                          <div class="sp-log-field">
+                            <label for="spxLogSil" data-i18n="sp_log_silences">Silences</label>
+                            <input type="number" id="spxLogSil" min="0" max="999" value="0">
+                          </div>
+                          <div class="sp-log-act">
+                            <button type="button" class="btn sm ok" id="spxLogSaveBtn" data-action="SP_EXAM.saveSessionLog" data-i18n="sp_log_save">Save session</button>
+                          </div>
+                        </div>
+                      </div>
                       <div class="spk-report-err" id="spxFbErr" role="alert"></div>
                     </section>
 
@@ -4124,74 +4254,107 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </section>
                   </div>
 
-                  <div class="task">
-                    <div class="task-head">
-                      <div class="task-num">1</div>
-                      <div>
-                        <div class="task-title">Continuous Simulation (Parts 1 to 4) <span class="t">15 min</span></div>
-                      </div>
-                      <div class="task-meta">
-                        <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="spTimer">—</span></div>
-                        <button class="btn sm" data-action="sp1.start">🎙 1:00 (P2)</button>
-                        <button class="btn sm gray" data-action="sp2.start">🤝 3:00 (P3)</button>
+                <div class="sp-today" id="spTodayStack">
+                  <!-- Materials: quiet reference surface, visually distinct from actions -->
+                  <section class="sp-materials" aria-labelledby="spMaterialsTitle">
+                    <h2 class="sp-materials-title" id="spMaterialsTitle" data-i18n="sp_materials_title">Materials</h2>
+                    <div class="chips sp-materials-chips" id="gSpChips"></div>
+                  </section>
+
+                  <!-- Option 1: Speaking Exam -->
+                  <section class="sp-option-card" id="spExamCard" aria-labelledby="spExamCardTitle">
+                    <div class="sp-option-head">
+                      <h2 class="sp-option-title" id="spExamCardTitle" data-i18n="sp_card_exam_title">Speaking Exam</h2>
+                      <p class="sp-option-sub" data-i18n="sp_card_exam_sub">Cambridge B2 First · full mock or one part</p>
+                    </div>
+                    <div class="sp-exam-modes" id="spExamModes" role="radiogroup" aria-labelledby="spExamCardTitle">
+                      <button type="button" class="sp-mode-row" id="spModeFull" role="radio" aria-checked="false" data-action="spSelectMode" data-mode="full">
+                        <span class="sp-mode-dot" aria-hidden="true"></span>
+                        <span class="sp-mode-label" data-i18n="spx_full_exam">Full exam · Parts 1–4</span>
+                        <span class="sp-mode-meta tnum" data-i18n="sp_exam_full_dur">14 min</span>
+                      </button>
+                      <div class="sp-mode-row sp-mode-part-row is-selected" id="spModePartWrap">
+                        <button type="button" class="sp-mode-trigger" id="spModePart" role="radio" aria-checked="true" data-action="spSelectMode" data-mode="part">
+                          <span class="sp-mode-dot" aria-hidden="true"></span>
+                          <span class="sp-mode-label" data-i18n="sp_exam_one_part">One part</span>
+                        </button>
+                        <div class="sp-part-seg" id="spPartPicker" role="radiogroup" aria-label="Choose a part" data-i18n-aria-label="spx_dot_choose">
+                          <button type="button" class="sp-part-btn tnum" data-action="spSelectPart" data-sp-part="1" role="radio" aria-checked="false">1</button>
+                          <button type="button" class="sp-part-btn tnum is-selected" data-action="spSelectPart" data-sp-part="2" role="radio" aria-checked="true">2</button>
+                          <button type="button" class="sp-part-btn tnum" data-action="spSelectPart" data-sp-part="3" role="radio" aria-checked="false">3</button>
+                          <button type="button" class="sp-part-btn tnum" data-action="spSelectPart" data-sp-part="4" role="radio" aria-checked="false">4</button>
+                        </div>
                       </div>
                     </div>
-                    <div class="guide">
-                      📍 <b>Visuals &amp; Prompts:</b>
-                      <div class="chips" id="gSpChips" style="margin-top:6px"></div>
-                      • <b>Part 2 Long Turn:</b> compare and speculate (never just describe) for 1 full minute.<br>
-                      • <b>Parts 3-4:</b> negotiate and reach a consensus using advanced discourse markers.
+                    <div class="sp-option-foot">
+                      <button type="button" class="btn ok" id="spxOpenBtn" data-action="spStartExam" data-i18n="spx_start">Start</button>
                     </div>
-                    <p id="spFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
-                    <div class="row" style="margin-top:10px">
-                      <div><label>Speaking part / mode</label>
-                        <select id="spPart">
-                          <option value="2" selected>Part 2 — Long turn (1 min)</option>
-                          <option value="1">Part 1 — Interview</option>
-                          <option value="3">Part 3 — Collaborative task</option>
-                          <option value="4">Part 4 — Discussion</option>
+                  </section>
+
+                  <!-- Option 2: Live Studio -->
+                  <section class="sp-option-card" id="spLiveCard" aria-labelledby="spLiveCardTitle">
+                    <div class="sp-option-head">
+                      <h2 class="sp-option-title" id="spLiveCardTitle" data-i18n="sp_card_live_title">Live Studio</h2>
+                      <p class="sp-option-sub" data-i18n="sp_card_live_sub">Talk freely and see your silences and speaking time</p>
+                    </div>
+                    <div class="sp-option-foot">
+                      <button type="button" class="btn gray" id="liveOpenBtn" data-action="liveOpen" data-i18n="sp_open_live">Open Live Studio</button>
+                    </div>
+                  </section>
+                </div>
+
+                <!-- Live studio (S1): client-side VAD + HUD. No audio leaves the tab. -->
+                <div class="live-panel" id="livePanel" style="display:none" aria-label="Live studio">
+                  <div class="live-head">
+                    <div>
+                      <div class="live-title">🎧 Live studio <span class="t">client-side VAD · nothing is recorded or sent</span></div>
+                      <div class="live-sub" id="liveStatus" role="status">Microphone off</div>
+                    </div>
+                    <div class="live-actions">
+                      <button class="btn sm gray" id="liveStopBtn" data-action="liveStop" disabled>■ Stop</button>
+                      <button class="btn sm gray" id="liveDiscardBtn" data-action="liveDiscard">✕ Discard</button>
+                    </div>
+                  </div>
+                  <div class="live-grid">
+                    <div class="live-stat"><span class="lbl">Elapsed</span><span class="val" id="liveElapsed">00:00</span></div>
+                    <div class="live-stat"><span class="lbl">Speech ratio</span><span class="val" id="liveRatio">—</span></div>
+                    <div class="live-stat"><span class="lbl">Silences</span><span class="val" id="liveSilences">0</span></div>
+                    <div class="live-stat"><span class="lbl">Longest silence</span><span class="val" id="liveLongest">—</span></div>
+                  </div>
+                  <div class="live-timeline" id="liveTimeline" role="img" aria-label="Session timeline: speech and silence"></div>
+                  <div class="live-sub">Timeline: speech in green, silence in red · chips list every pause of 0.3 s or more.</div>
+                  <div class="live-alert" id="liveAlert" aria-live="polite"></div>
+                  <div class="live-list" id="liveList"></div>
+                  <div class="sp-log-box" id="liveLogBox" style="display:none">
+                    <div class="sp-log-head">
+                      <span class="sp-log-title" data-i18n="sp_log_title">Log this session</span>
+                      <span class="sp-log-status" id="liveLogStatus" role="status" aria-live="polite"></span>
+                    </div>
+                    <div class="sp-log-fields">
+                      <div class="sp-log-field">
+                        <label for="liveLogPart" data-i18n="sp_log_part">Part</label>
+                        <select id="liveLogPart">
+                          <option value="0" data-i18n="sp_log_part_full">Full exam (1–4)</option>
+                          <option value="1" data-i18n="sp_log_part_1">Part 1</option>
+                          <option value="2" selected data-i18n="sp_log_part_2">Part 2</option>
+                          <option value="3" data-i18n="sp_log_part_3">Part 3</option>
+                          <option value="4" data-i18n="sp_log_part_4">Part 4</option>
                         </select>
                       </div>
-                      <div><label>Silences &gt;3s in Part 2?</label>
-                        <select id="spSil"><option value="no">No (Clean flow)</option><option value="si">Yes (Hesitation)</option></select>
+                      <div class="sp-log-field">
+                        <label for="liveLogMin" data-i18n="sp_log_min">Minutes</label>
+                        <input type="number" id="liveLogMin" min="1" max="120" value="1">
                       </div>
-                      <div><label>Self-correction performed?</label>
-                        <select id="spRep"><option value="si">Yes</option><option value="no">No</option></select>
+                      <div class="sp-log-field">
+                        <label for="liveLogSil" data-i18n="sp_log_silences">Silences</label>
+                        <input type="number" id="liveLogSil" min="0" max="999" value="0">
                       </div>
-                      <div><label>Negotiation structures used</label><input type="number" id="spNeg" min="0" value="0"></div>
-                    </div>
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" data-action="saveSP">✔ Save Speaking</button>
-                      <button class="btn" data-action="switchSpPhase" data-arg="upgrade">Proceed to Phase 2: C1 Polish →</button>
-                      <button class="btn" id="liveOpenBtn" data-action="liveOpen">🎧 Live studio</button>
-                      <button class="btn ok" id="spxOpenBtn" data-action="SP_EXAM.open" data-i18n="spx_open">🎓 Speaking exam</button>
-                      <button class="btn" id="spkOpenBtn" data-action="spkStart">🗣 Live examiner</button>
+                      <div class="sp-log-act">
+                        <button type="button" class="btn sm ok" id="liveLogSaveBtn" data-action="saveLiveSession" data-i18n="sp_log_save">Save session</button>
+                      </div>
                     </div>
                   </div>
-
-                  <!-- Live studio (S1): client-side VAD + HUD. No audio leaves the tab. -->
-                  <div class="live-panel" id="livePanel" style="display:none" aria-label="Live studio">
-                    <div class="live-head">
-                      <div>
-                        <div class="live-title">🎧 Live studio <span class="t">client-side VAD · nothing is recorded or sent</span></div>
-                        <div class="live-sub" id="liveStatus" role="status">Microphone off</div>
-                      </div>
-                      <div class="live-actions">
-                        <button class="btn sm gray" id="liveStopBtn" data-action="liveStop" disabled>■ Stop</button>
-                        <button class="btn sm gray" id="liveDiscardBtn" data-action="liveDiscard">✕ Discard</button>
-                      </div>
-                    </div>
-                    <div class="live-grid">
-                      <div class="live-stat"><span class="lbl">Elapsed</span><span class="val" id="liveElapsed">00:00</span></div>
-                      <div class="live-stat"><span class="lbl">Speech ratio</span><span class="val" id="liveRatio">—</span></div>
-                      <div class="live-stat"><span class="lbl">Silences</span><span class="val" id="liveSilences">0</span></div>
-                      <div class="live-stat"><span class="lbl">Longest silence</span><span class="val" id="liveLongest">—</span></div>
-                    </div>
-                    <div class="live-timeline" id="liveTimeline" role="img" aria-label="Session timeline: speech and silence"></div>
-                    <div class="live-sub">Timeline: speech in green, silence in red · chips list every pause of 0.3 s or more.</div>
-                    <div class="live-alert" id="liveAlert" aria-live="polite"></div>
-                    <div class="live-list" id="liveList"></div>
-                  </div>
+                </div>
 
                   <!-- Live examiner (S3): Part 1 + Part 2 against Gemini Live.
                        With ?spk=sim (or localStorage.b2f_spk_sim='1') a fixed,
@@ -4275,26 +4438,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spk-report-err" id="spkReportErr" role="alert"></div>
                     </div>
                   </div>
-                </div>
-
-                <!-- Phase 2: Upgrade -->
-                <div id="spPhase2" style="display:none">
-                  <div class="task">
-                    <div class="task-head">
-                      <div class="task-num">2</div>
-                      <div>
-                        <div class="task-title">C1 Polish &amp; Second Take <span class="t">45 min</span></div>
-                      </div>
-                    </div>
-                    <div class="guide">
-                      🎙 <b>C1 polish checklist:</b><br>
-                      • Inject: <i>"Whereas the former illustrates..., the latter seems to convey..."</i><br>
-                      • Negotiate: <i>"What if we were to prioritize..., given that...?"</i><br>
-                      • Re-record the full 4 parts and assess fluency.
-                    </div>
-                    <div style="margin-top:10px"><button class="btn ok" data-action="saveSP">✔ Save Speaking Studio</button></div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -5925,7 +6068,25 @@ const I18N={
     alert_speaking_final:'Speaking final has no numeric fields to edit — delete it and log it again.',
     alert_speaking_no_band:'This Speaking entry has no band to edit — delete it and log it again.',
 
-    spx_open:'🎓 Speaking exam',
+    sp_materials_title:'Materials',
+    sp_card_exam_title:'Speaking Exam',
+    sp_card_exam_sub:'Cambridge B2 First · full mock or one part',
+    sp_exam_full_dur:'14 min',
+    sp_exam_one_part:'One part',
+    sp_card_live_title:'Live Studio',
+    sp_card_live_sub:'Talk freely and see your silences and speaking time',
+    sp_open_live:'Open Live Studio',
+    sp_log_title:'Log this session',
+    sp_log_part:'Part',
+    sp_log_part_full:'Full exam (1–4)',
+    sp_log_part_1:'Part 1',
+    sp_log_part_2:'Part 2',
+    sp_log_part_3:'Part 3',
+    sp_log_part_4:'Part 4',
+    sp_log_min:'Minutes',
+    sp_log_silences:'Silences',
+    sp_log_save:'Save session',
+    sp_log_saved:'Session saved',
     spx_title:'Speaking exam',
     spx_sub:'Cambridge B2 First · part by part',
     spx_dot_choose:'Choose a part',
@@ -6915,7 +7076,25 @@ const I18N={
     alert_speaking_final:'El speaking final no tiene campos numéricos para editar — borralo y registralo de nuevo.',
     alert_speaking_no_band:'Esta entrada de Speaking no tiene banda para editar — borrala y registrala de nuevo.',
 
-    spx_open:'🎓 Examen oral',
+    sp_materials_title:'Materiales',
+    sp_card_exam_title:'Examen oral',
+    sp_card_exam_sub:'Cambridge B2 First · simulacro completo o una parte',
+    sp_exam_full_dur:'14 min',
+    sp_exam_one_part:'Una parte',
+    sp_card_live_title:'Live Studio',
+    sp_card_live_sub:'Hablá libre y mirá tus silencios y tu tiempo de habla',
+    sp_open_live:'Abrir Live Studio',
+    sp_log_title:'Registrar sesión',
+    sp_log_part:'Parte',
+    sp_log_part_full:'Examen completo (1–4)',
+    sp_log_part_1:'Parte 1',
+    sp_log_part_2:'Parte 2',
+    sp_log_part_3:'Parte 3',
+    sp_log_part_4:'Parte 4',
+    sp_log_min:'Minutos',
+    sp_log_silences:'Silencios',
+    sp_log_save:'Guardar sesión',
+    sp_log_saved:'Sesión guardada',
     spx_title:'Examen oral',
     spx_sub:'Cambridge B2 First · parte por parte',
     spx_dot_choose:'Elegir una parte',
@@ -9362,7 +9541,52 @@ let wTimerEl,wMode='plan',wPlan,wWrite,wRev;
   wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.revMin*60;render()}};
   function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}
 })();
-let sp1,sp2;(function(){let left=0,iv=null,el=document.getElementById('spTimer');function render(){if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}}function run(s){clearInterval(iv);iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null}render()},1000);left=s;render()}sp1={start(){run(SETTINGS_DEFAULT.sp1Sec)}};sp2={start(){run(SETTINGS_DEFAULT.sp2Sec)}}})();
+const SP_TODAY={mode:'part',part:2};
+function renderSpTodayChoices(){
+  const fullBtn=document.getElementById('spModeFull');
+  const partWrap=document.getElementById('spModePartWrap');
+  const partBtn=document.getElementById('spModePart');
+  const isFull=SP_TODAY.mode==='full';
+  if(fullBtn){
+    fullBtn.setAttribute('aria-checked',isFull?'true':'false');
+    fullBtn.classList.toggle('is-selected',isFull);
+  }
+  if(partBtn)partBtn.setAttribute('aria-checked',isFull?'false':'true');
+  if(partWrap)partWrap.classList.toggle('is-selected',!isFull);
+  document.querySelectorAll('#spPartPicker [data-sp-part]').forEach(btn=>{
+    const on=!isFull&&Number(btn.dataset.spPart)===SP_TODAY.part;
+    btn.setAttribute('aria-checked',on?'true':'false');
+    btn.classList.toggle('is-selected',on);
+  });
+}
+function spSelectMode(mode){
+  SP_TODAY.mode=(mode==='full')?'full':'part';
+  renderSpTodayChoices();
+}
+function spSelectPart(part){
+  const n=Math.max(1,Math.min(4,parseInt(part,10)||2));
+  SP_TODAY.mode='part';
+  SP_TODAY.part=n;
+  renderSpTodayChoices();
+  renderGuides();
+}
+async function spStartExam(){
+  const panel=spx$('spxPanel');
+  const ov=document.getElementById('spxOverlay');
+  if(ov)ov.style.display='flex';
+  if(panel)panel.style.display='block';
+  SP_EXAM.error='';
+  SP_EXAM.micMuted=false;
+  spxCustomMap();
+  const det=spx$('spxCustomDetails');
+  if(det)det.open=false;
+  if(SP_TODAY.mode==='full'){
+    await SP_EXAM.startFull();
+  }else{
+    SP_EXAM.select(SP_TODAY.part);
+    await SP_EXAM.start();
+  }
+}
 function applyTimers(){ueTimer.set(SETTINGS_DEFAULT.ueMin);lTimer.set(SETTINGS_DEFAULT.listenMin);}
 
 /* ---------- INTERACTIVE SESSION STUDIO & STEPPERS ---------- */
@@ -9416,14 +9640,6 @@ function switchUePhase(p){
   if(p1)p1.style.display=(p==='sprint'?'block':'none');
   if(p2)p2.style.display=(p==='score'?'block':'none');
   if(p==='sprint')ueTimer.start();
-}
-
-function switchSpPhase(p){
-  if(p!=='mock'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
-  document.querySelectorAll('#spPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
-  const p1=document.getElementById('spPhase1'),p2=document.getElementById('spPhase2');
-  if(p1)p1.style.display=(p==='mock'?'block':'none');
-  if(p2)p2.style.display=(p==='upgrade'?'block':'none');
 }
 
 /* ---------- LIVE STUDIO (S1): microphone -> AudioWorklet VAD -> HUD ----------
@@ -9654,6 +9870,12 @@ async function liveStart(){
   LIVE.starting=true;
   const panel=document.getElementById('livePanel');
   if(panel)panel.style.display='block';
+  const logBox=document.getElementById('liveLogBox');
+  if(logBox)logBox.style.display='none';
+  const logBtn=document.getElementById('liveLogSaveBtn');
+  if(logBtn)logBtn.disabled=false;
+  const logSt=document.getElementById('liveLogStatus');
+  if(logSt)logSt.textContent='';
   liveReset();
   liveSetStatus('Requesting microphone…');
   const stopBtn=document.getElementById('liveStopBtn');
@@ -9720,6 +9942,37 @@ function liveStop(){
   LIVE.listDirty=false;LIVE.timelineDirty=false;
   renderLiveList();
   renderLiveTimeline();
+  const logBox=document.getElementById('liveLogBox');
+  if(logBox){
+    const pEl=document.getElementById('liveLogPart');
+    const mEl=document.getElementById('liveLogMin');
+    const sEl=document.getElementById('liveLogSil');
+    const btn=document.getElementById('liveLogSaveBtn');
+    const st=document.getElementById('liveLogStatus');
+    const defPart=(typeof PLAN_UNIT_START!=='undefined'&&PLAN_UNIT_START&&PLAN_UNIT_START.skill==='sp')
+      ?Number(PLAN_UNIT_START.value)
+      :(SP_TODAY.mode==='full'?0:SP_TODAY.part);
+    if(pEl)pEl.value=String(Number.isFinite(defPart)?Math.max(0,Math.min(4,defPart)):2);
+    if(mEl)mEl.value=String(Math.max(1,Math.ceil((LIVE.elapsed||0)/60)));
+    if(sEl)sEl.value=String(LIVE.silences.length);
+    if(btn)btn.disabled=false;
+    if(st)st.textContent='';
+    logBox.style.display='block';
+  }
+}
+
+function saveLiveSession(){
+  const pEl=document.getElementById('liveLogPart');
+  const mEl=document.getElementById('liveLogMin');
+  const sEl=document.getElementById('liveLogSil');
+  const part=pEl?+pEl.value:2;
+  const min=Math.max(1,Math.round(+(mEl&&mEl.value)||1));
+  const silences=Math.max(0,Math.round(+(sEl&&sEl.value)||0));
+  saveSP({part,min,silences});
+  const btn=document.getElementById('liveLogSaveBtn');
+  if(btn)btn.disabled=true;
+  const st=document.getElementById('liveLogStatus');
+  if(st)st.textContent=t('sp_log_saved');
 }
 
 function liveDiscard(){
@@ -9727,6 +9980,8 @@ function liveDiscard(){
   liveTeardown();
   LIVE.running=false;
   liveReset();
+  const logBox=document.getElementById('liveLogBox');
+  if(logBox)logBox.style.display='none';
   const panel=document.getElementById('livePanel');
   if(panel)panel.style.display='none';
   liveSetStatus('Microphone off');
@@ -13917,6 +14172,7 @@ SP_EXAM.start=async function(){
   }
   try{await spxLoadBank()}catch(e){
     SP_EXAM.error=t('spx_no_task');
+    spxSetScreen('choose');
     spxRenderChoose();
     return;
   }
@@ -13933,6 +14189,7 @@ SP_EXAM.start=async function(){
     partStats:{},currentPart:entry.part};
   if(!SP_EXAM.task){
     SP_EXAM.error=t('spx_no_bank',{n:SP_EXAM.part});
+    spxSetScreen('choose');
     spxRenderChoose();
     return;
   }
@@ -13950,6 +14207,7 @@ SP_EXAM.startFull=async function(seed){
   SP_EXAM.selectedFull=true;
   try{await spxLoadBank()}catch(e){
     SP_EXAM.error=t('spx_no_task');
+    spxSetScreen('choose');
     spxRenderChoose();
     return;
   }
@@ -13978,7 +14236,7 @@ SP_EXAM.startFull=async function(seed){
 };
 
 SP_EXAM.back=function(){
-  if(SP_EXAM.screen==='brief'){spxSetScreen('choose');return}
+  if(SP_EXAM.screen==='brief'){spxSetScreen('choose');spxRenderChoose();return}
   if(SP_EXAM.screen==='feedback'){SP_EXAM.toChoose();return}
 };
 
@@ -14278,7 +14536,48 @@ function spxRenderFeedbackPending(){
   if(save)save.disabled=true;
   const retry=spx$('spxFbRetry');
   if(retry)retry.style.display='none';
+  spxSyncLogBox(false);
 }
+
+function spxSyncLogBox(show){
+  const box=spx$('spxLogBox');
+  if(!box)return;
+  if(!show){box.style.display='none';return}
+  const pEl=spx$('spxLogPart');
+  const mEl=spx$('spxLogMin');
+  const sEl=spx$('spxLogSil');
+  const btn=spx$('spxLogSaveBtn');
+  const st=spx$('spxLogStatus');
+  const partVal=SP_EXAM.full?0:(SP_EXAM.part||2);
+  const durS=(SPK.reportData&&SPK.reportData.duration_s)
+    ||(SPK.reportPayload&&SPK.reportPayload.duration_s)
+    ||(SP_EXAM.full?14*60:(((SPX_PART_META[SP_EXAM.part]&&SPX_PART_META[SP_EXAM.part].minutes)||4)*60));
+  const minVal=Math.max(1,Math.ceil(durS/60));
+  if(pEl)pEl.value=String(partVal);
+  if(mEl)mEl.value=String(minVal);
+  if(sEl)sEl.value=String(SP_EXAM.silencePrompts||0);
+  if(btn)btn.disabled=!!SP_EXAM.saved;
+  if(st)st.textContent=SP_EXAM.saved?t('sp_log_saved'):'';
+  box.style.display='block';
+}
+
+SP_EXAM.saveSessionLog=function(){
+  if(SP_EXAM.saved)return;
+  const pEl=spx$('spxLogPart');
+  const mEl=spx$('spxLogMin');
+  const sEl=spx$('spxLogSil');
+  const part=pEl?+pEl.value:(SP_EXAM.full?0:(SP_EXAM.part||2));
+  const min=Math.max(1,Math.round(+(mEl&&mEl.value)||1));
+  const silences=Math.max(0,Math.round(+(sEl&&sEl.value)||0));
+  SP_EXAM.entry=saveSP({part,min,silences})||null;
+  SP_EXAM.saved=true;
+  const btn=spx$('spxLogSaveBtn');
+  if(btn)btn.disabled=true;
+  const fbSave=spx$('spxFbSave');
+  if(fbSave)fbSave.disabled=true;
+  const st=spx$('spxLogStatus');
+  if(st)st.textContent=t('sp_log_saved');
+};
 
 function spxRenderPartsList(target,parts){
   if(!target)return;
@@ -14335,6 +14634,7 @@ function spxRenderFeedback(){
   if(retry)retry.style.display='inline-flex';
   const old=document.getElementById('spkReportPanel');
   if(old)old.style.display='none';
+  spxSyncLogBox(true);
 }
 
 function spxRenderFeedbackError(msg){
@@ -14350,6 +14650,7 @@ function spxRenderFeedbackError(msg){
   if(save)save.disabled=true;
   const retry=spx$('spxFbRetry');
   if(retry)retry.style.display='inline-flex';
+  spxSyncLogBox(true);
 }
 
 SP_EXAM.retry=async function(){
@@ -15357,10 +15658,21 @@ function saveSP(report){
     log(entry);
     return entry;
   }
-  const part=+document.getElementById('spPart').value;
-  const entry={type:'sp',part,sil:document.getElementById('spSil').value,rep:document.getElementById('spRep').value,neg:+document.getElementById('spNeg').value||0};
+  const opts=(report&&typeof report==='object')?report:{};
+  const rawPart=(opts.part!==undefined&&opts.part!==null)?+opts.part:(SP_TODAY.mode==='full'?0:SP_TODAY.part);
+  const part=Number.isFinite(rawPart)?Math.max(0,Math.min(4,Math.round(rawPart))):2;
+  const defMin=(typeof PLAN_UNIT_START!=='undefined'&&PLAN_UNIT_START&&PLAN_UNIT_START.skill==='sp')
+    ?+PLAN_UNIT_START.min
+    :(part===0?14:((SPX_PART_META[part]&&SPX_PART_META[part].minutes)||4));
+  const rawMin=(opts.min!==undefined&&opts.min!==null&&opts.min!=='')?+opts.min:defMin;
+  const min=Math.max(1,Math.round(Number.isFinite(rawMin)?rawMin:4));
+  const rawSil=(opts.silences!==undefined&&opts.silences!==null&&opts.silences!=='')?+opts.silences:0;
+  const silences=Math.max(0,Math.round(Number.isFinite(rawSil)?rawSil:0));
+  const entry={type:'sp',part,min,silences};
+  if(part===0){entry.full=true;entry.parts=[1,2,3,4]}
   const unit=takePlanUnit('sp',part);if(unit)entry.unit=unit;
   log(entry);
+  return entry;
 }
 function saveRUE(){
   const correct=+document.getElementById('rueOk').value,total=+document.getElementById('rueTotal').value;
@@ -17068,13 +17380,17 @@ function paintSpeakingStudio(sl){
   studioSet('st4Name','🗣️ '+title);
   studioSet('st4Sub',studioSubtitle(sl,'sp'));
   studioSet('st4Dur',sl?min+' MIN':'—');
-  studioSet('st4MockTitle','🎙️ '+title);
-  studioSet('st4MockTime',sl?min+':00 · '+studioPartsPhrase(sl):'—');
-  const partEl=document.getElementById('spPart');
-  if(partEl&&!whole){
+  if(whole){
+    SP_TODAY.mode='full';
+  }else{
     const parts=studioPartNumbers(sl,'sp');
-    if(parts.length)partEl.value=String(parts[0]);
+    SP_TODAY.mode='part';
+    if(parts.length){
+      SP_TODAY.part=Math.max(1,Math.min(4,Number(parts[0])||2));
+    }
   }
+  renderSpTodayChoices();
+  renderGuides();
 }
 function paintSessionStudios(plan){
   const p=plan||buildWeeklyPlan(D);
@@ -18236,7 +18552,7 @@ function chips(items){
 function renderGuides(){
   const set=(id,items)=>{const el=document.getElementById(id);if(el)el.innerHTML=chips(items)};
   const uePart=document.getElementById('uePart')?document.getElementById('uePart').value:'1';
-  const spPart=document.getElementById('spPart')?document.getElementById('spPart').value:'2';
+  const spPart=String((typeof SP_TODAY!=='undefined'&&SP_TODAY.part)?SP_TODAY.part:2);
   const ue=[['R&UoE S1','rueS1'],['S2','rueS2'],['FS1','rueFS1'],['FS2','rueFS2'],['Keys S1','keyS1'],['Keys S2','keyS2'],['Keys FS1','keyFS1'],['Keys FS2','keyFS2'],['Lesson plan P'+uePart,'lpR'+uePart],['Lesson FS P'+uePart,'fR'+uePart]];
   if(uePart>=5)ue.push(['Self-study R','rAct1'],['R Act P1','rAct1b'],['Further R','rAct2'],['Reading guide','rGuide']);
   ue.push(['Online UoE','https://www.flo-joe.co.uk/fce/students/tests/']);
@@ -21098,7 +21414,6 @@ function loadMaterial(){
 }
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
 document.getElementById('uePart').addEventListener('change',renderGuides);
-document.getElementById('spPart').addEventListener('change',renderGuides);
 function scheduleMaterial(){
   /* The catalogue is only fetched once there is a session to render it for. */
   if('requestIdleCallback' in window){requestIdleCallback(function(){loadMaterial()},{timeout:2500});}
@@ -21183,6 +21498,7 @@ click:{
 'SP_EXAM.retry':()=>SP_EXAM.retry(),
 'SP_EXAM.saveCustom':()=>SP_EXAM.saveCustom(),
 'SP_EXAM.saveReport':()=>SP_EXAM.saveReport(),
+'SP_EXAM.saveSessionLog':()=>SP_EXAM.saveSessionLog(),
 'SP_EXAM.start':()=>SP_EXAM.start(),
 'SP_EXAM.startFull':()=>SP_EXAM.startFull(),
 'SP_EXAM.stopEarly':()=>SP_EXAM.stopEarly(),
@@ -21288,7 +21604,7 @@ click:{
 'saveR6':()=>saveR6(),
 'saveRUE':()=>saveRUE(),
 'saveSF':()=>saveSF(),
-'saveSP':()=>saveSP(),
+'saveLiveSession':()=>saveLiveSession(),
 'saveSoloPractice':()=>saveSoloPractice(),
 'saveUE':()=>saveUE(),
 'saveW':()=>saveW(),
@@ -21301,12 +21617,12 @@ click:{
 'showPasswordRecovery':()=>showPasswordRecovery(),
 'showView':el=>showView(el.dataset.arg),
 'skipDiagItem':()=>skipDiagItem(),
-'sp1.start':()=>sp1.start(),
-'sp2.start':()=>sp2.start(),
+'spSelectMode':el=>spSelectMode(el.dataset.mode),
+'spSelectPart':el=>spSelectPart(el.dataset.spPart),
+'spStartExam':()=>spStartExam(),
 'spkDiscard':()=>spkDiscard(),
 'spkReport':()=>spkReport(),
 'spkSaveReport':()=>spkSaveReport(),
-'spkStart':()=>spkStart(),
 'spkStop':()=>spkStop(),
 'stageDown':()=>stageDown(),
 'startDiag':()=>startDiag(),
@@ -21320,7 +21636,6 @@ click:{
 'submitIaWriting':()=>submitIaWriting(),
 'switchAuthTab':el=>switchAuthTab(el.dataset.tab),
 'switchListeningPhase':el=>switchListeningPhase(el.dataset.phase||el.dataset.arg),
-'switchSpPhase':el=>switchSpPhase(el.dataset.phase||el.dataset.arg),
 'switchUePhase':el=>switchUePhase(el.dataset.phase||el.dataset.arg),
 'switchWritingPhase':el=>switchWritingPhase(el.dataset.phase||el.dataset.arg),
 'testByoConnection':()=>testByoConnection(),

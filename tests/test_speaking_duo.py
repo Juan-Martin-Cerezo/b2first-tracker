@@ -84,7 +84,7 @@ def main():
         # 1. Part 3 opens both sessions (and only two).
         pg.evaluate("SPK.setPart(3)")
         assert pg.evaluate("SPK.part") == 3, "setPart did not stick"
-        pg.click("#spkOpenBtn")
+        pg.evaluate("spkStart()")
         assert wait_until(pg, "SPK.running===true && SPK.activeVoices===2", 20), \
             "the duo session did not start"
         assert pg.evaluate("!!SPK.voices.examiner.transport && "
