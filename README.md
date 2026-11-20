@@ -197,7 +197,7 @@ browser (index.html + AudioWorklet VAD)
 
 ### Try the hosted app
 
-1. Open https://firsttracker.app and click **Create an account**.
+1. Open https://firsttracker.app and click **Start free** (or **Create an account**).
 2. Choose a username and a password of at least 12 characters (no email required), or sign in with Google.
 3. Set your exam date in onboarding (you can click **Skip for now** on the 12-question diagnostic and run it later).
 4. Submit a 140–190 word essay in **Writing**, or open **Speaking Exam** from **Today**.

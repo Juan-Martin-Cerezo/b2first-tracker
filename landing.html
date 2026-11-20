@@ -12,23 +12,25 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>B2 First Tracker — AI Writing Rubric &amp; Live Voice Examiner</title>
-<meta name="description" content="Cambridge B2 First (FCE) AI study platform: Writing scored on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive study plan.">
+<title>B2 First Tracker — Cambridge B2 First AI Examiner, Writing Corrector &amp; Study Plan</title>
+<meta name="description" content="Practice the Cambridge B2 First with a 4-band AI writing corrector, a 4-part AI speaking examiner, local Live Studio, and an adaptive daily study plan. Free while in beta.">
 <link rel="canonical" href="https://firsttracker.app/">
-<meta property="og:title" content="B2 First Tracker — AI Writing Rubric &amp; Live Voice Examiner">
-<meta property="og:description" content="Cambridge B2 First (FCE) AI study platform: Writing scored on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive study plan.">
+<meta property="og:title" content="B2 First Tracker — Cambridge B2 First AI Examiner, Writing Corrector &amp; Study Plan">
+<meta property="og:description" content="Practice the Cambridge B2 First with a 4-band AI writing corrector, a 4-part AI speaking examiner, local Live Studio, and an adaptive daily study plan. Free while in beta.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://firsttracker.app/">
 <meta property="og:image" content="https://firsttracker.app/assets/og.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="B2 First Tracker — AI rubric marking and live voice practice for B2 First.">
+<meta property="og:image:alt" content="B2 First Tracker — Cambridge B2 First AI writing corrector, speaking examiner, and adaptive study plan.">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="B2 First Tracker — Cambridge B2 First AI Examiner, Writing Corrector &amp; Study Plan">
+<meta name="twitter:description" content="4-band Cambridge writing feedback, timed 4-part AI speaking practice, local Live Studio, and 157 real exercises. Free while in beta.">
 <meta name="twitter:image" content="https://firsttracker.app/assets/og.png">
-<meta name="twitter:image:alt" content="B2 First Tracker — AI rubric marking and live voice practice for B2 First.">
+<meta name="twitter:image:alt" content="B2 First Tracker — Cambridge B2 First AI writing corrector, speaking examiner, and adaptive study plan.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Cambridge B2 First (FCE) preparation with AI writing marking on the four Cambridge bands, a 4-part Gemini Live voice examiner, and a deterministic adaptive weekly plan from a 12-item diagnostic."}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"B2 First Tracker","url":"https://firsttracker.app/","applicationCategory":"EducationalApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Practice the Cambridge B2 First with a 4-band AI writing corrector, a 4-part AI speaking examiner, local Live Studio, 157 non-repeating exercises, and an adaptive daily study plan."}
 </script>
 <link rel="icon" type="image/png" href="/assets/logo-512.png">
 <link rel="apple-touch-icon" href="/assets/logo-512.png">
@@ -102,7 +104,7 @@
 
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-16: 64px;
-  --section-y: clamp(56px, 7.5vw, 104px);
+  --section-y: clamp(56px, 7.5vw, 100px);
 
   --fs-12: 0.75rem;
   --fs-13: 0.8125rem;
@@ -114,7 +116,7 @@
   --fs-24: clamp(1.25rem, 1.12rem + 0.55vw, 1.5rem);
   --fs-32: clamp(1.5rem, 1.22rem + 1.2vw, 2.05rem);
   --fs-40: clamp(1.75rem, 1.32rem + 1.8vw, 2.5rem);
-  --fs-display: clamp(2rem, 1.35rem + 2.8vw, 3.5rem);
+  --fs-display: clamp(2rem, 1.35rem + 2.6vw, 3.3rem);
 
   --r-sm: 6px;
   --r-ctl: 9px;
@@ -235,9 +237,27 @@ ul,ol{list-style:none}
 }
 .icon-btn:hover{background:var(--inset);color:var(--txt);border-color:var(--line)}
 .icon-btn svg{width:19px;height:19px}
+.lang-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:38px;height:36px;padding:0 8px;flex:none;
+  border:1px solid var(--line-2);border-radius:var(--r-ctl);
+  background:var(--surface);color:var(--txt);
+  font:650 var(--fs-12)/1 var(--mono);letter-spacing:0.04em;cursor:pointer;
+  transition:background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.lang-btn:hover{background:var(--inset);border-color:var(--acc-line);color:var(--acc-text)}
 .theme-ico-sun{display:none}
 :root[data-theme="dark"] .theme-ico-moon{display:none}
 :root[data-theme="dark"] .theme-ico-sun{display:block}
+
+@media (max-width:419px){
+  .nav-in{gap:6px}
+  .brand{gap:7px;font-size:var(--fs-14)}
+  .nav-right{gap:3px}
+  .icon-btn{width:36px;height:36px}
+  .lang-btn{min-width:34px;height:34px;padding:0 6px}
+  .nav-signin{padding:0 6px;font-size:var(--fs-13)}
+}
 
 .mobile-drawer{
   border-top:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -272,12 +292,12 @@ h1{
   margin-bottom:var(--sp-5);
 }
 .h1-accent{color:var(--acc-text)}
-h2{font-size:var(--fs-40);line-height:1.1;letter-spacing:-0.025em;font-weight:680;max-width:24ch}
-h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650}
+h2{font-size:var(--fs-40);line-height:1.1;letter-spacing:-0.025em;font-weight:680;max-width:26ch}
+h3{font-size:var(--fs-20);line-height:1.25;letter-spacing:-0.015em;font-weight:650}
 .lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:52ch}
 .section{padding-block:var(--section-y);border-top:1px solid var(--line)}
 .section.alt{background:var(--bg-alt)}
-.sec-head{margin-bottom:clamp(28px, 4vw, 48px)}
+.sec-head{margin-bottom:clamp(28px, 4vw, 44px)}
 .sec-head h2{margin-bottom:var(--sp-3)}
 .sec-lede{font-size:var(--fs-18);line-height:1.6;color:var(--txt-2);max-width:58ch}
 
@@ -287,14 +307,12 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
   border:1px solid var(--acc-line);
   font-size:var(--fs-12);font-weight:650;letter-spacing:0.01em;white-space:nowrap;
 }
-.chip-neutral{
-  background:var(--inset);color:var(--txt-2);border-color:var(--line-2);
-}
+.hero-badge{margin-bottom:var(--sp-4)}
 
 /* ---------- HERO ---------- */
 .hero{
   position:relative;overflow:clip;
-  padding-block:clamp(36px, 5.5vw, 76px) clamp(40px, 5.5vw, 72px);
+  padding-block:clamp(32px, 5vw, 72px) clamp(36px, 5vw, 68px);
 }
 .hero-grid{align-items:center;row-gap:var(--sp-8)}
 @media (min-width:1024px){
@@ -307,7 +325,7 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
   margin-top:var(--sp-4);font-size:var(--fs-13);color:var(--txt-3);
 }
 
-/* Hero visual: compact 3-engine AI workspace summary */
+/* Hero visual panel */
 .panel{
   background:var(--surface);border:1px solid var(--line-2);
   border-radius:var(--r-card);box-shadow:var(--shadow-panel);
@@ -343,68 +361,48 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
 .hs-wave i{display:block;width:3px;border-radius:2px;background:var(--acc-text)}
 .hero-cap{margin-top:10px;font-size:var(--fs-13);color:var(--txt-3)}
 
-/* ---------- PROOF STRIP ---------- */
-.proof{
-  border-top:1px solid var(--line);background:var(--bg-alt);
+/* ---------- HOW IT WORKS (3 STEPS) ---------- */
+.steps-grid{
+  display:grid;grid-template-columns:1fr;gap:var(--gap);
 }
-.proof-grid{
-  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));
+@media (min-width:768px){ .steps-grid{grid-template-columns:repeat(3, minmax(0, 1fr))} }
+.step-card{
+  padding:var(--sp-6);border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--line-2);
+  display:grid;gap:var(--sp-3);align-content:start;
 }
-@media (min-width:768px){
-  .proof-grid{grid-template-columns:repeat(4, minmax(0, 1fr))}
-}
-.proof-item{
-  padding:var(--sp-5) var(--sp-4);
-  border-bottom:1px solid var(--line);
-  border-right:1px solid var(--line);
-  min-width:0;
-}
-.proof-item:nth-child(2n){border-right:0}
-.proof-item:nth-last-child(-n+2){border-bottom:0}
-@media (min-width:768px){
-  .proof-item{border-bottom:0;border-right:1px solid var(--line);padding:var(--sp-6) var(--sp-5)}
-  .proof-item:nth-child(2n){border-right:1px solid var(--line)}
-  .proof-item:last-child{border-right:0}
-}
-.proof-val{
-  font:700 var(--fs-24)/1.15 var(--font-display);letter-spacing:-0.025em;
-  color:var(--txt);font-variant-numeric:tabular-nums;
-}
-.proof-lbl{margin-top:6px;font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
-
-/* ---------- AI PILLARS (#ai) ---------- */
-.pillar{padding-block:clamp(40px, 5vw, 68px);border-top:1px solid var(--line)}
-.pillar:first-of-type{border-top:0;padding-top:0}
-.pillar:last-of-type{padding-bottom:0}
-.pillar-grid{row-gap:var(--sp-6);align-items:start}
-@media (min-width:1024px){
-  .pillar-copy{grid-column:1 / span 5}
-  .pillar-mock{grid-column:6 / span 7}
-  .pillar-flip .pillar-mock{grid-column:1 / span 7;grid-row:1}
-  .pillar-flip .pillar-copy{grid-column:8 / span 5;grid-row:1}
-}
-.pillar-tag{
-  display:inline-flex;align-items:center;gap:8px;margin-bottom:var(--sp-3);
-  font-family:var(--mono);font-size:var(--fs-12);font-weight:600;letter-spacing:0.04em;
+.step-num{
+  font-family:var(--mono);font-size:var(--fs-12);font-weight:700;letter-spacing:0.06em;
   color:var(--acc-text);
 }
-.pillar-copy h3{font-size:var(--fs-32);line-height:1.12;letter-spacing:-0.025em;margin-bottom:var(--sp-4)}
-.pillar-copy > p{font-size:var(--fs-16);line-height:1.65;color:var(--txt-2);max-width:50ch}
-.pillar-copy > p + p{margin-top:var(--sp-3)}
-.check-list{display:grid;gap:10px;margin-top:var(--sp-5)}
-.check-list li{
-  display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;
-  font-size:var(--fs-15);line-height:1.5;color:var(--txt);
+.step-card h3{font-size:var(--fs-20);line-height:1.3}
+.step-card p{font-size:var(--fs-15);line-height:1.6;color:var(--txt-2)}
+
+/* ---------- AI FEATURES (4 CARDS + RUBRIC SAMPLE) ---------- */
+.feat-grid{
+  display:grid;grid-template-columns:1fr;gap:var(--gap);
 }
-.check-list svg{width:18px;height:18px;margin-top:3px;color:var(--acc-text)}
+@media (min-width:768px){ .feat-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
+.feat-card{
+  padding:var(--sp-6);border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--line-2);
+  display:grid;gap:var(--sp-3);align-content:start;
+}
+.feat-tag{
+  font-family:var(--mono);font-size:var(--fs-12);font-weight:650;letter-spacing:0.05em;
+  color:var(--acc-text);text-transform:uppercase;
+}
+.feat-card h3{font-size:var(--fs-24);line-height:1.2}
+.feat-card p{font-size:var(--fs-15);line-height:1.6;color:var(--txt-2)}
 .honesty-note{
-  margin-top:var(--sp-5);padding:12px 14px;border-radius:var(--r-ctl);
-  background:var(--inset);border:1px solid var(--line-2);
-  font-size:var(--fs-14);line-height:1.55;color:var(--txt-2);
+  margin-top:var(--sp-1);padding:10px 12px;border-radius:var(--r-ctl);
+  background:var(--inset);border:1px solid var(--line);
+  font-size:var(--fs-13);line-height:1.5;color:var(--txt-2);
 }
 .honesty-note b{color:var(--txt)}
 
-/* --- Mockup 1: Writing Rubric Panel --- */
+/* Illustrative Writing Rubric Panel */
+.rubric-wrap{margin-top:var(--sp-8)}
 .mock-body{padding:var(--sp-5);display:grid;gap:var(--sp-4)}
 .draft-quote{
   padding:12px 14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
@@ -418,13 +416,14 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
   background:var(--acc-soft);color:var(--txt);
   padding:1px 4px;border-radius:4px;border-bottom:1px solid var(--acc-line);
 }
-.bands-list{display:grid;gap:10px}
-.band-row{
-  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px var(--sp-3);
-  padding-block:10px;border-bottom:1px solid var(--line);
+.bands-grid{
+  display:grid;grid-template-columns:1fr;gap:var(--sp-3);
 }
-.band-row:first-child{padding-top:0}
-.band-row:last-child{padding-bottom:0;border-bottom:0}
+@media (min-width:768px){ .bands-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
+.band-card{
+  padding:12px 14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px var(--sp-3);align-content:start;
+}
 .band-name{font-size:var(--fs-14);font-weight:650;color:var(--txt)}
 .band-score{font:700 var(--fs-15)/1 var(--font-display);color:var(--txt);font-variant-numeric:tabular-nums}
 .band-score small{font-weight:500;color:var(--txt-3)}
@@ -432,147 +431,25 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
 .band-segs{
   grid-column:1 / -1;display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:4px;margin-top:2px;
 }
-.band-segs i{display:block;height:6px;border-radius:3px;background:var(--inset);border:1px solid var(--line)}
+.band-segs i{display:block;height:5px;border-radius:3px;background:var(--bg);border:1px solid var(--line)}
 .band-segs i.on{background:var(--acc);border-color:var(--acc)}
-
-.writing-subgrid{
-  display:grid;gap:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line);
-}
-@media (min-width:640px){ .writing-subgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)} }
-.subbox{
-  padding:12px 14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
-  display:grid;gap:8px;align-content:start;
-}
-.subbox-h{
-  font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--acc-text);
-}
-.weak-list{display:grid;gap:6px;font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
-.weak-list li{padding-left:12px;position:relative}
-.weak-list li::before{
-  content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--acc-text);
-}
-.rw-list{display:grid;gap:8px}
-.rw-item{font-size:var(--fs-13);line-height:1.45;display:grid;gap:2px}
-.rw-old{color:var(--txt-3);text-decoration:line-through}
-.rw-new{color:var(--txt);font-weight:500}
-
-/* --- Mockup 2: Speaking Examiner Panel --- */
-.parts-bar{
-  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;
-}
-@media (min-width:560px){ .parts-bar{grid-template-columns:repeat(4, minmax(0, 1fr))} }
-.p-seg{
-  padding:8px 10px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
-  display:grid;gap:3px;min-width:0;
-}
-.p-seg.is-on{background:var(--acc-soft);border-color:var(--acc-line)}
-.p-seg b{font-size:var(--fs-12);color:var(--txt)}
-.p-seg span{font-size:11px;color:var(--txt-2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-.transcript{display:grid;gap:10px}
-.turn{
-  padding:10px 12px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
-  display:grid;gap:4px;
-}
-.turn-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.turn-role{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--acc-text)}
-.turn-role.is-user{color:var(--txt)}
-.turn-time{font-family:var(--mono);font-size:11px;color:var(--txt-3);font-variant-numeric:tabular-nums}
-.turn p{font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
-
-.spk-scores{
-  display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:8px;
-  padding-top:var(--sp-3);border-top:1px solid var(--line);
-}
-.spk-cell{
-  padding:10px 12px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
-  display:flex;flex-direction:column;gap:4px;min-width:0;
-}
-.spk-cell span{font-size:12px;color:var(--txt-2);line-height:1.3}
-.spk-cell b{font-size:var(--fs-15);color:var(--txt);font-variant-numeric:tabular-nums}
-.spk-cell .not-meas{
-  font-family:var(--mono);font-size:var(--fs-12);font-weight:700;color:var(--acc-text);
-}
-
-/* --- Mockup 3: Adaptive Plan Panel --- */
-.diag-bars{display:grid;gap:8px}
-.diag-row{
-  display:grid;grid-template-columns:minmax(0, 118px) minmax(0, 1fr) auto;align-items:center;gap:10px;
-  font-size:var(--fs-13);
-}
-.diag-lbl{color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.diag-row.is-weak .diag-lbl{color:var(--txt);font-weight:650}
-.diag-track{height:8px;border-radius:var(--r-pill);background:var(--inset);overflow:hidden;border:1px solid var(--line)}
-.diag-fill{display:block;height:100%;width:var(--pct);background:var(--txt-3);border-radius:inherit}
-.diag-row.is-weak .diag-fill{background:var(--acc)}
-.diag-pct{font-family:var(--mono);font-size:12px;color:var(--txt-2);font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
-.diag-row.is-weak .diag-pct{color:var(--acc-text);font-weight:700}
-
-.today-box{
-  padding:14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--acc-line);
-  display:grid;gap:8px;
-}
-.today-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
-.today-title{font-size:var(--fs-16);font-weight:650;color:var(--txt)}
-.today-why{font-size:var(--fs-13);line-height:1.5;color:var(--txt-2)}
-
-.rot-grid{
-  display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px;
-}
-@media (max-width:440px){ .rot-grid{grid-template-columns:1fr} }
-.rot-day{
-  padding:10px;border-radius:var(--r-sm);background:var(--inset);border:1px solid var(--line);
-  display:grid;gap:3px;
-}
-.rot-day.is-today{border-color:var(--acc-line);background:var(--acc-soft)}
-.rot-day span{font-family:var(--mono);font-size:11px;font-weight:650;color:var(--txt-3);text-transform:uppercase}
-.rot-day.is-today span{color:var(--acc-text)}
-.rot-day b{font-size:var(--fs-13);color:var(--txt);line-height:1.35}
-
 .mock-foot{
   padding:10px var(--sp-5);border-top:1px solid var(--line);background:var(--inset);
   font-size:var(--fs-12);color:var(--txt-2);
 }
 
-/* ---------- UNDER THE HOOD (#how) ---------- */
-.arch-flow{
-  display:grid;gap:12px;margin-bottom:var(--sp-6);
+/* ---------- MATERIALS (#materials) ---------- */
+.mat-grid{
+  display:grid;grid-template-columns:1fr;gap:var(--gap);
+}
+@media (min-width:768px){ .mat-grid{grid-template-columns:repeat(3, minmax(0, 1fr))} }
+.mat-card{
   padding:var(--sp-5);border-radius:var(--r-card);
   background:var(--surface);border:1px solid var(--line-2);
+  display:grid;gap:var(--sp-2);align-content:start;
 }
-@media (min-width:768px){
-  .arch-flow{grid-template-columns:1fr auto 1fr auto 1fr;align-items:center}
-}
-.arch-node{
-  padding:14px;border-radius:var(--r-ctl);background:var(--inset);border:1px solid var(--line);
-  display:grid;gap:4px;min-width:0;
-}
-.arch-node-k{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--acc-text);text-transform:uppercase}
-.arch-node b{font-size:var(--fs-15);color:var(--txt)}
-.arch-node p{font-size:var(--fs-13);line-height:1.45;color:var(--txt-2)}
-.arch-arrow{
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:var(--fs-12);color:var(--txt-3);
-  padding:4px 6px;
-}
-.arch-arrow svg{width:18px;height:18px;transform:rotate(90deg)}
-@media (min-width:768px){ .arch-arrow svg{transform:none} }
-
-.spec-grid{
-  display:grid;grid-template-columns:1fr;gap:1px;
-  border:1px solid var(--line-2);border-radius:var(--r-card);
-  background:var(--line);overflow:hidden;
-}
-@media (min-width:640px){ .spec-grid{grid-template-columns:repeat(2, minmax(0, 1fr))} }
-@media (min-width:1024px){ .spec-grid{grid-template-columns:repeat(3, minmax(0, 1fr))} }
-.spec-cell{
-  padding:var(--sp-5);background:var(--surface);
-  display:grid;gap:6px;align-content:start;
-}
-.spec-code{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--acc-text);letter-spacing:0.04em}
-.spec-cell h3{font-size:var(--fs-18);line-height:1.25}
-.spec-cell p{font-size:var(--fs-14);line-height:1.55;color:var(--txt-2)}
-.hood-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-3);margin-top:var(--sp-6)}
+.mat-card h3{font-size:var(--fs-18)}
+.mat-card p{font-size:var(--fs-15);line-height:1.55;color:var(--txt-2)}
 
 /* ---------- PRIVACY (#privacy) ---------- */
 .priv-grid{row-gap:var(--gap)}
@@ -591,6 +468,20 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
   color:var(--txt);font-size:var(--fs-14);font-weight:550;
 }
 .legal-links a:hover{border-color:var(--acc-line);color:var(--acc-text)}
+
+/* ---------- BETA ACCESS (#access) ---------- */
+.beta-band{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-6);
+  padding:clamp(24px, 4vw, 44px);
+  border-radius:var(--r-card);
+  background:var(--surface);border:1px solid var(--acc-line);
+}
+.beta-main{display:grid;gap:var(--sp-3);justify-items:start;max-width:56ch}
+.beta-h{font:700 var(--fs-32)/1.12 var(--font-display);letter-spacing:-0.025em;color:var(--txt)}
+.beta-sub{font-size:var(--fs-16);color:var(--txt-2);line-height:1.6}
+.beta-meta{font-size:var(--fs-14);color:var(--txt-2);line-height:1.55}
+.cta-btns{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
+@media (max-width:460px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
 
 /* ---------- FAQ (#faq) ---------- */
 .faq-grid{row-gap:var(--sp-6);align-items:start}
@@ -615,23 +506,6 @@ h3{font-size:var(--fs-24);line-height:1.2;letter-spacing:-0.02em;font-weight:650
 .chev svg{width:15px;height:15px}
 .faq details[open] .chev{transform:rotate(180deg);color:var(--acc-text);border-color:var(--acc-line)}
 .faq details p{padding:0 0 var(--sp-4) 0;font-size:var(--fs-15);line-height:1.65;color:var(--txt-2);max-width:62ch}
-
-/* ---------- FINAL CTA (#start) ---------- */
-.cta-section{
-  padding-block:clamp(48px, 6vw, 80px);
-  border-top:1px solid var(--line);
-  background:var(--bg-alt);
-}
-.cta-band{
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--sp-6);
-  padding:clamp(24px, 4vw, 44px);
-  border-radius:var(--r-card);
-  background:var(--surface);border:1px solid var(--acc-line);
-}
-.cta-h{font:700 var(--fs-32)/1.12 var(--font-display);letter-spacing:-0.025em;color:var(--txt);max-width:28ch}
-.cta-sub{margin-top:var(--sp-2);font-size:var(--fs-16);color:var(--txt-2);max-width:50ch}
-.cta-btns{display:flex;flex-wrap:wrap;gap:var(--sp-3)}
-@media (max-width:460px){ .cta-btns,.cta-btns .btn{flex:1 1 100%} }
 
 /* ---------- FOOTER ---------- */
 footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
@@ -665,7 +539,7 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
 </style>
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
+<a class="skip" href="#main" data-t="skip">Skip to content</a>
 
 <header class="nav" data-top>
   <div class="wrap nav-in">
@@ -674,19 +548,20 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
       <span>B2 First Tracker</span>
     </a>
     <nav class="nav-links" aria-label="Sections">
-      <a href="#ai">AI features</a>
-      <a href="#writing">Writing</a>
-      <a href="#speaking">Speaking</a>
-      <a href="#how">Under the hood</a>
-      <a href="#faq">FAQ</a>
+      <a href="#how" data-t="nav_how">How it works</a>
+      <a href="#ai" data-t="nav_ai">AI features</a>
+      <a href="#materials" data-t="nav_materials">Materials</a>
+      <a href="#privacy" data-t="nav_privacy">Privacy</a>
+      <a href="#faq" data-t="nav_faq">FAQ</a>
     </nav>
     <div class="nav-right">
+      <button type="button" class="lang-btn" id="langToggle" aria-label="Cambiar a español" aria-pressed="false">ES</button>
       <button type="button" class="icon-btn" id="themeToggle" aria-label="Toggle color theme" aria-pressed="false">
         <svg class="theme-ico-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
         <svg class="theme-ico-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
       </button>
-      <a class="nav-signin" href="/app">Sign in</a>
-      <a class="btn sm nav-create" id="navCta" href="/app">Create an account</a>
+      <a class="nav-signin" href="/app" data-t="signin">Sign in</a>
+      <a class="btn sm nav-create" id="navCta" href="/app" data-t="create">Create an account</a>
       <button type="button" class="icon-btn nav-menu-btn" id="navMenuBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
@@ -695,15 +570,15 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
   <div class="mobile-drawer" id="mobileMenu" hidden>
     <div class="wrap">
       <nav class="mobile-drawer-links" aria-label="Mobile sections">
-        <a href="#ai">AI features</a>
-        <a href="#writing">Writing</a>
-        <a href="#speaking">Speaking</a>
-        <a href="#how">Under the hood</a>
-        <a href="#faq">FAQ</a>
+        <a href="#how" data-t="nav_how">How it works</a>
+        <a href="#ai" data-t="nav_ai">AI features</a>
+        <a href="#materials" data-t="nav_materials">Materials</a>
+        <a href="#privacy" data-t="nav_privacy">Privacy</a>
+        <a href="#faq" data-t="nav_faq">FAQ</a>
       </nav>
       <div class="mobile-drawer-actions">
-        <a class="btn sm btn-secondary" href="/app">Sign in</a>
-        <a class="btn sm" href="/app">Create an account</a>
+        <a class="btn sm btn-secondary" href="/app" data-t="signin">Sign in</a>
+        <a class="btn sm" href="/app" data-t="create">Create an account</a>
       </div>
     </div>
   </div>
@@ -715,42 +590,43 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
     <div class="wrap">
       <div class="grid hero-grid">
         <div class="hero-copy">
-          <h1 id="hero-title">AI rubric marking and <span class="h1-accent">live voice practice</span> for B2 First.</h1>
-          <p class="lede">Score Writing drafts on all four Cambridge bands with quoted evidence, sit a timed 4-part Speaking exam with Gemini Live, and follow an adaptive plan built from a 12-item diagnostic.</p>
+          <span class="chip hero-badge" data-t="hero_badge">Free while in beta</span>
+          <h1 id="hero-title" data-t-html="hero_h1">Prepare for the Cambridge B2 First with an AI examiner and a plan that <span class="h1-accent">adapts every day.</span></h1>
+          <p class="lede" data-t="hero_sub">Four-band Cambridge writing feedback, timed 4-part speaking practice, local silence tracking, and 157 real exercises in one place.</p>
           <div class="hero-ctas">
-            <a class="btn" id="heroCta" href="/app">Start the free diagnostic<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-            <a class="btn btn-secondary" href="#ai">See how the AI works</a>
+            <a class="btn" id="heroCta" href="/app"><span id="heroCtaLabel" data-t="hero_cta">Start free</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+            <a class="btn btn-secondary" href="#marking-sample" data-t="hero_cta2">See how it marks</a>
           </div>
-          <p class="hero-note">No email required · Open source · Built for independent B2 First candidates</p>
+          <p class="hero-note" data-t="hero_note">One account · No card · No email required</p>
         </div>
 
         <figure class="hero-visual">
           <div class="panel">
             <div class="panel-bar">
-              <span class="panel-title">B2 First AI Feedback Loop</span>
-              <span class="chip">Illustrative example</span>
+              <span class="panel-title" data-t="hp_title">Inside one study loop</span>
+              <span class="chip" data-t="illus">Illustrative example</span>
             </div>
             <div class="hero-stack">
               <div class="hs-row">
                 <div class="hs-head">
-                  <span class="hs-label">01 · Writing Corrector</span>
-                  <span class="hs-meta">14 / 20 · Essay (168w)</span>
+                  <span class="hs-label" data-t="hp_r1_lbl">01 · Writing corrector</span>
+                  <span class="hs-meta" data-t="hp_r1_meta">14 / 20 · Essay (168w)</span>
                 </div>
                 <div class="hs-bands">
-                  <div class="hs-b"><span>Content</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
-                  <div class="hs-b"><span>Comm. Ach.</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
-                  <div class="hs-b"><span>Organis.</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
-                  <div class="hs-b"><span>Language</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
+                  <div class="hs-b"><span data-t="b_content">Content</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
+                  <div class="hs-b"><span data-t="b_ca_short">Comm. Ach.</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
+                  <div class="hs-b"><span data-t="b_org_short">Organis.</span><b>4/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:4"></i></span></div>
+                  <div class="hs-b"><span data-t="b_lang">Language</span><b>3/5</b><span class="hs-mini-bar" aria-hidden="true"><i style="--v:3"></i></span></div>
                 </div>
               </div>
 
               <div class="hs-row">
                 <div class="hs-head">
-                  <span class="hs-label">02 · Gemini Live Voice Examiner</span>
-                  <span class="hs-meta">Part 3 · 04:00</span>
+                  <span class="hs-label" data-t="hp_r2_lbl">02 · AI Speaking examiner</span>
+                  <span class="hs-meta" data-t="hp_r2_meta">Parts 1–4 · 14:00</span>
                 </div>
                 <div class="hs-head">
-                  <p class="hs-line"><b>Examiner + Partner voice:</b> live timed turns, full transcript &amp; banded report.</p>
+                  <p class="hs-line" data-t-html="hp_r2_line"><b>Examiner + partner:</b> timed turns, custom tasks, and a banded report.</p>
                   <span class="hs-wave" aria-hidden="true">
                     <i style="height:6px"></i><i style="height:14px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:8px"></i>
                   </span>
@@ -759,40 +635,45 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
 
               <div class="hs-row">
                 <div class="hs-head">
-                  <span class="hs-label">03 · Adaptive Session</span>
-                  <span class="hs-meta">From 12-item diagnostic</span>
+                  <span class="hs-label" data-t="hp_r3_lbl">03 · Adaptive daily plan</span>
+                  <span class="hs-meta" data-t="hp_r3_meta">157 exercises · no repeats</span>
                 </div>
-                <p class="hs-line"><b>Today:</b> Use of English Part 4 (10 min) — selected automatically as your lowest-scoring part.</p>
+                <p class="hs-line" data-t-html="hp_r3_line"><b>Today:</b> Use of English Part 4 (10 min) — selected from your diagnostic and log.</p>
               </div>
             </div>
           </div>
-          <figcaption class="hero-cap">Illustrative example of the three core loops inside the app.</figcaption>
+          <figcaption class="hero-cap" data-t="hp_cap">Illustrative example of the study loop inside the app.</figcaption>
         </figure>
       </div>
     </div>
   </section>
 
-  <!-- ============ PROOF STRIP ============ -->
-  <section class="proof" aria-label="Product specifications">
+  <!-- ============ HOW IT WORKS (#how) ============ -->
+  <section class="section alt" id="how" aria-labelledby="how-title">
     <div class="wrap">
-      <div class="proof-grid">
-        <div class="proof-item">
-          <div class="proof-val">4 bands · 0–5</div>
-          <p class="proof-lbl">Published Cambridge Writing &amp; Speaking scales</p>
-        </div>
-        <div class="proof-item">
-          <div class="proof-val">2 / 4 / 4 / 4 min</div>
-          <p class="proof-lbl">4 Speaking parts with real 14-minute timings</p>
-        </div>
-        <div class="proof-item">
-          <div class="proof-val">12-item check</div>
-          <p class="proof-lbl">Diagnostic maps weak parts in 10 minutes</p>
-        </div>
-        <div class="proof-item">
-          <div class="proof-val">17 exam parts</div>
-          <p class="proof-lbl">All four B2 First papers tracked in one log</p>
-        </div>
+      <div class="sec-head">
+        <p class="eyebrow" data-t="how_eyebrow">How it works</p>
+        <h2 id="how-title" data-t="how_title">Three steps from diagnostic to exam day</h2>
+        <p class="sec-lede" data-t="how_sub">No guesswork before you open a book, and no generic scores after you finish.</p>
       </div>
+
+      <ol class="steps-grid">
+        <li class="step-card">
+          <span class="step-num">01</span>
+          <h3 data-t="step1_h">It plans today's session from your diagnostic and your log.</h3>
+          <p data-t="step1_p">Take the 12-question baseline or start logging directly. The scheduler puts your weakest parts first and keeps all four papers rotating.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-num">02</span>
+          <h3 data-t="step2_h">You write or speak; the AI marks it against the Cambridge bands and quotes your own sentences.</h3>
+          <p data-t="step2_p">Submit a 140–190 word draft or sit a timed Speaking session to get 0–5 band scores, concrete weaknesses, and targeted rewrites.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-num">03</span>
+          <h3 data-t="step3_h">The plan adjusts tomorrow from what you actually did.</h3>
+          <p data-t="step3_p">Every logged session updates your progress by part, your error patterns, and the next unit in your queue automatically.</p>
+        </li>
+      </ol>
     </div>
   </section>
 
@@ -800,310 +681,106 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
   <section class="section" id="ai" aria-labelledby="ai-title">
     <div class="wrap">
       <div class="sec-head">
-        <p class="eyebrow">Core AI &amp; Adaptive Engine</p>
-        <h2 id="ai-title">Three parts of the exam you cannot grade with an answer key</h2>
-        <p class="sec-lede">Multiple-choice sheets tell you right from wrong. B2 First Tracker focuses AI strictly where self-study breaks down: Writing rubrics, real-time Speaking turns, and deciding what to study next.</p>
+        <p class="eyebrow" data-t="ai_eyebrow">AI features</p>
+        <h2 id="ai-title" data-t="ai_title">Focused where answer keys stop working</h2>
+        <p class="sec-lede" data-t="ai_sub">Four integrated tools for Writing, Speaking, fluency tracking, and non-repeating daily practice.</p>
       </div>
 
-      <!-- 1. WRITING RUBRIC CORRECTOR -->
-      <article class="pillar" id="writing" aria-labelledby="writing-title">
-        <div class="grid pillar-grid">
-          <div class="pillar-copy">
-            <span class="pillar-tag">01 / WRITING RUBRIC CORRECTOR</span>
-            <h3 id="writing-title">Scored on the four Cambridge bands, with evidence from your draft</h3>
-            <p>Submit essays, articles, reports, reviews, or emails within the 140–190 word B2 First target. Paste the exam prompt so Content is checked against every point the question requires.</p>
-            <p>Instead of vague praise, the corrector scores each 0–5 band, quotes the lines that earned or cost marks, names two concrete weak spots, and provides three rewritten sentences you can study.</p>
-            <ul class="check-list">
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>4 named bands:</b> Content, Communicative Achievement, Organisation, and Language</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Quoted evidence:</b> every score ties back to exact phrases from your text</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Actionable output:</b> 2 weak spots and 3 targeted sentence rewrites per draft</span></li>
-            </ul>
+      <div class="feat-grid">
+        <article class="feat-card">
+          <span class="feat-tag" data-t="f1_tag">01 / Writing corrector</span>
+          <h3 data-t="f1_h">Four Cambridge bands, quoted from your own text</h3>
+          <p data-t="f1_p">Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on Content, Communicative Achievement, Organisation, and Language — with quoted sentences, concrete weaknesses, and three rewrites.</p>
+        </article>
+
+        <article class="feat-card">
+          <span class="feat-tag" data-t="f2_tag">02 / AI Speaking examiner</span>
+          <h3 data-t="f2_h">All 4 parts, a listening partner, and your own tasks</h3>
+          <p data-t="f2_p">Run one part or the full 14-minute test (2 / 4 / 4 / 4 min) with a partner role from Part 2 onward that reacts to what you say. Paste your own prompts anytime with Use my own task.</p>
+          <p class="honesty-note" data-t-html="f2_note"><b>Practice, not a certificate:</b> band estimates help you spot what to fix next; official B2 First grades come only from Cambridge examiners.</p>
+        </article>
+
+        <article class="feat-card">
+          <span class="feat-tag" data-t="f3_tag">03 / Live Studio · Local VAD</span>
+          <h3 data-t="f3_h">Silences and speaking time, measured locally</h3>
+          <p data-t="f3_p">Speak freely and see your speech ratio, pause count, and longest silence in real time using a local browser AudioWorklet (VAD). Nothing is recorded, and audio never leaves the tab.</p>
+        </article>
+
+        <article class="feat-card">
+          <span class="feat-tag" data-t="f4_tag">04 / Adaptive plan &amp; variety engine</span>
+          <h3 data-t="f4_h">157 real exercises, no repeats</h3>
+          <p data-t="f4_p">A deterministic weekly rotation paired with a shared pool of 157 real exercises (131 local materials + 26 official online sources) and 5-pick no-repeat memory across Today and Exam.</p>
+        </article>
+      </div>
+
+      <!-- Illustrative marking sample -->
+      <figure class="rubric-wrap" id="marking-sample">
+        <div class="panel">
+          <div class="panel-bar">
+            <span class="panel-title" data-t="rub_title">How it marks · Essay (168 words)</span>
+            <span class="chip" data-t="illus">Illustrative example</span>
           </div>
-
-          <figure class="pillar-mock">
-            <div class="panel">
-              <div class="panel-bar">
-                <span class="panel-title">Writing Report · Essay (168 words)</span>
-                <span class="chip">Illustrative example</span>
-              </div>
-              <div class="mock-body">
-                <div class="draft-quote">
-                  <span class="draft-quote-lbl">Quoted draft excerpt</span>
-                  "In my opinion, smartphones help families stay in touch across long distances. However, <span class="draft-hl">a lot of teenagers check messages</span> during dinner instead of talking."
-                </div>
-
-                <ul class="bands-list" aria-label="Illustrative Cambridge writing bands">
-                  <li class="band-row">
-                    <span class="band-name">Content</span>
-                    <span class="band-score num">4 <small>/ 5</small></span>
-                    <span class="band-ev">Covers both prompt points and adds a clear third idea on family habits.</span>
-                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-                  </li>
-                  <li class="band-row">
-                    <span class="band-name">Communicative Achievement</span>
-                    <span class="band-score num">3 <small>/ 5</small></span>
-                    <span class="band-ev">Mostly neutral essay tone; informal phrasing ("a lot of") slips in paragraph two.</span>
-                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
-                  </li>
-                  <li class="band-row">
-                    <span class="band-name">Organisation</span>
-                    <span class="band-score num">4 <small>/ 5</small></span>
-                    <span class="band-ev">Clear paragraphing and contrast linkers ("However", "As a result").</span>
-                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-                  </li>
-                  <li class="band-row">
-                    <span class="band-name">Language</span>
-                    <span class="band-score num">3 <small>/ 5</small></span>
-                    <span class="band-ev">Accurate simple clauses; needs wider complex structures for Band 4–5.</span>
-                    <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
-                  </li>
-                </ul>
-
-                <div class="writing-subgrid">
-                  <div class="subbox">
-                    <span class="subbox-h">2 Weak spots</span>
-                    <ul class="weak-list">
-                      <li>Informal quantifier "a lot of" lowers essay register.</li>
-                      <li>Repeated subject-verb openings across consecutive sentences.</li>
-                    </ul>
-                  </div>
-                  <div class="subbox">
-                    <span class="subbox-h">3 Rewrites</span>
-                    <ul class="rw-list">
-                      <li class="rw-item">
-                        <span class="rw-old">"a lot of teenagers check messages"</span>
-                        <span class="rw-new">"many teenagers are drawn to notifications"</span>
-                      </li>
-                      <li class="rw-item">
-                        <span class="rw-old">"In my opinion, smartphones help..."</span>
-                        <span class="rw-new">"Undoubtedly, smartphones allow families..."</span>
-                      </li>
-                      <li class="rw-item">
-                        <span class="rw-old">"instead of talking."</span>
-                        <span class="rw-new">"rather than engaging in conversation."</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <figcaption class="mock-foot">Illustrative example with fictional candidate text. Actual bands depend on your draft and prompt.</figcaption>
+          <div class="mock-body">
+            <div class="draft-quote">
+              <span class="draft-quote-lbl" data-t="rub_quote_lbl">Quoted from your draft</span>
+              <span data-t-html="rub_quote">"In my opinion, smartphones help families stay in touch across long distances. However, <span class="draft-hl">a lot of teenagers check messages</span> during dinner instead of talking."</span>
             </div>
-          </figure>
-        </div>
-      </article>
 
-      <!-- 2. VOICE EXAMINER (GEMINI LIVE) -->
-      <article class="pillar pillar-flip" id="speaking" aria-labelledby="speaking-title">
-        <div class="grid pillar-grid">
-          <div class="pillar-copy">
-            <span class="pillar-tag">02 / VOICE EXAMINER · GEMINI LIVE</span>
-            <h3 id="speaking-title">Four-part Speaking exam with real-time examiner and partner voices</h3>
-            <p>Run a single part or the complete 14-minute B2 First Speaking sequence directly in your browser. Gemini Live drives natural voice turns with official exam clocks: 2 minutes for Part 1, then 4 minutes each for Parts 2, 3, and 4.</p>
-            <p>In Part 3, a partner voice collaborates with you on the task card and asks follow-up questions so you practise real turn-taking. When the clock ends, you receive a full transcript and a banded report.</p>
-            <ul class="check-list">
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Exact exam timings:</b> Part 1 (2m), Part 2 (4m), Part 3 (4m), Part 4 (4m)</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Partner voice in Part 3:</b> interactive collaborative discussion and decision</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Transcript &amp; banded report:</b> scored across Cambridge Speaking criteria</span></li>
-            </ul>
-            <p class="honesty-note"><b>Practice, not a certificate:</b> this voice examiner prepares you for timing and interaction under pressure. Official B2 First Speaking grades are always awarded by human Cambridge examiners.</p>
+            <div class="bands-grid" aria-label="Illustrative Cambridge writing bands">
+              <div class="band-card">
+                <span class="band-name" data-t="b_content">Content</span>
+                <span class="band-score num">4 <small>/ 5</small></span>
+                <span class="band-ev" data-t="b_content_ev">Covers both prompt points and adds a clear third idea on family habits.</span>
+                <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+              </div>
+              <div class="band-card">
+                <span class="band-name" data-t="b_ca">Communicative Achievement</span>
+                <span class="band-score num">3 <small>/ 5</small></span>
+                <span class="band-ev" data-t="b_ca_ev">Mostly neutral essay tone; informal phrasing ("a lot of") slips in paragraph two.</span>
+                <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+              </div>
+              <div class="band-card">
+                <span class="band-name" data-t="b_org">Organisation</span>
+                <span class="band-score num">4 <small>/ 5</small></span>
+                <span class="band-ev" data-t="b_org_ev">Clear paragraphing and contrast linkers ("However", "As a result").</span>
+                <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+              </div>
+              <div class="band-card">
+                <span class="band-name" data-t="b_lang">Language</span>
+                <span class="band-score num">3 <small>/ 5</small></span>
+                <span class="band-ev" data-t="b_lang_ev">Accurate simple clauses; needs wider complex structures for Band 4–5.</span>
+                <span class="band-segs" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+              </div>
+            </div>
           </div>
-
-          <figure class="pillar-mock">
-            <div class="panel">
-              <div class="panel-bar">
-                <span class="panel-title">Speaking Studio · Gemini Live</span>
-                <span class="chip">Illustrative example</span>
-              </div>
-              <div class="mock-body">
-                <ol class="parts-bar" aria-label="Speaking exam parts">
-                  <li class="p-seg"><b>Part 1</b><span>2 min · Interview</span></li>
-                  <li class="p-seg"><b>Part 2</b><span>4 min · Photos</span></li>
-                  <li class="p-seg is-on"><b>Part 3</b><span>4 min · Partner</span></li>
-                  <li class="p-seg"><b>Part 4</b><span>4 min · Discuss</span></li>
-                </ol>
-
-                <div class="transcript" aria-label="Illustrative speaking transcript">
-                  <div class="turn">
-                    <div class="turn-meta">
-                      <span class="turn-role">EXAMINER · GEMINI LIVE</span>
-                      <span class="turn-time">02:10</span>
-                    </div>
-                    <p>"Talk together about how useful these ways of attracting visitors to a small town might be."</p>
-                  </div>
-                  <div class="turn">
-                    <div class="turn-meta">
-                      <span class="turn-role">PARTNER VOICE · PART 3</span>
-                      <span class="turn-time">02:34</span>
-                    </div>
-                    <p>"A food festival brings people in quickly, though it only lasts one weekend. What do you think about restoring historic buildings instead?"</p>
-                  </div>
-                  <div class="turn">
-                    <div class="turn-meta">
-                      <span class="turn-role is-user">CANDIDATE · TRANSCRIPT</span>
-                      <span class="turn-time">02:51</span>
-                    </div>
-                    <p>"I agree with your point about timing. Historic sites keep visitors coming all year round, provided there is good transport from the city."</p>
-                  </div>
-                </div>
-
-                <div class="spk-scores" aria-label="Illustrative speaking band report">
-                  <div class="spk-cell"><span>Grammar &amp; Vocabulary</span><b>4 / 5</b></div>
-                  <div class="spk-cell"><span>Discourse Management</span><b>4 / 5</b></div>
-                  <div class="spk-cell"><span>Interactive Comm.</span><b>4 / 5</b></div>
-                  <div class="spk-cell"><span>Pronunciation</span><span class="not-meas">not measured*</span></div>
-                </div>
-              </div>
-              <figcaption class="mock-foot">Illustrative example. *When server speech assessment is unconfigured, Pronunciation explicitly shows "not measured" instead of inventing a score.</figcaption>
-            </div>
-          </figure>
+          <figcaption class="mock-foot" data-t="rub_foot">Illustrative example with fictional candidate text. Pronunciation in Speaking reports "not measured" unless server speech assessment is configured.</figcaption>
         </div>
-      </article>
-
-      <!-- 3. ADAPTIVE PLAN -->
-      <article class="pillar" id="adaptive" aria-labelledby="adaptive-title">
-        <div class="grid pillar-grid">
-          <div class="pillar-copy">
-            <span class="pillar-tag">03 / ADAPTIVE PLAN</span>
-            <h3 id="adaptive-title">A 12-item diagnostic turns weak parts into today's session</h3>
-            <p>Start with a ten-minute baseline across Reading and Use of English parts 1 to 7. The tracker ranks your lowest-scoring parts and immediately places the weakest one at the front of your queue.</p>
-            <p>Every study day opens with a single prioritized task, its unit timer, and the exact reason it was selected. Behind it sits a weekly rotation that balances all four papers without letting you skip weak skills.</p>
-            <ul class="check-list">
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Weakest part first:</b> diagnostic scores directly order your initial queue</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>One clear task per day:</b> removes ten minutes of deciding what to open</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg><span><b>Two rotation modes:</b> by-part skill pairs or timed full-paper sittings</span></li>
-            </ul>
-          </div>
-
-          <figure class="pillar-mock">
-            <div class="panel">
-              <div class="panel-bar">
-                <span class="panel-title">Diagnostic → Today's Session → Weekly Rotation</span>
-                <span class="chip">Illustrative example</span>
-              </div>
-              <div class="mock-body">
-                <div class="diag-bars" aria-label="Illustrative diagnostic accuracy by part">
-                  <div class="diag-row" style="--pct:80%">
-                    <span class="diag-lbl">Part 1 · Cloze</span>
-                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
-                    <span class="diag-pct">80%</span>
-                  </div>
-                  <div class="diag-row" style="--pct:65%">
-                    <span class="diag-lbl">Part 2 · Open cloze</span>
-                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
-                    <span class="diag-pct">65%</span>
-                  </div>
-                  <div class="diag-row is-weak" style="--pct:40%">
-                    <span class="diag-lbl">Part 4 · Key word</span>
-                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
-                    <span class="diag-pct">40%</span>
-                  </div>
-                  <div class="diag-row" style="--pct:75%">
-                    <span class="diag-lbl">Part 5 · Reading</span>
-                    <span class="diag-track" aria-hidden="true"><span class="diag-fill"></span></span>
-                    <span class="diag-pct">75%</span>
-                  </div>
-                </div>
-
-                <div class="today-box">
-                  <div class="today-top">
-                    <span class="chip">Today's session · Priority #1</span>
-                    <span class="mono num">10:00 timer</span>
-                  </div>
-                  <span class="today-title">Reading &amp; Use of English · Part 4</span>
-                  <p class="today-why">Chosen because Part 4 scored lowest in your 12-item diagnostic (40%) and leads your current Reading &amp; Use of English cycle.</p>
-                </div>
-
-                <div class="rot-grid" aria-label="Illustrative weekly rotation">
-                  <div class="rot-day is-today">
-                    <span>Mon · Active</span>
-                    <b>R&amp;UE Part 4 + Listening P1</b>
-                  </div>
-                  <div class="rot-day">
-                    <span>Wed · Next</span>
-                    <b>Writing Essay + Speaking P1</b>
-                  </div>
-                  <div class="rot-day">
-                    <span>Fri · Queued</span>
-                    <b>R&amp;UE Part 2 + Listening P2</b>
-                  </div>
-                </div>
-              </div>
-              <figcaption class="mock-foot">Illustrative example. Queue position is computed deterministically from your logged sessions.</figcaption>
-            </div>
-          </figure>
-        </div>
-      </article>
+      </figure>
     </div>
   </section>
 
-  <!-- ============ UNDER THE HOOD (#how) ============ -->
-  <section class="section alt" id="how" aria-labelledby="how-title">
+  <!-- ============ MATERIALS (#materials) ============ -->
+  <section class="section alt" id="materials" aria-labelledby="materials-title">
     <div class="wrap">
       <div class="sec-head">
-        <p class="eyebrow">Under the hood</p>
-        <h2 id="how-title">Engineered for judges to inspect, not trust blindly</h2>
-        <p class="sec-lede">Every security boundary, AI call, and scheduling rule is explicit in the repository. No hidden keys, no audio storage, and no hallucinated scores.</p>
+        <p class="eyebrow" data-t="mat_eyebrow">Materials</p>
+        <h2 id="materials-title" data-t="mat_title">Sample papers, keys, and official online sources — all one tap away</h2>
+        <p class="sec-lede" data-t="mat_sub">Every practice resource is organised by paper and sits right inside the session you are about to start.</p>
       </div>
 
-      <div class="arch-flow" aria-label="Gemini Live ephemeral token flow">
-        <div class="arch-node">
-          <span class="arch-node-k">01 · Browser</span>
-          <b>Requests live session</b>
-          <p>Never holds provider API keys; captures mic only inside /app.</p>
-        </div>
-        <div class="arch-arrow" aria-hidden="true">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
-        </div>
-        <div class="arch-node">
-          <span class="arch-node-k">02 · App Server</span>
-          <b>Mints ephemeral token</b>
-          <p>Issues a short-lived single-use Gemini Live token; audio never touches disk.</p>
-        </div>
-        <div class="arch-arrow" aria-hidden="true">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12M11 5l5 5-5 5"/></svg>
-        </div>
-        <div class="arch-node">
-          <span class="arch-node-k">03 · Gemini Live</span>
-          <b>Direct voice stream</b>
-          <p>Streams examiner &amp; partner turns directly; transcript feeds the banded report.</p>
-        </div>
-      </div>
-
-      <div class="spec-grid">
-        <div class="spec-cell">
-          <span class="spec-code">AUTH / EPHEMERAL</span>
-          <h3>Server-minted Gemini Live tokens</h3>
-          <p>The server mints short-lived ephemeral tokens for live voice sessions. Provider API keys stay strictly on the server and never reach the browser.</p>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-code">AUDIO / ZERO DISK</span>
-          <h3>Audio is never written to disk</h3>
-          <p>Speaking audio is streamed directly or dropped immediately after forwarding. It is never stored on disk, archived, or logged.</p>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-code">HONESTY / RUBRIC</span>
-          <h3>Pronunciation: not measured</h3>
-          <p>If speech pronunciation assessment is not configured on the server, the report explicitly shows <b>not measured</b> instead of guessing a band from text.</p>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-code">PLANNER / DETERMINISTIC</span>
-          <h3>Deterministic weekly scheduler</h3>
-          <p>Today's session and queue order are derived deterministically from your diagnostic and logged history—not regenerated by an LLM on refresh.</p>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-code">ANALYTICS / NO ADS</span>
-          <h3>No ad trackers, no CDNs</h3>
-          <p>Only cookie-free aggregate Cloudflare Web Analytics (page views, country, and referrer) with no user profiling. No ad networks, tracking pixels, or external font CDNs.</p>
-        </div>
-        <div class="spec-cell">
-          <span class="spec-code">PORTABILITY</span>
-          <h3>JSON export &amp; full deletion</h3>
-          <p>Download your complete practice log and error history as JSON at any time, or permanently delete your account and server records in one action.</p>
-        </div>
-      </div>
-
-      <div class="hood-actions">
-        <a class="btn btn-secondary" href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Inspect source on GitHub<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11l6-6M6 5h5v5"/></svg></a>
+      <div class="mat-grid">
+        <article class="mat-card">
+          <h3 data-t="mat1_h">Sample papers with keys</h3>
+          <p data-t="mat1_p">Downloadable PDFs and audio tracks paired side-by-side with answer keys, tapescripts, and examiner comments.</p>
+        </article>
+        <article class="mat-card">
+          <h3 data-t="mat2_h">Full papers &amp; own Listening audio</h3>
+          <p data-t="mat2_p">Complete timed papers across all four skills, plus private uploads for your own Listening audio, tasks, and answer keys.</p>
+        </article>
+        <article class="mat-card">
+          <h3 data-t="mat3_h">Official online sources</h3>
+          <p data-t="mat3_p">26 hand-checked Cambridge and free practice platforms grouped by paper, with live search and skill filters.</p>
+        </article>
       </div>
     </div>
   </section>
@@ -1112,71 +789,89 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
   <section class="section" id="privacy" aria-labelledby="privacy-title">
     <div class="wrap">
       <div class="sec-head">
-        <p class="eyebrow">Privacy</p>
-        <h2 id="privacy-title">Minimal data, reversible by design</h2>
-        <p class="sec-lede">Your study log syncs across devices while keeping account requirements minimal and fully under your control.</p>
+        <p class="eyebrow" data-t="priv_eyebrow">Privacy</p>
+        <h2 id="privacy-title" data-t="priv_title">Minimal data, transparent by design</h2>
+        <p class="sec-lede" data-t="priv_sub">Every boundary matches our public privacy policy — no hidden audio storage, no ad trackers, and full self-service control.</p>
       </div>
 
       <div class="grid priv-grid">
         <article class="priv-card">
-          <h3>Sign in without an email</h3>
-          <p>Create an account with a username and 12-character password, or use Google sign-in or a passkey. Your plan and error log stay synced across devices.</p>
+          <h3 data-t="p1_h">Audio never leaves the tab for Live Studio</h3>
+          <p data-t="p1_p">Live Studio runs voice activity detection locally in your browser. In the live examiner, audio streams directly to Google via short-lived tokens and speaking audio is never written to disk.</p>
         </article>
         <article class="priv-card">
-          <h3>Per-request AI evaluation</h3>
-          <p>Only the writing draft or speaking transcript you explicitly choose to evaluate is sent to the AI provider. Speaking audio is never saved on our server.</p>
+          <h3 data-t="p2_h">API keys stay server-side</h3>
+          <p data-t="p2_p">Shared provider keys never reach the browser. If you add your own provider key in Settings, it stays in your browser and is never saved on the server.</p>
+        </article>
+        <article class="priv-card">
+          <h3 data-t="p3_h">No ad trackers or profiling</h3>
+          <p data-t="p3_p">No advertising networks, no tracking pixels, and no external font CDNs. The only web analytics is cookie-free aggregate Cloudflare Web Analytics (page views, country, and referrer).</p>
+        </article>
+        <article class="priv-card">
+          <h3 data-t="p4_h">No email required, full export &amp; delete</h3>
+          <p data-t="p4_p">Create an account with a username and 12-character password, Google sign-in, or a passkey. Export your full JSON history or permanently delete your account anytime.</p>
         </article>
       </div>
 
       <div class="legal-links">
-        <a href="/privacy">Privacy policy</a>
-        <a href="/terms">Terms of use</a>
-        <a href="/security">Security policy</a>
+        <a href="/privacy" data-t="leg_privacy">Privacy policy</a>
+        <a href="/terms" data-t="leg_terms">Terms of use</a>
+        <a href="/security" data-t="leg_security">Security policy</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BETA ACCESS (#access) ============ -->
+  <section class="section alt" id="access" aria-labelledby="access-title">
+    <div class="wrap">
+      <div class="beta-band">
+        <div class="beta-main">
+          <span class="chip" data-t="beta_chip">Free while in beta</span>
+          <h2 class="beta-h" id="access-title" data-t="beta_title">One account. Free in beta. No card.</h2>
+          <p class="beta-sub" data-t="beta_sub">Every account includes the Writing corrector, the 4-part AI Speaking examiner, Live Studio, Materials, and the adaptive plan.</p>
+          <p class="beta-meta" data-t="beta_meta">Daily fair-use limits (5 Writing evaluations and 1 Speaking mock / 15 min per UTC day) keep shared AI costs sustainable. You can also connect your own provider key in Settings.</p>
+        </div>
+        <div class="cta-btns">
+          <a class="btn" href="/app"><span data-t="create">Create an account</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
+          <a class="btn btn-secondary" href="/app" data-t="signin">Sign in</a>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ============ FAQ (#faq) ============ -->
-  <section class="section alt" id="faq" aria-labelledby="faq-title">
+  <section class="section" id="faq" aria-labelledby="faq-title">
     <div class="wrap grid faq-grid">
       <div class="faq-head sec-head">
-        <p class="eyebrow">FAQ</p>
-        <h2 id="faq-title">Direct answers</h2>
-        <p class="sec-lede">What the AI scores mean, how accounts work, and how your data is handled.</p>
+        <p class="eyebrow" data-t="faq_eyebrow">FAQ</p>
+        <h2 id="faq-title" data-t="faq_title">Direct answers</h2>
+        <p class="sec-lede" data-t="faq_sub">Exam format, AI limits, audio handling, custom tasks, and device support.</p>
       </div>
       <div class="faq">
         <details open>
-          <summary>Are Writing and Speaking bands official Cambridge scores?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. They are practice estimates calibrated against the four published Cambridge B2 First assessment scales. Only Cambridge University Press &amp; Assessment issues official exam certificates and grades.</p>
+          <summary><span data-t="q1">Is it really Cambridge format?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a1">Yes. Writing uses the four published Cambridge B2 First assessment criteria (Content, Communicative Achievement, Organisation, and Language, 0–5 each) and the 140–190 word target. Speaking follows Parts 1–4 with official 2 / 4 / 4 / 4-minute timings, and all 17 exam parts are tracked in one log.</p>
         </details>
         <details>
-          <summary>Do I need an email address to create an account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>No. You can register with just a username and a password of at least 12 characters, or sign in with Google or a passkey.</p>
+          <summary><span data-t="q2">Does the AI replace a teacher?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a2">No. The AI gives fast, structured practice feedback between lessons so you can fix recurring mistakes before exam day. Band estimates are not official Cambridge grades and do not replace a human teacher or examiner.</p>
         </details>
         <details>
-          <summary>What happens when I delete my account?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>Deleting your account from the Account panel permanently removes your user record, sessions, progress history, and error log from the server. Export a JSON copy first if you want to keep your history.</p>
+          <summary><span data-t="q3">Do you store my audio?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a3">No. Speaking audio is never written to disk. Live Studio runs voice activity detection locally in your browser so audio never leaves the tab; live voice streams directly via a short-lived token, and turn-based clips are dropped right after the request. Only audio files you explicitly upload under Listening → My own material are stored privately in your account.</p>
         </details>
         <details>
-          <summary>How is AI used across the platform?<span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
-          <p>AI powers two practice loops: marking Writing drafts on the four Cambridge bands (with quoted evidence, two weak spots, and three rewrites) and running the 4-part Speaking voice examiner via Gemini Live ephemeral tokens. Your study plan, queue rotation, and stage gates are deterministic.</p>
+          <summary><span data-t="q4">Can I use my own tasks?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a4">Yes. In Writing you can paste any exam prompt so Content is checked against every required point. In the Speaking exam you can paste your own prompts for any part with Use my own task, and in Listening you can upload your own audio, written questions, keys, and transcripts.</p>
         </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ FINAL CTA (#start) ============ -->
-  <section class="cta-section" id="start" aria-labelledby="cta-title">
-    <div class="wrap">
-      <div class="cta-band">
-        <div>
-          <h2 class="cta-h" id="cta-title">Take the 12&#8209;item diagnostic.</h2>
-          <p class="cta-sub">Create your account, map your weakest B2 First parts in 10 minutes, and start practising with Cambridge-band AI feedback.</p>
-        </div>
-        <div class="cta-btns">
-          <a class="btn" href="/app">Create an account<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
-          <a class="btn btn-secondary" href="/app">Sign in</a>
-        </div>
+        <details>
+          <summary><span data-t="q5">What does it cost?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a5">It is free while in beta — one account, no card, and no email required. Shared AI features apply daily fair-use limits (5 Writing evaluations and 1 Speaking mock per UTC day), or you can use your own provider key in Settings.</p>
+        </details>
+        <details>
+          <summary><span data-t="q6">Does it work on a phone?</span><span class="chev" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></span></summary>
+          <p data-t="a6">Yes. Every view adapts to mobile screens, syncs your progress between phone and computer, and can be installed to your home screen. Microphone and speech recognition features depend on your mobile browser's Web Audio and speech support.</p>
+        </details>
       </div>
     </div>
   </section>
@@ -1190,45 +885,331 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
           <img src="/assets/logo-512.png" alt="" width="28" height="28">
           <span>B2 First Tracker</span>
         </div>
-        <p>AI rubric feedback, live voice practice, and adaptive scheduling for the Cambridge B2 First (FCE) exam.</p>
+        <p data-t="foot_desc">Cambridge B2 First study platform with 4-band AI writing feedback, a 4-part speaking examiner, local Live Studio, and an adaptive daily plan.</p>
       </div>
       <nav class="foot-col" aria-labelledby="foot-sections">
-        <p class="foot-h" id="foot-sections">Sections</p>
-        <a href="#ai">AI features</a>
-        <a href="#writing">Writing rubric</a>
-        <a href="#speaking">Voice examiner</a>
-        <a href="#how">Under the hood</a>
-        <a href="#faq">FAQ</a>
+        <p class="foot-h" id="foot-sections" data-t="foot_sec">Sections</p>
+        <a href="#how" data-t="nav_how">How it works</a>
+        <a href="#ai" data-t="nav_ai">AI features</a>
+        <a href="#materials" data-t="nav_materials">Materials</a>
+        <a href="#privacy" data-t="nav_privacy">Privacy</a>
+        <a href="#faq" data-t="nav_faq">FAQ</a>
       </nav>
       <nav class="foot-col" aria-labelledby="foot-legal">
-        <p class="foot-h" id="foot-legal">Legal</p>
-        <a href="/privacy">Privacy policy</a>
-        <a href="/terms">Terms of use</a>
-        <a href="/security">Security policy</a>
+        <p class="foot-h" id="foot-legal" data-t="foot_legal">Legal</p>
+        <a href="/privacy" data-t="leg_privacy">Privacy policy</a>
+        <a href="/terms" data-t="leg_terms">Terms of use</a>
+        <a href="/security" data-t="leg_security">Security policy</a>
       </nav>
       <nav class="foot-col" aria-labelledby="foot-account">
-        <p class="foot-h" id="foot-account">Account &amp; Code</p>
-        <a href="/app">Sign in</a>
-        <a href="/app">Create an account</a>
-        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener">Source on GitHub</a>
+        <p class="foot-h" id="foot-account" data-t="foot_acct">Account &amp; Code</p>
+        <a href="/app" data-t="signin">Sign in</a>
+        <a href="/app" data-t="create">Create an account</a>
+        <a href="https://github.com/Juan-Martin-Cerezo/b2first-tracker" rel="noopener" data-t="foot_github">GitHub</a>
       </nav>
     </div>
     <div class="foot-base">
-      <p>© 2026 B2 First Tracker. Cambridge and B2 First are trademarks of Cambridge University Press &amp; Assessment. This project is an independent study tool and is not affiliated with or endorsed by Cambridge.</p>
-      <a class="foot-top" href="#main">Back to top<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4"/></svg></a>
+      <p data-t="foot_disc">© 2026 B2 First Tracker. Cambridge and B2 First are trademarks of Cambridge University Press &amp; Assessment. This project is an independent study tool and is not affiliated with or endorsed by Cambridge.</p>
+      <a class="foot-top" href="#main"><span data-t="foot_top">Back to top</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 13V3M4 7l4-4 4 4"/></svg></a>
     </div>
   </div>
 </footer>
 
 <script>
 (function(){
+  var T={
+    en:{
+      skip:'Skip to content',
+      nav_how:'How it works',
+      nav_ai:'AI features',
+      nav_materials:'Materials',
+      nav_privacy:'Privacy',
+      nav_faq:'FAQ',
+      signin:'Sign in',
+      create:'Create an account',
+      hero_badge:'Free while in beta',
+      hero_h1:'Prepare for the Cambridge B2 First with an AI examiner and a plan that <span class="h1-accent">adapts every day.</span>',
+      hero_sub:'Four-band Cambridge writing feedback, timed 4-part speaking practice, local silence tracking, and 157 real exercises in one place.',
+      hero_cta:'Start free',
+      hero_cta_return:'Continue studying',
+      hero_cta2:'See how it marks',
+      hero_note:'One account · No card · No email required',
+      hp_title:'Inside one study loop',
+      illus:'Illustrative example',
+      hp_r1_lbl:'01 · Writing corrector',
+      hp_r1_meta:'14 / 20 · Essay (168w)',
+      b_content:'Content',
+      b_ca:'Communicative Achievement',
+      b_ca_short:'Comm. Ach.',
+      b_org:'Organisation',
+      b_org_short:'Organis.',
+      b_lang:'Language',
+      hp_r2_lbl:'02 · AI Speaking examiner',
+      hp_r2_meta:'Parts 1–4 · 14:00',
+      hp_r2_line:'<b>Examiner + partner:</b> timed turns, custom tasks, and a banded report.',
+      hp_r3_lbl:'03 · Adaptive daily plan',
+      hp_r3_meta:'157 exercises · no repeats',
+      hp_r3_line:'<b>Today:</b> Use of English Part 4 (10 min) — selected from your diagnostic and log.',
+      hp_cap:'Illustrative example of the study loop inside the app.',
+      how_eyebrow:'How it works',
+      how_title:'Three steps from diagnostic to exam day',
+      how_sub:'No guesswork before you open a book, and no generic scores after you finish.',
+      step1_h:"It plans today's session from your diagnostic and your log.",
+      step1_p:'Take the 12-question baseline or start logging directly. The scheduler puts your weakest parts first and keeps all four papers rotating.',
+      step2_h:'You write or speak; the AI marks it against the Cambridge bands and quotes your own sentences.',
+      step2_p:'Submit a 140–190 word draft or sit a timed Speaking session to get 0–5 band scores, concrete weaknesses, and targeted rewrites.',
+      step3_h:'The plan adjusts tomorrow from what you actually did.',
+      step3_p:'Every logged session updates your progress by part, your error patterns, and the next unit in your queue automatically.',
+      ai_eyebrow:'AI features',
+      ai_title:'Focused where answer keys stop working',
+      ai_sub:'Four integrated tools for Writing, Speaking, fluency tracking, and non-repeating daily practice.',
+      f1_tag:'01 / Writing corrector',
+      f1_h:'Four Cambridge bands, quoted from your own text',
+      f1_p:'Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on Content, Communicative Achievement, Organisation, and Language — with quoted sentences, concrete weaknesses, and three rewrites.',
+      f2_tag:'02 / AI Speaking examiner',
+      f2_h:'All 4 parts, a listening partner, and your own tasks',
+      f2_p:'Run one part or the full 14-minute test (2 / 4 / 4 / 4 min) with a partner role from Part 2 onward that reacts to what you say. Paste your own prompts anytime with Use my own task.',
+      f2_note:'<b>Practice, not a certificate:</b> band estimates help you spot what to fix next; official B2 First grades come only from Cambridge examiners.',
+      f3_tag:'03 / Live Studio · Local VAD',
+      f3_h:'Silences and speaking time, measured locally',
+      f3_p:'Speak freely and see your speech ratio, pause count, and longest silence in real time using a local browser AudioWorklet (VAD). Nothing is recorded, and audio never leaves the tab.',
+      f4_tag:'04 / Adaptive plan & variety engine',
+      f4_h:'157 real exercises, no repeats',
+      f4_p:"A deterministic weekly rotation paired with a shared pool of 157 real exercises (131 local materials + 26 official online sources) and 5-pick no-repeat memory across Today and Exam.",
+      rub_title:'How it marks · Essay (168 words)',
+      rub_quote_lbl:'Quoted from your draft',
+      rub_quote:'"In my opinion, smartphones help families stay in touch across long distances. However, <span class="draft-hl">a lot of teenagers check messages</span> during dinner instead of talking."',
+      b_content_ev:'Covers both prompt points and adds a clear third idea on family habits.',
+      b_ca_ev:'Mostly neutral essay tone; informal phrasing ("a lot of") slips in paragraph two.',
+      b_org_ev:'Clear paragraphing and contrast linkers ("However", "As a result").',
+      b_lang_ev:'Accurate simple clauses; needs wider complex structures for Band 4–5.',
+      rub_foot:'Illustrative example with fictional candidate text. Pronunciation in Speaking reports "not measured" unless server speech assessment is configured.',
+      mat_eyebrow:'Materials',
+      mat_title:'Sample papers, keys, and official online sources — all one tap away',
+      mat_sub:'Every practice resource is organised by paper and sits right inside the session you are about to start.',
+      mat1_h:'Sample papers with keys',
+      mat1_p:'Downloadable PDFs and audio tracks paired side-by-side with answer keys, tapescripts, and examiner comments.',
+      mat2_h:'Full papers & own Listening audio',
+      mat2_p:'Complete timed papers across all four skills, plus private uploads for your own Listening audio, tasks, and answer keys.',
+      mat3_h:'Official online sources',
+      mat3_p:'26 hand-checked Cambridge and free practice platforms grouped by paper, with live search and skill filters.',
+      priv_eyebrow:'Privacy',
+      priv_title:'Minimal data, transparent by design',
+      priv_sub:'Every boundary matches our public privacy policy — no hidden audio storage, no ad trackers, and full self-service control.',
+      p1_h:'Audio never leaves the tab for Live Studio',
+      p1_p:'Live Studio runs voice activity detection locally in your browser. In the live examiner, audio streams directly to Google via short-lived tokens and speaking audio is never written to disk.',
+      p2_h:'API keys stay server-side',
+      p2_p:'Shared provider keys never reach the browser. If you add your own provider key in Settings, it stays in your browser and is never saved on the server.',
+      p3_h:'No ad trackers or profiling',
+      p3_p:'No advertising networks, no tracking pixels, and no external font CDNs. The only web analytics is cookie-free aggregate Cloudflare Web Analytics (page views, country, and referrer).',
+      p4_h:'No email required, full export & delete',
+      p4_p:'Create an account with a username and 12-character password, Google sign-in, or a passkey. Export your full JSON history or permanently delete your account anytime.',
+      leg_privacy:'Privacy policy',
+      leg_terms:'Terms of use',
+      leg_security:'Security policy',
+      beta_chip:'Free while in beta',
+      beta_title:'One account. Free in beta. No card.',
+      beta_sub:'Every account includes the Writing corrector, the 4-part AI Speaking examiner, Live Studio, Materials, and the adaptive plan.',
+      beta_meta:'Daily fair-use limits (5 Writing evaluations and 1 Speaking mock / 15 min per UTC day) keep shared AI costs sustainable. You can also connect your own provider key in Settings.',
+      faq_eyebrow:'FAQ',
+      faq_title:'Direct answers',
+      faq_sub:'Exam format, AI limits, audio handling, custom tasks, and device support.',
+      q1:'Is it really Cambridge format?',
+      a1:'Yes. Writing uses the four published Cambridge B2 First assessment criteria (Content, Communicative Achievement, Organisation, and Language, 0–5 each) and the 140–190 word target. Speaking follows Parts 1–4 with official 2 / 4 / 4 / 4-minute timings, and all 17 exam parts are tracked in one log.',
+      q2:'Does the AI replace a teacher?',
+      a2:'No. The AI gives fast, structured practice feedback between lessons so you can fix recurring mistakes before exam day. Band estimates are not official Cambridge grades and do not replace a human teacher or examiner.',
+      q3:'Do you store my audio?',
+      a3:'No. Speaking audio is never written to disk. Live Studio runs voice activity detection locally in your browser so audio never leaves the tab; live voice streams directly via a short-lived token, and turn-based clips are dropped right after the request. Only audio files you explicitly upload under Listening → My own material are stored privately in your account.',
+      q4:'Can I use my own tasks?',
+      a4:'Yes. In Writing you can paste any exam prompt so Content is checked against every required point. In the Speaking exam you can paste your own prompts for any part with Use my own task, and in Listening you can upload your own audio, written questions, keys, and transcripts.',
+      q5:'What does it cost?',
+      a5:'It is free while in beta — one account, no card, and no email required. Shared AI features apply daily fair-use limits (5 Writing evaluations and 1 Speaking mock per UTC day), or you can use your own provider key in Settings.',
+      q6:'Does it work on a phone?',
+      a6:"Yes. Every view adapts to mobile screens, syncs your progress between phone and computer, and can be installed to your home screen. Microphone and speech recognition features depend on your mobile browser's Web Audio and speech support.",
+      foot_desc:'Cambridge B2 First study platform with 4-band AI writing feedback, a 4-part speaking examiner, local Live Studio, and an adaptive daily plan.',
+      foot_sec:'Sections',
+      foot_legal:'Legal',
+      foot_acct:'Account & Code',
+      foot_github:'GitHub',
+      foot_disc:'© 2026 B2 First Tracker. Cambridge and B2 First are trademarks of Cambridge University Press & Assessment. This project is an independent study tool and is not affiliated with or endorsed by Cambridge.',
+      foot_top:'Back to top',
+      menu_open:'Open navigation menu',
+      menu_close:'Close navigation menu',
+      lang_btn:'ES',
+      lang_aria:'Cambiar a español'
+    },
+    es:{
+      skip:'Ir al contenido',
+      nav_how:'Cómo funciona',
+      nav_ai:'Funciones IA',
+      nav_materials:'Materiales',
+      nav_privacy:'Privacidad',
+      nav_faq:'Preguntas',
+      signin:'Iniciar sesión',
+      create:'Crear cuenta',
+      hero_badge:'Gratis en beta',
+      hero_h1:'Prepara el Cambridge B2 First con un examinador IA y un plan que <span class="h1-accent">se adapta cada día.</span>',
+      hero_sub:'Corrección de Writing en las cuatro bandas de Cambridge, Speaking cronometrado en 4 partes, estudio local de silencios y 157 ejercicios reales en un solo lugar.',
+      hero_cta:'Empezar gratis',
+      hero_cta_return:'Seguir estudiando',
+      hero_cta2:'Ver cómo corrige',
+      hero_note:'Una cuenta · Sin tarjeta · Sin correo obligatorio',
+      hp_title:'Así funciona cada sesión',
+      illus:'Ejemplo ilustrativo',
+      hp_r1_lbl:'01 · Corrector de Writing',
+      hp_r1_meta:'14 / 20 · Essay (168 pal.)',
+      b_content:'Content',
+      b_ca:'Communicative Achievement',
+      b_ca_short:'Comm. Ach.',
+      b_org:'Organisation',
+      b_org_short:'Organis.',
+      b_lang:'Language',
+      hp_r2_lbl:'02 · Examinador IA de Speaking',
+      hp_r2_meta:'Partes 1–4 · 14:00',
+      hp_r2_line:'<b>Examinador + compañero:</b> turnos cronometrados, tareas propias e informe por bandas.',
+      hp_r3_lbl:'03 · Plan diario adaptativo',
+      hp_r3_meta:'157 ejercicios · sin repetir',
+      hp_r3_line:'<b>Hoy:</b> Use of English Parte 4 (10 min) — elegido según tu diagnóstico y tu registro.',
+      hp_cap:'Ejemplo ilustrativo del ciclo de estudio dentro de la aplicación.',
+      how_eyebrow:'Cómo funciona',
+      how_title:'Tres pasos desde el diagnóstico hasta el examen',
+      how_sub:'Sin dudar qué practicar cada día y sin notas genéricas al terminar.',
+      step1_h:'Planifica tu sesión de hoy a partir de tu diagnóstico y tu registro.',
+      step1_p:'Haz el diagnóstico de 12 preguntas o empieza a registrar directamente. El plan prioriza tus partes más débiles y rota las cuatro pruebas.',
+      step2_h:'Escribes o hablas; la IA evalúa con las bandas de Cambridge y cita tus propias frases.',
+      step2_p:'Envía un texto de 140–190 palabras o haz una sesión cronometrada de Speaking para recibir notas de 0 a 5, puntos concretos a mejorar y reescrituras.',
+      step3_h:'El plan de mañana se ajusta según lo que hiciste realmente.',
+      step3_p:'Cada sesión registrada actualiza tu precisión por parte, tus patrones de error y el siguiente ejercicio de tu cola.',
+      ai_eyebrow:'Funciones IA',
+      ai_title:'Enfocado donde una hoja de respuestas no alcanza',
+      ai_sub:'Cuatro herramientas integradas para Writing, Speaking, control de fluidez y práctica diaria sin repeticiones.',
+      f1_tag:'01 / Corrector de Writing',
+      f1_h:'Cuatro bandas de Cambridge, con citas de tu texto',
+      f1_p:'Evalúa Essay, Article, Report, Review y Email de 0 a 5 en Content, Communicative Achievement, Organisation y Language, con frases citadas, dos fallos concretos y tres reescrituras.',
+      f2_tag:'02 / Examinador IA de Speaking',
+      f2_h:'Las 4 partes, un compañero que escucha y tus propias consignas',
+      f2_p:'Practica una parte suelta o el examen completo de 14 minutos (2 / 4 / 4 / 4 min) con un compañero desde la Parte 2 que responde a lo que dices. Pega tus propias preguntas cuando quieras.',
+      f2_note:'<b>Práctica, no certificado:</b> las bandas estimadas te muestran qué corregir; las calificaciones oficiales del B2 First solo las emite Cambridge.',
+      f3_tag:'03 / Live Studio · VAD local',
+      f3_h:'Silencios y tiempo de habla, medidos en tu navegador',
+      f3_p:'Habla con libertad y mira tu proporción de habla, cantidad de pausas y silencio más largo en tiempo real con un AudioWorklet local (VAD). No graba nada y el audio nunca sale de la pestaña.',
+      f4_tag:'04 / Plan adaptativo y motor de variedad',
+      f4_h:'157 ejercicios reales, sin repetir',
+      f4_p:'Una rotación semanal determinista conectada a un catálogo de 157 ejercicios reales (131 materiales locales + 26 fuentes oficiales en línea) con memoria de no repetición en Hoy y Examen.',
+      rub_title:'Cómo corrige · Essay (168 palabras)',
+      rub_quote_lbl:'Cita de tu borrador',
+      rub_quote:'"In my opinion, smartphones help families stay in touch across long distances. However, <span class="draft-hl">a lot of teenagers check messages</span> during dinner instead of talking."',
+      b_content_ev:'Cubre los dos puntos de la consigna y suma una tercera idea clara sobre hábitos familiares.',
+      b_ca_ev:'Tono mayormente neutro para essay; aparece una expresión informal ("a lot of") en el segundo párrafo.',
+      b_org_ev:'Párrafos bien estructurados y conectores de contraste ("However", "As a result").',
+      b_lang_ev:'Oraciones simples correctas; necesita estructuras más complejas para llegar a Banda 4–5.',
+      rub_foot:'Ejemplo ilustrativo con texto ficticio. En Speaking, Pronunciación muestra "no medida" si el servidor no tiene evaluación de voz configurada.',
+      mat_eyebrow:'Materiales',
+      mat_title:'Exámenes de muestra, claves y fuentes oficiales en línea, a un toque',
+      mat_sub:'Todo el material está ordenado por prueba y disponible dentro de la misma sesión que vas a empezar.',
+      mat1_h:'Exámenes de muestra con claves',
+      mat1_p:'PDFs descargables y audios emparejados con sus respuestas, transcripciones y comentarios de examinadores.',
+      mat2_h:'Exámenes completos y tu propio audio',
+      mat2_p:'Pruebas completas con tiempos oficiales en las cuatro destrezas, además de carga privada de tus propios audios, preguntas y claves de Listening.',
+      mat3_h:'Fuentes oficiales en línea',
+      mat3_p:'26 recursos de Cambridge y plataformas gratuitas verificadas a mano, agrupadas por prueba con búsqueda y filtros.',
+      priv_eyebrow:'Privacidad',
+      priv_title:'Datos mínimos, transparente desde la arquitectura',
+      priv_sub:'Cada límite coincide con nuestra política de privacidad pública: sin audio guardado, sin rastreadores publicitarios y con control total desde tu cuenta.',
+      p1_h:'El audio de Live Studio nunca sale de la pestaña',
+      p1_p:'Live Studio detecta voz y silencios localmente en el navegador. En el examinador en vivo, el audio va directo a Google con un token temporal y jamás se guarda en disco.',
+      p2_h:'Claves API solo en el servidor',
+      p2_p:'Las claves compartidas nunca llegan al navegador. Si configuras tu propia clave en Ajustes, queda únicamente en tu navegador y nunca se guarda en el servidor.',
+      p3_h:'Sin rastreadores publicitarios ni perfilado',
+      p3_p:'Sin redes de anuncios, píxeles de seguimiento ni CDNs de fuentes externas. La única analítica web es Cloudflare Web Analytics agregada y sin cookies (visitas, país y origen).',
+      p4_h:'Sin correo obligatorio, exportación y borrado total',
+      p4_p:'Crea tu cuenta con usuario y contraseña de 12+ caracteres, Google o passkey. Exporta todo tu historial en JSON o borra tu cuenta de forma permanente cuando quieras.',
+      leg_privacy:'Política de privacidad',
+      leg_terms:'Términos de uso',
+      leg_security:'Política de seguridad',
+      beta_chip:'Gratis en beta',
+      beta_title:'Una cuenta. Gratis durante la beta. Sin tarjeta.',
+      beta_sub:'Todas las cuentas incluyen el corrector de Writing, el examinador IA de Speaking en 4 partes, Live Studio, Materiales y el plan adaptativo.',
+      beta_meta:'Los límites diarios de uso razonable (5 correcciones de Writing y 1 simulacro de Speaking / 15 min por día UTC) mantienen sostenibles los costos compartidos. También puedes usar tu propia clave en Ajustes.',
+      faq_eyebrow:'Preguntas frecuentes',
+      faq_title:'Respuestas directas',
+      faq_sub:'Formato del examen, límites de la IA, manejo del audio, tareas propias y uso en móvil.',
+      q1:'¿Es realmente formato Cambridge?',
+      a1:'Sí. Writing evalúa con los cuatro criterios oficiales del Cambridge B2 First (Content, Communicative Achievement, Organisation y Language, de 0 a 5 cada uno) y el objetivo de 140–190 palabras. Speaking sigue las Partes 1–4 con tiempos oficiales de 2 / 4 / 4 / 4 minutos, y las 17 partes del examen se registran en un solo historial.',
+      q2:'¿La IA reemplaza a un profesor?',
+      a2:'No. La IA ofrece devolución rápida y estructurada entre clases para detectar patrones y corregir errores repetidos antes del examen. Las bandas estimadas no son notas oficiales de Cambridge ni sustituyen a un docente o examinador humano.',
+      q3:'¿Guardan mi audio?',
+      a3:'No. El audio de Speaking nunca se escribe en disco. Live Studio analiza voz y silencios en tu navegador sin enviar nada; el examinador en vivo transmite directo con un token temporal y los clips por turnos se descartan al terminar el pedido. Solo se guardan en privado los audios que subas tú mismo en Listening → Mi material.',
+      q4:'¿Puedo usar mis propias tareas?',
+      a4:'Sí. En Writing puedes pegar cualquier consigna para que Content revise todos los puntos pedidos. En Speaking puedes pegar tus propias preguntas en cualquier parte con Usar mi tarea, y en Listening puedes subir tu propio audio, preguntas, respuestas y transcripciones.',
+      q5:'¿Cuánto cuesta?',
+      a5:'Es gratis durante la beta: una cuenta, sin tarjeta y sin correo obligatorio. Las funciones compartidas con IA tienen límites diarios razonables (5 correcciones de Writing y 1 simulacro de Speaking por día UTC), o puedes conectar tu propia clave en Ajustes.',
+      q6:'¿Funciona en el teléfono?',
+      a6:'Sí. Todas las pantallas se adaptan al móvil, tu progreso se sincroniza entre teléfono y computadora, y puedes instalarla en la pantalla de inicio. Las funciones de micrófono y reconocimiento dependen del soporte Web Audio y de voz de tu navegador móvil.',
+      foot_desc:'Plataforma de estudio para el Cambridge B2 First con corrector de Writing en 4 bandas, examinador oral en 4 partes, Live Studio local y plan diario adaptativo.',
+      foot_sec:'Secciones',
+      foot_legal:'Legal',
+      foot_acct:'Cuenta y código',
+      foot_github:'GitHub',
+      foot_disc:'© 2026 B2 First Tracker. Cambridge y B2 First son marcas registradas de Cambridge University Press & Assessment. Este proyecto es una herramienta de estudio independiente sin afiliación ni aval de Cambridge.',
+      foot_top:'Volver arriba',
+      menu_open:'Abrir menú de navegación',
+      menu_close:'Cerrar menú de navegación',
+      lang_btn:'EN',
+      lang_aria:'Switch to English'
+    }
+  };
+
+  var returningUser=false;
   try{
     var u=JSON.parse(localStorage.getItem('b2first_user')||'null');
-    if(u&&u.id){
-      var hero=document.getElementById('heroCta');
-      if(hero&&hero.firstChild)hero.firstChild.nodeValue='Continue studying';
-    }
+    if(u&&u.id)returningUser=true;
   }catch(e){}
+
+  var lang='en';
+  try{
+    var saved=localStorage.getItem('b2first_landing_lang');
+    if(saved==='es'||saved==='en')lang=saved;
+  }catch(e){}
+
+  var langBtn=document.getElementById('langToggle');
+  var menuBtn=document.getElementById('navMenuBtn');
+  var drawer=document.getElementById('mobileMenu');
+
+  function applyLang(next){
+    lang=next==='es'?'es':'en';
+    var dict=T[lang];
+    document.documentElement.lang=lang;
+    document.querySelectorAll('[data-t]').forEach(function(el){
+      var k=el.getAttribute('data-t');
+      if(k==='hero_cta'&&returningUser){
+        el.textContent=dict.hero_cta_return;
+      }else if(dict[k]!==undefined){
+        el.textContent=dict[k];
+      }
+    });
+    document.querySelectorAll('[data-t-html]').forEach(function(el){
+      var k=el.getAttribute('data-t-html');
+      if(dict[k]!==undefined)el.innerHTML=dict[k];
+    });
+    if(langBtn){
+      langBtn.textContent=dict.lang_btn;
+      langBtn.setAttribute('aria-label',dict.lang_aria);
+      langBtn.setAttribute('aria-pressed',lang==='es'?'true':'false');
+    }
+    if(menuBtn&&drawer){
+      menuBtn.setAttribute('aria-label',drawer.hidden?dict.menu_open:dict.menu_close);
+    }
+  }
+  applyLang(lang);
+
+  if(langBtn){
+    langBtn.addEventListener('click',function(){
+      var next=lang==='en'?'es':'en';
+      try{localStorage.setItem('b2first_landing_lang',next);}catch(e){}
+      applyLang(next);
+    });
+  }
 
   var bar=document.querySelector('.nav');
   var ticking=false;
@@ -1260,13 +1241,12 @@ footer{padding-block:var(--sp-12) var(--sp-8);border-top:1px solid var(--line)}
     });
   }
 
-  var menuBtn=document.getElementById('navMenuBtn');
-  var drawer=document.getElementById('mobileMenu');
   if(menuBtn&&drawer){
     function setOpen(open){
       drawer.hidden=!open;
       menuBtn.setAttribute('aria-expanded',open?'true':'false');
-      menuBtn.setAttribute('aria-label',open?'Close navigation menu':'Open navigation menu');
+      var dict=T[lang]||T.en;
+      menuBtn.setAttribute('aria-label',open?dict.menu_close:dict.menu_open);
     }
     menuBtn.addEventListener('click',function(){
       setOpen(drawer.hidden);

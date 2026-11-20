@@ -4106,7 +4106,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">—</b></p>
                     <div style="margin-top:12px">
-                      <button class="btn" data-action="switchUePhase" data-arg="score">Proceed to Phase 2: Log Score →</button>
+                      <button class="btn" data-action="switchUePhase" data-arg="score">Proceed to Phase 2: Log score →</button>
                     </div>
                   </div>
                 </div>
@@ -4164,7 +4164,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div>
                     <span class="badge mon" id="st2WkBadge">Monday</span>
                     <div class="sesion-title"><span id="st2Name">✍️ Writing</span> <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
-                    <div class="sesion-sub" id="st2Sub">One text type per session, with a deep C1 audit.</div>
+                    <div class="sesion-sub" id="st2Sub">One text type per session, with Cambridge rubric review.</div>
                   </div>
                   <div class="sesion-dur">
                     <span class="dur-label">Session time</span>
@@ -4181,13 +4181,13 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                   <div class="phase-step" data-phase="write" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 2</div>
-                    <div class="ps-title">✍️ Live Writing</div>
+                    <div class="ps-title">✍️ Live writing</div>
                     <div class="ps-time">35:00 · 140–190 words</div>
                   </div>
                   <div class="phase-step" data-phase="audit" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 3</div>
-                    <div class="ps-title">🔍 C1 Audit &amp; Rubric</div>
-                    <div class="ps-time">20:00 · 7-point rubric + Writing Corrector</div>
+                    <div class="ps-title">🔍 Rubric &amp; review</div>
+                    <div class="ps-time">20:00 · 7-point rubric + Writing corrector</div>
                   </div>
                 </div>
 
@@ -4241,7 +4241,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" maxlength="400" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
                     <div style="margin-top:12px">
-                      <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live Writing →</button>
+                      <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live writing →</button>
                     </div>
                   </div>
                 </div>
@@ -4252,7 +4252,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">2</div>
                       <div>
-                        <div class="task-title">Phase 2: Live Writing <span class="t">35 min · 140–190 words</span></div>
+                        <div class="task-title">Phase 2: Live writing <span class="t">35 min · 140–190 words</span></div>
                       </div>
                       <div class="task-meta">
                         <div class="task-timer"><span class="lbl">Timer</span><span class="timer" id="wTimer">—</span></div>
@@ -4264,15 +4264,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <span>Live word count: <b id="wLiveWordCount">0 words</b></span>
                       <span id="wWordMeter" style="font-weight:600">Target: 140–190 words</span>
                       <button class="btn sm" type="button" data-action="openWritingCorrectorFromDraft"
-                        title="Send this draft to the Writing Corrector">Check with Writing Corrector →</button>
+                        title="Send this draft to the Writing corrector">Check with Writing corrector →</button>
                     </div>
                     <div class="contraction-alert" id="wContractionWarn" style="display:none"></div>
                     <div class="row" style="margin-top:12px">
-                      <div><label>Registered Word count</label><input type="number" id="wWords" min="100" value="160"></div>
+                      <div><label>Registered word count</label><input type="number" id="wWords" min="100" value="160"></div>
                       <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="40"></div>
                     </div>
                     <div style="margin-top:12px">
-                      <button class="btn" data-action="switchWritingPhase" data-arg="audit">Proceed to Phase 3: Audit &amp; Rubric →</button>
+                      <button class="btn" data-action="switchWritingPhase" data-arg="audit">Proceed to Phase 3: Rubric &amp; review →</button>
                     </div>
                   </div>
                 </div>
@@ -4283,7 +4283,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="task-head">
                       <div class="task-num">3</div>
                       <div>
-                        <div class="task-title">Phase 3: Algorithmic C1 Audit &amp; Rubric <span class="t">20 min</span></div>
+                        <div class="task-title">Phase 3: Rubric &amp; review <span class="t">20 min</span></div>
                       </div>
                       <div class="task-meta">
                         <button class="btn sm gray" data-action="wRev.start">▶ 20:00</button>
@@ -4474,7 +4474,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </div>
                     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
                       <button class="btn ok" data-action="saveL">✔ Save Listening</button>
-                      <button class="btn" data-action="switchListeningPhase" data-arg="pm">Proceed to Phase 2: Post-Mortem →</button>
+                      <button class="btn" data-action="switchListeningPhase" data-arg="pm">Proceed to Phase 2: Post-mortem →</button>
                     </div>
                   </div>
                 </div>
@@ -4706,7 +4706,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <!-- Option 1: Speaking Exam -->
                   <section class="sp-option-card" id="spExamCard" aria-labelledby="spExamCardTitle">
                     <div class="sp-option-head">
-                      <h2 class="sp-option-title" id="spExamCardTitle" data-i18n="sp_card_exam_title">Speaking Exam</h2>
+                      <h2 class="sp-option-title" id="spExamCardTitle" data-i18n="sp_card_exam_title">Speaking exam</h2>
                       <p class="sp-option-sub" data-i18n="sp_card_exam_sub">Cambridge B2 First · full mock or one part</p>
                     </div>
                     <div class="sp-exam-modes" id="spExamModes" role="radiogroup" aria-labelledby="spExamCardTitle">
@@ -4749,7 +4749,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="live-panel" id="livePanel" style="display:none" aria-label="Live studio">
                   <div class="live-head">
                     <div>
-                      <div class="live-title">🎧 Live studio <span class="t">client-side VAD · nothing is recorded or sent</span></div>
+                      <div class="live-title">🎧 Live Studio <span class="t">local voice detection · audio never leaves this tab</span></div>
                       <div class="live-sub" id="liveStatus" role="status">Microphone off</div>
                     </div>
                     <div class="live-actions">
@@ -4805,7 +4805,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <div class="live-panel" id="spkPanel" style="display:none" aria-label="Live examiner">
                     <div class="live-head">
                       <div>
-                        <div class="live-title">🗣 Live exam <span class="t">Parts 1–4 · examiner + partner, one director</span></div>
+                        <div class="live-title">🗣 Live exam <span class="t">Parts 1–4 · examiner and partner</span></div>
                         <div class="live-sub" id="spkStatus" role="status">Examiner off</div>
                       </div>
                       <div class="live-actions">
@@ -4822,7 +4822,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <option value="3">3 · Collaborative</option>
                         <option value="4">4 · Discussion</option>
                       </select>
-                      <span class="t" id="spkPartHint">Part 1 opens the examiner only (cost control).</span>
+                      <span class="t" id="spkPartHint">Part 1 runs with the examiner only.</span>
                     </div>
                     <div class="live-grid">
                       <div class="live-stat"><span class="lbl">Examiner</span><span class="val" id="spkSpeaking">offline</span></div>
@@ -4839,7 +4839,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div class="spk-lines" id="spkInText"></div>
                       </div>
                       <div class="spk-col">
-                        <div class="spk-col-h">Examiner &amp; Partner <span class="t">two voices, one director</span></div>
+                        <div class="spk-col-h">Examiner &amp; Partner <span class="t">examiner and partner</span></div>
                         <div class="spk-lines" id="spkOutText"></div>
                       </div>
                     </div>
@@ -4888,12 +4888,12 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon" data-i18n="full_simulation">Full Simulation</span>
-                    <div class="sesion-title" data-i18n="full_mock_title">🧪 Full Mock Exam (All 4 Papers)</div>
+                    <span class="badge mon" data-i18n="full_simulation">Full simulation</span>
+                    <div class="sesion-title" data-i18n="full_mock_title">🧪 Full mock exam (all 4 papers)</div>
                     <div class="sesion-sub" data-i18n="full_mock_sub">Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).</div>
                   </div>
                   <div class="sesion-dur">
-                    <span class="dur-label" data-i18n="total_time">Total Time</span>
+                    <span class="dur-label" data-i18n="total_time">Total time</span>
                     <span class="dur-val">209 MIN</span>
                   </div>
                 </div>
@@ -5591,18 +5591,18 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         <div id="view-ia">
           <div class="page-head">
             <div>
-              <h1 class="page-title" data-i18n="ai_title">Writing Corrector</h1>
+              <h1 class="page-title" data-i18n="ai_title">Writing corrector</h1>
               <p class="page-sub" data-i18n="ai_sub">Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).</p>
             </div>
           </div>
 
           <div class="card" id="iaCard" data-state="idle">
-            <h2 data-i18n="ai_title">Writing Corrector</h2>
+            <h2 data-i18n="ai_title">Writing corrector</h2>
             <div class="sub" data-i18n="ai_card_sub">Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).</div>
 
             <div class="row" style="margin-bottom:var(--s3)">
               <div>
-                <label for="iaKind" data-i18n="ai_kind">Text type (kind)</label>
+                <label for="iaKind" data-i18n="ai_kind">Text type</label>
                 <select id="iaKind">
                   <option value="Essay">Essay</option>
                   <option value="Article">Article</option>
@@ -5631,8 +5631,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
             <div style="margin-top:var(--s4);display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap">
               <button type="button" class="btn" id="iaSubmitBtn" data-action="submitIaWriting" data-i18n="ai_submit">Correct it</button>
-              <span id="iaStateLabel" class="t-xs muted tnum">idle</span>
-              <span id="iaByoBadge" class="badge ok" style="display:none" data-i18n="ai_byo_badge">using your key</span>
+              <span id="iaStateLabel" class="t-xs muted tnum">Ready</span>
+              <span id="iaByoBadge" class="badge ok" style="display:none" data-i18n="ai_byo_badge">Using your key</span>
               <span id="iaQuota" class="t-xs muted tnum" style="display:none"></span>
             </div>
 
@@ -5643,7 +5643,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <div class="sk sk-line sk-w60"></div>
               </div>
               <div class="ia-progress-head">
-                <span class="t-sm ia-progress-title" data-i18n="ai_correcting">correcting…</span>
+                <span class="t-sm ia-progress-title" data-i18n="ai_correcting">Correcting…</span>
               </div>
               <div class="ia-progress-row">
                 <div id="iaProgressBar" class="ia-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Correction progress" data-i18n-aria-label="ai_progress_label">
@@ -5939,10 +5939,10 @@ const I18N={
     exam_set_date:'Set your exam date',
     exam_date_label:'Exam date',
     exam_save_date:'Save date',
-    full_mock_title:'Full Mock Exam (All 4 Papers)',
+    full_mock_title:'Full mock exam (all 4 papers)',
     full_mock_sub:'Complete examination under authentic Cambridge conditions and official timing (195 min written + 14 min speaking).',
-    full_simulation:'Full Simulation',
-    total_time:'Total Time',
+    full_simulation:'Full simulation',
+    total_time:'Total time',
     today_title_fmt:'Today · {name}',
     today_session_title:"Today's session",
     today_start_microcopy:"Opens the studio for today's session.",
@@ -5951,7 +5951,7 @@ const I18N={
     today_mode_one:'1 {skill} exercise',
     today_mode_many:'{n} {skill} exercises',
     today_mode_full:'Today: {paper}',
-    today_studio_writing_sub:'One text type per session, with a deep C1 audit.',
+    today_studio_writing_sub:'One text type per session, with Cambridge rubric review.',
     today_done_summary:'Session done: {planned} min planned, {real} min practised.',
     today_next_label:'Next session',
     today_cycle_label:'This cycle',
@@ -5964,9 +5964,9 @@ const I18N={
     stage_1:'Stage 1 — Precision',
     stage_2:'Stage 2 — Mastery',
     stage_n:'Stage {n}',
-    stage_name_0:'Stage 0 — Foundations (Structural Acquisition)',
-    stage_name_1:'Stage 1 — Precision & Cohesion (Pattern Mastery)',
-    stage_name_2:'Stage 2 — Mastery (Target Grade A / C1) · Release Candidate',
+    stage_name_0:'Stage 0 — Foundations (structural acquisition)',
+    stage_name_1:'Stage 1 — Precision & cohesion (pattern mastery)',
+    stage_name_2:'Stage 2 — Mastery (target Grade A / C1)',
     ob_language:'Language',
     ob_goal_title:'What are you preparing for?',
     ob_goal_body:'Choose your exam date and the grade you want. Every session the app builds starts from these two answers.',
@@ -5984,7 +5984,7 @@ const I18N={
     ob_diag_meta:'12 questions · about 10 minutes · no answers shown during the check',
     ob_diag_start:'Start the check',
     ob_diag_skip:'Skip for now',
-    ob_diag_skip_hint:'You can take the 12-question check later from the Diagnostic view.',
+    ob_diag_skip_hint:'You can take the 12-question check later from Plan.',
     ob_diag_done:'You finished the check on {date}: {correct}/{total} correct.',
     ob_diag_continue:'Continue to my plan',
     ob_diag_retake:'Take the check again',
@@ -6019,7 +6019,7 @@ const I18N={
     ob_acct_title:'Your account',
     ob_acct_loading:'Checking your limits…',
     ob_acct_unavailable:'Your limits are in Settings.',
-    ob_acct_writing_label:'Writing Corrector',
+    ob_acct_writing_label:'Writing corrector',
     ob_acct_speaking_label:'Speaking mocks',
     ob_acct_pron_label:'Pronunciation',
     ob_acct_unit_day:'day',
@@ -6040,20 +6040,20 @@ const I18N={
     day_thursday:'Thursday',
     day_friday:'Friday',
     day_saturday:'Saturday',
-    exam_title:'Exam Simulation',
+    exam_title:'Exam simulation',
     exam_sub:'Select a module to begin a timed simulation under strict exam conditions. Make sure you have a quiet environment before starting.',
     exam_desc_rue:'7 parts. Tests your reading comprehension and grammar proficiency.',
     exam_desc_w:'2 parts. Essay and a choice of article, email, letter, report or review.',
     exam_desc_l:'4 parts. Tests ability to follow and understand spoken English.',
     exam_full_title:'Full B2 First Exam',
-    exam_in_progress:'In Progress',
+    exam_in_progress:'In progress',
     exam_pause:'Pause',
     exam_reset:'Reset',
     exam_manual:'Or pick the paper manually',
     exam_opt_rue:'Reading & Use of English — 75 min (52 questions)',
     exam_opt_w:'Writing — 80 min (2 texts)',
     exam_opt_l:'Listening — 40 min (30 questions)',
-    exam_opt_full:'FULL EXAM — 195 min (all components)',
+    exam_opt_full:'Full exam — 195 min (all components)',
     exam_real_mocks:'Real mocks',
     exam_real_mocks_sub:'All four papers in one place. One click starts a real timed mock with the official duration.',
     exam_start_full:'Start full mock',
@@ -6149,7 +6149,7 @@ const I18N={
     wtf_hint_rue_paper:'Timed paper → check with the key → log the score.',
     wtf_hint_lesson:'Targeted lesson plan and strategy notes for this part.',
     wtf_hint_self_study:'Extra self-study activities and reference guide.',
-    wtf_hint_w_paper:'5 min plan → 35 min write (140–190 words) → run the C1 audit.',
+    wtf_hint_w_paper:'5 min plan → 35 min write (140–190 words) → run the rubric review.',
     wtf_hint_l_test:'Play without pausing → check with the key → review misses in the tapescript.',
     wtf_hint_l_part:'Listen to this part twice without pausing → check with the key → log the score.',
     wtf_hint_l_hb:'Handbook audio tracks; open the handbook PDF for tapescripts and keys.',
@@ -6256,7 +6256,7 @@ const I18N={
     pg_tip_sessions:'{n} sessions (goal {goal})',
     pg_tip_part:'Part {p} ({name}): {pct}% · {n} logs',
     pg_tip_err_week:'{week}: {total} total',
-    prog_matrix:'🧗 Progression Matrix',
+    prog_matrix:'🧗 Progression matrix',
     prog_matrix_sub:'Complete all gates within your current stage to unlock the next one automatically.',
     prog_achieved:'achieved',
     prog_pending:'pending',
@@ -6357,18 +6357,18 @@ const I18N={
     charts_errors:'Errors by type',
     charts_errors_sub:'Root causes you tagged, per week (last 8 weeks).',
     charts_consistency:'Weekly consistency',
-    err_title:'Error Taxonomy',
+    err_title:'Error taxonomy',
     err_sub:'Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.',
-    err_root_log:'🔖 Root-Cause Log',
+    err_root_log:'🔖 Root-cause log',
     err_root_sub:'Every logged mistake gets you closer to Grade A.',
-    err_patterns:'🧩 Failure Patterns',
+    err_patterns:'🧩 Failure patterns',
     err_patterns_sub:'Accumulated distribution of your taxonomy.',
-    err_log:'➕ Log Error',
+    err_log:'➕ Log error',
     err_log_sub:'Root-cause classification.',
     err_code:'Code',
     err_description:'Description',
     err_desc_ph:"e.g. I didn't apply inversion with 'Seldom'",
-    err_fix:'Correction / Notes',
+    err_fix:'Correction / notes',
     err_fix_ph:'e.g. review inversion rule',
     err_save:'💾 Save error',
     err_code_lgap:'L-GAP — vocabulary gap',
@@ -6393,11 +6393,11 @@ const I18N={
     err_legend_tlim_name:'Time limit',
     err_legend_tlim_means:'You ran out of time rather than getting it wrong',
     err_legend_tlim_example:'Part 5 unfinished at 0:00',
-    plan_title:'Plan Configuration',
+    plan_title:'Plan configuration',
     plan_sub:'Adjust your session schedules and what comes next. Everything applies to the tracker instantly.',
     plan_edit_intake:'✏️ Edit my intake',
     plan_export_json:'💾 Export JSON',
-    plan_import_backup:'📥 Import Backup',
+    plan_import_backup:'📥 Import backup',
     plan_week_plan:'Week plan',
     plan_regenerate:'Regenerate',
     plan_week_sub:'Your week follows your session days and the skill rotation. A refresh never moves it.',
@@ -6409,13 +6409,13 @@ const I18N={
     plan_time:'Time',
     plan_delete_day:'Delete session day',
     plan_offset:'Offset: {offset}',
-    plan_sessions:'🗓 Session Schedules & Frequency',
-    plan_add_day:'+ Add Session Day',
+    plan_sessions:'🗓 Session schedules & frequency',
+    plan_add_day:'+ Add session day',
     plan_sessions_sub:'Set as many session days and times as you want. Sessions keep moving through all four skills in order; nothing resets between weeks.',
-    plan_no_session_days:'No session days configured. Add a day in Session Schedules & Frequency.',
-    plan_shift:'Session Shift / Fast-Forward',
+    plan_no_session_days:'No session days configured. Add a day in Session schedules & frequency.',
+    plan_shift:'Session shift / fast-forward',
     plan_shift_sub:'Advance the queue if you do an upcoming session ahead of time. All subsequent dates shift forward by 1 slot.',
-    plan_advance1:'⚡ +1 Advance',
+    plan_advance1:'⚡ +1 advance',
     plan_reset0:'↩ Reset (0)',
     plan_reset_title:'Reset rotation to defaults?',
     plan_reset_btn:'Reset to defaults',
@@ -6472,7 +6472,7 @@ const I18N={
     settings_title:'Settings',
     settings_ai_provider:'AI provider',
     settings_close:'Close',
-    byo_title:'✨ Writing Corrector provider',
+    byo_title:'✨ Writing corrector provider',
     byo_sub:'Use any OpenAI-compatible provider. The key stays in this browser and is sent per request; it is never stored on the server.',
     byo_provider:'Provider',
     byo_provider_custom:'Custom',
@@ -6490,7 +6490,7 @@ const I18N={
     byo_test_fail:'Failed · {code}',
     usage_title:'Usage limits',
     usage_sub:'Every account has the full service. These daily limits only keep provider costs predictable, and they reset on their own.',
-    usage_write:'Writing Corrector & reports',
+    usage_write:'Writing corrector & reports',
     usage_speak:'Speaking mocks',
     usage_count:'{n} of {limit} · {window}',
     usage_window_day:'today',
@@ -6505,9 +6505,9 @@ const I18N={
     usage_close:'Close',
     usage_full_access:'Full service',
     usage_left:'{n} of {limit} left today',
-    books_online:'🌐 Online Practice (1-Click — Free)',
+    books_online:'🌐 Online practice (1-click — free)',
     books_online_sub:'Unlimited interactive exercises per skill. Official Cambridge materials + free practice platforms (no download needed).',
-    books_material:'📥 Downloaded Material (PDFs & Audio)',
+    books_material:'📥 Downloaded material (PDFs & audio)',
     books_material_sub:'All downloaded assets: full practice exams, skill guides, lesson plans, and audio files. PDFs open in the viewer, audio plays directly in browser.',
     books_filter_ph:'🔍 Filter material... (e.g. listening, part 3, writing)',
     practice_books_title:'Books & PDFs',
@@ -6515,19 +6515,19 @@ const I18N={
     books_moved_title:'Books & PDFs are now inside Resources',
     books_moved_sub:'The Books tab was merged into Resources. PDFs, audio and online practice are still one click away.',
     books_moved_cta:'Go to Resources',
-    ai_title:'Writing Corrector',
+    ai_title:'Writing corrector',
     ai_sub:'Scored with the official B2 First scale (Content, Communicative Achievement, Organisation, Language · 0–5 per criterion).',
     ai_card_sub:'Write or paste your text to grade it with the official Cambridge rubric (target 140–190 words).',
-    ai_byo_badge:'using your key',
+    ai_byo_badge:'Using your key',
     ai_quota_left:'{n} corrections left today',
-    ai_kind:'Text type (kind)',
+    ai_kind:'Text type',
     ai_text:'Your text in English',
     ai_text_ph:'Write or paste your Essay, Article, Report, Review or Email here (140–190 words)...',
     ai_words:'Words:',
     ai_target_words:'Target: 140–190 words',
     ai_target_short:'(target 140–190)',
     ai_submit:'Correct it',
-    ai_correcting:'correcting…',
+    ai_correcting:'Correcting…',
     ai_progress_label:'Correction progress',
     ai_step_read:'Reading your text',
     ai_step_task:'Checking the task and content points',
@@ -6538,11 +6538,11 @@ const I18N={
     ai_failed:'Failed to correct the text.',
     ai_result:'Cambridge B2 First result',
     ai_quotes:'Student quotes',
-    ai_rewrite:'3 improved sentences (rewrite)',
-    ai_state_idle:'idle',
-    ai_state_loading:'correcting…',
-    ai_state_ok:'done',
-    ai_state_error:'error',
+    ai_rewrite:'3 improved sentences',
+    ai_state_idle:'Ready',
+    ai_state_loading:'Correcting…',
+    ai_state_ok:'Done',
+    ai_state_error:'Error',
     ai_in_range:'✔ In range ({words}/140–190 words)',
     ai_short:'{n} words short (target 140–190)',
     ai_over:'{n} words over (max 190)',
@@ -6550,7 +6550,7 @@ const I18N={
     ai_err_words:'The text must be between 40 and 700 words.',
     ai_err_not_task:'That does not look like a B2 First writing task. Paste the task and your text.',
     ai_err_network:'Could not reach the corrector. Check your connection and try again.',
-    ai_err_generic:'The corrector could not finish this time. Your text is safe — press Check again.',
+    ai_err_generic:'The corrector could not finish this time. Your text is safe — try again.',
     ai_retrying:'Taking longer than usual, trying again…',
     ai_task_toggle:'Paste the exam task (optional, but it grades more accurately)',
     ai_task_ph:'e.g. Your teacher has asked you to write an essay on whether technology has made us less social...',
@@ -6577,26 +6577,26 @@ const I18N={
     fab_log_single:'Log session',
     solo_title:'Log session',
     solo_sub:'Extra practice done outside scheduled sessions',
-    solo_skill:'Skill / Component',
+    solo_skill:'Skill / component',
     solo_ue:'📖 Reading & Use of English (Parts 1–7)',
     solo_listening:'🎧 Listening (Parts 1–4)',
-    solo_writing:'✍️ Writing (Individual Text / Genre)',
+    solo_writing:'✍️ Writing (individual text / genre)',
     solo_speaking:'🗣️ Speaking (Parts 1–4)',
-    solo_part:'Part / Exercise',
+    solo_part:'Part / exercise',
     solo_correct:'Correct',
     solo_score20:'Score /20',
     solo_word_count:'Word count',
     solo_completed:'Completed (1=Yes)',
     solo_target:'Target',
     solo_total_q:'Total questions',
-    solo_minutes:'Minutes Spent',
-    solo_source:'Source / Book',
-    solo_ref:'Reference / Notes',
+    solo_minutes:'Minutes spent',
+    solo_source:'Source / book',
+    solo_ref:'Reference / notes',
     solo_ref_ph:'e.g. Unit 3 / Test 2',
     solo_log_error:'Log an error for root-cause analysis',
-    solo_err_code:'Error Code',
-    solo_err_desc:'Mistake Description',
-    solo_save:'✔ Save Solo Practice',
+    solo_err_code:'Error code',
+    solo_err_desc:'Mistake description',
+    solo_save:'✔ Save practice',
     solo_source_sample:'Official Sample Paper',
     solo_source_ptplus:'Practice Tests Plus',
     solo_source_fce6:'FCE 6',
@@ -6647,8 +6647,8 @@ const I18N={
     user_delete_nopass:'This account signs in with Google, so there is no password to type. The confirmation word is enough.',
     user_delete_confirm:'Type DELETE to confirm',
     user_delete_permanent:'Permanently delete my account',
-    user_edit_plan:'⚙️ Edit My Study Plan & Schedule',
-    user_logout:'⇄ Switch User / Log Out',
+    user_edit_plan:'⚙️ Edit my study plan & schedule',
+    user_logout:'⇄ Switch user / log out',
     ql_title:'Session quick-log',
     ql_sub:'Log your practice in 3 taps',
     ql_step1:'Step 1 · Session type',
@@ -6706,7 +6706,7 @@ const I18N={
     alert_speaking_no_band:'This Speaking entry has no band to edit — delete it and log it again.',
 
     sp_materials_title:'Materials',
-    sp_card_exam_title:'Speaking Exam',
+    sp_card_exam_title:'Speaking exam',
     sp_card_exam_sub:'Cambridge B2 First · full mock or one part',
     sp_exam_full_dur:'14 min',
     sp_exam_one_part:'One part',
@@ -6966,7 +6966,7 @@ const I18N={
     auth_enter:'Entrar',
     auth_forgot:'¿Olvidaste tu contraseña?',
     auth_recover_title:'Recuperar la cuenta',
-    auth_recover_note:'No hay ningún email guardado en tu cuenta, así que no se puede enviar un link de restablecimiento. Hay dos formas de volver a entrar que funcionan al toque:',
+    auth_recover_note:'No hay ningún correo guardado en tu cuenta, así que no se puede enviar un enlace de restablecimiento. Hay dos formas inmediatas de volver a entrar:',
     auth_recover_options:'Formas de volver a entrar',
     auth_recover_google:'¿Entraste con Google? Usá «Continuar con Google» en la pestaña de inicio de sesión.',
     auth_recover_passkey:'¿Configuraste una passkey? Usá «Entrar con una passkey».',
@@ -7049,7 +7049,7 @@ const I18N={
     today_mode_one:'1 ejercicio de {skill}',
     today_mode_many:'{n} ejercicios de {skill}',
     today_mode_full:'Hoy: {paper}',
-    today_studio_writing_sub:'Un tipo de texto por sesión, con auditoría C1 profunda.',
+    today_studio_writing_sub:'Un tipo de texto por sesión, con revisión de rúbrica Cambridge.',
     today_done_summary:'Sesión completada: {planned} min planificados, {real} min reales.',
     today_next_label:'Próxima sesión',
     today_cycle_label:'Este ciclo',
@@ -7062,9 +7062,9 @@ const I18N={
     stage_1:'Etapa 1 — Precisión',
     stage_2:'Etapa 2 — Maestría',
     stage_n:'Etapa {n}',
-    stage_name_0:'Etapa 0 — Cimientos (Adquisición estructural)',
-    stage_name_1:'Etapa 1 — Precisión y cohesión (Dominio de patrones)',
-    stage_name_2:'Etapa 2 — Maestría (Meta: Grado A / C1) · Candidato a examen',
+    stage_name_0:'Etapa 0 — Cimientos (adquisición estructural)',
+    stage_name_1:'Etapa 1 — Precisión y cohesión (dominio de patrones)',
+    stage_name_2:'Etapa 2 — Maestría (meta: Grado A / C1)',
     ob_language:'Idioma',
     ob_goal_title:'¿Para qué te preparás?',
     ob_goal_body:'Elegí la fecha del examen y la nota que querés. Cada sesión que arma la app empieza con estas dos respuestas.',
@@ -7082,7 +7082,7 @@ const I18N={
     ob_diag_meta:'12 preguntas · unos 10 minutos · no se muestran respuestas durante el chequeo',
     ob_diag_start:'Empezar el chequeo',
     ob_diag_skip:'Saltear por ahora',
-    ob_diag_skip_hint:'Podés hacer el chequeo de 12 preguntas después desde la vista Diagnostic.',
+    ob_diag_skip_hint:'Podés hacer el chequeo de 12 preguntas después desde Plan.',
     ob_diag_done:'Terminaste el chequeo el {date}: {correct}/{total} correctas.',
     ob_diag_continue:'Seguir a mi plan',
     ob_diag_retake:'Repetir el chequeo',
@@ -7093,8 +7093,8 @@ const I18N={
     ob_rotation_label:'Modo de rotación',
     ob_rot_by_part_title:'Por partes',
     ob_rot_by_part_desc:'Sesiones cortas, una habilidad por día: una parte de Reading, Listening, una tarea de Writing o una parte de Speaking.',
-    ob_rot_full_title:'Mocks completos',
-    ob_rot_full_desc:'Papers completos de examen: Full R&UE 75 min, Full Listening 40, Full Writing 80, Full Speaking 14.',
+    ob_rot_full_title:'Simulacros completos',
+    ob_rot_full_desc:'Exámenes completos: R&UE 75 min, Listening 40 min, Writing 80 min, Speaking 14 min.',
     ob_items_per_session:'Unidades por sesión',
     ob_plan_sessions:'{n} sesiones · unos {min} min cada una',
     ob_plan_sessions_range:'{n} sesiones · {min}–{max} min cada una',
@@ -7110,14 +7110,14 @@ const I18N={
     ob_type_w:'Writing',
     ob_type_l:'Listening',
     ob_type_sp:'Speaking',
-    ob_day_note:'Las sesiones aparecen en Today los días y horarios que elijas.',
+    ob_day_note:'Las sesiones aparecen en Hoy los días y horarios que elijas.',
     ob_error_day:'Elegí al menos un día de estudio.',
     ob_error_time:'Ingresá una hora válida (HH:MM) para cada día elegido.',
     ob_warn_same_time:'Dos o más días tienen la misma hora. Podés dejarlo así o ajustar cada día.',
     ob_acct_title:'Tu cuenta',
     ob_acct_loading:'Consultando tus límites…',
     ob_acct_unavailable:'Tus límites están en Ajustes.',
-    ob_acct_writing_label:'Writing Corrector',
+    ob_acct_writing_label:'Corrector de Writing',
     ob_acct_speaking_label:'Simulacros de speaking',
     ob_acct_pron_label:'Pronunciación',
     ob_acct_unit_day:'día',
@@ -7151,11 +7151,11 @@ const I18N={
     exam_opt_rue:'Reading & Use of English — 75 min (52 preguntas)',
     exam_opt_w:'Writing — 80 min (2 textos)',
     exam_opt_l:'Listening — 40 min (30 preguntas)',
-    exam_opt_full:'EXAMEN COMPLETO — 195 min (todos los componentes)',
-    exam_real_mocks:'Mocks reales',
-    exam_real_mocks_sub:'Las cuatro pruebas en un solo lugar. Un clic arranca un mock real cronometrado con la duración oficial.',
-    exam_start_full:'Empezar mock completo',
-    exam_full_hint:'El mock completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
+    exam_opt_full:'Examen completo — 195 min (todos los componentes)',
+    exam_real_mocks:'Simulacros reales',
+    exam_real_mocks_sub:'Las cuatro pruebas en un solo lugar. Un clic inicia un simulacro cronometrado con la duración oficial.',
+    exam_start_full:'Empezar simulacro completo',
+    exam_full_hint:'El simulacro completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
     exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
     exam_sources_title:'Fuentes oficiales a un clic',
     exam_sources_sub:'Recursos oficiales verificados para practicar cada prueba sin salir del examen.',
@@ -7243,11 +7243,11 @@ const I18N={
     wtf_full_rue_hint:'Practicá el examen completo (75 min, Partes 1–7) de corrido y corregí con las respuestas.',
     wtf_full_w_hint:'Practicá el examen completo: Parte 1 Essay + Parte 2 a elección (80 min, 140–190 palabras cada uno).',
     wtf_full_l_hint:'Practicá el examen completo: las 4 partes de corrido (~40 min, 30 preguntas) sin pausar el audio.',
-    wtf_full_sp_hint:'Practicá el examen completo: Partes 1–4 seguidas (14 min) con los visuales o el Speaking Exam abajo.',
+    wtf_full_sp_hint:'Practicá el examen completo: Partes 1–4 seguidas (14 min) con las imágenes o el examen oral abajo.',
     wtf_hint_rue_paper:'Hacelo con reloj → corregí con las respuestas → registrá el puntaje.',
     wtf_hint_lesson:'Plan de clase y estrategia específica para esta parte.',
     wtf_hint_self_study:'Actividades extra de autoestudio y guía de referencia.',
-    wtf_hint_w_paper:'5 min plan → 35 min escritura (140–190 palabras) → pasá la auditoría C1.',
+    wtf_hint_w_paper:'5 min plan → 35 min escritura (140–190 palabras) → revisión de rúbrica.',
     wtf_hint_l_test:'Escuchá sin pausar → corregí con las respuestas → revisá errores en la transcripción.',
     wtf_hint_l_part:'Escuchá esta parte dos veces sin pausar → corregí con las respuestas → registrá el puntaje.',
     wtf_hint_l_hb:'Audios del handbook; abrí el PDF del handbook para ver transcripciones y respuestas.',
@@ -7365,8 +7365,8 @@ const I18N={
     gate_col_action:'Acción',
     gate_stage_current:'Actual',
     gate_stage_upcoming:'Próxima',
-    gate_manual_badge:'Override manual',
-    gate_manual_badge_at:'Override manual · {date}',
+    gate_manual_badge:'Marca manual',
+    gate_manual_badge_at:'Marca manual · {date}',
     gate_action_override:'Marcar',
     gate_action_undo:'Deshacer',
     gate_summary_current:'Etapa actual: {stage}',
@@ -7428,9 +7428,9 @@ const I18N={
     gate_ev_best_mock:'mejor: {pct}% en {min} min',
     gate_ev_streak:'mejor racha: {best}/{need}',
     gate_ev_best_fw:'mejor: {s1}/{s2} en {min} min',
-    gate_ev_sp_full:'mock completo o aval C1',
+    gate_ev_sp_full:'simulacro completo o aval C1',
     gate_reason_all_data:'Todos los criterios de Etapa {n} cumplidos con datos reales',
-    gate_reason_with_overrides:'Todos los criterios de Etapa {n} cumplidos ({k} override manual: {ids})',
+    gate_reason_with_overrides:'Todos los criterios de Etapa {n} cumplidos ({k} marca manual: {ids})',
     gate_reason_migrated:'Etapa previa migrada',
     prog_export:'💾 Exportar datos',
     prog_import:'📥 Importar datos',
@@ -7498,7 +7498,7 @@ const I18N={
     plan_import_backup:'📥 Importar copia',
     plan_week_plan:'Plan semanal',
     plan_regenerate:'Regenerar',
-    plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Un refresh no la mueve.',
+    plan_week_sub:'Tu semana sigue tus días de sesión y la rotación de habilidades. Recargar la página no la mueve.',
     plan_need_diag:'Hacé el diagnóstico (10 min) y armo tu semana.',
     plan_diag_stale:'Tu diagnóstico tiene más de 60 días y ya no cuenta como evidencia fresca. Volvé a hacerlo para reconstruir tu semana.',
     plan_go_diag:'Ir al diagnóstico →',
@@ -7570,7 +7570,7 @@ const I18N={
     settings_title:'Ajustes',
     settings_ai_provider:'Proveedor de IA',
     settings_close:'Cerrar',
-    byo_title:'✨ Proveedor del Writing Corrector',
+    byo_title:'✨ Proveedor del corrector de Writing',
     byo_sub:'Usá cualquier proveedor compatible con OpenAI. La clave queda en este navegador y se envía por pedido; nunca se guarda en el servidor.',
     byo_provider:'Proveedor',
     byo_provider_custom:'Personalizado',
@@ -7588,7 +7588,7 @@ const I18N={
     byo_test_fail:'Falló · {code}',
     usage_title:'Límites de uso',
     usage_sub:'Todas las cuentas tienen el servicio completo. Estos límites diarios solo mantienen previsibles los costos del proveedor y se reinician solos.',
-    usage_write:'Writing Corrector y reportes',
+    usage_write:'Corrector de Writing e informes',
     usage_speak:'Simulacros de speaking',
     usage_count:'{n} de {limit} · {window}',
     usage_window_day:'hoy',
@@ -7603,7 +7603,7 @@ const I18N={
     usage_close:'Cerrar',
     usage_full_access:'Servicio completo',
     usage_left:'{n} de {limit} disponibles hoy',
-    books_online:'🌐 Práctica online (1 clic — gratis)',
+    books_online:'🌐 Práctica en línea (1 clic — gratis)',
     books_online_sub:'Ejercicios interactivos ilimitados por habilidad. Materiales oficiales de Cambridge + plataformas gratuitas (sin descargas).',
     books_material:'📥 Material descargado (PDF y audio)',
     books_material_sub:'Todo lo descargado: exámenes completos, guías por habilidad, planes de clase y audios. Los PDF se abren en el visor y el audio se reproduce en el navegador.',
@@ -7611,12 +7611,12 @@ const I18N={
     practice_books_title:'Libros y PDFs',
     practice_books_sub:'Todos los PDF y audios descargados, agrupados por carpeta.',
     books_moved_title:'Libros y PDFs ahora están en Recursos',
-    books_moved_sub:'La pestaña Libros se fusionó con Recursos. Los PDF, el audio y la práctica online siguen a un clic.',
+    books_moved_sub:'La pestaña Libros se fusionó con Recursos. Los PDF, el audio y la práctica en línea siguen a un clic.',
     books_moved_cta:'Ir a Recursos',
-    ai_title:'Writing Corrector',
+    ai_title:'Corrector de Writing',
     ai_sub:'Puntuado con la escala oficial del B2 First (Content, Communicative Achievement, Organisation, Language · 0–5 por criterio).',
     ai_card_sub:'Escribí o pegá tu texto para calificarlo con la rúbrica oficial de Cambridge (objetivo 140–190 palabras).',
-    ai_byo_badge:'usando tu clave',
+    ai_byo_badge:'Usando tu clave',
     ai_quota_left:'{n} correcciones disponibles hoy',
     ai_kind:'Tipo de texto',
     ai_text:'Tu texto en inglés',
@@ -7625,7 +7625,7 @@ const I18N={
     ai_target_words:'Objetivo: 140–190 palabras',
     ai_target_short:'(objetivo 140–190)',
     ai_submit:'Corregirlo',
-    ai_correcting:'corrigiendo…',
+    ai_correcting:'Corrigiendo…',
     ai_progress_label:'Progreso de la corrección',
     ai_step_read:'Leyendo tu texto',
     ai_step_task:'Revisando la consigna y los puntos',
@@ -7636,11 +7636,11 @@ const I18N={
     ai_failed:'No se pudo corregir el texto.',
     ai_result:'Resultado Cambridge B2 First',
     ai_quotes:'Citas del texto',
-    ai_rewrite:'3 frases mejoradas (reescritura)',
-    ai_state_idle:'inactivo',
-    ai_state_loading:'corrigiendo…',
-    ai_state_ok:'listo',
-    ai_state_error:'error',
+    ai_rewrite:'3 frases mejoradas',
+    ai_state_idle:'Listo',
+    ai_state_loading:'Corrigiendo…',
+    ai_state_ok:'Completado',
+    ai_state_error:'Error',
     ai_in_range:'✔ En rango ({words}/140–190 palabras)',
     ai_short:'Faltan {n} palabras (objetivo 140–190)',
     ai_over:'Sobran {n} palabras (máx. 190)',
@@ -7648,7 +7648,7 @@ const I18N={
     ai_err_words:'El texto debe tener entre 40 y 700 palabras.',
     ai_err_not_task:'Eso no parece una consigna de writing del B2 First. Pegá la consigna y tu texto.',
     ai_err_network:'No se pudo contactar al corrector. Revisá tu conexión e intentá de nuevo.',
-    ai_err_generic:'El corrector no pudo terminar esta vez. Tu texto está a salvo: tocá Comprobar de nuevo.',
+    ai_err_generic:'El corrector no pudo terminar esta vez. Tu texto está a salvo — probá de nuevo.',
     ai_retrying:'Está tardando más de lo normal, reintentando…',
     ai_task_toggle:'Pegá la consigna del examen (opcional, pero corrige con más precisión)',
     ai_task_ph:'ej. Tu profesor te pidió un essay sobre si la tecnología nos volvió menos sociales...',
@@ -7775,18 +7775,18 @@ const I18N={
     tour_next:'Siguiente',
     tour_done:'Listo',
     tour_replay:'🎬 Volver a ver el recorrido',
-    tour_1_title:'Today es tu casa',
-    tour_1_body:'Cada vez que abrís la app, empezá acá. Today te dice qué hacer ahora.',
+    tour_1_title:'Hoy es tu inicio',
+    tour_1_body:'Cada vez que abrís la app, empezá acá. Hoy te muestra qué hacer a continuación.',
     tour_2_title:'Tu sesión de hoy',
     tour_2_body:'Esta es la sesión que el plan eligió para hoy. Abrila, seguí los pasos y registrá el resultado al terminar.',
     tour_3_title:'Tu semana vive en Plan',
     tour_3_body:'Plan muestra cada sesión y el motivo detrás. Podés ajustar tus horas o regenerarlo cuando quieras.',
     tour_4_title:'Practicá cuando quieras más',
-    tour_4_body:'Practice reúne fuentes revisadas para cada habilidad, primero las gratis. Usalo para practicar fuera del plan.',
-    tour_5_title:'Hacé un simulacro en Exam',
-    tour_5_body:'Cuando te sientas listo, Exam corre un examen completo con los tiempos reales y te da una nota.',
+    tour_4_body:'Práctica reúne fuentes revisadas para cada habilidad, primero las gratis. Usala para practicar fuera del plan.',
+    tour_5_title:'Hacé un simulacro en Examen',
+    tour_5_body:'Cuando te sientas listo, Examen corre un examen completo con los tiempos reales y te da una nota.',
     tour_6_title:'Mirá tu progreso',
-    tour_6_body:'Progress muestra tus notas, tus partes más débiles y la evolución semana a semana.',
+    tour_6_body:'Progreso muestra tus notas, tus partes más débiles y la evolución semana a semana.',
     tour_7_title:'Mantené la llama',
     tour_7_body:'Esta llama es tu racha diaria. Una sesión registrada por día la mantiene viva.',
     alert_solo_logged:'Práctica registrada ✓',
@@ -7966,13 +7966,13 @@ const I18N={
     l_own_task_ph:'Pegá las preguntas y opciones, una por línea…',
     l_own_key_lbl:'Clave de respuestas (opcional, una por línea)',
     l_own_key_ph:'Una respuesta por línea en el mismo orden (A, B, palabra)…',
-    l_own_script_lbl:'Transcripción / script (opcional, máx. 6000 caracteres)',
+    l_own_script_lbl:'Transcripción (opcional, máx. 6000 caracteres)',
     l_own_script_ph:'Transcripción opcional — si no hay audio, podés reproducirla con la voz del navegador.',
     l_own_audio_lbl:'Archivo de audio (opcional, MP3/M4A/WAV/OGG/WebM, máx. 20 MB)',
     l_own_save:'Guardar mi material',
     l_own_delete:'Borrar',
-    l_own_play_script:'Reproducir script',
-    l_own_stop_script:'Detener script',
+    l_own_play_script:'Reproducir transcripción',
+    l_own_stop_script:'Detener transcripción',
     l_own_check:'Corregir respuestas',
     l_own_ans_ph:'Tu respuesta…',
     l_own_check_score:'{ok}/{total} correctas',

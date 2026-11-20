@@ -2,10 +2,10 @@
 
 Paste these values into the repository's **About** settings on GitHub.
 
-## Short description (135 / 160 characters)
+## Short description (139 / 160 characters)
 
 ```text
-Practice the Cambridge B2 First with an AI examiner, a four-band writing corrector, and a daily study plan. Python stdlib + vanilla JS.
+Practice the Cambridge B2 First with an AI examiner, 4-band writing corrector, local Live Studio, and an adaptive daily plan. Free in beta.
 ```
 
 ## Website
@@ -33,4 +33,4 @@ study-tracker
 
 ## About blurb (for Devpost / social / directory listings)
 
-> B2 First Tracker is a study system for the Cambridge B2 First exam built with Python's standard library and vanilla JavaScript (no framework, no build step, no external database). It combines a daily study plan built from your practice log, a 4-band Cambridge Writing corrector with quoted evidence and rewrites (DeepSeek), a 14-minute Speaking examiner across Parts 1–4 with a live voice path (Gemini Live + turn-based Gemini 2.5 Flash fallback) and local VAD Live Studio, 157 non-repeating practice exercises, and per-part error tracking.
+> B2 First Tracker is a study platform for the Cambridge B2 First exam built with Python's standard library and vanilla JavaScript (no framework, no build step, no external database). Free while in beta, it combines an adaptive daily study plan built from your diagnostic and log, a 4-band Cambridge Writing corrector with quoted sentences and rewrites (DeepSeek), a 14-minute AI Speaking examiner across Parts 1–4 with a listening partner and custom task support, browser-local VAD Live Studio, 157 non-repeating real exercises, and per-part error tracking.

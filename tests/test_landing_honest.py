@@ -6,7 +6,8 @@ Checks:
 2. Every <script> tag is inline (no CDN scripts) and no external stylesheets or
    font CDNs are loaded.
 3. "Sign in" and "Create an account" links point to /app.
-4. JSON-LD metadata makes no "self-hostable" claim and declares no price/offer.
+4. JSON-LD metadata makes no "self-hostable" claim and declares SoftwareApplication
+   in EducationalApplication with a free (price "0") offer.
 5. In Playwright (360x740 and 1280x800, light and dark themes):
    - Zero horizontal scroll (scrollWidth <= clientWidth).
    - Paragraph contrast ratio >= 4.5:1 against effective background.
@@ -117,7 +118,10 @@ assert len(parser.jsonld) == 1, f"Expected 1 JSON-LD block, got {len(parser.json
 ld = json.loads(parser.jsonld[0])
 ld_text = json.dumps(ld).lower()
 assert "self-hostable" not in ld_text and "self-hosted" not in ld_text, ld
-assert "offers" not in ld and "price" not in ld_text and "isAccessibleForFree" not in ld, ld
+assert ld.get("@type") == "SoftwareApplication", ld
+assert ld.get("applicationCategory") in ("EducationalApplication", "EducationApplication"), ld
+offers = ld.get("offers")
+assert isinstance(offers, dict) and str(offers.get("price")) == "0", ld
 
 # 3. Playwright checks across 360x740 and 1280x800 in light and dark themes
 CONTRAST_JS = """() => {
