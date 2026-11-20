@@ -2770,6 +2770,103 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 @media (min-width:1024px){
   .acct-sheet-overlay{padding:62px var(--s6) var(--s4)}
 }
+
+/* ---------- LISTENING OWN MATERIAL ---------- */
+#lOwnPanel{
+  margin-top:12px;padding:16px;border:1px solid var(--line);
+  border-radius:var(--r-panel);background:var(--surface-2);
+  max-width:100%;box-sizing:border-box;
+}
+.l-own-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;flex-wrap:wrap;margin-bottom:12px;
+}
+.l-own-title{font-size:var(--fs-md);font-weight:600;color:var(--txt)}
+.l-own-quota{font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums}
+.l-own-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.l-own-empty{
+  font-size:var(--t-meta);color:var(--txt-2);padding:12px;
+  border:1px dashed var(--line);border-radius:var(--r-ctl);background:var(--surface);
+}
+.l-own-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+  padding:8px 12px;border:1px solid var(--line);border-radius:var(--r-ctl);
+  background:var(--surface);min-height:44px;
+  transition-property:background-color, border-color;transition-duration:140ms;
+}
+.l-own-item.active{border-color:var(--acc-border);background:var(--acc-soft)}
+.l-own-item-btn{
+  flex:1 1 180px;min-width:0;min-height:44px;padding:4px 0;
+  border:none;background:transparent;color:var(--txt);text-align:left;
+  font-family:var(--font);font-size:var(--t-body);font-weight:600;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;gap:4px;
+  overflow-wrap:anywhere;
+}
+.l-own-item-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+.l-own-item-meta{font-size:var(--t-meta);font-weight:400;color:var(--txt-2);font-variant-numeric:tabular-nums}
+.l-own-session{
+  margin-bottom:12px;padding:12px;border:1px solid var(--line);
+  border-radius:var(--r-ctl);background:var(--surface);
+  max-width:100%;box-sizing:border-box;
+}
+.l-own-session-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;flex-wrap:wrap;margin-bottom:8px;
+}
+.l-own-session-title{font-size:var(--fs-md);font-weight:600;color:var(--txt);overflow-wrap:anywhere}
+.l-own-part-badge{
+  font-size:var(--t-meta);font-weight:600;color:var(--acc-text);
+  background:var(--acc-soft);border:1px solid var(--acc-border);
+  border-radius:999px;padding:4px 12px;flex:none;
+}
+#lOwnPlayer{width:100%;max-width:100%;display:block;margin-top:8px;min-height:44px}
+.l-own-tts-row{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+.l-own-q-list{
+  list-style:none;padding:0;margin:12px 0 0;
+  display:flex;flex-direction:column;gap:8px;
+}
+.l-own-q-row{
+  display:flex;flex-direction:column;gap:8px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface-2);
+}
+.l-own-q-row.is-ok{border-color:var(--ok-border);background:var(--ok-soft)}
+.l-own-q-row.is-bad{border-color:var(--bad-border);background:var(--bad-soft)}
+.l-own-q-text{font-size:var(--t-body);color:var(--txt);line-height:1.45;overflow-wrap:anywhere}
+.l-own-q-num{font-weight:600;color:var(--acc-text);margin-right:4px;font-variant-numeric:tabular-nums}
+.l-own-ans-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.l-own-ans{flex:1 1 140px;min-width:0;min-height:44px}
+.l-own-ans-fb{font-size:var(--t-meta);font-weight:600;overflow-wrap:anywhere}
+.l-own-ans-fb.is-ok{color:var(--ok-text)}
+.l-own-ans-fb.is-bad{color:var(--bad-text)}
+.l-own-check-row{
+  margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.l-own-check-res{font-size:var(--t-body);font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums}
+.l-own-form{
+  padding-top:12px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:8px;max-width:100%;
+}
+.l-own-part-hint{font-size:var(--t-meta);color:var(--txt-2);margin:0}
+#lOwnPanel input[type=text],#lOwnPanel textarea,#lOwnPanel input[type=file]{
+  width:100%;max-width:100%;box-sizing:border-box;
+}
+#lOwnPanel textarea{min-height:88px;resize:vertical;line-height:1.45}
+#lOwnAudio{min-height:44px;padding:8px;overflow:hidden;text-overflow:ellipsis}
+.l-own-audio-info{font-size:var(--t-meta);color:var(--txt-2);margin:0;overflow-wrap:anywhere}
+.l-own-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.l-own-actions .btn,.l-own-tts-row .btn,.l-own-check-row .btn{min-height:44px}
+.l-own-status{
+  margin-top:8px;padding:8px 12px;border-radius:var(--r-ctl);
+  font-size:var(--t-meta);font-weight:600;display:none;overflow-wrap:anywhere;
+}
+.l-own-status.show{display:block}
+.l-own-status.ok{background:var(--ok-soft);border:1px solid var(--ok-border);color:var(--ok-text)}
+.l-own-status.bad{background:var(--bad-soft);border:1px solid var(--bad-border);color:var(--bad-text)}
+.l-own-status.info{background:var(--acc-soft);border:1px solid var(--acc-border);color:var(--txt)}
+@media (max-width:560px){
+  #lOwnPanel{padding:12px}
+  .l-own-actions .btn,.l-own-tts-row .btn,.l-own-check-row .btn{width:100%}
+}
 </style>
 </head>
 <body>
@@ -3756,14 +3853,68 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         </select>
                       </div>
                       <div><label>Audio Source</label>
-                        <select id="lFuente">
+                        <select id="lFuente" data-change="onLFuenteChange">
                           <option value="sample1">Sample Paper 1 (MP3 local)</option>
                           <option value="sample2">Sample Paper 2 (MP3 local)</option>
                           <option value="ptplus">Practice Tests Plus (audio online)</option>
                           <option value="fce6">FCE 6 (CDs)</option>
+                          <option value="own" data-i18n="l_own_opt">My own material</option>
                         </select>
                       </div>
                       <div><label>Test # / Ref.</label><input type="text" id="lRef" placeholder="e.g. Sample 1 / Test 3"></div>
+                    </div>
+                    <div id="lOwnPanel" style="display:none">
+                      <div class="l-own-head">
+                        <div class="l-own-title" data-i18n="l_own_heading">My own listening material</div>
+                        <span id="lOwnQuota" class="l-own-quota"></span>
+                      </div>
+                      <div id="lOwnList" class="l-own-list"></div>
+                      <div id="lOwnSession" class="l-own-session" style="display:none">
+                        <div class="l-own-session-head">
+                          <div id="lOwnSessionTitle" class="l-own-session-title"></div>
+                          <span id="lOwnSessionPart" class="l-own-part-badge"></span>
+                        </div>
+                        <div id="lOwnAudioWrap" style="display:none">
+                          <audio id="lOwnPlayer" controls preload="metadata"></audio>
+                        </div>
+                        <div id="lOwnTtsRow" class="l-own-tts-row" style="display:none">
+                          <button type="button" class="btn" id="lOwnPlayScriptBtn" data-action="playOwnScript" data-i18n="l_own_play_script">Play script</button>
+                        </div>
+                        <ol id="lOwnQuestions" class="l-own-q-list" style="display:none"></ol>
+                        <div id="lOwnCheckRow" class="l-own-check-row" style="display:none">
+                          <button type="button" class="btn" id="lOwnCheckBtn" data-action="checkOwnAnswers" data-i18n="l_own_check">Check answers</button>
+                          <span id="lOwnCheckResult" class="l-own-check-res"></span>
+                        </div>
+                      </div>
+                      <div id="lOwnForm" class="l-own-form">
+                        <p id="lOwnPartHint" class="l-own-part-hint"></p>
+                        <div>
+                          <label for="lOwnTitle" data-i18n="l_own_title_lbl">Title</label>
+                          <input type="text" id="lOwnTitle" maxlength="120" data-i18n-placeholder="l_own_title_ph" placeholder="e.g. BBC podcast interview — Part 4">
+                        </div>
+                        <div>
+                          <label for="lOwnTask" data-i18n="l_own_task_lbl">Written task (one item per line, max 16)</label>
+                          <textarea id="lOwnTask" rows="4" data-i18n-placeholder="l_own_task_ph" placeholder="Paste questions and options, one per line…"></textarea>
+                        </div>
+                        <div>
+                          <label for="lOwnKey" data-i18n="l_own_key_lbl">Answer key (optional, one per line)</label>
+                          <textarea id="lOwnKey" rows="3" data-i18n-placeholder="l_own_key_ph" placeholder="One answer per line in the same order (A, B, word)…"></textarea>
+                        </div>
+                        <div>
+                          <label for="lOwnScript" data-i18n="l_own_script_lbl">Transcript / script (optional, max 6000 chars)</label>
+                          <textarea id="lOwnScript" rows="4" maxlength="6000" data-i18n-placeholder="l_own_script_ph" placeholder="Optional transcript — if there is no audio, you can play it aloud with your browser voice."></textarea>
+                        </div>
+                        <div>
+                          <label for="lOwnAudio" data-i18n="l_own_audio_lbl">Audio file (optional, MP3/M4A/WAV/OGG/WebM, max 20 MB)</label>
+                          <input type="file" id="lOwnAudio" accept="audio/mpeg,audio/mp4,audio/wav,audio/ogg,audio/webm" data-change="onLOwnAudioChange">
+                          <p id="lOwnAudioInfo" class="l-own-audio-info"></p>
+                        </div>
+                        <div class="l-own-actions">
+                          <button type="button" class="btn ok" id="lOwnSaveBtn" data-action="saveOwnMaterial" data-i18n="l_own_save">Save my material</button>
+                          <button type="button" class="btn gray" id="lOwnDeleteBtn" data-action="deleteOwnMaterial" data-i18n="l_own_delete" style="display:none">Delete</button>
+                        </div>
+                        <div id="lOwnStatus" class="l-own-status" role="status" aria-live="polite"></div>
+                      </div>
                     </div>
                     <div class="row">
                       <div><label id="lOkLbl">Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
@@ -5906,7 +6057,48 @@ const I18N={
     spx_custom_err_empty:'Enter at least one line for your task.',
     spx_custom_err_max_items:'Too many items (maximum {max} lines).',
     spx_custom_err_max_chars:'Each line must be {max} characters or fewer.',
-    spx_custom_err_html:'Plain text only — HTML tags are not allowed.'
+    spx_custom_err_html:'Plain text only — HTML tags are not allowed.',
+    l_own_opt:'My own material',
+    l_own_heading:'My own listening material',
+    l_own_empty:'No saved material yet. Add audio, written questions or a transcript below.',
+    l_own_part_hint:'Uses the Mode selected above: {part}.',
+    l_own_part_all_note:'All parts (will save as Part 1 unless you pick Part 1–4 above)',
+    l_own_part_n:'Part {n}',
+    l_own_title_lbl:'Title',
+    l_own_title_ph:'e.g. BBC podcast interview — Part 4',
+    l_own_task_lbl:'Written task (one item per line, max 16)',
+    l_own_task_ph:'Paste questions and options, one per line…',
+    l_own_key_lbl:'Answer key (optional, one per line)',
+    l_own_key_ph:'One answer per line in the same order (A, B, word)…',
+    l_own_script_lbl:'Transcript / script (optional, max 6000 chars)',
+    l_own_script_ph:'Optional transcript — if there is no audio, you can play it aloud with your browser voice.',
+    l_own_audio_lbl:'Audio file (optional, MP3/M4A/WAV/OGG/WebM, max 20 MB)',
+    l_own_save:'Save my material',
+    l_own_delete:'Delete',
+    l_own_play_script:'Play script',
+    l_own_stop_script:'Stop script',
+    l_own_check:'Check answers',
+    l_own_ans_ph:'Your answer…',
+    l_own_check_score:'{ok}/{total} correct',
+    l_own_has_audio:'Audio',
+    l_own_text_only:'Text only',
+    l_own_quota:'{count}/{max} items · {used}/{limit} MB',
+    l_own_st_uploading:'Uploading audio…',
+    l_own_st_saving:'Saving material…',
+    l_own_st_saved:'Material saved.',
+    l_own_st_deleted:'Material deleted.',
+    l_own_err_title:'Enter a title (max 120 characters).',
+    l_own_err_empty:'Add an audio file, written task or transcript.',
+    l_own_err_task_max:'Maximum 16 lines for task and answer key.',
+    l_own_err_line_len:'Each line must be 300 characters or fewer.',
+    l_own_err_script_len:'Transcript must be 6000 characters or fewer.',
+    l_own_err_audio_size:'Audio file exceeds the 20 MB limit.',
+    l_own_err_audio_fmt:'Unsupported audio format. Use MP3, M4A/MP4, WAV, OGG or WebM.',
+    l_own_err_load:'Could not load your saved material.',
+    l_own_err_save:'Could not save material.',
+    l_own_err_delete:'Could not delete material.',
+    l_own_err_limit_items:'Limit reached: maximum 10 saved materials.',
+    l_own_err_limit_bytes:'Storage limit reached (40 MB per user). Delete an old file first.'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -6855,7 +7047,48 @@ const I18N={
     spx_custom_err_empty:'Escribí al menos una línea para tu tarea.',
     spx_custom_err_max_items:'Demasiados ítems (máximo {max} líneas).',
     spx_custom_err_max_chars:'Cada línea debe tener {max} caracteres o menos.',
-    spx_custom_err_html:'Solo texto plano — no se permiten etiquetas HTML.'
+    spx_custom_err_html:'Solo texto plano — no se permiten etiquetas HTML.',
+    l_own_opt:'Mi material',
+    l_own_heading:'Mi material de Listening',
+    l_own_empty:'Todavía no guardaste material. Subí un audio o pegá la tarea o transcripción abajo.',
+    l_own_part_hint:'Usa el modo elegido arriba: {part}.',
+    l_own_part_all_note:'Todas las partes (se guardará como Parte 1 salvo que elijas Parte 1–4 arriba)',
+    l_own_part_n:'Parte {n}',
+    l_own_title_lbl:'Título',
+    l_own_title_ph:'ej. Entrevista podcast — Parte 4',
+    l_own_task_lbl:'Tarea escrita (un ítem por línea, máx. 16)',
+    l_own_task_ph:'Pegá las preguntas y opciones, una por línea…',
+    l_own_key_lbl:'Clave de respuestas (opcional, una por línea)',
+    l_own_key_ph:'Una respuesta por línea en el mismo orden (A, B, palabra)…',
+    l_own_script_lbl:'Transcripción / script (opcional, máx. 6000 caracteres)',
+    l_own_script_ph:'Transcripción opcional — si no hay audio, podés reproducirla con la voz del navegador.',
+    l_own_audio_lbl:'Archivo de audio (opcional, MP3/M4A/WAV/OGG/WebM, máx. 20 MB)',
+    l_own_save:'Guardar mi material',
+    l_own_delete:'Borrar',
+    l_own_play_script:'Reproducir script',
+    l_own_stop_script:'Detener script',
+    l_own_check:'Corregir respuestas',
+    l_own_ans_ph:'Tu respuesta…',
+    l_own_check_score:'{ok}/{total} correctas',
+    l_own_has_audio:'Audio',
+    l_own_text_only:'Solo texto',
+    l_own_quota:'{count}/{max} materiales · {used}/{limit} MB',
+    l_own_st_uploading:'Subiendo audio…',
+    l_own_st_saving:'Guardando material…',
+    l_own_st_saved:'Material guardado.',
+    l_own_st_deleted:'Material borrado.',
+    l_own_err_title:'Escribí un título (máx. 120 caracteres).',
+    l_own_err_empty:'Subí un audio o escribí una tarea o transcripción.',
+    l_own_err_task_max:'Máximo 16 líneas para la tarea y la clave.',
+    l_own_err_line_len:'Cada línea debe tener 300 caracteres o menos.',
+    l_own_err_script_len:'La transcripción debe tener 6000 caracteres o menos.',
+    l_own_err_audio_size:'El archivo de audio supera el límite de 20 MB.',
+    l_own_err_audio_fmt:'Formato de audio no permitido. Usá MP3, M4A/MP4, WAV, OGG o WebM.',
+    l_own_err_load:'No se pudo cargar tu material guardado.',
+    l_own_err_save:'No se pudo guardar el material.',
+    l_own_err_delete:'No se pudo borrar el material.',
+    l_own_err_limit_items:'Límite alcanzado: máximo 10 materiales guardados.',
+    l_own_err_limit_bytes:'Límite de almacenamiento alcanzado (40 MB por usuario). Borrá un archivo primero.'
   }
 };
 let LANG='en';
@@ -6921,6 +7154,7 @@ function applyI18n(){
   if(typeof updateTopbarViewTitle==='function')updateTopbarViewTitle();
   if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
   if(typeof syncAccountSheet==='function')syncAccountSheet();
+  if(typeof renderOwnMaterialUI==='function')renderOwnMaterialUI();
 }
 function setLang(code){
   const next=normalizeLang(code);
@@ -14545,6 +14779,508 @@ function saveL(){
   }
   document.getElementById('lOk').value=0;document.getElementById('lRef').value='';
 }
+/* ---------- LISTENING OWN MATERIAL ---------- */
+const L_OWN={
+  items:[],
+  selectedId:null,
+  totalBytes:0,
+  limitItems:10,
+  limitBytes:40*1024*1024,
+  loaded:false,
+  busy:false,
+  speaking:false,
+  lastStatus:null,
+  renderedSessionId:null
+};
+const L_OWN_MAX_AUDIO=20*1024*1024;
+const L_OWN_MIMES={
+  'audio/mpeg':'audio/mpeg',
+  'audio/mp4':'audio/mp4',
+  'audio/wav':'audio/wav',
+  'audio/x-wav':'audio/wav',
+  'audio/wave':'audio/wav',
+  'audio/ogg':'audio/ogg',
+  'audio/webm':'audio/webm'
+};
+const L_OWN_EXT_MIMES={
+  '.mp3':'audio/mpeg',
+  '.m4a':'audio/mp4',
+  '.mp4':'audio/mp4',
+  '.wav':'audio/wav',
+  '.ogg':'audio/ogg',
+  '.webm':'audio/webm'
+};
+function lOwnSupportsTTS(){
+  return typeof window!=='undefined'&&'speechSynthesis' in window&&!!window.speechSynthesis&&typeof window.SpeechSynthesisUtterance==='function';
+}
+function lOwnStopTTS(){
+  if(lOwnSupportsTTS()){
+    try{window.speechSynthesis.cancel()}catch(e){}
+  }
+  L_OWN.speaking=false;
+  const btn=document.getElementById('lOwnPlayScriptBtn');
+  if(btn)btn.textContent=t('l_own_play_script');
+}
+function lOwnResolveMime(file){
+  if(!file)return '';
+  const raw=String(file.type||'').trim().toLowerCase().split(';')[0].trim();
+  if(raw&&L_OWN_MIMES[raw])return L_OWN_MIMES[raw];
+  const name=String(file.name||'').toLowerCase();
+  const dot=name.lastIndexOf('.');
+  if(dot>=0){
+    const ext=name.slice(dot);
+    if(L_OWN_EXT_MIMES[ext])return L_OWN_EXT_MIMES[ext];
+  }
+  return '';
+}
+function lOwnFmtBytes(n){
+  const v=Number(n)||0;
+  if(v>=1024*1024)return (v/(1024*1024)).toFixed(1)+' MB';
+  if(v>=1024)return Math.max(1,Math.round(v/1024))+' KB';
+  return v+' B';
+}
+function lOwnSetStatus(kind,key,fallback){
+  const el=document.getElementById('lOwnStatus');
+  if(!kind){
+    L_OWN.lastStatus=null;
+    if(el){el.className='l-own-status';el.textContent=''}
+    return;
+  }
+  L_OWN.lastStatus={kind,key:key||'',fallback:fallback||''};
+  if(!el)return;
+  el.className='l-own-status show '+kind;
+  el.textContent=(key?t(key):'')||fallback||'';
+}
+function lOwnSyncPartHint(){
+  const hint=document.getElementById('lOwnPartHint');
+  if(!hint)return;
+  const partEl=document.getElementById('lPart');
+  const val=partEl?String(partEl.value):'all';
+  const partText=(val==='1'||val==='2'||val==='3'||val==='4')
+    ?t('l_own_part_n',{n:val})
+    :t('l_own_part_all_note');
+  hint.textContent=t('l_own_part_hint',{part:partText});
+}
+function lOwnActiveItem(){
+  if(!L_OWN.selectedId)return null;
+  return L_OWN.items.find(it=>it&&it.id===L_OWN.selectedId)||null;
+}
+function renderOwnMaterialUI(){
+  const panel=document.getElementById('lOwnPanel');
+  if(!panel)return;
+  const quotaEl=document.getElementById('lOwnQuota');
+  if(quotaEl){
+    quotaEl.textContent=t('l_own_quota',{
+      count:L_OWN.items.length,
+      max:L_OWN.limitItems,
+      used:(L_OWN.totalBytes/(1024*1024)).toFixed(1),
+      limit:Math.round(L_OWN.limitBytes/(1024*1024))
+    });
+  }
+  lOwnSyncPartHint();
+  if(L_OWN.lastStatus&&L_OWN.lastStatus.key){
+    const stEl=document.getElementById('lOwnStatus');
+    if(stEl&&stEl.classList.contains('show')){
+      stEl.textContent=t(L_OWN.lastStatus.key)||L_OWN.lastStatus.fallback||'';
+    }
+  }
+  const listEl=document.getElementById('lOwnList');
+  if(listEl){
+    if(!L_OWN.items.length){
+      listEl.innerHTML='<div class="l-own-empty">'+esc(t('l_own_empty'))+'</div>';
+    }else{
+      listEl.innerHTML=L_OWN.items.map(it=>{
+        const isActive=it.id===L_OWN.selectedId;
+        const metaParts=[t('l_own_part_n',{n:it.part})];
+        if(it.has_audio){
+          metaParts.push(t('l_own_has_audio')+' · '+lOwnFmtBytes(it.bytes));
+        }else{
+          metaParts.push(t('l_own_text_only'));
+        }
+        return '<div class="l-own-item'+(isActive?' active':'')+'">'
+          +'<button type="button" class="l-own-item-btn" data-action="selectOwnMaterial" data-id="'+esc(it.id)+'">'
+          +'<span>'+esc(it.title)+'</span>'
+          +'<span class="l-own-item-meta">'+esc(metaParts.join(' · '))+'</span>'
+          +'</button></div>';
+      }).join('');
+    }
+  }
+  const active=lOwnActiveItem();
+  const delBtn=document.getElementById('lOwnDeleteBtn');
+  if(delBtn)delBtn.style.display=active?'':'none';
+  const sessEl=document.getElementById('lOwnSession');
+  const player=document.getElementById('lOwnPlayer');
+  const audioWrap=document.getElementById('lOwnAudioWrap');
+  const ttsRow=document.getElementById('lOwnTtsRow');
+  const ttsBtn=document.getElementById('lOwnPlayScriptBtn');
+  const qListEl=document.getElementById('lOwnQuestions');
+  const chkRow=document.getElementById('lOwnCheckRow');
+  const chkRes=document.getElementById('lOwnCheckResult');
+  if(!active){
+    if(sessEl)sessEl.style.display='none';
+    if(player){try{player.pause()}catch(e){}player.removeAttribute('src')}
+    lOwnStopTTS();
+    L_OWN.renderedSessionId=null;
+    return;
+  }
+  if(sessEl)sessEl.style.display='';
+  const sTitle=document.getElementById('lOwnSessionTitle');
+  if(sTitle)sTitle.textContent=active.title||'';
+  const sPart=document.getElementById('lOwnSessionPart');
+  if(sPart)sPart.textContent=t('l_own_part_n',{n:active.part||1});
+  if(active.has_audio){
+    if(audioWrap)audioWrap.style.display='';
+    const wantedSrc='/api/listening/material/audio?id='+encodeURIComponent(active.id);
+    if(player&&player.getAttribute('src')!==wantedSrc){
+      player.setAttribute('src',wantedSrc);
+      try{player.load()}catch(e){}
+    }
+    if(ttsRow)ttsRow.style.display='none';
+    lOwnStopTTS();
+  }else{
+    if(audioWrap)audioWrap.style.display='none';
+    if(player){try{player.pause()}catch(e){}player.removeAttribute('src')}
+    const canTts=!!(active.script&&lOwnSupportsTTS());
+    if(ttsRow)ttsRow.style.display=canTts?'':'none';
+    if(ttsBtn)ttsBtn.textContent=L_OWN.speaking?t('l_own_stop_script'):t('l_own_play_script');
+  }
+  const tasks=Array.isArray(active.task)?active.task:[];
+  const keys=Array.isArray(active.key)?active.key:[];
+  const count=Math.max(tasks.length,keys.length);
+  if(qListEl){
+    if(!count){
+      qListEl.style.display='none';
+      qListEl.innerHTML='';
+    }else{
+      const prevVals={};
+      if(L_OWN.renderedSessionId===active.id){
+        qListEl.querySelectorAll('.l-own-ans').forEach(inp=>{
+          prevVals[inp.dataset.qidx]=inp.value;
+        });
+      }else if(chkRes){
+        chkRes.textContent='';
+      }
+      qListEl.style.display='';
+      const ph=esc(t('l_own_ans_ph'));
+      let html='';
+      for(let i=0;i<count;i++){
+        const qText=tasks[i]||'';
+        const hasKey=i<keys.length;
+        const val=prevVals[String(i)]!==undefined?prevVals[String(i)]:'';
+        html+='<li class="l-own-q-row" data-qidx="'+i+'">'
+          +'<div class="l-own-q-text"><span class="l-own-q-num">'+(i+1)+'.</span>'+esc(qText)+'</div>'
+          +(hasKey
+            ?'<div class="l-own-ans-wrap">'
+              +'<input type="text" class="l-own-ans" data-qidx="'+i+'" placeholder="'+ph+'" value="'+esc(val)+'">'
+              +'<span class="l-own-ans-fb"></span>'
+              +'</div>'
+            :'')
+          +'</li>';
+      }
+      qListEl.innerHTML=html;
+    }
+  }
+  if(chkRow)chkRow.style.display=keys.length?'':'none';
+  L_OWN.renderedSessionId=active.id;
+}
+function selectOwnMaterial(id){
+  lOwnStopTTS();
+  L_OWN.selectedId=id||null;
+  L_OWN.renderedSessionId=null;
+  const chkRes=document.getElementById('lOwnCheckResult');
+  if(chkRes)chkRes.textContent='';
+  const active=lOwnActiveItem();
+  if(active){
+    const refEl=document.getElementById('lRef');
+    if(refEl)refEl.value=active.title||'';
+    const partEl=document.getElementById('lPart');
+    if(partEl&&active.part>=1&&active.part<=4){
+      partEl.value=String(active.part);
+      onLPartChange();
+    }
+  }
+  renderOwnMaterialUI();
+}
+async function loadOwnMaterials(){
+  if(!USER||!USER.token)return;
+  try{
+    const r=await fetch('/api/listening/material',{headers:authHeaders()});
+    if(!r.ok){
+      lOwnSetStatus('bad','l_own_err_load');
+      return;
+    }
+    const data=await r.json();
+    L_OWN.items=Array.isArray(data.items)?data.items:[];
+    L_OWN.totalBytes=Number(data.total_bytes)||0;
+    L_OWN.limitItems=Number(data.limit_items)||10;
+    L_OWN.limitBytes=Number(data.limit_bytes)||(40*1024*1024);
+    L_OWN.loaded=true;
+    const still=L_OWN.selectedId&&L_OWN.items.some(it=>it.id===L_OWN.selectedId);
+    if(!still){
+      L_OWN.selectedId=L_OWN.items.length?L_OWN.items[0].id:null;
+      L_OWN.renderedSessionId=null;
+    }
+    const active=lOwnActiveItem();
+    if(active){
+      const refEl=document.getElementById('lRef');
+      if(refEl)refEl.value=active.title||'';
+      if(!still){
+        const partEl=document.getElementById('lPart');
+        if(partEl&&active.part>=1&&active.part<=4){
+          partEl.value=String(active.part);
+          onLPartChange();
+        }
+      }
+    }
+    renderOwnMaterialUI();
+  }catch(e){
+    lOwnSetStatus('bad','l_own_err_load');
+  }
+}
+function onLFuenteChange(){
+  const sel=document.getElementById('lFuente');
+  const panel=document.getElementById('lOwnPanel');
+  if(!sel||!panel)return;
+  const isOwn=sel.value==='own';
+  panel.style.display=isOwn?'':'none';
+  if(isOwn){
+    renderOwnMaterialUI();
+    loadOwnMaterials();
+  }else{
+    const player=document.getElementById('lOwnPlayer');
+    if(player){try{player.pause()}catch(e){}}
+    lOwnStopTTS();
+  }
+}
+function onLOwnAudioChange(){
+  const inp=document.getElementById('lOwnAudio');
+  const info=document.getElementById('lOwnAudioInfo');
+  if(info)info.textContent='';
+  if(!inp||!inp.files||!inp.files[0])return;
+  const f=inp.files[0];
+  if(f.size>L_OWN_MAX_AUDIO){
+    inp.value='';
+    lOwnSetStatus('bad','l_own_err_audio_size');
+    return;
+  }
+  const mime=lOwnResolveMime(f);
+  if(!mime){
+    inp.value='';
+    lOwnSetStatus('bad','l_own_err_audio_fmt');
+    return;
+  }
+  if(info)info.textContent=f.name+' ('+lOwnFmtBytes(f.size)+')';
+  lOwnSetStatus(null);
+}
+function lOwnReadFileBase64(file){
+  return new Promise((resolve,reject)=>{
+    const fr=new FileReader();
+    fr.addEventListener('load',()=>{
+      const raw=String(fr.result||'');
+      const idx=raw.indexOf(',');
+      resolve(idx>=0?raw.slice(idx+1):raw);
+    });
+    fr.addEventListener('error',()=>reject(new Error('read_failed')));
+    fr.readAsDataURL(file);
+  });
+}
+async function saveOwnMaterial(){
+  if(L_OWN.busy)return;
+  const titleEl=document.getElementById('lOwnTitle');
+  const taskEl=document.getElementById('lOwnTask');
+  const keyEl=document.getElementById('lOwnKey');
+  const scriptEl=document.getElementById('lOwnScript');
+  const audioEl=document.getElementById('lOwnAudio');
+  const partEl=document.getElementById('lPart');
+  const saveBtn=document.getElementById('lOwnSaveBtn');
+
+  const title=String(titleEl?titleEl.value:'').trim();
+  if(!title||title.length>120){
+    lOwnSetStatus('bad','l_own_err_title');
+    return;
+  }
+  const taskLines=String(taskEl?taskEl.value:'').replace(/\r\n?/g,'\n').split('\n').map(s=>s.trim()).filter(Boolean);
+  const keyLines=String(keyEl?keyEl.value:'').replace(/\r\n?/g,'\n').split('\n').map(s=>s.trim()).filter(Boolean);
+  const script=String(scriptEl?scriptEl.value:'').trim();
+  const file=(audioEl&&audioEl.files&&audioEl.files[0])?audioEl.files[0]:null;
+
+  if(taskLines.length>16||keyLines.length>16){
+    lOwnSetStatus('bad','l_own_err_task_max');
+    return;
+  }
+  if(taskLines.some(s=>s.length>300)||keyLines.some(s=>s.length>300)){
+    lOwnSetStatus('bad','l_own_err_line_len');
+    return;
+  }
+  if(script.length>6000){
+    lOwnSetStatus('bad','l_own_err_script_len');
+    return;
+  }
+  if(!taskLines.length&&!script&&!file){
+    lOwnSetStatus('bad','l_own_err_empty');
+    return;
+  }
+  let mime='';
+  if(file){
+    if(file.size>L_OWN_MAX_AUDIO){
+      lOwnSetStatus('bad','l_own_err_audio_size');
+      return;
+    }
+    mime=lOwnResolveMime(file);
+    if(!mime){
+      lOwnSetStatus('bad','l_own_err_audio_fmt');
+      return;
+    }
+  }
+  const rawPart=partEl?String(partEl.value):'all';
+  const part=(rawPart==='1'||rawPart==='2'||rawPart==='3'||rawPart==='4')?+rawPart:1;
+
+  L_OWN.busy=true;
+  if(saveBtn)saveBtn.disabled=true;
+  lOwnSetStatus('info',file?'l_own_st_uploading':'l_own_st_saving');
+  try{
+    const payload={title,part,task:taskLines,key:keyLines,script};
+    if(file){
+      payload.audio_b64=await lOwnReadFileBase64(file);
+      payload.mime=mime;
+    }
+    const r=await fetch('/api/listening/material',{
+      method:'POST',
+      headers:authHeaders(),
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok){
+      let errMsg='';
+      try{const j=await r.json();errMsg=(j&&j.error)?String(j.error):''}catch(e){}
+      if(r.status===429){
+        lOwnSetStatus('bad','l_own_err_limit_items',errMsg);
+      }else if(r.status===413){
+        if(errMsg.indexOf('40 MB')>=0)lOwnSetStatus('bad','l_own_err_limit_bytes',errMsg);
+        else lOwnSetStatus('bad','l_own_err_audio_size',errMsg);
+      }else{
+        lOwnSetStatus('bad','l_own_err_save',errMsg);
+      }
+      return;
+    }
+    const created=await r.json();
+    if(titleEl)titleEl.value='';
+    if(taskEl)taskEl.value='';
+    if(keyEl)keyEl.value='';
+    if(scriptEl)scriptEl.value='';
+    if(audioEl)audioEl.value='';
+    const info=document.getElementById('lOwnAudioInfo');
+    if(info)info.textContent='';
+    L_OWN.items=[created].concat(L_OWN.items.filter(it=>it.id!==created.id));
+    L_OWN.totalBytes+=Number(created.bytes)||0;
+    L_OWN.selectedId=created.id;
+    L_OWN.renderedSessionId=null;
+    const refEl=document.getElementById('lRef');
+    if(refEl)refEl.value=created.title||'';
+    if(partEl&&created.part>=1&&created.part<=4){
+      partEl.value=String(created.part);
+      onLPartChange();
+    }
+    renderOwnMaterialUI();
+    lOwnSetStatus('ok','l_own_st_saved');
+  }catch(e){
+    lOwnSetStatus('bad','l_own_err_save');
+  }finally{
+    L_OWN.busy=false;
+    if(saveBtn)saveBtn.disabled=false;
+  }
+}
+async function deleteOwnMaterial(){
+  const active=lOwnActiveItem();
+  if(!active||L_OWN.busy)return;
+  L_OWN.busy=true;
+  const delBtn=document.getElementById('lOwnDeleteBtn');
+  if(delBtn)delBtn.disabled=true;
+  try{
+    const r=await fetch('/api/listening/material?id='+encodeURIComponent(active.id),{
+      method:'DELETE',
+      headers:authHeaders()
+    });
+    if(!r.ok){
+      lOwnSetStatus('bad','l_own_err_delete');
+      return;
+    }
+    const player=document.getElementById('lOwnPlayer');
+    if(player){try{player.pause()}catch(e){}player.removeAttribute('src')}
+    lOwnStopTTS();
+    L_OWN.items=L_OWN.items.filter(it=>it.id!==active.id);
+    L_OWN.totalBytes=Math.max(0,L_OWN.totalBytes-(Number(active.bytes)||0));
+    L_OWN.selectedId=L_OWN.items.length?L_OWN.items[0].id:null;
+    L_OWN.renderedSessionId=null;
+    const next=lOwnActiveItem();
+    const refEl=document.getElementById('lRef');
+    if(refEl)refEl.value=next?(next.title||''):'';
+    renderOwnMaterialUI();
+    lOwnSetStatus('ok','l_own_st_deleted');
+  }catch(e){
+    lOwnSetStatus('bad','l_own_err_delete');
+  }finally{
+    L_OWN.busy=false;
+    if(delBtn)delBtn.disabled=false;
+  }
+}
+function playOwnScript(){
+  if(!lOwnSupportsTTS())return;
+  if(L_OWN.speaking){lOwnStopTTS();return}
+  const active=lOwnActiveItem();
+  if(!active||active.has_audio||!active.script)return;
+  try{window.speechSynthesis.cancel()}catch(e){}
+  const u=new SpeechSynthesisUtterance(active.script);
+  u.lang='en-GB';
+  const reset=()=>{
+    L_OWN.speaking=false;
+    const btn=document.getElementById('lOwnPlayScriptBtn');
+    if(btn)btn.textContent=t('l_own_play_script');
+  };
+  u.addEventListener('end',reset);
+  u.addEventListener('error',reset);
+  L_OWN.speaking=true;
+  const btn=document.getElementById('lOwnPlayScriptBtn');
+  if(btn)btn.textContent=t('l_own_stop_script');
+  window.speechSynthesis.speak(u);
+}
+function checkOwnAnswers(){
+  const active=lOwnActiveItem();
+  if(!active||!Array.isArray(active.key)||!active.key.length)return;
+  const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const qListEl=document.getElementById('lOwnQuestions');
+  if(!qListEl)return;
+  let ok=0;
+  const total=active.key.length;
+  qListEl.querySelectorAll('.l-own-ans').forEach(inp=>{
+    const idx=+inp.dataset.qidx;
+    if(isNaN(idx)||idx<0||idx>=total)return;
+    const expected=active.key[idx];
+    const row=inp.closest('.l-own-q-row');
+    const fb=row?row.querySelector('.l-own-ans-fb'):null;
+    const match=norm(inp.value)===norm(expected);
+    if(match)ok++;
+    if(row){
+      row.classList.toggle('is-ok',match);
+      row.classList.toggle('is-bad',!match);
+    }
+    if(fb){
+      fb.classList.toggle('is-ok',match);
+      fb.classList.toggle('is-bad',!match);
+      fb.textContent=match?'✓':'✗ '+expected;
+    }
+  });
+  const resEl=document.getElementById('lOwnCheckResult');
+  if(resEl)resEl.textContent=t('l_own_check_score',{ok,total});
+  const okInp=document.getElementById('lOk');
+  if(okInp){
+    const maxVal=+okInp.max||total;
+    okInp.value=Math.min(ok,maxVal);
+  }
+}
+(function(){
+  const el=document.getElementById('lPart');
+  if(el)el.addEventListener('change',lOwnSyncPartHint);
+})();
 function saveSP(report){
   /* S5: a report is saved without the transcript (bands + metrics only).
      The manual "Save Speaking" button still calls saveSP() with no argument
@@ -20460,6 +21196,7 @@ click:{
 'applyPlanningReset':()=>applyPlanningReset(),
 'cancelGoogleLink':()=>{hideGoogleLink();showAuthOverlay()},
 'cancelMfa':()=>cancelMfa(),
+'checkOwnAnswers':()=>checkOwnAnswers(),
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
 'clearResourcesFilter':()=>clearResourcesFilter(),
@@ -20478,6 +21215,7 @@ click:{
 'closeUserModalIfSelf':(el,ev)=>{if(ev.target===el)closeUserModal()},
 'delErr':el=>delErr(+el.dataset.i),
 'delLog':el=>delLog(+el.dataset.i),
+'deleteOwnMaterial':()=>deleteOwnMaterial(),
 'doChangePassword':()=>doChangePassword(),
 'confirmMfa':()=>confirmMfa(),
 'disableMfa':()=>disableMfa(),
@@ -20525,6 +21263,7 @@ click:{
 'openSoloModal':el=>openSoloModal(el.dataset.arg||undefined),
 'openSpeakingExam':()=>openSpeakingExam(),
 'openWritingCorrectorFromDraft':()=>openWritingCorrectorFromDraft(),
+'playOwnScript':()=>playOwnScript(),
 'qlNext':()=>qlNext(),
 'qlPickNum':el=>qlPickNum(+el.dataset.arg),
 'qlPickRange':el=>{const r=el.dataset.qlRange.split('-');qlPickRange(+r[0],+r[1])},
@@ -20544,6 +21283,7 @@ click:{
 'saveFW':()=>saveFW(),
 'saveL':()=>saveL(),
 'saveMockListening':()=>saveMockListening(),
+'saveOwnMaterial':()=>saveOwnMaterial(),
 'savePart':el=>savePart(+el.dataset.i),
 'saveR6':()=>saveR6(),
 'saveRUE':()=>saveRUE(),
@@ -20552,6 +21292,7 @@ click:{
 'saveSoloPractice':()=>saveSoloPractice(),
 'saveUE':()=>saveUE(),
 'saveW':()=>saveW(),
+'selectOwnMaterial':el=>selectOwnMaterial(el.dataset.id),
 'setExamDate':()=>setExamDate(),
 'setLang':el=>setLang(el.dataset.arg),
 'setPracticeFilter':el=>setPracticeFilter(el.dataset.skill),
@@ -20603,6 +21344,8 @@ change:{
 'obTargetGrade':el=>{OB.draft.targetGrade=el.value},
 'onByoProviderChange':()=>onByoProviderChange(),
 'onItemsPerSessionChange':el=>onItemsPerSessionChange(el.value),
+'onLFuenteChange':()=>onLFuenteChange(),
+'onLOwnAudioChange':()=>onLOwnAudioChange(),
 'onRotationModeChange':el=>onRotationModeChange(el.value),
 'onSoloPartChange':()=>onSoloPartChange(),
 'onSoloSkillChange':()=>onSoloSkillChange(),

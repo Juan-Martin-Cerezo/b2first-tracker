@@ -255,13 +255,43 @@ SPK_TURN_TIMEOUT = 20                # seconds per upstream call
 SPK_TURN_DEADLINE = SPK_TURN_TIMEOUT + 5
 SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
 
+# --- Listening own material (per-user audio + task/key/script) --------------
+LISTENING_MAT_MAX_AUDIO = 20 * 1024 * 1024           # 20 MB decoded audio per item
+LISTENING_MAT_MAX_B64 = ((LISTENING_MAT_MAX_AUDIO + 2) // 3) * 4 + 16
+LISTENING_MAT_MAX_BODY = LISTENING_MAT_MAX_B64 + 64 * 1024
+LISTENING_MAT_MAX_ITEMS = 10                         # max materials per user
+LISTENING_MAT_MAX_USER_BYTES = 40 * 1024 * 1024      # 40 MB total audio per user
+LISTENING_MAT_TITLE_MAX = 120
+LISTENING_MAT_TASK_MAX_ITEMS = 16
+LISTENING_MAT_ITEM_MAX_CHARS = 300
+LISTENING_MAT_SCRIPT_MAX_CHARS = 6000
+LISTENING_MAT_MIMES = {
+    "audio/mpeg": (".mp3", "audio/mpeg"),
+    "audio/mp4": (".m4a", "audio/mp4"),
+    "audio/wav": (".wav", "audio/wav"),
+    "audio/x-wav": (".wav", "audio/wav"),
+    "audio/wave": (".wav", "audio/wav"),
+    "audio/ogg": (".ogg", "audio/ogg"),
+    "audio/webm": (".webm", "audio/webm"),
+}
+_LM_ID_RE = re.compile(r"^[A-Za-z0-9_-]{8,48}$")
+_LM_UID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+_LM_HTML_TAG_RE = re.compile(r"<[^>]*>")
+_LM_CTRL_RE = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+_LM_LOCK = threading.Lock()
+_LM_COOKIE_NAME = "b2_lmedia"
+_LM_COOKIE_TTL = 2 * 3600
+_LM_COOKIE_KEY = secrets.token_bytes(32)
 
-def _route_body_cap(path):
+
+def _route_body_cap(path, method="POST"):
     """Hard body ceiling for one mutating request, decided from Content-Length.
 
     Routes with a documented larger payload keep their own cap; every other
     mutating /api/* request is limited to B2_MAX_BODY (256 KB).
     """
+    if path == "/api/listening/material" and method == "POST":
+        return LISTENING_MAT_MAX_BODY
     return {
         "/api/speaking/pa": SPK_PA_MAX_BODY,
         "/api/speaking/turn": SPK_TURN_MAX_BODY,
@@ -4342,6 +4372,237 @@ class _CountingReader:
         return getattr(self._raw, name)
 
 
+# --- Listening own material helpers -----------------------------------------
+def _lm_sanitize_text(val, max_len, allow_newlines=False):
+    """Return (cleaned_text, error_code) with HTML and control chars stripped."""
+    if val is None:
+        return "", None
+    if not isinstance(val, str):
+        return None, "invalid_type"
+    s = val.replace("\r\n", "\n").replace("\r", "\n")
+    s = _LM_CTRL_RE.sub("", s)
+    s = _LM_HTML_TAG_RE.sub("", s).replace("<", "").replace(">", "")
+    if not allow_newlines:
+        s = s.replace("\n", " ").replace("\t", " ").strip()
+    else:
+        s = s.strip()
+    if len(s) > max_len:
+        return None, "too_long"
+    return s, None
+
+
+def _lm_parse_lines(raw_val, max_items, max_chars):
+    """Parse newline-delimited string or list of strings into sanitized items."""
+    if raw_val is None:
+        return [], None
+    if isinstance(raw_val, str):
+        raw_lines = raw_val.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    elif isinstance(raw_val, list):
+        if not all(isinstance(x, str) for x in raw_val):
+            return None, "invalid_type"
+        raw_lines = raw_val
+    else:
+        return None, "invalid_type"
+    items = []
+    for line in raw_lines:
+        clean, err = _lm_sanitize_text(line, max_chars, allow_newlines=False)
+        if err:
+            return None, err
+        if clean:
+            items.append(clean)
+    if len(items) > max_items:
+        return None, "too_many"
+    return items, None
+
+
+def _lm_user_dir(uid):
+    """Return realpath of USERS_DIR/<uid>/listening if uid is safe, else None."""
+    if not isinstance(uid, str) or not _LM_UID_RE.fullmatch(uid):
+        return None
+    base = os.path.realpath(USERS_DIR)
+    target = os.path.realpath(os.path.join(USERS_DIR, uid, "listening"))
+    if not (target.startswith(base + os.sep)):
+        return None
+    return target
+
+
+def _lm_item_dir(uid, mid):
+    """Return realpath of USERS_DIR/<uid>/listening/<mid> if valid, else None."""
+    if not isinstance(mid, str) or not _LM_ID_RE.fullmatch(mid):
+        return None
+    root = _lm_user_dir(uid)
+    if not root:
+        return None
+    target = os.path.realpath(os.path.join(root, mid))
+    if not target.startswith(root + os.sep):
+        return None
+    return target
+
+
+def _lm_read_meta(item_dir):
+    """Load meta.json from one material directory, or None if missing/corrupt."""
+    meta_path = os.path.join(item_dir, "meta.json")
+    try:
+        with open(meta_path, "r", encoding="utf-8") as fh:
+            obj = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    return obj if isinstance(obj, dict) else None
+
+
+def _lm_audio_path(item_dir, meta):
+    """Return verified audio file path inside item_dir, or None."""
+    fname = meta.get("audio_file")
+    if not isinstance(fname, str) or not fname or "/" in fname or "\\" in fname or ".." in fname:
+        return None
+    full = os.path.realpath(os.path.join(item_dir, fname))
+    root = os.path.realpath(item_dir)
+    if not full.startswith(root + os.sep) or not os.path.isfile(full):
+        return None
+    return full
+
+
+def _lm_public_meta(meta, actual_bytes=None):
+    """Client-safe projection of meta.json (no server paths)."""
+    has_audio = bool(meta.get("has_audio"))
+    size = int(actual_bytes if actual_bytes is not None else (meta.get("bytes") or 0))
+    return {
+        "id": str(meta.get("id") or ""),
+        "title": str(meta.get("title") or ""),
+        "part": int(meta.get("part") or 1),
+        "task": list(meta.get("task") or []),
+        "key": list(meta.get("key") or []),
+        "script": str(meta.get("script") or ""),
+        "has_audio": has_audio,
+        "mime": str(meta.get("mime") or "") if has_audio else "",
+        "bytes": size if has_audio else 0,
+        "created": float(meta.get("created") or 0),
+    }
+
+
+def _lm_list_items(uid):
+    """List one user's listening materials newest-first and total audio bytes."""
+    root = _lm_user_dir(uid)
+    if not root or not os.path.isdir(root):
+        return [], 0
+    items = []
+    total_bytes = 0
+    try:
+        names = os.listdir(root)
+    except OSError:
+        return [], 0
+    for name in names:
+        if not _LM_ID_RE.fullmatch(name):
+            continue
+        item_dir = _lm_item_dir(uid, name)
+        if not item_dir or not os.path.isdir(item_dir):
+            continue
+        meta = _lm_read_meta(item_dir)
+        if not meta:
+            continue
+        audio_size = 0
+        if meta.get("has_audio"):
+            ap = _lm_audio_path(item_dir, meta)
+            if ap:
+                try:
+                    audio_size = os.path.getsize(ap)
+                except OSError:
+                    audio_size = 0
+            else:
+                meta = dict(meta, has_audio=False, bytes=0)
+        total_bytes += audio_size
+        items.append(_lm_public_meta(meta, actual_bytes=audio_size))
+    items.sort(key=lambda x: x.get("created", 0), reverse=True)
+    return items, total_bytes
+
+
+def _lm_make_cookie_header(handler, uid, bearer_token):
+    """Mint a scoped HttpOnly cookie so native <audio> can fetch private audio."""
+    tkey = _token_key(bearer_token)
+    exp = int(time.time()) + _LM_COOKIE_TTL
+    payload = f"{uid}|{tkey}|{exp}"
+    sig = hmac.new(_LM_COOKIE_KEY, payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    raw = f"{payload}|{sig}".encode("utf-8")
+    val = base64.urlsafe_b64encode(raw).decode("ascii")
+    cookie = (f"{_LM_COOKIE_NAME}={val}; HttpOnly; SameSite=Strict; "
+              f"Path=/api/listening/material/audio; Max-Age={_LM_COOKIE_TTL}")
+    proto = (handler.headers.get("X-Forwarded-Proto") or "").strip().lower()
+    if proto == "https":
+        cookie += "; Secure"
+    return cookie
+
+
+def _lm_verify_cookie_header(cookie_header):
+    """Validate the scoped audio cookie against the active session table."""
+    if not cookie_header:
+        return None
+    val = ""
+    for part in cookie_header.split(";"):
+        chunk = part.strip()
+        if chunk.startswith(_LM_COOKIE_NAME + "="):
+            val = chunk[len(_LM_COOKIE_NAME) + 1:].strip()
+            break
+    if not val:
+        return None
+    try:
+        decoded = base64.urlsafe_b64decode(val.encode("ascii")).decode("utf-8")
+        uid, tkey, exp_s, sig = decoded.split("|", 3)
+        exp = int(exp_s)
+    except Exception:
+        return None
+    now = time.time()
+    if exp < now or not _LM_UID_RE.fullmatch(uid):
+        return None
+    payload = f"{uid}|{tkey}|{exp}"
+    expected = hmac.new(_LM_COOKIE_KEY, payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    _tokens_ready()
+    _tokens_refresh()
+    with _TOKENS_LOCK:
+        rec = _TOKENS.get(tkey)
+        if not rec or rec.get("user_id") != uid:
+            return None
+        abs_exp = rec.get("absolute_exp")
+        if isinstance(abs_exp, (int, float)) and now >= abs_exp:
+            return None
+        if rec.get("exp", 0) < now:
+            return None
+    return uid
+
+
+def _lm_parse_range(range_hdr, size):
+    """Parse one HTTP byte range against `size`.
+
+    Returns None when no valid Range header is present (serve full 200),
+    ('invalid', None, None) when unsatisfiable (416), or ('ok', start, end).
+    """
+    if not range_hdr:
+        return None
+    m = re.match(r"^\s*bytes=(\d*)-(\d*)\s*$", range_hdr)
+    if not m:
+        return None
+    s_raw, e_raw = m.group(1), m.group(2)
+    if not s_raw and not e_raw:
+        return None
+    if size <= 0:
+        return ("invalid", None, None)
+    if not s_raw:
+        # Suffix range: last N bytes
+        suffix = int(e_raw)
+        if suffix <= 0:
+            return ("invalid", None, None)
+        start = max(0, size - suffix)
+        end = size - 1
+    else:
+        start = int(s_raw)
+        end = int(e_raw) if e_raw else size - 1
+        if start >= size or start > end:
+            return ("invalid", None, None)
+        end = min(end, size - 1)
+    return ("ok", start, end)
+
+
 class H(BaseHTTPRequestHandler):
     # No version banner: the default handler appends the Python version, which tells an
     # attacker which interpreter CVEs to try. Send a bare, unversioned product name.
@@ -4986,13 +5247,18 @@ class H(BaseHTTPRequestHandler):
         # Body ceilings are decided from Content-Length before a single byte of
         # the body is read (no drain, no allocation): closing the connection is
         # what stops the upload.
-        if clen > MAX_BODY_BYTES:
-            self._reject(413, {"error": "payload too large"})
+        effective_global_cap = MAX_BODY_BYTES
+        if self.command == "POST" and path == "/api/listening/material":
+            effective_global_cap = LISTENING_MAT_MAX_BODY
+        if clen > effective_global_cap:
+            msg = ("audio too large (max 20 MB)"
+                   if path == "/api/listening/material" else "payload too large")
+            self._reject(413, {"error": msg})
             return
         if self.command in ("POST", "PUT", "DELETE") and path.startswith("/api/"):
             # Before any handler reads the body: one uniform cap per route
             # (B2_MAX_BODY unless the route documents a larger payload).
-            if clen > _route_body_cap(path):
+            if clen > _route_body_cap(path, self.command):
                 self._reject(413, {"error": "payload too large"})
                 return
             # CSRF defence in depth on every mutating API route, including
@@ -5020,6 +5286,8 @@ class H(BaseHTTPRequestHandler):
                     return
             else:
                 uid, _auth_err = self._auth()
+                if not uid and path == "/api/listening/material/audio":
+                    uid = _lm_verify_cookie_header(self.headers.get("Cookie", ""))
                 if uid:
                     if self._rate_limited("user-api:" + uid, RATE_USER_API, 60, "user"):
                         return
@@ -7239,6 +7507,302 @@ class H(BaseHTTPRequestHandler):
                 self._send_json(403, {"error": "owner only"})
                 return
             self._send_json(200, build_metrics())
+            return
+
+        # Per-user listening own material: GET (list/one), POST (create), DELETE (?id=...)
+        if path == "/api/listening/material":
+            if self.command not in ("GET", "HEAD", "POST", "DELETE"):
+                self._send(405, b"method not allowed", "text/plain")
+                return
+            uid, auth_err = self._auth()
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            qs = parse_qs(urlsplit(self.path).query)
+            cookie_hdr = _lm_make_cookie_header(self, uid, self._bearer())
+
+            if self.command in ("GET", "HEAD"):
+                mid = (qs.get("id") or [""])[0]
+                if mid:
+                    if not _LM_ID_RE.fullmatch(mid):
+                        self._send_json(400, {"error": "invalid id"})
+                        return
+                    with _LM_LOCK:
+                        item_dir = _lm_item_dir(uid, mid)
+                        meta = _lm_read_meta(item_dir) if item_dir and os.path.isdir(item_dir) else None
+                        if not meta:
+                            self._send_json(404, {"error": "not found"})
+                            return
+                        ap = _lm_audio_path(item_dir, meta) if meta.get("has_audio") else None
+                        size = os.path.getsize(ap) if ap else 0
+                        if meta.get("has_audio") and not ap:
+                            meta = dict(meta, has_audio=False, bytes=0)
+                        pub = _lm_public_meta(meta, actual_bytes=size)
+                    self._send_json(200, pub, extra={"Set-Cookie": cookie_hdr})
+                    return
+                with _LM_LOCK:
+                    items, total_bytes = _lm_list_items(uid)
+                self._send_json(200, {
+                    "items": items,
+                    "total_bytes": total_bytes,
+                    "limit_items": LISTENING_MAT_MAX_ITEMS,
+                    "limit_bytes": LISTENING_MAT_MAX_USER_BYTES,
+                }, extra={"Set-Cookie": cookie_hdr})
+                return
+
+            if self.command == "DELETE":
+                mid = (qs.get("id") or [""])[0]
+                if not _LM_ID_RE.fullmatch(mid):
+                    self._send_json(400, {"error": "invalid id"})
+                    return
+                with _LM_LOCK:
+                    item_dir = _lm_item_dir(uid, mid)
+                    if not item_dir or not os.path.isdir(item_dir):
+                        self._send_json(404, {"error": "not found"})
+                        return
+                    shutil.rmtree(item_dir, ignore_errors=False)
+                self._send_json(200, {"ok": True, "id": mid})
+                return
+
+            # POST /api/listening/material
+            req, err_code = self._json_body(limit=LISTENING_MAT_MAX_BODY)
+            if err_code == 413:
+                self._send_json(413, {"error": "audio too large (max 20 MB)"})
+                return
+            if err_code:
+                self._send_json(400, {"error": "invalid json"})
+                return
+
+            title, t_err = _lm_sanitize_text(req.get("title"), LISTENING_MAT_TITLE_MAX, allow_newlines=False)
+            if t_err == "too_long":
+                self._send_json(400, {"error": "title too long (max 120 chars)"})
+                return
+            if t_err or not title:
+                self._send_json(400, {"error": "title is required"})
+                return
+
+            raw_part = req.get("part")
+            if isinstance(raw_part, bool):
+                part = None
+            elif isinstance(raw_part, int) and raw_part in (1, 2, 3, 4):
+                part = raw_part
+            elif isinstance(raw_part, str) and raw_part.strip() in ("1", "2", "3", "4"):
+                part = int(raw_part.strip())
+            else:
+                part = None
+            if part is None:
+                self._send_json(400, {"error": "invalid part (must be 1-4)"})
+                return
+
+            task, task_err = _lm_parse_lines(
+                req.get("task"), LISTENING_MAT_TASK_MAX_ITEMS, LISTENING_MAT_ITEM_MAX_CHARS
+            )
+            if task_err == "too_many":
+                self._send_json(400, {"error": "too many task items (max 16)"})
+                return
+            if task_err == "too_long":
+                self._send_json(400, {"error": "task item too long (max 300 chars)"})
+                return
+            if task_err:
+                self._send_json(400, {"error": "invalid task"})
+                return
+
+            key, key_err = _lm_parse_lines(
+                req.get("key"), LISTENING_MAT_TASK_MAX_ITEMS, LISTENING_MAT_ITEM_MAX_CHARS
+            )
+            if key_err == "too_many":
+                self._send_json(400, {"error": "too many answer key items (max 16)"})
+                return
+            if key_err == "too_long":
+                self._send_json(400, {"error": "answer key item too long (max 300 chars)"})
+                return
+            if key_err:
+                self._send_json(400, {"error": "invalid answer key"})
+                return
+
+            script, sc_err = _lm_sanitize_text(
+                req.get("script"), LISTENING_MAT_SCRIPT_MAX_CHARS, allow_newlines=True
+            )
+            if sc_err == "too_long":
+                self._send_json(400, {"error": "script too long (max 6000 chars)"})
+                return
+            if sc_err:
+                self._send_json(400, {"error": "invalid script"})
+                return
+
+            raw_audio = req.get("audio_b64")
+            raw_mime = req.get("mime")
+            audio_bytes = b""
+            audio_ext = ""
+            audio_mime = ""
+            if raw_audio is not None and raw_audio != "":
+                if not isinstance(raw_audio, str):
+                    self._send_json(400, {"error": "invalid audio data"})
+                    return
+                b64_str = raw_audio.strip()
+                inferred_mime = ""
+                if b64_str.startswith("data:") and ";base64," in b64_str[:80]:
+                    prefix, b64_str = b64_str.split(";base64,", 1)
+                    inferred_mime = prefix[5:].strip().lower()
+                mime_in = (raw_mime if isinstance(raw_mime, str) and raw_mime.strip() else inferred_mime)
+                mime_clean = mime_in.strip().lower().split(";", 1)[0].strip()
+                if mime_clean not in LISTENING_MAT_MIMES:
+                    self._send_json(400, {"error": "unsupported audio format"})
+                    return
+                audio_ext, audio_mime = LISTENING_MAT_MIMES[mime_clean]
+                b64_str = re.sub(r"\s+", "", b64_str)
+                if len(b64_str) > LISTENING_MAT_MAX_B64:
+                    self._send_json(413, {"error": "audio too large (max 20 MB)"})
+                    return
+                try:
+                    audio_bytes = base64.b64decode(b64_str, validate=True)
+                except (binascii.Error, ValueError):
+                    self._send_json(400, {"error": "invalid base64 audio"})
+                    return
+                if len(audio_bytes) == 0:
+                    self._send_json(400, {"error": "empty audio file"})
+                    return
+                if len(audio_bytes) > LISTENING_MAT_MAX_AUDIO:
+                    self._send_json(413, {"error": "audio too large (max 20 MB)"})
+                    return
+
+            if not task and not script and not audio_bytes:
+                self._send_json(400, {"error": "provide audio, task or script"})
+                return
+
+            root = _lm_user_dir(uid)
+            if not root:
+                self._send_json(400, {"error": "invalid user"})
+                return
+
+            with _LM_LOCK:
+                existing, total_bytes = _lm_list_items(uid)
+                if len(existing) >= LISTENING_MAT_MAX_ITEMS:
+                    self._send_json(429, {"error": "material limit reached (max 10)"})
+                    return
+                if total_bytes + len(audio_bytes) > LISTENING_MAT_MAX_USER_BYTES:
+                    self._send_json(413, {"error": "storage limit reached (max 40 MB per user)"})
+                    return
+
+                mid = ""
+                item_dir = ""
+                for _ in range(8):
+                    cand = secrets.token_urlsafe(12)
+                    cand_dir = _lm_item_dir(uid, cand)
+                    if cand_dir and not os.path.exists(cand_dir):
+                        mid = cand
+                        item_dir = cand_dir
+                        break
+                if not mid or not item_dir:
+                    self._send_json(500, {"error": "could not allocate material id"})
+                    return
+
+                audio_file = ("audio" + audio_ext) if audio_bytes else ""
+                meta = {
+                    "id": mid,
+                    "title": title,
+                    "part": part,
+                    "task": task,
+                    "key": key,
+                    "script": script,
+                    "has_audio": bool(audio_bytes),
+                    "audio_file": audio_file,
+                    "mime": audio_mime,
+                    "bytes": len(audio_bytes),
+                    "created": time.time(),
+                }
+                try:
+                    os.makedirs(item_dir, exist_ok=True)
+                    if audio_bytes:
+                        ap_tmp = os.path.join(item_dir, audio_file + ".tmp")
+                        ap_dst = os.path.join(item_dir, audio_file)
+                        with open(ap_tmp, "wb") as fh:
+                            fh.write(audio_bytes)
+                        os.replace(ap_tmp, ap_dst)
+                    mp_tmp = os.path.join(item_dir, "meta.json.tmp")
+                    mp_dst = os.path.join(item_dir, "meta.json")
+                    with open(mp_tmp, "w", encoding="utf-8") as fh:
+                        json.dump(meta, fh, ensure_ascii=False)
+                    os.replace(mp_tmp, mp_dst)
+                except OSError:
+                    shutil.rmtree(item_dir, ignore_errors=True)
+                    self._send_json(500, {"error": "could not save material"})
+                    return
+
+            self._send_json(200, _lm_public_meta(meta), extra={"Set-Cookie": cookie_hdr})
+            return
+
+        # Private per-user listening audio with Range support (seek)
+        if path == "/api/listening/material/audio":
+            if self.command not in ("GET", "HEAD"):
+                self._send(405, b"method not allowed", "text/plain")
+                return
+            if self._bearer():
+                uid, auth_err = self._auth()
+            else:
+                uid = _lm_verify_cookie_header(self.headers.get("Cookie", ""))
+                auth_err = None if uid else "invalid session"
+            if not uid:
+                self._send_json(401, {"error": auth_err or "invalid session"})
+                return
+            qs = parse_qs(urlsplit(self.path).query)
+            mid = (qs.get("id") or [""])[0]
+            if not _LM_ID_RE.fullmatch(mid):
+                self._send_json(400, {"error": "invalid id"})
+                return
+            item_dir = _lm_item_dir(uid, mid)
+            if not item_dir or not os.path.isdir(item_dir):
+                self._send_json(404, {"error": "not found"})
+                return
+            meta = _lm_read_meta(item_dir)
+            if not meta or not meta.get("has_audio"):
+                self._send_json(404, {"error": "not found"})
+                return
+            ap = _lm_audio_path(item_dir, meta)
+            if not ap:
+                self._send_json(404, {"error": "not found"})
+                return
+            ctype = meta.get("mime")
+            if ctype not in ("audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg", "audio/webm"):
+                ctype = "application/octet-stream"
+            try:
+                size = os.path.getsize(ap)
+            except OSError:
+                self._send_json(404, {"error": "not found"})
+                return
+            rng = _lm_parse_range(self.headers.get("Range"), size)
+            if rng is not None:
+                status_kind, start, end = rng
+                if status_kind == "invalid":
+                    self._send_raw(416, b"", "text/plain", {
+                        "Content-Range": f"bytes */{size}",
+                        "Accept-Ranges": "bytes",
+                        "Cache-Control": "private, no-store",
+                    })
+                    return
+                try:
+                    with open(ap, "rb") as fh:
+                        fh.seek(start)
+                        data = fh.read(end - start + 1)
+                except OSError:
+                    self._send_json(404, {"error": "not found"})
+                    return
+                self._send_raw(206, data, ctype, {
+                    "Content-Range": f"bytes {start}-{end}/{size}",
+                    "Accept-Ranges": "bytes",
+                    "Cache-Control": "private, no-store",
+                })
+                return
+            try:
+                with open(ap, "rb") as fh:
+                    data = fh.read()
+            except OSError:
+                self._send_json(404, {"error": "not found"})
+                return
+            self._send_raw(200, data, ctype, {
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "private, no-store",
+            })
             return
 
         self._send(404, b"not found", "text/plain")
