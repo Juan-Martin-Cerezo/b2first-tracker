@@ -45,7 +45,7 @@ calls = []
 
 def fake_complete(system, user_block, byo=None):
     calls.append(user_block)
-    return json.dumps({"line": "That is a good point."}), None
+    return json.dumps({"line": "Living in the city sounds lively."}), None
 
 
 S._ai_text_complete = fake_complete

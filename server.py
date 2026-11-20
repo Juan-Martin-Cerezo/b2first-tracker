@@ -1457,6 +1457,150 @@ def _spk_candidate_context(value):
     return lines[-SPK_CONTEXT_LINES:]
 
 
+_SPK_STOPWORDS = frozenset({
+    "that", "this", "with", "from", "they", "them", "their", "there",
+    "then", "than", "what", "when", "where", "which", "while", "whom",
+    "whose", "have", "has", "had", "been", "being", "were", "will",
+    "would", "could", "should", "might", "must", "shall", "about",
+    "into", "over", "after", "before", "between", "under", "again",
+    "further", "once", "here", "more", "most", "other", "some", "such",
+    "only", "same", "very", "just", "also", "even", "still", "much",
+    "many", "every", "really", "actually", "basically", "probably",
+    "maybe", "perhaps", "think", "thinks", "thought", "believe",
+    "agree", "interesting", "good", "great", "nice", "well", "sure",
+    "yeah", "right", "true", "because", "since", "although", "though",
+    "however", "therefore", "rather", "prefer", "like", "want", "need",
+    "make", "makes", "made", "take", "takes", "took", "give", "gives",
+    "gave", "know", "knows", "knew", "feel", "feels", "felt", "seem",
+    "seems", "look", "looks", "thing", "things", "something", "anything",
+    "nothing", "everything", "someone", "everyone", "people", "person",
+    "always", "never", "often", "sometimes", "usually", "quite",
+    "pretty", "kind", "sort", "going", "does", "doesn", "didn", "don",
+    "won", "wouldn", "couldn", "shouldn", "isn", "aren", "wasn", "weren",
+    "haven", "hasn", "hadn", "your", "yours", "ours", "mine", "myself",
+    "yourself", "himself", "herself", "itself", "themselves", "point",
+    "idea", "opinion", "sense", "means", "mean", "guess", "suppose",
+})
+
+_SPK_INFLECTION_SUFFIXES = ("s", "es", "ed", "er", "est", "ing", "ly", "d", "r", "n")
+
+
+def _spk_content_tokens(text):
+    """Lowercase content words (>=4 letters, excluding stopwords)."""
+    words = re.findall(r"[a-z]+", str(text or "").lower())
+    return [w for w in words if len(w) >= 4 and w not in _SPK_STOPWORDS]
+
+
+def _spk_tokens_match(a, b):
+    if a == b:
+        return True
+    short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+    if len(short) >= 4 and long_.startswith(short):
+        if long_[len(short):] in _SPK_INFLECTION_SUFFIXES:
+            return True
+    if len(short) >= 4 and short.endswith("e") and long_.startswith(short[:-1]):
+        if long_[len(short) - 1:] in ("ing", "ed", "er", "est"):
+            return True
+    if len(short) >= 4 and short.endswith("y") and long_.startswith(short[:-1]):
+        if long_[len(short) - 1:] in ("ies", "ied", "ier", "iest", "ily"):
+            return True
+    return False
+
+
+def _spk_is_grounded(line, said_tokens):
+    """True when `line` shares at least one content word (>=4 letters) with `said_tokens`."""
+    if not said_tokens:
+        return True
+    line_tokens = _spk_content_tokens(line)
+    for lt in line_tokens:
+        for st in said_tokens:
+            if _spk_tokens_match(lt, st):
+                return True
+    return False
+
+
+def _spk_norm_tokens(text):
+    return set(re.findall(r"[a-z0-9]+", str(text or "").lower()))
+
+
+def _spk_token_similarity(a, b):
+    ta = _spk_norm_tokens(a)
+    tb = _spk_norm_tokens(b)
+    if not ta or not tb:
+        return 0.0
+    return len(ta & tb) / float(len(ta | tb))
+
+
+def _spk_pick_detail(said, said_tokens):
+    """Pick a concrete detail from `said` to quote in a strict retry prompt."""
+    if not said_tokens:
+        return str(said or "").strip()[:80]
+    seen = []
+    for tok in said_tokens:
+        if tok not in seen:
+            seen.append(tok)
+    ordered = sorted(seen, key=lambda w: (-len(w), seen.index(w)))
+    return ", ".join(ordered[:2])
+
+
+def _spk_extract_partner_line(content):
+    line = ""
+    try:
+        obj = json.loads(content)
+        if isinstance(obj, dict):
+            for key in ("line", "reply", "sentence"):
+                value = obj.get(key)
+                if isinstance(value, str) and value.strip():
+                    line = value
+                    break
+    except (ValueError, TypeError):
+        pass
+    if not line:
+        line = str(content or "")
+    line = re.sub(r"[\x00-\x1f\x7f]", " ", line)
+    line = re.sub(r"\s+", " ", line).strip()
+    line = re.sub(r"^(?:[-*•]\s+|\d+[.)]\s+)", "", line).strip()
+    return line.strip('"').strip("'").strip()
+
+
+def _spk_clean_partner_line(line, mode):
+    """Enforce word and sentence caps on the partner/examiner reply."""
+    line = re.sub(r"\s+", " ", str(line or "")).strip().strip('"').strip()
+    if not line:
+        return ""
+    if mode == "examiner":
+        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if s.strip()]
+        if sents:
+            line = sents[0]
+        words = line.split()
+        if len(words) > 20:
+            line = " ".join(words[:20])
+        if not line.endswith("?"):
+            line = line.rstrip(".! ,;:-") + "?"
+        if len(line) > 240:
+            line = line[:239].rsplit(" ", 1)[0].rstrip(".! ,;:-") + "?"
+        return line
+    sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if s.strip()]
+    if len(sents) > 2:
+        line = " ".join(sents[:2])
+    words = line.split()
+    if len(words) > 35:
+        if len(sents) >= 2 and 4 <= len(sents[0].split()) <= 35:
+            line = sents[0]
+        else:
+            ended_q = line.endswith("?")
+            line = " ".join(words[:35]).rstrip(",;:-")
+            if not line.endswith((".", "!", "?")):
+                line += "?" if ended_q else "."
+    if len(line) > 240:
+        ended_q = line.endswith("?")
+        cut = line[:239].rsplit(" ", 1)[0].rstrip(",;:-")
+        if cut and not cut.endswith((".", "!", "?")):
+            cut += "?" if ended_q else "."
+        line = cut
+    return line
+
+
 _SPK_TURN_LOCK = threading.Lock()
 _SPK_TURN_SESSIONS = {}   # {uid: {session_id: first_seen}}
 
@@ -6825,41 +6969,60 @@ class H(BaseHTTPRequestHandler):
             else:
                 said = ""
             context = _spk_candidate_context(req.get("candidate_context"))
+            partner_said = _spk_candidate_context(req.get("partner_said"))
             mode = "examiner" if req.get("mode") == "examiner" else "partner"
             if mode == "examiner":
                 system = (
-                    "You are the Cambridge B2 First speaking examiner. From what the "
-                    "candidate just said, ask exactly one short follow-up question "
-                    "(maximum 20 words) that explores the content. When earlier "
-                    "answers are provided, connect the question to them. It must end "
-                    "with a question mark. No comments, no praise, no quotation "
-                    "marks. Return JSON with exactly one key: {\"line\": \"...\"}."
+                    "You are the Cambridge B2 First speaking examiner. Pick one "
+                    "concrete detail from what the candidate just said (a specific "
+                    "word, place, reason, activity or example actually mentioned) "
+                    "and ask exactly one short follow-up question (maximum 20 words) "
+                    "about that detail. When earlier answers are provided, connect "
+                    "the question to them. Never repeat or rephrase the previous "
+                    "examiner question. It must end with a question mark. No "
+                    "comments, no praise, no quotation marks. Return JSON with "
+                    "exactly one key: {\"line\": \"...\"}."
                 )
                 user_block = (
                     "Topic: " + (topic or "the Speaking exam") + "\n"
-                    "Examiner's question: " + question + "\n"
+                    "Examiner's question (do NOT repeat or rephrase this): "
+                    + question + "\n"
                     + ("Earlier answers from the candidate, oldest first:\n"
-                       + "\n".join("  - " + line for line in context) + "\n"
+                       + "\n".join("  - " + item for item in context) + "\n"
                        if context else "")
+                    + ("Lines already spoken (do NOT repeat):\n"
+                       + "\n".join("  - " + item for item in partner_said) + "\n"
+                       if partner_said else "")
                     + "The candidate said: " + (said or "(nothing heard)") + "\n"
                     "One follow-up question:"
                 )
             else:
                 system = (
                     "You are Alex, a B2 First (Cambridge English) speaking candidate, "
-                    "a friendly 17-year-old student. React to what the other candidate "
-                    "just said: agree, disagree politely, add an example or ask them a "
-                    "question back. Never repeat their words with different wording. "
-                    "Use one sentence only, natural spoken British English, no lists, "
-                    "no quotation marks. Return JSON with exactly one key: "
-                    "{\"line\": \"...\"}."
+                    "a friendly 17-year-old student. React to one concrete detail in "
+                    "what the other candidate just said — a specific word or phrase "
+                    "actually there (the transport, place, reason, activity, etc.), "
+                    "not the general topic. Take a clear stance (agree and add a "
+                    "reason or example, or disagree politely) and, if natural, ask "
+                    "a short question back. Maximum 35 words, one or two sentences, "
+                    "natural spoken British English, no lists, no quotation marks. "
+                    "Forbidden: starting with empty filler like \"That's interesting\", "
+                    "\"I see\", or \"I agree\"; repeating the candidate's line "
+                    "verbatim; reusing or paraphrasing any line Alex already said. "
+                    "Return JSON with exactly one key: {\"line\": \"...\"}."
                 )
                 user_block = (
                     "Topic: " + (topic or "the Speaking exam") + "\n"
                     "Examiner's question to Alex: " + question + "\n"
-                    "What the other candidate just said: "
+                    + ("Earlier things the other candidate said, oldest first:\n"
+                       + "\n".join("  - " + item for item in context) + "\n"
+                       if context else "")
+                    + ("Lines Alex already said (do NOT repeat or paraphrase):\n"
+                       + "\n".join("  - " + item for item in partner_said) + "\n"
+                       if partner_said else "")
+                    + "What the other candidate just said: "
                     + (said or "(nothing heard)") + "\n"
-                    "Alex's one-sentence reaction:"
+                    "Alex's reply (1-2 sentences, max 35 words):"
                 )
             byo, byo_err = _byo_from_headers(self.headers)
             if byo_err:
@@ -6868,37 +7031,55 @@ class H(BaseHTTPRequestHandler):
             if not byo and not (os.environ.get("B2_AI_KEY") or "").strip():
                 self._send_json(503, {"error": "ai_not_configured"})
                 return
-            if mode == "examiner" and not said:
-                # Nothing was heard: the client keeps its written script. Do not
-                # spend a model call on a generic question.
+            if not said:
+                # Nothing was heard: do not spend a model call on a generic line.
                 self._send_json(200, {"line": ""})
                 return
             content, err = _ai_text_complete(system, user_block, byo)
             if err:
                 self._spk_refuse(err, {"error": err})
                 return
-            line = ""
-            try:
-                obj = json.loads(content)
-                if isinstance(obj, dict):
-                    for key in ("line", "reply", "sentence"):
-                        value = obj.get(key)
-                        if isinstance(value, str) and value.strip():
-                            line = value
-                            break
-            except (ValueError, TypeError):
-                pass
-            if not line:
-                line = str(content or "")
-            line = re.sub(r"\s+", " ", line).strip().strip('"').strip()
-            if mode == "examiner" and line:
-                words = line.split()
-                if len(words) > 20:
-                    line = " ".join(words[:20])
-                if not line.endswith("?"):
-                    line = line.rstrip(".! ,;:") + "?"
-            if len(line) > 240:
-                line = line[:240].rsplit(" ", 1)[0]
+            line = _spk_clean_partner_line(_spk_extract_partner_line(content), mode)
+            said_tokens = _spk_content_tokens(said)
+            avoid_lines = ([question] + partner_said) if mode == "examiner" else partner_said
+            grounded = _spk_is_grounded(line, said_tokens) if line else False
+            repeated = (
+                (any(_spk_token_similarity(line, prev) >= 0.8 for prev in avoid_lines)
+                 or (mode == "partner" and _spk_token_similarity(line, said) >= 0.85))
+                if line else False
+            )
+            if line and (not grounded or repeated):
+                detail = _spk_pick_detail(said, said_tokens)
+                reasons = []
+                if not grounded and detail:
+                    reasons.append(
+                        f'You MUST directly mention or react to "{detail}" from what '
+                        f'the candidate said, without starting with empty filler like '
+                        f'"That\'s interesting", "I see", or "I agree".'
+                    )
+                if repeated:
+                    reasons.append(
+                        f'Your draft repeated an earlier line. Give a completely '
+                        f'different response that reacts to "{detail}".'
+                    )
+                if reasons:
+                    retry_block = user_block + "\n\nSTRICT CORRECTION: " + " ".join(reasons)
+                    retry_content, retry_err = _ai_text_complete(system, retry_block, byo)
+                    if not retry_err and retry_content:
+                        cand = _spk_clean_partner_line(
+                            _spk_extract_partner_line(retry_content), mode)
+                        if cand:
+                            cand_grounded = _spk_is_grounded(cand, said_tokens)
+                            cand_repeated = (
+                                any(_spk_token_similarity(cand, prev) >= 0.8
+                                    for prev in avoid_lines)
+                                or (mode == "partner"
+                                    and _spk_token_similarity(cand, said) >= 0.85)
+                            )
+                            score1 = (not repeated, grounded)
+                            score2 = (not cand_repeated, cand_grounded)
+                            if score2 >= score1:
+                                line = cand
             if not line:
                 if mode == "examiner":
                     self._send_json(200, {"line": ""})

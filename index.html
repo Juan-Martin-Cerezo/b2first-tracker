@@ -11505,6 +11505,7 @@ function spkAddLine(side,text,who,partial){
       SPK.lastExaminerText=text;
     }
   }
+  if(SP_EXAM.screen==='exam'&&!partial)spxRenderTx();
 }
 
 function spkReset(){
@@ -13185,9 +13186,43 @@ function spxMicNotice(show){
     el.style.display='none';
   }
 }
+function spxLastCandidateLine(){
+  const lines=SPK.lines||[];
+  for(let i=lines.length-1;i>=0;i--){
+    const l=lines[i];
+    if(l&&l.who==='candidate'&&typeof l.text==='string'&&l.text.trim()){
+      return String(l.text).replace(/\s+/g,' ').trim().slice(0,600);
+    }
+  }
+  return '';
+}
 function spxCandidateSaid(){
   const h=SPK.heard||{};
-  return String(h.final||'').replace(/\s+/g,' ').trim().slice(0,600);
+  const live=String(h.final||'').replace(/\s+/g,' ').trim().slice(0,600);
+  const committed=String(h.committed||'').replace(/\s+/g,' ').trim().slice(0,600);
+  if(live&&live!==committed)return live;
+  const last=spxLastCandidateLine();
+  if(last)return last;
+  if(live)return live;
+  if(h.active&&h.interim){
+    return String(h.interim).replace(/\s+/g,' ').trim().slice(0,600);
+  }
+  return '';
+}
+function spxCommitHeard(){
+  const h=SPK.heard;
+  if(!h)return;
+  const said=String(h.final||'').replace(/\s+/g,' ').trim();
+  if(said&&said!==h.committed){
+    h.committed=said;
+    spkAddLine('in',said,'candidate');
+    if(h.active){
+      h.final='';
+      h.committed='';
+      h.interim='';
+    }
+    spxRenderTx();
+  }
 }
 /* Phase 52: Part 4's examiner chains with what the candidate already said.
    The session transcript keeps every recognised answer; the last three are the
@@ -13336,7 +13371,8 @@ function spxPartnerFromProvider(question,mode){
     question:q,
     topic:String((SP_EXAM.task&&(SP_EXAM.task.topic||SP_EXAM.task.title))||'').slice(0,120),
     candidate_said:spxCandidateSaid(),
-    candidate_context:Number(SP_EXAM.part)===4?spxCandidateContext():[],
+    candidate_context:spxCandidateContext(),
+    partner_said:(Array.isArray(SP_EXAM.partnerSaid)?SP_EXAM.partnerSaid:[]).slice(-3),
     mode:mode
   };
   const hook=SPX_TEST_SELF&&SPX_TEST_SELF.partnerProvider;
@@ -13459,6 +13495,7 @@ function spxPartnerSay(text,fallback){
   return line;
 }
 function spxPartnerTurn(ev){
+  spxCommitHeard();
   const question=ev.prompt||ev.text||'';
   const fallback=ev.text||spxPartnerLine(SP_EXAM.task,SP_EXAM.partnerIdx++);
   const phaseAt=SP_EXAM.phase;
@@ -13467,10 +13504,15 @@ function spxPartnerTurn(ev){
     if(line)spxSay('partner',line,spxSpeechMs(line));
     return;
   }
-  spxPartnerFromProvider(question,'partner').then(function(line){
+  const deliver=function(line){
     if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
     const say=spxPartnerSay(line||fallback,fallback);
     if(say)spxSay('partner',say,spxSpeechMs(say));
+  };
+  spxPartnerFromProvider(question,'partner').then(function(line){
+    if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
+    if(line){deliver(line);return}
+    return spxPartnerFromProvider(question,'partner').then(deliver);
   });
 }
 /* Phase 51: after a candidate answer in Parts 1 and 4 the examiner may ask one
@@ -13746,6 +13788,10 @@ function spxRenderTx(){
   const box=spx$('spxTx');
   if(!box)return;
   const lines=SPK.lines||[];
+  if(SP_EXAM.txShown>lines.length){
+    SP_EXAM.txShown=0;
+    box.replaceChildren();
+  }
   /* The draft is parked while the committed lines render: otherwise the
      duplicate check below mistakes it for the final `You:` row. */
   let draft=box.querySelector('.spx-tx-draft');
