@@ -9,7 +9,7 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 [![Live app](https://img.shields.io/badge/live-firsttracker.app-2563eb)](https://firsttracker.app)
 [![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B%20stdlib-3f3f46)](server.py)
 [![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)](index.html)
-[![Tests](https://img.shields.io/badge/tests-150%20suites-16a34a)](tests/run_all.sh)
+[![Tests](https://img.shields.io/badge/tests-149%20suites-16a34a)](tests/run_all.sh)
 [![AI](https://img.shields.io/badge/AI-Gemini%20%2B%20DeepSeek-0f766e)](#how-the-ai-is-used)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3f3f46)](LICENSE)
 
@@ -21,11 +21,11 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/today.webp" alt="Today view: scheduled Reading part 2 session with timer, non-repeating exercise picker, and collapsible Materials blocks"></td>
+    <td width="50%"><img src="docs/screenshots/today.webp" alt="Today view: scheduled Reading part 1 session with timer and collapsible Materials blocks"></td>
     <td width="50%"><img src="docs/screenshots/speaking-exam.webp" alt="Speaking Exam Part 2: two Wikimedia Commons photographs, task prompt, countdown clock, examiner indicator, and live transcript"></td>
   </tr>
   <tr>
-    <td align="center"><sub><b>Today:</b> scheduled session, non-repeating exercise picker, and Materials</sub></td>
+    <td align="center"><sub><b>Today:</b> scheduled session, timer, and collapsible Materials</sub></td>
     <td align="center"><sub><b>Speaking Exam:</b> Parts 1–4 with official timings, photos, and examiner</sub></td>
   </tr>
   <tr>
@@ -47,7 +47,6 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 - **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
 - **Live Studio (local VAD):** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speaking time and silences in real time; no audio is recorded or uploaded.
 - **Materials in blocks & Exam sources:** Local PDFs and audio paired side-by-side with answer keys, dedicated *Full paper* and *Online* blocks, private user-uploaded Listening practice files, and 26 searchable, filterable official Exam sources.
-- **Non-repeating practice variety engine:** A shared pool of **157 exercises** (131 local materials + 26 online sources across Reading & Use of English, Writing, Listening, and Speaking) with 5-pick no-repeat memory, LRU cycling, and done-item avoidance in both Today and Exam.
 - **Progress by part and error type:** Four zero-dependency SVG charts track score trajectory, accuracy per exam part, error taxonomy (*vocabulary*, *grammar*, *distractor*, *time limit*), and skill consistency.
 
 ---
@@ -268,7 +267,7 @@ Measured against published DeepSeek and Google Gemini API pricing (documented in
 
 ## Testing
 
-The repository ships **150 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
+The repository ships **149 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
 
 ```bash
 cd tests
@@ -287,7 +286,7 @@ uv run --no-project --with playwright --with httpx python test_landing_honest.py
 | **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, four SVG charts. |
 | **Writing AI & guards** | `test_ai.py`, `test_ai_guard.py`, `test_writing_progress.py` | Strict JSON schema validation, injection/leak guards, live progress bar and elapsed timer, rate limits. |
 | **Speaking exam & voice** | `test_speaking_exam.py`, `test_speaking_live.py`, `test_speaking_custom_task.py`, `test_partner_grounding.py`, `test_speaking_pa.py`, `test_speaking_turn_budget.py` | All 4 parts, custom tasks, grounded partner replies, Live tokens, turn-based TTS, Azure PA `not measured` contract, monthly budget. |
-| **Materials & variety** | `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_practice_variety.py`, `test_listening_own_material.py` | Block layout with paired keys, 26 searchable Exam sources, 157-exercise non-repeating picker, private Listening uploads. |
+| **Materials & sources** | `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Block layout with paired keys, 26 searchable Exam sources, private Listening uploads. |
 | **Auth & accounts** | `test_register.py`, `test_multiuser.py`, `test_auth_methods.py`, `test_mfa.py`, `test_owner_unlimited.py` | Account isolation, Google OAuth, WebAuthn passkeys, TOTP MFA, owner limits, export & deletion. |
 | **Security, legal & load** | `test_security2.py`, `test_security3.py`, `test_server_hardening.py`, `test_legal.py`, `test_readme_limits.py`, `test_capacity.py` | Lockout/backoff, hash-chained audit log, CSP, raw HTTP limits, `/privacy` `/terms` `/security`, measured p95 throughput. |
 
