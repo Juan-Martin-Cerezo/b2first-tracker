@@ -7600,7 +7600,13 @@ class H(BaseHTTPRequestHandler):
             # A prompt leak is a safety refusal, not a size problem: check it
             # before the length cap so an oversized echo is still reported as
             # "unsafe output" (and audited as such) instead of "too large".
-            if _leaks_system_prompt(cand_text):
+            # strong_only: honest feedback names the rubric on purpose
+            # ("communicative achievement", "band 4", "cohesive devices"), so the
+            # weak markers rejected legit corrections (real false positive
+            # 2026-11-20: 502 "unsafe output" + one wasted retry). A genuine leak
+            # is prose: it either echoes a literal prompt phrase (strong marker)
+            # or fails the JSON validation below.
+            if _leaks_system_prompt(cand_text, strong_only=True):
                 _audit("ai_blocked", "", client_ip, self._rid,
                        {"reason": "prompt_leak", "chars": len(cand_text)})
                 self._send_json(502, {"error": "unsafe output"})
