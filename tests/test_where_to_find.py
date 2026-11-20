@@ -111,6 +111,13 @@ def open_studio(pg, studio_key, card_id):
                 }
             }
             renderGuides();
+            if (card) {
+                const sec = card.querySelector('.wtf-section');
+                const btn = sec && sec.querySelector('.wtf-toggle');
+                if (btn && btn.getAttribute('aria-expanded') !== 'true') {
+                    btn.click();
+                }
+            }
         }""",
         [studio_key, card_id],
     )

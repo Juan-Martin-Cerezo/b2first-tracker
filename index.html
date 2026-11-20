@@ -734,6 +734,152 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 }
 .wtf-online .wtf-hint{color:var(--txt)}
 
+/* ---------- TODAY COMPACT COLLAPSIBLE MATERIALS ---------- */
+.wtf-section{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  margin:10px 0;width:100%;min-width:0;box-sizing:border-box;
+}
+.sp-materials.wtf-section{margin:0;padding:0}
+:root[data-theme="dark"] .sp-materials.wtf-section{background:var(--bg)}
+.wtf-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  width:100%;min-height:48px;padding:10px 14px;
+  background:transparent;border:0;border-radius:var(--r-panel);
+  color:var(--txt);font:600 14px/1.3 var(--font);text-align:left;
+  cursor:pointer;box-sizing:border-box;
+  transition:background-color 140ms ease,color 140ms ease;
+}
+.wtf-toggle:hover{background:var(--acc-soft)}
+.wtf-toggle:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.wtf-toggle-summary{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.wtf-caret{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;font-size:14px;line-height:1;color:var(--txt-2);
+  transition:transform 160ms ease,color 140ms ease;
+}
+.wtf-section.is-open .wtf-caret{transform:rotate(180deg);color:var(--txt)}
+.wtf-panel{padding:0 10px 10px;border-top:1px solid var(--line);min-width:0}
+.wtf-panel[hidden]{display:none}
+.wtf-panel-lead{font-size:13px;color:var(--txt-2);line-height:1.35;margin:10px 0 8px}
+.wtf-panel-lead b{color:var(--txt)}
+.wtf-notes{padding:8px 12px;margin:8px 0 0;font-size:13px;line-height:1.45}
+.wtf-list.wtf-compact{
+  display:flex;flex-direction:column;gap:10px;
+  margin:8px 0 0;width:100%;min-width:0;
+}
+.sp-materials .wtf-list.wtf-compact{margin:10px 0 0}
+.wtf-compact .wtf-sep{display:none}
+.wtf-compact .wtf-block,
+.wtf-compact .wtf-block.listen-test{
+  display:grid;grid-template-rows:28px 18px;align-items:start;gap:0;
+  background:var(--surface);border:1px solid var(--line);border-left:1px solid var(--line);
+  border-radius:10px;padding:4px 10px;min-height:56px;
+  width:100%;min-width:0;max-width:100%;box-sizing:border-box;
+  transition:background-color 140ms ease,border-color 140ms ease;
+}
+.wtf-compact .wtf-block:hover{border-color:var(--acc-border)}
+.wtf-compact .wtf-main{
+  grid-row:1 / 3;grid-column:1;align-self:stretch;
+  display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:nowrap;
+  gap:8px;min-width:0;max-width:100%;
+}
+.wtf-compact .wtf-keys{
+  display:inline-flex;align-items:flex-start;justify-content:flex-end;gap:6px;
+  flex:0 1 auto;min-width:0;
+}
+.wtf-compact .wtf-link{
+  display:inline-flex;align-items:flex-start;gap:4px;
+  min-height:44px;min-width:44px;padding:3px 2px 0;
+  background:transparent;border:0;border-radius:6px;
+  color:var(--acc-text);font-size:14px;font-weight:600;
+  line-height:1.25;text-decoration:none;
+  flex:0 1 auto;max-width:100%;overflow:hidden;box-sizing:border-box;
+  transition:color 140ms ease,background-color 140ms ease;
+}
+.wtf-compact .wtf-link:hover{background:transparent;color:var(--acc);text-decoration:underline}
+.wtf-compact .wtf-link:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.wtf-compact .wtf-link-txt{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;
+}
+.wtf-compact .wtf-link.is-key{
+  background:transparent;color:var(--txt-2);font-size:13px;font-weight:600;
+  justify-content:flex-end;text-align:right;
+}
+.wtf-compact .wtf-link.is-key:hover{color:var(--acc-text);background:transparent}
+.wtf-compact .wtf-hint{
+  grid-row:2 / 3;grid-column:1;align-self:end;z-index:1;
+  margin:0;font-size:13px;color:var(--txt-2);line-height:18px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-width:0;
+}
+.wtf-compact .wtf-block.wtf-has-extra,
+.wtf-compact .wtf-block.wtf-has-extra.listen-test{
+  display:flex;flex-direction:column;align-items:stretch;gap:0;
+  padding:6px 10px 5px;min-height:0;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-head,
+.wtf-compact .wtf-block.wtf-has-extra.listen-test .lt-head{
+  font-size:13px;font-weight:600;color:var(--txt);line-height:1.25;margin:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-main{
+  grid-row:auto;grid-column:auto;align-self:stretch;
+  align-items:center;min-height:44px;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-link{
+  align-items:center;padding:0 2px;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-extra{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:8px;
+  padding:0;border-top:1px dashed var(--line);min-height:44px;min-width:0;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-extra .wtf-link{
+  background:transparent;font-size:13px;font-weight:500;color:var(--txt-2);
+  padding:0 2px;min-height:44px;min-width:44px;flex:0 1 auto;
+}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-extra .wtf-link:hover{color:var(--acc-text);background:transparent}
+.wtf-compact .wtf-block.wtf-has-extra .wtf-hint{
+  grid-row:auto;grid-column:auto;align-self:stretch;z-index:auto;margin:0;
+}
+.wtf-compact .wtf-block.wtf-full,
+.wtf-compact .wtf-block.wtf-full.listen-test{
+  margin-top:6px;
+  background:var(--ok-soft);border:1px solid var(--ok-border);border-left:1px solid var(--ok-border);
+}
+.wtf-compact .wtf-block.wtf-online{
+  margin-top:0;
+  background:var(--acc-soft);border:1px dashed var(--acc-border);
+}
+.wtf-compact .wtf-block[data-wtf-kind="paper"] + .wtf-block.wtf-online{margin-top:6px}
+.wtf-compact .wtf-sub{
+  grid-row:2 / 3;grid-column:1;align-self:end;z-index:1;
+  display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;
+}
+.wtf-compact .wtf-sub .wtf-tag{
+  flex:none;align-self:center;min-width:0;
+  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:1px 6px;border-radius:999px;line-height:1.4;
+}
+.wtf-compact .wtf-sub .wtf-hint{
+  grid-row:auto;grid-column:auto;align-self:center;flex:1;min-width:0;color:var(--txt);
+}
+.wtf-compact .wtf-full .wtf-link,
+.wtf-compact .wtf-online .wtf-link{background:transparent;border:0}
+.wtf-compact .wtf-full .wtf-link{font-size:13px;flex:0 0 auto}
+.wtf-compact .wtf-full .wtf-link.is-key{background:transparent;color:var(--txt);flex:0 1 auto;min-width:44px}
+.wtf-compact .wtf-full .wtf-link.is-ext{flex:1 1 44px;min-width:44px;margin-left:auto;justify-content:flex-end;text-align:right}
+.wtf-compact .wtf-full .wtf-main{justify-content:flex-start;gap:6px;overflow:hidden}
+@media (min-width:720px){
+  .wtf-list.wtf-compact{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  }
+  .wtf-compact .wtf-block.wtf-full,
+  .wtf-compact .wtf-block.wtf-online{
+    grid-column:1 / -1;
+  }
+}
+
 /* ---------- EXAM SOURCES (reuses Today .wtf-list / .wtf-block language) ---------- */
 .es-toolbar{display:flex;flex-direction:column;gap:var(--s3);margin:var(--s3) 0 var(--s4);min-width:0}
 .es-search-row{display:flex;align-items:center;gap:var(--s2);min-width:0}
@@ -3809,9 +3955,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="ueTimer.start">▶ / ⏸</button>
                       </div>
                     </div>
-                    <div class="guide">
-                      <span id="st1GuideLead">📍 <b>Where to find the paper:</b></span>
-                      <div class="wtf-list" id="gUeChips"></div>
+                    <div class="wtf-section" id="wtfSectionRue" data-wtf-skill="rue">
+                      <button type="button" class="wtf-toggle" id="wtfToggleRue" data-action="toggleWtfSection" data-wtf-skill="rue" aria-expanded="false" aria-controls="wtfPanelRue">
+                        <span class="wtf-toggle-summary" id="wtfSummaryRue">Materials</span>
+                        <span class="wtf-caret" aria-hidden="true">▾</span>
+                      </button>
+                      <div class="wtf-panel" id="wtfPanelRue" hidden>
+                        <div class="wtf-panel-lead" id="st1GuideLead">📍 <b>Where to find the paper:</b></div>
+                        <div class="wtf-list wtf-compact" id="gUeChips"></div>
+                      </div>
+                    </div>
+                    <div class="guide wtf-notes">
                       <span id="st1GuidePace"></span><br>
                       • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
                     </div>
@@ -3915,9 +4069,15 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="wPlan.start">▶</button>
                       </div>
                     </div>
-                    <div class="guide">
-                      <span>📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></span>
-                      <div class="wtf-list" id="gWChips"></div>
+                    <div class="wtf-section" id="wtfSectionW" data-wtf-skill="w">
+                      <button type="button" class="wtf-toggle" id="wtfToggleW" data-action="toggleWtfSection" data-wtf-skill="w" aria-expanded="false" aria-controls="wtfPanelW">
+                        <span class="wtf-toggle-summary" id="wtfSummaryW">Materials</span>
+                        <span class="wtf-caret" aria-hidden="true">▾</span>
+                      </button>
+                      <div class="wtf-panel" id="wtfPanelW" hidden>
+                        <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></div>
+                        <div class="wtf-list wtf-compact" id="gWChips"></div>
+                      </div>
                     </div>
                     <div class="guide">
                       📍 <b>Architecture Checklist:</b><br>
@@ -4078,11 +4238,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="lTimer.start">▶</button>
                       </div>
                     </div>
-                    <div class="guide">
-                      <span>📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></span>
-                      <div class="wtf-list" id="gLChips"></div>
-                      <span id="st3Rule">—</span>
+                    <div class="wtf-section" id="wtfSectionL" data-wtf-skill="l">
+                      <button type="button" class="wtf-toggle" id="wtfToggleL" data-action="toggleWtfSection" data-wtf-skill="l" aria-expanded="false" aria-controls="wtfPanelL">
+                        <span class="wtf-toggle-summary" id="wtfSummaryL">Materials</span>
+                        <span class="wtf-caret" aria-hidden="true">▾</span>
+                      </button>
+                      <div class="wtf-panel" id="wtfPanelL" hidden>
+                        <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></div>
+                        <div class="wtf-list wtf-compact" id="gLChips"></div>
+                      </div>
                     </div>
+                    <div class="guide wtf-notes"><span id="st3Rule">—</span></div>
                     <p id="lFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
                     <div class="row" style="margin-top:10px">
                       <div><label>Mode</label>
@@ -4380,9 +4546,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
                 <div class="sp-today" id="spTodayStack">
                   <!-- Materials: quiet reference surface, visually distinct from actions -->
-                  <section class="sp-materials" aria-labelledby="spMaterialsTitle">
-                    <h2 class="sp-materials-title" id="spMaterialsTitle" data-i18n="sp_materials_title">Materials</h2>
-                    <div class="wtf-list" id="gSpChips"></div>
+                  <section class="sp-materials wtf-section" id="wtfSectionSp" data-wtf-skill="sp" aria-labelledby="spMaterialsTitle">
+                    <button type="button" class="wtf-toggle" id="wtfToggleSp" data-action="toggleWtfSection" data-wtf-skill="sp" aria-expanded="false" aria-controls="wtfPanelSp">
+                      <span class="wtf-toggle-summary" id="spMaterialsTitle">Materials</span>
+                      <span class="wtf-caret" aria-hidden="true">▾</span>
+                    </button>
+                    <div class="wtf-panel" id="wtfPanelSp" hidden>
+                      <div class="wtf-list wtf-compact" id="gSpChips"></div>
+                    </div>
                   </section>
 
                   <!-- Option 1: Speaking Exam -->
@@ -5757,6 +5928,9 @@ const I18N={
     wtf_online_l:'Extra audio with automatic marking; do one part at a time.',
     wtf_online_sp:'Sample questions to record yourself; then check your silences in Live Studio.',
     wtf_examiner_notes:'Examiner notes',
+    wtf_notes_short:'Notes',
+    wtf_res_one:'{n} resource',
+    wtf_res_many:'{n} resources',
     wtf_full_online_cambridge:'Cambridge official sample papers',
     wtf_full_online_write:'Write & Improve (Cambridge)',
     wtf_full_online_listen:'Exam English — 2 full listening tests',
@@ -6820,6 +6994,9 @@ const I18N={
     wtf_online_l:'Audio extra con corrección automática; hacé una parte por vez.',
     wtf_online_sp:'Preguntas de muestra para grabarte; después revisá tus silencios en Live Studio.',
     wtf_examiner_notes:'Notas del examinador',
+    wtf_notes_short:'Notas',
+    wtf_res_one:'{n} recurso',
+    wtf_res_many:'{n} recursos',
     wtf_full_online_cambridge:'Exámenes oficiales de Cambridge',
     wtf_full_online_write:'Write & Improve (Cambridge)',
     wtf_full_online_listen:'Exam English — 2 tests completos de listening',
@@ -18947,11 +19124,37 @@ function wtfLink(label,keyOrUrl,title){
 }
 function wtfAnchor(item,extraCls){
   if(!item||!item.href)return '';
-  const cls='wtf-link'+(extraCls?' '+extraCls:'');
+  const cls='wtf-link'+(extraCls?' '+extraCls:'')+(item.external?' is-ext':'');
   const rel=item.external?'noopener noreferrer':'noopener';
-  const titleAttr=item.title?` title="${esc(item.title)}"`:'';
+  const titleText=item.title||item.label;
+  const titleAttr=titleText?` title="${esc(titleText)}"`:'';
   const suffix=item.external?' ↗':'';
-  return `<a class="${cls}" href="${esc(item.href)}" target="_blank" rel="${rel}"${titleAttr}>${esc(item.label)}${suffix}</a>`;
+  return `<a class="${cls}" href="${esc(item.href)}" target="_blank" rel="${rel}"${titleAttr}><span class="wtf-link-txt">${esc(item.label)}${suffix}</span></a>`;
+}
+function wtfStorageKey(skill){return 'b2f_wtf_open_'+skill}
+function isWtfOpen(skill){
+  try{return localStorage.getItem(wtfStorageKey(skill))==='1'}catch(e){return false}
+}
+function applyWtfOpenState(skill,open){
+  const sec=document.querySelector('.wtf-section[data-wtf-skill="'+skill+'"]');
+  if(!sec)return;
+  const btn=sec.querySelector('.wtf-toggle');
+  const panel=sec.querySelector('.wtf-panel');
+  sec.classList.toggle('is-open',!!open);
+  if(btn)btn.setAttribute('aria-expanded',open?'true':'false');
+  if(panel)panel.hidden=!open;
+}
+function setWtfOpen(skill,open){
+  try{localStorage.setItem(wtfStorageKey(skill),open?'1':'0')}catch(e){}
+  applyWtfOpenState(skill,!!open);
+}
+function toggleWtfSection(el){
+  const skill=(el&&el.dataset&&el.dataset.wtfSkill)||(el&&el.closest&&el.closest('.wtf-section')&&el.closest('.wtf-section').dataset.wtfSkill)||'';
+  if(!skill)return;
+  setWtfOpen(skill,!isWtfOpen(skill));
+}
+function wtfSummaryLabel(n){
+  return t('sp_materials_title')+' · '+t(n===1?'wtf_res_one':'wtf_res_many',{n});
 }
 /* Shared block renderer for Today's 4 "Where to find" sections.
    rows: [{title?, left, right?, extra?, hint}]
@@ -18963,42 +19166,58 @@ function renderWhereToFind(rows,online,fullPaper,opts){
   const rowCls=(opts&&opts.rowClass)?' '+opts.rowClass:'';
   (rows||[]).forEach(r=>{
     const left=r&&r.left&&r.left.href?r.left:null;
-    const right=r&&r.right&&r.right.href?r.right:null;
+    const rightArr=Array.isArray(r&&r.right)
+      ?r.right.filter(x=>x&&x.href)
+      :(r&&r.right&&r.right.href?[r.right]:[]);
     const extra=(r&&Array.isArray(r.extra))?r.extra.filter(x=>x&&x.href):[];
-    if(!left&&!right&&!extra.length)return;
+    if(!left&&!rightArr.length&&!extra.length)return;
+    const hasExtra=extra.length>0||!!r.title;
+    const extraFlagCls=hasExtra?' wtf-has-extra':'';
     const head=r.title?`<div class="wtf-head${rowCls?' lt-head':''}">${esc(r.title)}</div>`:'';
     const mainParts=[];
     if(left)mainParts.push(wtfAnchor(left,''));
-    if(left&&right)mainParts.push('<span class="wtf-sep" aria-hidden="true"></span>');
-    if(right)mainParts.push(wtfAnchor(right,'is-key'));
+    if(left&&rightArr.length)mainParts.push('<span class="wtf-sep" aria-hidden="true"></span>');
+    if(rightArr.length===1)mainParts.push(wtfAnchor(rightArr[0],'is-key'));
+    else if(rightArr.length>1)mainParts.push(`<span class="wtf-keys">${rightArr.map(x=>wtfAnchor(x,'is-key')).join('')}</span>`);
     const mainHtml=mainParts.length?`<div class="wtf-main">${mainParts.join('')}</div>`:'';
     const extraHtml=extra.length?`<div class="wtf-extra">${extra.map(x=>wtfAnchor(x,'')).join('')}</div>`:'';
-    const hintHtml=r.hint?`<p class="wtf-hint">${esc(r.hint)}</p>`:'';
-    parts.push(`<div class="wtf-block${rowCls}" data-wtf-kind="paper">${head}${mainHtml}${extraHtml}${hintHtml}</div>`);
+    const hintHtml=r.hint?`<p class="wtf-hint" title="${esc(r.hint)}">${esc(r.hint)}</p>`:'';
+    parts.push(`<div class="wtf-block${rowCls}${extraFlagCls}" data-wtf-kind="paper">${head}${mainHtml}${extraHtml}${hintHtml}</div>`);
   });
   if(fullPaper){
     const flinks=(Array.isArray(fullPaper.links)?fullPaper.links:[]).filter(x=>x&&x.href);
     const fextra=(Array.isArray(fullPaper.extra)?fullPaper.extra:[]).filter(x=>x&&x.href);
     if(flinks.length||fextra.length){
+      const extraFlagCls=fextra.length?' wtf-has-extra':'';
       const mainHtml=flinks.length?`<div class="wtf-main">${flinks.map((x,i)=>wtfAnchor(x,i>0&&!x.external?'is-key':'')).join('')}</div>`:'';
       const extraHtml=fextra.length?`<div class="wtf-extra">${fextra.map(x=>wtfAnchor(x,'')).join('')}</div>`:'';
-      const hintHtml=fullPaper.hint?`<p class="wtf-hint">${esc(fullPaper.hint)}</p>`:'';
-      parts.push(`<div class="wtf-block wtf-full${rowCls}" data-wtf-kind="full"><span class="wtf-tag">${esc(t('wtf_full_tag'))}</span>${mainHtml}${extraHtml}${hintHtml}</div>`);
+      const hintHtml=fullPaper.hint?`<p class="wtf-hint" title="${esc(fullPaper.hint)}">${esc(fullPaper.hint)}</p>`:'';
+      const subHtml=`<div class="wtf-sub"><span class="wtf-tag">${esc(t('wtf_full_tag'))}</span>${hintHtml}</div>`;
+      parts.push(`<div class="wtf-block wtf-full${rowCls}${extraFlagCls}" data-wtf-kind="full">${mainHtml}${extraHtml}${subHtml}</div>`);
     }
   }
   if(online&&online.href){
     const onlineItem={label:online.label,href:online.href,external:/^https?:\/\//.test(online.href)};
-    const hintHtml=online.hint?`<p class="wtf-hint">${esc(online.hint)}</p>`:'';
-    parts.push(`<div class="wtf-block wtf-online" data-wtf-kind="online"><span class="wtf-tag">${esc(t('wtf_online_tag'))}</span><div class="wtf-main">${wtfAnchor(onlineItem,'')}</div>${hintHtml}</div>`);
+    const hintHtml=online.hint?`<p class="wtf-hint" title="${esc(online.hint)}">${esc(online.hint)}</p>`:'';
+    const subHtml=`<div class="wtf-sub"><span class="wtf-tag">${esc(t('wtf_online_tag'))}</span>${hintHtml}</div>`;
+    parts.push(`<div class="wtf-block wtf-online" data-wtf-kind="online"><div class="wtf-main">${wtfAnchor(onlineItem,'')}</div>${subHtml}</div>`);
   }
   return parts.join('');
 }
 /* renderGuides(): fills Today's 4 "Where to find" sections (R&UoE, Writing,
    Listening, Speaking) using the shared block renderer and existing MAT links. */
 function renderGuides(){
-  const mount=(id,rows,online,fullPaper,opts)=>{
+  const mount=(id,skill,rows,online,fullPaper,opts)=>{
     const el=document.getElementById(id);
-    if(el)el.innerHTML=renderWhereToFind(rows,online,fullPaper,opts);
+    if(!el)return;
+    el.innerHTML=renderWhereToFind(rows,online,fullPaper,opts);
+    const count=el.querySelectorAll(':scope > .wtf-block').length;
+    const sec=el.closest('.wtf-section');
+    if(sec){
+      const sum=sec.querySelector('.wtf-toggle-summary');
+      if(sum)sum.textContent=wtfSummaryLabel(count);
+      applyWtfOpenState(skill,isWtfOpen(skill));
+    }
   };
 
   /* 1. Reading & Use of English */
@@ -19032,7 +19251,7 @@ function renderGuides(){
   const ueOnline=ueNum>=5
     ?{label:'Exam English — FCE Reading',href:'https://www.examenglish.com/FCE/fce_reading.html',hint:t('wtf_online_rue')}
     :{label:'Flo-Joe — FCE Use of English',href:'https://www.flo-joe.co.uk/fce/students/tests/',hint:t('wtf_online_rue')};
-  mount('gUeChips',ueRows,ueOnline,{links:ueFullLinks,hint:t('wtf_full_rue_hint')});
+  mount('gUeChips','rue',ueRows,ueOnline,{links:ueFullLinks,hint:t('wtf_full_rue_hint')});
 
   /* 2. Writing */
   const wTipo=document.getElementById('wTipo')?String(document.getElementById('wTipo').value):'Essay';
@@ -19052,7 +19271,7 @@ function renderGuides(){
   const wFullLinks=[];
   if(wFullPick)wFullLinks.push(wtfLink(wFullPick[0],wFullPick[1]));
   wFullLinks.push(wtfLink(t('wtf_full_online_write'),'https://writeandimprove.com/'));
-  mount('gWChips',wRows,{label:'Exam English — FCE Writing',href:'https://www.examenglish.com/FCE/fce_writing.html',hint:t('wtf_online_w')},{links:wFullLinks,hint:t('wtf_full_w_hint')});
+  mount('gWChips','w',wRows,{label:'Exam English — FCE Writing',href:'https://www.examenglish.com/FCE/fce_writing.html',hint:t('wtf_online_w')},{links:wFullLinks,hint:t('wtf_full_w_hint')});
 
   /* 3. Listening */
   const lPartVal=document.getElementById('lPart')?String(document.getElementById('lPart').value):'all';
@@ -19097,7 +19316,7 @@ function renderGuides(){
   if(MAT.lFS2){
     lFullLinks.push(wtfLink(t('lt_full_2'),'lFS2'));
     if(MAT.lkFS2)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS2'));
-    if(MAT.auFS2)lFullExtra.push(wtfLink(t('res_audio'),'auFS2'));
+    if(MAT.auFS2)lFullLinks.push(wtfLink(t('res_audio'),'auFS2'));
   }else if(MAT.lFS1){
     lFullLinks.push(wtfLink(t('lt_full_1'),'lFS1'));
     if(MAT.lkFS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkFS1'));
@@ -19106,18 +19325,18 @@ function renderGuides(){
   }else if(MAT.lS1){
     lFullLinks.push(wtfLink(t('lt_test_1'),'lS1'));
     if(MAT.lkS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkS1'));
-    if(MAT.auS1)lFullExtra.push(wtfLink(t('res_audio'),'auS1'));
+    if(MAT.auS1)lFullLinks.push(wtfLink(t('res_audio'),'auS1'));
   }
   lFullLinks.push(wtfLink(t('wtf_full_online_listen'),'https://www.examenglish.com/FCE/fce_listening.html'));
-  mount('gLChips',lRows,{label:'Test-English — B2 Listening',href:'https://test-english.com/listening/b2/',hint:t('wtf_online_l')},{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')},{rowClass:'listen-test'});
+  mount('gLChips','l',lRows,{label:'Test-English — B2 Listening',href:'https://test-english.com/listening/b2/',hint:t('wtf_online_l')},{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')},{rowClass:'listen-test'});
 
   /* 4. Speaking */
   const spPart=String((typeof SP_TODAY!=='undefined'&&SP_TODAY.part)?SP_TODAY.part:2);
   const spRows=[
     {left:wtfLink('Speaking S1','spS1'),right:wtfLink(t('wtf_examiner_notes'),'exC0'),hint:t('wtf_hint_sp_visuals')},
-    {left:wtfLink('Speaking S2','spS2'),right:wtfLink(t('wtf_examiner_notes')+' 2','exC1'),extra:[wtfLink(t('wtf_examiner_notes')+' 3','exC2')],hint:t('wtf_hint_sp_visuals')},
+    {left:wtfLink('Speaking S2','spS2'),right:[wtfLink(t('wtf_notes_short')+' 2','exC1',t('wtf_examiner_notes')+' 2'),wtfLink(t('wtf_notes_short')+' 3','exC2',t('wtf_examiner_notes')+' 3')],hint:t('wtf_hint_sp_visuals')},
     {left:wtfLink('Speaking FS1','spFS1'),right:wtfLink('Examiner FS 1','exC3'),hint:t('wtf_hint_sp_visuals')},
-    {left:wtfLink('Speaking FS2','spFS2'),right:wtfLink('Examiner FS 2','exC4'),extra:[wtfLink('Examiner FS 3','exC5')],hint:t('wtf_hint_sp_visuals')},
+    {left:wtfLink('Speaking FS2','spFS2'),right:[wtfLink('FS 2','exC4','Examiner FS 2'),wtfLink('FS 3','exC5','Examiner FS 3')],hint:t('wtf_hint_sp_visuals')},
     {left:wtfLink('Lesson P'+spPart,'lpSp'+spPart),hint:t('wtf_hint_lesson')},
     {left:wtfLink('Lesson FS P'+spPart,'fSp'+spPart),hint:t('wtf_hint_lesson')},
     {left:wtfLink('Self-study','spAct'),hint:t('wtf_hint_self_study')},
@@ -19127,7 +19346,7 @@ function renderGuides(){
   const spFullLinks=[];
   if(spFullPick)spFullLinks.push(wtfLink(spFullPick[0],spFullPick[1]));
   spFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
-  mount('gSpChips',spRows,{label:'Exam English — FCE Speaking',href:'https://www.examenglish.com/FCE/fce_speaking.html',hint:t('wtf_online_sp')},{links:spFullLinks,hint:t('wtf_full_sp_hint')});
+  mount('gSpChips','sp',spRows,{label:'Exam English — FCE Speaking',href:'https://www.examenglish.com/FCE/fce_speaking.html',hint:t('wtf_online_sp')},{links:spFullLinks,hint:t('wtf_full_sp_hint')});
 }
 let MATERIALS=[];
 /* matDone/matUndo: mark a Material exercise as done (counter of
@@ -22212,6 +22431,7 @@ click:{
 'todayStart':el=>todayStart(+el.dataset.idx),
 'toggleAccountSheet':()=>toggleAccountSheet(),
 'toggleByoKeyVisibility':()=>toggleByoKeyVisibility(),
+'toggleWtfSection':el=>toggleWtfSection(el),
 'tourNext':()=>tourNext(),
 'ueTimer.start':()=>ueTimer.start(),
 'undoPlanningChange':()=>undoPlanningChange(),
