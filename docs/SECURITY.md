@@ -37,11 +37,13 @@ not to.
 
 ## 3. Data protection in place
 
-- Passwords: PBKDF2-HMAC-SHA256, 600,000 iterations, unique 128-bit salt,
+- Passwords and MFA: PBKDF2-HMAC-SHA256, 600,000 iterations, unique 128-bit salt,
   constant-time comparison. Hashes below the current cost are upgraded on login.
   The embedded password blocklist (1,000 sourced entries plus deterministic
   derivations), passwords equal to the username, and anything shorter than 12
-  characters are rejected.
+  characters are rejected. Optional TOTP two-factor authentication (RFC 6238)
+  with hashed one-time recovery codes, Google OAuth, and WebAuthn passkeys are
+  also supported.
 - Sessions: 192-bit random tokens; only `sha256(token)` is stored; 30-day sliding
   expiry capped by a 90-day absolute ceiling; every session is revoked on a
   password change; a User-Agent change is logged but not blocked.
@@ -54,10 +56,12 @@ not to.
   the client address. Never the raw IP, never a token, never a request body.
 - Rate limits: registration, login (per IP and per username, with lockout and
   backoff), progress writes, AI calls and speaking minutes.
-- Transport: HSTS, no version banner, restrictive CSP, `X-Frame-Options: DENY`,
-  `nosniff`, `no-referrer`, closed CORS, Host allowlist and path traversal
-  checks. TLS terminates at the edge network in front of the service (see
-  `/privacy`).
+- Transport: HSTS, no version banner, restrictive CSP (inline scripts verified
+  by SHA-256 hash, no `'unsafe-inline'` or `'unsafe-hashes'` in `script-src`,
+  and `https://static.cloudflareinsights.com` as the only external script),
+  `X-Frame-Options: DENY`, `nosniff`, `no-referrer`, closed CORS, Host allowlist
+  and path traversal checks. TLS terminates at the edge network in front of the
+  service (see `/privacy`).
 
 ## 4. What is intentionally not protected
 

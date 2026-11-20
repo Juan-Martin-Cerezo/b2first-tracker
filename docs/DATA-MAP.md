@@ -8,13 +8,15 @@ layers.
 
 | Category | Contents | Protection |
 | --- | --- | --- |
-| Accounts | account id, display name, salt, password hash, algorithm and cost, colour, creation date; optional email hash and a "password not set" flag for Google-created accounts | private to the service, atomic writes |
+| Accounts | account id, display name, salt, password hash, algorithm and cost, colour, creation date; optional email hash, optional TOTP MFA secret and hashed recovery codes, and a "password not set" flag for Google-created accounts | private to the service, atomic writes |
 | Google links | Google's stable subject id mapped to a local account id; never a name or address | private, atomic writes |
 | Passkeys | credential id, public key, signature counter, creation date and the device label the user chose | per-account private directory |
 | Sessions | hash of the session token, expiry, issue and last-seen times, and a hash of the user agent | the raw token is never written |
 | Progress | practice log, errors, profile, settings and plan selections | per-account private directory |
 | Backups | the last 20 progress documents per account | per-account private directory |
+| Own Listening material | optional practice audio (up to 20 MB/file, 40 MB and 10 items per account) plus task, answer key and script metadata | per-account private directory; streamed to the owner via Range requests |
 | Speaking ledger | seconds spoken and tokens minted today; no audio | per-account private directory |
+| Monthly Speaking guard | aggregate monthly seconds for the instance-wide Gemini Live budget (`spk_spend.json`); no user data, no audio | private, atomic writes |
 | Transcripts | only when the client explicitly asks to save a session | per-account private directory |
 | Audit log | security events with a SHA-256 hash chain (previous-hash on every line) | private, rotates at 5 MB, 90-day retention |
 | Usage counters | per-account writing and speaking counters and the last-seen date | private |
@@ -35,8 +37,11 @@ restrictive permissions and re-checked on every write.
   truncated hash of the client address.
 - No User-Agent string: sessions store a hash of the user agent.
 - No passwords, tokens or provider keys in plaintext.
-- No audio and no writing content in any log. AI text is forwarded per request
-  and only the accepted result lands in the user's own progress.
+- No speaking or pronunciation audio and no writing content in any log. Speaking
+  audio is never written to disk; AI text is forwarded per request and only the
+  accepted result lands in the user's own progress. (Optional Listening practice
+  audio uploaded by the user lives only in that account's private directory until
+  deleted.)
 
 ## Access log (stdout, not stored data)
 
@@ -64,8 +69,8 @@ Request bodies are never logged.
 ## Deletion (account closure)
 
 1. Verify the password with the same cost as a login.
-2. Remove the account's progress directory, backups, speaking ledger and transcripts.
-3. Remove the account record.
+2. Remove the account's progress directory, backups, uploaded Listening material, speaking ledger and transcripts.
+3. Remove the account record (including any TOTP MFA configuration).
 4. Remove every session token that belongs to the account.
 5. Remove the usage row.
 6. Remove the Google link and the passkey record, so neither can outlive the account.

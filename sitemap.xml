@@ -3,4 +3,13 @@
   <url>
     <loc>https://firsttracker.app/</loc>
   </url>
+  <url>
+    <loc>https://firsttracker.app/privacy</loc>
+  </url>
+  <url>
+    <loc>https://firsttracker.app/terms</loc>
+  </url>
+  <url>
+    <loc>https://firsttracker.app/security</loc>
+  </url>
 </urlset>

@@ -45,11 +45,13 @@ authoritative result is the one issued by Cambridge.
 
 ## 4. Fair use and limits
 
-Every account has the full service. To keep the AI provider costs predictable,
-the service applies **reasonable daily limits** to writing corrections and
-speaking practice; the current meter is visible under **Settings → Usage
-limits**. Limits reset on their own and never change the work already saved in
-your account.
+Every account has the full service. To keep AI provider costs predictable, the
+service applies **daily fair-use limits** per UTC day — currently **5 writing
+evaluations** and **1 Speaking mock (up to 15 minutes)** per account, plus an
+instance-wide monthly cap on live voice minutes. The current meter is visible
+under **Settings → Usage limits**. Limits reset automatically and never change
+the work already saved in your account. Accounts using their own provider key
+(BYO) are not metered by the service.
 
 Automated scraping, credential stuffing, deliberately exhausting quotas, or using
 the AI endpoint for anything other than your own study is prohibited.
@@ -109,8 +111,9 @@ excludes liability that cannot be excluded by law.
 ## 10. Privacy
 
 Data handling is described in the Privacy Policy at `/privacy`. In short: account
-and progress data stay on the provider's server; audio is never stored; no data is
-sold and there is no advertising or tracking.
+and progress data stay on the provider's server; speaking audio is never stored;
+no data is sold and there is no advertising or cross-site tracking (only
+cookie-free aggregate Cloudflare Web Analytics).
 
 ## 11. Governing law and contact
 

@@ -54,11 +54,11 @@ students use the app from a browser.
 | Per-user data | IDOR: read/write another account's data by guessing its id | The session token must belong to the requested user (otherwise `403`); requests without a token always get `401`; audit events are filtered to the caller |
 | Server filesystem | Path traversal via parameters or file routes | User ids validated against an explicit safe pattern with `..` rejection; file routes resolve real paths and require the result to stay inside their root |
 | AI provider key | Key theft or free-riding | The key comes only from the environment, never from the request; never logged, never written to disk; a bounded request cap |
-| AI budget | Draining the shared key | Per-IP minute/hour buckets; a generous daily per-account allowance; an instance-wide daily ceiling; user-supplied keys bypass the shared quota; upstream timeout |
+| AI budget | Draining the shared key | Per-IP minute/hour buckets; daily per-account caps (5 writing evaluations, 1 Speaking mock / 15 min per UTC day in `plans.py`); instance-wide daily and monthly ceilings; user-supplied keys bypass the shared quota; upstream timeout |
 | Availability | DoS via oversized or malformed payloads | Bounded progress payload with a schema (list/string/depth/number caps) → `422`; per-account and per-IP rate limits → `429`; busy locks answer `429` instead of stacking |
 | Network surface | Slowloris, connection floods, oversized requests sent by hand | Socket timeout per connection; a global connection semaphore answers `503 {"error":"busy","retry_after":5}` with `Retry-After`; URI/header/body limits; optional Host allowlist |
 | Request smuggling / traversal surface | Path traversal, encoded slash tricks, hidden-file probing, unknown verbs | Path rejected for NUL, backslash, `..` in any encoding and empty segments; hidden dot-files → `403`; method allowlist → `405` + `Allow`; `404` never lists candidates |
-| Browser sessions | XSS / CSRF | CSP (`default-src 'self'`, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`; rendered names go through `html.escape`; auth is a `Bearer` header (no cookies) and CORS is closed |
+| Browser sessions | XSS / CSRF | CSP (`default-src 'self'`, hashed inline `<script>` blocks, no `'unsafe-inline'` or `'unsafe-hashes'` in `script-src`, `https://static.cloudflareinsights.com` as the only external script, `frame-ancestors 'none'`, `base-uri 'none'`, `form-action 'self'`), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`; rendered names go through `html.escape`; API auth is a `Bearer` header (only `/api/listening/material/audio` uses a scoped HttpOnly cookie for `<audio>` Range streaming) and CORS is closed |
 | Audit trail | Secrets leaking into logs; users reading each other's events; silent log tampering | Access log: method, path without query, status, request id — never tokens or bodies; the audit log holds events with user + hashed IP only and **every line carries the hash of the previous raw line**, so edits/deletions break the chain; an account sees only its own events |
 | Security events | Blind spots during abuse or provider misuse | Append-only events for blocked AI calls, rate limits, rejected pronunciation clips, token mints and revoked sessions — each with a request id and scalar metadata only, no content and no secrets |
 | Disclosure metadata | No documented way to report a vulnerability | `/.well-known/security.txt` (RFC 9116): `Contact`, `Expires`, `Canonical`, `Policy` |
@@ -70,10 +70,10 @@ students use the app from a browser.
 | --- | --- | --- |
 | Input validation | Implemented | Progress shape, list/string/depth/finite-number caps, safe user ids, AI request and model-output schemas, password policy (12 characters, blocklist plus derived rules, username check), diagnostic JSON validation |
 | SQL injection | N/A (no database) | Storage is JSON read with `json.load`; there is no query language and no string-built SQL anywhere |
-| Password hashing | Implemented | PBKDF2-HMAC-SHA256, **600,000 iterations**, per-user salt, constant-time compare; older hashes upgraded transparently on the next login |
+| Password hashing & MFA | Implemented | PBKDF2-HMAC-SHA256, **600,000 iterations**, per-user salt, constant-time compare; older hashes upgraded transparently on the next login; optional TOTP MFA (RFC 6238, `mfa.py`) with hashed recovery codes, Google OAuth, and WebAuthn passkeys |
 | Session lifetime | Implemented | 30-day sliding expiry capped by a 90-day absolute expiry per token; both clocks are enforced on read |
 | Audit log integrity | Implemented | SHA-256 hash chain on every line; the verifier exits non-zero on a broken link |
-| Security headers | Implemented | HSTS `max-age=63072000; includeSubDomains; preload`; CSP `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'self'`, no `'unsafe-eval'`; COOP/CORP `same-origin`; `Referrer-Policy: no-referrer`; `Permissions-Policy` scoped (`microphone=(self)` only on the tracker) |
+| Security headers | Implemented | HSTS `max-age=63072000; includeSubDomains; preload`; CSP `object-src 'none'`, `base-uri 'none'`, `frame-ancestors 'none'`, `form-action 'self'`, no `'unsafe-eval'`, no `'unsafe-inline'` or `'unsafe-hashes'` in `script-src`; COOP/CORP `same-origin`; `Referrer-Policy: no-referrer`; `Permissions-Policy` scoped (`microphone=(self)` only on the tracker) |
 | Body limits by route | Implemented | Global ceiling checked from `Content-Length` before the body is read; larger documented routes have their own caps and answer `413` |
 | Secrets outside the repository | Implemented | Provider keys come from the environment, are never logged and are never written to progress; the repo ships no credentials |
 | Server-side auth | Implemented | Every data route validates the Bearer token on every request |
@@ -116,27 +116,29 @@ used.
 
 ## 5. Residual risks (honest status)
 
-### 5.1 CSP: no `'unsafe-inline'`, but `'unsafe-hashes'` is still required
+### 5.1 CSP: `style-src 'unsafe-inline'` and Cloudflare Web Analytics beacon
 
-`script-src` no longer contains `'unsafe-inline'`. The server hashes every inline
-`<script>` body and every inline event-handler value and emits
-`script-src 'self' 'sha256-…' 'unsafe-hashes' 'strict-dynamic'`. The full browser
-test suite requires zero `securitypolicyviolation` events.
+`script-src` contains neither `'unsafe-inline'` nor `'unsafe-hashes'`. All inline
+event handlers were removed in favour of `data-*` event delegation in
+`index.html`, so `script-src` only needs `'self'`, the SHA-256 hashes of the
+served `<script>` blocks, and `https://static.cloudflareinsights.com` for
+cookie-free aggregate Cloudflare Web Analytics (`connect-src` allows
+`https://cloudflareinsights.com` and `https://static.cloudflareinsights.com` for
+the beacon POST, plus `wss://generativelanguage.googleapis.com` for live
+Speaking).
 
-The honest limitation is `'unsafe-hashes'`: CSP Level 3 only allows hashed inline
-event handlers with that keyword. It does not re-enable arbitrary inline code —
-only the exact handler strings present in the served document match. Removing it
-needs event delegation so that inline handlers disappear entirely. `style-src`
-still keeps `'unsafe-inline'` for the document's inline `style` attributes; that
-is a separate, smaller surface.
+The remaining CSP compromises are:
 
-- **Impact if bypassed:** an injected event-handler attribute whose exact source
-  is not already in the policy is blocked by the browser; a matching one would
-  need to reproduce known code.
+- `style-src 'self' 'unsafe-inline'` is still used for inline `style` attributes.
+- `'strict-dynamic'` is intentionally omitted because CSP3 browsers ignore host
+  allowlists when it is set, which would block the Cloudflare Web Analytics
+  beacon injected at the edge.
+
 - **Mitigations already in place:** all dynamic names go through `html.escape`;
-  student text and AI output are rendered with `textContent`; no third-party
-  scripts; `connect-src` restricted; `frame-ancestors 'none'`,
-  `base-uri 'none'`, `object-src 'none'`.
+  student text and AI output are rendered with `textContent`; zero inline event
+  handlers; `connect-src` restricted; `frame-ancestors 'none'`,
+  `base-uri 'none'`, `object-src 'none'`; the browser test suite checks for zero
+  `securitypolicyviolation` events.
 
 ### 5.2 Audit history written before the hash chain
 
@@ -154,12 +156,11 @@ possible with write access). The hash chain detects accidental or partial
 tampering and tampering by a process that lacks write access to the file; it is
 not a defence against a compromised host.
 
-### 5.4 No verified disclosure mailbox
+### 5.4 No dedicated disclosure mailbox
 
-There is no verified email address for this project. `/.well-known/security.txt`
-publishes the GitHub advisory URL as the working `Contact` plus the documented
-`TODO_OWNER_EMAIL` placeholder. Replace the placeholder with a real mailbox
-before claiming a mail contact.
+There is no published email address for this project. `/.well-known/security.txt`
+publishes the GitHub private security advisory URL as the working `Contact`
+channel.
 
 ### 5.5 Account recovery is manual
 
@@ -194,8 +195,7 @@ this repository:
 **https://github.com/Juan-Martin-Cerezo/b2first-tracker/security/advisories/new**
 
 Machine-readable disclosure metadata: **https://firsttracker.app/.well-known/security.txt**
-(RFC 9116). The `mailto:` line in that file is the documented
-`TODO_OWNER_EMAIL` placeholder until a verified mailbox exists.
+(RFC 9116), which lists the GitHub advisory URL above as the contact channel.
 
 (If you cannot use advisories, open an issue with no details asking for a
 contact channel.)

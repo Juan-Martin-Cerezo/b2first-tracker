@@ -4,113 +4,68 @@
 
 # B2 First Tracker
 
-A hosted study system for the Cambridge B2 First: writing marked against the four Cambridge
-bands, a plan for today, and progress you can see. Create an account on the service and use it
-from any browser; your progress lives on our server, not on your machine.
+Practice the Cambridge B2 First with an AI examiner, a writing corrector and a plan that knows what you did yesterday.
+
+[![Live app](https://img.shields.io/badge/live-firsttracker.app-2563eb)](https://firsttracker.app)
+[![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B%20stdlib-3f3f46)](server.py)
+[![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)](index.html)
+[![Tests](https://img.shields.io/badge/tests-150%20suites-16a34a)](tests/run_all.sh)
+[![AI](https://img.shields.io/badge/AI-Gemini%20%2B%20DeepSeek-0f766e)](#how-the-ai-is-used)
+[![License: MIT](https://img.shields.io/badge/license-MIT-3f3f46)](LICENSE)
 
 **Live service:** https://firsttracker.app
 
-![The landing page at firsttracker.app](docs/screenshots/landing.webp)
-
-![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B-stdlib-3f3f46)
-![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)
-![License MIT](https://img.shields.io/badge/license-MIT-3f3f46)
-![Hosted](https://img.shields.io/badge/hosted-accounts-3f3f46)
-
-## Why it exists
-
-**Nobody tells you whether your Writing is good.** Writing is a quarter of the mark, and it is the
-one paper whose answer key cannot exist: two answers can both be correct English while one is a
-Band 4 and the other a Band 2. Reading and Listening practice tests come with answers, so they tell
-you. Writing does not, and neither does a friend who has never seen a Cambridge scale. The app marks
-every text on the four official bands, quotes the sentence that earned or cost each mark, and
-rewrites three of your own sentences.
-
-**Nobody tells you what to study today.** By week three the real question is not *what exists* but
-*which of the ten things in front of me should I open tonight?* Answering it costs ten minutes of
-second-guessing, and on a Tuesday night with forty minutes free that is enough to skip the session.
-The app reads the diagnostic, your practice log and your exam date, and hands you today's session:
-what to do, how long it takes, and why it was chosen.
-
-**Progress is invisible, so consistency collapses.** A candidate who does five sessions in sixty-seven
-days remembers the effort, not the frequency. Without a record there is no way to notice that the
-last Listening test was three weeks ago or that Part 4 accuracy has not moved since March. The app
-charts every log entry per part, per error type and per skill, and keeps the streak and the exam-day
-countdown in view.
+---
 
 ## Screenshots
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/desktop.webp" alt="Today view in dark mode: the session for today, a practice suggestion with three sources, the A/B rotation and the quick-log button"></td>
-    <td width="50%"><img src="docs/screenshots/writing.webp" alt="Writing Corrector result: four Cambridge band cards scored 5/5 with feedback, plus the total of 20/20"></td>
+    <td width="50%"><img src="docs/screenshots/today.webp" alt="Today view: scheduled Reading part 2 session with timer, non-repeating exercise picker, and collapsible Materials blocks"></td>
+    <td width="50%"><img src="docs/screenshots/speaking-exam.webp" alt="Speaking Exam Part 2: two Wikimedia Commons photographs, task prompt, countdown clock, examiner indicator, and live transcript"></td>
   </tr>
   <tr>
-    <td align="center"><sub>Today: the session chosen for you, with its reason</sub></td>
-    <td align="center"><sub>Writing: four bands, quoted evidence and a total out of 20</sub></td>
+    <td align="center"><sub><b>Today:</b> scheduled session, non-repeating exercise picker, and Materials</sub></td>
+    <td align="center"><sub><b>Speaking Exam:</b> Parts 1–4 with official timings, photos, and examiner</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/writing-progress.webp" alt="Writing Corrector while grading: essay draft, progress bar, step-by-step status, and elapsed timer"></td>
+    <td width="50%"><img src="docs/screenshots/exam-sources.webp" alt="Exam Sources: 26 hand-checked official resources grouped by paper with live search and filter chips"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Writing Corrector:</b> 4-band Cambridge marking with live grading steps</sub></td>
+    <td align="center"><sub><b>Exam Sources:</b> 26 curated resources grouped by paper with search & filters</sub></td>
   </tr>
 </table>
 
-<p align="center">
-  <img src="docs/screenshots/mobile.webp" alt="The same Today view on a 390-pixel-wide phone, with the bottom navigation and the quick-log button" width="260">
-</p>
+---
 
-![The landing page at 1280 pixels wide](docs/screenshots/landing.webp)
+## What it does
 
-## Features
+- **Daily exam plan derived from your log:** An optional 12-question diagnostic ranks your weakest exam parts. Two rotations (*By part* and *Full paper each session*) derive today's session directly from the units already logged, with official Cambridge timings, streak shields, and exam-day countdown.
+- **Writing corrector on all four Cambridge bands:** Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*. Every band quotes evidence from your text, lists concrete weaknesses, rewrites three sentences, and displays a step-by-step progress bar with elapsed time while grading.
+- **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
+- **Live Studio (local VAD):** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speaking time and silences in real time; no audio is recorded or uploaded.
+- **Materials in blocks & Exam sources:** Local PDFs and audio paired side-by-side with answer keys, dedicated *Full paper* and *Online* blocks, private user-uploaded Listening practice files, and 26 searchable, filterable official Exam sources.
+- **Non-repeating practice variety engine:** A shared pool of **157 exercises** (131 local materials + 26 online sources across Reading & Use of English, Writing, Listening, and Speaking) with 5-pick no-repeat memory, LRU cycling, and done-item avoidance in both Today and Exam.
+- **Progress by part and error type:** Four zero-dependency SVG charts track score trajectory, accuracy per exam part, error taxonomy (*vocabulary*, *grammar*, *distractor*, *time limit*), and skill consistency.
 
-| Area | What it does |
-| --- | --- |
-| **Use of English & Reading** | Parts 1–7, with real exam-mode timings. Every session logs the part, score and minutes. |
-| **Writing** | Four Cambridge bands, 0–5 each (Content, Communicative Achievement, Organisation, Language). Each band quotes evidence from your text, lists two concrete weaknesses, and adds three rewritten sentences. You can paste the exam task so the content is judged against it. |
-| **Listening** | Full tests scored out of 30, or one part at a time. Part 2 errors are tracked against the stage gate. |
-| **Speaking** | Parts 1–4 with their real timings: a real-time examiner, a partner voice for Part 3, and a report that bands grammar and vocabulary, discourse management, pronunciation and interactive communication. |
-| **Plan** | The diagnostic ranks your weakest parts, the weekly plan turns that into sessions, the gates track the next stage, and the streak and countdown keep the week honest. |
-| **Charts** | Four SVG panels, no chart library: progress over time, accuracy per part, the mix of error types, and score consistency per skill. |
-| **Accounts** | Username and password, Google sign-in, and passkeys. Each account stores its own progress on the service. Recovery works through Google, a passkey, or a manual operator reset. |
-| **Privacy** | Your progress is stored on our server. Only cookie-free aggregate Cloudflare Web Analytics (page views, country, referrer); no ads, no tracking pixels, no external database. |
+---
 
-## How the plan works
+## How the AI is used
 
-The Plan tab has two rotations, picked under **Rotation** on the week plan card. Both read the
-same session days from **Session Schedules**, and the same **Fast-forward (+1)** shifts either
-one by a session without touching the log.
+| Provider | Task | Model | Approx. cost | Fallback |
+| --- | --- | --- | --- | --- |
+| **Google (Gemini Live)** | Real-time Speaking examiner (Parts 1–4) | `gemini-3.8-live` (ephemeral token; direct browser ↔ Google WebSocket) | ~$0.0088 / min (~$0.123 per 14-min mock) | Turn-based Gemini 2.5 Flash, or browser speech synthesis/recognition |
+| **Google (Gemini API)** | Turn-based Speaking voice (STT + reply + TTS) | `gemini-2.5-flash` + `gemini-2.5-flash-preview-tts` | ~$0.047 per 14-min mock | Browser Web Speech API (`SpeechRecognition` + `speechSynthesis`) |
+| **DeepSeek** *(default; or Gemini)* | Writing 4-band grading, Speaking partner reactions, Speaking report | `deepseek-chat` (DeepSeek V4.1 Flash; strict JSON capped at 8 KB) | ~$0.0011–$0.0022 / writing; ~$0.0008 / report; ~$0.0003 / partner line | Bring-your-own key (BYO); scripted partner lines from task bank |
+| **Microsoft Azure AI Speech** *(optional)* | Speaking Pronunciation band (0–5) | Azure Pronunciation Assessment (`POST /api/speaking/pa`) | Optional (operator-configured) | Returns `503 speech_not_configured`; report displays `not measured` |
 
-**By part** (the default) keeps one continuous queue of exercises. A week is a pair of skills
-that alternates forever: Reading & Use of English with Listening, then Writing with Speaking.
-The days of that week split the pair in order, so one session never mixes skills. **Exercises
-per session** puts 1–4 units of the same skill in a single session. The queue position comes
-from the units already in the log, not from a stored cursor, so a refresh or a second device
-cannot move it.
+- **Server-side keys only:** Shared API keys live in the server environment (`chmod 600` env file) and never reach the browser or the repository.
+- **Bring your own key (BYO):** Users can configure their own provider key in **Settings → AI provider**. It stays in browser `localStorage`, is forwarded only on that user's requests, is never stored on the server, and bypasses shared service quotas.
+- **No speaking audio stored:** Live Studio runs VAD locally in the browser and records nothing. Live Speaking streams directly from the browser to Google via a single-use ephemeral token minted by `POST /api/speaking/token`. Turn-based audio and optional Azure pronunciation clips are held in memory only for the single request and discarded immediately.
 
-**Full paper each session** ignores the queue: every scheduled session is one whole paper with
-its exam time, cycling Reading & Use of English → Listening → Writing → Speaking. Its Start
-button opens the paper in exam mode, and the log row carries the paper's own type (`rue`, `l`,
-`fw`, `sp`).
-
-Every unit is timed from its paper's own table, and the table closes with the official totals:
-
-| Paper | Units | Total (min) |
-| --- | --- | --- |
-| Reading & Use of English | part 1: 8 · part 2: 8 · part 3: 8 · part 4: 10 · part 5: 13 · part 6: 13 · part 7: 15 | 75 |
-| Listening | part 1: 10 · part 2: 10 · part 3: 10 · part 4: 10 | 40 |
-| Writing | 40 per task (Essay, Article, Report, Review, Email) | 80 |
-| Speaking | part 1: 2 · part 2: 4 · part 3: 4 · part 4: 4 | 14 |
-
-A session lasts exactly the sum of its units, and the summary line on the week plan card adds
-the rows it shows.
-
-Each skill has a fixed cycle, and both modes are drawn from it:
-
-- Reading & Use of English: parts 1–7.
-- Listening: parts 1–4.
-- Writing: Essay, Article, Report, Review, Email.
-- Speaking: parts 1–4.
-
-A pass through a cycle closes when every unit in it is in the log; a unit logged twice counts
-once, and the queue offers only what the current pass still misses before starting the next
-pass whole. The **What comes next** card and the progress lines read that same queue, so they
-cannot disagree with the session you get.
+---
 
 ## The Speaking exam
 
@@ -135,11 +90,12 @@ for this app in the B2 First format — not past papers. Each part has its own t
 selection is seeded and rotates, so a task is not presented again until that part's pool has been
 used. The chosen task and a countdown stay on screen while the exam runs; every turn has its own
 clock, and after five seconds of silence the examiner asks one short question from the task
-instead of waiting. The Part 2 photographs are from Wikimedia Commons, with their credits
-recorded in `assets/speaking/CREDITS.json`.
+instead of waiting. You can also paste your own task for any part under **Use my own task**.
+The Part 2 photographs are from Wikimedia Commons, with their credits recorded in
+`assets/speaking/CREDITS.json`.
 
 **Optional AI.** With no provider key the exam still runs: the browser's own speech synthesis
-reads the examiner and partner lines, and the browser's speech recogniser (en-GB) writes your
+reads the examiner and partner lines, and the browser's speech recogniser (`en-GB`) writes your
 turns into the transcript. Keys add three things, independently:
 
 - **Live voice** — a short-lived token lets the browser talk to the provider directly, so the
@@ -147,8 +103,8 @@ turns into the transcript. Keys add three things, independently:
 - **Turn-based voice** — one recorded turn is sent, and the examiner's reply comes back as text
   and audio. The audio is forwarded to the provider and dropped: it is never written to disk and
   never logged.
-- **A partner that listens** — the last recognised line becomes one sentence. Without a key, the
-  written partner lines are used.
+- **A partner that listens** — the last recognised line becomes one sentence grounded in what you
+  said. Without a key, the written partner lines are used.
 
 The text model and the voice model are configured by the operator of the service; you can also
 connect your own provider key from the app.
@@ -169,18 +125,7 @@ to `POST /api/speaking/report` when you ask for the report. No audio is ever wri
 by the server. Nothing is added to your log until you press **Save report**; the exam does not
 store the transcript, and saving writes only the report row into your progress.
 
-## AI implementation
-
-| Component | Model / API | Role |
-| --- | --- | --- |
-| Real-time Speaking examiner | **Gemini 3.8 Live** (`gemini-3.8-live`, Live API) | Conducts the live voice exam. The server only mints ephemeral tokens (`POST /api/speaking/token`). Audio goes directly from the browser to Google and never passes through or is stored by the server. |
-| Turn-based Speaking fallback | **Gemini 2.5 Flash + 2.5 Flash TTS** | Used when Live is unavailable. One call per turn to transcribe and reply, and one call for the voice response. |
-| Writing & Speaking report | **DeepSeek V4.1 Flash** (OpenAI format) | Grades Writing drafts against the four Cambridge bands and generates the final Speaking report (strict JSON, output capped at 8 KB). |
-| Pronunciation band (optional) | **Azure Pronunciation Assessment** | Sole source of the Pronunciation band. Without a key, the report states `not measured` and the endpoint returns `503 speech_not_configured`. The text model never invents this band. |
-
-- **Keys and testing:** API keys live only in the server environment (`chmod 600` env file); none reach the browser or the repository. Tests run with stubs and no network access.
-- **Cost caps:** 5 Writing evaluations and 1 Speaking mock (15 min) per account per day; 20 text calls and 25 voice minutes per instance per day (enforced in `plans.py` and server daily cap settings).
-- **Honesty:** Bands are practice estimates calibrated against published Cambridge scales, not official Cambridge grades.
+---
 
 ## What it does not do
 
@@ -200,102 +145,175 @@ ones written in the exam format, not past papers.
   microphone the note under the transcript says so while the examiner keeps the written script.
   The server receives audio only for the optional turn-based voice and the Azure clip, and stores
   neither.
-- **You need an account.** The service is account-based: create one with a username and a password
-  on the landing page. There is no anonymous mode and no local-only mode.
+- **You need an account.** Every session belongs to an account (username + 12-character password,
+  Google sign-in, or passkey). There is no anonymous mode and no local-only mode.
 
-## How to try it in two minutes
-
-1. Open https://firsttracker.app and click **Create an account**.
-2. Pick a username and a password of 12+ characters. No email is required.
-3. In onboarding, set your exam date, enter your scores per skill, and click **Skip for now** on the 12-question check (you can take it later).
-4. To test the AI: submit a 140–190 word draft in Writing, or run a short Speaking mock. Daily caps are listed in [AI implementation](#ai-implementation).
-
-## Quick start
-
-1. Open https://firsttracker.app and choose **Create an account**.
-2. Pick a username and a password. No email address is needed.
-3. Take the diagnostic and open today's session.
-
-Already have an account? Choose **Sign in** and continue where you left off. Sessions follow you
-between your phone and your computer because the progress is stored on the server.
+---
 
 ## Architecture
 
-`landing.html` is the public page at `/`; `index.html` is the whole tracker at `/app`. `server.py`
-is a standard-library `ThreadingHTTPServer`: it serves those two files and the assets, handles
-accounts and sessions, persists progress, proxies the AI calls and mints the speaking tokens.
-`store.py` is the storage seam, so the stored documents could be replaced without changing the
-HTTP API. There is no external database.
-
-The frontend is one HTML file on purpose. There is no build step, no `node_modules` and no bundled
-output that can drift from the source: the file the server sends is the file you edit.
+Zero third-party Python dependencies (`http.server.ThreadingHTTPServer`), zero frontend build step, zero external database.
 
 ```text
-browser ──HTTPS──► the service
-                   ├── landing page and tracker (static assets)
-                   ├── accounts and sessions
-                   ├── per-account progress and backups
-                   └── AI and speaking proxies ──► the configured provider
+browser (index.html + AudioWorklet VAD)
+  │
+  ├── HTTPS ──► server.py (Python 3.11+ stdlib)
+  │               ├── static HTML/assets (landing.html, index.html, material/)
+  │               ├── auth & security (PBKDF2-600k, OAuth, WebAuthn, TOTP MFA, CSP)
+  │               ├── store.py ──► per-account atomic JSON + 20-version backups
+  │               ├── plans.py ──► per-account UTC daily usage meter
+  │               └── AI proxies ──► DeepSeek / Gemini (writing, partner, report, turn)
+  │                              ──► Azure AI Speech (optional pronunciation)
+  │                              ──► Gemini Live ephemeral token mint
+  │
+  └── WSS (ephemeral token, direct) ──► Google Gemini Live API (audio never hits server)
 ```
 
-## Tests
+### Main files
 
-The suites are standalone scripts, not pytest. Each one exits non-zero on failure and prints JSON,
-and every suite that boots its own server uses a throwaway data directory and a free port, so the
-real data is never read or written.
+| File | Role |
+| --- | --- |
+| [`server.py`](server.py) | Standard-library `ThreadingHTTPServer`: routing, auth, CSP/security headers, rate limits, AI & speaking proxies. |
+| [`store.py`](store.py) | Storage seam for atomic JSON reads/writes, per-account progress, backups, and speaking ledgers. |
+| [`plans.py`](plans.py) | Service-level daily caps (`service`, `byo`, `owner`) and UTC day/week/month usage meter (`data/usage.json`). |
+| [`prompts.py`](prompts.py) | Official Cambridge B2 First Writing rubric and strict-JSON grading prompts. |
+| [`speaking_prompts.py`](speaking_prompts.py) | Scripted Cambridge examiner and grounded partner prompts for Parts 1–4. |
+| [`speaking_report.py`](speaking_report.py) | Four-scale Speaking report parser and validator (strips any guessed pronunciation band). |
+| [`speech.py`](speech.py) | Pure-stdlib Azure Pronunciation Assessment helpers (audio container validation and score mapping). |
+| [`oauth_google.py`](oauth_google.py) | Stdlib Google OAuth 2.0 + PKCE and RS256 JWKS `id_token` verification. |
+| [`webauthn.py`](webauthn.py) | Stdlib CBOR/COSE WebAuthn passkey registration and assertion verification. |
+| [`mfa.py`](mfa.py) | RFC 6238 TOTP two-factor authentication and hashed one-time recovery codes. |
+| [`legal.py`](legal.py) | Sanitized stdlib Markdown renderer serving `/privacy`, `/terms`, and `/security` from `docs/`. |
+| [`wordlist.py`](wordlist.py) | Embedded 1,000-entry sourced password blocklist plus deterministic derivatives (22,492 candidates). |
+| [`index.html`](index.html) | Complete single-file tracker UI (EN/ES i18n, light/dark oklch themes, SVG charts, exam timers, Speaking UI). |
+| [`landing.html`](landing.html) | Public landing page served at `/`. |
+| [`assets/spk-vad.js`](assets/spk-vad.js) | Local `AudioWorkletProcessor` voice activity detector for Live Studio. |
+| [`assets/spk-tx.js`](assets/spk-tx.js) | Local `AudioWorkletProcessor` 16 kHz PCM capture for Speaking turns and Live. |
+| [`material/`](material/speaking.json) | Static exam banks (`speaking.json`, `diagnostico.json`, `writing-samples.json`). |
+
+---
+
+## Quick start
+
+### Try the hosted app
+
+1. Open https://firsttracker.app and click **Create an account**.
+2. Choose a username and a password of at least 12 characters (no email required), or sign in with Google.
+3. Set your exam date in onboarding (you can click **Skip for now** on the 12-question diagnostic and run it later).
+4. Submit a 140–190 word essay in **Writing**, or open **Speaking Exam** from **Today**.
+
+### Run locally from source
+
+Requires Python 3.11+ (stdlib only — no `pip install`, no Node.js):
+
+```bash
+git clone https://github.com/Juan-Martin-Cerezo/b2first-tracker.git
+cd b2first-tracker
+python3 server.py
+```
+
+The server listens on `http://127.0.0.1:8088` (`/` is the landing page, `/app` is the tracker) and stores accounts and progress under `./data/`.
+
+- **Creating your local account:** Open `http://127.0.0.1:8088/app`, click **Create an account**, and pick a username and 12+ character password. There is no anonymous or demo mode in `server.py`.
+- **Enabling AI locally:** Export a text provider key and/or Google Gemini key before starting `server.py` (see [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md)), or paste your own key directly inside **Settings → AI provider** in the browser.
+- **Docker:** `docker build -t b2first . && docker run -p 8088:8088 -v b2data:/app/data b2first`
+
+---
+
+## Configuration
+
+All runtime settings are passed as environment variables (never committed to the repo). See [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) for the exact environment variable names and complete reference.
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| Text AI provider | `deepseek` | Selects `deepseek` or `gemini` for Writing grading, Speaking partner lines, and Speaking reports. |
+| Text AI model | `deepseek-chat` (`gemini-2.0-flash` for Gemini) | Model ID forwarded to the text provider. |
+| Text AI API key | *(unset)* | Shared server-side key for text grading. When unset, server grading returns `503 ai_not_configured` unless a BYO key is supplied. |
+| Speaking Google key | *(unset)* | Enables Gemini ephemeral Live tokens and turn-based Gemini 2.5 Flash voice/TTS. |
+| Speaking Live toggle | *(off)* | Enables direct browser ↔ Gemini Live WebSocket sessions (`gemini-3.8-live`); off falls back to turn-based voice or browser speech. |
+| Instance daily AI / voice caps | `1200` text calls / `600` voice min | Instance-wide ceilings across non-owner accounts (hosted production sets tighter caps to match prepaid balance). |
+| Global monthly Live guard | `900` min / month | Hard monthly ceiling tracked in `data/spk_spend.json`; enforced on **every** account including owners. |
+| Owner account IDs | `owner` | Comma-separated user IDs exempt from daily writing/speaking caps (monthly guard and per-minute rate limits still apply). |
+| Bind address & port | `127.0.0.1` · `8088` | Loopback by default for reverse-proxy deployments; override via `PORT` and bind host setting. |
+| Data directory | `./data` | Location for accounts, hashed tokens, progress, backups, usage meter, and audit log (`DATA_DIR`). |
+| Registration policy | `open` | Set to `closed` to disable new public signups. |
+
+---
+
+## Limits & cost
+
+### Daily & monthly limits
+
+| Tier | Writing evaluations | Speaking mocks / minutes | Global monthly Live guard |
+| --- | --- | --- | --- |
+| **Standard account (`service`)** | **5 / UTC day** (`plans.py`) | **1 mock · 15 min / UTC day** (`plans.py`) | Enforced (`900` min/month default) |
+| **Bring-your-own key (`byo`)** | Unmetered by server | Unmetered by server | Billed to user's own key |
+| **Owner account (`owner`)** | Uncapped per day (`plans.py`) | Uncapped per day (`plans.py`) | **Enforced** (applies to everyone) |
+| **Hosted instance ceiling** | Configurable (20 text calls/day on hosted instance) | Configurable (25 voice min/day on hosted instance) | Enforced across all accounts |
+
+### Estimated provider cost per session
+
+Measured against published DeepSeek and Google Gemini API pricing (documented in `plans.py`):
+
+| Action | Provider / model | Estimated cost |
+| --- | --- | --- |
+| Writing evaluation (140–190 words + rubric prompt) | DeepSeek (`deepseek-chat`) | ~$0.0011 (off-peak) – $0.0022 (peak) |
+| Speaking final report (JSON) | DeepSeek (`deepseek-chat`) | ~$0.0008 |
+| Speaking partner reaction (1 line) | DeepSeek (`deepseek-chat`) | ~$0.0003 |
+| Speaking Live voice (1 minute) | Google (`gemini-3.8-live`) | ~$0.0088 / min |
+| Full 14-minute Speaking mock (Live) | Google (`gemini-3.8-live`) | ~$0.123 |
+| Full 14-minute Speaking mock (turn-based fallback) | Google (`gemini-2.5-flash` + TTS) | ~$0.047 |
+
+---
+
+## Testing
+
+The repository ships **150 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
 
 ```bash
 cd tests
-uv run --with playwright python test_final.py
-uv run --with httpx python test_capacity.py
+uv run --no-project --with playwright --with httpx python test_final.py
+uv run --no-project --with playwright --with httpx python test_readme_limits.py
+uv run --no-project --with playwright --with httpx python test_landing_honest.py
 
-# every suite, one exit code (per-test logs in tests/out/run_all/)
+# Run every suite with one exit code (logs saved to tests/out/run_all/)
 ./run_all.sh
-./run_all.sh speaking     # only suites whose file name matches
+./run_all.sh speaking    # run only suites matching a substring
 ```
 
-| Suite | Covers |
-| --- | --- |
-| `test_final.py` | Every view renders in a real browser, dark mode persists, contrast and focus rings, no JS errors. |
-| `test_landing.py` | `/` is the landing, `/app` is the tracker, scoped microphone permission, manifest `start_url`, crawler files, no CDN. |
-| `test_i18n.py` | Every visible string exists in both English and Spanish, with no untranslated keys. |
-| `test_layout.py` | 360/768/1440 px in English and Spanish: no horizontal scroll, no overlap, no control under 40 px. |
-| `test_mobile.py` | The 390×844 layout, bottom navigation and quick-log button. |
-| `test_onboard.py` | The intake wizard, the profile it writes and the plan it seeds. |
-| `test_plan.py` | The deterministic weekly plan and its card. |
-| `test_diag.py` | The 12-item diagnostic end to end, including the error taxonomy. |
-| `test_streak.py` | Streak rules: shields, gaps, future dates and the weekly goal. |
-| `test_exam.py` | Exam-mode timers, pause and exam-mode logging. |
-| `test_graf.py` | The four SVG charts and their empty states. |
-| `test_sync.py` | Progress persistence, backup rotation and invalid payloads. |
-| `test_register.py` | Registration open and closed, login and password change. |
-| `test_multiuser.py` | Accounts end to end: isolation, quotas, export and delete. |
-| `test_auth_methods.py` | Google sign-in and passkeys. |
-| `test_ai.py` | The writing proxy against a mock provider: schema validation, `422` on bad shape, rate limits, no key leakage. |
-| `test_ai_guard.py` | Injection and abuse guards on the writing endpoint. |
-| `test_no_purchase.py` | No view sells anything and every removed purchase route answers `404`. |
-| `test_legal.py` | `/privacy`, `/terms` and `/security` render from Markdown. |
-| `test_security2.py` | Login lockout, hashed tokens, payload schema and the audit log. |
-| `test_security3.py` | Additional authentication and secret-handling checks. |
-| `test_server_hardening.py` | Raw-HTTP surface: URI/header/body limits, method allowlist, traversal guards, security headers. |
-| `test_capacity.py` | Measured throughput and p95 with the real server, cached and uncached. |
-| `test_speaking_*.py` | The speaking parts, the examiner flow, the partner voice and the report. |
+| Group | Representative suites | What they verify |
+| --- | --- | --- |
+| **UI, layout & i18n** | `test_final.py`, `test_layout.py`, `test_mobile.py`, `test_i18n.py`, `test_landing_honest.py` | Every view renders with zero JS/CSP errors, light/dark contrast >= 4.5:1, EN/ES parity, 360/390/768/1440 px layout. |
+| **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, four SVG charts. |
+| **Writing AI & guards** | `test_ai.py`, `test_ai_guard.py`, `test_writing_progress.py` | Strict JSON schema validation, injection/leak guards, live progress bar and elapsed timer, rate limits. |
+| **Speaking exam & voice** | `test_speaking_exam.py`, `test_speaking_live.py`, `test_speaking_custom_task.py`, `test_partner_grounding.py`, `test_speaking_pa.py`, `test_speaking_turn_budget.py` | All 4 parts, custom tasks, grounded partner replies, Live tokens, turn-based TTS, Azure PA `not measured` contract, monthly budget. |
+| **Materials & variety** | `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_practice_variety.py`, `test_listening_own_material.py` | Block layout with paired keys, 26 searchable Exam sources, 157-exercise non-repeating picker, private Listening uploads. |
+| **Auth & accounts** | `test_register.py`, `test_multiuser.py`, `test_auth_methods.py`, `test_mfa.py`, `test_owner_unlimited.py` | Account isolation, Google OAuth, WebAuthn passkeys, TOTP MFA, owner limits, export & deletion. |
+| **Security, legal & load** | `test_security2.py`, `test_security3.py`, `test_server_hardening.py`, `test_legal.py`, `test_readme_limits.py`, `test_capacity.py` | Lockout/backoff, hash-chained audit log, CSP, raw HTTP limits, `/privacy` `/terms` `/security`, measured p95 throughput. |
 
-## Privacy and security
+---
 
-Your progress is stored on our server; the only analytics is cookie-free aggregate Cloudflare Web
-Analytics (page views, country, and referrer, with no user profiling), and no ad network, tracking
-pixel, or external database is loaded. The only outbound text is the writing you explicitly submit for correction, which goes to
-the configured provider and is not stored; speaking audio goes from the browser to the speaking
-provider and is never written to disk. Accounts use PBKDF2-HMAC-SHA256 with 600,000 iterations,
-session tokens are stored hashed, and the audit log is a hash chain.
+## Privacy & security
 
-Read the policies at [`/privacy`](https://firsttracker.app/privacy),
-[`/terms`](https://firsttracker.app/terms) and [`SECURITY.md`](SECURITY.md).
+Progress lives in private per-account JSON files on the server (PBKDF2-HMAC-SHA256 @ 600,000 iterations, SHA-256 hashed tokens, hash-chained audit log, zero speaking audio written to disk, and only cookie-free aggregate Cloudflare Web Analytics — no ads or profiling).
 
-## Contributing and license
+- [Privacy Policy](docs/PRIVACY.md) (`/privacy`)
+- [Terms of Use](docs/TERMS.md) (`/terms`)
+- [Security Policy](docs/SECURITY.md) (`/security`) & [Security Model](SECURITY.md)
+- [Data Map](docs/DATA-MAP.md) & [ASVS 4.0.3 Checklist](docs/SECURITY-CHECKLIST.md)
+- [Documentation Index](docs/README.md)
 
-Keep the backend standard-library only, keep the frontend in one file, and run the relevant suites
-before opening a pull request.
+---
 
-MIT © 2026 Juan Martín Cerezo
+## Roadmap
+
+- **Rubric calibration against real marked scripts:** Benchmark Writing and Speaking band estimates against published Cambridge examiner commentaries (`tools/calibrate.py`).
+- **Full ASVS top-3,000 password blocklist:** Expand `wordlist.py` from the current 1,000 sourced entries (plus derivatives) to the full top-3,000 list.
+- **Teacher / classroom view:** Optional read-only progress summary for academies or tutors reviewing a student's writing and error log.
+- **Offline practice packs:** Service-worker caching for static practice papers and answer keys when studying without a connection.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Juan Martín Cerezo

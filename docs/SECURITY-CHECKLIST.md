@@ -28,6 +28,7 @@ python3 tools/pentest.py --spawn
 | Anti-automation on login | 2.2.1 | PASS | rate limiter, username lockout, exponential backoff (5/15/60 s) | `test_security3.py` F1/F2; `test_security2.py` 1/1b |
 | Legacy hashes upgraded without locking users out | 2.1.1 | PASS | rehash-on-login | `test_security3.py` D1 (200k→600k) / D2 (sha256→PBKDF2) |
 | No user enumeration through errors or timing | 2.2.1 | PASS | dummy digest, constant-time compare, identical 401 body | `test_security2.py` 2 |
+| Multi-factor authentication (TOTP + recovery codes) | 2.8.1 | PASS | optional RFC 6238 TOTP (`mfa.py`) with 30 s step, constant-time compare, hashed one-time recovery codes | `test_mfa.py` |
 | Cryptographically secure randomness | 2.9.1 | PASS | `secrets` for tokens and salts | `test_security3.py` E2 |
 | Password recovery | 2.5.1 | N/A | no remote reset link (there is no email); the login screen files a manual request and the operator resets by hand | SECURITY.md §5.5 |
 | Recovery request cannot enumerate accounts and is rate-limited | 2.2.1 / 2.5.2 | PASS | identical `200 {"ok":true}`, 5/h/IP on top of the credential bucket, only a short IP hash stored | `test_password_reset_request.py` |
@@ -44,7 +45,7 @@ python3 tools/pentest.py --spawn
 | Password change terminates every session | 3.3.1 | PASS | session revocation on password change; a fresh token is returned | `test_security3.py` J1; `test_security2.py` 13b |
 | Token↔user binding (no ambient authority) | 3.3.1 | PASS | progress route answers `403` on mismatch | `test_legacy_guard.py` 9; `test_multiuser.py` |
 | CSRF resistance | 3.5.1 | PASS | Bearer header, no cookies, CORS closed; mutating requests check Origin/Referer and the Fetch Metadata fallback | `test_security3.py` L1–L4; `tools/pentest.py` |
-| Cookie-based sessions | 3.4.1 | N/A | cookies are not used | code inspection |
+| Cookie-based sessions | 3.4.1 | N/A | API auth uses `Authorization: Bearer`; a scoped HttpOnly cookie is issued only for `/api/listening/material/audio` `<audio>` Range playback | code inspection |
 
 ## V4 — Access Control
 
@@ -97,7 +98,7 @@ python3 tools/pentest.py --spawn
 | No sensitive data cached by the browser | 8.2.1 | PASS | `Cache-Control: no-store` on API routes | `tools/audit.sh`; `test_hardening.py` C2 |
 | Sensitive data not kept in server memory/disk | 8.3.1 | PASS | pronunciation audio forwarded and discarded; AI text not persisted; keys not written | `test_speaking_pa.py`; code inspection |
 | Stored data private | 8.3.1 | PASS | restrictive modes, atomic writes | `test_security2.py` 12c |
-| File uploads | 8.3.1 | N/A | the application accepts no file uploads | code inspection |
+| File uploads (Listening own material) | 8.3.1 | PASS | authenticated per-user audio uploads validated by MIME allowlist, base64 check, 20 MB/file and 40 MB / 10-item caps, stored outside webroot in private user dir | `test_listening_own_material.py` |
 
 ## V9 — Communication
 
@@ -112,7 +113,7 @@ python3 tools/pentest.py --spawn
 
 | Control | ASVS ref | Status | Implemented in | Verified by |
 | --- | --- | --- | --- | --- |
-| No third-party/untrusted code loaded | 10.1.1 | PASS | stdlib backend; vanilla UI; CSP `default-src 'self'` | `tools/audit.sh`; code inspection |
+| No untrusted third-party code loaded | 10.1.1 | PASS | stdlib backend; vanilla UI; CSP `default-src 'self'` with only cookie-free Cloudflare Web Analytics (`https://static.cloudflareinsights.com`) allowed in `script-src`/`connect-src` | `tools/audit.sh`; code inspection |
 | Business logic limits (quotas, ownership) | 11.1.1 | PASS | per-account and per-instance AI and speaking quotas; token↔user binding | `test_ai_guard.py`; `test_security3.py` H3/J1 |
 | Anti-automation on expensive endpoints | 11.1.1 | PASS | AI buckets, pronunciation quotas, rate limiter | `test_security3.py` H3 |
 
@@ -120,7 +121,7 @@ python3 tools/pentest.py --spawn
 
 | Control | ASVS ref | Status | Implemented in | Verified by |
 | --- | --- | --- | --- | --- |
-| File upload handling | 12.1.1 | N/A | no uploads | code inspection |
+| File upload handling | 12.1.1 | PASS | `/api/listening/material` enforces MIME allowlist, size/count caps, random IDs, atomic writes, and owner-only streaming | `test_listening_own_material.py` |
 | File download path containment | 12.5.1 | PASS | realpath containment for material and assets | `test_server_hardening.py` 6–9 |
 | Sensitive repository files not served | 12.5.1 | PASS | explicit routing; unknown paths answer 404 | `test_security3.py` C1; `tools/audit.sh` |
 | Backup files not served | 12.5.1 | PASS | backup paths are unknown routes → 404 | `test_security3.py` C1; `tools/audit.sh` |
@@ -146,9 +147,9 @@ python3 tools/pentest.py --spawn
 | Security headers on every response | 14.4.1 | PASS | security-header helper | `test_security3.py` A1–A5 |
 | CORS | 14.4.2 | PASS | closed | `tools/audit.sh` |
 | HSTS | 14.4.3 | PASS | `max-age=63072000; includeSubDomains; preload` | `tools/audit.sh` |
-| Cookie flags | 14.4.4 | N/A | no cookies | code inspection |
+| Cookie flags | 14.4.4 | PASS | API sessions do not use cookies; the scoped `/api/listening/material/audio` playback cookie sets `HttpOnly; SameSite=Strict; Path=/api/listening/material/audio` (plus `Secure` over HTTPS) | code inspection; `test_listening_own_material.py` |
 | Cache control | 14.4.5 | PASS | `no-store` on API routes | `tools/audit.sh` |
-| Content Security Policy | 14.4.6 | PASS | CSP template + inline-script hashes; no `'unsafe-inline'` in `script-src` | `test_csp.py` (0 violations across every view); `test_security3.py` A2; `tools/pentest.py` |
+| Content Security Policy | 14.4.6 | PASS | CSP template + inline-script SHA-256 hashes; no `'unsafe-inline'` and no `'unsafe-hashes'` in `script-src`; only `https://static.cloudflareinsights.com` allowed externally | `test_csp.py` (0 violations across every view); `test_security3.py` A2; `tools/pentest.py` |
 | Referrer policy | 14.4.7 | PASS | `no-referrer` | `test_security3.py` A3 |
 | COOP / CORP | 14.4.1 | PASS | `same-origin` on both | `test_security3.py` A3 |
 | Permissions policy | 14.4.1 | PASS | minimal; `microphone=(self)` only on the tracker | `test_security3.py` A4 |
@@ -162,13 +163,13 @@ python3 tools/pentest.py --spawn
 
 | Status | Count |
 | --- | --- |
-| PASS | 72 |
+| PASS | 76 |
 | PARTIAL | 1 |
 | FAIL | 0 |
-| N/A | 8 |
+| N/A | 5 |
 
 The one PARTIAL row is deliberate: password length (12) and the CSP are verified,
 but the embedded blocklist is still not a full sourced top-3,000 list (it is
 1,000 sourced entries plus deterministic derivatives). It is reported as
-PARTIAL, not PASS. The 8 N/A rows are features this product does not have
-(database/ORM, cookies, file uploads, SOAP/GraphQL, email recovery, admin UI).
+PARTIAL, not PASS. The 5 N/A rows are features this product does not have
+(database/ORM, cookie-based API sessions, SOAP/GraphQL, email recovery, admin UI).

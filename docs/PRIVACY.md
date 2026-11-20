@@ -20,9 +20,10 @@ third parties. It is written against the code, not against an aspiration.
 
 B2 First Tracker is a hosted study service for the Cambridge B2 First. The public
 entry point is `https://firsttracker.app`. Accounts and progress live on the
-provider's server; there is no company, no cloud database and no analytics
-platform behind it. The operator of the service is the person who runs the
-server and answers the contact address below.
+provider's server; there is no company, no cloud database and no advertising
+network behind it. The only web analytics is cookie-free aggregate Cloudflare Web
+Analytics (page views, country, and referrer). The operator of the service is the
+person who runs the server and answers the contact address below.
 
 ## 2. What is stored, and where
 
@@ -42,6 +43,8 @@ are private to the service and are not served to anyone else.
 | Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash |
 | Google link | Google's stable `sub` mapped to your local account id (no name, no address) |
 | Passkeys | credential id, public key (COSE), signature counter and the device label you choose |
+| Two-factor auth (TOTP) | base32 TOTP secret and hashed one-time recovery codes, only if you enable MFA |
+| Own Listening material | optional practice audio (up to 20 MB per file, 40 MB / 10 items per account) and task/key/script text you upload under Listening |
 | Recovery requests | user name, the optional contact you type, timestamp, 16-character hash of your address |
 
 The password itself is never stored. The raw session token is never stored. Raw
@@ -72,11 +75,13 @@ capped at 500 entries.
 
 ## 3. What is never stored
 
-- **Audio is never written to disk.** The live examiner streams microphone audio
-  from your browser directly to Google; it does not pass through our server.
-  Pronunciation clips are held in memory for the single Azure request and are
-  deleted in the same handler. No audio file, temporary file or log entry is
-  created.
+- **Speaking audio is never written to disk.** The live examiner streams microphone
+  audio from your browser directly to Google; it does not pass through our server.
+  Turn-based voice and pronunciation clips are held in memory for the single
+  provider request and are deleted in the same handler. No speaking audio file,
+  temporary file or log entry is created. (Only audio files you explicitly upload
+  yourself under Listening → Own material are stored in your private account
+  directory, and you can delete them at any time.)
 - No writing or answer is logged in the audit log or in product events. The AI
   request sends the text you chose to correct and receives feedback; the text is
   not persisted by the service beyond the request (the accepted result is saved
@@ -84,9 +89,10 @@ capped at 500 entries.
 - No email, phone, address, age, or government identifier is collected. The only
   exceptions are the opt-in email hash described in §2 and the optional contact you type into a
   recovery request; neither is used for anything else.
-- No advertising identifiers, no tracking pixels, no third-party analytics
-  script. The edge proxy may inject its own analytics beacon, but this service's
-  Content-Security-Policy blocks it, so it never executes in the app.
+- No advertising identifiers, no tracking pixels, and no behavioural profiling.
+  The service allows cookie-free aggregate **Cloudflare Web Analytics**
+  (`https://static.cloudflareinsights.com`) for page views, country, and referrer;
+  no other external script is allowed by the Content-Security-Policy.
 
 **Speech recognition in the Speaking exam.** The exam transcript is written by
 the browser's own speech recogniser (`SpeechRecognition` / `webkitSpeechRecognition`,
@@ -107,7 +113,7 @@ in §4.
 
 | Provider | When | What it receives | Where it processes |
 | --- | --- | --- | --- |
-| **Cloudflare, Inc.** | Every public request | the full HTTP request **in plaintext** (TLS terminates at Cloudflare's edge), including headers, path, cookies and request bodies; your IP address | global edge network |
+| **Cloudflare, Inc.** | Every public request | the full HTTP request **in plaintext** (TLS terminates at Cloudflare's edge), including headers, path, cookies and request bodies; your IP address; cookie-free aggregate Web Analytics (page views, country, referrer) | global edge network |
 | **Google Identity (OAuth)** | Only if you press “Continue with Google” | the authorization request (`openid email profile`), your Google account choice and the authorization code; the code is exchanged server-side and never stored | Google infrastructure outside Argentina |
 | **Google (Gemini Live)** | Speaking Parts 1–4 with the live examiner/partner | your microphone audio (16 kHz PCM), the examiner script, and the session token | Google infrastructure outside Argentina |
 | **Google (Gemini API)** | If the operator configures Gemini as the text provider, or for speaking-report generation | the text you asked to correct or the transcript you chose to analyse | Google infrastructure |
@@ -159,7 +165,8 @@ pronunciation is reported as *not measured*; the app never invents that score.
 | Progress, account, usage | until you delete the account |
 | Session tokens | 30 days sliding, with a 90-day absolute ceiling |
 | Recovery requests | 90 days, pruned on the next request; capped at 500 entries |
-| Audio | never stored |
+| Speaking audio | never stored |
+| Own Listening material | until you delete the item or the account |
 | Transcripts | until you delete them or the account |
 
 The retention limits are enforced by an idempotent daily job on the server. It is
@@ -172,9 +179,10 @@ not something you need to run.
   your session). The JSON file contains your progress, usage counters and your
   own audit events.
 - **Delete the account.** Same **Account** panel → **Delete my account** → enter
-  your password and type `DELETE`. This removes the account record, every
-  session, the progress directory including backups, the usage row, your Google
-  link and your passkeys. A final audit event records that an account was
+  your password and type `DELETE`. This removes the account record (including any
+  TOTP MFA configuration), every session, the progress directory including backups
+  and any uploaded Listening material, the usage row, your Google link and your
+  passkeys. A final audit event records that an account was
   deleted; it contains the account id, never the username.
 - **Clear your own provider key.** Open **Settings** → the **AI provider**
   card → **Clear key**. A BYO key lives only in your browser's localStorage and
@@ -197,8 +205,9 @@ birth date, so the service relies on this statement.
 ## 9. No selling, no advertising, no tracking
 
 We do not sell, rent or trade personal data. There is no advertising, no
-behavioural profiling, no tracking pixel, no third-party analytics SDK and no
-session recording. There is exactly one first-party browser preference:
+behavioural profiling, no tracking pixel, and no session recording; the only web
+analytics is cookie-free aggregate Cloudflare Web Analytics (page views, country,
+and referrer). There is exactly one first-party browser preference store:
 `localStorage` holds your theme, your language, your local progress cache and —
 if you choose to use it — your own provider key. It leaves your browser only
 when you sync or export.
