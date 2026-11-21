@@ -917,6 +917,66 @@ a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var
   .u4-exam-materials{margin-bottom:var(--s4)}
 }
 
+/* ---------- EXERCISE LIBRARY (ordered local + online catalogue) ---------- */
+.wtf-browse-all{display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+.wtf-browse-btn{min-height:44px}
+.u4-source-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s3)}
+.u4-source-foot .u4-source-all{margin-top:0}
+.exlib-toolbar{display:flex;flex-direction:column;gap:var(--s3);margin:0 0 var(--s4);min-width:0}
+.exlib-search-row{display:flex;align-items:center;gap:var(--s2);min-width:0}
+.exlib-search-input{flex:1;min-width:0;min-height:var(--btn-h-tertiary)}
+.exlib-clear-btn{flex:none;white-space:nowrap}
+.exlib-chips{margin:0}
+.exlib-chip{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);white-space:nowrap}
+.exlib-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2) var(--s3);min-width:0}
+.exlib-bar-controls{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2) var(--s3);min-width:0}
+.exlib-free-toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;margin:0;font-size:var(--t-meta);font-weight:600;color:var(--txt);cursor:pointer;text-transform:none;letter-spacing:0}
+.exlib-free-toggle input{width:18px;height:18px;margin:0;accent-color:var(--acc);cursor:pointer}
+.exlib-sort-wrap{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0;font-size:var(--t-meta);font-weight:600;color:var(--txt-2);text-transform:none;letter-spacing:0;max-width:100%}
+.exlib-sort-select{width:auto;min-width:148px;max-width:100%;min-height:44px;padding:6px 10px;font-size:13px}
+.exlib-count{font-size:var(--t-meta);font-weight:600;color:var(--txt-2);line-height:1.4}
+.exlib-groups{display:flex;flex-direction:column;gap:var(--s4);min-width:0}
+.exlib-group{display:flex;flex-direction:column;gap:var(--s2);min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3)}
+.exlib-group-head{display:flex;flex-direction:column;gap:4px;min-width:0}
+.exlib-group-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;min-width:0}
+.exlib-group-title{margin:0;color:var(--txt)}
+.exlib-group-count{font-size:var(--t-meta);color:var(--txt-2);flex:none}
+.exlib-group-sub{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45;overflow-wrap:anywhere}
+.exlib-list{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
+a.exlib-row{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  width:100%;max-width:100%;min-width:0;min-height:52px;padding:10px 12px;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  color:inherit;text-decoration:none;box-sizing:border-box;cursor:pointer;
+  transition:background-color 140ms ease,border-color 140ms ease;
+}
+a.exlib-row:hover,a.exlib-row:focus-visible{background:var(--acc-soft);border-color:var(--acc-border);text-decoration:none}
+a.exlib-row:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.exlib-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.exlib-row-name{font-size:14px;font-weight:600;color:var(--txt);line-height:1.3;overflow-wrap:anywhere}
+a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
+.exlib-row-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.exlib-pill{
+  display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;
+  font-size:11px;font-weight:600;line-height:1.4;letter-spacing:.02em;
+  background:var(--surface-2);border:1px solid var(--line);color:var(--txt-2);
+  white-space:nowrap;
+}
+.exlib-pill.is-origin-local{background:var(--ok-soft);border-color:var(--ok-border);color:var(--ok-text)}
+.exlib-pill.is-origin-online{background:var(--acc-soft);border-color:var(--acc-border);color:var(--acc-text)}
+.exlib-pill.is-type-paper{color:var(--txt)}
+.exlib-pill.is-type-audio{color:var(--acc-text)}
+.exlib-pill.is-freemium{background:transparent;border-style:dashed;color:var(--txt-2)}
+.exlib-mins{font-size:12px;color:var(--txt-2);white-space:nowrap}
+.exlib-row-open{flex:none;font-size:13px;font-weight:600;color:var(--acc-text);white-space:nowrap;padding-left:4px}
+.exlib-empty{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s3);padding:var(--s4);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
+.exlib-empty p{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45}
+@media (max-width:480px){
+  .wtf-browse-all{justify-content:stretch}
+  .wtf-browse-btn{width:100%;justify-content:center}
+  .exlib-bar{align-items:flex-start}
+}
+
 /* ---------- LIVE STUDIO (S1: mic -> VAD -> HUD) ---------- */
 .live-panel{margin-top:12px;padding:16px;border-radius:var(--r-panel);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-1)}
 .live-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
@@ -3848,6 +3908,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
       <button data-view="prog"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-prog"/></svg><span class="nav-label" data-i18n="nav_progress">Progress</span></button>
       <button data-view="plan" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg><span class="nav-label" data-i18n="nav_plan">Plan</span></button>
       <button data-view="practice"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg><span class="nav-label" data-i18n="nav_practice">Practice</span></button>
+      <button data-view="exercises" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg><span class="nav-label" data-i18n="nav_exercises">Exercises</span></button>
       <button data-view="resources" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg><span class="nav-label" data-i18n="nav_resources">Resources</span></button>
       <button data-view="err" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-err"/></svg><span class="nav-label" data-i18n="nav_errors">Errors</span></button>
       <button data-view="ia" class="extra"><svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-ai"/></svg><span class="nav-label" data-i18n="nav_ai">Writing Corrector</span></button>
@@ -3872,6 +3933,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-plan"/></svg>
           <span class="more-sheet-label" data-i18n="nav_plan">Plan</span>
           <span class="more-sheet-desc" data-i18n="more_desc_plan">Schedule, intake and countdown</span>
+        </button>
+        <button type="button" class="more-sheet-item" data-view="exercises">
+          <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-books"/></svg>
+          <span class="more-sheet-label" data-i18n="nav_exercises">Exercises</span>
+          <span class="more-sheet-desc" data-i18n="more_desc_exercises">All local &amp; online exercises</span>
         </button>
         <button type="button" class="more-sheet-item" data-view="resources">
           <svg class="nav-ico" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-link"/></svg>
@@ -4011,6 +4077,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelRue" hidden>
                         <div class="wtf-panel-lead" id="st1GuideLead">📍 <b>Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gUeChips"></div>
+                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide wtf-notes">
@@ -4125,6 +4192,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelW" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gWChips"></div>
+                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide">
@@ -4294,6 +4362,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelL" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></div>
                         <div class="wtf-list wtf-compact" id="gLChips"></div>
+                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide wtf-notes"><span id="st3Rule">—</span></div>
@@ -4601,6 +4670,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </button>
                     <div class="wtf-panel" id="wtfPanelSp" hidden>
                       <div class="wtf-list wtf-compact" id="gSpChips"></div>
+                      <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                     </div>
                   </section>
 
@@ -5045,7 +5115,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="es-count tnum" id="examSourcesCount" aria-live="polite"></div>
           </div>
           <div id="examSources" class="es-groups"></div>
-          <div class="u4-source-all"><button class="btn sm gray" type="button" data-action="showView" data-arg="resources" data-i18n="exam_sources_all">Open the full source library</button></div>
+          <div class="u4-source-foot">
+            <div class="u4-source-browse"><button class="btn sm" id="examBrowseExercisesBtn" type="button" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
+            <div class="u4-source-all"><button class="btn sm gray" type="button" data-action="showView" data-arg="resources" data-i18n="exam_sources_all">Open the full source library</button></div>
+          </div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -5392,6 +5465,75 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <h2 data-i18n="parts_exercises">Exercises by part</h2>
           <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
           <div id="partsList"></div>
+        </div>
+      </section>
+
+      <!-- ============ EXERCISES LIBRARY (ordered local + online) ============ -->
+      <section id="v-exercises" class="view">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="exlib_title">Exercises</h1>
+            <p class="page-sub" data-i18n="exlib_sub">Every local paper, audio, lesson plan and verified online source in one ordered library.</p>
+          </div>
+        </div>
+
+        <div class="card" id="exercisesLibraryCard">
+          <div class="exlib-toolbar">
+            <div class="exlib-search-row">
+              <label class="sr" for="exLibSearch" data-i18n="exlib_search_label">Search exercises</label>
+              <input type="search" id="exLibSearch" class="exlib-search-input" autocomplete="off"
+                placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
+                aria-label="Search exercises" data-i18n-aria-label="exlib_search_label"
+                data-input="onExLibSearch" data-keydown="exLibSearchKey">
+              <button type="button" id="exLibClear" class="btn sm gray exlib-clear-btn" style="display:none"
+                data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
+            </div>
+
+            <div class="chips exlib-chips" id="exLibPaperFilter" role="group"
+              aria-label="Filter exercises by paper" data-i18n-aria-label="exlib_paper_aria">
+              <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
+              <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+              <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
+              <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
+              <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
+            </div>
+
+            <div class="chips exlib-chips" id="exLibPartFilter" role="group"
+              aria-label="Filter exercises by part" data-i18n-aria-label="exlib_part_aria">
+              <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
+              <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
+            </div>
+
+            <div class="exlib-bar">
+              <div class="exlib-bar-controls">
+                <label class="exlib-free-toggle" for="exLibFreeOnly">
+                  <input type="checkbox" id="exLibFreeOnly" data-change="toggleExLibFree">
+                  <span data-i18n="exlib_free_only">Free only</span>
+                </label>
+                <label class="exlib-sort-wrap" for="exLibSort">
+                  <span data-i18n="exlib_sort_label">Sort</span>
+                  <select id="exLibSort" class="exlib-sort-select" data-change="setExLibSort">
+                    <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
+                    <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
+                    <option value="az" data-i18n="exlib_sort_az">A–Z</option>
+                  </select>
+                </label>
+              </div>
+              <div class="exlib-count tnum" id="exLibCount" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div id="exLibList" class="exlib-groups"></div>
+          <div id="exLibEmpty" class="exlib-empty" style="display:none">
+            <p data-i18n="exlib_empty">No exercises match these filters. Try clearing the search or switching back to all papers and parts.</p>
+            <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
+          </div>
         </div>
       </section>
 
@@ -6749,7 +6891,46 @@ const I18N={
     l_own_err_save:'Could not save material.',
     l_own_err_delete:'Could not delete material.',
     l_own_err_limit_items:'Limit reached: maximum 10 saved materials.',
-    l_own_err_limit_bytes:'Storage limit reached (40 MB per user). Delete an old file first.'
+    l_own_err_limit_bytes:'Storage limit reached (40 MB per user). Delete an old file first.',
+    nav_exercises:'Exercises',
+    more_desc_exercises:'All local & online exercises',
+    exlib_title:'Exercises',
+    exlib_sub:'Every local paper, audio, lesson plan and verified online source in one ordered library.',
+    exlib_browse_all:'Browse all exercises',
+    exlib_search_label:'Search exercises',
+    exlib_search_ph:'Search by name, paper or part…',
+    exlib_clear:'Clear',
+    exlib_paper_aria:'Filter exercises by paper',
+    exlib_paper_all:'All papers',
+    exlib_part_aria:'Filter exercises by part',
+    exlib_part_all:'All parts',
+    exlib_part_1:'Part 1',
+    exlib_part_2:'Part 2',
+    exlib_part_3:'Part 3',
+    exlib_part_4:'Part 4',
+    exlib_part_5:'Part 5',
+    exlib_part_6:'Part 6',
+    exlib_part_7:'Part 7',
+    exlib_free_only:'Free only',
+    exlib_sort_label:'Sort',
+    exlib_sort_exam:'Exam order',
+    exlib_sort_shortest:'Shortest first',
+    exlib_sort_az:'A–Z',
+    exlib_count_many:'{n} exercises',
+    exlib_count_one:'1 exercise',
+    exlib_empty:'No exercises match these filters. Try clearing the search or switching back to all papers and parts.',
+    exlib_reset:'Reset filters',
+    exlib_open:'Open',
+    exlib_all_parts:'All parts',
+    exlib_type_paper:'Paper',
+    exlib_type_key:'Answer key',
+    exlib_type_notes:'Examiner notes',
+    exlib_type_lesson:'Lesson plan',
+    exlib_type_audio:'Audio',
+    exlib_type_online:'Practice',
+    exlib_origin_local:'Local',
+    exlib_origin_online:'Online',
+    exlib_filter_action:'Search exercises'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -7824,7 +8005,46 @@ const I18N={
     l_own_err_save:'No se pudo guardar el material.',
     l_own_err_delete:'No se pudo borrar el material.',
     l_own_err_limit_items:'Límite alcanzado: máximo 10 materiales guardados.',
-    l_own_err_limit_bytes:'Límite de almacenamiento alcanzado (40 MB por usuario). Borrá un archivo primero.'
+    l_own_err_limit_bytes:'Límite de almacenamiento alcanzado (40 MB por usuario). Borrá un archivo primero.',
+    nav_exercises:'Ejercicios',
+    more_desc_exercises:'Todos los ejercicios locales y online',
+    exlib_title:'Ejercicios',
+    exlib_sub:'Todos los exámenes locales, audios, guías de clase y fuentes online verificadas en una sola biblioteca ordenada.',
+    exlib_browse_all:'Ver todos los ejercicios',
+    exlib_search_label:'Buscar ejercicios',
+    exlib_search_ph:'Buscar por nombre, prueba o parte…',
+    exlib_clear:'Limpiar',
+    exlib_paper_aria:'Filtrar ejercicios por prueba',
+    exlib_paper_all:'Todas las pruebas',
+    exlib_part_aria:'Filtrar ejercicios por parte',
+    exlib_part_all:'Todas las partes',
+    exlib_part_1:'Parte 1',
+    exlib_part_2:'Parte 2',
+    exlib_part_3:'Parte 3',
+    exlib_part_4:'Parte 4',
+    exlib_part_5:'Parte 5',
+    exlib_part_6:'Parte 6',
+    exlib_part_7:'Parte 7',
+    exlib_free_only:'Solo gratis',
+    exlib_sort_label:'Ordenar',
+    exlib_sort_exam:'Orden del examen',
+    exlib_sort_shortest:'Más cortos primero',
+    exlib_sort_az:'A–Z',
+    exlib_count_many:'{n} ejercicios',
+    exlib_count_one:'1 ejercicio',
+    exlib_empty:'Ningún ejercicio coincide con estos filtros. Probá limpiando la búsqueda o volviendo a todas las pruebas y partes.',
+    exlib_reset:'Limpiar filtros',
+    exlib_open:'Abrir',
+    exlib_all_parts:'Toda la prueba',
+    exlib_type_paper:'Examen',
+    exlib_type_key:'Respuestas',
+    exlib_type_notes:'Notas de examinador',
+    exlib_type_lesson:'Guía de clase',
+    exlib_type_audio:'Audio',
+    exlib_type_online:'Práctica',
+    exlib_origin_local:'Local',
+    exlib_origin_online:'Online',
+    exlib_filter_action:'Buscar ejercicios'
   }
 };
 let LANG='en';
@@ -19078,12 +19298,39 @@ const PRACTICE_SOURCES=[
  {n:"Exam English — FCE Reading",url:"https://www.examenglish.com/FCE/fce_reading.html",skill:"rue",kind:"free",part:["5","6","7"],what:"Two full FCE reading sets covering multiple choice, gapped text and multiple matching.",mins:25},
  {n:"Cambridge English — reading activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=independent",skill:"rue",kind:"free",part:["5","6","7"],what:"16 official Independent-level reading tasks on scanning, implied meaning and reading for detail.",mins:20},
  {n:"British Council — B2 reading",url:"https://learnenglish.britishcouncil.org/free-resources/reading/b2",skill:"rue",kind:"free",part:["5","6","7"],what:"B2 articles and reviews with preparation tasks and comprehension questions.",mins:20},
+ {n:"Cambridge English — grammar activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=grammar&level=independent",skill:"rue",kind:"free",part:["1","2","4"],what:"Official Cambridge Independent-level grammar drills on conditionals, modals, tenses and clauses.",mins:15},
+ {n:"Cambridge English — vocabulary activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=vocabulary&level=independent",skill:"rue",kind:"free",part:["1","3"],what:"Official Cambridge vocabulary tasks targeting collocations, phrasal verbs and word families.",mins:15},
+ {n:"Exam English — FCE Part 1: Multiple-choice cloze",url:"https://www.examenglish.com/FCE/fce_use_of_english_part1.htm",skill:"rue",kind:"free",part:["1"],what:"Interactive B2 First Part 1 gap-fill text with four options per blank and automatic scoring.",mins:10},
+ {n:"Exam English — FCE Part 2: Open cloze",url:"https://www.examenglish.com/FCE/fce_use_of_english_part2.htm",skill:"rue",kind:"free",part:["2"],what:"Interactive B2 First Part 2 open cloze exercise testing grammar words with immediate feedback.",mins:10},
+ {n:"Exam English — FCE Part 3: Word formation",url:"https://www.examenglish.com/FCE/fce_use_of_english_part3.htm",skill:"rue",kind:"free",part:["3"],what:"Interactive B2 First Part 3 word formation task converting root words with answers checked instantly.",mins:10},
+ {n:"Exam English — FCE Part 4: Key word transformation",url:"https://www.examenglish.com/FCE/fce_use_of_english_part4.htm",skill:"rue",kind:"free",part:["4"],what:"Interactive B2 First Part 4 sentence rewrites using 2 to 5 words including the given key word.",mins:12},
+ {n:"Exam English — FCE Part 5: Multiple choice reading",url:"https://www.examenglish.com/FCE/fce_reading_and_use_of_english_part5.htm",skill:"rue",kind:"free",part:["5"],what:"Long B2 reading passage with six 4-option comprehension questions marked automatically.",mins:15},
+ {n:"Exam English — FCE Part 6: Gapped text",url:"https://www.examenglish.com/FCE/fce_reading_and_use_of_english_part6.htm",skill:"rue",kind:"free",part:["6"],what:"Interactive Part 6 gapped text exercise matching removed sentences to cohesion clues.",mins:15},
+ {n:"Exam English — FCE Part 7: Multiple matching",url:"https://www.examenglish.com/FCE/fce_reading_and_use_of_english_part7.htm",skill:"rue",kind:"free",part:["7"],what:"Interactive Part 7 scanning task matching ten statements to short text sections.",mins:15},
+ {n:"Exam English — FCE Grammar practice",url:"https://www.examenglish.com/FCE/fce_grammar.htm",skill:"rue",kind:"free",part:["1","2","4"],what:"Targeted B2 grammar quizzes covering the core structures tested in Use of English.",mins:15},
+ {n:"ESL Lounge — FCE Part 1: Multiple-choice cloze",url:"https://www.esl-lounge.com/student/first-certificate-multiple-choice-cloze.php",skill:"rue",kind:"free",part:["1"],what:"Set of graded FCE Part 1 multiple-choice cloze exercises with built-in answer checks.",mins:10},
+ {n:"ESL Lounge — FCE Part 2: Open cloze",url:"https://www.esl-lounge.com/student/first-certificate-open-cloze.php",skill:"rue",kind:"free",part:["2"],what:"Collection of B2 open cloze texts focusing on prepositions, linkers and auxiliary verbs.",mins:10},
+ {n:"ESL Lounge — FCE Part 3: Word formation",url:"https://www.esl-lounge.com/student/first-certificate-word-formation.php",skill:"rue",kind:"free",part:["3"],what:"Dedicated B2 word formation drills practising prefixes, suffixes and negative forms.",mins:10},
+ {n:"ESL Lounge — FCE Part 4: Key word transformations",url:"https://www.esl-lounge.com/student/first-certificate-key-word-transformations.php",skill:"rue",kind:"free",part:["4"],what:"Sentence transformation sets mirroring Cambridge Part 4 grammar and phrasing patterns.",mins:12},
+ {n:"ESL Lounge — FCE Part 5: Reading multiple choice",url:"https://www.esl-lounge.com/student/first-certificate-reading-multiple-choice.php",skill:"rue",kind:"free",part:["5"],what:"Full-length B2 reading texts with multiple-choice questions on detail, attitude and tone.",mins:15},
+ {n:"ESL Lounge — FCE Part 6: Reading gapped text",url:"https://www.esl-lounge.com/student/first-certificate-reading-gapped-text.php",skill:"rue",kind:"free",part:["6"],what:"Cohesion and paragraph-insertion practice texts styled on B2 First Reading Part 6.",mins:15},
+ {n:"ESL Lounge — FCE Part 7: Reading multiple matching",url:"https://www.esl-lounge.com/student/first-certificate-reading-multiple-matching.php",skill:"rue",kind:"free",part:["7"],what:"Multi-section reading sets for fast scanning and paraphrase matching in Part 7.",mins:15},
+ {n:"Perfect English Grammar — interactive exercises",url:"https://www.perfect-english-grammar.com/grammar-exercises.html",skill:"rue",kind:"free",part:["2","4"],what:"Hundreds of focused interactive drills on verb tenses, conditionals, passives and reported speech.",mins:15},
+ {n:"Cambridge Dictionary — British Grammar",url:"https://dictionary.cambridge.org/grammar/british-grammar/",skill:"rue",kind:"free",part:[],what:"Authoritative Cambridge grammar reference explaining usage, clauses and collocations with examples.",mins:15},
 
  {n:"Write & Improve",url:"https://writeandimprove.com/",skill:"w",kind:"free",part:[],what:"Cambridge's free tool marks a draft against the CEFR and shows where to improve.",mins:20},
  {n:"Cambridge English — writing activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=writing&level=independent",skill:"w",kind:"free",part:[],what:"11 official Independent-level writing tasks on linking words, register and paragraphing.",mins:25},
  {n:"British Council — B2 writing",url:"https://learnenglish.britishcouncil.org/free-resources/writing/b2",skill:"w",kind:"free",part:[],what:"Essays, reports, reviews and emails with preparation tasks and model texts.",mins:20},
  {n:"Exam English — FCE Writing",url:"https://www.examenglish.com/FCE/fce_writing.html",skill:"w",kind:"free",part:[],what:"Writing tasks for both parts plus how-to guides for essay, article, report, review and email.",mins:20},
  {n:"LangCorrect",url:"https://langcorrect.com/",skill:"w",kind:"free",part:[],what:"Free journal exchange where native speakers correct your writing sentence by sentence.",mins:15},
+ {n:"Exam English — FCE Writing Part 1: Essay",url:"https://www.examenglish.com/FCE/FCE_writing.htm",skill:"w",kind:"free",part:["1"],what:"Sample B2 First Part 1 essay prompt with structure breakdown, useful phrases and model answer.",mins:20},
+ {n:"Exam English — FCE Writing Part 2: Article, email & review",url:"https://www.examenglish.com/FCE/FCE_writing2.htm",skill:"w",kind:"free",part:["2"],what:"Practice Part 2 prompts covering emails, articles, reports and reviews with exam guidance.",mins:20},
+ {n:"ESL Lounge — FCE Writing guide",url:"https://www.esl-lounge.com/student/first-certificate-writing.php",skill:"w",kind:"free",part:["1","2"],what:"Step-by-step FCE writing practice prompts, structure checklists and style notes for both parts.",mins:25},
+ {n:"Academic Phrasebank (Manchester)",url:"https://www.phrasebank.manchester.ac.uk/",skill:"w",kind:"free",part:["1","2"],what:"Curated bank of formal linking, hedging and argumentative phrases for high-band essays and reports.",mins:10},
+ {n:"Purdue OWL — Essay writing guide",url:"https://owl.purdue.edu/owl/general_writing/academic_writing/essay_writing/index.html",skill:"w",kind:"free",part:["1"],what:"Clear university guide to building thesis statements, body paragraphs and balanced essay arguments.",mins:15},
+ {n:"BBC Learning English — Go The Distance",url:"https://www.bbc.co.uk/learningenglish/english/course/go-the-distance",skill:"w",kind:"free",part:["1"],what:"BBC academic study skills course covering essay planning, paragraph cohesion and formal tone.",mins:20},
+ {n:"BBC Learning English — English at Work",url:"https://www.bbc.co.uk/learningenglish/english/features/english-at-work",skill:"w",kind:"free",part:["2"],what:"Workplace English series useful for semi-formal emails, reports and clear professional phrasing.",mins:15},
+ {n:"Oxford Learner's Dictionaries",url:"https://www.oxfordlearnersdictionaries.com/",skill:"w",kind:"free",part:[],what:"Check B2 word register, collocations and natural example sentences while revising a draft.",mins:10},
 
  {n:"BBC Learning English",url:"https://www.bbc.co.uk/learningenglish/",skill:"l",kind:"free",part:[],what:"News, drama and 6 Minute English audio with transcripts and vocabulary support.",mins:15},
  {n:"British Council — B2 listening",url:"https://learnenglish.britishcouncil.org/free-resources/listening/b2",skill:"l",kind:"free",part:[],what:"B2 listening lessons with preparation tasks, audio and comprehension questions.",mins:20},
@@ -19092,13 +19339,34 @@ const PRACTICE_SOURCES=[
  {n:"Cambridge English — listening activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=listening&level=independent",skill:"l",kind:"free",part:["1","2","3","4"],what:"31 official Independent-level listening tasks on gist, detail and unstressed words.",mins:20},
  {n:"Youglish",url:"https://youglish.com/",skill:"l",kind:"free",part:[],what:"Hear any word or phrase in real YouTube clips with subtitles and slow playback.",mins:10},
  {n:"LyricsTraining",url:"https://lyricstraining.com/",skill:"l",kind:"freemium",part:[],what:"Gap-fill and karaoke listening practice with hundreds of songs and adjustable difficulty.",mins:10},
+ {n:"Exam English — FCE Listening Part 1",url:"https://www.examenglish.com/FCE/fce_listening_part1.htm",skill:"l",kind:"free",part:["1"],what:"Eight short everyday extracts with three-option multiple-choice questions marked instantly.",mins:10},
+ {n:"Exam English — FCE Listening Part 2",url:"https://www.examenglish.com/FCE/fce_listening_part2.htm",skill:"l",kind:"free",part:["2"],what:"Monologue sentence-completion listening drill testing exact words and spelling with instant answers.",mins:10},
+ {n:"Exam English — FCE Listening Part 3",url:"https://www.examenglish.com/FCE/fce_listening3.htm",skill:"l",kind:"free",part:["3"],what:"Five themed speakers matched against statements in authentic B2 First Part 3 format.",mins:10},
+ {n:"Exam English — FCE Listening Part 4",url:"https://www.examenglish.com/FCE/fce_listening4.html",skill:"l",kind:"free",part:["4"],what:"Long radio interview with seven multiple-choice questions on opinion, detail and attitude.",mins:12},
+ {n:"Exam English — FCE Listening Test 2",url:"https://www.examenglish.com/FCE/fce_listening_test2.html",skill:"l",kind:"free",part:["1","2","3","4"],what:"Second complete four-part FCE listening mock with integrated player and automatic scoring.",mins:30},
+ {n:"BBC Learning English — 6 Minute English",url:"https://www.bbc.co.uk/learningenglish/english/features/6-minute-english",skill:"l",kind:"free",part:["2","4"],what:"Weekly topical British English discussions with full transcripts and B2 vocabulary quizzes.",mins:10},
+ {n:"BBC Learning English — The English We Speak",url:"https://www.bbc.co.uk/learningenglish/english/features/the-english-we-speak",skill:"l",kind:"free",part:["1","3"],what:"Short 3-minute dialogues unpackaging idioms and informal expressions common in Part 1 extracts.",mins:8},
+ {n:"BBC Learning English — Lingohack",url:"https://www.bbc.co.uk/learningenglish/english/features/lingohack",skill:"l",kind:"free",part:["2","4"],what:"Real BBC news reports at natural speed paired with transcripts and key vocabulary notes.",mins:10},
+ {n:"ELLLO — English Listening Lesson Library",url:"https://www.elllo.org/",skill:"l",kind:"free",part:["1","3","4"],what:"Over 3,000 free audio interviews with diverse international accents, transcripts and quizzes.",mins:15},
+ {n:"Randall's ESL Cyber Listening Lab",url:"https://www.esl-lab.com/",skill:"l",kind:"free",part:["1","2","4"],what:"Graded everyday dialogues and talks with pre-listening warm-ups, quizzes and full scripts.",mins:15},
+ {n:"Breaking News English",url:"https://breakingnewsenglish.com/",skill:"l",kind:"free",part:["2","4"],what:"Current news recordings at multiple playback speeds with gap-fills and comprehension questions.",mins:15},
+ {n:"TED-Ed — Lessons worth sharing",url:"https://ed.ted.com/",skill:"l",kind:"free",part:["2","4"],what:"Short animated talks with natural narration and multiple-choice comprehension questions.",mins:12},
 
  {n:"Cambridge English — speaking activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=speaking&level=independent",skill:"sp",kind:"free",part:[],what:"Four official Independent-level activities on conversational phrases and spoken vs written English.",mins:20},
  {n:"Exam English — FCE Speaking",url:"https://www.examenglish.com/FCE/fce_speaking.html",skill:"sp",kind:"free",part:["1","2","3","4"],what:"The four speaking parts explained, with guidance on how to do well on the day.",mins:20},
  {n:"British Council — B2 speaking",url:"https://learnenglish.britishcouncil.org/free-resources/speaking/b2",skill:"sp",kind:"free",part:[],what:"Video lessons with functional phrases and follow-up tasks to check understanding.",mins:20},
  {n:"Conversation Exchange",url:"https://www.conversationexchange.com/",skill:"sp",kind:"free",part:[],what:"Find a free tandem partner for face-to-face or online conversation practice.",mins:20},
  {n:"Tandem",url:"https://tandem.net/",skill:"sp",kind:"freemium",part:[],what:"Language-exchange app that pairs you with native speakers for real conversation.",mins:15},
- {n:"HelloTalk",url:"https://www.hellotalk.com/",skill:"sp",kind:"freemium",part:[],what:"Chat and call with native English speakers; core exchange features are free.",mins:15}
+ {n:"HelloTalk",url:"https://www.hellotalk.com/",skill:"sp",kind:"freemium",part:[],what:"Chat and call with native English speakers; core exchange features are free.",mins:15},
+ {n:"Speak & Improve (Cambridge)",url:"https://speakandimprove.com/",skill:"sp",kind:"free",part:["1","2","3","4"],what:"Cambridge research tool that records your spoken answers and estimates your CEFR speaking level.",mins:15},
+ {n:"Cambridge English — pronunciation activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=pronunciation&level=independent",skill:"sp",kind:"free",part:[],what:"Official Cambridge exercises on word stress, intonation and connected speech at B1–B2 level.",mins:15},
+ {n:"ESL Lounge — FCE Speaking prompts",url:"https://www.esl-lounge.com/student/first-certificate-speaking.php",skill:"sp",kind:"free",part:["1","2","3","4"],what:"Realistic FCE Speaking Part 1–4 prompt cards, photo comparison tips and discussion questions.",mins:15},
+ {n:"BBC Learning English — Pronunciation studio",url:"https://www.bbc.co.uk/learningenglish/english/features/pronunciation",skill:"sp",kind:"free",part:[],what:"Short video drills on individual British English sounds, minimal pairs and natural rhythm.",mins:10},
+ {n:"BBC Learning English — Upper-Intermediate spoken course",url:"https://www.bbc.co.uk/learningenglish/english/course/upper-intermediate",skill:"sp",kind:"free",part:["1","3","4"],what:"30 free B2 units featuring natural spoken expressions, functional language and discourse markers.",mins:20},
+ {n:"TalkEnglish — Speaking lessons",url:"https://www.talkenglish.com/",skill:"sp",kind:"free",part:["1","3","4"],what:"Structured spoken English dialogues and interview-style questions for timed solo rehearsal.",mins:15},
+ {n:"Free4Talk — Live English voice rooms",url:"https://www.free4talk.com/",skill:"sp",kind:"free",part:["1","3","4"],what:"Drop-in free group voice rooms to practise interactive turn-taking and spontaneous discussion.",mins:20},
+ {n:"Speechling — Pronunciation coaching",url:"https://speechling.com/",skill:"sp",kind:"freemium",part:[],what:"Record shadowing sentences and compare with native speakers; free tier includes coach feedback.",mins:15},
+ {n:"MyLanguageExchange",url:"https://www.mylanguageexchange.com/",skill:"sp",kind:"freemium",part:["1","3","4"],what:"Long-running tandem community with structured conversation lesson plans and partner search.",mins:20}
 ];
 let PRACTICE_FILTER='all';
 let PRACTICE_FREE_ONLY=false;
@@ -19496,6 +19764,317 @@ function renderExamMaterials(){
     {id:'exMatSp',key:'exam-sp',skill:'sp',part:2,titleKey:'exam_sources_group_sp_title'}
   ];
   defs.forEach(d=>mountWtfSection(d.id,d.key,buildWtfSpec(d.skill,d.part),t(d.titleKey)));
+}
+/* ---------- EXERCISE LIBRARY (ordered local MAT + online PRACTICE_SOURCES) ---------- */
+const EX_LIB_LOCAL=[
+  /* Reading & Use of English */
+  {key:'rueS1',skill:'rue',type:'paper',part:[],mins:75,n:'B2 First Sample 1 — Reading & Use of English'},
+  {key:'rueS2',skill:'rue',type:'paper',part:[],mins:75,n:'B2 First Sample 2 — Reading & Use of English'},
+  {key:'rueFS1',skill:'rue',type:'paper',part:[],mins:75,n:'For Schools Sample 1 — Reading & Use of English'},
+  {key:'rueFS2',skill:'rue',type:'paper',part:[],mins:75,n:'For Schools Sample 2 — Reading & Use of English'},
+  {key:'keyS1',skill:'rue',type:'key',part:[],mins:10,n:'B2 First Sample 1 — R&UoE Answer Key'},
+  {key:'keyS2',skill:'rue',type:'key',part:[],mins:10,n:'B2 First Sample 2 — R&UoE Answer Keys'},
+  {key:'keyFS1',skill:'rue',type:'key',part:[],mins:10,n:'For Schools Sample 1 — R&UoE Answer Key'},
+  {key:'keyFS2',skill:'rue',type:'key',part:[],mins:10,n:'For Schools Sample 2 — R&UoE Answer Keys'},
+  {key:'lpR1',skill:'rue',type:'lesson',part:['1'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 1'},
+  {key:'lpR2',skill:'rue',type:'lesson',part:['2'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 2'},
+  {key:'lpR3',skill:'rue',type:'lesson',part:['3'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 3'},
+  {key:'lpR4',skill:'rue',type:'lesson',part:['4'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 4'},
+  {key:'lpR5',skill:'rue',type:'lesson',part:['5'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 5'},
+  {key:'lpR6',skill:'rue',type:'lesson',part:['6'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 6'},
+  {key:'lpR7',skill:'rue',type:'lesson',part:['7'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 7'},
+  {key:'fR1',skill:'rue',type:'lesson',part:['1'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 1'},
+  {key:'fR2',skill:'rue',type:'lesson',part:['2'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 2'},
+  {key:'fR3',skill:'rue',type:'lesson',part:['3'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 3'},
+  {key:'fR4',skill:'rue',type:'lesson',part:['4'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 4'},
+  {key:'fR5',skill:'rue',type:'lesson',part:['5'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 5'},
+  {key:'fR6',skill:'rue',type:'lesson',part:['6'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 6'},
+  {key:'fR7',skill:'rue',type:'lesson',part:['7'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 7'},
+  {key:'rAct1b',skill:'rue',type:'lesson',part:['1'],mins:15,n:'Self-study Reading Activities — Part 1'},
+  {key:'rAct1',skill:'rue',type:'lesson',part:['5','6','7'],mins:25,n:'Self-study Reading Activities 1'},
+  {key:'rAct2',skill:'rue',type:'lesson',part:['5','6','7'],mins:25,n:'Self-study Further Reading Activities'},
+  {key:'rGuide',skill:'rue',type:'lesson',part:['5','6','7'],mins:20,n:'Developing Reading Skills Guide'},
+  /* Writing */
+  {key:'wS1',skill:'w',type:'paper',part:[],mins:80,n:'B2 First Sample 1 — Writing'},
+  {key:'wS2',skill:'w',type:'paper',part:[],mins:80,n:'B2 First Sample 2 — Writing'},
+  {key:'wFS1',skill:'w',type:'paper',part:[],mins:80,n:'For Schools Sample 1 — Writing'},
+  {key:'wFS2',skill:'w',type:'paper',part:[],mins:80,n:'For Schools Sample 2 — Writing'},
+  {key:'lpW1',skill:'w',type:'lesson',part:['1'],mins:25,n:'B2 First Lesson Plan — Writing Part 1 (Essay)'},
+  {key:'lpW2',skill:'w',type:'lesson',part:['2'],mins:25,n:'B2 First Lesson Plan — Writing Part 2'},
+  {key:'fW1',skill:'w',type:'lesson',part:['1'],mins:25,n:'For Schools Lesson Plan — Writing Part 1'},
+  {key:'fW2',skill:'w',type:'lesson',part:['2'],mins:25,n:'For Schools Lesson Plan — Writing Part 2'},
+  {key:'wAct1',skill:'w',type:'lesson',part:['1'],mins:30,n:'Self-study Writing Activities — Part 1'},
+  {key:'wAct2',skill:'w',type:'lesson',part:['2'],mins:30,n:'Self-study Further Writing Activities — Part 2'},
+  {key:'wCheck',skill:'w',type:'lesson',part:[],mins:10,n:'Writing Improvement Checklist'},
+  {key:'wGuide',skill:'w',type:'lesson',part:[],mins:20,n:'Teacher Guide for Writing'},
+  /* Listening */
+  {key:'lS1',skill:'l',type:'paper',part:[],mins:40,n:'B2 First Sample 1 — Listening'},
+  {key:'lS2',skill:'l',type:'paper',part:[],mins:40,n:'B2 First Sample 2 — Listening'},
+  {key:'lFS1',skill:'l',type:'paper',part:[],mins:40,n:'For Schools Sample 1 — Listening'},
+  {key:'lFS2',skill:'l',type:'paper',part:[],mins:40,n:'For Schools Sample 2 — Listening'},
+  {key:'lkS1',skill:'l',type:'key',part:[],mins:10,n:'B2 First Sample 1 — Listening Answer Key'},
+  {key:'tsS1',skill:'l',type:'key',part:[],mins:15,n:'B2 First Sample 1 — Listening Tapescript'},
+  {key:'lkS2',skill:'l',type:'key',part:[],mins:10,n:'B2 First Sample 2 — Listening Answer Key'},
+  {key:'lkFS1',skill:'l',type:'key',part:[],mins:10,n:'For Schools Sample 1 — Listening Answer Key'},
+  {key:'tsFS1',skill:'l',type:'key',part:[],mins:15,n:'For Schools Sample 1 — Listening Tapescript'},
+  {key:'lkFS2',skill:'l',type:'key',part:[],mins:10,n:'For Schools Sample 2 — Listening Answer Key'},
+  {key:'lpL1',skill:'l',type:'lesson',part:['1'],mins:20,n:'B2 First Lesson Plan — Listening Part 1'},
+  {key:'lpL2',skill:'l',type:'lesson',part:['2'],mins:20,n:'B2 First Lesson Plan — Listening Part 2'},
+  {key:'lpL3',skill:'l',type:'lesson',part:['3'],mins:20,n:'B2 First Lesson Plan — Listening Part 3'},
+  {key:'lpL4',skill:'l',type:'lesson',part:['4'],mins:20,n:'B2 First Lesson Plan — Listening Part 4'},
+  {key:'fL1',skill:'l',type:'lesson',part:['1'],mins:20,n:'For Schools Lesson Plan — Listening Part 1'},
+  {key:'fL2',skill:'l',type:'lesson',part:['2'],mins:20,n:'For Schools Lesson Plan — Listening Part 2'},
+  {key:'fL3',skill:'l',type:'lesson',part:['3'],mins:20,n:'For Schools Lesson Plan — Listening Part 3'},
+  {key:'fL4',skill:'l',type:'lesson',part:['4'],mins:20,n:'For Schools Lesson Plan — Listening Part 4'},
+  {key:'lGuide',skill:'l',type:'lesson',part:[],mins:20,n:'Teacher Guide for Listening'},
+  {key:'auS1',skill:'l',type:'audio',part:[],mins:40,n:'B2 First Sample 1 — Listening Audio (Full)'},
+  {key:'auS2p1',skill:'l',type:'audio',part:['1'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 1'},
+  {key:'auS2p2',skill:'l',type:'audio',part:['2'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 2'},
+  {key:'auS2p3',skill:'l',type:'audio',part:['3'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 3'},
+  {key:'auS2p4',skill:'l',type:'audio',part:['4'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 4'},
+  {key:'auFS1p1',skill:'l',type:'audio',part:['1'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 1'},
+  {key:'auFS1p2',skill:'l',type:'audio',part:['2'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 2'},
+  {key:'auFS1p3',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 3'},
+  {key:'auFS1p4',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 4'},
+  {key:'auFS2',skill:'l',type:'audio',part:[],mins:40,n:'For Schools Sample 2 — Listening Audio (Full)'},
+  {key:'fL1a',skill:'l',type:'audio',part:['1'],mins:10,n:'For Schools Lesson Audio — Listening Part 1'},
+  {key:'fL2a',skill:'l',type:'audio',part:['2'],mins:10,n:'For Schools Lesson Audio — Listening Part 2'},
+  {key:'fL3a',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Lesson Audio — Listening Part 3'},
+  {key:'fL4a',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Lesson Audio — Listening Part 4'},
+  {key:'hbA1',skill:'l',type:'audio',part:[],mins:40,n:'Handbook Audio — Sample 1 (Full)'},
+  {key:'hbA2p1',skill:'l',type:'audio',part:['1'],mins:10,n:'Handbook Audio — Sample 2 Part 1'},
+  {key:'hbA2p2',skill:'l',type:'audio',part:['2'],mins:10,n:'Handbook Audio — Sample 2 Part 2'},
+  {key:'hbA2p3',skill:'l',type:'audio',part:['3'],mins:10,n:'Handbook Audio — Sample 2 Part 3'},
+  {key:'hbA2p4',skill:'l',type:'audio',part:['4'],mins:10,n:'Handbook Audio — Sample 2 Part 4'},
+  {key:'hbFSp1',skill:'l',type:'audio',part:['1'],mins:10,n:'For Schools Handbook Audio — Part 1'},
+  {key:'hbFSp2',skill:'l',type:'audio',part:['2'],mins:10,n:'For Schools Handbook Audio — Part 2'},
+  {key:'hbFSp3',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Handbook Audio — Part 3'},
+  {key:'hbFSp4',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Handbook Audio — Part 4'},
+  {key:'hbFS2',skill:'l',type:'audio',part:[],mins:40,n:'For Schools Handbook Audio — Sample 2 (Full)'},
+  /* Speaking */
+  {key:'spS1',skill:'sp',type:'paper',part:[],mins:14,n:'B2 First Sample 1 — Speaking'},
+  {key:'spS2',skill:'sp',type:'paper',part:[],mins:14,n:'B2 First Sample 2 — Speaking'},
+  {key:'spFS1',skill:'sp',type:'paper',part:[],mins:14,n:'For Schools Sample 1 — Speaking'},
+  {key:'spFS2',skill:'sp',type:'paper',part:[],mins:14,n:'For Schools Sample 2 — Speaking'},
+  {key:'exC0',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Natalia & Enzo (Sample 1)'},
+  {key:'exC1',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Giulia, Tabatha & Elena (Sample 2)'},
+  {key:'exC2',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Julia & Isabela (Sample 2)'},
+  {key:'exC3',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Francesco & Emma (For Schools 1)'},
+  {key:'exC4',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Lara, Agustina & Mateo (For Schools 2)'},
+  {key:'exC5',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Julia & Malena (For Schools 2)'},
+  {key:'lpSp1',skill:'sp',type:'lesson',part:['1'],mins:15,n:'B2 First Lesson Plan — Speaking Part 1'},
+  {key:'lpSp2',skill:'sp',type:'lesson',part:['2'],mins:15,n:'B2 First Lesson Plan — Speaking Part 2'},
+  {key:'lpSp3',skill:'sp',type:'lesson',part:['3'],mins:15,n:'B2 First Lesson Plan — Speaking Part 3'},
+  {key:'lpSp4',skill:'sp',type:'lesson',part:['4'],mins:15,n:'B2 First Lesson Plan — Speaking Part 4'},
+  {key:'fSp1',skill:'sp',type:'lesson',part:['1'],mins:15,n:'For Schools Lesson Plan — Speaking Part 1'},
+  {key:'fSp2',skill:'sp',type:'lesson',part:['2'],mins:15,n:'For Schools Lesson Plan — Speaking Part 2'},
+  {key:'fSp3',skill:'sp',type:'lesson',part:['3'],mins:15,n:'For Schools Lesson Plan — Speaking Part 3'},
+  {key:'fSp4',skill:'sp',type:'lesson',part:['4'],mins:15,n:'For Schools Lesson Plan — Speaking Part 4'},
+  {key:'spAct',skill:'sp',type:'lesson',part:[],mins:20,n:'Self-study Speaking Activities'},
+  {key:'spGuide',skill:'sp',type:'lesson',part:[],mins:20,n:'Teacher Guide for Speaking'}
+];
+const EXLIB_PAPER_ORDER={rue:0,w:1,l:2,sp:3};
+const EXLIB_TYPE_ORDER={paper:0,key:1,notes:1,lesson:2,audio:3,online:4};
+const EXLIB_TYPE_KEYS={
+  paper:'exlib_type_paper',
+  key:'exlib_type_key',
+  notes:'exlib_type_notes',
+  lesson:'exlib_type_lesson',
+  audio:'exlib_type_audio',
+  online:'exlib_type_online'
+};
+const EXLIB_ORIGIN_KEYS={local:'exlib_origin_local',online:'exlib_origin_online'};
+const EXLIB_SHORT_PAPER_KEYS={
+  rue:'practice_filter_rue',
+  w:'practice_filter_w',
+  l:'practice_filter_l',
+  sp:'practice_filter_sp'
+};
+const EXLIB_STATE={query:'',paper:'all',part:'all',freeOnly:false,sort:'exam'};
+function exLibMinPart(item){
+  if(!item||!Array.isArray(item.part)||!item.part.length)return 99;
+  const nums=item.part.map(Number).filter(n=>Number.isFinite(n)&&n>0);
+  return nums.length?Math.min.apply(null,nums):99;
+}
+function compareExLibExam(a,b){
+  const pa=EXLIB_PAPER_ORDER[a.skill]!=null?EXLIB_PAPER_ORDER[a.skill]:9;
+  const pb=EXLIB_PAPER_ORDER[b.skill]!=null?EXLIB_PAPER_ORDER[b.skill]:9;
+  if(pa!==pb)return pa-pb;
+  const pta=exLibMinPart(a),ptb=exLibMinPart(b);
+  if(pta!==ptb)return pta-ptb;
+  const ta=EXLIB_TYPE_ORDER[a.type]!=null?EXLIB_TYPE_ORDER[a.type]:9;
+  const tb=EXLIB_TYPE_ORDER[b.type]!=null?EXLIB_TYPE_ORDER[b.type]:9;
+  if(ta!==tb)return ta-tb;
+  if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
+  return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
+}
+function compareExLibShortest(a,b){
+  if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
+  return compareExLibExam(a,b);
+}
+function compareExLibAZ(a,b){
+  const cmp=String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
+  if(cmp!==0)return cmp;
+  return compareExLibExam(a,b);
+}
+function buildExerciseLibrary(){
+  const items=[];
+  EX_LIB_LOCAL.forEach(m=>{
+    const href=MAT[m.key];
+    if(!href)return;
+    items.push({
+      id:'loc_'+m.key,
+      n:m.n,
+      skill:m.skill,
+      type:m.type,
+      part:Array.isArray(m.part)?m.part:[],
+      mins:m.mins,
+      origin:'local',
+      kind:'free',
+      href:href,
+      what:''
+    });
+  });
+  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
+    ?PRACTICE_SOURCES.filter(s=>s&&/^https?:\/\//.test(s.url)):[];
+  sources.forEach((s,i)=>{
+    items.push({
+      id:'on_'+i,
+      n:s.n,
+      skill:s.skill,
+      type:'online',
+      part:Array.isArray(s.part)?s.part:[],
+      mins:s.mins,
+      origin:'online',
+      kind:s.kind||'free',
+      href:s.url,
+      what:s.what||''
+    });
+  });
+  return items;
+}
+function exLibRowHtml(item,showPaper){
+  const partTxt=examSourcePartTag(item.part)||t('exlib_all_parts');
+  const typeTxt=t(EXLIB_TYPE_KEYS[item.type]||'exlib_type_online');
+  const originTxt=t(EXLIB_ORIGIN_KEYS[item.origin]||'exlib_origin_online');
+  const minsTxt=t('practice_mins',{mins:item.mins});
+  const paperPill=showPaper?`<span class="exlib-pill">${esc(t(EXLIB_SHORT_PAPER_KEYS[item.skill]||'practice_filter_rue'))}</span>`:'';
+  const freemiumPill=item.kind==='freemium'?`<span class="exlib-pill is-freemium">${esc(t('practice_kind_'+item.kind))}</span>`:'';
+  const isOnline=item.origin==='online';
+  const rel=isOnline?'noopener noreferrer':'noopener';
+  const openTxt=t('exlib_open')+(isOnline?' ↗':'');
+  const minPart=exLibMinPart(item);
+  return `<a class="exlib-row" href="${esc(item.href)}" target="_blank" rel="${rel}"`+
+    ` data-skill="${esc(item.skill)}" data-type="${esc(item.type)}" data-origin="${esc(item.origin)}"`+
+    ` data-kind="${esc(item.kind)}" data-mins="${item.mins}" data-parts="${esc(item.part.join(','))}"`+
+    ` data-min-part="${minPart}" data-name="${esc(item.n)}">`+
+    `<span class="exlib-row-main">`+
+      `<span class="exlib-row-name">${esc(item.n)}</span>`+
+      `<span class="exlib-row-meta">`+
+        `${paperPill}`+
+        `<span class="exlib-pill is-type-${esc(item.type)}">${esc(typeTxt)}</span>`+
+        `<span class="exlib-pill is-part">${esc(partTxt)}</span>`+
+        `<span class="exlib-pill is-origin-${esc(item.origin)}">${esc(originTxt)}</span>`+
+        `${freemiumPill}`+
+        `<span class="exlib-mins tnum">${esc(minsTxt)}</span>`+
+      `</span>`+
+    `</span>`+
+    `<span class="exlib-row-open" aria-hidden="true">${esc(openTxt)}</span>`+
+    `</a>`;
+}
+function setExLibPaper(paper){EXLIB_STATE.paper=paper||'all';renderExercisesLibrary()}
+function setExLibPart(part){EXLIB_STATE.part=part||'all';renderExercisesLibrary()}
+function toggleExLibFree(on){EXLIB_STATE.freeOnly=!!on;renderExercisesLibrary()}
+function setExLibSort(sort){EXLIB_STATE.sort=(sort==='shortest'||sort==='az')?sort:'exam';renderExercisesLibrary()}
+function onExLibSearch(val){EXLIB_STATE.query=String(val||'');renderExercisesLibrary()}
+function clearExLibSearch(){
+  EXLIB_STATE.query='';
+  const inp=document.getElementById('exLibSearch');
+  if(inp){inp.value='';inp.focus();}
+  renderExercisesLibrary();
+}
+function exLibSearchKey(el,ev){
+  if(ev&&ev.key==='Escape'&&el.value){ev.preventDefault();clearExLibSearch();}
+}
+function resetExLibFilters(){
+  EXLIB_STATE.query='';
+  EXLIB_STATE.paper='all';
+  EXLIB_STATE.part='all';
+  EXLIB_STATE.freeOnly=false;
+  EXLIB_STATE.sort='exam';
+  renderExercisesLibrary();
+}
+function openExercisesLibrary(){
+  resetExLibFilters();
+  showView('exercises');
+}
+function renderExercisesLibrary(){
+  const listEl=document.getElementById('exLibList');
+  if(!listEl)return;
+  const inp=document.getElementById('exLibSearch');
+  if(inp&&inp.value!==EXLIB_STATE.query)inp.value=EXLIB_STATE.query;
+  const clearBtn=document.getElementById('exLibClear');
+  if(clearBtn)clearBtn.style.display=EXLIB_STATE.query.trim()?'':'none';
+  document.querySelectorAll('#exLibPaperFilter [data-exlib-paper]').forEach(b=>{
+    const on=b.getAttribute('data-exlib-paper')===EXLIB_STATE.paper;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+  document.querySelectorAll('#exLibPartFilter [data-exlib-part]').forEach(b=>{
+    const on=b.getAttribute('data-exlib-part')===EXLIB_STATE.part;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',on?'true':'false');
+  });
+  const freeCb=document.getElementById('exLibFreeOnly');
+  if(freeCb&&freeCb.checked!==EXLIB_STATE.freeOnly)freeCb.checked=EXLIB_STATE.freeOnly;
+  const sortSel=document.getElementById('exLibSort');
+  if(sortSel&&sortSel.value!==EXLIB_STATE.sort)sortSel.value=EXLIB_STATE.sort;
+  const all=buildExerciseLibrary();
+  const q=EXLIB_STATE.query.trim().toLowerCase();
+  const filtered=all.filter(item=>{
+    if(EXLIB_STATE.paper!=='all'&&item.skill!==EXLIB_STATE.paper)return false;
+    if(EXLIB_STATE.part!=='all'&&!(Array.isArray(item.part)&&item.part.includes(EXLIB_STATE.part)))return false;
+    if(EXLIB_STATE.freeOnly&&item.kind!=='free')return false;
+    if(q){
+      const paperTitle=t(EXLIB_SHORT_PAPER_KEYS[item.skill]||'practice_filter_rue');
+      const typeTxt=t(EXLIB_TYPE_KEYS[item.type]||'exlib_type_online');
+      const partTxt=examSourcePartTag(item.part)||t('exlib_all_parts');
+      const hay=[item.n,item.what,paperTitle,typeTxt,partTxt,item.origin,item.kind].join(' ').toLowerCase();
+      if(hay.indexOf(q)===-1)return false;
+    }
+    return true;
+  });
+  const countEl=document.getElementById('exLibCount');
+  if(countEl){
+    countEl.textContent=filtered.length===1
+      ?t('exlib_count_one')
+      :t('exlib_count_many',{n:filtered.length});
+  }
+  const emptyEl=document.getElementById('exLibEmpty');
+  if(!filtered.length){
+    listEl.innerHTML='';
+    if(emptyEl)emptyEl.style.display='';
+    return;
+  }
+  if(emptyEl)emptyEl.style.display='none';
+  if(EXLIB_STATE.sort==='exam'){
+    const html=EXAM_SOURCE_GROUPS.map(g=>{
+      const grp=filtered.filter(it=>it.skill===g.skill).sort(compareExLibExam);
+      if(!grp.length)return '';
+      const grpCnt=grp.length===1?t('exlib_count_one'):t('exlib_count_many',{n:grp.length});
+      return `<section class="exlib-group" data-skill="${esc(g.skill)}">`+
+        `<div class="exlib-group-head">`+
+          `<div class="exlib-group-title-row"><h2 class="exlib-group-title">${esc(t(g.titleKey))}</h2><span class="exlib-group-count tnum">${esc(grpCnt)}</span></div>`+
+          `<p class="exlib-group-sub">${esc(t(g.subKey))}</p>`+
+        `</div>`+
+        `<div class="exlib-list">${grp.map(it=>exLibRowHtml(it,false)).join('')}</div>`+
+      `</section>`;
+    }).join('');
+    listEl.innerHTML=html;
+  }else{
+    const sorted=filtered.slice().sort(EXLIB_STATE.sort==='shortest'?compareExLibShortest:compareExLibAZ);
+    listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,true)).join('')}</div>`;
+  }
 }
 let MATERIALS=[];
 /* matDone/matUndo: mark a Material exercise as done (counter of
@@ -22107,7 +22686,7 @@ window.addEventListener('resize',()=>{
   if(typeof syncTopbarCompact==='function')syncTopbarCompact();
   if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
 });
-const MORE_SHEET_VIEWS=new Set(['plan','resources','err','ia']);
+const MORE_SHEET_VIEWS=new Set(['plan','exercises','resources','err','ia']);
 let _moreSheetTrigger=null;
 let _accountSheetTrigger=null;
 function currentActiveViewId(){
@@ -22157,6 +22736,14 @@ function mobilePrimaryConfig(viewId){
       };
     case 'plan':
       return {label:t('plan_edit_intake_short'),run:()=>openIntake()};
+    case 'exercises':
+      return {
+        label:t('exlib_filter_action'),
+        run:()=>{
+          const inp=document.getElementById('exLibSearch');
+          if(inp){inp.scrollIntoView({block:'center'});inp.focus();}
+        }
+      };
     case 'resources':
       return {
         label:t('resources_filter_action'),
@@ -22348,6 +22935,7 @@ function activateNavView(viewId,isUserClick){
      cost more than 100 ms, so a fast switch never flashes a placeholder. */
   if(viewId==='diag')skRenderView('diag',renderDiag);
   if(viewId==='practice')skRenderView('practice',renderPractice);
+  if(viewId==='exercises')skRenderView('exercises',function(){if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();renderExercisesLibrary()});
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
   if(viewId==='prog')skRenderView('prog',function(){
     advanceStageIfReady();renderGates();renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
@@ -22441,7 +23029,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPractice();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderOnline();renderMaterial();renderGuides();renderExercisesLibrary();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderResources();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -22457,7 +23045,7 @@ function loadMaterial(){
   _matLoading=true;
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     _matLoading=false;
-    MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();renderResources();
+    MATERIALS=data;buildMatIndex();renderMaterial();renderEx();renderParts();renderGuides();renderResources();renderExercisesLibrary();
   }).catch(()=>{_matLoading=false; /* local file mode: no dynamic material */ });
 }
 document.getElementById('matFilter').addEventListener('input',renderMaterial);
@@ -22564,6 +23152,7 @@ click:{
 'checkOwnAnswers':()=>checkOwnAnswers(),
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
+'clearExLibSearch':()=>clearExLibSearch(),
 'clearExamSourcesSearch':()=>clearExamSourcesSearch(),
 'clearResourcesFilter':()=>clearResourcesFilter(),
 'closePlanLimit':()=>closePlanLimit(),
@@ -22623,6 +23212,7 @@ click:{
 'obStartDiagnostic':()=>obStartDiagnostic(),
 'obToggleDay':el=>obToggleDay(el.dataset.day),
 'openDeleteAccount':()=>openDeleteAccount(),
+'openExercisesLibrary':()=>openExercisesLibrary(),
 'openImportPicker':()=>document.getElementById('importFile').click(),
 'openIntake':()=>openIntake(),
 'openQuickLog':()=>openQuickLog(),
@@ -22641,6 +23231,7 @@ click:{
 'removeScheduleRow':el=>removeScheduleRow(+el.dataset.i),
 'repeatDiag':()=>repeatDiag(),
 'requestPasswordReset':()=>requestPasswordReset(),
+'resetExLibFilters':()=>resetExLibFilters(),
 'resetPlanningDefaults':()=>resetPlanningDefaults(),
 'resetSessionOffset':()=>resetSessionOffset(),
 'saveEdit':el=>saveEdit(+el.dataset.i),
@@ -22660,6 +23251,8 @@ click:{
 'saveW':()=>saveW(),
 'selectOwnMaterial':el=>selectOwnMaterial(el.dataset.id),
 'setExamDate':()=>setExamDate(),
+'setExLibPaper':el=>setExLibPaper(el.dataset.exlibPaper),
+'setExLibPart':el=>setExLibPart(el.dataset.exlibPart),
 'setExamSourcesFilter':el=>setExamSourcesFilter(el.dataset.esFilter),
 'setLang':el=>setLang(el.dataset.arg),
 'setPracticeFilter':el=>setPracticeFilter(el.dataset.skill),
@@ -22718,8 +23311,10 @@ change:{
 'onSoloSkillChange':()=>onSoloSkillChange(),
 'onUePartChange':()=>onUePartChange(),
 'renderEx':()=>renderEx(),
+'setExLibSort':el=>setExLibSort(el.value),
 'soloErrToggle':el=>{document.getElementById('soloErrBox').style.display=el.checked?'block':'none'},
 'spkSetPart':el=>spkSetPart(el.value),
+'toggleExLibFree':el=>toggleExLibFree(el.checked),
 'togglePracticeFree':el=>togglePracticeFree(el.checked),
 'updateScheduleFromUI':()=>updateScheduleFromUI()
 },
@@ -22728,6 +23323,7 @@ input:{
 'obSetDayTime':el=>obSetDayTime(el.dataset.day,el.value),
 'onByoConfigInput':()=>onByoConfigInput(),
 'onByoKeyInput':el=>onByoKeyInput(el.value),
+'onExLibSearch':el=>onExLibSearch(el.value),
 'onExamSourcesSearch':el=>onExamSourcesSearch(el.value),
 'onIaTextChange':()=>onIaTextChange(),
 'onRegPwInput':el=>onRegPwInput(el.value),
@@ -22735,6 +23331,7 @@ input:{
 },
 keydown:{
 'activate':(el,ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click()}},
+'exLibSearchKey':(el,ev)=>exLibSearchKey(el,ev),
 'examSourcesSearchKey':(el,ev)=>examSourcesSearchKey(el,ev),
 'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
 'mfaEnter':(el,ev)=>{if(ev.key==='Enter')doLoginMfa()},
