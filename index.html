@@ -879,42 +879,18 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   }
 }
 
-/* ---------- EXAM SOURCES (reuses Today .wtf-list / .wtf-block language) ---------- */
-.es-toolbar{display:flex;flex-direction:column;gap:var(--s3);margin:var(--s3) 0 var(--s4);min-width:0}
-.es-search-row{display:flex;align-items:center;gap:var(--s2);min-width:0}
-.es-search-input{flex:1;min-width:0;min-height:var(--btn-h-tertiary)}
-.es-clear-btn{flex:none;white-space:nowrap}
-.es-chips{margin:0}
-.es-chip{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);white-space:nowrap}
-.es-count{font-size:var(--t-meta);color:var(--txt-2);line-height:1.4}
-.es-groups{display:flex;flex-direction:column;gap:var(--s4);margin-top:var(--s2);min-width:0}
-.es-group{display:flex;flex-direction:column;gap:var(--s2);min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3)}
-.es-group-head{display:flex;flex-direction:column;gap:4px;min-width:0}
-.es-group-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;min-width:0}
-.es-group-title{margin:0;color:var(--txt)}
-.es-group-count{font-size:var(--t-meta);color:var(--txt-2);flex:none}
-.es-group-sub{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45;overflow-wrap:anywhere}
-.es-group .wtf-list{margin:4px 0 0}
-a.wtf-block.wtf-source{text-decoration:none;color:inherit;min-height:var(--btn-h-tertiary);cursor:pointer;transition:background-color 140ms ease,border-color 140ms ease}
-a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var(--acc-soft);border-color:var(--acc-border);text-decoration:none}
-.wtf-source-top{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s2);flex-wrap:wrap;min-width:0}
-.wtf-source-name{color:var(--acc-text);font-size:13px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
-.wtf-source-arrow{white-space:nowrap;font-weight:600}
-.wtf-part-tag{background:var(--surface-2);border:1px solid var(--line);color:var(--txt-2);flex:none}
-.wtf-source-what{display:block;font-size:var(--t-meta);color:var(--txt);line-height:1.45;overflow-wrap:anywhere}
-.es-empty{padding:var(--s3);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
-@media (min-width:900px){
-  .es-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.wtf-compact .wtf-online .wtf-online-links{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.wtf-compact .wtf-online .wtf-online-links .wtf-link{width:100%;justify-content:flex-start;text-align:left;min-height:var(--btn-h-tertiary)}
+.wtf-more-row{margin-top:8px;padding-top:6px;border-top:1px solid var(--line);display:flex;align-items:center}
+.wtf-more-lib{
+  appearance:none;background:none;border:0;padding:8px 0;margin:0;
+  min-height:var(--btn-h-tertiary);display:inline-flex;align-items:center;
+  font-family:var(--font);font-size:var(--t-meta);font-weight:600;
+  color:var(--acc-text);text-decoration:underline;text-underline-offset:3px;
+  cursor:pointer;text-align:left;
 }
-
-/* ---------- EXAM LOCAL MATERIALS ---------- */
-.u4-exam-materials{margin-top:0;margin-bottom:var(--s5)}
-.u4-exam-materials h2{margin-bottom:var(--s1)}
-.u4-exam-mat-stack{display:flex;flex-direction:column;gap:var(--s2);margin-top:var(--s3);min-width:0}
-.u4-exam-mat-stack .wtf-section{margin:0}
-@media (max-width:768px){
-  .u4-exam-materials{margin-bottom:var(--s4)}
-}
+.wtf-more-lib:hover{color:var(--acc)}
+.wtf-more-lib:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
 
 /* ---------- SESSION WORKSPACE (Session + Contents tabs) ---------- */
 #v-hoy.is-session-focus .today-block{display:none}
@@ -2706,14 +2682,18 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .u4-section-head h2{margin-bottom:var(--s2)}
 .u4-fullmock-btn{flex:none}
 .u4-mock-hint{margin:var(--s3) 0 0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.5}
-.u4-exam-sources{margin-top:0;margin-bottom:var(--s5)}
-.u4-sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--s3);margin-top:var(--s3)}
-.u4-source-group{display:flex;flex-direction:column;gap:var(--s2);min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3)}
-.u4-source-link{display:flex;justify-content:space-between;gap:var(--s2);align-items:baseline;font-size:var(--t-body);color:var(--txt);text-decoration:none;overflow-wrap:anywhere;border-radius:var(--r-ctl);padding:var(--s1) 0}
-.u4-source-link:hover{color:var(--acc-text)}
-.u4-source-link span{flex:none;font-size:var(--t-meta);color:var(--txt-2)}
+.u4-library-note{margin:var(--s2) 0 0;padding-top:var(--s2);border-top:1px solid var(--line)}
+.u4-library-link{
+  appearance:none;background:none;border:0;padding:8px 0;margin:0;
+  min-height:var(--btn-h-tertiary);display:inline-flex;align-items:center;
+  font-family:var(--font);font-size:var(--t-meta);font-weight:500;
+  color:var(--txt-2);text-decoration:underline;text-underline-offset:3px;
+  cursor:pointer;text-align:left;max-width:100%;overflow-wrap:anywhere;
+}
+.u4-library-link:hover{color:var(--acc-text)}
+.u4-library-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
 @media (max-width:768px){
-  .u4-real-mocks,.u4-exam-sources{margin-bottom:var(--s4)}
+  .u4-real-mocks{margin-bottom:var(--s4)}
 }
 .spx-overlay{position:fixed;inset:0;z-index:1200;margin:0;border:0;border-radius:0;overflow-y:auto;background:var(--bg);box-shadow:none;padding:var(--s5)}
 .spx-overlay>.spx-head{position:sticky;top:0;z-index:1;background:var(--bg);padding-bottom:var(--s2)}
@@ -3124,7 +3104,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .page-head{margin-bottom:var(--s3);gap:var(--s2)}
   .card{padding:var(--s4);margin-bottom:var(--s3)}
   .stat-grid,.exam-select-grid,.grid-12{gap:var(--s3)}
-  .stat-grid,.prog-moved-grid,.u4-real-mocks,.u4-exam-sources{margin-bottom:var(--s3)}
+  .stat-grid,.prog-moved-grid,.u4-real-mocks{margin-bottom:var(--s3)}
   .stat-card,.exam-card,.task,.next-session{padding:var(--s4);gap:var(--s2)}
   .streak-card{padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
   #v-hoy .today-aside{padding:var(--s4);gap:var(--s3)}
@@ -4125,6 +4105,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelRue" hidden>
                         <div class="wtf-panel-lead" id="st1GuideLead">📍 <b>Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gUeChips"></div>
+                        <div class="wtf-more-row">
+                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="rue" data-i18n="wtf_more_in_library">More in Library</button>
+                        </div>
                       </div>
                     </div>
                     <div class="guide wtf-notes">
@@ -4239,6 +4222,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelW" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gWChips"></div>
+                        <div class="wtf-more-row">
+                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="w" data-i18n="wtf_more_in_library">More in Library</button>
+                        </div>
                       </div>
                     </div>
                     <div class="guide">
@@ -4408,6 +4394,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelL" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></div>
                         <div class="wtf-list wtf-compact" id="gLChips"></div>
+                        <div class="wtf-more-row">
+                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="l" data-i18n="wtf_more_in_library">More in Library</button>
+                        </div>
                       </div>
                     </div>
                     <div class="guide wtf-notes"><span id="st3Rule">—</span></div>
@@ -4715,6 +4704,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </button>
                     <div class="wtf-panel" id="wtfPanelSp" hidden>
                       <div class="wtf-list wtf-compact" id="gSpChips"></div>
+                      <div class="wtf-more-row">
+                        <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="sp" data-i18n="wtf_more_in_library">More in Library</button>
+                      </div>
                     </div>
                   </section>
 
@@ -5160,78 +5152,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
-        </div>
-
-        <!-- Local materials per paper (reuses Today's collapsible renderWhereToFind renderer) -->
-        <div class="card u4-exam-materials" id="examMaterialsCard">
-          <h2 data-i18n="exam_materials_title">Local materials by paper</h2>
-          <div class="sub" data-i18n="exam_materials_sub">Sample papers with answer keys, full tests and online practice — collapsed until you need them.</div>
-          <div class="u4-exam-mat-stack" id="examMaterialsStack">
-            <div class="wtf-section" id="wtfSectionExamRue" data-wtf-skill="exam-rue">
-              <button type="button" class="wtf-toggle" id="wtfToggleExamRue" data-action="toggleWtfSection" data-wtf-skill="exam-rue" aria-expanded="false" aria-controls="wtfPanelExamRue">
-                <span class="wtf-toggle-summary" id="wtfSummaryExamRue">Reading &amp; Use of English</span>
-                <span class="wtf-caret" aria-hidden="true">▾</span>
-              </button>
-              <div class="wtf-panel" id="wtfPanelExamRue" hidden>
-                <div class="wtf-list wtf-compact" id="exMatRue"></div>
-              </div>
-            </div>
-            <div class="wtf-section" id="wtfSectionExamW" data-wtf-skill="exam-w">
-              <button type="button" class="wtf-toggle" id="wtfToggleExamW" data-action="toggleWtfSection" data-wtf-skill="exam-w" aria-expanded="false" aria-controls="wtfPanelExamW">
-                <span class="wtf-toggle-summary" id="wtfSummaryExamW">Writing</span>
-                <span class="wtf-caret" aria-hidden="true">▾</span>
-              </button>
-              <div class="wtf-panel" id="wtfPanelExamW" hidden>
-                <div class="wtf-list wtf-compact" id="exMatW"></div>
-              </div>
-            </div>
-            <div class="wtf-section" id="wtfSectionExamL" data-wtf-skill="exam-l">
-              <button type="button" class="wtf-toggle" id="wtfToggleExamL" data-action="toggleWtfSection" data-wtf-skill="exam-l" aria-expanded="false" aria-controls="wtfPanelExamL">
-                <span class="wtf-toggle-summary" id="wtfSummaryExamL">Listening</span>
-                <span class="wtf-caret" aria-hidden="true">▾</span>
-              </button>
-              <div class="wtf-panel" id="wtfPanelExamL" hidden>
-                <div class="wtf-list wtf-compact" id="exMatL"></div>
-              </div>
-            </div>
-            <div class="wtf-section" id="wtfSectionExamSp" data-wtf-skill="exam-sp">
-              <button type="button" class="wtf-toggle" id="wtfToggleExamSp" data-action="toggleWtfSection" data-wtf-skill="exam-sp" aria-expanded="false" aria-controls="wtfPanelExamSp">
-                <span class="wtf-toggle-summary" id="wtfSummaryExamSp">Speaking</span>
-                <span class="wtf-caret" aria-hidden="true">▾</span>
-              </button>
-              <div class="wtf-panel" id="wtfPanelExamSp" hidden>
-                <div class="wtf-list wtf-compact" id="exMatSp"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- U4: full practice source catalogue grouped by paper in Today's block style -->
-        <div class="card u4-exam-sources">
-          <h2 data-i18n="exam_sources_title">Official sources, one click</h2>
-          <div class="sub" data-i18n="exam_sources_sub">Hand-checked official resources to practise each paper without leaving the exam.</div>
-          <div class="es-toolbar">
-            <div class="es-search-row">
-              <label class="sr" for="examSourcesSearch" data-i18n="exam_sources_search_label">Search practice sources</label>
-              <input type="search" id="examSourcesSearch" class="es-search-input" autocomplete="off"
-                placeholder="Search by source, skill or topic…" data-i18n-placeholder="exam_sources_search_ph"
-                aria-label="Search practice sources" data-i18n-aria-label="exam_sources_search_label"
-                data-input="onExamSourcesSearch" data-keydown="examSourcesSearchKey">
-              <button type="button" id="examSourcesClear" class="btn sm gray es-clear-btn" style="display:none"
-                data-action="clearExamSourcesSearch" data-i18n="exam_sources_clear">Clear</button>
-            </div>
-            <div class="chips es-chips" id="examSourcesFilter" role="group"
-              aria-label="Filter exam practice sources" data-i18n-aria-label="exam_sources_filter_aria">
-              <button type="button" class="chip es-chip on" data-es-filter="all" aria-pressed="true" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_all">All</button>
-              <button type="button" class="chip es-chip" data-es-filter="free" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_free">Free</button>
-              <button type="button" class="chip es-chip" data-es-filter="rue" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_rue">Reading</button>
-              <button type="button" class="chip es-chip" data-es-filter="w" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_w">Writing</button>
-              <button type="button" class="chip es-chip" data-es-filter="l" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_l">Listening</button>
-              <button type="button" class="chip es-chip" data-es-filter="sp" aria-pressed="false" data-action="setExamSourcesFilter" data-i18n="exam_sources_chip_sp">Speaking</button>
-            </div>
-            <div class="es-count tnum" id="examSourcesCount" aria-live="polite"></div>
-          </div>
-          <div id="examSources" class="es-groups"></div>
+          <p class="u4-library-note">
+            <button type="button" class="u4-library-link" id="examLibraryLink" data-action="openPracticeCatalog" data-i18n="exam_library_link">Papers, keys and practice links live in Library</button>
+          </p>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -6049,22 +5972,7 @@ const I18N={
     exam_start_full:'Start full mock',
     exam_full_hint:'Full mock runs R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.',
     exam_desc_sp:'4 parts with the AI examiner: interview, long turn, collaborative task and discussion.',
-    exam_sources_title:'Official sources, one click',
-    exam_sources_sub:'Hand-checked official resources to practise each paper without leaving the exam.',
-    exam_sources_search_label:'Search practice sources',
-    exam_sources_search_ph:'Search by source, skill or topic…',
-    exam_sources_clear:'Clear',
-    exam_sources_filter_aria:'Filter exam practice sources',
-    exam_sources_chip_all:'All',
-    exam_sources_chip_free:'Free',
-    exam_sources_chip_rue:'Reading',
-    exam_sources_chip_w:'Writing',
-    exam_sources_chip_l:'Listening',
-    exam_sources_chip_sp:'Speaking',
-    exam_sources_count:'Showing {shown} of {total} sources',
-    exam_sources_group_count:'{n} sources',
-    exam_sources_group_count_one:'1 source',
-    exam_sources_empty:'No sources match this filter. Clear the search or switch to All.',
+    exam_library_link:'Papers, keys and practice links live in Library',
     exam_sources_group_rue_title:'Reading & Use of English',
     exam_sources_group_rue_sub:'7 parts · grammar, vocabulary, cloze, word formation and reading comprehension.',
     exam_sources_group_w_title:'Writing',
@@ -6076,12 +5984,6 @@ const I18N={
     exam_sources_part_one:'Part {part}',
     exam_sources_parts_range:'Parts {from}–{to}',
     exam_sources_parts_list:'Parts {parts}',
-    exam_sources_hint_rue_instant:'{mins} min · {kind} · marked instantly — do one set, then log it.',
-    exam_sources_hint_rue:'{mins} min · {kind} — time one set, check the key, then log it.',
-    exam_sources_hint_w:'{mins} min · {kind} — read the model answer and compare structure.',
-    exam_sources_hint_l_instant:'{mins} min · {kind} · marked instantly — play without pausing, then log it.',
-    exam_sources_hint_l:'{mins} min · {kind} — listen once without pausing, then check transcript.',
-    exam_sources_hint_sp:'{mins} min · {kind} — practise aloud with a timer, then log the session.',
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
@@ -6130,11 +6032,7 @@ const I18N={
     wtf_notes_short:'Notes',
     wtf_res_one:'{n} resource',
     wtf_res_many:'{n} resources',
-    wtf_full_online_cambridge:'Cambridge official sample papers',
-    wtf_full_online_write:'Write & Improve (Cambridge)',
-    wtf_full_online_listen:'Exam English — 2 full listening tests',
-    exam_materials_title:'Local materials by paper',
-    exam_materials_sub:'Sample papers with answer keys, full tests and online practice — collapsed until you need them.',
+    wtf_more_in_library:'More in Library',
     prog_title:'Progress',
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     pg_summary_title:'At a glance',
@@ -7129,22 +7027,7 @@ const I18N={
     exam_start_full:'Empezar simulacro completo',
     exam_full_hint:'El simulacro completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
     exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
-    exam_sources_title:'Fuentes oficiales a un clic',
-    exam_sources_sub:'Recursos oficiales verificados para practicar cada prueba sin salir del examen.',
-    exam_sources_search_label:'Buscar fuentes de práctica',
-    exam_sources_search_ph:'Buscar por fuente, prueba o tema…',
-    exam_sources_clear:'Limpiar',
-    exam_sources_filter_aria:'Filtrar fuentes de práctica del examen',
-    exam_sources_chip_all:'Todas',
-    exam_sources_chip_free:'Gratis',
-    exam_sources_chip_rue:'Reading',
-    exam_sources_chip_w:'Writing',
-    exam_sources_chip_l:'Listening',
-    exam_sources_chip_sp:'Speaking',
-    exam_sources_count:'Mostrando {shown} de {total} fuentes',
-    exam_sources_group_count:'{n} fuentes',
-    exam_sources_group_count_one:'1 fuente',
-    exam_sources_empty:'Ninguna fuente coincide con este filtro. Limpiá la búsqueda o cambiá a Todas.',
+    exam_library_link:'Los exámenes, respuestas y enlaces de práctica están en la Biblioteca',
     exam_sources_group_rue_title:'Reading y Use of English',
     exam_sources_group_rue_sub:'7 partes · gramática, vocabulario, cloze, formación de palabras y comprensión lectora.',
     exam_sources_group_w_title:'Writing',
@@ -7156,12 +7039,6 @@ const I18N={
     exam_sources_part_one:'Parte {part}',
     exam_sources_parts_range:'Partes {from}–{to}',
     exam_sources_parts_list:'Partes {parts}',
-    exam_sources_hint_rue_instant:'{mins} min · {kind} · corrección al instante — hacé una serie y registrala.',
-    exam_sources_hint_rue:'{mins} min · {kind} — hacé una serie con reloj, corregí y registrala.',
-    exam_sources_hint_w:'{mins} min · {kind} — leé la respuesta modelo y compará la estructura.',
-    exam_sources_hint_l_instant:'{mins} min · {kind} · corrección al instante — escuchá sin pausar y registralo.',
-    exam_sources_hint_l:'{mins} min · {kind} — escuchá una vez sin pausar y revisá la transcripción.',
-    exam_sources_hint_sp:'{mins} min · {kind} — practicá en voz alta con reloj y registrá la sesión.',
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
@@ -7210,11 +7087,7 @@ const I18N={
     wtf_notes_short:'Notas',
     wtf_res_one:'{n} recurso',
     wtf_res_many:'{n} recursos',
-    wtf_full_online_cambridge:'Exámenes oficiales de Cambridge',
-    wtf_full_online_write:'Write & Improve (Cambridge)',
-    wtf_full_online_listen:'Exam English — 2 tests completos de listening',
-    exam_materials_title:'Materiales locales por prueba',
-    exam_materials_sub:'Exámenes de muestra con respuestas, tests completos y práctica en línea — plegados hasta que los necesites.',
+    wtf_more_in_library:'Más en Biblioteca',
     prog_title:'Progreso',
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     pg_summary_title:'En un vistazo',
@@ -10345,10 +10218,15 @@ function renderSessionTopbar(){
   const paperEl=document.getElementById('sessionUnitPaper');
   const titleEl=document.getElementById('sessionUnitTitle');
   const scopeBtn=document.getElementById('sessionContentsScopeBtn');
-  if(paperEl)paperEl.textContent=u?t(SESSION_PAPER_KEYS[u.skill]||'paper_reading'):'';
-  if(titleEl)titleEl.textContent=u?sessionUnitHeading(u):'';
+  if(u&&u.catalog){
+    if(paperEl)paperEl.textContent=t('nav_practice');
+    if(titleEl)titleEl.textContent=t('exlib_title');
+  }else{
+    if(paperEl)paperEl.textContent=u?t(SESSION_PAPER_KEYS[u.skill]||'paper_reading'):'';
+    if(titleEl)titleEl.textContent=u?sessionUnitHeading(u):'';
+  }
   if(scopeBtn){
-    if(u&&u.part){
+    if(u&&u.part&&!u.catalog){
       scopeBtn.hidden=false;
       scopeBtn.textContent=EXLIB_STATE.expanded
         ?t('session_contents_back_part',{part:u.part})
@@ -10507,7 +10385,7 @@ function openUnitSession(u,opts){
   else if(skill==='sp')paintSpeakingStudio(slot);
   resetStudioPhases(skill);
   SESSION_ORIGIN=origin;
-  SESSION_UNIT={skill,part:partStr,value,min};
+  SESSION_UNIT={skill,part:partStr,value,min,catalog:!!o.catalog};
   EXLIB_STATE.query='';
   EXLIB_STATE.paper=o.exlibPaper||skill;
   EXLIB_STATE.part=o.exlibPart!=null?String(o.exlibPart):(partStr||'all');
@@ -18954,19 +18832,14 @@ function renderEx(){
   else if(exPaper==='l')f.innerHTML=`<div><label>Correct (max 30)</label><input type="number" id="exOk" min="0" max="30"></div><div><label>Part 2 errors</label><input type="number" id="exP2" min="0"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
   else f.innerHTML=`<div><label>R&UoE correct (52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Text 1 score</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Listening correct (30)</label><input type="number" id="exLOk" min="0" max="30"></div><div><label>Total minutes</label><input type="number" id="exMin" min="0"></div>`;
   reg.style.display='none';
-  if(typeof renderExamMaterials==='function')renderExamMaterials();
-  renderExamSources();
 }
-/* Exam sources: renders all PRACTICE_SOURCES grouped by paper in Today's
-   .wtf-list / .wtf-block visual language with live search and quick filter chips. */
+/* Paper group metadata & part tag formatter (shared by Practice Library). */
 const EXAM_SOURCE_GROUPS=[
   {skill:'rue',titleKey:'exam_sources_group_rue_title',subKey:'exam_sources_group_rue_sub',en:'Reading & Use of English'},
   {skill:'w',titleKey:'exam_sources_group_w_title',subKey:'exam_sources_group_w_sub',en:'Writing'},
   {skill:'l',titleKey:'exam_sources_group_l_title',subKey:'exam_sources_group_l_sub',en:'Listening'},
   {skill:'sp',titleKey:'exam_sources_group_sp_title',subKey:'exam_sources_group_sp_sub',en:'Speaking'}
 ];
-let EXAM_SOURCES_FILTER='all';
-let EXAM_SOURCES_QUERY='';
 function examSourcePartTag(part){
   if(!Array.isArray(part)||!part.length)return '';
   if(part.length===1)return t('exam_sources_part_one',{part:part[0]});
@@ -18978,90 +18851,12 @@ function examSourcePartTag(part){
   if(consecutive)return t('exam_sources_parts_range',{from:nums[0],to:nums[nums.length-1]});
   return t('exam_sources_parts_list',{parts:part.join(', ')});
 }
-function examSourceHint(s){
-  const kind=t('practice_kind_'+s.kind).toLowerCase();
-  const vars={mins:s.mins,kind};
-  const instant=/marked|answers shown|automatic scoring|automatic|comprehension questions|answers/i.test(s.what||'');
-  if(s.skill==='rue')return t(instant?'exam_sources_hint_rue_instant':'exam_sources_hint_rue',vars);
-  if(s.skill==='w')return t('exam_sources_hint_w',vars);
-  if(s.skill==='l')return t(instant?'exam_sources_hint_l_instant':'exam_sources_hint_l',vars);
-  return t('exam_sources_hint_sp',vars);
-}
-function setExamSourcesFilter(filter){
-  EXAM_SOURCES_FILTER=filter||'all';
-  renderExamSources();
-}
-function onExamSourcesSearch(val){
-  EXAM_SOURCES_QUERY=String(val||'');
-  renderExamSources();
-}
-function clearExamSourcesSearch(){
-  EXAM_SOURCES_QUERY='';
-  const inp=document.getElementById('examSourcesSearch');
-  if(inp){inp.value='';inp.focus();}
-  renderExamSources();
-}
-function examSourcesSearchKey(el,ev){
-  if(ev&&ev.key==='Escape'&&el.value){
-    ev.preventDefault();
-    clearExamSourcesSearch();
-  }
-}
-function renderExamSources(){
-  const el=document.getElementById('examSources');
-  if(!el)return;
-  const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
-    ?PRACTICE_SOURCES.filter(s=>s&&/^https?:\/\//.test(s.url))
-    :[];
-  const inp=document.getElementById('examSourcesSearch');
-  if(inp&&inp.value!==EXAM_SOURCES_QUERY)inp.value=EXAM_SOURCES_QUERY;
-  const clearBtn=document.getElementById('examSourcesClear');
-  if(clearBtn)clearBtn.style.display=EXAM_SOURCES_QUERY.trim()?'':'none';
-  document.querySelectorAll('#examSourcesFilter [data-es-filter]').forEach(b=>{
-    const on=b.getAttribute('data-es-filter')===EXAM_SOURCES_FILTER;
-    b.classList.toggle('on',on);
-    b.setAttribute('aria-pressed',on?'true':'false');
+function openPracticeCatalog(paper){
+  const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp'||paper==='ref')?paper:'all';
+  const baseSkill=(p==='all'||p==='ref')?'rue':p;
+  openUnitSession({skill:baseSkill,value:1,part:null,min:8},{
+    origin:'practice',initialTab:'contents',expanded:true,exlibPaper:p,exlibPart:'all',catalog:p==='all'
   });
-  const q=EXAM_SOURCES_QUERY.trim().toLowerCase();
-  let shown=0;
-  const html=EXAM_SOURCE_GROUPS.map(g=>{
-    if(EXAM_SOURCES_FILTER!=='all'&&EXAM_SOURCES_FILTER!=='free'&&EXAM_SOURCES_FILTER!==g.skill)return '';
-    const groupTitle=t(g.titleKey);
-    const items=sources.filter(s=>{
-      if(s.skill!==g.skill)return false;
-      if(EXAM_SOURCES_FILTER==='free'&&s.kind!=='free')return false;
-      if(q){
-        const partTxt=examSourcePartTag(s.part);
-        const hay=[s.n,s.what,s.kind,t('practice_kind_'+s.kind),g.en,groupTitle,partTxt].join(' ').toLowerCase();
-        if(hay.indexOf(q)===-1)return false;
-      }
-      return true;
-    });
-    if(!items.length)return '';
-    shown+=items.length;
-    const countTxt=items.length===1
-      ?t('exam_sources_group_count_one')
-      :t('exam_sources_group_count',{n:items.length});
-    const blocks=items.map(s=>{
-      const partTxt=examSourcePartTag(s.part);
-      const partHtml=partTxt?`<span class="wtf-tag wtf-part-tag">${esc(partTxt)}</span>`:'';
-      return `<a class="wtf-block wtf-source" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" data-skill="${esc(s.skill)}" data-kind="${esc(s.kind)}">`+
-        `<span class="wtf-source-top"><span class="wtf-source-name">${esc(s.n)} <span class="wtf-source-arrow" aria-hidden="true">↗</span></span>${partHtml}</span>`+
-        `<span class="wtf-source-what">${esc(s.what)}</span>`+
-        `<span class="wtf-hint">${esc(examSourceHint(s))}</span>`+
-        `</a>`;
-    }).join('');
-    return `<section class="es-group" data-skill="${esc(g.skill)}">`+
-      `<div class="es-group-head">`+
-      `<div class="es-group-title-row"><h3 class="es-group-title">${esc(groupTitle)}</h3><span class="es-group-count tnum">${esc(countTxt)}</span></div>`+
-      `<p class="es-group-sub">${esc(t(g.subKey))}</p>`+
-      `</div>`+
-      `<div class="wtf-list es-list">${blocks}</div>`+
-      `</section>`;
-  }).join('');
-  el.innerHTML=html||`<p class="wtf-hint es-empty">${esc(t('exam_sources_empty'))}</p>`;
-  const countEl=document.getElementById('examSourcesCount');
-  if(countEl)countEl.textContent=t('exam_sources_count',{shown,total:sources.length});
 }
 function exStart(){
   if(exIv){exPause();return}
@@ -19584,8 +19379,9 @@ function wtfAnchor(item,extraCls){
   const rel=item.external?'noopener noreferrer':'noopener';
   const titleText=item.title||item.label;
   const titleAttr=titleText?` title="${esc(titleText)}"`:'';
+  const partsAttr=(Array.isArray(item.parts)&&item.parts.length)?` data-parts="${esc(item.parts.join(','))}"`:'';
   const suffix=item.external?' ↗':'';
-  return `<a class="${cls}" href="${esc(item.href)}" target="_blank" rel="${rel}"${titleAttr}><span class="wtf-link-txt">${esc(item.label)}${suffix}</span></a>`;
+  return `<a class="${cls}" href="${esc(item.href)}" target="_blank" rel="${rel}"${titleAttr}${partsAttr}><span class="wtf-link-txt">${esc(item.label)}${suffix}</span></a>`;
 }
 function wtfStorageKey(skill){return 'b2f_wtf_open_'+skill}
 function isWtfOpen(skill){
@@ -19654,15 +19450,42 @@ function renderWhereToFind(rows,online,fullPaper,opts){
       parts.push(`<div class="wtf-block wtf-full${rowCls}${extraFlagCls}" data-wtf-kind="full">${mainHtml}${extraHtml}${subHtml}</div>`);
     }
   }
-  if(online&&online.href){
-    const onlineItem={label:online.label,href:online.href,external:/^https?:\/\//.test(online.href)};
-    const hintHtml=online.hint?`<p class="wtf-hint" title="${esc(online.hint)}">${esc(online.hint)}</p>`:'';
-    const subHtml=`<div class="wtf-sub"><span class="wtf-tag">${esc(t('wtf_online_tag'))}</span>${hintHtml}</div>`;
-    parts.push(`<div class="wtf-block wtf-online" data-wtf-kind="online"><div class="wtf-main">${wtfAnchor(onlineItem,'')}</div>${subHtml}</div>`);
+  if(online){
+    const olinks=(Array.isArray(online.links)
+      ?online.links
+      :(online.href?[{label:online.label,href:online.href,parts:online.parts}]:[])
+    ).filter(x=>x&&x.href);
+    if(olinks.length){
+      const anchors=olinks.map(x=>wtfAnchor({label:x.label,href:x.href,parts:x.parts,external:/^https?:\/\//.test(x.href)},'')).join('');
+      const hintHtml=online.hint?`<p class="wtf-hint" title="${esc(online.hint)}">${esc(online.hint)}</p>`:'';
+      const subHtml=`<div class="wtf-sub"><span class="wtf-tag">${esc(t('wtf_online_tag'))}</span>${hintHtml}</div>`;
+      parts.push(`<div class="wtf-block wtf-online" data-wtf-kind="online"><div class="wtf-main wtf-online-links">${anchors}</div>${subHtml}</div>`);
+    }
   }
   return parts.join('');
 }
-/* Shared spec builder for both Today's 4 studios and Exam's local materials. */
+/* Contextual online sources for Today's Materials panel: strictly part-specific
+   sources from PRACTICE_SOURCES (never general part:[] catalog items), capped to 2-3. */
+function wtfPartOnlineSources(skill,partOpt,limit){
+  const cap=limit||2;
+  const pool=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
+    ?PRACTICE_SOURCES.filter(s=>s&&s.skill===skill&&/^https?:\/\//.test(s.url)&&Array.isArray(s.part)&&s.part.length>0)
+    :[];
+  if(!pool.length)return [];
+  const pNum=Number(partOpt);
+  const pStr=(pNum>=1&&pNum<=7)?String(pNum):'';
+  let picks=[];
+  if(pStr){
+    const exact=pool.filter(s=>s.part.length===1&&s.part[0]===pStr);
+    const multi=pool.filter(s=>s.part.length>1&&s.part.includes(pStr));
+    picks=exact.concat(multi);
+  }else{
+    picks=pool;
+  }
+  return picks.slice(0,cap).map(s=>({label:s.n,href:s.url,parts:s.part}));
+}
+/* Shared spec builder for Today's 4 session studios: unit-contextual local
+   papers/keys/lessons/audio plus 2 part-specific online links (full catalog lives in Library). */
 function buildWtfSpec(skill,partOpt){
   if(skill==='rue'){
     const ueVal=partOpt!=null?String(partOpt):'all';
@@ -19691,11 +19514,8 @@ function buildWtfSpec(skill,partOpt){
       ueFullLinks.push(wtfLink(ueFullPair[0],ueFullPair[1]));
       if(MAT[ueFullPair[3]])ueFullLinks.push(wtfLink(ueFullPair[2],ueFullPair[3]));
     }
-    ueFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
-    const ueOnline=ueNum>=5
-      ?{label:'Exam English — FCE Reading',href:'https://www.examenglish.com/FCE/fce_reading.html',hint:t('wtf_online_rue')}
-      :{label:'Flo-Joe — FCE Use of English',href:'https://www.flo-joe.co.uk/fce/students/tests/',hint:t('wtf_online_rue')};
-    return {rows:ueRows,online:ueOnline,fullPaper:{links:ueFullLinks,hint:t('wtf_full_rue_hint')},opts:null};
+    const ueOnlineLinks=wtfPartOnlineSources('rue',ueVal,2);
+    return {rows:ueRows,online:ueOnlineLinks.length?{links:ueOnlineLinks,hint:t('wtf_online_rue')}:null,fullPaper:ueFullLinks.length?{links:ueFullLinks,hint:t('wtf_full_rue_hint')}:null,opts:null};
   }
   if(skill==='w'){
     const wPart=(partOpt===1||partOpt==='1'||partOpt==='Essay')?1:2;
@@ -19713,8 +19533,8 @@ function buildWtfSpec(skill,partOpt){
     const wFullPick=[['Full Writing S1','wS1'],['Full Writing S2','wS2'],['Full Writing FS1','wFS1'],['Full Writing FS2','wFS2']].find(p=>MAT[p[1]]);
     const wFullLinks=[];
     if(wFullPick)wFullLinks.push(wtfLink(wFullPick[0],wFullPick[1]));
-    wFullLinks.push(wtfLink(t('wtf_full_online_write'),'https://writeandimprove.com/'));
-    return {rows:wRows,online:{label:'Exam English — FCE Writing',href:'https://www.examenglish.com/FCE/fce_writing.html',hint:t('wtf_online_w')},fullPaper:{links:wFullLinks,hint:t('wtf_full_w_hint')},opts:null};
+    const wOnlineLinks=wtfPartOnlineSources('w',wPart,2);
+    return {rows:wRows,online:wOnlineLinks.length?{links:wOnlineLinks,hint:t('wtf_online_w')}:null,fullPaper:wFullLinks.length?{links:wFullLinks,hint:t('wtf_full_w_hint')}:null,opts:null};
   }
   if(skill==='l'){
     const lPartVal=partOpt!=null?String(partOpt):'all';
@@ -19770,8 +19590,8 @@ function buildWtfSpec(skill,partOpt){
       if(MAT.lkS1)lFullLinks.push(wtfLink(t('res_answer_key'),'lkS1'));
       if(MAT.auS1)lFullLinks.push(wtfLink(t('res_audio'),'auS1'));
     }
-    lFullLinks.push(wtfLink(t('wtf_full_online_listen'),'https://www.examenglish.com/FCE/fce_listening.html'));
-    return {rows:lRows,online:{label:'Test-English — B2 Listening',href:'https://test-english.com/listening/b2/',hint:t('wtf_online_l')},fullPaper:{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')},opts:{rowClass:'listen-test'}};
+    const lOnlineLinks=wtfPartOnlineSources('l',lPartVal,2);
+    return {rows:lRows,online:lOnlineLinks.length?{links:lOnlineLinks,hint:t('wtf_online_l')}:null,fullPaper:(lFullLinks.length||lFullExtra.length)?{links:lFullLinks,extra:lFullExtra,hint:t('wtf_full_l_hint')}:null,opts:{rowClass:'listen-test'}};
   }
   const spPart=String((partOpt&&Number(partOpt)>=1&&Number(partOpt)<=4)?Number(partOpt):2);
   const spRows=[
@@ -19787,8 +19607,8 @@ function buildWtfSpec(skill,partOpt){
   const spFullPick=[['Full Speaking S1','spS1'],['Full Speaking S2','spS2'],['Full Speaking FS1','spFS1'],['Full Speaking FS2','spFS2']].find(p=>MAT[p[1]]);
   const spFullLinks=[];
   if(spFullPick)spFullLinks.push(wtfLink(spFullPick[0],spFullPick[1]));
-  spFullLinks.push(wtfLink(t('wtf_full_online_cambridge'),'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/'));
-  return {rows:spRows,online:{label:'Exam English — FCE Speaking',href:'https://www.examenglish.com/FCE/fce_speaking.html',hint:t('wtf_online_sp')},fullPaper:{links:spFullLinks,hint:t('wtf_full_sp_hint')},opts:null};
+  const spOnlineLinks=wtfPartOnlineSources('sp',spPart,2);
+  return {rows:spRows,online:spOnlineLinks.length?{links:spOnlineLinks,hint:t('wtf_online_sp')}:null,fullPaper:spFullLinks.length?{links:spFullLinks,hint:t('wtf_full_sp_hint')}:null,opts:null};
 }
 function mountWtfSection(containerId,storageSkill,spec,summaryPrefix){
   const el=document.getElementById(containerId);
@@ -19813,18 +19633,6 @@ function renderGuides(){
   mountWtfSection('gWChips','w',buildWtfSpec('w',wTipo==='Essay'?1:2));
   mountWtfSection('gLChips','l',buildWtfSpec('l',lPartVal));
   mountWtfSection('gSpChips','sp',buildWtfSpec('sp',spPart));
-  renderExamMaterials();
-}
-/* Exam local materials: reuses the exact same buildWtfSpec + mountWtfSection
-   (-> renderWhereToFind) collapsible block renderer as Today. */
-function renderExamMaterials(){
-  const defs=[
-    {id:'exMatRue',key:'exam-rue',skill:'rue',part:'all',titleKey:'exam_sources_group_rue_title'},
-    {id:'exMatW',key:'exam-w',skill:'w',part:1,titleKey:'exam_sources_group_w_title'},
-    {id:'exMatL',key:'exam-l',skill:'l',part:'all',titleKey:'exam_sources_group_l_title'},
-    {id:'exMatSp',key:'exam-sp',skill:'sp',part:2,titleKey:'exam_sources_group_sp_title'}
-  ];
-  defs.forEach(d=>mountWtfSection(d.id,d.key,buildWtfSpec(d.skill,d.part),t(d.titleKey)));
 }
 /* ---------- EXERCISE LIBRARY (ordered local MAT + online PRACTICE_SOURCES) ---------- */
 const EX_LIB_LOCAL=[
@@ -20032,6 +19840,48 @@ function compareExLibAZ(a,b){
   if(cmp!==0)return cmp;
   return compareExLibExam(a,b);
 }
+function normalizeExLibUrl(u){
+  let s=String(u||'').trim();
+  if(!s)return '';
+  try{s=decodeURIComponent(s)}catch(e){}
+  return s.replace(/#.*$/,'').replace(/\/+$/,'').toLowerCase();
+}
+function normalizeExLibName(n){
+  return String(n||'').toLowerCase().replace(/[—–-]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function exLibPriority(item){
+  const isLocal=item&&item.origin==='local';
+  const isRef=item&&item.skill==='ref';
+  if(isLocal&&!isRef)return 0;
+  if(isLocal&&isRef)return 1;
+  if(!isLocal&&!isRef)return 2;
+  return 3;
+}
+function dedupeExerciseLibrary(items){
+  const ranked=(items||[]).map((it,idx)=>({it,idx,prio:exLibPriority(it)}));
+  ranked.sort((a,b)=>(a.prio-b.prio)||(a.idx-b.idx));
+  const seenUrl=new Set();
+  const seenNamePart=new Set();
+  const seenBaseName=new Set();
+  const kept=[];
+  ranked.forEach(entry=>{
+    const it=entry.it;
+    if(!it||!it.href)return;
+    const uKey=normalizeExLibUrl(it.href);
+    const nKey=normalizeExLibName(it.n);
+    const pKey=Array.isArray(it.part)?it.part.map(String).sort().join(','):'';
+    const npKey=nKey?(nKey+'|'+pKey):'';
+    if(uKey&&seenUrl.has(uKey))return;
+    if(npKey&&seenNamePart.has(npKey))return;
+    if(it.skill==='ref'&&nKey&&seenBaseName.has(nKey))return;
+    if(uKey)seenUrl.add(uKey);
+    if(npKey)seenNamePart.add(npKey);
+    if(nKey)seenBaseName.add(nKey);
+    kept.push(entry);
+  });
+  kept.sort((a,b)=>a.idx-b.idx);
+  return kept.map(e=>e.it);
+}
 function buildExerciseLibrary(){
   const items=[];
   EX_LIB_LOCAL.forEach(m=>{
@@ -20097,7 +19947,7 @@ function buildExerciseLibrary(){
       what:s.what||''
     });
   });
-  return items;
+  return dedupeExerciseLibrary(items);
 }
 function exLibRowHtml(item,showPaper){
   const partTxt=examSourcePartTag(item.part)||t('exlib_all_parts');
@@ -23264,7 +23114,6 @@ click:{
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
 'clearExLibSearch':()=>clearExLibSearch(),
-'clearExamSourcesSearch':()=>clearExamSourcesSearch(),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
 'planLimitViewLimits':()=>planLimitViewLimits(),
@@ -23322,6 +23171,7 @@ click:{
 'openDeleteAccount':()=>openDeleteAccount(),
 'openImportPicker':()=>document.getElementById('importFile').click(),
 'openIntake':()=>openIntake(),
+'openPracticeCatalog':el=>openPracticeCatalog(el.dataset.paper),
 'openQuickLog':()=>openQuickLog(),
 'openSoloModal':el=>openSoloModal(el.dataset.arg||undefined),
 'openSpeakingExam':()=>openSpeakingExam(),
@@ -23360,7 +23210,6 @@ click:{
 'setExamDate':()=>setExamDate(),
 'setExLibPaper':el=>setExLibPaper(el.dataset.exlibPaper),
 'setExLibPart':el=>setExLibPart(el.dataset.exlibPart),
-'setExamSourcesFilter':el=>setExamSourcesFilter(el.dataset.esFilter),
 'setLang':el=>setLang(el.dataset.arg),
 'setSessionTab':el=>setSessionTab(el.dataset.sessionTab),
 'setThemeMode':el=>setThemeMode(el.dataset.arg),
@@ -23430,7 +23279,6 @@ input:{
 'onByoConfigInput':()=>onByoConfigInput(),
 'onByoKeyInput':el=>onByoKeyInput(el.value),
 'onExLibSearch':el=>onExLibSearch(el.value),
-'onExamSourcesSearch':el=>onExamSourcesSearch(el.value),
 'onIaTextChange':()=>onIaTextChange(),
 'onRegPwInput':el=>onRegPwInput(el.value),
 'onWritingDraftChange':()=>onWritingDraftChange()
@@ -23438,7 +23286,6 @@ input:{
 keydown:{
 'activate':(el,ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();el.click()}},
 'exLibSearchKey':(el,ev)=>exLibSearchKey(el,ev),
-'examSourcesSearchKey':(el,ev)=>examSourcesSearchKey(el,ev),
 'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
 'mfaEnter':(el,ev)=>{if(ev.key==='Enter')doLoginMfa()},
 'registerEnter':(el,ev)=>{if(ev.key==='Enter')doRegister()}
