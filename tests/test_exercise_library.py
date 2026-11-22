@@ -1,27 +1,33 @@
-"""Exercise library acceptance: expanded PRACTICE_SOURCES + ordered Exercises view.
+"""Unified Practice Library acceptance: By part + Library tabs (local, online & Reference).
 
 Verifies:
   1. PRACTICE_SOURCES.length >= 50, no duplicate URLs, all start with https://.
-  2. The Exercises library renders ALL local (MAT) + online (PRACTICE_SOURCES)
-     entries and the visible counter matches the rendered row count.
-  3. Default order ("Exam order"): papers in fixed order (rue, w, l, sp) and
-     within each paper sorted by part ascending (then type, then mins).
-  4. "Shortest first" sorts globally by mins ascending; "A–Z" sorts globally
+  2. No #v-resources or #v-exercises views and no Resources/Exercises entries in
+     main nav or the More sheet; Practice is the single entry point with tabs
+     "By part" (default) and "Library".
+  3. The Library renders ALL local (MAT) + online (PRACTICE_SOURCES) + Reference
+     entries (handbooks, guides, answer sheets, official platforms) and the
+     visible counter matches the rendered row count.
+  4. Default order ("Exam order"): papers in fixed order (rue, w, l, sp, ref)
+     with Reference grouped at the end, and within each paper sorted by part
+     ascending (then type, then mins).
+  5. "Shortest first" sorts globally by mins ascending; "A–Z" sorts globally
      alphabetically by name.
-  5. Filters: paper Listening leaves only Listening; Part 2 leaves only items
-     covering Part 2; "Free only" excludes freemium; search filters by name;
-     impossible query displays empty state and Reset restores all rows.
-  6. Every row is a clickable <a> with non-empty href; local rows start with
+  6. Filters: paper Listening leaves only Listening; paper Reference leaves only
+     Reference; Part 2 leaves only items covering Part 2; "Free only" excludes
+     freemium; search filters both exercises and Reference items; impossible
+     query displays empty state and Reset restores all rows.
+  7. Every row is a clickable <a> with non-empty href; local rows start with
      /files/ (from MAT) and online rows start with https:// with target=_blank
      and rel=noopener.
-  7. 390x844 (light & dark) and 1280x900: single column, rows and controls
+  8. 390x844 (light & dark) and 1280x900: single column, rows and controls
      >= 44px, zero horizontal overflow; EN and ES render symmetric controls
      with translated copy; zero inline on* handlers and zero page errors.
-  8. Entry buttons from Today (Materials panels) and Exam (sources card) open
-     the Exercises library view.
+  9. Entry buttons from Today (Materials panels), Exam (sources card) and
+     legacy showView('resources') open Practice on the Library tab.
 
 Saves screenshots in tests/out/:
-  library_390_light.png, library_390_dark.png, library_1280_light.png.
+  library_390_light.png, library_390_dark.png, practice_tabs_1280_light.png.
 """
 import json
 import os
@@ -35,16 +41,19 @@ URL = isolated_server() + "/"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 os.makedirs(OUT, exist_ok=True)
 
-EXPECTED_PAPER_ORDER = ["rue", "w", "l", "sp"]
+EXPECTED_SKILLS = ["rue", "w", "l", "sp"]
+EXPECTED_GROUP_ORDER = ["rue", "w", "l", "sp", "ref"]
 INLINE_HANDLER_RE = re.compile(r'\bon[a-z]+\s*=\s*"')
 
 
 def inspect_library(pg):
     return pg.evaluate(
         r"""() => {
-            const view = document.getElementById('v-exercises');
+            const view = document.getElementById('v-practice');
+            const libPanel = document.getElementById('practiceTabLibrary');
+            const partsPanel = document.getElementById('practiceTabParts');
             const list = document.getElementById('exLibList');
-            if (!view || !list) return null;
+            if (!view || !libPanel || !list) return null;
             const groups = [...list.querySelectorAll(':scope > .exlib-group')].map(g => {
                 const title = g.querySelector('.exlib-group-title');
                 const cnt = g.querySelector('.exlib-group-count');
@@ -87,6 +96,12 @@ def inspect_library(pg):
                     right: Math.round(r.right),
                 };
             });
+            const tabs = [...view.querySelectorAll('#practiceTabs button.practice-tab')].map(b => ({
+                tab: b.dataset.practiceTab || '',
+                text: b.textContent.trim(),
+                selected: b.getAttribute('aria-selected'),
+                h: Math.round(b.getBoundingClientRect().height),
+            }));
             const paperChips = [...view.querySelectorAll('#exLibPaperFilter button.exlib-chip')].map(b => ({
                 val: b.dataset.exlibPaper || '',
                 text: b.textContent.trim(),
@@ -104,10 +119,15 @@ def inspect_library(pg):
             const free = document.getElementById('exLibFreeOnly');
             const countEl = document.getElementById('exLibCount');
             const emptyEl = document.getElementById('exLibEmpty');
+            const subEl = view.querySelector('#exercisesLibraryCard > .sub');
             const listEl = list.querySelector('.exlib-list');
             const lcs = listEl ? getComputedStyle(listEl) : null;
             return {
                 active: view.classList.contains('active'),
+                libVisible: !libPanel.hidden,
+                partsVisible: partsPanel ? !partsPanel.hidden : false,
+                tabs,
+                subText: subEl ? subEl.textContent.trim() : '',
                 groups,
                 rows,
                 paperChips,
@@ -146,6 +166,29 @@ with sync_playwright() as p:
     pg.wait_for_function("Object.keys(MAT).length > 0", timeout=8000)
     pg.wait_for_timeout(200)
 
+    # 2. Old #v-resources / #v-exercises and menu entries are gone
+    removed = pg.evaluate(
+        """() => ({
+            vResources: !!document.getElementById('v-resources'),
+            vExercises: !!document.getElementById('v-exercises'),
+            vLibros: !!document.getElementById('v-libros'),
+            navResources: !!document.querySelector("nav button[data-view='resources']"),
+            navExercises: !!document.querySelector("nav button[data-view='exercises']"),
+            moreResources: !!document.querySelector("#moreSheet [data-view='resources']"),
+            moreExercises: !!document.querySelector("#moreSheet [data-view='exercises']"),
+            navLabels: [...document.querySelectorAll('#sideNav .nav-label')].map(e => e.textContent.trim()),
+        })"""
+    )
+    assert not removed["vResources"], "#v-resources still exists in DOM"
+    assert not removed["vExercises"], "#v-exercises still exists in DOM"
+    assert not removed["vLibros"], "#v-libros still exists in DOM"
+    assert not removed["navResources"], "Resources nav button still exists"
+    assert not removed["navExercises"], "Exercises nav button still exists"
+    assert not removed["moreResources"], "Resources item still exists in More sheet"
+    assert not removed["moreExercises"], "Exercises item still exists in More sheet"
+    assert "Resources" not in removed["navLabels"], f"Resources still in nav: {removed['navLabels']}"
+    assert "Exercises" not in removed["navLabels"], f"Exercises still in nav: {removed['navLabels']}"
+
     # 1. PRACTICE_SOURCES >= 50, no duplicate URLs, all https://
     sources = pg.evaluate(
         """() => (typeof PRACTICE_SOURCES !== 'undefined' ? PRACTICE_SOURCES : []).map(s => ({
@@ -157,17 +200,30 @@ with sync_playwright() as p:
     assert len(urls) == len(set(urls)), "Duplicate URLs found in PRACTICE_SOURCES"
     for s in sources:
         assert s["url"].startswith("https://"), f"Non-https URL: {s['url']}"
-        assert s["skill"] in EXPECTED_PAPER_ORDER, f"Invalid skill: {s}"
+        assert s["skill"] in EXPECTED_SKILLS, f"Invalid skill: {s}"
         assert s["kind"] in ("free", "freemium"), f"Invalid kind: {s}"
         assert isinstance(s["mins"], int) and s["mins"] > 0, f"Invalid mins: {s}"
         assert isinstance(s["what"], str) and len(s["what"]) > 20, f"Short what: {s}"
-    by_skill = {k: sum(1 for s in sources if s["skill"] == k) for k in EXPECTED_PAPER_ORDER}
+    by_skill = {k: sum(1 for s in sources if s["skill"] == k) for k in EXPECTED_SKILLS}
     assert all(v >= 8 for v in by_skill.values()), f"Unbalanced PRACTICE_SOURCES: {by_skill}"
 
-    # 8a. Entry from Today Materials panel opens Exercises view
+    # 2b. Practice default tab is "By part"
+    pg.evaluate("showView('practice')")
+    pg.wait_for_timeout(200)
+    default_st = inspect_library(pg)
+    assert default_st["active"], "#v-practice not active"
+    assert default_st["partsVisible"] and not default_st["libVisible"], (
+        f"Practice default tab is not By part: parts={default_st['partsVisible']}, lib={default_st['libVisible']}"
+    )
+    assert [t["text"] for t in default_st["tabs"]] == ["By part", "Library"], (
+        f"Unexpected Practice tabs: {default_st['tabs']}"
+    )
+    for tab in default_st["tabs"]:
+        assert tab["h"] >= 44, f"Practice tab height {tab['h']} < 44px: {tab}"
+
+    # 9a. Entry from Today Materials panel opens Practice -> Library tab
     pg.evaluate("showView('hoy')")
     pg.wait_for_timeout(200)
-    # Find whichever Today studio materials panel is in DOM and open it
     opened_today = pg.evaluate(
         """() => {
             const ids = ['wtfSectionRue', 'wtfSectionW', 'wtfSectionL', 'wtfSectionSp'];
@@ -183,53 +239,72 @@ with sync_playwright() as p:
             return null;
         }"""
     )
-    assert opened_today is not None, "No Today Materials 'Browse all exercises' button found"
+    assert opened_today is not None, "No Today Materials library button found"
     pg.wait_for_timeout(200)
-    assert pg.evaluate("document.getElementById('v-exercises').classList.contains('active')"), (
-        f"Today button in {opened_today} did not open #v-exercises"
+    st_today = inspect_library(pg)
+    assert st_today["active"] and st_today["libVisible"], (
+        f"Today button in {opened_today} did not open Practice -> Library"
     )
-    # Also verify all 4 Today Materials panels have the browse button
     today_btns = pg.evaluate(
         """() => ['wtfPanelRue', 'wtfPanelW', 'wtfPanelL', 'wtfPanelSp'].map(id =>
             !!document.querySelector('#' + id + ' .wtf-browse-btn')
         )"""
     )
-    assert all(today_btns), f"Missing Browse all exercises button in Today panels: {today_btns}"
+    assert all(today_btns), f"Missing library button in Today panels: {today_btns}"
 
-    # 8b. Entry from Exam sources card opens Exercises view
+    # 9b. Legacy showView('resources') redirects to Practice -> Library tab
+    pg.evaluate("showView('hoy')")
+    pg.wait_for_timeout(120)
+    pg.evaluate("showView('resources')")
+    pg.wait_for_timeout(200)
+    st_redir = inspect_library(pg)
+    assert st_redir["active"] and st_redir["libVisible"], (
+        "showView('resources') did not redirect to Practice -> Library"
+    )
+
+    # 9c. Entry from Exam sources card opens Practice -> Library tab
     pg.click("nav button[data-view='exam']")
     pg.wait_for_timeout(200)
     pg.click("#examBrowseExercisesBtn")
     pg.wait_for_timeout(200)
-    assert pg.evaluate("document.getElementById('v-exercises').classList.contains('active')"), (
-        "Exam '#examBrowseExercisesBtn' did not open #v-exercises"
+    st_exam = inspect_library(pg)
+    assert st_exam["active"] and st_exam["libVisible"], (
+        "Exam '#examBrowseExercisesBtn' did not open Practice -> Library"
     )
 
-    # 2. All local + online entries listed, counter matches rendered rows
+    # 3. All local + online + Reference entries listed, counter matches rendered rows
     expected_catalog = pg.evaluate("buildExerciseLibrary()")
-    expected_local = [x for x in expected_catalog if x["origin"] == "local"]
-    expected_online = [x for x in expected_catalog if x["origin"] == "online"]
+    expected_local = [x for x in expected_catalog if x["origin"] == "local" and x["skill"] != "ref"]
+    expected_online = [x for x in expected_catalog if x["origin"] == "online" and x["skill"] != "ref"]
+    expected_ref = [x for x in expected_catalog if x["skill"] == "ref"]
     assert len(expected_local) > 0, "No local exercises built from MAT"
     assert len(expected_online) == len(sources), (
         f"Online count {len(expected_online)} != PRACTICE_SOURCES {len(sources)}"
     )
+    assert len(expected_ref) >= 5, f"Expected Reference entries in library, got {len(expected_ref)}"
 
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
     pg.wait_for_timeout(120)
     state = inspect_library(pg)
-    assert state is not None and state["active"], "#v-exercises not active"
-    assert not INLINE_HANDLER_RE.search(state["html"]), "Inline on* handler found in #v-exercises"
+    assert state is not None and state["active"] and state["libVisible"], "Practice Library not active"
+    assert state["subText"] == "Every paper, key, audio and verified source in one ordered list.", (
+        f"Unexpected Library subtitle: {state['subText']!r}"
+    )
+    assert not INLINE_HANDLER_RE.search(state["html"]), "Inline on* handler found in #v-practice"
 
     assert len(state["rows"]) == len(expected_catalog), (
         f"Rendered {len(state['rows'])} rows, expected {len(expected_catalog)}"
     )
-    assert state["countText"] == f"{len(state['rows'])} exercises", (
+    assert state["countText"] == f"{len(state['rows'])} items", (
         f"Counter mismatch: {state['countText']!r} vs {len(state['rows'])}"
     )
 
-    # 3. Default order: papers in fixed order, within each paper minPart ascending
-    assert [g["skill"] for g in state["groups"]] == EXPECTED_PAPER_ORDER, (
+    # 4. Default order: papers in fixed order ending with Reference, within each paper minPart ascending
+    assert [g["skill"] for g in state["groups"]] == EXPECTED_GROUP_ORDER, (
         f"Paper groups out of order: {[g['skill'] for g in state['groups']]}"
+    )
+    assert state["groups"][-1]["title"] == "Reference", (
+        f"Last group title is not Reference: {state['groups'][-1]['title']!r}"
     )
     for g in state["groups"]:
         min_parts = [r["minPart"] for r in g["rows"]]
@@ -237,7 +312,7 @@ with sync_playwright() as p:
             f"Group {g['skill']} parts not ascending: {min_parts[:20]}"
         )
 
-    # 6. Every row has non-empty href; local starts with /files/, online starts with https://
+    # 7. Every row has non-empty href; local starts with /files/, online starts with https://
     for r in state["rows"]:
         assert r["tag"] == "a", f"Row is not <a>: {r}"
         assert r["href"], f"Empty href on row: {r}"
@@ -250,7 +325,7 @@ with sync_playwright() as p:
         assert r["h"] >= 44, f"Row height {r['h']} < 44px: {r['name']}"
         assert r["right"] <= state["clientWidth"] + 1, f"Row overflows right edge: {r}"
 
-    # 7a. Mobile 390x844 light & dark checks + screenshots
+    # 8a. Mobile 390x844 light & dark checks + screenshots
     assert state["listDisplay"] == "flex" and state["listFlexDir"] == "column", (
         f"Mobile list not single column: {state['listDisplay']}/{state['listFlexDir']}"
     )
@@ -278,7 +353,7 @@ with sync_playwright() as p:
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
     pg.wait_for_timeout(100)
 
-    # 4. Sorting: Shortest first (mins ascending) and A-Z (alphabetical)
+    # 5. Sorting: Shortest first (mins ascending) and A-Z (alphabetical)
     pg.select_option("#exLibSort", "shortest")
     pg.wait_for_timeout(120)
     st_short = inspect_library(pg)
@@ -290,8 +365,6 @@ with sync_playwright() as p:
     pg.wait_for_timeout(120)
     st_az = inspect_library(pg)
     assert len(st_az["rows"]) == len(expected_catalog)
-    names_seq = [r["name"].lower() for r in st_az["rows"]]
-    # Verify non-decreasing via JS localeCompare('en', {sensitivity:'base'}) to match UI collation
     az_ok = pg.evaluate(
         """() => {
             const names = [...document.querySelectorAll('#exLibList a.exlib-row')].map(a => a.dataset.name || '');
@@ -309,14 +382,23 @@ with sync_playwright() as p:
     pg.select_option("#exLibSort", "exam")
     pg.wait_for_timeout(100)
 
-    # 5. Filters: Listening paper, Part 2, Free only, Search by name, Empty state
+    # 6. Filters: Listening, Reference, Part 2, Free only, Search, Empty state
     pg.click("#exLibPaperFilter [data-exlib-paper='l']")
     pg.wait_for_timeout(100)
     st_l = inspect_library(pg)
     assert st_l["rows"], "Listening filter returned 0 rows"
     assert all(r["skill"] == "l" for r in st_l["rows"]), "Listening filter leaked other papers"
     assert [g["skill"] for g in st_l["groups"]] == ["l"]
-    assert st_l["countText"] == f"{len(st_l['rows'])} exercises"
+    assert st_l["countText"] == f"{len(st_l['rows'])} items"
+
+    pg.click("#exLibPaperFilter [data-exlib-paper='ref']")
+    pg.wait_for_timeout(100)
+    st_ref = inspect_library(pg)
+    assert len(st_ref["rows"]) == len(expected_ref), (
+        f"Reference filter returned {len(st_ref['rows'])}, expected {len(expected_ref)}"
+    )
+    assert all(r["skill"] == "ref" for r in st_ref["rows"]), "Reference filter leaked other papers"
+    assert [g["skill"] for g in st_ref["groups"]] == ["ref"]
 
     pg.click("#exLibPaperFilter [data-exlib-paper='all']")
     pg.click("#exLibPartFilter [data-exlib-part='2']")
@@ -345,7 +427,15 @@ with sync_playwright() as p:
     st_q = inspect_library(pg)
     assert len(st_q["rows"]) == 1, f"Search 'Academic Phrasebank' expected 1 row, got {len(st_q['rows'])}"
     assert "Academic Phrasebank" in st_q["rows"][0]["name"]
-    assert st_q["countText"] == "1 exercise"
+    assert st_q["countText"] == "1 item"
+
+    # Search finds Reference items too
+    pg.fill("#exLibSearch", "Cambridge One")
+    pg.wait_for_timeout(100)
+    st_ref_q = inspect_library(pg)
+    assert len(st_ref_q["rows"]) == 1 and st_ref_q["rows"][0]["skill"] == "ref", (
+        f"Search 'Cambridge One' did not find Reference row: {st_ref_q['rows']}"
+    )
 
     # Empty state & Reset
     pg.fill("#exLibSearch", "zzz-no-such-exercise-999")
@@ -353,29 +443,34 @@ with sync_playwright() as p:
     st_empty = inspect_library(pg)
     assert len(st_empty["rows"]) == 0
     assert st_empty["emptyVisible"], "Empty state not shown when 0 results"
-    assert st_empty["countText"] == "0 exercises"
+    assert st_empty["countText"] == "0 items"
     pg.click("#exLibEmpty button[data-action='resetExLibFilters']")
     pg.wait_for_timeout(100)
     assert len(inspect_library(pg)["rows"]) == len(expected_catalog), "Reset filters did not restore all rows"
 
-    # 7b. Spanish i18n: same controls, translated labels, no overflow
+    # 8b. Spanish i18n: same controls, translated labels, no overflow
     pg.evaluate("setLang('es')")
     pg.wait_for_timeout(250)
     es_state = inspect_library(pg)
     assert len(es_state["rows"]) == len(expected_catalog)
+    assert [t["text"] for t in es_state["tabs"]] == ["Por parte", "Biblioteca"], (
+        f"ES Practice tabs not translated: {es_state['tabs']}"
+    )
     assert [c["val"] for c in es_state["paperChips"]] == [c["val"] for c in state["paperChips"]]
     assert [c["val"] for c in es_state["partChips"]] == [c["val"] for c in state["partChips"]]
     assert [o["v"] for o in es_state["sortOptions"]] == [o["v"] for o in state["sortOptions"]]
-    assert "ejercicios" in es_state["countText"], f"ES counter not translated: {es_state['countText']!r}"
+    assert "elementos" in es_state["countText"], f"ES counter not translated: {es_state['countText']!r}"
     assert "Buscar" in es_state["searchPh"], f"ES placeholder not translated: {es_state['searchPh']!r}"
     assert es_state["paperChips"][0]["text"] == "Todas las pruebas"
+    assert es_state["paperChips"][-1]["text"] == "Referencia"
     assert es_state["partChips"][1]["text"] == "Parte 1"
     assert es_state["sortOptions"][0]["t"] == "Orden del examen"
+    assert es_state["groups"][-1]["title"] == "Referencia"
     assert es_state["scrollWidth"] <= es_state["clientWidth"] + 1, (
         f"390 ES horizontal overflow: {es_state['scrollWidth']} > {es_state['clientWidth']}"
     )
 
-    # Restore EN and capture 1280x900 desktop screenshot
+    # Restore EN and capture 1280x900 desktop screenshot of Practice tabs + Library
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(200)
     pg.set_viewport_size({"width": 1280, "height": 900})
@@ -388,7 +483,7 @@ with sync_playwright() as p:
     pg.evaluate("window.scrollTo(0, 0)")
     pg.mouse.move(0, 0)
     pg.wait_for_timeout(120)
-    pg.screenshot(path=os.path.join(OUT, "library_1280_light.png"))
+    pg.screenshot(path=os.path.join(OUT, "practice_tabs_1280_light.png"))
 
     assert page_errors == [], f"Page errors: {page_errors}"
 
@@ -398,7 +493,9 @@ with sync_playwright() as p:
         "library_total": len(expected_catalog),
         "library_local": len(expected_local),
         "library_online": len(expected_online),
+        "library_reference": len(expected_ref),
         "filter_listening": len(st_l["rows"]),
+        "filter_reference": len(st_ref["rows"]),
         "filter_part2": len(st_p2["rows"]),
         "filter_free": len(st_free["rows"]),
         "en_count": state["countText"],
@@ -406,7 +503,7 @@ with sync_playwright() as p:
         "screenshots": [
             "library_390_light.png",
             "library_390_dark.png",
-            "library_1280_light.png",
+            "practice_tabs_1280_light.png",
         ],
         "page_errors": page_errors,
     }

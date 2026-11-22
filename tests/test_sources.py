@@ -1,8 +1,8 @@
 """Phase 26 acceptance: practice sources catalogue and one-tap access.
 
 Standalone Playwright suite. It logs in through helpers.py, opens the Practice
-screen from the main nav, and checks the catalogue, the filters, the free-only
-toggle and the "Practise this now" row on Today.
+Library tab from the main nav, and checks the catalogue, the filters, the
+free-only toggle and the "Practise this now" row on Today.
 
 Link liveness is deliberately NOT part of this suite: run
 `python3 tools/check_sources.py` by hand for that report.
@@ -21,14 +21,14 @@ SKILLS = ["rue", "w", "l", "sp"]
 KINDS = ["free", "freemium", "paid"]
 
 
-def card_state(pg):
+def online_row_state(pg):
     return pg.evaluate(
         """() => {
-        const cards = [...document.querySelectorAll('#practiceGrid .practice-card')];
+        const rows = [...document.querySelectorAll('#exLibList a.exlib-row[data-origin="online"][data-type="online"]')];
         return {
-            n: cards.length,
-            skills: [...new Set(cards.map(c => c.dataset.skill))],
-            kinds: [...new Set(cards.map(c => c.dataset.kind))],
+            n: rows.length,
+            skills: [...new Set(rows.map(c => c.dataset.skill))],
+            kinds: [...new Set(rows.map(c => c.dataset.kind))],
         };
     }"""
     )
@@ -50,15 +50,20 @@ with sync_playwright() as p:
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
-    # --- 1. The Resources item is in the nav and opens the screen ----------
+    # --- 1. Practice is in the nav and opens the Library tab --------------
     assert pg.evaluate(
-        "!!document.querySelector(\"nav button[data-view='resources']\")"
-    ), "Resources is not in the main navigation"
-    pg.click("nav button[data-view='resources']")
-    pg.wait_for_timeout(300)
+        "!!document.querySelector(\"nav button[data-view='practice']\")"
+    ), "Practice is not in the main navigation"
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(200)
     assert pg.evaluate(
-        "document.getElementById('v-resources').classList.contains('active')"
-    ), "Resources did not become the active view"
+        "document.getElementById('v-practice').classList.contains('active')"
+    ), "Practice did not become the active view"
+    pg.click("#practiceTabLibraryBtn")
+    pg.wait_for_timeout(250)
+    assert pg.evaluate(
+        "!document.getElementById('practiceTabLibrary').hidden"
+    ), "Library tab did not open inside Practice"
 
     # --- 2. The catalogue is big enough and has the right shape -----------
     sources = pg.evaluate(
@@ -79,18 +84,18 @@ with sync_playwright() as p:
     assert all(v > 0 for v in expected.values()), f"a skill has no sources: {expected}"
 
     # --- 3. Filter chips really filter, and the parts add up --------------
-    pg.click("#practiceFilter [data-skill='all']")
+    pg.click("#exLibPaperFilter [data-exlib-paper='all']")
     pg.wait_for_timeout(120)
-    all_state = card_state(pg)
+    all_state = online_row_state(pg)
     assert all_state["n"] == len(sources), f"All shows {all_state['n']}, catalogue {len(sources)}"
 
     filtered = {}
     for skill in SKILLS:
-        pg.click(f"#practiceFilter [data-skill='{skill}']")
+        pg.click(f"#exLibPaperFilter [data-exlib-paper='{skill}']")
         pg.wait_for_timeout(120)
-        state = card_state(pg)
+        state = online_row_state(pg)
         filtered[skill] = state["n"]
-        assert state["n"] == expected[skill], f"{skill}: {state['n']} cards, expected {expected[skill]}"
+        assert state["n"] == expected[skill], f"{skill}: {state['n']} rows, expected {expected[skill]}"
         assert state["skills"] == [skill], f"{skill} filter leaked: {state['skills']}"
         assert state["n"] != all_state["n"], f"{skill} did not change the count"
     assert sum(filtered.values()) == len(sources), (
@@ -98,30 +103,30 @@ with sync_playwright() as p:
     )
 
     # --- 4. Free-only hides every non-free source -------------------------
-    pg.click("#practiceFilter [data-skill='all']")
+    pg.click("#exLibPaperFilter [data-exlib-paper='all']")
     pg.wait_for_timeout(120)
-    pg.check("#practiceFreeOnly")
+    pg.check("#exLibFreeOnly")
     pg.wait_for_timeout(120)
-    free_state = card_state(pg)
+    free_state = online_row_state(pg)
     free_total = sum(1 for s in sources if s["kind"] == "free")
     assert free_state["n"] == free_total, f"Free only shows {free_state['n']}, expected {free_total}"
     assert free_state["kinds"] in (["free"], []), f"non-free sources leaked: {free_state['kinds']}"
-    pg.uncheck("#practiceFreeOnly")
+    pg.uncheck("#exLibFreeOnly")
     pg.wait_for_timeout(120)
-    assert card_state(pg)["n"] == len(sources), "turning Free only off did not restore the list"
+    assert online_row_state(pg)["n"] == len(sources), "turning Free only off did not restore the list"
 
-    # --- 5. Every card link opens safely in a new tab ---------------------
+    # --- 5. Every online source link opens safely in a new tab ------------
     links = pg.eval_on_selector_all(
-        "#practiceGrid a",
+        "#exLibList a.exlib-row[data-origin='online'][data-type='online']",
         """els => els.map(a => ({href: a.getAttribute('href'),
                                 target: a.getAttribute('target'),
                                 rel: a.getAttribute('rel')}))""",
     )
-    assert len(links) == len(sources), f"{len(links)} links for {len(sources)} cards"
+    assert len(links) == len(sources), f"{len(links)} links for {len(sources)} sources"
     for a in links:
-        assert a["href"] and a["href"].startswith("https://"), f"bad card link: {a}"
-        assert a["target"] == "_blank", f"card link without target=_blank: {a}"
-        assert a["rel"] == "noopener noreferrer", f"card link without rel=noopener noreferrer: {a}"
+        assert a["href"] and a["href"].startswith("https://"), f"bad source link: {a}"
+        assert a["target"] == "_blank", f"source link without target=_blank: {a}"
+        assert a["rel"] == "noopener noreferrer", f"source link without rel=noopener noreferrer: {a}"
 
     # --- 6. Today shows 1-3 one-tap sources under the daily suggestion ----
     # Practise this now belongs to rest days, so the schedule leaves today out.

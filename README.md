@@ -46,7 +46,7 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 - **Writing corrector on all four Cambridge bands:** Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*. Every band quotes evidence from your text, lists concrete weaknesses, rewrites three sentences, and displays a step-by-step progress bar with elapsed time while grading.
 - **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
 - **Live Studio (local VAD):** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speaking time and silences in real time; no audio is recorded or uploaded.
-- **Materials in blocks & Exam sources:** Local PDFs and audio paired side-by-side with answer keys, dedicated *Full paper* and *Online* blocks, private user-uploaded Listening practice files, and 26 searchable, filterable official Exam sources.
+- **Practice (By part & unified Library):** Timed drills for every exam part alongside a single searchable, sortable **Library** tab combining local papers, answer keys, audio, lesson plans, examiner notes, reference handbooks, and verified online sources — plus private user-uploaded Listening practice files and inline session materials.
 - **Progress by part and error type:** Four zero-dependency SVG charts track score trajectory, accuracy per exam part, error taxonomy (*vocabulary*, *grammar*, *distractor*, *time limit*), and skill consistency.
 
 ---

@@ -65,48 +65,45 @@ with sync_playwright() as p:
         """(keys) => {
         MAT = {};
         keys.forEach(k => { MAT[k] = '/files/test-' + k + '.pdf'; });
-        renderParts(); renderResources(); renderGuides();
+        renderParts(); renderExercisesLibrary(); renderGuides();
     }""",
         LISTEN_KEYS,
     )
-    pg.evaluate("showView('practice')")
+    pg.evaluate("showView('practice'); setPracticeTab('library')")
     pg.wait_for_timeout(300)
 
-    # 2. No opaque listening code anywhere; cards grouped in Practice and exam mode.
-    chip_labels = pg.eval_on_selector_all("#resourcesList .chip", "els => els.map(e => e.textContent.trim())")
-    assert chip_labels, "no resource chips rendered"
-    assert not [c for c in chip_labels if "🎧" in c], f"an emoji audio chip leaked: {chip_labels}"
-    assert not [c for c in chip_labels if re.search(r"-P[1-4]\b", c)], f"a part code leaked: {chip_labels}"
+    # 2. No opaque listening code anywhere; cards grouped in exam mode and studio.
+    lib_rows = pg.eval_on_selector_all("#exLibList a.exlib-row", "els => els.map(e => e.textContent.trim())")
+    assert lib_rows, "no library rows rendered"
+    assert not [r for r in lib_rows if "🎧" in r], f"an emoji audio row leaked: {lib_rows[:5]}"
+    assert not [r for r in lib_rows if re.search(r"-P[1-4]\b", r)], f"a part code leaked: {lib_rows[:5]}"
     body_text = pg.evaluate("document.body.innerText")
     assert not re.search(r"-P[1-4]\b", body_text), "a part code is visible in the page text"
 
-    practice_cards = pg.eval_on_selector_all(
-        "#resourcesList .listen-test",
+    pg.evaluate("showView('exam'); document.getElementById('exPaper').value='l'; renderEx()")
+    pg.wait_for_timeout(300)
+    exam_cards = pg.eval_on_selector_all(
+        "#exGuide .listen-test",
         """els => els.map(e => ({
             title: e.querySelector('.lt-head').textContent.trim(),
             links: [...e.querySelectorAll('a')].map(a => a.textContent.trim())
         }))""",
     )
-    titles = [c["title"] for c in practice_cards]
+    titles = [c["title"] for c in exam_cards]
     for wanted in ("Listening test 1", "Listening test 2 · part 1", "Full test 1", "Full test 2", "Handbook exercises"):
-        assert wanted in titles, f"listening card missing in Practice: {wanted} ({titles})"
-    for card in practice_cards:
+        assert wanted in titles, f"listening card missing in Exam mode: {wanted} ({titles})"
+    for card in exam_cards:
         if "Audio" in card["links"]:
             assert any(k in card["links"] for k in ("Tapescript", "Answer key", "Tapescript and key")), (
                 f"audio without a tapescript/key in the same card: {card}"
             )
-
-    pg.evaluate("showView('exam'); document.getElementById('exPaper').value='l'; renderEx()")
-    pg.wait_for_timeout(300)
-    exam_cards = pg.eval_on_selector_all("#exGuide .listen-test .lt-head", "els => els.map(e => e.textContent.trim())")
-    assert "Listening test 1" in exam_cards, f"exam mode is not grouped: {exam_cards}"
     orphan_chips = pg.evaluate(
         "() => [...document.querySelectorAll('#exGuide .chip')].filter(a => !a.closest('.listen-test')).length"
     )
     assert orphan_chips == 0, "exam mode still paints a flat chip wall"
     gl_cards = pg.eval_on_selector_all("#gLChips .listen-test", "els => els.length")
     assert gl_cards >= 1, "the listening studio did not render grouped cards"
-    out["2_grouped"] = {"practice": titles, "exam": exam_cards, "studio": gl_cards}
+    out["2_grouped"] = {"exam": titles, "studio": gl_cards}
     pg.locator("#exGuide").screenshot(path=os.path.join(OUT, "exam_listening.png"))
 
     # 3. The personalized study-plan sentence is gone in both languages.
@@ -120,8 +117,8 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     out["3_study_plan"] = "gone"
 
-    # 4. Part rows have no chips; Resources filters the resources section.
-    pg.evaluate("showView('practice'); clearResourcesFilter(); showView('practice')")
+    # 4. Part rows have no chips; Library button filters the unified library.
+    pg.evaluate("resetExLibFilters(); showView('practice')")
     pg.wait_for_timeout(300)
     assert pg.eval_on_selector_all("#partsList .step .chip", "els => els.length") == 0, (
         "part rows still carry resource chips"
@@ -130,13 +127,14 @@ with sync_playwright() as p:
     first_row = pg.locator("#partsList .step").first
     row_buttons = first_row.locator("button")
     labels = [row_buttons.nth(i).inner_text().strip() for i in range(row_buttons.count())]
-    assert "Resources" in labels, f"the row has no Resources button: {labels}"
-    first_row.locator("button", has_text="Resources").click()
-    pg.wait_for_timeout(400)
-    papers = pg.eval_on_selector_all("#resourcesList .res-paper", "els => els.map(e => e.dataset.resType)")
-    assert papers == ["ue"], f"Resources did not filter to the row's paper: {papers}"
-    pg.evaluate("clearResourcesFilter()")
-    out["4_rows_resources"] = {"row_buttons": labels, "filtered": papers}
+    assert "Library" in labels, f"the row has no Library button: {labels}"
+    first_row.locator("button", has_text="Library").click()
+    pg.wait_for_timeout(300)
+    assert pg.evaluate("!document.getElementById('practiceTabLibrary').hidden"), "Library tab did not open"
+    skills = pg.eval_on_selector_all("#exLibList a.exlib-row", "els => [...new Set(els.map(e => e.dataset.skill))]")
+    assert skills == ["rue"], f"Library did not filter to the row's paper: {skills}"
+    pg.evaluate("resetExLibFilters()")
+    out["4_rows_library"] = {"row_buttons": labels, "filtered": skills}
 
     # 5. The Phase 3 AI check reuses the corrector endpoint shape.
     seen = {}
