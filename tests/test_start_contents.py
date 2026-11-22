@@ -59,6 +59,7 @@ def inspect_contents(pg):
             }));
             const rows = list ? [...list.querySelectorAll('a.exlib-row')].map(a => {
                 const r = a.getBoundingClientRect();
+                const partEl = a.querySelector('.exlib-pill.is-part');
                 return {
                     href: a.getAttribute('href') || '',
                     target: a.getAttribute('target') || '',
@@ -66,7 +67,9 @@ def inspect_contents(pg):
                     skill: a.dataset.skill || '',
                     type: a.dataset.type || '',
                     origin: a.dataset.origin || '',
+                    mins: Number(a.dataset.mins || 0),
                     parts: (a.dataset.parts || '').split(',').filter(Boolean),
+                    partLabel: partEl ? partEl.textContent.trim() : '',
                     name: a.dataset.name || '',
                     h: Math.round(r.height),
                     right: Math.round(r.right),
@@ -97,6 +100,44 @@ def inspect_contents(pg):
     )
 
 
+def assert_part_first_order(rows, part_str, label):
+    assert rows, f"{label}: Contents rendered 0 rows"
+    assert rows[0]["parts"] == [part_str] and rows[0]["partLabel"] == f"Part {part_str}", (
+        f"{label}: first row must be Part {part_str}, got {rows[0]}"
+    )
+    all_parts_idx = [i for i, r in enumerate(rows) if not r["parts"] or r["partLabel"] == "All parts"]
+    part_idx = [i for i, r in enumerate(rows) if r["parts"] == [part_str]]
+    assert part_idx, f"{label}: expected at least one Part {part_str} row"
+    if all_parts_idx:
+        assert max(part_idx) < min(all_parts_idx), (
+            f"{label}: 'All parts' row appeared at {min(all_parts_idx)} before Part {part_str} row at {max(part_idx)}: "
+            f"{[(r['name'], r['partLabel'], r['type']) for r in rows]}"
+        )
+    order_map = {"paper": 0, "key": 1, "notes": 1, "lesson": 2, "audio": 3, "online": 4, "reference": 5}
+
+    def rank_key(r):
+        parts = r["parts"]
+        is_online = r["origin"] == "online" or r["type"] == "online"
+        if parts == [part_str]:
+            grp = 0
+        elif not is_online and part_str in parts:
+            grp = 1
+        elif not is_online and not parts and r["type"] == "lesson":
+            grp = 2
+        elif not is_online and not parts:
+            grp = 3
+        elif is_online and part_str in parts:
+            grp = 4
+        else:
+            grp = 5
+        return (grp, order_map[r["type"]], r["mins"])
+
+    keys = [rank_key(r) for r in rows]
+    assert keys == sorted(keys), (
+        f"{label}: rows not in expected part-first order: {[(r['name'], r['partLabel'], r['type'], r['mins']) for r in rows]}"
+    )
+
+
 out = {}
 with sync_playwright() as p:
     browser = p.chromium.launch()
@@ -117,7 +158,7 @@ with sync_playwright() as p:
             """() => {
                 const keys = [
                     'rueS1','rueS2','keyS1','keyS2','lpR1','lpR2','lpR3','fR2',
-                    'wS1','wS2','lpW1','lpW2','lS1','lkS1','auS1','tsS1','lpL2',
+                    'wS1','wS2','lpW1','lpW2','lS1','lkS1','auS1','tsS1','lpL2','lpL3','auS2p3',
                     'spS1','exC0','lpSp2','hb'
                 ];
                 keys.forEach(k => { MAT[k] = '/files/test-' + k + '.pdf'; });
@@ -237,10 +278,9 @@ with sync_playwright() as p:
     assert len(local_keys) >= 1, f"Expected >=1 local answer key, got {local_keys}"
     assert len(local_lessons) >= 1, f"Expected >=1 local lesson plan, got {local_lessons}"
     assert len(online_rows) >= 1, f"Expected >=1 online source, got {online_rows}"
-    # Verify unit ordering: paper (0) <= key (1) <= lesson (2) <= audio (3) <= online (4)
-    order_map = {"paper": 0, "key": 1, "notes": 1, "lesson": 2, "audio": 3, "online": 4, "reference": 5}
-    type_seq = [order_map[r["type"]] for r in rows]
-    assert type_seq == sorted(type_seq), f"Contents not ordered paper->key->lesson->audio->online: {[r['type'] for r in rows]}"
+    # Verify unit ordering: exact Part 2 items first (no "All parts" before Part 2),
+    # then general lessons, full papers ("All parts"), multi-part online, general online.
+    assert_part_first_order(rows, "2", "Reading Part 2")
 
     # Capture 390x844 light & dark screenshots of the session Contents view
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light'); if(document.activeElement)document.activeElement.blur(); window.scrollTo(0, 0)")
@@ -364,6 +404,33 @@ with sync_playwright() as p:
     assert not after_close["hoyFocus"], "is-session-focus stayed on #v-hoy"
     assert not after_close["exlibExpanded"], "EXLIB_STATE.expanded not reset"
     out["8_close_clean"] = after_close
+
+    # 8b. Writing Part 1 & Listening Part 3 Contents also prioritize the active part.
+    pg.click("#partsList .step button[data-action='startPart'][data-i='15']")
+    pg.wait_for_timeout(200)
+    pg.click("#sessionTabContentsBtn")
+    pg.wait_for_timeout(200)
+    w1_cnt = inspect_contents(pg)
+    assert all(r["skill"] == "w" for r in w1_cnt["rows"]), "Writing Part 1 leaked other skills"
+    assert_part_first_order(w1_cnt["rows"], "1", "Writing Part 1")
+    pg.click("#sessionCloseBtn")
+    pg.wait_for_timeout(200)
+
+    pg.click("#partsList .step button[data-action='startPart'][data-i='9']")
+    pg.wait_for_timeout(200)
+    pg.click("#sessionTabContentsBtn")
+    pg.wait_for_timeout(200)
+    l3_cnt = inspect_contents(pg)
+    assert all(r["skill"] == "l" for r in l3_cnt["rows"]), "Listening Part 3 leaked other skills"
+    assert_part_first_order(l3_cnt["rows"], "3", "Listening Part 3")
+    pg.click("#sessionCloseBtn")
+    pg.wait_for_timeout(200)
+    out["8b_writing_and_listening_part_order"] = {
+        "writing_p1_first": w1_cnt["rows"][0]["name"],
+        "writing_p1_count": w1_cnt["countText"],
+        "listening_p3_first": l3_cnt["rows"][0]["name"],
+        "listening_p3_count": l3_cnt["countText"],
+    }
 
     # 6. No "Browse all exercises" / "Open library" button in Today or Exam.
     pg.evaluate("showView('hoy')")

@@ -19992,9 +19992,28 @@ function compareExLibExam(a,b){
   if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
   return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
 }
-/* Unit-scoped Contents order: paper -> answer key / notes -> lesson plan -> audio -> online practice,
-   with part-specific entries ahead of whole-paper ones within the same type. */
-function compareExLibUnit(a,b){
+function exLibUnitRank(item,unitPart){
+  const parts=Array.isArray(item.part)?item.part:[];
+  const isOnline=item.origin==='online'||item.type==='online';
+  if(parts.length===1&&parts[0]===unitPart)return 0;
+  if(!isOnline&&parts.includes(unitPart))return 1;
+  if(!isOnline&&!parts.length&&item.type==='lesson')return 2;
+  if(!isOnline&&!parts.length)return 3;
+  if(isOnline&&parts.includes(unitPart))return 4;
+  return 5;
+}
+/* Unit-scoped Contents order: when a unit part is active, exact-part items come
+   first (local and online), then local multi-part items, general lesson plans,
+   full papers/keys/audio ("All parts"), multi-part online sources, and general
+   online sources. Within each group: type (paper, key, lesson, audio, online),
+   minutes, name. Full-section units without a part keep the type-first order. */
+function compareExLibUnit(a,b,unitPart){
+  const up=(unitPart!==undefined)?String(unitPart||''):((typeof EXLIB_STATE==='object'&&EXLIB_STATE&&EXLIB_STATE.part!=='all')?String(EXLIB_STATE.part||''):'');
+  if(up&&up!=='all'){
+    const ra=exLibUnitRank(a,up);
+    const rb=exLibUnitRank(b,up);
+    if(ra!==rb)return ra-rb;
+  }
   const ta=EXLIB_TYPE_ORDER[a.type]!=null?EXLIB_TYPE_ORDER[a.type]:9;
   const tb=EXLIB_TYPE_ORDER[b.type]!=null?EXLIB_TYPE_ORDER[b.type]:9;
   if(ta!==tb)return ta-tb;
@@ -20194,7 +20213,8 @@ function renderExercisesLibrary(){
   }
   if(emptyEl)emptyEl.style.display='none';
   if(!EXLIB_STATE.expanded){
-    const sorted=filtered.slice().sort(compareExLibUnit);
+    const unitPart=(EXLIB_STATE.part&&EXLIB_STATE.part!=='all')?EXLIB_STATE.part:'';
+    const sorted=filtered.slice().sort((a,b)=>compareExLibUnit(a,b,unitPart));
     listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,false)).join('')}</div>`;
     return;
   }
