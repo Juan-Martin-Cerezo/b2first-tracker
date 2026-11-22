@@ -1,13 +1,13 @@
-"""Unified Practice Library acceptance: By part + Library tabs (local, online & Reference).
+"""Session Contents & Full Library acceptance (local, online & Reference).
 
 Verifies:
   1. PRACTICE_SOURCES.length >= 50, no duplicate URLs, all start with https://.
-  2. No #v-resources or #v-exercises views and no Resources/Exercises entries in
-     main nav or the More sheet; Practice is the single entry point with tabs
-     "By part" (default) and "Library".
-  3. The Library renders ALL local (MAT) + online (PRACTICE_SOURCES) + Reference
-     entries (handbooks, guides, answer sheets, official platforms) and the
-     visible counter matches the rendered row count.
+  2. No #v-resources, #v-exercises, #practiceTabs or #practiceTabLibrary, and no
+     "Browse all exercises" buttons in Today or Exam; Practice shows By part
+     only, with one Start button per unit opening Session / Contents.
+  3. Expanding Contents ("See all in this paper" -> "All papers") renders ALL
+     local (MAT) + online (PRACTICE_SOURCES) + Reference entries (handbooks,
+     guides, answer sheets, official platforms) and the counter matches.
   4. Default order ("Exam order"): papers in fixed order (rue, w, l, sp, ref)
      with Reference grouped at the end, and within each paper sorted by part
      ascending (then type, then mins).
@@ -23,11 +23,6 @@ Verifies:
   8. 390x844 (light & dark) and 1280x900: single column, rows and controls
      >= 44px, zero horizontal overflow; EN and ES render symmetric controls
      with translated copy; zero inline on* handlers and zero page errors.
-  9. Entry buttons from Today (Materials panels), Exam (sources card) and
-     legacy showView('resources') open Practice on the Library tab.
-
-Saves screenshots in tests/out/:
-  library_390_light.png, library_390_dark.png, practice_tabs_1280_light.png.
 """
 import json
 import os
@@ -49,11 +44,11 @@ INLINE_HANDLER_RE = re.compile(r'\bon[a-z]+\s*=\s*"')
 def inspect_library(pg):
     return pg.evaluate(
         r"""() => {
-            const view = document.getElementById('v-practice');
-            const libPanel = document.getElementById('practiceTabLibrary');
-            const partsPanel = document.getElementById('practiceTabParts');
+            const ws = document.getElementById('sessionWorkspace');
+            const cntPanel = document.getElementById('sessionTabContents');
+            const sesPanel = document.getElementById('sessionTabSession');
             const list = document.getElementById('exLibList');
-            if (!view || !libPanel || !list) return null;
+            if (!ws || !cntPanel || !list) return null;
             const groups = [...list.querySelectorAll(':scope > .exlib-group')].map(g => {
                 const title = g.querySelector('.exlib-group-title');
                 const cnt = g.querySelector('.exlib-group-count');
@@ -96,19 +91,19 @@ def inspect_library(pg):
                     right: Math.round(r.right),
                 };
             });
-            const tabs = [...view.querySelectorAll('#practiceTabs button.practice-tab')].map(b => ({
-                tab: b.dataset.practiceTab || '',
+            const tabs = [...ws.querySelectorAll('#sessionTabs button.practice-tab')].map(b => ({
+                tab: b.dataset.sessionTab || '',
                 text: b.textContent.trim(),
                 selected: b.getAttribute('aria-selected'),
                 h: Math.round(b.getBoundingClientRect().height),
             }));
-            const paperChips = [...view.querySelectorAll('#exLibPaperFilter button.exlib-chip')].map(b => ({
+            const paperChips = [...ws.querySelectorAll('#exLibPaperFilter button.exlib-chip')].map(b => ({
                 val: b.dataset.exlibPaper || '',
                 text: b.textContent.trim(),
                 pressed: b.getAttribute('aria-pressed'),
                 h: Math.round(b.getBoundingClientRect().height),
             }));
-            const partChips = [...view.querySelectorAll('#exLibPartFilter button.exlib-chip')].map(b => ({
+            const partChips = [...ws.querySelectorAll('#exLibPartFilter button.exlib-chip')].map(b => ({
                 val: b.dataset.exlibPart || '',
                 text: b.textContent.trim(),
                 pressed: b.getAttribute('aria-pressed'),
@@ -119,15 +114,13 @@ def inspect_library(pg):
             const free = document.getElementById('exLibFreeOnly');
             const countEl = document.getElementById('exLibCount');
             const emptyEl = document.getElementById('exLibEmpty');
-            const subEl = view.querySelector('#exercisesLibraryCard > .sub');
             const listEl = list.querySelector('.exlib-list');
             const lcs = listEl ? getComputedStyle(listEl) : null;
             return {
-                active: view.classList.contains('active'),
-                libVisible: !libPanel.hidden,
-                partsVisible: partsPanel ? !partsPanel.hidden : false,
+                wsVisible: !ws.hidden,
+                cntVisible: !cntPanel.hidden,
+                sesVisible: sesPanel ? !sesPanel.hidden : false,
                 tabs,
-                subText: subEl ? subEl.textContent.trim() : '',
                 groups,
                 rows,
                 paperChips,
@@ -144,7 +137,7 @@ def inspect_library(pg):
                 listFlexDir: lcs ? lcs.flexDirection : '',
                 scrollWidth: document.documentElement.scrollWidth,
                 clientWidth: document.documentElement.clientWidth,
-                html: view.outerHTML,
+                html: ws.outerHTML,
             };
         }"""
     )
@@ -166,26 +159,34 @@ with sync_playwright() as p:
     pg.wait_for_function("Object.keys(MAT).length > 0", timeout=8000)
     pg.wait_for_timeout(200)
 
-    # 2. Old #v-resources / #v-exercises and menu entries are gone
+    # 2. Old #v-resources / #v-exercises, Practice Library tabs and Browse buttons are gone
     removed = pg.evaluate(
         """() => ({
             vResources: !!document.getElementById('v-resources'),
             vExercises: !!document.getElementById('v-exercises'),
             vLibros: !!document.getElementById('v-libros'),
+            practiceTabs: !!document.getElementById('practiceTabs'),
+            practiceTabLibrary: !!document.getElementById('practiceTabLibrary'),
             navResources: !!document.querySelector("nav button[data-view='resources']"),
             navExercises: !!document.querySelector("nav button[data-view='exercises']"),
             moreResources: !!document.querySelector("#moreSheet [data-view='resources']"),
             moreExercises: !!document.querySelector("#moreSheet [data-view='exercises']"),
+            wtfBrowseBtns: document.querySelectorAll('.wtf-browse-btn').length,
+            examBrowseBtn: !!document.getElementById('examBrowseExercisesBtn'),
             navLabels: [...document.querySelectorAll('#sideNav .nav-label')].map(e => e.textContent.trim()),
         })"""
     )
     assert not removed["vResources"], "#v-resources still exists in DOM"
     assert not removed["vExercises"], "#v-exercises still exists in DOM"
     assert not removed["vLibros"], "#v-libros still exists in DOM"
+    assert not removed["practiceTabs"], "#practiceTabs still exists in DOM"
+    assert not removed["practiceTabLibrary"], "#practiceTabLibrary still exists in DOM"
     assert not removed["navResources"], "Resources nav button still exists"
     assert not removed["navExercises"], "Exercises nav button still exists"
     assert not removed["moreResources"], "Resources item still exists in More sheet"
     assert not removed["moreExercises"], "Exercises item still exists in More sheet"
+    assert removed["wtfBrowseBtns"] == 0, f"Today browse buttons still exist: {removed['wtfBrowseBtns']}"
+    assert not removed["examBrowseBtn"], "#examBrowseExercisesBtn still exists"
     assert "Resources" not in removed["navLabels"], f"Resources still in nav: {removed['navLabels']}"
     assert "Exercises" not in removed["navLabels"], f"Exercises still in nav: {removed['navLabels']}"
 
@@ -207,70 +208,17 @@ with sync_playwright() as p:
     by_skill = {k: sum(1 for s in sources if s["skill"] == k) for k in EXPECTED_SKILLS}
     assert all(v >= 8 for v in by_skill.values()), f"Unbalanced PRACTICE_SOURCES: {by_skill}"
 
-    # 2b. Practice default tab is "By part"
+    # 2b. Enter session from Practice Start -> Contents -> See all in this paper -> All papers
     pg.evaluate("showView('practice')")
     pg.wait_for_timeout(200)
-    default_st = inspect_library(pg)
-    assert default_st["active"], "#v-practice not active"
-    assert default_st["partsVisible"] and not default_st["libVisible"], (
-        f"Practice default tab is not By part: parts={default_st['partsVisible']}, lib={default_st['libVisible']}"
-    )
-    assert [t["text"] for t in default_st["tabs"]] == ["By part", "Library"], (
-        f"Unexpected Practice tabs: {default_st['tabs']}"
-    )
-    for tab in default_st["tabs"]:
-        assert tab["h"] >= 44, f"Practice tab height {tab['h']} < 44px: {tab}"
-
-    # 9a. Entry from Today Materials panel opens Practice -> Library tab
-    pg.evaluate("showView('hoy')")
+    pg.click("#partsList .step button[data-action='startPart'][data-i='1']")
     pg.wait_for_timeout(200)
-    opened_today = pg.evaluate(
-        """() => {
-            const ids = ['wtfSectionRue', 'wtfSectionW', 'wtfSectionL', 'wtfSectionSp'];
-            for (const id of ids) {
-                const sec = document.getElementById(id);
-                if (!sec) continue;
-                const btn = sec.querySelector('.wtf-browse-btn');
-                if (!btn) continue;
-                setWtfOpen(sec.dataset.wtfSkill, true);
-                btn.click();
-                return id;
-            }
-            return null;
-        }"""
-    )
-    assert opened_today is not None, "No Today Materials library button found"
+    pg.click("#sessionTabContentsBtn")
     pg.wait_for_timeout(200)
-    st_today = inspect_library(pg)
-    assert st_today["active"] and st_today["libVisible"], (
-        f"Today button in {opened_today} did not open Practice -> Library"
-    )
-    today_btns = pg.evaluate(
-        """() => ['wtfPanelRue', 'wtfPanelW', 'wtfPanelL', 'wtfPanelSp'].map(id =>
-            !!document.querySelector('#' + id + ' .wtf-browse-btn')
-        )"""
-    )
-    assert all(today_btns), f"Missing library button in Today panels: {today_btns}"
-
-    # 9b. Legacy showView('resources') redirects to Practice -> Library tab
-    pg.evaluate("showView('hoy')")
-    pg.wait_for_timeout(120)
-    pg.evaluate("showView('resources')")
+    pg.click("#sessionContentsScopeBtn")
+    pg.wait_for_timeout(150)
+    pg.click("#exLibPaperFilter [data-exlib-paper='all']")
     pg.wait_for_timeout(200)
-    st_redir = inspect_library(pg)
-    assert st_redir["active"] and st_redir["libVisible"], (
-        "showView('resources') did not redirect to Practice -> Library"
-    )
-
-    # 9c. Entry from Exam sources card opens Practice -> Library tab
-    pg.click("nav button[data-view='exam']")
-    pg.wait_for_timeout(200)
-    pg.click("#examBrowseExercisesBtn")
-    pg.wait_for_timeout(200)
-    st_exam = inspect_library(pg)
-    assert st_exam["active"] and st_exam["libVisible"], (
-        "Exam '#examBrowseExercisesBtn' did not open Practice -> Library"
-    )
 
     # 3. All local + online + Reference entries listed, counter matches rendered rows
     expected_catalog = pg.evaluate("buildExerciseLibrary()")
@@ -286,16 +234,13 @@ with sync_playwright() as p:
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
     pg.wait_for_timeout(120)
     state = inspect_library(pg)
-    assert state is not None and state["active"] and state["libVisible"], "Practice Library not active"
-    assert state["subText"] == "Every paper, key, audio and verified source in one ordered list.", (
-        f"Unexpected Library subtitle: {state['subText']!r}"
-    )
-    assert not INLINE_HANDLER_RE.search(state["html"]), "Inline on* handler found in #v-practice"
+    assert state is not None and state["wsVisible"] and state["cntVisible"], "Session Contents not active"
+    assert not INLINE_HANDLER_RE.search(state["html"]), "Inline on* handler found in #sessionWorkspace"
 
     assert len(state["rows"]) == len(expected_catalog), (
         f"Rendered {len(state['rows'])} rows, expected {len(expected_catalog)}"
     )
-    assert state["countText"] == f"{len(state['rows'])} items", (
+    assert state["countText"] == f"{len(state['rows'])} contents", (
         f"Counter mismatch: {state['countText']!r} vs {len(state['rows'])}"
     )
 
@@ -325,7 +270,7 @@ with sync_playwright() as p:
         assert r["h"] >= 44, f"Row height {r['h']} < 44px: {r['name']}"
         assert r["right"] <= state["clientWidth"] + 1, f"Row overflows right edge: {r}"
 
-    # 8a. Mobile 390x844 light & dark checks + screenshots
+    # 8a. Mobile 390x844 light & dark checks
     assert state["listDisplay"] == "flex" and state["listFlexDir"] == "column", (
         f"Mobile list not single column: {state['listDisplay']}/{state['listFlexDir']}"
     )
@@ -337,19 +282,12 @@ with sync_playwright() as p:
     for ch in state["paperChips"] + state["partChips"]:
         assert ch["h"] >= 44, f"Chip {ch['text']!r} height {ch['h']} < 44px"
 
-    pg.evaluate("window.scrollTo(0, 0)")
-    pg.mouse.move(0, 0)
-    pg.wait_for_timeout(120)
-    pg.screenshot(path=os.path.join(OUT, "library_390_light.png"))
-
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark')")
-    pg.mouse.move(0, 0)
     pg.wait_for_timeout(120)
     dark_state = inspect_library(pg)
     assert dark_state["scrollWidth"] <= dark_state["clientWidth"] + 1, (
         f"390 dark horizontal overflow: {dark_state['scrollWidth']} > {dark_state['clientWidth']}"
     )
-    pg.screenshot(path=os.path.join(OUT, "library_390_dark.png"))
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
     pg.wait_for_timeout(100)
 
@@ -389,7 +327,7 @@ with sync_playwright() as p:
     assert st_l["rows"], "Listening filter returned 0 rows"
     assert all(r["skill"] == "l" for r in st_l["rows"]), "Listening filter leaked other papers"
     assert [g["skill"] for g in st_l["groups"]] == ["l"]
-    assert st_l["countText"] == f"{len(st_l['rows'])} items"
+    assert st_l["countText"] == f"{len(st_l['rows'])} contents"
 
     pg.click("#exLibPaperFilter [data-exlib-paper='ref']")
     pg.wait_for_timeout(100)
@@ -427,7 +365,7 @@ with sync_playwright() as p:
     st_q = inspect_library(pg)
     assert len(st_q["rows"]) == 1, f"Search 'Academic Phrasebank' expected 1 row, got {len(st_q['rows'])}"
     assert "Academic Phrasebank" in st_q["rows"][0]["name"]
-    assert st_q["countText"] == "1 item"
+    assert st_q["countText"] == "1 content"
 
     # Search finds Reference items too
     pg.fill("#exLibSearch", "Cambridge One")
@@ -443,7 +381,7 @@ with sync_playwright() as p:
     st_empty = inspect_library(pg)
     assert len(st_empty["rows"]) == 0
     assert st_empty["emptyVisible"], "Empty state not shown when 0 results"
-    assert st_empty["countText"] == "0 items"
+    assert st_empty["countText"] == "0 contents"
     pg.click("#exLibEmpty button[data-action='resetExLibFilters']")
     pg.wait_for_timeout(100)
     assert len(inspect_library(pg)["rows"]) == len(expected_catalog), "Reset filters did not restore all rows"
@@ -453,13 +391,13 @@ with sync_playwright() as p:
     pg.wait_for_timeout(250)
     es_state = inspect_library(pg)
     assert len(es_state["rows"]) == len(expected_catalog)
-    assert [t["text"] for t in es_state["tabs"]] == ["Por parte", "Biblioteca"], (
-        f"ES Practice tabs not translated: {es_state['tabs']}"
+    assert [t["text"] for t in es_state["tabs"]] == ["Sesión", "Contenidos"], (
+        f"ES Session tabs not translated: {es_state['tabs']}"
     )
     assert [c["val"] for c in es_state["paperChips"]] == [c["val"] for c in state["paperChips"]]
     assert [c["val"] for c in es_state["partChips"]] == [c["val"] for c in state["partChips"]]
     assert [o["v"] for o in es_state["sortOptions"]] == [o["v"] for o in state["sortOptions"]]
-    assert "elementos" in es_state["countText"], f"ES counter not translated: {es_state['countText']!r}"
+    assert "contenidos" in es_state["countText"], f"ES counter not translated: {es_state['countText']!r}"
     assert "Buscar" in es_state["searchPh"], f"ES placeholder not translated: {es_state['searchPh']!r}"
     assert es_state["paperChips"][0]["text"] == "Todas las pruebas"
     assert es_state["paperChips"][-1]["text"] == "Referencia"
@@ -470,7 +408,7 @@ with sync_playwright() as p:
         f"390 ES horizontal overflow: {es_state['scrollWidth']} > {es_state['clientWidth']}"
     )
 
-    # Restore EN and capture 1280x900 desktop screenshot of Practice tabs + Library
+    # Restore EN and check 1280x900 desktop layout
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(200)
     pg.set_viewport_size({"width": 1280, "height": 900})
@@ -480,10 +418,6 @@ with sync_playwright() as p:
         f"1280 horizontal overflow: {desktop['scrollWidth']} > {desktop['clientWidth']}"
     )
     assert len(desktop["rows"]) == len(expected_catalog)
-    pg.evaluate("window.scrollTo(0, 0)")
-    pg.mouse.move(0, 0)
-    pg.wait_for_timeout(120)
-    pg.screenshot(path=os.path.join(OUT, "practice_tabs_1280_light.png"))
 
     assert page_errors == [], f"Page errors: {page_errors}"
 
@@ -500,11 +434,6 @@ with sync_playwright() as p:
         "filter_free": len(st_free["rows"]),
         "en_count": state["countText"],
         "es_count": es_state["countText"],
-        "screenshots": [
-            "library_390_light.png",
-            "library_390_dark.png",
-            "practice_tabs_1280_light.png",
-        ],
         "page_errors": page_errors,
     }
     browser.close()

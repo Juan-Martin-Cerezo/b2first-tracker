@@ -69,7 +69,7 @@ with sync_playwright() as p:
     }""",
         LISTEN_KEYS,
     )
-    pg.evaluate("showView('practice'); setPracticeTab('library')")
+    pg.evaluate("openUnitSession({skill:'l',value:1,min:10},{origin:'practice',initialTab:'contents',expanded:true,exlibPaper:'all',exlibPart:'all'})")
     pg.wait_for_timeout(300)
 
     # 2. No opaque listening code anywhere; cards grouped in exam mode and studio.
@@ -117,23 +117,26 @@ with sync_playwright() as p:
     pg.wait_for_timeout(300)
     out["3_study_plan"] = "gone"
 
-    # 4. Part rows have no chips; Library button filters the unified library.
-    pg.evaluate("resetExLibFilters(); showView('practice')")
+    # 4. Part rows have no chips and a single Start button; Start opens session with filtered Contents.
+    pg.evaluate("closeSessionStudios(); showView('practice')")
     pg.wait_for_timeout(300)
     assert pg.eval_on_selector_all("#partsList .step .chip", "els => els.length") == 0, (
         "part rows still carry resource chips"
     )
     pg.locator("#v-practice").screenshot(path=os.path.join(OUT, "practice_sections.png"))
     first_row = pg.locator("#partsList .step").first
-    row_buttons = first_row.locator("button")
-    labels = [row_buttons.nth(i).inner_text().strip() for i in range(row_buttons.count())]
-    assert "Library" in labels, f"the row has no Library button: {labels}"
-    first_row.locator("button", has_text="Library").click()
+    action_buttons = first_row.locator(".step-actions button")
+    labels = [action_buttons.nth(i).inner_text().strip() for i in range(action_buttons.count())]
+    assert labels == ["Start"], f"the row should have only a Start button: {labels}"
+    action_buttons.first.click()
     pg.wait_for_timeout(300)
-    assert pg.evaluate("!document.getElementById('practiceTabLibrary').hidden"), "Library tab did not open"
+    assert pg.evaluate("!document.getElementById('sessionWorkspace').hidden"), "Session workspace did not open"
+    pg.click("#sessionTabContentsBtn")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('sessionTabContents').hidden"), "Contents tab did not open"
     skills = pg.eval_on_selector_all("#exLibList a.exlib-row", "els => [...new Set(els.map(e => e.dataset.skill))]")
-    assert skills == ["rue"], f"Library did not filter to the row's paper: {skills}"
-    pg.evaluate("resetExLibFilters()")
+    assert skills == ["rue"], f"Contents did not filter to the row's paper: {skills}"
+    pg.evaluate("closeSessionStudios()")
     out["4_rows_library"] = {"row_buttons": labels, "filtered": skills}
 
     # 5. The Phase 3 AI check reuses the corrector endpoint shape.

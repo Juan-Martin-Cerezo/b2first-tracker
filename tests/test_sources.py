@@ -50,7 +50,7 @@ with sync_playwright() as p:
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
 
-    # --- 1. Practice is in the nav and opens the Library tab --------------
+    # --- 1. Practice is in the nav; Start opens session Contents -> See all ---
     assert pg.evaluate(
         "!!document.querySelector(\"nav button[data-view='practice']\")"
     ), "Practice is not in the main navigation"
@@ -59,11 +59,15 @@ with sync_playwright() as p:
     assert pg.evaluate(
         "document.getElementById('v-practice').classList.contains('active')"
     ), "Practice did not become the active view"
-    pg.click("#practiceTabLibraryBtn")
-    pg.wait_for_timeout(250)
+    pg.click("#partsList .step button[data-action='startPart'][data-i='0']")
+    pg.wait_for_timeout(200)
+    pg.click("#sessionTabContentsBtn")
+    pg.wait_for_timeout(200)
+    pg.click("#sessionContentsScopeBtn")
+    pg.wait_for_timeout(200)
     assert pg.evaluate(
-        "!document.getElementById('practiceTabLibrary').hidden"
-    ), "Library tab did not open inside Practice"
+        "!document.getElementById('sessionTabContents').hidden"
+    ), "Contents tab did not open inside Session"
 
     # --- 2. The catalogue is big enough and has the right shape -----------
     sources = pg.evaluate(

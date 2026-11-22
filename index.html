@@ -916,12 +916,27 @@ a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var
   .u4-exam-materials{margin-bottom:var(--s4)}
 }
 
-/* ---------- PRACTICE TABS & UNIFIED LIBRARY ---------- */
+/* ---------- SESSION WORKSPACE (Session + Contents tabs) ---------- */
+#v-hoy.is-session-focus .today-block{display:none}
+.session-workspace{display:flex;flex-direction:column;gap:var(--s4);min-width:0}
+.session-workspace[hidden]{display:none}
+#sessionTabSession[hidden],#sessionTabContents[hidden]{display:none}
+.session-topbar{
+  display:flex;flex-direction:column;gap:var(--s3);min-width:0;
+  padding:var(--s4);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-panel);
+  box-shadow:var(--shadow-1);
+}
+.session-topbar-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);min-width:0}
+.session-topbar-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.session-topbar-paper{font-size:var(--t-meta);font-weight:600;color:var(--txt-2);letter-spacing:.04em;text-transform:uppercase;line-height:1.3}
+.session-topbar-title{margin:0;font-size:var(--fs-lg);font-weight:700;color:var(--txt);line-height:1.25;overflow-wrap:anywhere}
+.session-close-btn{flex:none;min-height:44px;min-width:44px}
 .practice-tabs{
   display:inline-flex;align-items:center;gap:4px;
-  padding:4px;margin:0 0 var(--s4);
+  padding:4px;margin:0;
   background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
-  max-width:100%;
+  max-width:100%;align-self:flex-start;
 }
 .practice-tab{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -938,9 +953,18 @@ a.wtf-block.wtf-source:hover,a.wtf-block.wtf-source:focus-visible{background:var
   border-color:var(--line);box-shadow:var(--shadow-1);
 }
 .practice-tab:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.wtf-browse-all{display:flex;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
-.wtf-browse-btn{min-height:44px}
-.u4-source-foot{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s3)}
+.session-contents-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2) var(--s3);min-width:0}
+.session-scope-link{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 4px;
+  background:transparent;border:none;border-radius:6px;
+  color:var(--acc-text);font-family:var(--font);font-size:var(--t-meta);font-weight:600;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;white-space:nowrap;
+}
+.session-scope-link:hover{opacity:.85}
+.session-scope-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.session-scope-link[hidden]{display:none}
+.exlib-advanced{display:flex;flex-direction:column;gap:var(--s3);padding-top:var(--s2);border-top:1px solid var(--line);min-width:0}
+.exlib-advanced[hidden]{display:none}
 .exlib-toolbar{display:flex;flex-direction:column;gap:var(--s3);margin:0 0 var(--s4);min-width:0}
 .exlib-search-row{display:flex;align-items:center;gap:var(--s2);min-width:0}
 .exlib-search-input{flex:1;min-width:0;min-height:var(--btn-h-tertiary)}
@@ -992,10 +1016,9 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .exlib-empty{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s3);padding:var(--s4);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
 .exlib-empty p{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45}
 @media (max-width:480px){
+  .session-topbar{padding:var(--s3)}
   .practice-tabs{display:flex;width:100%}
   .practice-tab{flex:1;min-width:0;padding:0 12px}
-  .wtf-browse-all{justify-content:stretch}
-  .wtf-browse-btn{width:100%;justify-content:center}
   .exlib-bar{align-items:flex-start}
 }
 
@@ -4034,6 +4057,23 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="card" id="lastSpeaking" style="display:none"></div>
           </div>
 
+          <!-- SESSION WORKSPACE: opens from Practice Start, Today or Plan -->
+          <div id="sessionWorkspace" class="session-workspace" hidden>
+            <div class="session-topbar" id="sessionBar">
+              <div class="session-topbar-head">
+                <div class="session-topbar-meta">
+                  <span class="session-topbar-paper" id="sessionUnitPaper"></span>
+                  <h2 class="session-topbar-title" id="sessionUnitTitle"></h2>
+                </div>
+                <button type="button" class="btn sm gray session-close-btn" id="sessionCloseBtn" data-action="closeSessionView" data-i18n="common_close">Close</button>
+              </div>
+              <div class="practice-tabs session-tabs" id="sessionTabs" role="tablist" aria-label="Session views" data-i18n-aria-label="session_tabs_aria">
+                <button type="button" class="practice-tab active" id="sessionTabSessionBtn" role="tab" aria-selected="true" aria-controls="sessionTabSession" data-session-tab="session" data-action="setSessionTab" data-i18n="session_tab_session">Session</button>
+                <button type="button" class="practice-tab" id="sessionTabContentsBtn" role="tab" aria-selected="false" aria-controls="sessionTabContents" data-session-tab="contents" data-action="setSessionTab" data-i18n="session_tab_contents">Contents</button>
+              </div>
+            </div>
+
+            <div id="sessionTabSession" role="tabpanel" aria-labelledby="sessionTabSessionBtn">
             <!-- SESSION A (MONDAYS) -->
             <div id="sesA">
               <!-- Studio 1: Full Reading & Use of English Sprint (Week A Monday) -->
@@ -4085,7 +4125,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelRue" hidden>
                         <div class="wtf-panel-lead" id="st1GuideLead">📍 <b>Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gUeChips"></div>
-                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide wtf-notes">
@@ -4200,7 +4239,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelW" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></div>
                         <div class="wtf-list wtf-compact" id="gWChips"></div>
-                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide">
@@ -4370,7 +4408,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="wtf-panel" id="wtfPanelL" hidden>
                         <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></div>
                         <div class="wtf-list wtf-compact" id="gLChips"></div>
-                        <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                       </div>
                     </div>
                     <div class="guide wtf-notes"><span id="st3Rule">—</span></div>
@@ -4678,7 +4715,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     </button>
                     <div class="wtf-panel" id="wtfPanelSp" hidden>
                       <div class="wtf-list wtf-compact" id="gSpChips"></div>
-                      <div class="wtf-browse-all"><button type="button" class="btn sm gray wtf-browse-btn" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Browse all exercises</button></div>
                     </div>
                   </section>
 
@@ -4993,6 +5029,79 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 </div>
               </div>
             </div>
+            </div>
+
+            <div id="sessionTabContents" role="tabpanel" aria-labelledby="sessionTabContentsBtn" hidden>
+              <div class="card" id="exercisesLibraryCard">
+                <h2 id="sessionContentsTitle" data-i18n="session_contents_title">Contents</h2>
+                <div class="sub" id="sessionContentsSub" data-i18n="session_contents_sub">Papers, answer keys, lesson plans, audio and online practice for this unit.</div>
+                <div class="exlib-toolbar">
+                  <div class="exlib-search-row">
+                    <label class="sr" for="exLibSearch" data-i18n="exlib_search_label">Search contents</label>
+                    <input type="search" id="exLibSearch" class="exlib-search-input" autocomplete="off"
+                      placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
+                      aria-label="Search contents" data-i18n-aria-label="exlib_search_label"
+                      data-input="onExLibSearch" data-keydown="exLibSearchKey">
+                    <button type="button" id="exLibClear" class="btn sm gray exlib-clear-btn" style="display:none"
+                      data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
+                  </div>
+
+                  <div class="session-contents-status">
+                    <div class="exlib-count tnum" id="exLibCount" aria-live="polite"></div>
+                    <button type="button" class="session-scope-link" id="sessionContentsScopeBtn"
+                      data-action="toggleContentsPaperScope">See all in this paper</button>
+                  </div>
+
+                  <div id="exLibAdvancedFilters" class="exlib-advanced" hidden>
+                    <div class="chips exlib-chips" id="exLibPaperFilter" role="group"
+                      aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
+                      <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
+                    </div>
+
+                    <div class="chips exlib-chips" id="exLibPartFilter" role="group"
+                      aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
+                      <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
+                      <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
+                    </div>
+
+                    <div class="exlib-bar">
+                      <div class="exlib-bar-controls">
+                        <label class="exlib-free-toggle" for="exLibFreeOnly">
+                          <input type="checkbox" id="exLibFreeOnly" data-change="toggleExLibFree">
+                          <span data-i18n="exlib_free_only">Free only</span>
+                        </label>
+                        <label class="exlib-sort-wrap" for="exLibSort">
+                          <span data-i18n="exlib_sort_label">Sort</span>
+                          <select id="exLibSort" class="exlib-sort-select" data-change="setExLibSort">
+                            <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
+                            <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
+                            <option value="az" data-i18n="exlib_sort_az">A–Z</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="exLibList" class="exlib-groups"></div>
+                <div id="exLibEmpty" class="exlib-empty" style="display:none">
+                  <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
+                  <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -5123,9 +5232,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div class="es-count tnum" id="examSourcesCount" aria-live="polite"></div>
           </div>
           <div id="examSources" class="es-groups"></div>
-          <div class="u4-source-foot">
-            <div class="u4-source-browse"><button class="btn sm" id="examBrowseExercisesBtn" type="button" data-action="openExercisesLibrary" data-i18n="exlib_browse_all">Open library</button></div>
-          </div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -5459,90 +5565,19 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ PRACTICE (By part + unified Library) ============ -->
+      <!-- ============ PRACTICE (By part) ============ -->
       <section id="v-practice" class="view">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="practice_head_title">Practice</h1>
-            <p class="page-sub" data-i18n="practice_head_sub">Timed drills by exam part and the full library of papers, keys, audio and verified sources.</p>
+            <p class="page-sub" data-i18n="practice_head_sub">Timed drills by exam part. Tap Start to open the session with its papers, keys, audio and practice sources.</p>
           </div>
         </div>
 
-        <div class="practice-tabs" id="practiceTabs" role="tablist" aria-label="Practice views" data-i18n-aria-label="practice_tabs_aria">
-          <button type="button" class="practice-tab active" id="practiceTabPartsBtn" role="tab" aria-selected="true" aria-controls="practiceTabParts" data-practice-tab="parts" data-action="setPracticeTab" data-i18n="practice_tab_parts">By part</button>
-          <button type="button" class="practice-tab" id="practiceTabLibraryBtn" role="tab" aria-selected="false" aria-controls="practiceTabLibrary" data-practice-tab="library" data-action="setPracticeTab" data-i18n="practice_tab_library">Library</button>
-        </div>
-
-        <div id="practiceTabParts" role="tabpanel" aria-labelledby="practiceTabPartsBtn">
-          <div class="card" id="practiceParts">
-            <h2 data-i18n="parts_exercises">Exercises by part</h2>
-            <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
-            <div id="partsList"></div>
-          </div>
-        </div>
-
-        <div id="practiceTabLibrary" role="tabpanel" aria-labelledby="practiceTabLibraryBtn" hidden>
-          <div class="card" id="exercisesLibraryCard">
-            <h2 data-i18n="exlib_title">Library</h2>
-            <div class="sub" data-i18n="exlib_sub">Every paper, key, audio and verified source in one ordered list.</div>
-            <div class="exlib-toolbar">
-              <div class="exlib-search-row">
-                <label class="sr" for="exLibSearch" data-i18n="exlib_search_label">Search library</label>
-                <input type="search" id="exLibSearch" class="exlib-search-input" autocomplete="off"
-                  placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
-                  aria-label="Search library" data-i18n-aria-label="exlib_search_label"
-                  data-input="onExLibSearch" data-keydown="exLibSearchKey">
-                <button type="button" id="exLibClear" class="btn sm gray exlib-clear-btn" style="display:none"
-                  data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
-              </div>
-
-              <div class="chips exlib-chips" id="exLibPaperFilter" role="group"
-                aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
-                <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
-              </div>
-
-              <div class="chips exlib-chips" id="exLibPartFilter" role="group"
-                aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
-                <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
-              </div>
-
-              <div class="exlib-bar">
-                <div class="exlib-bar-controls">
-                  <label class="exlib-free-toggle" for="exLibFreeOnly">
-                    <input type="checkbox" id="exLibFreeOnly" data-change="toggleExLibFree">
-                    <span data-i18n="exlib_free_only">Free only</span>
-                  </label>
-                  <label class="exlib-sort-wrap" for="exLibSort">
-                    <span data-i18n="exlib_sort_label">Sort</span>
-                    <select id="exLibSort" class="exlib-sort-select" data-change="setExLibSort">
-                      <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
-                      <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
-                      <option value="az" data-i18n="exlib_sort_az">A–Z</option>
-                    </select>
-                  </label>
-                </div>
-                <div class="exlib-count tnum" id="exLibCount" aria-live="polite"></div>
-              </div>
-            </div>
-
-            <div id="exLibList" class="exlib-groups"></div>
-            <div id="exLibEmpty" class="exlib-empty" style="display:none">
-              <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
-              <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
-            </div>
-          </div>
+        <div class="card" id="practiceParts">
+          <h2 data-i18n="parts_exercises">Exercises by part</h2>
+          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
+          <div id="partsList"></div>
         </div>
       </section>
 
@@ -5783,10 +5818,14 @@ const I18N={
     more_desc_ia:'Cambridge B2 rubric grading',
     plan_edit_intake_short:'Edit intake',
     practice_head_title:'Practice',
-    practice_head_sub:'Timed drills by exam part and the full library of papers, keys, audio and verified sources.',
-    practice_tabs_aria:'Practice views',
-    practice_tab_parts:'By part',
-    practice_tab_library:'Library',
+    practice_head_sub:'Timed drills by exam part. Tap Start to open the session with its papers, keys, audio and practice sources.',
+    session_tabs_aria:'Session views',
+    session_tab_session:'Session',
+    session_tab_contents:'Contents',
+    session_contents_title:'Contents',
+    session_contents_sub:'Papers, answer keys, lesson plans, audio and online practice for this unit.',
+    session_contents_see_paper:'See all in this paper',
+    session_contents_back_part:'Back to Part {part}',
     practice_filter_rue:'Reading & UoE',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
@@ -6063,7 +6102,6 @@ const I18N={
     res_online_practice:'Online practice',
     res_online:'Online',
     part_start:'Start',
-    part_library:'Library',
     paper_reading:'Reading & Use of English',
     paper_listening:'Listening',
     paper_speaking:'Speaking',
@@ -6796,10 +6834,9 @@ const I18N={
     l_own_err_delete:'Could not delete material.',
     l_own_err_limit_items:'Limit reached: maximum 10 saved materials.',
     l_own_err_limit_bytes:'Storage limit reached (40 MB per user). Delete an old file first.',
-    exlib_title:'Library',
+    exlib_title:'Contents',
     exlib_sub:'Every paper, key, audio and verified source in one ordered list.',
-    exlib_browse_all:'Open library',
-    exlib_search_label:'Search library',
+    exlib_search_label:'Search contents',
     exlib_search_ph:'Search by name, paper or part…',
     exlib_clear:'Clear',
     exlib_paper_aria:'Filter library by section',
@@ -6819,9 +6856,9 @@ const I18N={
     exlib_sort_exam:'Exam order',
     exlib_sort_shortest:'Shortest first',
     exlib_sort_az:'A–Z',
-    exlib_count_many:'{n} items',
-    exlib_count_one:'1 item',
-    exlib_empty:'No items match these filters. Try clearing the search or switching back to all papers and parts.',
+    exlib_count_many:'{n} contents',
+    exlib_count_one:'1 content',
+    exlib_empty:'No contents match these filters. Try clearing the search or resetting filters.',
     exlib_reset:'Reset filters',
     exlib_open:'Open',
     exlib_all_parts:'All parts',
@@ -6861,10 +6898,14 @@ const I18N={
     more_desc_ia:'Corrección con rúbrica B2',
     plan_edit_intake_short:'Editar perfil',
     practice_head_title:'Práctica',
-    practice_head_sub:'Ejercicios cronometrados por parte del examen y la biblioteca completa de exámenes, respuestas, audios y fuentes verificadas.',
-    practice_tabs_aria:'Vistas de Práctica',
-    practice_tab_parts:'Por parte',
-    practice_tab_library:'Biblioteca',
+    practice_head_sub:'Ejercicios cronometrados por parte del examen. Tocá Empezar para abrir la sesión con sus exámenes, respuestas, audios y fuentes.',
+    session_tabs_aria:'Vistas de la sesión',
+    session_tab_session:'Sesión',
+    session_tab_contents:'Contenidos',
+    session_contents_title:'Contenidos',
+    session_contents_sub:'Exámenes, respuestas, guías de clase, audios y práctica online de esta unidad.',
+    session_contents_see_paper:'Ver todo en esta prueba',
+    session_contents_back_part:'Volver a Parte {part}',
     practice_filter_rue:'Reading y UoE',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
@@ -7141,7 +7182,6 @@ const I18N={
     res_online_practice:'Práctica en línea',
     res_online:'En línea',
     part_start:'Empezar',
-    part_library:'Biblioteca',
     paper_reading:'Reading y UoE',
     paper_listening:'Listening',
     paper_speaking:'Speaking',
@@ -7874,10 +7914,9 @@ const I18N={
     l_own_err_delete:'No se pudo borrar el material.',
     l_own_err_limit_items:'Límite alcanzado: máximo 10 materiales guardados.',
     l_own_err_limit_bytes:'Límite de almacenamiento alcanzado (40 MB por usuario). Borrá un archivo primero.',
-    exlib_title:'Biblioteca',
+    exlib_title:'Contenidos',
     exlib_sub:'Todos los exámenes, respuestas, audios y fuentes verificadas en una sola lista ordenada.',
-    exlib_browse_all:'Abrir biblioteca',
-    exlib_search_label:'Buscar en la biblioteca',
+    exlib_search_label:'Buscar contenidos',
     exlib_search_ph:'Buscar por nombre, prueba o parte…',
     exlib_clear:'Limpiar',
     exlib_paper_aria:'Filtrar biblioteca por sección',
@@ -7897,9 +7936,9 @@ const I18N={
     exlib_sort_exam:'Orden del examen',
     exlib_sort_shortest:'Más cortos primero',
     exlib_sort_az:'A–Z',
-    exlib_count_many:'{n} elementos',
-    exlib_count_one:'1 elemento',
-    exlib_empty:'Ningún elemento coincide con estos filtros. Probá limpiando la búsqueda o volviendo a todas las pruebas y partes.',
+    exlib_count_many:'{n} contenidos',
+    exlib_count_one:'1 contenido',
+    exlib_empty:'Ningún contenido coincide con estos filtros. Probá limpiando la búsqueda o restableciendo los filtros.',
     exlib_reset:'Limpiar filtros',
     exlib_open:'Abrir',
     exlib_all_parts:'Toda la prueba',
@@ -10242,18 +10281,149 @@ function applyTimers(){ueTimer.set(SETTINGS_DEFAULT.ueMin);lTimer.set(SETTINGS_D
 let CURRENT_STUDIO='';
 let CURRENT_STUDIO_SOURCE='';
 let CURRENT_STUDIO_SLOT=null;
+let SESSION_TAB='session';
+let SESSION_UNIT=null;
+let SESSION_ORIGIN='';
+const SESSION_PAPER_KEYS={rue:'paper_reading',w:'paper_writing',l:'paper_listening',sp:'paper_speaking'};
+function unitPartString(skill,value){
+  if(skill==='w'){
+    if(value===1||value==='1'||String(value||'').toLowerCase()==='essay')return '1';
+    if(value===2||value==='2'||value)return '2';
+    return null;
+  }
+  const n=Number(value);
+  return (Number.isInteger(n)&&n>=1&&n<=7)?String(n):null;
+}
+function inferStudioUnit(id){
+  const skill=(typeof STUDIO_ID_SKILL==='object'&&STUDIO_ID_SKILL)?STUDIO_ID_SKILL[id]:null;
+  if(!skill)return null;
+  let part=null,value=null,min=0;
+  if(skill==='rue'){
+    const v=document.getElementById('uePart')?String(document.getElementById('uePart').value):'all';
+    part=v==='all'?null:v;
+    value=part?Number(part):null;
+    min=document.getElementById('ueMin')?+document.getElementById('ueMin').value||0:0;
+  }else if(skill==='l'){
+    const v=document.getElementById('lPart')?String(document.getElementById('lPart').value):'all';
+    part=v==='all'?null:v;
+    value=part?Number(part):null;
+    min=document.getElementById('lMin')?+document.getElementById('lMin').value||0:0;
+  }else if(skill==='w'){
+    const v=document.getElementById('wTipo')?String(document.getElementById('wTipo').value):'Essay';
+    part=unitPartString('w',v);
+    value=v;
+    min=document.getElementById('wMin')?+document.getElementById('wMin').value||0:40;
+  }else if(skill==='sp'){
+    const full=(typeof SP_TODAY!=='undefined'&&SP_TODAY.mode==='full');
+    part=full?null:String((typeof SP_TODAY!=='undefined'&&SP_TODAY.part)||2);
+    value=part?Number(part):null;
+    min=full?14:(unitMinutes({skill:'sp',value:value||2})||4);
+  }
+  return {skill,part,value,min};
+}
+function sessionUnitHeading(u){
+  if(!u)return '';
+  const partStr=u.part?String(u.part):'';
+  const partLabel=partStr?t('exlib_part_'+partStr):'';
+  const match=(typeof PARTS!=='undefined'&&Array.isArray(PARTS)&&partStr)
+    ?PARTS.find(p=>((p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue')===u.skill)&&String(p.n)===partStr)
+    :null;
+  let base='';
+  if(u.skill==='w'&&u.value&&typeof u.value==='string'&&partLabel){
+    base=partLabel+' — '+u.value;
+  }else if(match&&partLabel){
+    base=partLabel+' — '+match.t;
+  }else if(partLabel){
+    base=partLabel;
+  }else{
+    base=t(SESSION_PAPER_KEYS[u.skill]||'paper_reading');
+  }
+  return u.min?`${base} · ${t('practice_mins',{mins:u.min})}`:base;
+}
+function renderSessionTopbar(){
+  const u=SESSION_UNIT;
+  const paperEl=document.getElementById('sessionUnitPaper');
+  const titleEl=document.getElementById('sessionUnitTitle');
+  const scopeBtn=document.getElementById('sessionContentsScopeBtn');
+  if(paperEl)paperEl.textContent=u?t(SESSION_PAPER_KEYS[u.skill]||'paper_reading'):'';
+  if(titleEl)titleEl.textContent=u?sessionUnitHeading(u):'';
+  if(scopeBtn){
+    if(u&&u.part){
+      scopeBtn.hidden=false;
+      scopeBtn.textContent=EXLIB_STATE.expanded
+        ?t('session_contents_back_part',{part:u.part})
+        :t('session_contents_see_paper');
+    }else{
+      scopeBtn.hidden=true;
+    }
+  }
+}
+function setSessionTab(tab){
+  SESSION_TAB=(tab==='contents')?'contents':'session';
+  const sesBtn=document.getElementById('sessionTabSessionBtn');
+  const cntBtn=document.getElementById('sessionTabContentsBtn');
+  const sesPanel=document.getElementById('sessionTabSession');
+  const cntPanel=document.getElementById('sessionTabContents');
+  const isCnt=SESSION_TAB==='contents';
+  if(sesBtn){sesBtn.classList.toggle('active',!isCnt);sesBtn.setAttribute('aria-selected',isCnt?'false':'true');}
+  if(cntBtn){cntBtn.classList.toggle('active',isCnt);cntBtn.setAttribute('aria-selected',isCnt?'true':'false');}
+  if(sesPanel)sesPanel.hidden=isCnt;
+  if(cntPanel)cntPanel.hidden=!isCnt;
+  if(isCnt){
+    if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
+    renderSessionTopbar();
+    renderExercisesLibrary();
+  }
+}
+function toggleContentsPaperScope(){
+  const u=SESSION_UNIT;
+  if(!EXLIB_STATE.expanded){
+    EXLIB_STATE.expanded=true;
+    EXLIB_STATE.paper=(u&&u.skill)||'all';
+    EXLIB_STATE.part='all';
+  }else{
+    EXLIB_STATE.expanded=false;
+    EXLIB_STATE.paper=(u&&u.skill)||'all';
+    EXLIB_STATE.part=(u&&u.part)||'all';
+    EXLIB_STATE.freeOnly=false;
+    EXLIB_STATE.sort='exam';
+  }
+  renderSessionTopbar();
+  renderExercisesLibrary();
+}
+function resetStudioPhases(skill){
+  if(skill==='rue'){
+    document.querySelectorAll('#uePhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='sprint'));
+    const p1=document.getElementById('uePhase1'),p2=document.getElementById('uePhase2');
+    if(p1)p1.style.display='block';
+    if(p2)p2.style.display='none';
+  }else if(skill==='w'){
+    document.querySelectorAll('#wPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='plan'));
+    const p1=document.getElementById('wPhase1'),p2=document.getElementById('wPhase2'),p3=document.getElementById('wPhase3');
+    if(p1)p1.style.display='block';
+    if(p2)p2.style.display='none';
+    if(p3)p3.style.display='none';
+  }else if(skill==='l'){
+    document.querySelectorAll('#lPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='play'));
+    const p1=document.getElementById('lPhase1'),p2=document.getElementById('lPhase2');
+    if(p1)p1.style.display='block';
+    if(p2)p2.style.display='none';
+  }
+}
 function selectSessionStudio(id,opts){
   /* Leaving the speaking studio must not leave an exam voice talking to an
      empty card. The panel lives in the Speaking studio. */
   if(id!=='fri-b'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
   CURRENT_STUDIO=id||'';
   const fromPlan=!!(opts&&opts.fromPlan&&opts.slot&&opts.slot.day);
-  CURRENT_STUDIO_SOURCE=id?(fromPlan?'plan':'menu'):'';
+  CURRENT_STUDIO_SOURCE=id?((opts&&opts.source)||(fromPlan?'plan':'menu')):'';
   CURRENT_STUDIO_SLOT=fromPlan?opts.slot:null;
   const skill=(typeof STUDIO_ID_SKILL==='object'&&STUDIO_ID_SKILL)?STUDIO_ID_SKILL[id]:null;
   if(skill&&typeof paintStudioBadge==='function'){
     paintStudioBadge(skill,fromPlan?opts.slot:null,fromPlan);
   }
+  const ws=document.getElementById('sessionWorkspace');
+  if(ws)ws.hidden=!id;
   const group=(gid,on)=>{const el=document.getElementById(gid);if(el)el.style.display=on?'flex':'none'};
   const card=(cid,on)=>{const el=document.getElementById(cid);if(el)el.style.display=on?'block':'none'};
   group('sesA',id==='mon-a'||id==='mon-b');
@@ -10263,16 +10433,119 @@ function selectSessionStudio(id,opts){
   card('studioMonB',id==='mon-b');
   card('studioFriA',id==='fri-a');
   card('studioFriB',id==='fri-b');
+  if(id&&!(opts&&opts.keepUnit)){
+    const u=inferStudioUnit(id);
+    SESSION_UNIT=u;
+    if(!SESSION_ORIGIN)SESSION_ORIGIN='hoy';
+    EXLIB_STATE.query='';
+    EXLIB_STATE.paper=(u&&u.skill)||'all';
+    EXLIB_STATE.part=(u&&u.part)||'all';
+    EXLIB_STATE.freeOnly=false;
+    EXLIB_STATE.sort='exam';
+    EXLIB_STATE.expanded=!(u&&u.part);
+    setSessionTab('session');
+    renderSessionTopbar();
+    if(typeof renderExercisesLibrary==='function')renderExercisesLibrary();
+  }
 }
 /* The resting state of TODAY: every studio group closed. */
 function closeSessionStudios(){
+  if(window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
   CURRENT_STUDIO='';
   CURRENT_STUDIO_SOURCE='';
   CURRENT_STUDIO_SLOT=null;
+  SESSION_TAB='session';
+  SESSION_UNIT=null;
+  SESSION_ORIGIN='';
+  if(typeof PLAN_UNIT_START!=='undefined')PLAN_UNIT_START=null;
+  const hoy=document.getElementById('v-hoy');
+  if(hoy)hoy.classList.remove('is-session-focus');
+  const ws=document.getElementById('sessionWorkspace');
+  if(ws)ws.hidden=true;
   ['sesA','sesB','sesFull'].forEach(gid=>{
     const el=document.getElementById(gid);
     if(el)el.style.display='none';
   });
+  const sesBtn=document.getElementById('sessionTabSessionBtn');
+  const cntBtn=document.getElementById('sessionTabContentsBtn');
+  const sesPanel=document.getElementById('sessionTabSession');
+  const cntPanel=document.getElementById('sessionTabContents');
+  if(sesBtn){sesBtn.classList.add('active');sesBtn.setAttribute('aria-selected','true');}
+  if(cntBtn){cntBtn.classList.remove('active');cntBtn.setAttribute('aria-selected','false');}
+  if(sesPanel)sesPanel.hidden=false;
+  if(cntPanel)cntPanel.hidden=true;
+  if(typeof EXLIB_STATE==='object'&&EXLIB_STATE){
+    EXLIB_STATE.query='';
+    EXLIB_STATE.paper='all';
+    EXLIB_STATE.part='all';
+    EXLIB_STATE.freeOnly=false;
+    EXLIB_STATE.sort='exam';
+    EXLIB_STATE.expanded=false;
+  }
+}
+function closeSessionView(){
+  const origin=SESSION_ORIGIN||'practice';
+  closeSessionStudios();
+  if(origin==='plan'){showView('plan');return}
+  if(origin==='hoy')return;
+  showView('practice');
+}
+function openUnitSession(u,opts){
+  if(!u)return;
+  const o=opts||{};
+  const skill=u.skill==='ue'?'rue':(u.skill==='lp'?'l':u.skill);
+  const partStr=u.part!=null?String(u.part):unitPartString(skill,u.value);
+  const value=(u.value!=null)?u.value:(skill==='w'?(partStr==='1'?'Essay':'Article'):(partStr?Number(partStr):1));
+  const min=Number(u.min)||unitMinutes({skill,value})||10;
+  const origin=o.origin||'practice';
+  const fromPlan=!!o.fromPlan;
+  PLAN_UNIT_START=o.armPlanUnit?{skill,value,min}:null;
+  const slot=unitStartSlot({skill,value,min},o.slot||null);
+  if(skill==='rue')paintUeStudio(slot);
+  else if(skill==='l')paintListeningStudio(slot);
+  else if(skill==='w')paintWritingStudio(slot);
+  else if(skill==='sp')paintSpeakingStudio(slot);
+  resetStudioPhases(skill);
+  SESSION_ORIGIN=origin;
+  SESSION_UNIT={skill,part:partStr,value,min};
+  EXLIB_STATE.query='';
+  EXLIB_STATE.paper=o.exlibPaper||skill;
+  EXLIB_STATE.part=o.exlibPart!=null?String(o.exlibPart):(partStr||'all');
+  EXLIB_STATE.freeOnly=false;
+  EXLIB_STATE.sort='exam';
+  EXLIB_STATE.expanded=o.expanded!=null?!!o.expanded:!partStr;
+  const hoy=document.getElementById('v-hoy');
+  if(origin==='practice'||origin==='plan'){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    if(hoy){hoy.classList.add('active');hoy.classList.add('is-session-focus');}
+    const navTarget=origin==='plan'?'plan':'practice';
+    document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===navTarget));
+    if(typeof closeMoreSheet==='function')closeMoreSheet(false);
+    if(typeof closeAccountSheet==='function')closeAccountSheet(false);
+    if(typeof syncMoreActiveState==='function')syncMoreActiveState(navTarget);
+    if(typeof updateTopbarViewTitle==='function')updateTopbarViewTitle(navTarget);
+    if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab(navTarget);
+    if(typeof syncTopbarCompact==='function')syncTopbarCompact();
+    if(typeof syncNavOffset==='function')syncNavOffset();
+  }else if(hoy){
+    hoy.classList.remove('is-session-focus');
+  }
+  selectSessionStudio(UNIT_STUDIO[skill]||'mon-a',{
+    fromPlan:fromPlan&&!!slot.day,
+    slot:slot,
+    source:origin==='practice'?'practice':(fromPlan?'plan':'menu'),
+    keepUnit:true
+  });
+  setSessionTab(o.initialTab==='contents'?'contents':'session');
+  renderSessionTopbar();
+  renderExercisesLibrary();
+  if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
+  if(origin==='practice'||origin==='plan'){
+    window.scrollTo(0,0);
+  }else if(o.scroll!==false){
+    const ws=document.getElementById('sessionWorkspace');
+    if(ws&&ws.scrollIntoView)ws.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 
 function switchWritingPhase(p){
@@ -18156,13 +18429,14 @@ function paintSessionStudios(plan){
   const w=studioSlotFor('w',p);
   const l=studioSlotFor('l',p);
   const sp=studioSlotFor('sp',p);
-  paintUeStudio(ue);
-  paintWritingStudio(w);
-  paintListeningStudio(l);
-  paintSpeakingStudio(sp);
+  const keepSkill=(CURRENT_STUDIO&&CURRENT_STUDIO_SOURCE==='practice'&&SESSION_UNIT)?SESSION_UNIT.skill:'';
+  if(keepSkill!=='rue')paintUeStudio(ue);
+  if(keepSkill!=='w')paintWritingStudio(w);
+  if(keepSkill!=='l')paintListeningStudio(l);
+  if(keepSkill!=='sp')paintSpeakingStudio(sp);
   [['rue',ue],['w',w],['l',l],['sp',sp]].forEach(([sk,sl])=>{
     const meta=STUDIO_META[sk];
-    if(CURRENT_STUDIO===meta.id&&CURRENT_STUDIO_SOURCE==='menu'){
+    if(CURRENT_STUDIO===meta.id&&(CURRENT_STUDIO_SOURCE==='menu'||CURRENT_STUDIO_SOURCE==='practice')){
       paintStudioBadge(sk,null,false);
     }else if(sl&&sl.day){
       paintStudioBadge(sk,sl,true);
@@ -18587,15 +18861,16 @@ function regenWeeklyPlan(){renderWeeklyPlan()}
 function wpStart(i){
   const sl=(WEEK_PLAN&&WEEK_PLAN.slots&&WEEK_PLAN.slots[i])||null;
   if(!sl)return;
-  if(Array.isArray(sl.units)&&sl.units.length){
-    QUEUE_PENDING=sl.units.length>1?{day:sl.day,units:sl.units.slice(1)}:null;
-    startQueueUnit(sl.units[0]);
+  if(sl.section){startFullPaperSession(sl.type);return}
+  const units=planSlotUnits(sl);
+  if(units.length){
+    QUEUE_PENDING=units.length>1?{day:sl.day,time:sl.time||'',units:units.slice(1)}:null;
+    openUnitSession(units[0],{origin:'plan',fromPlan:true,slot:sl,armPlanUnit:true});
     return;
   }
-  if(sl.type==='w')goToPartFilter(sl.part,'w');
-  else if(sl.type==='l')goToPartFilter(sl.part,'lp');
-  else if(sl.type==='sp')goToPartFilter(sl.part,'sp');
-  else goToPartFilter(sl.part,'ue');
+  const skill=studioSkillOfType(sl.type);
+  const val=sl.part!=null?sl.part:(skill==='w'?'Essay':1);
+  openUnitSession({skill,value:val,min:sl.min||unitMinutes({skill,value:val})},{origin:'plan',fromPlan:true,slot:sl,armPlanUnit:false});
 }
 
 /* ---------- EXAM + PARTS ----------
@@ -18854,14 +19129,19 @@ function mapLegacyPaperType(type){
   return 'all';
 }
 function goToPartFilter(partNum, type){
-  EXLIB_STATE.query='';
-  EXLIB_STATE.paper=mapLegacyPaperType(type||'ue');
-  EXLIB_STATE.part=partNum?String(partNum):'all';
-  EXLIB_STATE.freeOnly=false;
-  EXLIB_STATE.sort='exam';
-  showView('practice');
-  setPracticeTab('library');
-  renderExercisesLibrary();
+  const paper=mapLegacyPaperType(type||'ue');
+  const partStr=partNum?String(partNum):null;
+  if(paper==='all'||paper==='ref'){
+    openUnitSession({skill:'rue',value:1,part:null,min:8},{
+      origin:'practice',initialTab:'contents',expanded:true,exlibPaper:paper,exlibPart:partStr||'all'
+    });
+    return;
+  }
+  const val=paper==='w'?(partStr==='1'?'Essay':'Article'):(partStr?Number(partStr):1);
+  const match=partStr?PARTS.find(p=>mapLegacyPaperType(p.type)===paper&&String(p.n)===partStr):null;
+  openUnitSession({skill:paper,value:val,part:partStr,min:match?match.min:unitMinutes({skill:paper,value:val})},{
+    origin:'practice',initialTab:'contents'
+  });
 }
 function listeningRes(labelKey,key,title){
   const href=/^https?:/.test(key)?key:MAT[key];
@@ -18914,10 +19194,10 @@ function listeningCardsArray(){
 function listeningTestCards(){return resourceGrid(listeningCardsArray())}
 function startPart(i){
   const p=PARTS[i];
-  if(p.type==='sp'){openSpeakingExam();return}
-  if(p.type==='w'){showView('hoy');selectSessionStudio('mon-b');switchWritingPhase('write');return}
-  showView('exam');
-  startRealMock(p.type==='lp'?'l':'rue');
+  if(!p)return;
+  const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
+  const value=skill==='w'?(p.kind||(p.n===1?'Essay':'Article')):p.n;
+  openUnitSession({skill,value,part:p.n,min:p.min},{origin:'practice',fromPlan:false,armPlanUnit:false});
 }
 function renderParts(){
   const el=document.getElementById('partsList');
@@ -18931,18 +19211,17 @@ function renderParts(){
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
       ${p.note?`<p class="step-note">${p.note}</p>`:''}
       <div class="step-actions">
-        <button class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
-        <button class="btn sm gray" data-type="${p.type}" data-n="${p.n}" data-action="openLibraryForPart">${esc(t('part_library'))}</button>
+        <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
       </div>
-      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
+      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
         <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
+        <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
       </div>`:`<div class="step-log">
         <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
         <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
         <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
+        <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
       </div>`}
     </div>`;
   });
@@ -19695,25 +19974,7 @@ const EXLIB_SHORT_PAPER_KEYS={
   sp:'practice_filter_sp',
   ref:'exlib_paper_ref'
 };
-const EXLIB_STATE={query:'',paper:'all',part:'all',freeOnly:false,sort:'exam'};
-let PRACTICE_TAB='parts';
-function setPracticeTab(tab){
-  PRACTICE_TAB=(tab==='library')?'library':'parts';
-  const partsBtn=document.getElementById('practiceTabPartsBtn');
-  const libBtn=document.getElementById('practiceTabLibraryBtn');
-  const partsPanel=document.getElementById('practiceTabParts');
-  const libPanel=document.getElementById('practiceTabLibrary');
-  const isLib=PRACTICE_TAB==='library';
-  if(partsBtn){partsBtn.classList.toggle('active',!isLib);partsBtn.setAttribute('aria-selected',isLib?'false':'true');}
-  if(libBtn){libBtn.classList.toggle('active',isLib);libBtn.setAttribute('aria-selected',isLib?'true':'false');}
-  if(partsPanel)partsPanel.hidden=isLib;
-  if(libPanel)libPanel.hidden=!isLib;
-  if(isLib){
-    if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
-    renderExercisesLibrary();
-  }
-  if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab('practice');
-}
+const EXLIB_STATE={query:'',paper:'all',part:'all',freeOnly:false,sort:'exam',expanded:false};
 function exLibMinPart(item){
   if(!item||!Array.isArray(item.part)||!item.part.length)return 99;
   const nums=item.part.map(Number).filter(n=>Number.isFinite(n)&&n>0);
@@ -19728,6 +19989,18 @@ function compareExLibExam(a,b){
   const ta=EXLIB_TYPE_ORDER[a.type]!=null?EXLIB_TYPE_ORDER[a.type]:9;
   const tb=EXLIB_TYPE_ORDER[b.type]!=null?EXLIB_TYPE_ORDER[b.type]:9;
   if(ta!==tb)return ta-tb;
+  if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
+  return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
+}
+/* Unit-scoped Contents order: paper -> answer key / notes -> lesson plan -> audio -> online practice,
+   with part-specific entries ahead of whole-paper ones within the same type. */
+function compareExLibUnit(a,b){
+  const ta=EXLIB_TYPE_ORDER[a.type]!=null?EXLIB_TYPE_ORDER[a.type]:9;
+  const tb=EXLIB_TYPE_ORDER[b.type]!=null?EXLIB_TYPE_ORDER[b.type]:9;
+  if(ta!==tb)return ta-tb;
+  const sa=(Array.isArray(a.part)&&a.part.length)?0:1;
+  const sb=(Array.isArray(b.part)&&b.part.length)?0:1;
+  if(sa!==sb)return sa-sb;
   if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
   return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
 }
@@ -19850,22 +20123,25 @@ function clearExLibSearch(){
 function exLibSearchKey(el,ev){
   if(ev&&ev.key==='Escape'&&el.value){ev.preventDefault();clearExLibSearch();}
 }
-function resetExLibFilters(){
+function resetExLibFilters(forceAll){
   EXLIB_STATE.query='';
-  EXLIB_STATE.paper='all';
-  EXLIB_STATE.part='all';
   EXLIB_STATE.freeOnly=false;
   EXLIB_STATE.sort='exam';
+  if(forceAll||EXLIB_STATE.expanded||!SESSION_UNIT){
+    EXLIB_STATE.paper='all';
+    EXLIB_STATE.part='all';
+  }else{
+    EXLIB_STATE.paper=SESSION_UNIT.skill||'all';
+    EXLIB_STATE.part=SESSION_UNIT.part||'all';
+  }
+  renderSessionTopbar();
   renderExercisesLibrary();
-}
-function openExercisesLibrary(){
-  resetExLibFilters();
-  showView('practice');
-  setPracticeTab('library');
 }
 function renderExercisesLibrary(){
   const listEl=document.getElementById('exLibList');
   if(!listEl)return;
+  const advEl=document.getElementById('exLibAdvancedFilters');
+  if(advEl)advEl.hidden=!EXLIB_STATE.expanded;
   const inp=document.getElementById('exLibSearch');
   if(inp&&inp.value!==EXLIB_STATE.query)inp.value=EXLIB_STATE.query;
   const clearBtn=document.getElementById('exLibClear');
@@ -19886,9 +20162,14 @@ function renderExercisesLibrary(){
   if(sortSel&&sortSel.value!==EXLIB_STATE.sort)sortSel.value=EXLIB_STATE.sort;
   const all=buildExerciseLibrary();
   const q=EXLIB_STATE.query.trim().toLowerCase();
+  const includeWholePaper=!EXLIB_STATE.expanded&&EXLIB_STATE.paper!=='all'&&EXLIB_STATE.paper!=='ref';
   const filtered=all.filter(item=>{
     if(EXLIB_STATE.paper!=='all'&&item.skill!==EXLIB_STATE.paper)return false;
-    if(EXLIB_STATE.part!=='all'&&!(Array.isArray(item.part)&&item.part.includes(EXLIB_STATE.part)))return false;
+    if(EXLIB_STATE.part!=='all'){
+      const hasPart=Array.isArray(item.part)&&item.part.includes(EXLIB_STATE.part);
+      const isWholePaper=includeWholePaper&&(!Array.isArray(item.part)||!item.part.length);
+      if(!hasPart&&!isWholePaper)return false;
+    }
     if(EXLIB_STATE.freeOnly&&item.kind!=='free')return false;
     if(q){
       const paperTitle=t(EXLIB_SHORT_PAPER_KEYS[item.skill]||'practice_filter_rue');
@@ -19912,6 +20193,11 @@ function renderExercisesLibrary(){
     return;
   }
   if(emptyEl)emptyEl.style.display='none';
+  if(!EXLIB_STATE.expanded){
+    const sorted=filtered.slice().sort(compareExLibUnit);
+    listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,false)).join('')}</div>`;
+    return;
+  }
   if(EXLIB_STATE.sort==='exam'){
     const html=EXLIB_GROUPS.map(g=>{
       const grp=filtered.filter(it=>it.skill===g.skill).sort(compareExLibExam);
@@ -21077,10 +21363,10 @@ function startFullPaperSession(type){
 }
 function startQueueUnit(u){
   if(!u)return;
-  if(u.type==='w')goToPartFilter(u.part,'w');
-  else if(u.type==='l')goToPartFilter(u.part,'lp');
-  else if(u.type==='sp')goToPartFilter(u.part,'sp');
-  else goToPartFilter(u.part,'ue');
+  const skill=u.skill||studioSkillOfType(u.type||'ue');
+  const val=u.value!=null?u.value:(u.kind||u.part||1);
+  const min=u.min||unitMinutes({skill,value:val});
+  openUnitSession({skill,value:val,min},{origin:'practice',fromPlan:false,armPlanUnit:false});
 }
 /* The unit a Today Start opened. The studio is painted with exactly this
    exercise and the minutes the plan gives it; the save that follows tags its
@@ -21103,17 +21389,13 @@ function openPlanUnit(u,planSlot,opts){
     ?TODAY_PLAN.slots.find(sl=>sl.day===planTodayLabel()&&studioSkillOfType(sl.type)===u.skill)
       ||TODAY_PLAN.slots.find(sl=>studioSkillOfType(sl.type)===u.skill)
     :null);
-  PLAN_UNIT_START={skill:u.skill,value:u.value,min:u.min};
-  const slot=unitStartSlot(u,resolvedSlot);
-  if(u.skill==='rue')paintUeStudio(slot);
-  else if(u.skill==='l')paintListeningStudio(slot);
-  else if(u.skill==='w')paintWritingStudio(slot);
-  else if(u.skill==='sp')paintSpeakingStudio(slot);
-  selectSessionStudio(UNIT_STUDIO[u.skill]||'mon-a',{fromPlan:!!slot.day,slot:slot});
-  if(!(opts&&opts.scroll===false)){
-    const card=document.getElementById(UNIT_STUDIO_CARD[u.skill]);
-    if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
-  }
+  openUnitSession(u,{
+    origin:(opts&&opts.origin)||'hoy',
+    fromPlan:true,
+    slot:resolvedSlot,
+    armPlanUnit:true,
+    scroll:opts&&opts.scroll
+  });
 }
 /* The plan tag for a row saved from a studio: the exercise the plan opened
    and the minutes it allocated. A different exercise is not this unit. */
@@ -21245,7 +21527,7 @@ function renderToday(){
   const nb=document.getElementById('nextBox');
   if(nb){nb.innerHTML='';nb.style.display='none';}
   if(!todaySlots.length&&!(QUEUE_PENDING&&QUEUE_PENDING.units.length)){
-    closeSessionStudios();
+    if(CURRENT_STUDIO_SOURCE!=='practice')closeSessionStudios();
   }else if(CURRENT_STUDIO&&CURRENT_STUDIO_SOURCE==='plan'){
     const sl=todaySlots[0];
     if(!sl||sl.section){
@@ -22561,15 +22843,6 @@ function mobilePrimaryConfig(viewId){
     case 'plan':
       return {label:t('plan_edit_intake_short'),run:()=>openIntake()};
     case 'practice':
-      if(PRACTICE_TAB==='library'){
-        return {
-          label:t('exlib_filter_action'),
-          run:()=>{
-            const inp=document.getElementById('exLibSearch');
-            if(inp){inp.scrollIntoView({block:'center'});inp.focus();}
-          }
-        };
-      }
       return {label:t('fab_log_single'),run:()=>openSoloModal()};
     case 'err':
       return {
@@ -22742,13 +23015,15 @@ function trapSheetKeydown(sheet,onClose,e){
   return false;
 }
 function activateNavView(viewId,isUserClick){
-  let openLibraryTab=false;
   if(viewId==='libros'||viewId==='resources'||viewId==='exercises'){
     viewId='practice';
-    openLibraryTab=true;
   }
   const sec=document.getElementById('v-'+viewId)||document.getElementById('view-'+viewId);
   if(!sec)return false;
+  const hoy=document.getElementById('v-hoy');
+  if(hoy&&hoy.classList.contains('is-session-focus')){
+    closeSessionStudios();
+  }
   document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===viewId));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   sec.classList.add('active');
@@ -22757,8 +23032,7 @@ function activateNavView(viewId,isUserClick){
      cost more than 100 ms, so a fast switch never flashes a placeholder. */
   if(viewId==='diag')skRenderView('diag',renderDiag);
   if(viewId==='practice')skRenderView('practice',function(){
-    setPracticeTab(openLibraryTab?'library':'parts');
-    if(!openLibraryTab)renderParts();
+    renderParts();
   });
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
   if(viewId==='prog')skRenderView('prog',function(){
@@ -22778,17 +23052,9 @@ function activateNavView(viewId,isUserClick){
   return true;
 }
 function showView(viewId){
-  /* Legacy links (resources, exercises, libros) land inside Practice → Library. */
+  /* Legacy links (resources, exercises, libros) redirect to Practice. */
   if(viewId==='libros'||viewId==='resources'||viewId==='exercises'){
-    const btn=document.querySelector('nav button[data-view="practice"]');
-    if(btn){
-      btn.click();
-      setPracticeTab('library');
-      return;
-    }
-    if(!activateNavView('resources',false))return;
-    track('view_change',{view:'practice',ms:0});
-    return;
+    viewId='practice';
   }
   const btn=document.querySelector(`nav button[data-view="${viewId}"]`);
   if(btn){btn.click();return}
@@ -22855,7 +23121,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderExercisesLibrary();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -22986,6 +23252,7 @@ click:{
 'closePlanResetDialogIfSelf':(el,ev)=>{if(ev.target===el)closePlanResetDialog()},
 'closeQuickLog':()=>closeQuickLog(),
 'closeQuickLogIfSelf':(el,ev)=>{if(ev.target===el)closeQuickLog()},
+'closeSessionView':()=>closeSessionView(),
 'closeSettingsModal':()=>closeSettingsModal(),
 'closeSettingsModalIfSelf':(el,ev)=>{if(ev.target===el)closeSettingsModal()},
 'closeSoloModal':()=>closeSoloModal(),
@@ -23033,8 +23300,6 @@ click:{
 'obStartDiagnostic':()=>obStartDiagnostic(),
 'obToggleDay':el=>obToggleDay(el.dataset.day),
 'openDeleteAccount':()=>openDeleteAccount(),
-'openExercisesLibrary':()=>openExercisesLibrary(),
-'openLibraryForPart':el=>goToPartFilter(+el.dataset.n,el.dataset.type),
 'openImportPicker':()=>document.getElementById('importFile').click(),
 'openIntake':()=>openIntake(),
 'openQuickLog':()=>openQuickLog(),
@@ -23077,7 +23342,7 @@ click:{
 'setExLibPart':el=>setExLibPart(el.dataset.exlibPart),
 'setExamSourcesFilter':el=>setExamSourcesFilter(el.dataset.esFilter),
 'setLang':el=>setLang(el.dataset.arg),
-'setPracticeTab':el=>setPracticeTab(el.dataset.practiceTab),
+'setSessionTab':el=>setSessionTab(el.dataset.sessionTab),
 'setThemeMode':el=>setThemeMode(el.dataset.arg),
 'showPasswordRecovery':()=>showPasswordRecovery(),
 'showView':el=>showView(el.dataset.arg),
@@ -23107,6 +23372,7 @@ click:{
 'todayStart':el=>todayStart(+el.dataset.idx),
 'toggleAccountSheet':()=>toggleAccountSheet(),
 'toggleByoKeyVisibility':()=>toggleByoKeyVisibility(),
+'toggleContentsPaperScope':()=>toggleContentsPaperScope(),
 'toggleWtfSection':el=>toggleWtfSection(el),
 'tourNext':()=>tourNext(),
 'ueTimer.start':()=>ueTimer.start(),
