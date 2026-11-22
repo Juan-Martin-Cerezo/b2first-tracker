@@ -157,9 +157,31 @@ with sync_playwright() as p:
             }"""
         )
 
-    # 1. Practice shows By part only: no Library tabs, no Library button per row, exactly 1 Start per unit.
-    pg.evaluate("showView('practice')")
+    # 1. Practice opens on Library first, with #practiceParts inside a closed <details>;
+    #    opening it reveals all 17 part rows, each with exactly 1 Start button and no Library button.
+    pg.click("nav button[data-view='practice']")
     pg.wait_for_timeout(250)
+    pre_open = pg.evaluate(
+        """() => {
+            const libCard = document.getElementById('practiceLibraryCard');
+            const parts = document.getElementById('practiceParts');
+            const details = parts ? parts.closest('details') : null;
+            return {
+                libVisible: !!libCard && getComputedStyle(libCard).display !== 'none' && !libCard.hidden,
+                libTop: libCard ? Math.round(libCard.getBoundingClientRect().top) : 9999,
+                libBeforeParts: !!(libCard && parts && (libCard.compareDocumentPosition(parts) & Node.DOCUMENT_POSITION_FOLLOWING)),
+                detailsClosed: !!details && details.open === false,
+                pracCount: (document.getElementById('pracLibCount') || {}).textContent?.trim() || '',
+            };
+        }"""
+    )
+    assert pre_open["libVisible"] and pre_open["libTop"] < 844, f"Library not visible in first viewport: {pre_open}"
+    assert pre_open["libBeforeParts"], "#practiceLibraryCard must come before #practiceParts"
+    assert pre_open["detailsClosed"], f"#practiceParts must be in a closed <details>: {pre_open}"
+    assert pre_open["pracCount"], "Practice Library counter empty"
+
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(200)
     practice_info = pg.evaluate(
         """() => {
             const view = document.getElementById('v-practice');
@@ -175,6 +197,7 @@ with sync_playwright() as p:
             });
             return {
                 active: view.classList.contains('active'),
+                detailsOpen: !!document.getElementById('practicePartsDetails')?.open,
                 hasPracticeTabs: !!document.getElementById('practiceTabs'),
                 hasTabLibrary: !!document.getElementById('practiceTabLibrary'),
                 hasTabLibraryBtn: !!document.getElementById('practiceTabLibraryBtn'),
@@ -187,10 +210,11 @@ with sync_playwright() as p:
         }"""
     )
     assert practice_info["active"], "#v-practice is not active"
+    assert practice_info["detailsOpen"], "#practicePartsDetails did not open"
     assert not practice_info["hasPracticeTabs"], "#practiceTabs still exists"
     assert not practice_info["hasTabLibrary"], "#practiceTabLibrary still exists"
     assert not practice_info["hasTabLibraryBtn"], "#practiceTabLibraryBtn still exists"
-    assert practice_info["stepCount"] >= 15, f"Too few parts: {practice_info['stepCount']}"
+    assert practice_info["stepCount"] == 17, f"Expected 17 parts, got {practice_info['stepCount']}"
     assert not INLINE_HANDLER_RE.search(practice_info["html"]), "Inline on* handler in #v-practice"
     assert practice_info["scrollWidth"] <= practice_info["clientWidth"] + 1, "Overflow in Practice 390"
     for idx, st in enumerate(practice_info["perStep"]):

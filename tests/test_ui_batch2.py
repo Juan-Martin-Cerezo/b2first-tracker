@@ -120,6 +120,8 @@ with sync_playwright() as p:
     # 4. Part rows have no chips and a single Start button; Start opens session with filtered Contents.
     pg.evaluate("closeSessionStudios(); showView('practice')")
     pg.wait_for_timeout(300)
+    pg.click("#practicePartsSummary")
+    pg.wait_for_timeout(150)
     assert pg.eval_on_selector_all("#partsList .step .chip", "els => els.length") == 0, (
         "part rows still carry resource chips"
     )

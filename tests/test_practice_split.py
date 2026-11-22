@@ -28,10 +28,11 @@ with sync_playwright() as p:
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(400)
 
-    # 1. Practice shows By part directly and has no legacy Resources or Library tab DOM.
+    # 1. Practice opens on Library first, has #partsList inside closed <details>, and no legacy DOM.
     pg.evaluate("showView('practice')")
     pg.wait_for_timeout(300)
     assert pg.evaluate("document.querySelector('.view.active').id") == "v-practice", "Practice is not active"
+    assert pg.evaluate("!!document.querySelector('#v-practice #practiceLibraryCard')"), "#practiceLibraryCard missing"
     assert pg.evaluate("!!document.querySelector('#v-practice #partsList')"), "#partsList is not in Practice"
     assert pg.eval_on_selector_all("#v-practice #partsList .step", "els => els.length") > 0, (
         "Practice has no exercise rows"
@@ -46,7 +47,9 @@ with sync_playwright() as p:
         )
     out["practice"] = {"steps": pg.eval_on_selector_all("#v-practice #partsList .step", "els => els.length")}
 
-    # 2. Clicking Start opens the session workspace on Contents, with Session and Contents tabs.
+    # 2. Opening parts <details> and clicking Start opens the session workspace on Contents.
+    pg.click("#practicePartsSummary")
+    pg.wait_for_timeout(150)
     pg.click("#partsList .step button[data-action='startPart'][data-i='1']")
     pg.wait_for_timeout(300)
     assert pg.evaluate("!document.getElementById('sessionWorkspace').hidden"), "Session workspace did not open"

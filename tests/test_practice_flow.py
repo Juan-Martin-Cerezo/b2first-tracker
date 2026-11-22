@@ -1,23 +1,21 @@
-"""Phase practice-flow acceptance: intent -> exact resources, always-visible Library, unlimited full mocks.
+"""Phase practice-first & practice-flow acceptance: Practice opens on Library hub.
 
 Verifies:
-  1. #v-practice renders the Library immediately without extra clicks, with counter and rows,
-     plus a resource mini-summary per part row in #partsList.
-  2. Start on Reading Part 2 opens the session on Contents and lists local paper + answer key
-     + lesson plan + 2-4 online sources for Part 2 (zero sources from other parts) and a
-     primary "Practise online" link opening in a new tab.
-  3. Today's cycle counter (#todayCycleValue) is clickable and opens the Library filtered
-     to its skill.
-  4. In Exam, "Start full mock" opens the pre-flight (not the countdown directly) with all
-     4 papers in official order, a sample selector from MAT, and >= 4 free online full mocks;
-     after finishing, "Do another full mock" / "Hacer otro full mock" is offered.
-  5. Full mock offers exact materials per paper (paper + key + audio + speaking cards) and
-     never shows a dead-end "no more mocks" message; service plan allows 3 speaking mocks / 45 min.
-  6. 390x844 light & dark with zero horizontal overflow, symmetric EN/ES copy, zero duplicate
-     IDs across the whole DOM, zero inline on* handlers, zero page errors.
+  1. Clicking nav Practice opens #v-practice with #practiceLibraryCard visible in the first
+     viewport (top < 844), counter > 0 (187 contents in EN, exam group order), and filters work.
+  2. #practiceLibraryCard precedes #practiceParts in DOM order.
+  3. #practiceParts lives inside a <details> closed by default; opening it exposes all 17 Start buttons.
+  4. The 2 intent cards exist: "Full mock" opens #v-exam with pre-flight visible;
+     "Practise by part" opens the parts <details>.
+  5. Start on Reading Part 2 opens the session on Contents with local + online resources.
+  6. Today's cycle counter opens the Practice Library filtered to its skill; Full Mock pre-flight works.
+  7. 390x844 & 1280x800 light/dark: zero horizontal overflow, search visible without scroll,
+     FAB does not overlap search or intent cards, symmetric EN/ES copy, zero duplicate IDs,
+     zero inline on* handlers, zero console/page errors.
 
 Saves screenshots in tests/out/:
-  practice_library_390_light.png, practice_library_390_dark.png, full_mock_preflight_390_light.png.
+  practice_hub_390_light.png, practice_hub_390_dark.png, practice_hub_1280_light.png,
+  full_mock_preflight_390_light.png.
 """
 import json
 import os
@@ -71,7 +69,14 @@ with sync_playwright() as p:
     browser = p.chromium.launch()
     pg = browser.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
     page_errors = []
+    console_errors = []
     pg.on("pageerror", lambda e: page_errors.append(str(e)))
+    pg.on(
+        "console",
+        lambda m: console_errors.append(m.text)
+        if m.type == "error" and "Failed to load resource" not in m.text
+        else None,
+    )
     pg.goto(URL + "app", wait_until="networkidle")
     login_owner(pg, URL)
     pg.evaluate("setLang('en')")
@@ -95,7 +100,7 @@ with sync_playwright() as p:
     assert dup_ids == [], f"Duplicate DOM ids found: {dup_ids}"
     out["duplicate_ids"] = 0
 
-    # --- 1. #v-practice shows Library immediately without clicks ------------
+    # --- 1. Nav Practice opens Library first, in first viewport, parts collapsed ---
     pg.click("nav button[data-view='practice']")
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light'); window.scrollTo(0, 0)")
     pg.wait_for_timeout(250)
@@ -104,16 +109,39 @@ with sync_playwright() as p:
         """() => {
             const view = document.getElementById('v-practice');
             const libCard = document.getElementById('practiceLibraryCard');
+            const parts = document.getElementById('practiceParts');
+            const details = parts ? parts.closest('details') : null;
             const countEl = document.getElementById('pracLibCount');
+            const searchEl = document.getElementById('pracLibSearch');
+            const fab = document.getElementById('qlFab');
+            const intentMock = document.getElementById('practiceIntentFullMock');
+            const intentPart = document.getElementById('practiceIntentByPart');
             const rows = [...document.querySelectorAll('#pracLibList a.exlib-row')];
+            const groupSkills = [...document.querySelectorAll('#pracLibList .exlib-group')].map(g => g.dataset.skill);
             const summaries = [...document.querySelectorAll('#partsList .step .step-res-summary')]
                 .map(e => e.textContent.trim());
-            const r = libCard ? libCard.getBoundingClientRect() : null;
+            const box = el => {
+                if (!el) return null;
+                const b = el.getBoundingClientRect();
+                return {top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right), w: Math.round(b.width), h: Math.round(b.height)};
+            };
+            const libBeforeParts = !!(libCard && parts && (libCard.compareDocumentPosition(parts) & Node.DOCUMENT_POSITION_FOLLOWING));
             return {
                 active: view.classList.contains('active'),
-                libVisible: !!libCard && getComputedStyle(libCard).display !== 'none' && !libCard.hidden && (r ? r.height > 80 : false),
+                libVisible: !!libCard && getComputedStyle(libCard).display !== 'none' && !libCard.hidden,
+                libBox: box(libCard),
+                searchBox: box(searchEl),
+                countBox: box(countEl),
+                fabBox: box(fab),
+                intentMockBox: box(intentMock),
+                intentPartBox: box(intentPart),
+                libBeforeParts,
+                hasDetails: !!details,
+                detailsOpen: details ? details.open : null,
+                startBtnsCount: document.querySelectorAll('#partsList .step button[data-action="startPart"]').length,
                 countText: countEl ? countEl.textContent.trim() : '',
                 rowCount: rows.length,
+                groupSkills,
                 summariesCount: summaries.length,
                 sampleSummary: summaries[1] || '',
                 scrollWidth: document.documentElement.scrollWidth,
@@ -122,27 +150,120 @@ with sync_playwright() as p:
             };
         }"""
     )
+
+    def overlaps(a, b):
+        return a and b and a["w"] > 0 and a["h"] > 0 and b["w"] > 0 and b["h"] > 0 and not (
+            a["right"] <= b["left"] or b["right"] <= a["left"] or a["bottom"] <= b["top"] or b["bottom"] <= a["top"]
+        )
+
     assert prac["active"], "#v-practice not active"
     assert prac["libVisible"], "Library is not visible in #v-practice without clicks"
+    assert prac["libBox"] and prac["libBox"]["top"] < 844, f"Library not in first viewport: {prac['libBox']}"
+    assert prac["searchBox"] and 0 <= prac["searchBox"]["top"] and prac["searchBox"]["bottom"] <= 844, f"Search not visible without scroll: {prac['searchBox']}"
+    assert prac["countBox"] and prac["countBox"]["bottom"] <= 844, f"Counter not visible without scroll: {prac['countBox']}"
+    assert prac["intentMockBox"] and prac["intentMockBox"]["h"] >= 44, f"Full mock card missing or <44px: {prac['intentMockBox']}"
+    assert prac["intentPartBox"] and prac["intentPartBox"]["h"] >= 44, f"Practise by part card missing or <44px: {prac['intentPartBox']}"
+    assert not overlaps(prac["fabBox"], prac["searchBox"]), f"FAB overlaps search: fab={prac['fabBox']} search={prac['searchBox']}"
+    assert not overlaps(prac["fabBox"], prac["intentMockBox"]), f"FAB overlaps Full mock card: fab={prac['fabBox']} card={prac['intentMockBox']}"
+    assert not overlaps(prac["fabBox"], prac["intentPartBox"]), f"FAB overlaps By part card: fab={prac['fabBox']} card={prac['intentPartBox']}"
+    assert prac["libBeforeParts"], "#practiceLibraryCard must appear before #practiceParts in DOM"
+    assert prac["hasDetails"] and prac["detailsOpen"] is False, f"#practiceParts must be inside closed <details>: {prac}"
     assert prac["rowCount"] > 50, f"Expected full Library rows in Practice, got {prac['rowCount']}"
     assert prac["countText"] == f"{prac['rowCount']} contents", f"Count mismatch: {prac['countText']!r}"
-    assert prac["summariesCount"] >= 15, f"Missing part resource summaries: {prac['summariesCount']}"
+    if os.path.exists(os.path.join(REPO, "libros.json")):
+        assert prac["rowCount"] == 187, f"Expected 187 contents in EN, got {prac['rowCount']}"
+    assert prac["groupSkills"] == ["rue", "w", "l", "sp", "ref"], f"Unexpected Library group order: {prac['groupSkills']}"
+    assert prac["summariesCount"] == 17, f"Expected 17 part summaries, got {prac['summariesCount']}"
+    assert prac["startBtnsCount"] == 17, f"Expected 17 Start buttons, got {prac['startBtnsCount']}"
     assert "online" in prac["sampleSummary"].lower(), f"Part 2 summary missing online count: {prac['sampleSummary']!r}"
     assert prac["scrollWidth"] <= prac["clientWidth"] + 1, f"Practice 390 light overflow: {prac['scrollWidth']} > {prac['clientWidth']}"
     assert not INLINE_HANDLER_RE.search(prac["html"]), "Inline on* handler in #v-practice"
 
-    # Scroll to the Library card for light & dark screenshots
-    pg.evaluate("document.getElementById('practiceLibraryCard').scrollIntoView({block:'start'}); if(document.activeElement)document.activeElement.blur();")
+    # Screenshots at scroll=0 (390 light & dark, and 1280 light)
+    pg.evaluate("if(document.activeElement)document.activeElement.blur(); window.scrollTo(0, 0)")
     pg.wait_for_timeout(150)
-    pg.screenshot(path=os.path.join(OUT, "practice_library_390_light.png"))
+    pg.screenshot(path=os.path.join(OUT, "practice_hub_390_light.png"))
 
-    pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark')")
+    pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark'); window.scrollTo(0, 0)")
     pg.wait_for_timeout(150)
     dark_overflow = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
     assert dark_overflow <= 1, f"Practice 390 dark overflow: {dark_overflow}"
-    pg.screenshot(path=os.path.join(OUT, "practice_library_390_dark.png"))
-    pg.evaluate("document.documentElement.setAttribute('data-theme', 'light'); window.scrollTo(0, 0)")
+    pg.screenshot(path=os.path.join(OUT, "practice_hub_390_dark.png"))
+
+    pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
+    pg.set_viewport_size({"width": 1280, "height": 800})
+    pg.evaluate("window.scrollTo(0, 0); if(document.activeElement)document.activeElement.blur()")
     pg.wait_for_timeout(150)
+    desk_overflow = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
+    assert desk_overflow <= 1, f"Practice 1280 overflow: {desk_overflow}"
+    pg.screenshot(path=os.path.join(OUT, "practice_hub_1280_light.png"))
+
+    pg.set_viewport_size({"width": 390, "height": 844})
+    pg.evaluate("window.scrollTo(0, 0)")
+    pg.wait_for_timeout(150)
+
+    # Library filters work inside Practice
+    pg.fill("#pracLibSearch", "open cloze")
+    pg.wait_for_timeout(150)
+    filtered_search = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
+    assert 0 < filtered_search < prac["rowCount"], f"Search filter failed: {filtered_search}"
+    pg.click("#pracLibPaperFilter button[data-exlib-paper='rue']")
+    pg.wait_for_timeout(120)
+    filtered_rue = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
+    assert filtered_rue > 0, "R&UoE filter returned 0 rows"
+    pg.evaluate("resetExLibFilters(true, 'practice')")
+    pg.wait_for_timeout(150)
+    assert pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length") == prac["rowCount"], "Reset did not restore full Library"
+
+    # EN/ES copy check on Practice Hub
+    pg.evaluate("setLang('es')")
+    pg.wait_for_timeout(200)
+    es_hub = pg.evaluate(
+        """() => ({
+            title: document.querySelector('#v-practice .page-title').textContent.trim(),
+            sub: document.querySelector('#v-practice .page-sub').textContent.trim(),
+            mockTitle: document.querySelector('#practiceIntentFullMock .practice-intent-title').textContent.trim(),
+            partTitle: document.querySelector('#practiceIntentByPart .practice-intent-title').textContent.trim(),
+            summary: document.getElementById('practicePartsSummary').textContent.trim(),
+            count: document.getElementById('pracLibCount').textContent.trim(),
+            overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        })"""
+    )
+    assert es_hub["title"] == "Práctica", es_hub
+    assert "full mock" in es_hub["sub"].lower() and "papers" in es_hub["sub"].lower(), es_hub
+    assert es_hub["mockTitle"] == "Full mock" and es_hub["partTitle"] == "Practicar por parte", es_hub
+    assert "ejercicios por parte" in es_hub["summary"].lower(), es_hub
+    assert "contenidos" in es_hub["count"].lower(), es_hub
+    assert es_hub["overflow"] <= 1, f"Practice 390 ES overflow: {es_hub}"
+    pg.evaluate("setLang('en')")
+    pg.wait_for_timeout(200)
+
+    # Intent 1: "Full mock" opens #v-exam with pre-flight visible
+    pg.click("#practiceIntentFullMock")
+    pg.wait_for_timeout(250)
+    fm_from_intent = pg.evaluate(
+        """() => ({
+            view: (document.querySelector('.view.active') || {}).id || '',
+            preflightVisible: !document.getElementById('fullMockPreflight').hidden,
+        })"""
+    )
+    assert fm_from_intent == {"view": "v-exam", "preflightVisible": True}, f"Full mock intent failed: {fm_from_intent}"
+    pg.evaluate("closeFullMockPreflight()")
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(250)
+
+    # Intent 2: "Practise by part" opens the parts <details>
+    assert pg.evaluate("!document.getElementById('practicePartsDetails').open"), "Details should still be closed before clicking Practise by part"
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(250)
+    parts_opened = pg.evaluate(
+        """() => ({
+            open: document.getElementById('practicePartsDetails').open,
+            visibleStarts: [...document.querySelectorAll('#partsList .step button[data-action="startPart"]')].filter(b => b.getBoundingClientRect().height >= 44).length,
+        })"""
+    )
+    assert parts_opened["open"] is True and parts_opened["visibleStarts"] == 17, f"Practise by part did not reveal 17 Start buttons: {parts_opened}"
+
     out["1_practice_library"] = {"rows": prac["rowCount"], "count": prac["countText"], "summary_p2": prac["sampleSummary"]}
 
     # --- 2. Start on Reading Part 2 opens session on Contents ---------------
@@ -362,6 +483,7 @@ with sync_playwright() as p:
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(150)
     assert page_errors == [], f"Page errors: {page_errors}"
+    assert console_errors == [], f"Console errors: {console_errors}"
 
     out["4_5_full_mock"] = {
         "samples": [s["id"] for s in fm["samples"]],
@@ -371,11 +493,13 @@ with sync_playwright() as p:
         "es_do_another": done_es["btnText"],
     }
     out["screenshots"] = [
-        "practice_library_390_light.png",
-        "practice_library_390_dark.png",
+        "practice_hub_390_light.png",
+        "practice_hub_390_dark.png",
+        "practice_hub_1280_light.png",
         "full_mock_preflight_390_light.png",
     ]
     out["page_errors"] = page_errors
+    out["console_errors"] = console_errors
     browser.close()
 
 print(json.dumps(out, ensure_ascii=False, indent=1))

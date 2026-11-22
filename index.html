@@ -264,7 +264,7 @@ summary:focus-visible,
 #v-exam button:focus,#v-exam a:focus,#v-exam select:focus,#v-exam input:focus,#v-exam [role="button"]:focus,
 #v-prog button:focus,#v-prog a:focus,#v-prog select:focus,#v-prog input:focus,
 #v-plan button:focus,#v-plan a:focus,#v-plan select:focus,#v-plan input:focus,#v-plan [tabindex]:not([tabindex="-1"]):focus,
-#v-practice button:focus,#v-practice a:focus,#v-practice select:focus,#v-practice input:focus,
+#v-practice button:focus,#v-practice a:focus,#v-practice select:focus,#v-practice input:focus,#v-practice summary:focus,
 #v-err button:focus,#v-err a:focus,#v-err select:focus,#v-err input:focus,
 #v-ia button:focus,#v-ia a:focus,#v-ia select:focus,#v-ia input:focus,#v-ia textarea:focus,#v-ia summary:focus{
   outline:2px solid var(--acc);
@@ -2769,7 +2769,36 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .fm-online-card:hover,.fm-online-card:focus-visible{border-color:var(--acc);background:var(--acc-soft);text-decoration:none}
 .fm-online-card b{font-size:14px;color:var(--txt);line-height:1.3;overflow-wrap:anywhere}
 .fm-online-card span{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
-#practiceLibraryCard{margin-top:var(--s4);scroll-margin-top:96px}
+.practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);margin-bottom:var(--s4)}
+.practice-intent-card{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;
+  min-height:68px;padding:var(--s3) var(--s4);text-align:left;cursor:pointer;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+  font-family:var(--font);color:var(--txt);box-shadow:var(--shadow-1);
+  transition:border-color 140ms ease,background-color 140ms ease,transform 140ms ease;
+}
+.practice-intent-card:hover{border-color:var(--acc);background:var(--acc-soft)}
+.practice-intent-card:active{transform:scale(.98)}
+.practice-intent-card:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.practice-intent-title{font-size:var(--t-sub);font-weight:600;color:var(--txt);line-height:1.25}
+.practice-intent-sub{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
+#practiceLibraryCard{margin-top:0;scroll-margin-top:96px}
+.practice-parts-details{scroll-margin-top:96px}
+.practice-parts-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  min-height:44px;cursor:pointer;list-style:none;
+  font-size:var(--t-sub);font-weight:600;color:var(--txt);line-height:1.3;
+}
+.practice-parts-summary::-webkit-details-marker{display:none}
+.practice-parts-summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
+.practice-parts-summary-chev{flex:none;color:var(--txt-2);transition:transform 150ms ease}
+.practice-parts-details[open] .practice-parts-summary-chev{transform:rotate(180deg)}
+#practiceParts{scroll-margin-top:96px}
+.practice-parts-details[open] #practiceParts{margin-top:var(--s3)}
+@media (max-width:767px){
+  .practice-intents{gap:var(--s2);margin-bottom:var(--s3)}
+  .practice-intent-card{padding:var(--s3);min-height:60px}
+}
 @media (max-width:768px){
   .u4-real-mocks{margin-bottom:var(--s4)}
 }
@@ -5601,19 +5630,24 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
         </div>
       </section>
 
-      <!-- ============ PRACTICE (By part) ============ -->
+      <!-- ============ PRACTICE (Hub) ============ -->
       <section id="v-practice" class="view">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="practice_head_title">Practice</h1>
-            <p class="page-sub" data-i18n="practice_head_sub">Timed drills by exam part. Tap Start to open the session with its papers, keys, audio and practice sources.</p>
+            <p class="page-sub" data-i18n="practice_head_sub">Choose a full mock or a part. Every option opens its papers, keys, audio and free online practice.</p>
           </div>
         </div>
 
-        <div class="card" id="practiceParts">
-          <h2 data-i18n="parts_exercises">Exercises by part</h2>
-          <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
-          <div id="partsList"></div>
+        <div class="practice-intents" id="practiceIntents">
+          <button type="button" class="practice-intent-card" id="practiceIntentFullMock" data-action="startFullMock">
+            <span class="practice-intent-title" data-i18n="practice_intent_mock_title">Full mock</span>
+            <span class="practice-intent-sub" data-i18n="practice_intent_mock_sub">4 papers, official timing</span>
+          </button>
+          <button type="button" class="practice-intent-card" id="practiceIntentByPart" data-action="openPracticeByPart">
+            <span class="practice-intent-title" data-i18n="practice_intent_part_title">Practise by part</span>
+            <span class="practice-intent-sub" data-i18n="practice_intent_part_sub">One part, exact resources</span>
+          </button>
         </div>
 
         <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
@@ -5686,6 +5720,17 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
           </div>
         </div>
+
+        <details class="card practice-parts-details" id="practicePartsDetails">
+          <summary class="practice-parts-summary" id="practicePartsSummary">
+            <span data-i18n="parts_exercises_summary">Exercises by part · save your score</span>
+            <span class="practice-parts-summary-chev" aria-hidden="true">▾</span>
+          </summary>
+          <div id="practiceParts">
+            <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
+            <div id="partsList"></div>
+          </div>
+        </details>
       </section>
 
       <!-- ============ AI WRITING CORRECTOR ============ -->
@@ -5925,7 +5970,11 @@ const I18N={
     more_desc_ia:'Cambridge B2 rubric grading',
     plan_edit_intake_short:'Edit intake',
     practice_head_title:'Practice',
-    practice_head_sub:'Timed drills by exam part. Tap Start to open the session with its papers, keys, audio and practice sources.',
+    practice_head_sub:'Choose a full mock or a part. Every option opens its papers, keys, audio and free online practice.',
+    practice_intent_mock_title:'Full mock',
+    practice_intent_mock_sub:'4 papers, official timing',
+    practice_intent_part_title:'Practise by part',
+    practice_intent_part_sub:'One part, exact resources',
     session_tabs_aria:'Session views',
     session_tab_session:'Session',
     session_tab_contents:'Contents',
@@ -6171,6 +6220,7 @@ const I18N={
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
+    parts_exercises_summary:'Exercises by part · save your score',
     parts_exercises_sub:'Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.',
     lt_test_1:'Listening test 1',
     lt_test_2_part:'Listening test 2 · part {n}',
@@ -7015,7 +7065,11 @@ const I18N={
     more_desc_ia:'Corrección con rúbrica B2',
     plan_edit_intake_short:'Editar perfil',
     practice_head_title:'Práctica',
-    practice_head_sub:'Ejercicios cronometrados por parte del examen. Tocá Empezar para abrir la sesión con sus exámenes, respuestas, audios y fuentes.',
+    practice_head_sub:'Elegí un full mock o una parte. Cada opción abre sus papers, keys, audio y práctica online gratis.',
+    practice_intent_mock_title:'Full mock',
+    practice_intent_mock_sub:'4 pruebas, tiempo oficial',
+    practice_intent_part_title:'Practicar por parte',
+    practice_intent_part_sub:'Una parte, recursos exactos',
     session_tabs_aria:'Vistas de la sesión',
     session_tab_session:'Sesión',
     session_tab_contents:'Contenidos',
@@ -7261,6 +7315,7 @@ const I18N={
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
+    parts_exercises_summary:'Ejercicios por parte · guardá tu puntaje',
     parts_exercises_sub:'Todos los ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, un botón para empezar y registro de resultados.',
     lt_test_1:'Test de listening 1',
     lt_test_2_part:'Test de listening 2 · parte {n}',
@@ -19129,6 +19184,7 @@ function startRealMock(paper,keepFull){
   if(box)box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function startFullMock(){
+  if(currentActiveViewId()!=='exam')showView('exam');
   FULL_MOCK.preflightOpen=true;
   FULL_MOCK.finished=false;
   if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
@@ -19260,6 +19316,13 @@ function openPracticeLibrary(opts){
   renderExercisesLibrary('practice');
   const card=document.getElementById('practiceLibraryCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openPracticeByPart(){
+  const det=document.getElementById('practicePartsDetails');
+  if(det)det.open=true;
+  if(typeof renderParts==='function')renderParts();
+  const target=document.getElementById('practiceParts')||det;
+  if(target&&target.scrollIntoView)target.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function openCycleLibrary(el){
   const skill=(el&&el.dataset&&el.dataset.skill)||practiceRotationSkill()||'rue';
@@ -23426,6 +23489,7 @@ function activateNavView(viewId,isUserClick){
      cost more than 100 ms, so a fast switch never flashes a placeholder. */
   if(viewId==='diag')skRenderView('diag',renderDiag);
   if(viewId==='practice')skRenderView('practice',function(){
+    renderExercisesLibrary('practice');
     renderParts();
   });
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
@@ -23645,6 +23709,7 @@ click:{
 'openActiveExamMaterials':()=>openActiveExamMaterials(),
 'openCycleLibrary':el=>openCycleLibrary(el),
 'openFullPaperLibrary':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();openFullPaperLibrary(el.dataset.paper)},
+'openPracticeByPart':()=>openPracticeByPart(),
 'openPracticeLibrary':el=>openPracticeLibrary({paper:el.dataset.paper,part:el.dataset.part,scope:el.dataset.scope}),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
