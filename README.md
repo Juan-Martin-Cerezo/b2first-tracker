@@ -245,7 +245,7 @@ All runtime settings are passed as environment variables (never committed to the
 
 | Tier | Writing evaluations | Speaking mocks / minutes | Global monthly Live guard |
 | --- | --- | --- | --- |
-| **Standard account (`service`)** | **5 / UTC day** (`plans.py`) | **1 mock · 15 min / UTC day** (`plans.py`) | Enforced (`900` min/month default) |
+| **Standard account (`service`)** | **5 / UTC day** (`plans.py`) | **3 mocks · 45 min / UTC day** (`plans.py`) | Enforced (`900` min/month default) |
 | **Bring-your-own key (`byo`)** | Unmetered by server | Unmetered by server | Billed to user's own key |
 | **Owner account (`owner`)** | Uncapped per day (`plans.py`) | Uncapped per day (`plans.py`) | **Enforced** (applies to everyone) |
 | **Hosted instance ceiling** | Configurable (20 text calls/day on hosted instance) | Configurable (25 voice min/day on hosted instance) | Enforced across all accounts |

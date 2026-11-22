@@ -245,8 +245,8 @@ def main():
     st, reg_plan = api("/api/plan", token=reg_token)
     assert st == 200 and reg_plan["plan"] == "service", (st, reg_plan)
     assert reg_plan["limits"]["writing"]["limit"] == 5, reg_plan
-    assert reg_plan["limits"]["speaking"]["mocks"] == 1, reg_plan
-    assert reg_plan["limits"]["speaking"]["minutes"] == 15, reg_plan
+    assert reg_plan["limits"]["speaking"]["mocks"] == 3, reg_plan
+    assert reg_plan["limits"]["speaking"]["minutes"] == 45, reg_plan
     out["1_plans"] = {"owner": owner_plan["plan"], "regular": reg_plan["plan"]}
 
     # 2. Regular account hits 429 on writing call #6 (B2_AI_DAILY_PER_USER=5).
@@ -276,15 +276,16 @@ def main():
         f"second regular user should hit daily AI total: {st} {body}"
     out["3_owner_writing_25"] = {"owner_calls": 25, "reg2_instance_429": st}
 
-    # 4. Regular account hits 429 on speaking session #2 (1 mock/day).
-    st, body = api("/api/speaking/turn", turn_body("reg-s1"),
-                   token=reg_token, clear_rate=True)
-    assert st == 200, f"regular speaking #1 failed: {st} {body}"
-    st, body = api("/api/speaking/turn", turn_body("reg-s2"),
+    # 4. Regular account hits 429 on speaking session #4 (3 mocks/day).
+    for idx in range(1, 4):
+        st, body = api("/api/speaking/turn", turn_body(f"reg-s{idx}"),
+                       token=reg_token, clear_rate=True)
+        assert st == 200, f"regular speaking #{idx} failed: {st} {body}"
+    st, body = api("/api/speaking/turn", turn_body("reg-s4"),
                    token=reg_token, clear_rate=True)
     assert st == 429 and body.get("error") == "limit_reached" and body.get("limit") == "speaking", \
-        f"regular speaking #2 should 429: {st} {body}"
-    out["4_regular_speaking_429"] = {"after": 1, "status": st, "error": body.get("error")}
+        f"regular speaking #4 should 429: {st} {body}"
+    out["4_regular_speaking_429"] = {"after": 3, "status": st, "error": body.get("error")}
 
     # 5. Owner logs 30 speaking minutes (> 15/user and > 25/instance) and still
     # opens 3 fresh speaking sessions + mints a Live token without 429.

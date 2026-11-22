@@ -2692,6 +2692,77 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 .u4-library-link:hover{color:var(--acc-text)}
 .u4-library-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
+#v-hoy .today-meta-value.today-meta-link,
+.today-meta-link{
+  appearance:none;background:none;border:0;padding:4px 0;margin:0;
+  min-height:44px;display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font);text-align:left;cursor:pointer;max-width:100%;
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;
+  transition:color 120ms ease,text-decoration-color 120ms ease;
+}
+.today-meta-link:hover{color:var(--acc-text);text-decoration-color:var(--acc)}
+.today-meta-link:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
+.step-res-summary{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.4;font-variant-numeric:tabular-nums}
+.session-online-wrap{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin:0 0 var(--s3)}
+.session-online-wrap[hidden]{display:none}
+.session-online-cta{min-height:44px;text-decoration:none}
+.exam-card-mat-btn{
+  appearance:none;background:none;border:0;padding:6px 0 0;margin:var(--s1) 0 0;
+  min-height:44px;display:inline-flex;align-items:center;gap:4px;align-self:flex-start;
+  font-family:var(--font);font-size:var(--t-meta);font-weight:600;color:var(--acc-text);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
+}
+.exam-card-mat-btn:hover{color:var(--txt)}
+.exam-card-mat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
+.ex-active-lib-btn{min-height:44px}
+.fm-preflight{margin-bottom:var(--s5);border:1px solid var(--acc-border);scroll-margin-top:96px}
+.fm-preflight[hidden]{display:none}
+.fm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
+.fm-head>div{min-width:0;flex:1 1 220px}
+.fm-head h2{margin:0 0 var(--s1)}
+.fm-done-banner{
+  background:var(--ok-soft);border:1px solid var(--ok-border);border-radius:var(--r-panel);
+  padding:var(--s3) var(--s4);margin-bottom:var(--s4);display:flex;flex-direction:column;gap:var(--s2);
+}
+.fm-done-banner[hidden]{display:none}
+.fm-done-banner h3{margin:0;font-size:var(--t-sub);color:var(--ok-text)}
+.fm-done-banner p{margin:0;font-size:var(--t-meta);color:var(--txt);line-height:1.45}
+.fm-block{margin-top:var(--s4)}
+.fm-block-title{font-size:var(--t-meta);font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-2);margin:0 0 var(--s2)}
+.fm-samples{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.fm-sample-btn{
+  min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--txt);font:inherit;font-size:var(--t-meta);font-weight:600;
+  cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+}
+.fm-sample-btn[aria-pressed="true"]{background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text)}
+.fm-sample-done-tag{font-size:11px;padding:1px 6px;border-radius:999px;background:var(--ok-soft);color:var(--ok-text)}
+.fm-papers{display:flex;flex-direction:column;gap:var(--s2)}
+.fm-paper-row{
+  display:flex;flex-direction:column;gap:var(--s2);padding:var(--s3);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);min-width:0;
+}
+.fm-paper-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:wrap}
+.fm-paper-name{font-size:var(--t-body);font-weight:600;color:var(--txt);min-width:0}
+.fm-paper-dur{font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums;margin-left:6px;font-weight:500}
+.fm-paper-links{display:flex;flex-wrap:wrap;gap:6px}
+.fm-ai-quota{
+  margin-top:var(--s3);padding:var(--s3);background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-ctl);font-size:var(--t-meta);color:var(--txt-2);
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2);line-height:1.45;
+}
+.fm-actions{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s4);align-items:center}
+.fm-actions .btn{min-height:44px}
+.fm-online-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:var(--s2)}
+.fm-online-card{
+  display:flex;flex-direction:column;gap:4px;padding:var(--s3);min-height:44px;min-width:0;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  text-decoration:none;color:var(--txt);transition:border-color 120ms ease,background-color 120ms ease;
+}
+.fm-online-card:hover,.fm-online-card:focus-visible{border-color:var(--acc);background:var(--acc-soft);text-decoration:none}
+.fm-online-card b{font-size:14px;color:var(--txt);line-height:1.3;overflow-wrap:anywhere}
+.fm-online-card span{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
+#practiceLibraryCard{margin-top:var(--s4);scroll-margin-top:96px}
 @media (max-width:768px){
   .u4-real-mocks{margin-bottom:var(--s4)}
 }
@@ -4029,7 +4100,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 </div>
                 <div class="today-meta-block" id="todayCycleBlock">
                   <div class="today-meta-label" id="todayCycleLabel" data-i18n="today_cycle_label">This cycle</div>
-                  <div class="today-meta-value tnum" id="todayCycleValue"></div>
+                  <button type="button" class="today-meta-value today-meta-link tnum" id="todayCycleValue" data-action="openCycleLibrary" data-skill="rue"></button>
                 </div>
               </aside>
             </div>
@@ -5024,28 +5095,31 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
 
             <div id="sessionTabContents" role="tabpanel" aria-labelledby="sessionTabContentsBtn" hidden>
-              <div class="card" id="exercisesLibraryCard">
+              <div class="card" id="exercisesLibraryCard" data-exlib-root="session">
                 <h2 id="sessionContentsTitle" data-i18n="session_contents_title">Contents</h2>
                 <div class="sub" id="sessionContentsSub" data-i18n="session_contents_sub">Papers, answer keys, lesson plans, audio and online practice for this unit.</div>
+                <div class="session-online-wrap" id="sessionOnlinePrimaryWrap" hidden>
+                  <a id="sessionOnlinePrimaryBtn" class="btn ok session-online-cta" href="#" target="_blank" rel="noopener noreferrer" data-i18n="practice_online_cta">Practise online</a>
+                </div>
                 <div class="exlib-toolbar">
                   <div class="exlib-search-row">
                     <label class="sr" for="exLibSearch" data-i18n="exlib_search_label">Search contents</label>
-                    <input type="search" id="exLibSearch" class="exlib-search-input" autocomplete="off"
+                    <input type="search" id="exLibSearch" data-exlib-role="search" class="exlib-search-input" autocomplete="off"
                       placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
                       aria-label="Search contents" data-i18n-aria-label="exlib_search_label"
                       data-input="onExLibSearch" data-keydown="exLibSearchKey">
-                    <button type="button" id="exLibClear" class="btn sm gray exlib-clear-btn" style="display:none"
+                    <button type="button" id="exLibClear" data-exlib-role="clear" class="btn sm gray exlib-clear-btn" style="display:none"
                       data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
                   </div>
 
                   <div class="session-contents-status">
-                    <div class="exlib-count tnum" id="exLibCount" aria-live="polite"></div>
+                    <div class="exlib-count tnum" id="exLibCount" data-exlib-role="count" aria-live="polite"></div>
                     <button type="button" class="session-scope-link" id="sessionContentsScopeBtn"
                       data-action="toggleContentsPaperScope">See all in this paper</button>
                   </div>
 
-                  <div id="exLibAdvancedFilters" class="exlib-advanced" hidden>
-                    <div class="chips exlib-chips" id="exLibPaperFilter" role="group"
+                  <div id="exLibAdvancedFilters" data-exlib-role="adv" class="exlib-advanced" hidden>
+                    <div class="chips exlib-chips" id="exLibPaperFilter" data-exlib-role="paperFilter" role="group"
                       aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
                       <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
                       <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
@@ -5055,7 +5129,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
                     </div>
 
-                    <div class="chips exlib-chips" id="exLibPartFilter" role="group"
+                    <div class="chips exlib-chips" id="exLibPartFilter" data-exlib-role="partFilter" role="group"
                       aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
                       <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
                       <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
@@ -5070,12 +5144,16 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                     <div class="exlib-bar">
                       <div class="exlib-bar-controls">
                         <label class="exlib-free-toggle" for="exLibFreeOnly">
-                          <input type="checkbox" id="exLibFreeOnly" data-change="toggleExLibFree">
+                          <input type="checkbox" id="exLibFreeOnly" data-exlib-role="freeOnly" data-change="toggleExLibFree">
                           <span data-i18n="exlib_free_only">Free only</span>
+                        </label>
+                        <label class="exlib-free-toggle" for="exLibFullScope">
+                          <input type="checkbox" id="exLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
+                          <span data-i18n="exlib_scope_full">Full paper only</span>
                         </label>
                         <label class="exlib-sort-wrap" for="exLibSort">
                           <span data-i18n="exlib_sort_label">Sort</span>
-                          <select id="exLibSort" class="exlib-sort-select" data-change="setExLibSort">
+                          <select id="exLibSort" data-exlib-role="sort" class="exlib-sort-select" data-change="setExLibSort">
                             <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
                             <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
                             <option value="az" data-i18n="exlib_sort_az">A–Z</option>
@@ -5086,8 +5164,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                 </div>
 
-                <div id="exLibList" class="exlib-groups"></div>
-                <div id="exLibEmpty" class="exlib-empty" style="display:none">
+                <div id="exLibList" data-exlib-role="list" class="exlib-groups"></div>
+                <div id="exLibEmpty" data-exlib-role="empty" class="exlib-empty" style="display:none">
                   <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
                   <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
                 </div>
@@ -5125,6 +5203,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
               <h3 class="exam-card-title">Reading &amp; Use of English</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
+              <button type="button" class="exam-card-mat-btn" data-paper="rue" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="w" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
@@ -5133,6 +5212,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
               <h3 class="exam-card-title">Writing</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
+              <button type="button" class="exam-card-mat-btn" data-paper="w" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="l" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
@@ -5141,6 +5221,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
               <h3 class="exam-card-title">Listening</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
+              <button type="button" class="exam-card-mat-btn" data-paper="l" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="sp" data-action="openSpeakingExam" data-keydown="activate">
               <div class="exam-card-top">
@@ -5149,12 +5230,49 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </div>
               <h3 class="exam-card-title">Speaking</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
+              <button type="button" class="exam-card-mat-btn" data-paper="sp" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
           <p class="u4-library-note">
             <button type="button" class="u4-library-link" id="examLibraryLink" data-action="openPracticeCatalog" data-i18n="exam_library_link">Papers, keys and practice links live in Library</button>
           </p>
+        </div>
+
+        <!-- Full mock pre-flight: papers in order, sample selector, online mocks & unlimited exit -->
+        <div class="card fm-preflight" id="fullMockPreflight" hidden>
+          <div class="fm-head">
+            <div>
+              <h2 data-i18n="fm_title">Full mock — pre-flight</h2>
+              <div class="sub" data-i18n="fm_sub">Check your papers, pick a sample or an online test, and start the official 195′ written sequence followed by 14′ Speaking.</div>
+            </div>
+            <button type="button" class="btn sm gray" id="fmCloseBtn" data-action="closeFullMockPreflight" data-i18n="common_close">Close</button>
+          </div>
+          <div class="fm-done-banner" id="fmDoneBanner" hidden>
+            <h3 data-i18n="fm_done_title">Full mock finished — ready for another?</h3>
+            <p data-i18n="fm_done_sub">Pick the next sample or try a free online full mock. There is no cap on written mocks or Library resources.</p>
+            <div class="fm-actions" style="margin-top:0">
+              <button type="button" class="btn ok" id="fmDoAnotherBtn" data-action="doAnotherFullMock" data-i18n="fm_do_another">Do another full mock</button>
+              <button type="button" class="btn gray" data-action="openSpeakingExam" data-i18n="fm_open_speaking">Start Speaking (14′)</button>
+            </div>
+          </div>
+          <div class="fm-block" id="fmSampleBlock">
+            <div class="fm-block-title" data-i18n="fm_sample_label">Choose a local sample</div>
+            <div class="fm-samples" id="fmSampleList" role="group"></div>
+          </div>
+          <div class="fm-block">
+            <div class="fm-block-title" data-i18n="fm_papers_title">Official sequence (4 papers)</div>
+            <div class="fm-papers" id="fmPapersList"></div>
+          </div>
+          <div class="fm-ai-quota" id="fmAiQuota"></div>
+          <div class="fm-actions">
+            <button type="button" class="btn ok" id="fmStartSeqBtn" data-action="beginFullMockSequence" data-i18n="fm_start_seq">Start 195′ sequence</button>
+          </div>
+          <div class="fm-block">
+            <div class="fm-block-title" data-i18n="fm_online_title">More full mocks online (free)</div>
+            <div class="sub" style="margin-bottom:var(--s2)" data-i18n="fm_online_sub">Unlimited free practice outside the local samples. Each opens in a new tab.</div>
+            <div class="fm-online-grid" id="fmOnlineList"></div>
+          </div>
         </div>
 
         <!-- Advanced selector (test contract) -->
@@ -5186,6 +5304,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button class="btn" data-action="exStart" data-i18n="common_start">▶ Start</button>
               <button class="btn gray" data-action="exPause">⏸ <span data-i18n="exam_pause">Pause</span></button>
               <button class="btn gray" data-action="exResetUser">↺ <span data-i18n="exam_reset">Reset</span></button>
+            </div>
+            <div style="margin:0 0 var(--s3)">
+              <button type="button" class="btn sm gray ex-active-lib-btn" id="exActiveLibBtn" data-action="openActiveExamMaterials" data-i18n="exam_open_mock_materials">Open materials for this mock</button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--r-ctl);padding:var(--s4);text-align:left">
@@ -5501,6 +5622,77 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
           <h2 data-i18n="parts_exercises">Exercises by part</h2>
           <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
           <div id="partsList"></div>
+        </div>
+
+        <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
+          <h2 data-i18n="practice_lib_title">Library</h2>
+          <div class="sub" data-i18n="practice_lib_sub">Every local paper, answer key, audio, lesson plan and free online practice source in one place.</div>
+          <div class="exlib-toolbar">
+            <div class="exlib-search-row">
+              <label class="sr" for="pracLibSearch" data-i18n="exlib_search_label">Search contents</label>
+              <input type="search" id="pracLibSearch" data-exlib-role="search" class="exlib-search-input" autocomplete="off"
+                placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
+                aria-label="Search contents" data-i18n-aria-label="exlib_search_label"
+                data-input="onExLibSearch" data-keydown="exLibSearchKey">
+              <button type="button" id="pracLibClear" data-exlib-role="clear" class="btn sm gray exlib-clear-btn" style="display:none"
+                data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
+            </div>
+
+            <div class="session-contents-status">
+              <div class="exlib-count tnum" id="pracLibCount" data-exlib-role="count" aria-live="polite"></div>
+            </div>
+
+            <div id="pracLibAdvancedFilters" data-exlib-role="adv" class="exlib-advanced">
+              <div class="chips exlib-chips" id="pracLibPaperFilter" data-exlib-role="paperFilter" role="group"
+                aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
+                <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
+                <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+                <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
+                <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
+                <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
+                <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
+              </div>
+
+              <div class="chips exlib-chips" id="pracLibPartFilter" data-exlib-role="partFilter" role="group"
+                aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
+                <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
+                <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
+              </div>
+
+              <div class="exlib-bar">
+                <div class="exlib-bar-controls">
+                  <label class="exlib-free-toggle" for="pracLibFreeOnly">
+                    <input type="checkbox" id="pracLibFreeOnly" data-exlib-role="freeOnly" data-change="toggleExLibFree">
+                    <span data-i18n="exlib_free_only">Free only</span>
+                  </label>
+                  <label class="exlib-free-toggle" for="pracLibFullScope">
+                    <input type="checkbox" id="pracLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
+                    <span data-i18n="exlib_scope_full">Full paper only</span>
+                  </label>
+                  <label class="exlib-sort-wrap" for="pracLibSort">
+                    <span data-i18n="exlib_sort_label">Sort</span>
+                    <select id="pracLibSort" data-exlib-role="sort" class="exlib-sort-select" data-change="setExLibSort">
+                      <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
+                      <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
+                      <option value="az" data-i18n="exlib_sort_az">A–Z</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="pracLibList" data-exlib-role="list" class="exlib-groups"></div>
+          <div id="pracLibEmpty" data-exlib-role="empty" class="exlib-empty" style="display:none">
+            <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
+            <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
+          </div>
         </div>
       </section>
 
@@ -6771,7 +6963,41 @@ const I18N={
     exlib_group_ref_sub:'Official handbooks, candidate guides, answer sheets, score scales and reference platforms.',
     exlib_origin_local:'Local',
     exlib_origin_online:'Online',
-    exlib_filter_action:'Search library'
+    exlib_filter_action:'Search library',
+    exlib_scope_full:'Full paper only',
+    practice_lib_title:'Library',
+    practice_lib_sub:'Every local paper, answer key, audio, lesson plan and free online practice source in one place.',
+    practice_online_cta:'Practise online',
+    practice_res_paper:'Paper',
+    practice_res_key:'key',
+    practice_res_audio:'audio',
+    practice_res_lesson:'lesson',
+    practice_res_online:'{n} online',
+    practice_res_total_one:'1 resource',
+    practice_res_total_many:'{n} resources',
+    exam_open_materials:'Open materials',
+    exam_open_mock_materials:'Open materials for this mock',
+    fm_title:'Full mock — pre-flight',
+    fm_sub:'Check your papers, pick a sample or an online test, and start the official 195′ written sequence followed by 14′ Speaking.',
+    fm_sample_label:'Choose a local sample',
+    fm_sample_done:'Done',
+    fm_sample_none:'Local PDFs are not loaded yet — you can use the free online full mocks below right away.',
+    fm_papers_title:'Official sequence (4 papers)',
+    fm_start_seq:'Start 195′ sequence',
+    fm_online_title:'More full mocks online (free)',
+    fm_online_sub:'Unlimited free practice outside the local samples. Each opens in a new tab.',
+    fm_done_title:'Full mock finished — ready for another?',
+    fm_done_sub:'Pick the next sample or try a free online full mock. There is no cap on written mocks or Library resources.',
+    fm_do_another:'Do another full mock',
+    fm_ai_unlimited:'AI Speaking voice: unlimited on this account. Written mocks and online resources are always unlimited.',
+    fm_ai_quota:'AI Speaking voice: {mocks} of {maxMocks} mocks · {mins} of {maxMins} min left today. Written mocks and online links are always unlimited.',
+    fm_ai_byo:'Use my own API key',
+    fm_open_speaking:'Start Speaking (14′)',
+    fm_sample_s1:'Standard 1',
+    fm_sample_s2:'Standard 2',
+    fm_sample_fs1:'For Schools 1',
+    fm_sample_fs2:'For Schools 2',
+    today_cycle_open_aria:'Open Library filtered to {skill}'
   },
   es:{
     app_title:'B2 First Tracker — Nota A',
@@ -7826,7 +8052,41 @@ const I18N={
     exlib_group_ref_sub:'Manuales oficiales, guías para candidatos, hojas de respuesta, escalas de puntaje y plataformas de referencia.',
     exlib_origin_local:'Local',
     exlib_origin_online:'Online',
-    exlib_filter_action:'Buscar biblioteca'
+    exlib_filter_action:'Buscar biblioteca',
+    exlib_scope_full:'Solo paper completo',
+    practice_lib_title:'Biblioteca',
+    practice_lib_sub:'Todos los exámenes locales, respuestas, audios, guías y páginas online gratis en un solo lugar.',
+    practice_online_cta:'Practicar online',
+    practice_res_paper:'Examen',
+    practice_res_key:'respuestas',
+    practice_res_audio:'audio',
+    practice_res_lesson:'guía',
+    practice_res_online:'{n} online',
+    practice_res_total_one:'1 recurso',
+    practice_res_total_many:'{n} recursos',
+    exam_open_materials:'Abrir materiales',
+    exam_open_mock_materials:'Abrir materiales de este simulacro',
+    fm_title:'Simulacro completo — preparación',
+    fm_sub:'Revisá los materiales, elegí una muestra o un test online, y empezá la secuencia oficial de 195′ escritos seguida por 14′ de Speaking.',
+    fm_sample_label:'Elegí una muestra local',
+    fm_sample_done:'Hecho',
+    fm_sample_none:'Todavía no hay PDFs locales cargados — podés usar los full mocks online gratis de abajo ahora mismo.',
+    fm_papers_title:'Secuencia oficial (4 pruebas)',
+    fm_start_seq:'Empezar secuencia 195′',
+    fm_online_title:'Más full mocks online (gratis)',
+    fm_online_sub:'Práctica gratis ilimitada más allá de las muestras locales. Cada uno abre en pestaña nueva.',
+    fm_done_title:'Simulacro terminado — ¿hacemos otro?',
+    fm_done_sub:'Elegí la siguiente muestra o probá un full mock online gratis. Los simulacros escritos y la Biblioteca no tienen tope.',
+    fm_do_another:'Hacer otro full mock',
+    fm_ai_unlimited:'Voz AI de Speaking: sin límite en esta cuenta. Los simulacros escritos y los recursos online son siempre ilimitados.',
+    fm_ai_quota:'Voz AI de Speaking: te quedan {mocks} de {maxMocks} simulacros · {mins} de {maxMins} min hoy. Los simulacros escritos y enlaces online son siempre ilimitados.',
+    fm_ai_byo:'Usar mi propia API key',
+    fm_open_speaking:'Empezar Speaking (14′)',
+    fm_sample_s1:'Standard 1',
+    fm_sample_s2:'Standard 2',
+    fm_sample_fs1:'For Schools 1',
+    fm_sample_fs2:'For Schools 2',
+    today_cycle_open_aria:'Abrir Biblioteca filtrada en {skill}'
   }
 };
 let LANG='en';
@@ -10259,15 +10519,17 @@ function toggleContentsPaperScope(){
     EXLIB_STATE.expanded=true;
     EXLIB_STATE.paper=(u&&u.skill)||'all';
     EXLIB_STATE.part='all';
+    EXLIB_STATE.scope='all';
   }else{
     EXLIB_STATE.expanded=false;
     EXLIB_STATE.paper=(u&&u.skill)||'all';
     EXLIB_STATE.part=(u&&u.part)||'all';
+    EXLIB_STATE.scope='all';
     EXLIB_STATE.freeOnly=false;
     EXLIB_STATE.sort='exam';
   }
   renderSessionTopbar();
-  renderExercisesLibrary();
+  renderExercisesLibrary('session');
 }
 function resetStudioPhases(skill){
   if(skill==='rue'){
@@ -10318,12 +10580,13 @@ function selectSessionStudio(id,opts){
     EXLIB_STATE.query='';
     EXLIB_STATE.paper=(u&&u.skill)||'all';
     EXLIB_STATE.part=(u&&u.part)||'all';
+    EXLIB_STATE.scope='all';
     EXLIB_STATE.freeOnly=false;
     EXLIB_STATE.sort='exam';
     EXLIB_STATE.expanded=!(u&&u.part);
     setSessionTab('session');
     renderSessionTopbar();
-    if(typeof renderExercisesLibrary==='function')renderExercisesLibrary();
+    if(typeof renderExercisesLibrary==='function')renderExercisesLibrary('session');
   }
 }
 /* The resting state of TODAY: every studio group closed. */
@@ -10356,6 +10619,7 @@ function closeSessionStudios(){
     EXLIB_STATE.query='';
     EXLIB_STATE.paper='all';
     EXLIB_STATE.part='all';
+    EXLIB_STATE.scope='all';
     EXLIB_STATE.freeOnly=false;
     EXLIB_STATE.sort='exam';
     EXLIB_STATE.expanded=false;
@@ -10389,6 +10653,7 @@ function openUnitSession(u,opts){
   EXLIB_STATE.query='';
   EXLIB_STATE.paper=o.exlibPaper||skill;
   EXLIB_STATE.part=o.exlibPart!=null?String(o.exlibPart):(partStr||'all');
+  EXLIB_STATE.scope=o.exlibScope||'all';
   EXLIB_STATE.freeOnly=false;
   EXLIB_STATE.sort='exam';
   EXLIB_STATE.expanded=o.expanded!=null?!!o.expanded:!partStr;
@@ -10416,7 +10681,7 @@ function openUnitSession(u,opts){
   });
   setSessionTab(o.initialTab==='contents'?'contents':'session');
   renderSessionTopbar();
-  renderExercisesLibrary();
+  renderExercisesLibrary('session');
   if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
   if(origin==='practice'||origin==='plan'){
     window.scrollTo(0,0);
@@ -17518,6 +17783,7 @@ async function loadPlan(){
     PLAN_STATE=await r.json();
   }catch(e){return null}
   renderPlanCard();
+  if(typeof renderFullMockPreflight==='function')renderFullMockPreflight();
   return PLAN_STATE;
 }
 function renderPlanCard(){
@@ -18768,9 +19034,130 @@ let exLeft=75*60,exIv=null,exPaper='rue';
 /* U4: real mocks. A card sets the paper, its official duration and starts
    the existing countdown in one click. The full mock chains the three written
    papers and hands over to the SP_EXAM speaking test (14 min). */
-const FULL_MOCK={active:false,idx:0,phases:['rue','w','l']};
+const FULL_MOCK={active:false,preflightOpen:false,finished:false,sample:'s1',completedSamples:[],idx:0,phases:['rue','w','l']};
+const FULL_MOCK_SAMPLES=[
+  {id:'s1',labelKey:'fm_sample_s1',papers:{
+    rue:[['Paper','rueS1'],['Answer key','keyS1']],
+    w:[['Paper','wS1']],
+    l:[['Paper','lS1'],['Answer key','lkS1'],['Audio','auS1'],['Tapescript','tsS1']],
+    sp:[['Speaking cards','spS1'],['Examiner notes','exC0']]
+  }},
+  {id:'s2',labelKey:'fm_sample_s2',papers:{
+    rue:[['Paper','rueS2'],['Answer keys','keyS2']],
+    w:[['Paper','wS2'],['Answer keys','keyS2']],
+    l:[['Paper','lS2'],['Answer key','lkS2'],['Audio P1','auS2p1'],['Audio P2','auS2p2'],['Audio P3','auS2p3'],['Audio P4','auS2p4']],
+    sp:[['Speaking cards','spS2'],['Examiner notes','exC1']]
+  }},
+  {id:'fs1',labelKey:'fm_sample_fs1',papers:{
+    rue:[['Paper','rueFS1'],['Answer key','keyFS1']],
+    w:[['Paper','wFS1']],
+    l:[['Paper','lFS1'],['Answer key','lkFS1'],['Audio P1','auFS1p1'],['Audio P2','auFS1p2'],['Audio P3','auFS1p3'],['Audio P4','auFS1p4'],['Tapescript','tsFS1']],
+    sp:[['Speaking cards','spFS1'],['Examiner notes','exC3']]
+  }},
+  {id:'fs2',labelKey:'fm_sample_fs2',papers:{
+    rue:[['Paper','rueFS2'],['Answer keys','keyFS2']],
+    w:[['Paper','wFS2'],['Answer keys','keyFS2']],
+    l:[['Paper','lFS2'],['Answer key','lkFS2'],['Audio','auFS2']],
+    sp:[['Speaking cards','spFS2'],['Examiner notes','exC4']]
+  }}
+];
+const FULL_MOCK_ONLINE_URLS=[
+  'https://www.examenglish.com/FCE/fce_use_of_english.html',
+  'https://www.examenglish.com/FCE/fce_reading.html',
+  'https://www.examenglish.com/FCE/fce_listening_test2.html',
+  'https://test-english.com/use-of-english/b2/',
+  'https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/',
+  'https://www.flo-joe.co.uk/fce/students/tests/'
+];
+function availableFullMockSamples(){
+  return FULL_MOCK_SAMPLES.filter(s=>Object.values(s.papers).some(arr=>arr.some(pair=>!!MAT[pair[1]])));
+}
+function fullMockOnlineSources(){
+  if(typeof PRACTICE_SOURCES==='undefined'||!Array.isArray(PRACTICE_SOURCES))return [];
+  const picked=[];
+  FULL_MOCK_ONLINE_URLS.forEach(u=>{
+    const m=PRACTICE_SOURCES.find(s=>s&&s.url===u);
+    if(m)picked.push(m);
+  });
+  return picked;
+}
 function examPaperTitle(p){
-  return p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':t('exam_full_title');
+  return p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':p==='sp'?'Speaking':t('exam_full_title');
+}
+function renderFullMockPreflight(){
+  const box=document.getElementById('fullMockPreflight');
+  if(!box)return;
+  box.hidden=!FULL_MOCK.preflightOpen;
+  if(!FULL_MOCK.preflightOpen)return;
+  const doneEl=document.getElementById('fmDoneBanner');
+  if(doneEl)doneEl.hidden=!FULL_MOCK.finished;
+  const avail=availableFullMockSamples();
+  if(avail.length&&!avail.some(s=>s.id===FULL_MOCK.sample)){
+    const nextAvail=avail.find(s=>FULL_MOCK.completedSamples.indexOf(s.id)<0)||avail[0];
+    FULL_MOCK.sample=nextAvail.id;
+  }
+  const sampleList=document.getElementById('fmSampleList');
+  if(sampleList){
+    if(avail.length){
+      sampleList.innerHTML=avail.map(s=>{
+        const on=s.id===FULL_MOCK.sample;
+        const done=FULL_MOCK.completedSamples.indexOf(s.id)>=0;
+        return `<button type="button" class="fm-sample-btn" data-sample="${esc(s.id)}" data-action="selectFullMockSample" aria-pressed="${on?'true':'false'}">`+
+          `<span>${esc(t(s.labelKey))}</span>`+
+          (done?`<span class="fm-sample-done-tag">${esc(t('fm_sample_done'))}</span>`:'')+
+          `</button>`;
+      }).join('');
+    }else{
+      sampleList.innerHTML=`<p class="sub" style="margin:0">${esc(t('fm_sample_none'))}</p>`;
+    }
+  }
+  const activeSample=avail.find(s=>s.id===FULL_MOCK.sample)||null;
+  const papersEl=document.getElementById('fmPapersList');
+  if(papersEl){
+    const seq=[
+      {id:'rue',title:'1. Reading & Use of English',dur:'75′'},
+      {id:'w',title:'2. Writing',dur:'80′'},
+      {id:'l',title:'3. Listening',dur:'40′'},
+      {id:'sp',title:'4. Speaking',dur:'14′'}
+    ];
+    papersEl.innerHTML=seq.map(p=>{
+      const pairs=activeSample?(activeSample.papers[p.id]||[]).filter(pair=>!!MAT[pair[1]]):[];
+      const quick=pairs.map(pair=>`<a class="chip" href="${esc(MAT[pair[1]])}" target="_blank" rel="noopener">${esc(pair[0])}</a>`).join('');
+      return `<div class="fm-paper-row" data-fm-paper="${p.id}">`+
+        `<div class="fm-paper-top">`+
+          `<span class="fm-paper-name">${esc(p.title)}<span class="fm-paper-dur">${esc(p.dur)}</span></span>`+
+          `<button type="button" class="btn sm gray" data-paper="${p.id}" data-action="openFullPaperLibrary">${esc(t('exam_open_materials'))}</button>`+
+        `</div>`+
+        (quick?`<div class="fm-paper-links">${quick}</div>`:'')+
+        `</div>`;
+    }).join('');
+  }
+  const quotaEl=document.getElementById('fmAiQuota');
+  if(quotaEl){
+    const p=typeof PLAN_STATE==='object'?PLAN_STATE:null;
+    const byoKey=typeof loadByo==='function'&&!!loadByo().key;
+    const isUnlimited=byoKey||(p&&(p.plan==='owner'||p.plan==='byo'||!(p.limits&&p.limits.speaking)));
+    let msg='';
+    if(isUnlimited){
+      msg=t('fm_ai_unlimited');
+    }else{
+      const sLim=(p&&p.limits&&p.limits.speaking)||{mocks:3,minutes:45};
+      const u=(p&&p.usage)||{};
+      const leftMocks=Math.max(0,(Number(sLim.mocks)||3)-(Number(u.speaking_mocks)||0));
+      const usedMins=Math.floor((Number(u.speaking_seconds)||0)/60);
+      const maxMins=Number(sLim.minutes)||45;
+      const leftMins=Math.max(0,maxMins-usedMins);
+      msg=t('fm_ai_quota',{mocks:leftMocks,maxMocks:sLim.mocks||3,mins:leftMins,maxMins:maxMins});
+    }
+    quotaEl.innerHTML=`<span>${esc(msg)}</span>`+
+      (!isUnlimited?`<button type="button" class="btn sm gray" data-action="focusByoCard">${esc(t('fm_ai_byo'))}</button>`:'');
+  }
+  const onlineEl=document.getElementById('fmOnlineList');
+  if(onlineEl){
+    const online=fullMockOnlineSources();
+    onlineEl.innerHTML=online.map(s=>`<a class="fm-online-card" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">`+
+      `<b>${esc(s.n)} ↗</b><span>${esc(t('practice_mins',{mins:s.mins}))} · ${esc(t('practice_kind_'+(s.kind||'free')))}</span></a>`).join('');
+  }
 }
 function startRealMock(paper,keepFull){
   if(paper==='full'){startFullMock();return}
@@ -18787,14 +19174,57 @@ function startRealMock(paper,keepFull){
   if(box)box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function startFullMock(){
+  FULL_MOCK.preflightOpen=true;
+  FULL_MOCK.finished=false;
+  if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
+  if(typeof loadPlan==='function'&&!PLAN_STATE)loadPlan().then(()=>renderFullMockPreflight());
+  renderFullMockPreflight();
+  const box=document.getElementById('fullMockPreflight');
+  if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function closeFullMockPreflight(){
+  FULL_MOCK.preflightOpen=false;
+  renderFullMockPreflight();
+}
+function selectFullMockSample(sampleId){
+  if(!sampleId)return;
+  FULL_MOCK.sample=String(sampleId);
+  renderFullMockPreflight();
+}
+function beginFullMockSequence(){
   FULL_MOCK.active=true;
+  FULL_MOCK.finished=false;
   FULL_MOCK.idx=0;
   startRealMock(FULL_MOCK.phases[0],true);
+}
+function markFullMockCompleted(){
+  if(FULL_MOCK.sample&&FULL_MOCK.completedSamples.indexOf(FULL_MOCK.sample)<0){
+    FULL_MOCK.completedSamples.push(FULL_MOCK.sample);
+  }
+  FULL_MOCK.active=false;
+  FULL_MOCK.finished=true;
+  FULL_MOCK.preflightOpen=true;
+  renderFullMockPreflight();
+}
+function doAnotherFullMock(){
+  const avail=availableFullMockSamples();
+  const remaining=avail.find(s=>FULL_MOCK.completedSamples.indexOf(s.id)<0);
+  if(remaining){
+    FULL_MOCK.sample=remaining.id;
+  }else if(avail.length){
+    const curIdx=avail.findIndex(s=>s.id===FULL_MOCK.sample);
+    FULL_MOCK.sample=avail[(curIdx+1)%avail.length].id;
+  }
+  FULL_MOCK.finished=false;
+  FULL_MOCK.preflightOpen=true;
+  renderFullMockPreflight();
+  const box=document.getElementById('fullMockPreflight');
+  if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function fullMockAdvance(){
   FULL_MOCK.idx++;
   if(FULL_MOCK.idx>=FULL_MOCK.phases.length){
-    FULL_MOCK.active=false;
+    markFullMockCompleted();
     openSpeakingExam();
     return;
   }
@@ -18851,12 +19281,42 @@ function examSourcePartTag(part){
   if(consecutive)return t('exam_sources_parts_range',{from:nums[0],to:nums[nums.length-1]});
   return t('exam_sources_parts_list',{parts:part.join(', ')});
 }
-function openPracticeCatalog(paper){
+function openPracticeCatalog(paper,part,scope){
   const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp'||paper==='ref')?paper:'all';
+  const partStr=(part&&part!=='all')?String(part):'all';
   const baseSkill=(p==='all'||p==='ref')?'rue':p;
-  openUnitSession({skill:baseSkill,value:1,part:null,min:8},{
-    origin:'practice',initialTab:'contents',expanded:true,exlibPaper:p,exlibPart:'all',catalog:p==='all'
+  openUnitSession({skill:baseSkill,value:1,part:partStr==='all'?null:partStr,min:8},{
+    origin:'practice',initialTab:'contents',expanded:true,exlibPaper:p,exlibPart:partStr,exlibScope:scope||'all',catalog:p==='all'
   });
+}
+function openPracticeLibrary(opts){
+  const o=opts||{};
+  const p=(o.paper==='rue'||o.paper==='w'||o.paper==='l'||o.paper==='sp'||o.paper==='ref')?o.paper:'all';
+  const partStr=(o.part&&o.part!=='all')?String(o.part):'all';
+  const scope=(o.scope==='full')?'full':'all';
+  closeSessionStudios();
+  EXLIB_PRACTICE_STATE.query='';
+  EXLIB_PRACTICE_STATE.paper=p;
+  EXLIB_PRACTICE_STATE.part=partStr;
+  EXLIB_PRACTICE_STATE.scope=scope;
+  EXLIB_PRACTICE_STATE.freeOnly=false;
+  EXLIB_PRACTICE_STATE.sort='exam';
+  showView('practice');
+  renderExercisesLibrary('practice');
+  const card=document.getElementById('practiceLibraryCard');
+  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openCycleLibrary(el){
+  const skill=(el&&el.dataset&&el.dataset.skill)||practiceRotationSkill()||'rue';
+  openPracticeLibrary({paper:skill,part:'all',scope:'all'});
+}
+function openFullPaperLibrary(paper){
+  const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp')?paper:'all';
+  openPracticeLibrary({paper:p,part:'all',scope:'full'});
+}
+function openActiveExamMaterials(){
+  const p=(exPaper==='rue'||exPaper==='w'||exPaper==='l'||exPaper==='sp')?exPaper:'all';
+  openFullPaperLibrary(p);
 }
 function exStart(){
   if(exIv){exPause();return}
@@ -18880,11 +19340,14 @@ function exTick(){
 function exSave(){
   const v=id=>{const e=document.getElementById(id);return e?+e.value||0:0};
   const min=v('exMin')||Math.max(0,Math.round((EX_DUR[exPaper]-exLeft)/60))||0;
+  const wasFull=(exPaper==='full'||FULL_MOCK.active);
   if(exPaper==='rue')log({type:'rue',book:'exam',ref:'exam mode',correct:v('exOk'),total:52,min});
   else if(exPaper==='w')log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});
   else if(exPaper==='l')log({type:'l',book:'exam',ref:'exam mode',correct:v('exOk'),total:30,p2:v('exP2'),min});
   else{log({type:'rue',book:'exam',ref:'full exam',correct:v('exOk'),total:52,min});log({type:'fw',s1:v('exW1'),s2:v('exW2'),min});log({type:'l',book:'exam',ref:'full exam',correct:v('exLOk'),total:30,p2:0,min});}
-  document.getElementById('exRegister').style.display='none';exReset();alert(t('alert_result_saved'));
+  document.getElementById('exRegister').style.display='none';exReset();
+  if(wasFull)markFullMockCompleted();
+  alert(t('alert_result_saved'));
 }
 const PARTS=[
  {g:'Reading & Use of English',n:1,t:'Multiple-choice cloze',q:8,min:8,type:'ue',note:''},
@@ -18992,18 +19455,44 @@ function startPart(i){
   if(!p)return;
   const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
   const value=skill==='w'?(p.kind||(p.n===1?'Essay':'Article')):p.n;
-  openUnitSession({skill,value,part:p.n,min:p.min},{origin:'practice',fromPlan:false,armPlanUnit:false});
+  openUnitSession({skill,value,part:p.n,min:p.min},{origin:'practice',fromPlan:false,armPlanUnit:false,initialTab:'contents'});
+}
+function partResourceSummary(p,catalog){
+  const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
+  const partStr=String(p.n);
+  const all=catalog||buildExerciseLibrary();
+  const mine=all.filter(it=>it.skill===skill);
+  const localItems=mine.filter(it=>it.origin==='local'&&(!it.part.length||it.part.includes(partStr)));
+  const onlineItems=rankOnlineSourcesForPart(skill,partStr,false);
+  const hasPaper=localItems.some(it=>it.type==='paper');
+  const hasKey=localItems.some(it=>it.type==='key'||it.type==='notes');
+  const hasAudio=localItems.some(it=>it.type==='audio');
+  const hasLesson=localItems.some(it=>it.type==='lesson');
+  const bits=[];
+  if(hasPaper)bits.push(t('practice_res_paper'));
+  if(hasKey)bits.push(t('practice_res_key'));
+  if(hasAudio)bits.push(t('practice_res_audio'));
+  if(hasLesson)bits.push(t('practice_res_lesson'));
+  if(onlineItems.length)bits.push(t('practice_res_online',{n:onlineItems.length}));
+  const total=localItems.length+onlineItems.length;
+  if(!total)return '';
+  const totTxt=total===1?t('practice_res_total_one'):t('practice_res_total_many',{n:total});
+  return bits.length?(bits.join(' + ')+' · '+totTxt):totTxt;
 }
 function renderParts(){
   const el=document.getElementById('partsList');
+  if(!el)return;
+  const catalog=buildExerciseLibrary();
   let html='',last='';
   PARTS.forEach((p,i)=>{
     if(p.g!==last){
       html+=`<h3 class="folder">${p.g}</h3>`;
       last=p.g;
     }
+    const resSummary=partResourceSummary(p,catalog);
     html+=`<div class="step">
       <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
+      ${resSummary?`<p class="step-res-summary">${esc(resSummary)}</p>`:''}
       ${p.note?`<p class="step-note">${p.note}</p>`:''}
       <div class="step-actions">
         <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
@@ -19263,6 +19752,23 @@ function practiceRotationSkill(){
   const todaySlots=(plan&&plan.slots||[]).filter(sl=>sl.day===todayLabel);
   return todayCycleSkill(plan,todaySlots)||'rue';
 }
+function rankOnlineSourcesForPart(skill,partOpt,allowGeneric){
+  const pool=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
+    ?PRACTICE_SOURCES.filter(s=>s&&s.skill===skill&&/^https?:\/\//.test(s.url))
+    :[];
+  if(!pool.length)return [];
+  const pNum=Number(partOpt);
+  const pStr=(pNum>=1&&pNum<=7)?String(pNum):'';
+  if(pStr){
+    const exact=pool.filter(s=>Array.isArray(s.part)&&s.part.length===1&&s.part[0]===pStr);
+    const multi=pool.filter(s=>Array.isArray(s.part)&&s.part.length>1&&s.part.includes(pStr));
+    const generic=allowGeneric?pool.filter(s=>!Array.isArray(s.part)||s.part.length===0):[];
+    return exact.concat(multi,generic);
+  }
+  const partSpecific=pool.filter(s=>Array.isArray(s.part)&&s.part.length>0);
+  const generic=allowGeneric?pool.filter(s=>!Array.isArray(s.part)||s.part.length===0):[];
+  return partSpecific.concat(generic);
+}
 function renderPracticeNow(){
   const box=document.getElementById('practiceNow');
   if(!box)return;
@@ -19272,26 +19778,27 @@ function renderPracticeNow(){
   const prog=getProgression(D);
   const diag=prog.diag;
   const weak=(diag.fresh&&Array.isArray(diag.weakest))?Number(diag.weakest[0]):0;
-  let list=[],sub='',skill='';
+  let list=[],sub='',skill='',partStr='all';
   if(weak>=1&&weak<=7){
-    const p=String(weak);
-    const pool=PRACTICE_SOURCES.filter(s=>s.skill==='rue');
-    const exact=pool.filter(s=>Array.isArray(s.part)&&s.part.includes(p));
-    const generic=pool.filter(s=>!s.part||s.part.length===0);
-    list=[...exact,...generic.filter(s=>!exact.includes(s))].slice(0,3);
-    sub=t('practice_now_diag',{part:weak});
+    partStr=String(weak);
     skill='rue';
+    list=rankOnlineSourcesForPart('rue',partStr,true).slice(0,3);
+    sub=t('practice_now_diag',{part:weak});
   }
   if(!list.length){
     skill=practiceRotationSkill();
-    list=PRACTICE_SOURCES.filter(s=>s.skill===skill).slice(0,3);
+    partStr='all';
+    list=rankOnlineSourcesForPart(skill,null,true).slice(0,3);
     sub=t('practice_now_rot',{skill:t('practice_skill_'+skill)});
   }
   if(!list.length){box.style.display='none';return;}
   box.style.display='';
   box.innerHTML=`<h2>${esc(t('practice_now_title'))} <span class="badge fri">${esc(t('practice_skill_'+skill))}</span></h2>
     <div class="sub">${esc(sub)}</div>
-    <div class="practice-now-row">${list.map(s=>`<a class="practice-now-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(s.n)}</b><span>${esc(t('practice_mins',{mins:s.mins}))} · ${esc(t('practice_kind_'+s.kind))}</span></a>`).join('')}</div>`;
+    <div class="practice-now-row">${list.map(s=>`<a class="practice-now-link" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(s.n)}</b><span>${esc(t('practice_mins',{mins:s.mins}))} · ${esc(t('practice_kind_'+s.kind))}</span></a>`).join('')}</div>
+    <div class="wtf-more-row" style="margin-top:var(--s2)">
+      <button type="button" class="wtf-more-lib" data-action="openPracticeLibrary" data-paper="${esc(skill)}" data-part="${esc(partStr)}">${esc(t('wtf_more_in_library'))}</button>
+    </div>`;
 }
 /* ---------- MAT: material index by name ----------
    Built when /libros.json arrives. Each key points to the href of the
@@ -19468,21 +19975,9 @@ function renderWhereToFind(rows,online,fullPaper,opts){
    sources from PRACTICE_SOURCES (never general part:[] catalog items), capped to 2-3. */
 function wtfPartOnlineSources(skill,partOpt,limit){
   const cap=limit||2;
-  const pool=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
-    ?PRACTICE_SOURCES.filter(s=>s&&s.skill===skill&&/^https?:\/\//.test(s.url)&&Array.isArray(s.part)&&s.part.length>0)
-    :[];
-  if(!pool.length)return [];
-  const pNum=Number(partOpt);
-  const pStr=(pNum>=1&&pNum<=7)?String(pNum):'';
-  let picks=[];
-  if(pStr){
-    const exact=pool.filter(s=>s.part.length===1&&s.part[0]===pStr);
-    const multi=pool.filter(s=>s.part.length>1&&s.part.includes(pStr));
-    picks=exact.concat(multi);
-  }else{
-    picks=pool;
-  }
-  return picks.slice(0,cap).map(s=>({label:s.n,href:s.url,parts:s.part}));
+  return rankOnlineSourcesForPart(skill,partOpt,false)
+    .slice(0,cap)
+    .map(s=>({label:s.n,href:s.url,parts:s.part}));
 }
 /* Shared spec builder for Today's 4 session studios: unit-contextual local
    papers/keys/lessons/audio plus 2 part-specific online links (full catalog lives in Library). */
@@ -19627,12 +20122,21 @@ function mountWtfSection(containerId,storageSkill,spec,summaryPrefix){
 function renderGuides(){
   const ueVal=document.getElementById('uePart')?String(document.getElementById('uePart').value):'1';
   const wTipo=document.getElementById('wTipo')?String(document.getElementById('wTipo').value):'Essay';
+  const wPart=wTipo==='Essay'?'1':'2';
   const lPartVal=document.getElementById('lPart')?String(document.getElementById('lPart').value):'all';
   const spPart=(typeof SP_TODAY!=='undefined'&&SP_TODAY.part)?SP_TODAY.part:2;
   mountWtfSection('gUeChips','rue',buildWtfSpec('rue',ueVal));
-  mountWtfSection('gWChips','w',buildWtfSpec('w',wTipo==='Essay'?1:2));
+  mountWtfSection('gWChips','w',buildWtfSpec('w',Number(wPart)));
   mountWtfSection('gLChips','l',buildWtfSpec('l',lPartVal));
   mountWtfSection('gSpChips','sp',buildWtfSpec('sp',spPart));
+  const setMorePart=(panelId,partVal)=>{
+    const btn=document.querySelector('#'+panelId+' button.wtf-more-lib');
+    if(btn)btn.dataset.part=(partVal&&partVal!=='all')?String(partVal):'all';
+  };
+  setMorePart('wtfPanelRue',ueVal);
+  setMorePart('wtfPanelW',wPart);
+  setMorePart('wtfPanelL',lPartVal);
+  setMorePart('wtfPanelSp',String(spPart));
 }
 /* ---------- EXERCISE LIBRARY (ordered local MAT + online PRACTICE_SOURCES) ---------- */
 const EX_LIB_LOCAL=[
@@ -19764,7 +20268,7 @@ const EXLIB_GROUPS=EXAM_SOURCE_GROUPS.concat([
   {skill:'ref',titleKey:'exlib_group_ref_title',subKey:'exlib_group_ref_sub',en:'Reference'}
 ]);
 const EXLIB_PAPER_ORDER={rue:0,w:1,l:2,sp:3,ref:4};
-const EXLIB_TYPE_ORDER={paper:0,key:1,notes:1,lesson:2,audio:3,online:4,reference:5};
+const EXLIB_TYPE_ORDER={paper:0,key:1,notes:1,audio:2,lesson:3,online:4,reference:5};
 const EXLIB_TYPE_KEYS={
   paper:'exlib_type_paper',
   key:'exlib_type_key',
@@ -19782,7 +20286,29 @@ const EXLIB_SHORT_PAPER_KEYS={
   sp:'practice_filter_sp',
   ref:'exlib_paper_ref'
 };
-const EXLIB_STATE={query:'',paper:'all',part:'all',freeOnly:false,sort:'exam',expanded:false};
+const EXLIB_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,sort:'exam',expanded:false};
+const EXLIB_PRACTICE_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,sort:'exam',expanded:true};
+function exLibResolveRoot(elOrId){
+  if(typeof elOrId==='string')return elOrId==='practice'?'practice':'session';
+  if(elOrId&&typeof elOrId.closest==='function'){
+    const host=elOrId.closest('[data-exlib-root]');
+    if(host&&host.dataset.exlibRoot==='practice')return 'practice';
+  }
+  return 'session';
+}
+function exLibStateFor(rootId){
+  return rootId==='practice'?EXLIB_PRACTICE_STATE:EXLIB_STATE;
+}
+function exLibRootEl(rootId){
+  return document.getElementById(rootId==='practice'?'practiceLibraryCard':'exercisesLibraryCard');
+}
+function isFullPaperItem(item){
+  if(!item)return false;
+  if(item.origin==='local'){
+    return item.type==='paper'||item.type==='key'||item.type==='audio'||item.type==='notes';
+  }
+  return !Array.isArray(item.part)||item.part.length===0||item.part.length>=3;
+}
 function exLibMinPart(item){
   if(!item||!Array.isArray(item.part)||!item.part.length)return 99;
   const nums=item.part.map(Number).filter(n=>Number.isFinite(n)&&n>0);
@@ -19800,34 +20326,33 @@ function compareExLibExam(a,b){
   if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
   return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
 }
-function exLibUnitRank(item,unitPart){
-  const parts=Array.isArray(item.part)?item.part:[];
-  const isOnline=item.origin==='online'||item.type==='online';
-  if(parts.length===1&&parts[0]===unitPart)return 0;
-  if(!isOnline&&parts.includes(unitPart))return 1;
-  if(!isOnline&&!parts.length&&item.type==='lesson')return 2;
-  if(!isOnline&&!parts.length)return 3;
-  if(isOnline&&parts.includes(unitPart))return 4;
+/* Unit-scoped Contents order:
+   local paper -> answer key / notes -> audio (Listening) -> lesson plan -> online sources of that part.
+   Within each type, exact-part items come before multi-part or whole-paper items. */
+function exLibUnitTypeRank(item){
+  if(!item)return 9;
+  if(item.origin==='online'||item.type==='online')return 4;
+  if(item.type==='paper')return 0;
+  if(item.type==='key'||item.type==='notes')return 1;
+  if(item.type==='audio')return 2;
+  if(item.type==='lesson')return 3;
   return 5;
 }
-/* Unit-scoped Contents order: when a unit part is active, exact-part items come
-   first (local and online), then local multi-part items, general lesson plans,
-   full papers/keys/audio ("All parts"), multi-part online sources, and general
-   online sources. Within each group: type (paper, key, lesson, audio, online),
-   minutes, name. Full-section units without a part keep the type-first order. */
+function exLibUnitPartSpecificity(item,unitPart){
+  const parts=Array.isArray(item.part)?item.part:[];
+  if(unitPart&&parts.length===1&&parts[0]===unitPart)return 0;
+  if(unitPart&&parts.includes(unitPart))return 1;
+  return 2;
+}
 function compareExLibUnit(a,b,unitPart){
   const up=(unitPart!==undefined)?String(unitPart||''):((typeof EXLIB_STATE==='object'&&EXLIB_STATE&&EXLIB_STATE.part!=='all')?String(EXLIB_STATE.part||''):'');
-  if(up&&up!=='all'){
-    const ra=exLibUnitRank(a,up);
-    const rb=exLibUnitRank(b,up);
-    if(ra!==rb)return ra-rb;
-  }
-  const ta=EXLIB_TYPE_ORDER[a.type]!=null?EXLIB_TYPE_ORDER[a.type]:9;
-  const tb=EXLIB_TYPE_ORDER[b.type]!=null?EXLIB_TYPE_ORDER[b.type]:9;
+  const ta=exLibUnitTypeRank(a),tb=exLibUnitTypeRank(b);
   if(ta!==tb)return ta-tb;
-  const sa=(Array.isArray(a.part)&&a.part.length)?0:1;
-  const sb=(Array.isArray(b.part)&&b.part.length)?0:1;
-  if(sa!==sb)return sa-sb;
+  if(up&&up!=='all'){
+    const sa=exLibUnitPartSpecificity(a,up);
+    const sb=exLibUnitPartSpecificity(b,up);
+    if(sa!==sb)return sa-sb;
+  }
   if((a.mins||0)!==(b.mins||0))return (a.mins||0)-(b.mins||0);
   return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
 }
@@ -19978,68 +20503,88 @@ function exLibRowHtml(item,showPaper){
     `<span class="exlib-row-open" aria-hidden="true">${esc(openTxt)}</span>`+
     `</a>`;
 }
-function setExLibPaper(paper){EXLIB_STATE.paper=paper||'all';renderExercisesLibrary()}
-function setExLibPart(part){EXLIB_STATE.part=part||'all';renderExercisesLibrary()}
-function toggleExLibFree(on){EXLIB_STATE.freeOnly=!!on;renderExercisesLibrary()}
-function setExLibSort(sort){EXLIB_STATE.sort=(sort==='shortest'||sort==='az')?sort:'exam';renderExercisesLibrary()}
-function onExLibSearch(val){EXLIB_STATE.query=String(val||'');renderExercisesLibrary()}
-function clearExLibSearch(){
-  EXLIB_STATE.query='';
-  const inp=document.getElementById('exLibSearch');
+function setExLibPaper(paper,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).paper=paper||'all';renderExercisesLibrary(r)}
+function setExLibPart(part,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).part=part||'all';renderExercisesLibrary(r)}
+function toggleExLibFree(on,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).freeOnly=!!on;renderExercisesLibrary(r)}
+function toggleExLibFullScope(on,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).scope=on?'full':'all';renderExercisesLibrary(r)}
+function setExLibSort(sort,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).sort=(sort==='shortest'||sort==='az')?sort:'exam';renderExercisesLibrary(r)}
+function onExLibSearch(val,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).query=String(val||'');renderExercisesLibrary(r)}
+function clearExLibSearch(elOrId){
+  const r=exLibResolveRoot(elOrId);
+  const st=exLibStateFor(r);
+  st.query='';
+  const root=exLibRootEl(r);
+  const inp=root&&root.querySelector('[data-exlib-role="search"]');
   if(inp){inp.value='';inp.focus();}
-  renderExercisesLibrary();
+  renderExercisesLibrary(r);
 }
 function exLibSearchKey(el,ev){
-  if(ev&&ev.key==='Escape'&&el.value){ev.preventDefault();clearExLibSearch();}
+  if(ev&&ev.key==='Escape'&&el.value){ev.preventDefault();clearExLibSearch(el);}
 }
-function resetExLibFilters(forceAll){
-  EXLIB_STATE.query='';
-  EXLIB_STATE.freeOnly=false;
-  EXLIB_STATE.sort='exam';
-  if(forceAll||EXLIB_STATE.expanded||!SESSION_UNIT){
-    EXLIB_STATE.paper='all';
-    EXLIB_STATE.part='all';
+function resetExLibFilters(forceAll,elOrId){
+  const r=exLibResolveRoot(elOrId);
+  const st=exLibStateFor(r);
+  st.query='';
+  st.freeOnly=false;
+  st.scope='all';
+  st.sort='exam';
+  if(r==='practice'||forceAll||st.expanded||!SESSION_UNIT){
+    st.paper='all';
+    st.part='all';
   }else{
-    EXLIB_STATE.paper=SESSION_UNIT.skill||'all';
-    EXLIB_STATE.part=SESSION_UNIT.part||'all';
+    st.paper=SESSION_UNIT.skill||'all';
+    st.part=SESSION_UNIT.part||'all';
   }
-  renderSessionTopbar();
-  renderExercisesLibrary();
+  if(r==='session')renderSessionTopbar();
+  renderExercisesLibrary(r);
 }
-function renderExercisesLibrary(){
-  const listEl=document.getElementById('exLibList');
+function renderExercisesLibrary(rootId){
+  if(!rootId){
+    renderExercisesLibrary('session');
+    renderExercisesLibrary('practice');
+    return;
+  }
+  const r=rootId==='practice'?'practice':'session';
+  const root=exLibRootEl(r);
+  if(!root)return;
+  const listEl=root.querySelector('[data-exlib-role="list"]');
   if(!listEl)return;
-  const advEl=document.getElementById('exLibAdvancedFilters');
-  if(advEl)advEl.hidden=!EXLIB_STATE.expanded;
-  const inp=document.getElementById('exLibSearch');
-  if(inp&&inp.value!==EXLIB_STATE.query)inp.value=EXLIB_STATE.query;
-  const clearBtn=document.getElementById('exLibClear');
-  if(clearBtn)clearBtn.style.display=EXLIB_STATE.query.trim()?'':'none';
-  document.querySelectorAll('#exLibPaperFilter [data-exlib-paper]').forEach(b=>{
-    const on=b.getAttribute('data-exlib-paper')===EXLIB_STATE.paper;
+  const st=exLibStateFor(r);
+  const isExpanded=(r==='practice')?true:!!st.expanded;
+  const advEl=root.querySelector('[data-exlib-role="adv"]');
+  if(advEl)advEl.hidden=!isExpanded;
+  const inp=root.querySelector('[data-exlib-role="search"]');
+  if(inp&&inp.value!==st.query)inp.value=st.query;
+  const clearBtn=root.querySelector('[data-exlib-role="clear"]');
+  if(clearBtn)clearBtn.style.display=st.query.trim()?'':'none';
+  root.querySelectorAll('[data-exlib-role="paperFilter"] [data-exlib-paper]').forEach(b=>{
+    const on=b.getAttribute('data-exlib-paper')===st.paper;
     b.classList.toggle('on',on);
     b.setAttribute('aria-pressed',on?'true':'false');
   });
-  document.querySelectorAll('#exLibPartFilter [data-exlib-part]').forEach(b=>{
-    const on=b.getAttribute('data-exlib-part')===EXLIB_STATE.part;
+  root.querySelectorAll('[data-exlib-role="partFilter"] [data-exlib-part]').forEach(b=>{
+    const on=b.getAttribute('data-exlib-part')===st.part;
     b.classList.toggle('on',on);
     b.setAttribute('aria-pressed',on?'true':'false');
   });
-  const freeCb=document.getElementById('exLibFreeOnly');
-  if(freeCb&&freeCb.checked!==EXLIB_STATE.freeOnly)freeCb.checked=EXLIB_STATE.freeOnly;
-  const sortSel=document.getElementById('exLibSort');
-  if(sortSel&&sortSel.value!==EXLIB_STATE.sort)sortSel.value=EXLIB_STATE.sort;
+  const freeCb=root.querySelector('[data-exlib-role="freeOnly"]');
+  if(freeCb&&freeCb.checked!==st.freeOnly)freeCb.checked=st.freeOnly;
+  const fullCb=root.querySelector('[data-exlib-role="fullScope"]');
+  if(fullCb&&fullCb.checked!==(st.scope==='full'))fullCb.checked=(st.scope==='full');
+  const sortSel=root.querySelector('[data-exlib-role="sort"]');
+  if(sortSel&&sortSel.value!==st.sort)sortSel.value=st.sort;
   const all=buildExerciseLibrary();
-  const q=EXLIB_STATE.query.trim().toLowerCase();
-  const includeWholePaper=!EXLIB_STATE.expanded&&EXLIB_STATE.paper!=='all'&&EXLIB_STATE.paper!=='ref';
-  const filtered=all.filter(item=>{
-    if(EXLIB_STATE.paper!=='all'&&item.skill!==EXLIB_STATE.paper)return false;
-    if(EXLIB_STATE.part!=='all'){
-      const hasPart=Array.isArray(item.part)&&item.part.includes(EXLIB_STATE.part);
-      const isWholePaper=includeWholePaper&&(!Array.isArray(item.part)||!item.part.length);
-      if(!hasPart&&!isWholePaper)return false;
+  const q=st.query.trim().toLowerCase();
+  const unitScoped=!isExpanded&&st.paper!=='all'&&st.paper!=='ref';
+  let filtered=all.filter(item=>{
+    if(st.paper!=='all'&&item.skill!==st.paper)return false;
+    if(st.scope==='full'&&!isFullPaperItem(item))return false;
+    if(st.part!=='all'){
+      const hasPart=Array.isArray(item.part)&&item.part.includes(st.part);
+      const isLocalWholePaper=unitScoped&&item.origin==='local'&&(!Array.isArray(item.part)||!item.part.length);
+      if(!hasPart&&!isLocalWholePaper)return false;
     }
-    if(EXLIB_STATE.freeOnly&&item.kind!=='free')return false;
+    if(st.freeOnly&&item.kind!=='free')return false;
     if(q){
       const paperTitle=t(EXLIB_SHORT_PAPER_KEYS[item.skill]||'practice_filter_rue');
       const typeTxt=t(EXLIB_TYPE_KEYS[item.type]||'exlib_type_online');
@@ -20049,26 +20594,45 @@ function renderExercisesLibrary(){
     }
     return true;
   });
-  const countEl=document.getElementById('exLibCount');
+  if(unitScoped&&!q){
+    const unitPart=(st.part&&st.part!=='all')?st.part:'';
+    const localRows=filtered.filter(it=>it.origin==='local').sort((a,b)=>compareExLibUnit(a,b,unitPart));
+    const onlineRows=filtered.filter(it=>it.origin==='online').sort((a,b)=>compareExLibUnit(a,b,unitPart)).slice(0,4);
+    filtered=localRows.concat(onlineRows);
+  }
+  const onlineWrap=r==='session'?document.getElementById('sessionOnlinePrimaryWrap'):null;
+  const onlineBtn=r==='session'?document.getElementById('sessionOnlinePrimaryBtn'):null;
+  if(onlineWrap&&onlineBtn){
+    const topOnline=unitScoped?filtered.find(it=>it.origin==='online'):null;
+    if(topOnline){
+      onlineBtn.href=topOnline.href;
+      onlineBtn.textContent=t('practice_online_cta')+' ↗';
+      onlineBtn.title=topOnline.n;
+      onlineWrap.hidden=false;
+    }else{
+      onlineWrap.hidden=true;
+    }
+  }
+  const countEl=root.querySelector('[data-exlib-role="count"]');
   if(countEl){
     countEl.textContent=filtered.length===1
       ?t('exlib_count_one')
       :t('exlib_count_many',{n:filtered.length});
   }
-  const emptyEl=document.getElementById('exLibEmpty');
+  const emptyEl=root.querySelector('[data-exlib-role="empty"]');
   if(!filtered.length){
     listEl.innerHTML='';
     if(emptyEl)emptyEl.style.display='';
     return;
   }
   if(emptyEl)emptyEl.style.display='none';
-  if(!EXLIB_STATE.expanded){
-    const unitPart=(EXLIB_STATE.part&&EXLIB_STATE.part!=='all')?EXLIB_STATE.part:'';
+  if(!isExpanded){
+    const unitPart=(st.part&&st.part!=='all')?st.part:'';
     const sorted=filtered.slice().sort((a,b)=>compareExLibUnit(a,b,unitPart));
     listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,false)).join('')}</div>`;
     return;
   }
-  if(EXLIB_STATE.sort==='exam'){
+  if(st.sort==='exam'){
     const html=EXLIB_GROUPS.map(g=>{
       const grp=filtered.filter(it=>it.skill===g.skill).sort(compareExLibExam);
       if(!grp.length)return '';
@@ -20083,7 +20647,7 @@ function renderExercisesLibrary(){
     }).join('');
     listEl.innerHTML=html;
   }else{
-    const sorted=filtered.slice().sort(EXLIB_STATE.sort==='shortest'?compareExLibShortest:compareExLibAZ);
+    const sorted=filtered.slice().sort(st.sort==='shortest'?compareExLibShortest:compareExLibAZ);
     listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,true)).join('')}</div>`;
   }
 }
@@ -21140,7 +21704,12 @@ function renderTodayAside(plan,todaySlots){
   const cycLbl=document.getElementById('todayCycleLabel');
   if(cycLbl)cycLbl.textContent=t('today_cycle_label');
   const cycVal=document.getElementById('todayCycleValue');
-  if(cycVal)cycVal.textContent=todayCycleText(plan,todaySlots);
+  if(cycVal){
+    const skill=todayCycleSkill(plan,todaySlots);
+    cycVal.dataset.skill=skill;
+    cycVal.textContent=todayCycleText(plan,todaySlots);
+    cycVal.setAttribute('aria-label',t('today_cycle_open_aria',{skill:todaySkillName(skill)}));
+  }
 }
 /* The skill word the Today card may use: the session's own skill, never the
    queue position. Reading & UoE is named "Reading" in this one-line count. */
@@ -21183,7 +21752,7 @@ function renderTodaySession(plan,todaySlots){
         </div>
         <div class="today-meta-block">
           <div class="today-meta-label">${esc(t('today_cycle_label'))}</div>
-          <div class="today-meta-value">${esc(todayCycleText(plan,todaySlots))}</div>
+          <button type="button" class="today-meta-value today-meta-link tnum" data-action="openCycleLibrary" data-skill="${esc(todayCycleSkill(plan,todaySlots))}">${esc(todayCycleText(plan,todaySlots))}</button>
         </div>
         <div class="today-meta-block today-rest-streak">
           <div class="today-meta-label">${esc(t('metric_streak'))}</div>
@@ -22991,7 +23560,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -23007,7 +23576,7 @@ function loadMaterial(){
   _matLoading=true;
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     _matLoading=false;
-    MATERIALS=data;buildMatIndex();renderEx();renderParts();renderGuides();renderExercisesLibrary();
+    MATERIALS=data;buildMatIndex();renderEx();renderParts();renderGuides();renderExercisesLibrary();renderFullMockPreflight();
   }).catch(()=>{_matLoading=false; /* local file mode: no dynamic material */ });
 }
 document.getElementById('uePart').addEventListener('change',renderGuides);
@@ -23113,7 +23682,15 @@ click:{
 'checkOwnAnswers':()=>checkOwnAnswers(),
 'checkRubricWithAI':()=>checkRubricWithAI(),
 'clearByoKey':()=>clearByoKey(),
-'clearExLibSearch':()=>clearExLibSearch(),
+'clearExLibSearch':el=>clearExLibSearch(el),
+'closeFullMockPreflight':()=>closeFullMockPreflight(),
+'beginFullMockSequence':()=>beginFullMockSequence(),
+'doAnotherFullMock':()=>doAnotherFullMock(),
+'selectFullMockSample':el=>selectFullMockSample(el.dataset.sample),
+'openActiveExamMaterials':()=>openActiveExamMaterials(),
+'openCycleLibrary':el=>openCycleLibrary(el),
+'openFullPaperLibrary':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();openFullPaperLibrary(el.dataset.paper)},
+'openPracticeLibrary':el=>openPracticeLibrary({paper:el.dataset.paper,part:el.dataset.part,scope:el.dataset.scope}),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
 'planLimitViewLimits':()=>planLimitViewLimits(),
@@ -23171,7 +23748,7 @@ click:{
 'openDeleteAccount':()=>openDeleteAccount(),
 'openImportPicker':()=>document.getElementById('importFile').click(),
 'openIntake':()=>openIntake(),
-'openPracticeCatalog':el=>openPracticeCatalog(el.dataset.paper),
+'openPracticeCatalog':el=>openPracticeCatalog(el.dataset.paper,el.dataset.part,el.dataset.scope),
 'openQuickLog':()=>openQuickLog(),
 'openSoloModal':el=>openSoloModal(el.dataset.arg||undefined),
 'openSpeakingExam':()=>openSpeakingExam(),
@@ -23188,7 +23765,7 @@ click:{
 'removeScheduleRow':el=>removeScheduleRow(+el.dataset.i),
 'repeatDiag':()=>repeatDiag(),
 'requestPasswordReset':()=>requestPasswordReset(),
-'resetExLibFilters':()=>resetExLibFilters(),
+'resetExLibFilters':el=>resetExLibFilters(false,el),
 'resetPlanningDefaults':()=>resetPlanningDefaults(),
 'resetSessionOffset':()=>resetSessionOffset(),
 'saveEdit':el=>saveEdit(+el.dataset.i),
@@ -23208,8 +23785,8 @@ click:{
 'saveW':()=>saveW(),
 'selectOwnMaterial':el=>selectOwnMaterial(el.dataset.id),
 'setExamDate':()=>setExamDate(),
-'setExLibPaper':el=>setExLibPaper(el.dataset.exlibPaper),
-'setExLibPart':el=>setExLibPart(el.dataset.exlibPart),
+'setExLibPaper':el=>setExLibPaper(el.dataset.exlibPaper,el),
+'setExLibPart':el=>setExLibPart(el.dataset.exlibPart,el),
 'setLang':el=>setLang(el.dataset.arg),
 'setSessionTab':el=>setSessionTab(el.dataset.sessionTab),
 'setThemeMode':el=>setThemeMode(el.dataset.arg),
@@ -23267,10 +23844,11 @@ change:{
 'onSoloSkillChange':()=>onSoloSkillChange(),
 'onUePartChange':()=>onUePartChange(),
 'renderEx':()=>renderEx(),
-'setExLibSort':el=>setExLibSort(el.value),
+'setExLibSort':el=>setExLibSort(el.value,el),
 'soloErrToggle':el=>{document.getElementById('soloErrBox').style.display=el.checked?'block':'none'},
 'spkSetPart':el=>spkSetPart(el.value),
-'toggleExLibFree':el=>toggleExLibFree(el.checked),
+'toggleExLibFree':el=>toggleExLibFree(el.checked,el),
+'toggleExLibFullScope':el=>toggleExLibFullScope(el.checked,el),
 'updateScheduleFromUI':()=>updateScheduleFromUI()
 },
 input:{
@@ -23278,7 +23856,7 @@ input:{
 'obSetDayTime':el=>obSetDayTime(el.dataset.day,el.value),
 'onByoConfigInput':()=>onByoConfigInput(),
 'onByoKeyInput':el=>onByoKeyInput(el.value),
-'onExLibSearch':el=>onExLibSearch(el.value),
+'onExLibSearch':el=>onExLibSearch(el.value,el),
 'onIaTextChange':()=>onIaTextChange(),
 'onRegPwInput':el=>onRegPwInput(el.value),
 'onWritingDraftChange':()=>onWritingDraftChange()

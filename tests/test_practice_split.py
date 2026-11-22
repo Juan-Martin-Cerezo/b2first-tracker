@@ -46,12 +46,15 @@ with sync_playwright() as p:
         )
     out["practice"] = {"steps": pg.eval_on_selector_all("#v-practice #partsList .step", "els => els.length")}
 
-    # 2. Clicking Start opens the session workspace with Session and Contents tabs.
+    # 2. Clicking Start opens the session workspace on Contents, with Session and Contents tabs.
     pg.click("#partsList .step button[data-action='startPart'][data-i='1']")
     pg.wait_for_timeout(300)
     assert pg.evaluate("!document.getElementById('sessionWorkspace').hidden"), "Session workspace did not open"
-    assert pg.evaluate("!document.getElementById('sessionTabSession').hidden"), "Session tab should start open"
-    assert pg.evaluate("document.getElementById('sessionTabContents').hidden"), "Contents tab should start hidden"
+    assert pg.evaluate("!document.getElementById('sessionTabContents').hidden"), "Contents tab should start open"
+    assert pg.evaluate("document.getElementById('sessionTabSession').hidden"), "Session tab should start hidden"
+    pg.click("#sessionTabSessionBtn")
+    pg.wait_for_timeout(150)
+    assert pg.evaluate("!document.getElementById('sessionTabSession').hidden"), "Session tab did not open"
     pg.click("#sessionTabContentsBtn")
     pg.wait_for_timeout(250)
     assert pg.evaluate("!document.getElementById('sessionTabContents').hidden"), "Contents tab did not open"

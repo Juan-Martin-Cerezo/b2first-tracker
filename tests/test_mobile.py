@@ -25,18 +25,18 @@ with sync_playwright() as p:
     # full nav present (10 views + More)?
     out["nav_btns"] = pg.eval_on_selector_all("nav button", "els => els.length")
 
-    # BOOKS split out of PRACTICE: online practice and downloadable material
-    # now live on Resources.
-    pg.click("nav button[data-view='resources']")
-    pg.wait_for_timeout(600)
-    out["online_cards"] = pg.eval_on_selector_all("#onlineList .book", "els => els.length")
-    out["material_cards"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
+    # PRACTICE: By part + always-visible Library
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(400)
+    out["library_rows"] = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
+    assert out["library_rows"] > 0, "Practice Library rendered 0 rows on mobile"
 
     # filter works on mobile
-    pg.fill("#matFilter", "listening")
+    pg.fill("#pracLibSearch", "listening")
     pg.wait_for_timeout(200)
-    out["filtro_listening"] = pg.eval_on_selector_all("#matList .book", "els => els.length")
-    pg.fill("#matFilter", "")
+    out["filtro_listening"] = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
+    assert out["filtro_listening"] > 0, "Listening search returned 0 rows on mobile"
+    pg.fill("#pracLibSearch", "")
 
     # PROGRESS: export/import present + gates
     pg.click("nav button[data-view='prog']")

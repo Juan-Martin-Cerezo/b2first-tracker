@@ -102,39 +102,30 @@ def inspect_contents(pg):
 
 def assert_part_first_order(rows, part_str, label):
     assert rows, f"{label}: Contents rendered 0 rows"
-    assert rows[0]["parts"] == [part_str] and rows[0]["partLabel"] == f"Part {part_str}", (
-        f"{label}: first row must be Part {part_str}, got {rows[0]}"
-    )
-    all_parts_idx = [i for i, r in enumerate(rows) if not r["parts"] or r["partLabel"] == "All parts"]
-    part_idx = [i for i, r in enumerate(rows) if r["parts"] == [part_str]]
-    assert part_idx, f"{label}: expected at least one Part {part_str} row"
-    if all_parts_idx:
-        assert max(part_idx) < min(all_parts_idx), (
-            f"{label}: 'All parts' row appeared at {min(all_parts_idx)} before Part {part_str} row at {max(part_idx)}: "
-            f"{[(r['name'], r['partLabel'], r['type']) for r in rows]}"
-        )
-    order_map = {"paper": 0, "key": 1, "notes": 1, "lesson": 2, "audio": 3, "online": 4, "reference": 5}
+    type_rank = {"paper": 0, "key": 1, "notes": 1, "audio": 2, "lesson": 3, "online": 4, "reference": 5}
 
     def rank_key(r):
         parts = r["parts"]
         is_online = r["origin"] == "online" or r["type"] == "online"
+        t_rank = 4 if is_online else type_rank.get(r["type"], 5)
         if parts == [part_str]:
-            grp = 0
-        elif not is_online and part_str in parts:
-            grp = 1
-        elif not is_online and not parts and r["type"] == "lesson":
-            grp = 2
-        elif not is_online and not parts:
-            grp = 3
-        elif is_online and part_str in parts:
-            grp = 4
+            spec = 0
+        elif part_str in parts:
+            spec = 1
         else:
-            grp = 5
-        return (grp, order_map[r["type"]], r["mins"])
+            spec = 2
+        return (t_rank, spec, r["mins"])
+
+    for r in rows:
+        if r["origin"] == "online":
+            assert part_str in r["parts"], f"{label}: online row from wrong part leaked: {r}"
+        else:
+            assert not r["parts"] or part_str in r["parts"], f"{label}: local row from wrong part leaked: {r}"
 
     keys = [rank_key(r) for r in rows]
     assert keys == sorted(keys), (
-        f"{label}: rows not in expected part-first order: {[(r['name'], r['partLabel'], r['type'], r['mins']) for r in rows]}"
+        f"{label}: rows not in expected paper->key->audio->lesson->online order: "
+        f"{[(r['name'], r['partLabel'], r['type'], r['mins']) for r in rows]}"
     )
 
 
@@ -212,12 +203,12 @@ with sync_playwright() as p:
         )
     out["1_practice_single_start"] = {"steps": practice_info["stepCount"]}
 
-    # 2. Tap Start on Reading part 2 -> opens session view with Session / Contents tabs.
+    # 2. Tap Start on Reading part 2 -> opens session view on Contents tab with Session / Contents tabs.
     pg.click("#partsList .step button[data-action='startPart'][data-i='1']")
     pg.wait_for_timeout(250)
     ses_state = inspect_contents(pg)
     assert ses_state["wsVisible"], "Session workspace did not open"
-    assert ses_state["sesVisible"] and not ses_state["cntVisible"], "Session tab should be active by default"
+    assert ses_state["cntVisible"] and not ses_state["sesVisible"], "Contents tab should be active by default on part Start"
     assert [t["text"] for t in ses_state["tabs"]] == ["Session", "Contents"], (
         f"Unexpected session tabs: {ses_state['tabs']}"
     )
@@ -225,6 +216,8 @@ with sync_playwright() as p:
         assert tab["h"] >= 44, f"Session tab height < 44px: {tab}"
     assert ses_state["closeH"] >= 44, f"Close button height < 44px: {ses_state['closeH']}"
     assert pg.evaluate("document.getElementById('uePart').value") == "2", "Studio uePart is not 2"
+    pg.click("#sessionTabSessionBtn")
+    pg.wait_for_timeout(150)
     assert pg.evaluate("getComputedStyle(document.getElementById('studioMonA')).display !== 'none'"), (
         "Reading studio #studioMonA is not visible"
     )

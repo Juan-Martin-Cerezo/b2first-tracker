@@ -229,15 +229,14 @@ async def main():
             "#wpRows .wp-row", f"els => els[{first_ue}].querySelector('.wp-start').click()"
         )
         nav_state = await page.evaluate(
-            "() => ({view: document.querySelector('.view.active')?.id,"
-            " filter: RES_FILTER, papers: document.querySelectorAll('#resourcesList .res-paper').length})"
+            "() => ({wsVisible: !document.getElementById('sessionWorkspace').hidden,"
+            " uePart: document.getElementById('uePart')?.value,"
+            " paper: EXLIB_STATE.paper, part: EXLIB_STATE.part})"
         )
-        # Since the Practice/Resources split the sample papers filter lives on
-        # the Resources screen, and that is where a plan row sends you.
-        assert nav_state["view"] == "v-resources", f"Start did not navigate to RESOURCES: {nav_state}"
-        assert nav_state["filter"] == {"type": "ue", "part": ue_part}, f"Filter not applied: {nav_state}"
-        assert nav_state["papers"] == 1, f"Filter did not leave one paper: {nav_state}"
-        out["ui_card_y_empezar"] = f"OK: rows=5, no why block, Start -> RESOURCES part {ue_part}"
+        assert nav_state["wsVisible"], f"Start did not open session workspace: {nav_state}"
+        assert nav_state["uePart"] == str(ue_part), f"Studio uePart mismatch: {nav_state}"
+        assert nav_state["paper"] == "rue" and nav_state["part"] == str(ue_part), f"Filter not applied: {nav_state}"
+        out["ui_card_y_empezar"] = f"OK: rows=5, no why block, Start -> Session part {ue_part}"
 
         # Clean up the test user's localStorage
         await page.evaluate(

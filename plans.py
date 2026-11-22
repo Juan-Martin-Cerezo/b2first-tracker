@@ -41,8 +41,8 @@ __all__ = [
 
 USAGE_KEEP_DAYS = 396   # 13 months on write (the retention tool enforces the same)
 DAY_WRITING_LIMIT = 5
-DAY_SPEAKING_MOCKS = 1
-DAY_SPEAKING_MINUTES = 15
+DAY_SPEAKING_MOCKS = 3
+DAY_SPEAKING_MINUTES = 45
 _DAY = 24 * 3600
 
 # The account(s) that run the product are not capped per day (the global
