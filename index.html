@@ -4040,8 +4040,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioMonA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon" id="st1WkBadge">Monday</span>
-                    <div class="sesion-title"><span id="st1Name">📚 Reading &amp; Use of English</span> <span class="badge fri" id="st1TimeBadge">MON 15:30</span></div>
+                    <span class="badge mon" id="st1WkBadge">Session A</span>
+                    <div class="sesion-title"><span id="st1Name">📚 Reading &amp; Use of English</span> <span class="badge fri" id="st1TimeBadge" style="display:none"></span></div>
                     <div class="sesion-sub" id="st1Sub">—</div>
                   </div>
                   <div class="sesion-dur">
@@ -4150,8 +4150,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioMonB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge mon" id="st2WkBadge">Monday</span>
-                    <div class="sesion-title"><span id="st2Name">✍️ Writing</span> <span class="badge fri" id="st2TimeBadge">MON 15:30</span></div>
+                    <span class="badge mon" id="st2WkBadge">Session A</span>
+                    <div class="sesion-title"><span id="st2Name">✍️ Writing</span> <span class="badge fri" id="st2TimeBadge" style="display:none"></span></div>
                     <div class="sesion-sub" id="st2Sub">One text type per session, with Cambridge rubric review.</div>
                   </div>
                   <div class="sesion-dur">
@@ -4325,8 +4325,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioFriA" class="card sesion-card">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri" id="st3WkBadge">Friday</span>
-                    <div class="sesion-title"><span id="st3Name">🎧 Listening</span> <span class="badge fri" id="st3TimeBadge">FRI 13:00</span></div>
+                    <span class="badge fri" id="st3WkBadge">Session B</span>
+                    <div class="sesion-title"><span id="st3Name">🎧 Listening</span> <span class="badge fri" id="st3TimeBadge" style="display:none"></span></div>
                     <div class="sesion-sub" id="st3Sub">—</div>
                   </div>
                   <div class="sesion-dur">
@@ -4481,8 +4481,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <div id="studioFriB" class="card sesion-card" style="display:none">
                 <div class="sesion-head">
                   <div>
-                    <span class="badge fri" id="st4WkBadge">Friday</span>
-                    <div class="sesion-title"><span id="st4Name">🗣️ Speaking</span> <span class="badge fri" id="st4TimeBadge">FRI 13:00</span></div>
+                    <span class="badge fri" id="st4WkBadge">Session B</span>
+                    <div class="sesion-title"><span id="st4Name">🗣️ Speaking</span> <span class="badge fri" id="st4TimeBadge" style="display:none"></span></div>
                     <div class="sesion-sub" id="st4Sub">—</div>
                   </div>
                   <div class="sesion-dur">
@@ -6360,6 +6360,8 @@ const I18N={
     plan_queue_reason_many:'{n} {skill} exercises in one session.',
     plan_next_unit_reason:'Next exercise in this session.',
     studio_not_planned:'This skill is not in your current plan.',
+    studio_session_a:'Session A',
+    studio_session_b:'Session B',
     studio_sub_official:'All {n} parts · {min} min (official exam time).',
     studio_sub_whole:'All {n} parts · {min} min.',
     studio_sub_part:'This part only · {min} min.',
@@ -7436,6 +7438,8 @@ const I18N={
     plan_queue_reason_many:'{n} ejercicios de {skill} en una sesión.',
     plan_next_unit_reason:'Siguiente ejercicio de esta sesión.',
     studio_not_planned:'Esta destreza no está en tu plan actual.',
+    studio_session_a:'Sesión A',
+    studio_session_b:'Sesión B',
     studio_sub_official:'Todas las partes ({n}) · {min} min (tiempo oficial de examen).',
     studio_sub_whole:'Todas las partes ({n}) · {min} min.',
     studio_sub_part:'Solo esta parte · {min} min.',
@@ -10235,12 +10239,21 @@ async function spStartExam(){
 function applyTimers(){ueTimer.set(SETTINGS_DEFAULT.ueMin);lTimer.set(SETTINGS_DEFAULT.listenMin);}
 
 /* ---------- INTERACTIVE SESSION STUDIO & STEPPERS ---------- */
-let CURRENT_STUDIO='mon-a';
-function selectSessionStudio(id){
+let CURRENT_STUDIO='';
+let CURRENT_STUDIO_SOURCE='';
+let CURRENT_STUDIO_SLOT=null;
+function selectSessionStudio(id,opts){
   /* Leaving the speaking studio must not leave an exam voice talking to an
-     empty card. The panel lives in the Friday B studio. */
+     empty card. The panel lives in the Speaking studio. */
   if(id!=='fri-b'&&window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
-  CURRENT_STUDIO=id;
+  CURRENT_STUDIO=id||'';
+  const fromPlan=!!(opts&&opts.fromPlan&&opts.slot&&opts.slot.day);
+  CURRENT_STUDIO_SOURCE=id?(fromPlan?'plan':'menu'):'';
+  CURRENT_STUDIO_SLOT=fromPlan?opts.slot:null;
+  const skill=(typeof STUDIO_ID_SKILL==='object'&&STUDIO_ID_SKILL)?STUDIO_ID_SKILL[id]:null;
+  if(skill&&typeof paintStudioBadge==='function'){
+    paintStudioBadge(skill,fromPlan?opts.slot:null,fromPlan);
+  }
   const group=(gid,on)=>{const el=document.getElementById(gid);if(el)el.style.display=on?'flex':'none'};
   const card=(cid,on)=>{const el=document.getElementById(cid);if(el)el.style.display=on?'block':'none'};
   group('sesA',id==='mon-a'||id==='mon-b');
@@ -10254,6 +10267,8 @@ function selectSessionStudio(id){
 /* The resting state of TODAY: every studio group closed. */
 function closeSessionStudios(){
   CURRENT_STUDIO='';
+  CURRENT_STUDIO_SOURCE='';
+  CURRENT_STUDIO_SLOT=null;
   ['sesA','sesB','sesFull'].forEach(gid=>{
     const el=document.getElementById(gid);
     if(el)el.style.display='none';
@@ -17922,12 +17937,63 @@ function nextSectionSlotForSkill(type){
   }
   return null;
 }
-/* The session a studio stands for: the first matching row of the real week,
-   then that skill's next unit in the queue (or the next whole paper when
-   full-section is active). */
+const STUDIO_META={
+  rue:{id:'mon-a',card:'studioMonA',wk:'st1WkBadge',time:'st1TimeBadge',neutralKey:'studio_session_a'},
+  w:{id:'mon-b',card:'studioMonB',wk:'st2WkBadge',time:'st2TimeBadge',neutralKey:'studio_session_a'},
+  l:{id:'fri-a',card:'studioFriA',wk:'st3WkBadge',time:'st3TimeBadge',neutralKey:'studio_session_b'},
+  sp:{id:'fri-b',card:'studioFriB',wk:'st4WkBadge',time:'st4TimeBadge',neutralKey:'studio_session_b'}
+};
+const STUDIO_ID_SKILL={'mon-a':'rue','mon-b':'w','fri-a':'l','fri-b':'sp'};
+function paintStudioBadge(skill,sl,fromPlan){
+  const meta=STUDIO_META[skill];
+  if(!meta)return;
+  const wkEl=document.getElementById(meta.wk);
+  const timeEl=document.getElementById(meta.time);
+  const cardEl=document.getElementById(meta.card);
+  const hasPlanDay=!!(fromPlan&&sl&&sl.day);
+  if(hasPlanDay){
+    const fullDay=planDayFull(sl.day);
+    const shortDay=fullDay.slice(0,3).toUpperCase();
+    if(wkEl)wkEl.textContent=fullDay;
+    if(timeEl){
+      if(sl.time){
+        timeEl.textContent=`${shortDay} ${sl.time}`;
+        timeEl.style.display='';
+      }else{
+        timeEl.textContent='';
+        timeEl.style.display='none';
+      }
+    }
+    if(cardEl){
+      cardEl.dataset.planDay=sl.day;
+      cardEl.dataset.planTime=sl.time||'';
+      cardEl.dataset.planMin=String(sl.min||'');
+      cardEl.dataset.planSource='plan';
+    }
+  }else{
+    if(wkEl)wkEl.textContent=t(meta.neutralKey);
+    if(timeEl){
+      timeEl.textContent='';
+      timeEl.style.display='none';
+    }
+    if(cardEl){
+      cardEl.dataset.planDay='';
+      cardEl.dataset.planTime='';
+      cardEl.dataset.planMin='';
+      cardEl.dataset.planSource='menu';
+    }
+  }
+}
+/* The session a studio stands for: today's matching row first, then the first
+   matching row of the real week, then that skill's next unit in the queue (or
+   the next whole paper when full-section is active). */
 function studioSlotFor(skill,plan){
   const p=plan||buildWeeklyPlan(D);
-  const match=((p&&p.slots)||[]).filter(sl=>studioSkillOfType(sl.type)===skill);
+  const slots=(p&&p.slots)||[];
+  const todayLabel=planTodayLabel();
+  const match=slots.filter(sl=>studioSkillOfType(sl.type)===skill);
+  const todayMatch=match.find(sl=>sl.day===todayLabel);
+  if(todayMatch)return todayMatch;
   if(match.length)return match[0];
   const mode=normalizeRotationMode((D&&D.settings||{}).rotationMode);
   if(mode==='full-section')return nextSectionSlotForSkill(skill==='rue'?'ue':skill);
@@ -18094,6 +18160,16 @@ function paintSessionStudios(plan){
   paintWritingStudio(w);
   paintListeningStudio(l);
   paintSpeakingStudio(sp);
+  [['rue',ue],['w',w],['l',l],['sp',sp]].forEach(([sk,sl])=>{
+    const meta=STUDIO_META[sk];
+    if(CURRENT_STUDIO===meta.id&&CURRENT_STUDIO_SOURCE==='menu'){
+      paintStudioBadge(sk,null,false);
+    }else if(sl&&sl.day){
+      paintStudioBadge(sk,sl,true);
+    }else{
+      paintStudioBadge(sk,null,false);
+    }
+  });
 }
 
 function buildWeeklyPlan(D){
@@ -19108,12 +19184,10 @@ const PRACTICE_SOURCES=[
  {n:"MyLanguageExchange",url:"https://www.mylanguageexchange.com/",skill:"sp",kind:"freemium",part:["1","3","4"],what:"Long-running tandem community with structured conversation lesson plans and partner search.",mins:20}
 ];
 function practiceRotationSkill(){
-  const sched=getSchedule();
-  const wd=new Date().getDay();
-  const idx=sched.findIndex(slot=>slot.day===wd);
-  if(idx!==-1)return getSlotSession(isoWeek(new Date()),idx,sched.length).session.id;
-  const next=getNextScheduledSession();
-  return next?next.session.id:'rue';
+  const plan=buildWeeklyPlan(D);
+  const todayLabel=planTodayLabel();
+  const todaySlots=(plan&&plan.slots||[]).filter(sl=>sl.day===todayLabel);
+  return todayCycleSkill(plan,todaySlots)||'rue';
 }
 function renderPracticeNow(){
   const box=document.getElementById('practiceNow');
@@ -20612,32 +20686,41 @@ function getNextScheduledSession(baseDate=new Date()){
 
 function advanceSession(delta=1,silent=false){
   D.sessionOffset=(D.sessionOffset||0)+delta;
+  QUEUE_PENDING=null;
+  PLAN_UNIT_START=null;
   save();
   refreshAll();
-  if(!silent){
-    const nextSlot=getNextScheduledSession();
-    if(nextSlot){
-      selectSessionStudio(nextSlot.session.studio);
-    }
-  }
 }
 
 function resetSessionOffset(){
   D.sessionOffset=0;
+  QUEUE_PENDING=null;
+  PLAN_UNIT_START=null;
   save();
   refreshAll();
 }
 
 function doNextSessionNow(){
-  const nextSlot=getNextScheduledSession();
-  if(nextSlot){
-    selectSessionStudio(nextSlot.session.studio);
+  const plan=buildWeeklyPlan(D);
+  const todayLabel=planTodayLabel();
+  const todaySlots=(plan&&plan.slots||[]).filter(sl=>sl.day===todayLabel);
+  if(todaySlots.length){
+    TODAY_PLAN=plan;
+    todayStart(plan.slots.indexOf(todaySlots[0]));
+    return;
   }
+  const nextSl=todayNextSessionSlot(plan,todaySlots);
+  if(!nextSl)return;
+  if(nextSl.section){startFullPaperSession(nextSl.type);return}
+  const units=planSlotUnits(nextSl);
+  if(units.length)openPlanUnit(units[0],nextSl);
 }
 
 function repaintScheduleDrivenViews(){
+  QUEUE_PENDING=null;
+  PLAN_UNIT_START=null;
   save();
-  renderSchedulePreview();
+  renderRotationCard();
   renderWeeklyPlan();
   renderToday();
   renderPracticeNow();
@@ -20646,7 +20729,12 @@ function repaintScheduleDrivenViews(){
 function renderScheduleRows(){
   const c=document.getElementById('scheduleRowsContainer');
   if(!c)return;
-  const sched=getSchedule();
+  const rawSched=getSchedule();
+  const sched=sortSchedule(rawSched);
+  if(D&&D.settings&&Array.isArray(D.settings.schedule)){
+    D.settings.schedule=sched;
+    if(Array.isArray(D.settings.sessions))D.settings.sessions=sched;
+  }
   if(!sched.length){
     c.innerHTML=`<div class="empty" data-empty="1">${t('plan_no_session_days')}</div>`;
     ['pADay','pATime','pBDay','pBTime'].forEach(id=>{
@@ -20797,46 +20885,9 @@ function getSkillNextOccurrence(skillId,baseDate=new Date()){
 }
 
 function updatePersonalizedUI(){
-  const s=D.settings||SETTINGS_DEFAULT;
-  const sched=getSchedule();
-
-  // Dynamic Header
+  // Dynamic Header (studio badges are painted from buildWeeklyPlan in paintSessionStudios)
   const titleEl=document.getElementById('userTitle');
   if(titleEl)titleEl.textContent=t('nav_today');
-
-  const now=new Date();
-  const rueOccur=getSkillNextOccurrence('rue',now);
-  const lOccur=getSkillNextOccurrence('l',now);
-  const wOccur=getSkillNextOccurrence('w',now);
-  const spOccur=getSkillNextOccurrence('sp',now);
-
-  const aSlot=sched[0]||{day:1,time:'15:30'};
-  const bSlot=sched[1]||sched[0]||{day:5,time:'13:00'};
-  const aDayName=dayFull(aSlot.day)||t('day_monday');
-  const bDayName=dayFull(bSlot.day)||t('day_friday');
-  const aShort=dayShort(aSlot.day);
-  const bShort=dayShort(bSlot.day);
-
-  // Dynamic Studio Card Badges
-  const st1W=document.getElementById('st1WkBadge');
-  if(st1W)st1W.textContent=sched.length===2?aDayName:localizeDayName(rueOccur.dayName);
-  const st1T=document.getElementById('st1TimeBadge');
-  if(st1T)st1T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${rueOccur.dayShort.toUpperCase()} ${rueOccur.time}`;
-
-  const st2W=document.getElementById('st2WkBadge');
-  if(st2W)st2W.textContent=sched.length===2?aDayName:localizeDayName(wOccur.dayName);
-  const st2T=document.getElementById('st2TimeBadge');
-  if(st2T)st2T.textContent=sched.length===2?`${aShort.toUpperCase()} ${aSlot.time}`:`${wOccur.dayShort.toUpperCase()} ${wOccur.time}`;
-
-  const st3W=document.getElementById('st3WkBadge');
-  if(st3W)st3W.textContent=sched.length===2?bDayName:localizeDayName(lOccur.dayName);
-  const st3T=document.getElementById('st3TimeBadge');
-  if(st3T)st3T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${lOccur.dayShort.toUpperCase()} ${lOccur.time}`;
-
-  const st4W=document.getElementById('st4WkBadge');
-  if(st4W)st4W.textContent=sched.length===2?bDayName:localizeDayName(spOccur.dayName);
-  const st4T=document.getElementById('st4TimeBadge');
-  if(st4T)st4T.textContent=sched.length===2?`${bShort.toUpperCase()} ${bSlot.time}`:`${spOccur.dayShort.toUpperCase()} ${spOccur.time}`;
 }
 
 let TODAY_PLAN=null;
@@ -21038,24 +21089,31 @@ function startQueueUnit(u){
 let PLAN_UNIT_START=null;
 const UNIT_STUDIO={rue:'mon-a',l:'fri-a',w:'mon-b',sp:'fri-b'};
 const UNIT_STUDIO_CARD={rue:'studioMonA',l:'studioFriA',w:'studioMonB',sp:'studioFriB'};
-function unitStartSlot(u){
+function unitStartSlot(u,planSlot){
   const type=u.skill==='rue'?'ue':u.skill;
   const unit={skill:u.skill,type:type,value:u.value,
     part:type==='w'?null:u.value,kind:type==='w'?u.value:null,min:u.min};
   return {part:unit.part,parts:type==='w'?[]:[u.value],type:type,min:u.min,
-    timed:false,queue:true,units:[unit],session:false,reason:''};
+    timed:false,queue:true,units:[unit],session:false,reason:'',
+    day:(planSlot&&planSlot.day)||'',time:(planSlot&&planSlot.time)||''};
 }
-function openPlanUnit(u){
+function openPlanUnit(u,planSlot,opts){
   if(!u)return;
+  const resolvedSlot=planSlot||((TODAY_PLAN&&Array.isArray(TODAY_PLAN.slots))
+    ?TODAY_PLAN.slots.find(sl=>sl.day===planTodayLabel()&&studioSkillOfType(sl.type)===u.skill)
+      ||TODAY_PLAN.slots.find(sl=>studioSkillOfType(sl.type)===u.skill)
+    :null);
   PLAN_UNIT_START={skill:u.skill,value:u.value,min:u.min};
-  const slot=unitStartSlot(u);
+  const slot=unitStartSlot(u,resolvedSlot);
   if(u.skill==='rue')paintUeStudio(slot);
   else if(u.skill==='l')paintListeningStudio(slot);
   else if(u.skill==='w')paintWritingStudio(slot);
   else if(u.skill==='sp')paintSpeakingStudio(slot);
-  selectSessionStudio(UNIT_STUDIO[u.skill]||'mon-a');
-  const card=document.getElementById(UNIT_STUDIO_CARD[u.skill]);
-  if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
+  selectSessionStudio(UNIT_STUDIO[u.skill]||'mon-a',{fromPlan:!!slot.day,slot:slot});
+  if(!(opts&&opts.scroll===false)){
+    const card=document.getElementById(UNIT_STUDIO_CARD[u.skill]);
+    if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 }
 /* The plan tag for a row saved from a studio: the exercise the plan opened
    and the minutes it allocated. A different exercise is not this unit. */
@@ -21142,8 +21200,8 @@ function todayStart(i){
   if(sl.section){startFullPaperSession(sl.type);return}
   const units=planSlotUnits(sl);
   if(units.length){
-    QUEUE_PENDING=units.length>1?{day:sl.day,units:units.slice(1)}:null;
-    openPlanUnit(units[0]);
+    QUEUE_PENDING=units.length>1?{day:sl.day,time:sl.time||'',units:units.slice(1)}:null;
+    openPlanUnit(units[0],sl);
     return;
   }
   QUEUE_PENDING=null;
@@ -21152,11 +21210,12 @@ function todayStart(i){
 }
 function startNextQueuedUnit(){
   if(!QUEUE_PENDING||!QUEUE_PENDING.units.length)return;
+  const ctx={day:QUEUE_PENDING.day||'',time:QUEUE_PENDING.time||''};
   const u=QUEUE_PENDING.units.shift();
   const left=QUEUE_PENDING.units.length;
   if(!left)QUEUE_PENDING=null;
   renderToday();
-  openPlanUnit(u);
+  openPlanUnit(u,ctx);
 }
 function renderToday(){
   updatePersonalizedUI();
@@ -21181,11 +21240,27 @@ function renderToday(){
   renderTodaySession(plan,todaySlots);
 
   // Today owns a single session block: the old top banner is gone. The studios
-  // stay closed until Start opens the one the session points to, and a rest day
-  // never keeps one open.
+  // stay closed until Start opens the one the session points to, a rest day
+  // never keeps one open, and an open plan studio always tracks today's slot.
   const nb=document.getElementById('nextBox');
   if(nb){nb.innerHTML='';nb.style.display='none';}
-  if(!todaySlots.length&&!(QUEUE_PENDING&&QUEUE_PENDING.units.length))closeSessionStudios();
+  if(!todaySlots.length&&!(QUEUE_PENDING&&QUEUE_PENDING.units.length)){
+    closeSessionStudios();
+  }else if(CURRENT_STUDIO&&CURRENT_STUDIO_SOURCE==='plan'){
+    const sl=todaySlots[0];
+    if(!sl||sl.section){
+      closeSessionStudios();
+    }else{
+      const sk=todaySlotSkill(sl);
+      const expectedStudio=UNIT_STUDIO[sk];
+      if(expectedStudio&&CURRENT_STUDIO!==expectedStudio){
+        selectSessionStudio(expectedStudio,{fromPlan:true,slot:sl});
+      }else if(sk){
+        CURRENT_STUDIO_SLOT=sl;
+        paintStudioBadge(sk,sl,true);
+      }
+    }
+  }
 
   renderLastSpeaking();
 }
