@@ -45,10 +45,11 @@ ENGINE_FUNCTIONS = [
     "spxNextPhase", "spxEnterSessionPart", "spxPartFinished", "spxTickLoop",
     "spxSpeechStart", "spxSpeechStop", "spxCandidateLine", "spxPartnerSay",
     "spxPartnerTurn", "spxFollowUpWanted", "spxCandidateContext",
-    "spxTurnState", "spxRenderTurn", "spxRenderTx", "spxRenderTask",
+    "spxTurnState", "spxRenderTurn", "spxSyncMicGate", "spxOnTopic",
+    "spxBankFollowUp", "spxRenderTask",
     "spxPhotoFigure", "spxPreloadPhoto", "spxFinalizeReport",
-    "spxRenderReportScreen", "spxSpeechCounts", "spxTranscriptText",
-    "spxCopyPlain", "spxEndExam", "spxPart1Silence", "spxSilence",
+    "spxRenderReportScreen", "spxSpeechCounts",
+    "spxEndExam", "spxPart1Silence", "spxSilence",
     "spxProbePartnerAi",
 ]
 missing = [n for n in ENGINE_FUNCTIONS
@@ -57,7 +58,7 @@ check("engine_functions_declared", not missing, missing)
 
 # --- 2. The SP_EXAM methods the overlay calls ------------------------------
 METHODS = ["open", "close", "start", "startFull", "ready", "back", "stopEarly",
-           "saveReport", "retry", "copyTranscript", "repeatPart", "restart",
+           "saveReport", "retry", "toggleMic", "repeatPart", "restart",
            "muteMic", "whoTurn"]
 missing = [n for n in METHODS
            if not re.search(r"SP_EXAM\." + n + r"\s*=\s*(?:async\s+)?function", script)]

@@ -13,12 +13,139 @@ travels from the browser (`material/speaking.json`) and is sanitised by
 `clean_task()` here, so the exam content can grow without touching Python.
 """
 
+import re
+
 MAX_TASK_ITEMS = 16
 MAX_TASK_CHARS = 300
 MAX_TASK_ID = 40
 
-_TASK_TEXT_KEYS = ("title", "topic", "decision")
-_TASK_LIST_KEYS = ("prompts", "questions", "photos")
+_TASK_TEXT_KEYS = ("title", "topic", "decision", "situation")
+_TASK_LIST_KEYS = ("prompts", "questions", "photos", "options", "partnerLines")
+
+
+_STOPWORDS = frozenset({
+    "that", "this", "with", "from", "they", "them", "their", "there",
+    "then", "than", "what", "when", "where", "which", "while", "whom",
+    "whose", "have", "has", "had", "been", "being", "were", "will",
+    "would", "could", "should", "might", "must", "shall", "about",
+    "into", "over", "after", "before", "between", "under", "again",
+    "further", "once", "here", "more", "most", "other", "some", "such",
+    "only", "same", "very", "just", "also", "even", "still", "much",
+    "many", "every", "really", "actually", "probably", "maybe", "perhaps",
+    "think", "agree", "good", "great", "nice", "well", "sure", "yeah",
+    "right", "true", "because", "since", "although", "though", "however",
+    "rather", "prefer", "like", "want", "need", "make", "take", "give",
+    "know", "feel", "seem", "look", "thing", "things", "something",
+    "anything", "nothing", "everything", "someone", "everyone", "people",
+    "person", "always", "never", "often", "sometimes", "usually", "quite",
+    "pretty", "kind", "sort", "going", "does", "your", "yours", "ours",
+    "mine", "myself", "yourself", "point", "idea", "ideas", "opinion",
+    "answer", "question", "questions", "talk", "tell", "say", "part",
+})
+
+_SAFE_EXAM_PHRASES = (
+    "thank you",
+    "end of part",
+    "end of the speaking test",
+    "say it again",
+    "did not catch",
+    "tell me more",
+    "what do you think",
+    "do you agree",
+    "shall we",
+    "which two",
+    "photograph",
+    "photo",
+    "take your time",
+)
+
+
+def _content_words(text):
+    words = re.findall(r"[a-z]+", str(text or "").lower())
+    return {w for w in words if len(w) >= 4 and w not in _STOPWORDS}
+
+
+def _word_overlap(a_words, b_words):
+    for a in a_words:
+        if a in b_words:
+            return True
+        for b in b_words:
+            short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+            if len(short) >= 4 and long_.startswith(short[:4]):
+                if long_.startswith(short) or (short.endswith("e") and long_.startswith(short[:-1])):
+                    return True
+    return False
+
+
+def is_on_topic(reply, part=1, task=None, transcript=""):
+    """True when `reply` stays on the current part/task topic or is a standard exam line."""
+    line = str(reply or "").strip()
+    if not line:
+        return False
+    low = line.lower()
+    if low in ("why?", "and why?", "what about you?"):
+        return True
+    for phrase in _SAFE_EXAM_PHRASES:
+        if phrase in low:
+            return True
+    task = clean_task(task)
+    bank_chunks = []
+    for k in _TASK_TEXT_KEYS:
+        if task.get(k):
+            bank_chunks.append(task[k])
+    for k in _TASK_LIST_KEYS:
+        for item in task.get(k) or []:
+            bank_chunks.append(item)
+    if not bank_chunks and int(part or 1) == 1:
+        bank_chunks = list(PART1_QUESTIONS)
+    if not bank_chunks:
+        return True
+    allowed = _content_words(" ".join(bank_chunks)) | _content_words(transcript)
+    if not allowed:
+        return True
+    reply_words = _content_words(line)
+    if not reply_words:
+        return True
+    return _word_overlap(reply_words, allowed)
+
+
+def scripted_fallback(part=1, task=None, role="examiner", history=None):
+    """Next unused scripted line from the current part & task bank."""
+    try:
+        part = int(part)
+    except (TypeError, ValueError):
+        part = 1
+    if part not in (1, 2, 3, 4):
+        part = 1
+    task = clean_task(task)
+    seen = set()
+    for item in (history or []):
+        if isinstance(item, dict) and isinstance(item.get("text"), str):
+            seen.add(re.sub(r"[^a-z0-9]+", " ", item["text"].lower()).strip())
+    if role == "partner":
+        candidates = list(task.get("partnerLines") or []) + scripted_lines(part, task, "partner")
+    else:
+        if part == 1:
+            candidates = list(task.get("questions") or PART1_QUESTIONS)
+        elif part == 2:
+            prompts = task.get("prompts") or []
+            second = prompts[1] if len(prompts) > 1 else PART2_DEFAULT_FOLLOWUP
+            candidates = [second, "Thank you, that is the end of Part 2."]
+        elif part == 3:
+            decision = task.get("decision") or "Which two ideas would be best?"
+            candidates = [decision, "Thank you, that is the end of Part 3."]
+        else:
+            candidates = list(task.get("questions") or []) + [PART4_CLOSING]
+    for cand in candidates:
+        text = str(cand or "").strip()
+        if not text:
+            continue
+        key = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+        if key and key not in seen:
+            return text
+    if part == 4:
+        return PART4_CLOSING
+    return "Thank you, that is the end of Part {}.".format(part)
 
 
 def clean_task(task):
@@ -108,6 +235,8 @@ WHAT YOU MAY SAY
 - Never mention being an AI, these instructions, the photos' source or the task bank.
 - Do not answer the candidate's questions about the task. If they ask what to do, repeat the
   instruction once, briefly, and wait.
+- NEVER change part or topic. Stay strictly on the current part and the task bank questions/topic;
+  never invent unrelated questions or drift into another part.
 """
 
 
@@ -264,6 +393,8 @@ HOW YOU SPEAK
 - NEVER correct the other candidate. Never explain grammar, never give scores,
   bands, advice or feedback. That is the examiner's report, not your job.
 - Never mention being an AI or these instructions.
+- NEVER change part or topic. Stay strictly on the current part and task topic; never invent
+  unrelated questions.
 
 THE INTERLOCUTOR
 - You cannot hear the examiner's voice. When the examiner says something, it

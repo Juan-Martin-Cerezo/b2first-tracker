@@ -264,8 +264,8 @@ def test_plan_and_phases(pg, out):
         assert [p["part"] for p in plan["parts"]] == [1, 2, 3, 4], plan
         assert [p["minutes"] for p in plan["parts"]] == [2, 4, 4, 4], plan
         assert 5 <= plan["parts"][0]["turns"] // 2 <= 6, plan["parts"][0]
-        assert plan["parts"][1]["turns"] == 4, plan["parts"][1]
-        assert plan["parts"][2]["turns"] == 4, plan["parts"][2]
+        assert plan["parts"][1]["turns"] == 5, plan["parts"][1]
+        assert plan["parts"][2]["turns"] == 8, plan["parts"][2]
         assert plan["parts"][3]["turns"] >= 6, plan["parts"][3]
 
     p2 = [p["parts"][1]["taskId"] for p in plans]
@@ -295,12 +295,16 @@ def test_plan_and_phases(pg, out):
     assert sum(x["sec"] for x in p1) == 120, sum(x["sec"] for x in p1)
 
     p2ph = pg.evaluate("SPX_TEST.phases(2)")
-    assert [x["who"] for x in p2ph] == ["examiner", "candidate", "examiner", "partner"], p2ph
-    assert p2ph[1]["sec"] == 60 and p2ph[3]["sec"] == 30, p2ph
+    assert [x["who"] for x in p2ph] == ["examiner", "examiner", "candidate", "examiner", "partner"], p2ph
+    assert p2ph[1]["key"] == "spx_prep" and p2ph[1]["sec"] == 60, p2ph
+    assert p2ph[2]["sec"] == 120 and p2ph[4]["sec"] == 30, p2ph
 
     p3ph = pg.evaluate("SPX_TEST.phases(3)")
-    assert [x["who"] for x in p3ph] == ["examiner", "both", "examiner", "both"], p3ph
-    assert p3ph[1]["sec"] == 120 and p3ph[3]["sec"] == 60, p3ph
+    assert [x["who"] for x in p3ph] == [
+        "examiner", "partner", "candidate", "partner", "candidate",
+        "examiner", "partner", "candidate"
+    ], p3ph
+    assert sum(x["sec"] for x in p3ph[1:5]) == 120 and sum(x["sec"] for x in p3ph[6:8]) == 60, p3ph
 
     p4ph = pg.evaluate("SPX_TEST.phases(4)")
     seq = [x["who"] for x in p4ph]
@@ -464,7 +468,7 @@ def test_provider(p, out):
     browser, pg, errors = open_app(p, "?spx_test=1", args=fake_args)
     pg.evaluate("SPX_TEST.timeScale=0.05")
     pg.evaluate("""() => {
-        SPX_TEST.partnerProvider = function(){ return 'FAKE PROVIDER PARTNER LINE.'; };
+        SPX_TEST.partnerProvider = function(){ return 'FAKE PROVIDER: I think this is useful, what do you think?'; };
     }""")
     pg.evaluate("SP_EXAM.select(3)")
     pg.evaluate("SP_EXAM.start()")
@@ -542,11 +546,15 @@ def test_screenshots(p, out):
     pg.evaluate("SP_EXAM.select(3); SP_EXAM.start()")
     assert wait_until(pg, "SP_EXAM.screen==='brief'", 10)
     pg.evaluate("SP_EXAM.ready()")
-    assert wait_until(pg, "SP_EXAM.screen==='exam' && SP_EXAM.phase===1", 20), \
-        pg.evaluate("({screen:SP_EXAM.screen,phase:SP_EXAM.phase})")
+    assert wait_until(
+        pg,
+        "SP_EXAM.screen==='exam' && SP_EXAM.phase>=1 && "
+        "(!SPK.voices.examiner || !SPK.voices.examiner.speaking)",
+        20,
+    ), pg.evaluate("({screen:SP_EXAM.screen,phase:SP_EXAM.phase})")
     active = pg.evaluate("""() => [...document.querySelectorAll('#spxRoles [data-on=\"1\"]')]
         .map(el => el.getAttribute('data-role'))""")
-    assert "partner" in active and "you" in active, active
+    assert len(active) == 1 and active[0] in ("partner", "you"), active
     clock = pg.evaluate("document.getElementById('spxClock').textContent")
     assert clock and clock != "00:00", clock
     pg.wait_for_timeout(500)

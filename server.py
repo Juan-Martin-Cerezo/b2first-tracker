@@ -1729,6 +1729,8 @@ These rules override the part block above wherever they disagree.
   question list. The scripted question list is a FALLBACK for silence, not a
   script to read; never ask a question that could have been asked without
   listening, and only move on after an on-topic answer of at least 4 words.
+- NEVER change part or topic. Stay strictly on the current part's topic and task bank;
+  never invent unrelated questions or switch to another part.
 - Never describe the audio, never mention transcription, never add JSON prose.
 Return only the JSON object.
 """
@@ -6788,6 +6790,14 @@ class H(BaseHTTPRequestHandler):
             # server's own repeat request, whatever the model tried to say.
             if not transcript or not reply:
                 reply = _SPK_TURN_REPEAT
+            elif task and not speaking_prompts.is_on_topic(
+                reply, part or 1, task, transcript=transcript
+            ):
+                # Enforce topic/part coherence: off-topic replies fall back to
+                # the scripted line from the current part & task bank.
+                reply = speaking_prompts.scripted_fallback(
+                    part or 1, task, role=role, history=history
+                )
 
             if tts == "none":
                 # The browser owns the voice: no TTS request is built, cached or
@@ -6977,7 +6987,9 @@ class H(BaseHTTPRequestHandler):
                     "concrete detail from what the candidate just said (a specific "
                     "word, place, reason, activity or example actually mentioned) "
                     "and ask exactly one short follow-up question (maximum 20 words) "
-                    "about that detail. When earlier answers are provided, connect "
+                    "about that detail. Stay strictly on the current part and topic; "
+                    "never change part or topic or invent unrelated questions. "
+                    "When earlier answers are provided, connect "
                     "the question to them. Never repeat or rephrase the previous "
                     "examiner question. It must end with a question mark. No "
                     "comments, no praise, no quotation marks. Return JSON with "
@@ -7002,7 +7014,8 @@ class H(BaseHTTPRequestHandler):
                     "a friendly 17-year-old student. React to one concrete detail in "
                     "what the other candidate just said — a specific word or phrase "
                     "actually there (the transport, place, reason, activity, etc.), "
-                    "not the general topic. Take a clear stance (agree and add a "
+                    "not the general topic. Stay strictly on the current part and topic; "
+                    "never change part or topic or invent unrelated questions. Take a clear stance (agree and add a "
                     "reason or example, or disagree politely) and, if natural, ask "
                     "a short question back. Maximum 35 words, one or two sentences, "
                     "natural spoken British English, no lists, no quotation marks. "
@@ -7080,6 +7093,13 @@ class H(BaseHTTPRequestHandler):
                             score2 = (not cand_repeated, cand_grounded)
                             if score2 >= score1:
                                 line = cand
+            if line and not speaking_prompts.is_on_topic(
+                line,
+                part=1,
+                task={"topic": topic, "questions": [question] if question else []},
+                transcript=said,
+            ):
+                line = ""
             if not line:
                 if mode == "examiner":
                     self._send_json(200, {"line": ""})

@@ -1141,15 +1141,6 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 
 /* ---------- LIVE EXAMINER (S3: Gemini Live + sim transport) ---------- */
 .live-stat .val[data-on="1"]{color:var(--ok-text)}
-.spk-transcript{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-@media (max-width:640px){.spk-transcript{grid-template-columns:1fr}}
-.spk-col{background:var(--surface-2);border-radius:var(--r-ctl);padding:10px 12px;min-width:0}
-.spk-col-h{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
-.spk-col-h .t{letter-spacing:0;text-transform:none;font-weight:400;margin-left:6px}
-.spk-lines{margin-top:8px;max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
-.spk-line{font-size:var(--fs-sm);color:var(--txt);line-height:1.4;display:flex;gap:8px}
-.spk-line .ts{flex:none;font-size:var(--fs-xs);color:var(--txt-2);font-variant-numeric:tabular-nums;padding-top:2px}
-.spk-line .txt{overflow-wrap:anywhere}
 .spk-badge{min-height:20px;margin-top:8px;font-size:var(--fs-xs);font-weight:600;color:var(--warn-text)}
 .spk-parts{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;font-size:var(--fs-sm)}
 .spk-parts label{font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
@@ -1158,7 +1149,6 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .live-stat .val[data-state="speaking"]{color:var(--ok-text)}
 .live-stat .val[data-state="muted"]{color:var(--txt-2)}
 .live-stat .val[data-state="offline"]{color:var(--bad-text)}
-.spk-line.spk-partner .txt{color:var(--txt-2)}
 
 /* ---------- S5: four-scale speaking report ---------- */
 .spk-report{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
@@ -1239,11 +1229,24 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .spx-clock-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2)}
 .spx-clock{display:block;font-size:40px;line-height:1;font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
 .spx-clock[data-low="1"]{color:var(--bad-text)}
-.spx-who{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-sm);font-weight:700;border-radius:999px;padding:6px 14px;margin:8px 0 12px;background:var(--surface-2);color:var(--txt-2)}
+.spx-turn-stage{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  margin:10px 0 12px;padding:10px 12px;border-radius:var(--r-panel);
+  background:var(--surface-2);border:1px solid var(--line);
+}
+.spx-turn-stage[data-who="examiner"]{border-left:4px solid var(--acc);justify-content:flex-start}
+.spx-turn-stage[data-who="candidate"]{border-color:var(--ok-border);background:var(--ok-soft);justify-content:center}
+.spx-turn-stage[data-who="partner"]{border-right:4px solid var(--warn);justify-content:flex-end}
+.spx-who{display:inline-flex;align-items:center;gap:8px;font-size:var(--fs-sm);font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:6px 14px;margin:0;background:var(--surface);color:var(--txt-2);border:1px solid var(--line)}
 .spx-who::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
-.spx-who[data-who="examiner"]{background:var(--acc-soft);color:var(--acc-text)}
-.spx-who[data-who="partner"]{background:var(--warn-soft);color:var(--warn-text)}
-.spx-who[data-who="candidate"]{background:var(--ok-soft);color:var(--ok-text)}
+.spx-who[data-who="examiner"]{background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text)}
+.spx-who[data-who="partner"]{background:var(--warn-soft);border-color:var(--warn-border);color:var(--warn-text)}
+.spx-who[data-who="candidate"]{background:var(--ok);border-color:var(--ok);color:var(--on-ok)}
+.spx-mic-btn{min-height:44px;min-width:110px;font-weight:700;transition:transform 120ms ease-out,box-shadow 150ms ease}
+.spx-mic-btn[data-mic-state="open"]{background:var(--ok);border-color:var(--ok);color:var(--on-ok)}
+.spx-mic-btn[data-mic-state="open"]:hover{background:color-mix(in oklch,var(--ok) 88%,var(--txt));border-color:var(--ok);color:var(--on-ok)}
+.spx-mic-btn[data-mic-state="closed"]{background:var(--surface);border-color:var(--line);color:var(--txt-2);opacity:.85;cursor:not-allowed;box-shadow:none}
+.spx-mic-btn[data-mic-state="muted"]{background:var(--warn-soft);border-color:var(--warn-border);color:var(--warn-text);box-shadow:none}
 .spx-task{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);padding:14px;margin-bottom:12px}
 .spx-task h4{margin:0 0 8px;font-size:var(--fs-md);color:var(--txt)}
 .spx-task p{margin:0 0 8px;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
@@ -1264,10 +1267,22 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .spx-full .n{display:block;font-size:var(--fs-sm);font-weight:700}
 .spx-full .d{display:block;font-size:var(--fs-xs);color:var(--txt-2);margin-top:4px;line-height:1.4}
 .spx-full .m{display:block;font-size:var(--fs-xs);color:var(--acc-text);margin-top:6px;font-weight:600}
-.spx-roles{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:6px 0 2px;font-size:var(--fs-xs);color:var(--txt-2)}
-.spx-role{padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);line-height:1.3}
-.spx-role+.spx-role::before{content:"·";margin-right:2px;color:var(--txt-2)}
-.spx-role[data-on="1"]{background:var(--ok-soft);border-color:var(--ok-border);color:var(--ok-text);font-weight:700}
+.spx-roles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 6px;font-size:var(--fs-xs);color:var(--txt-2)}
+.spx-role{
+  display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:var(--r-ctl);
+  border:1px solid var(--line);background:var(--surface);line-height:1.3;min-width:0;
+  font-weight:600;text-transform:uppercase;letter-spacing:.04em;opacity:.62;
+  overflow-wrap:break-word;word-break:normal;
+}
+@media (max-width:520px){
+  .spx-roles{grid-template-columns:minmax(0,1.15fr) minmax(0,.7fr) minmax(0,1.15fr);gap:6px}
+  .spx-role{padding:7px 6px;font-size:10.5px;letter-spacing:.02em}
+}
+.spx-role[data-role="examiner"]{justify-content:flex-start;text-align:left}
+.spx-role[data-role="you"]{justify-content:center;text-align:center}
+.spx-role[data-role="partner"]{justify-content:flex-end;text-align:right}
+.spx-role[data-on="1"]{opacity:1;font-weight:700;box-shadow:0 0 0 2px currentColor}
+.spx-role[data-role="you"][data-on="1"]{background:var(--ok-soft);border-color:var(--ok-border);color:var(--ok-text)}
 .spx-role[data-role="examiner"][data-on="1"]{background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text)}
 .spx-role[data-role="partner"][data-on="1"]{background:var(--warn-soft);border-color:var(--warn-border);color:var(--warn-text)}
 .spx-role-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -1279,14 +1294,6 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .spx-tip p{margin:4px 0 0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
 .spx-credit{font-size:var(--fs-xs);color:var(--txt-2);margin-top:8px}
 .spx-credit a{color:var(--acc-text);font-weight:600}
-.spx-tx{max-height:150px;overflow-y:auto;font-size:var(--fs-xs);color:var(--txt-2);line-height:1.5;display:grid;gap:3px;margin-top:10px;padding:8px 10px;background:var(--surface);border-radius:var(--r-ctl);border:1px solid var(--line)}
-.spx-tx-line{overflow-wrap:anywhere}
-.spx-tx-candidate{color:var(--txt)}
-.spx-tx-draft{opacity:.55;font-style:italic}
-.spx-rp-tx{margin-top:14px}
-.spx-rp-tx-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.spx-rp-tx .spk-report-h{margin-top:0}
-.spx-rp-tx .spx-tx{max-height:240px}
 .spx-next{margin-top:12px}
 .spx-next-lbl{display:block;font-size:var(--fs-xs);letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);font-weight:600}
 .spx-next p{margin:4px 0 0;font-size:var(--fs-sm);color:var(--txt);line-height:1.5}
@@ -4672,16 +4679,18 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                       <div class="spx-roles" id="spxRoles" aria-live="polite">
                         <span class="spx-role" id="spxRoleExaminer" data-role="examiner"></span>
-                        <span class="spx-role" id="spxRolePartner" data-role="partner"></span>
                         <span class="spx-role" id="spxRoleYou" data-role="you"></span>
+                        <span class="spx-role" id="spxRolePartner" data-role="partner"></span>
                         <span class="spx-role-sr" id="spxPartnerName" hidden>Alex</span>
                       </div>
-                      <div class="spx-who" id="spxWho" aria-live="polite" data-who="candidate"></div>
+                      <div class="spx-turn-stage" id="spxTurnStage" data-who="examiner">
+                        <div class="spx-who" id="spxWho" aria-live="polite" data-who="examiner"></div>
+                        <button type="button" class="btn spx-mic-btn" id="spxMicBtn" data-action="SP_EXAM.toggleMic" data-mic-state="closed" disabled>Listen</button>
+                      </div>
                       <div class="spx-gap" id="spxGap" aria-live="polite" title="Average milliseconds from you stopping to the examiner's first sound" data-i18n-title="spx_turn_gap_title">turn gap —</div>
                       <p class="spx-note" id="spxTurnNote" style="display:none" data-i18n="spx_turn_note">Turn-based voice: your audio is sent only when you stop speaking.</p>
                       <div class="spx-task" id="spxTask" data-exam-task></div>
                       <div class="spk-report-err" id="spxExamErr" role="alert"></div>
-                      <div class="spx-tx" id="spxTx" aria-label="Transcript" aria-live="polite" data-exam-task data-i18n-aria-label="spx_transcript"></div>
                       <div class="spx-note spx-mic-note" id="spxMicNotice" role="status" style="display:none" data-i18n="spx_mic_denied">Microphone access was denied. The exam continues without speech recognition.</div>
                       <div class="spx-actions">
                         <button class="btn gray" id="spxVoiceRetry" data-action="SPK.retryTurn" style="display:none" data-i18n="spx_voice_retry" aria-label="Try the microphone again" data-i18n-aria-label="spx_aria_retry_voice">Retry the voice</button>
@@ -4747,13 +4756,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="spx-part-comments" id="spxRpParts"></div>
                       <div class="spx-turns" id="spxRpTurns"></div>
                       <div class="spx-turns" id="spxRpSpeech"></div>
-                      <div class="spx-rp-tx" id="spxRpTxWrap" style="display:none">
-                        <div class="spx-rp-tx-head">
-                          <div class="spk-report-h" data-i18n="spx_rp_transcript">Full transcript</div>
-                          <button class="btn gray" id="spxRpCopy" data-action="SP_EXAM.copyTranscript" data-i18n="spx_copy" aria-label="Copy the full transcript" data-i18n-aria-label="spx_aria_copy">Copy</button>
-                        </div>
-                        <div class="spx-tx spx-rp-tx-lines" id="spxRpTx" role="region" aria-label="Full transcript" data-exam-task data-i18n-aria-label="spx_rp_transcript"></div>
-                      </div>
                       <div class="spx-tip">
                         <span class="spx-next-lbl" data-i18n="spx_tip_label">One concrete tip</span>
                         <p id="spxRpTip"></p>
@@ -4911,16 +4913,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div class="live-stat"><span class="lbl">Interruptions</span><span class="val" id="spkInterrupts">0</span></div>
                     </div>
                     <div class="spk-badge" id="spkBadge" aria-live="polite"></div>
-                    <div class="spk-transcript">
-                      <div class="spk-col">
-                        <div class="spk-col-h">You <span class="t">exactly what you say</span></div>
-                        <div class="spk-lines" id="spkInText"></div>
-                      </div>
-                      <div class="spk-col">
-                        <div class="spk-col-h">Examiner &amp; Partner <span class="t">examiner and partner</span></div>
-                        <div class="spk-lines" id="spkOutText"></div>
-                      </div>
-                    </div>
 
                     <!-- S5: four-scale report. Pronunciation is never produced by
                          the text model: it is the Azure PA band, or "not measured".
@@ -6782,8 +6774,6 @@ const I18N={
     spx_part_n:'Part {n}:',
     spx_turns_line:'Turns — you: {you} · partner: {partner} · examiner: {examiner}',
     spx_speech_counts:'Words you said: {words} · fillers: {fillers} ({detail})',
-    spx_rp_transcript:'Full transcript',
-    spx_copy:'Copy',
     spx_tip_label:'One concrete tip',
     spx_report_sentence_full:'The full exam is saved to your log.',
     spx_start:'Start',
@@ -6801,7 +6791,11 @@ const I18N={
     spx_turn_gap:'turn gap —',
     spx_turn_gap_ms:'turn gap {n} ms',
     spx_turn_gap_title:"Average milliseconds from you stopping to the examiner's first sound",
-    spx_transcript:'Transcript',
+    spx_mic_listen:'Listen',
+    spx_mic_speak:'Speak',
+    spx_mic_muted:'Mic muted',
+    spx_prep:'Preparation (1 min)',
+    spx_scale_note_none:'Graded from your spoken performance.',
     spx_mic_denied:'Microphone access was denied. The exam continues without speech recognition.',
     spx_confirm_quit:'Leave the exam? What you said in this part will not be saved.',
     spx_examiner:'Examiner speaking',
@@ -6863,7 +6857,6 @@ const I18N={
     spx_aria_retry_report:'Ask for the report again',
     spx_aria_again:'Choose another part',
     spx_aria_repeat_part:'Repeat this part',
-    spx_aria_copy:'Copy the full transcript',
     spx_aria_part:'Part {n}, {min} minutes',
     spx_custom_toggle:'Use my own task',
     spx_custom_chip:'Your task',
@@ -7871,8 +7864,6 @@ const I18N={
     spx_part_n:'Parte {n}:',
     spx_turns_line:'Turnos — vos: {you} · compañero: {partner} · examinador: {examiner}',
     spx_speech_counts:'Palabras que dijiste: {words} · muletillas: {fillers} ({detail})',
-    spx_rp_transcript:'Transcripción completa',
-    spx_copy:'Copiar',
     spx_tip_label:'Un consejo concreto',
     spx_report_sentence_full:'El examen completo quedó guardado en tu registro.',
     spx_start:'Empezar',
@@ -7890,7 +7881,11 @@ const I18N={
     spx_turn_gap:'pausa de turno —',
     spx_turn_gap_ms:'pausa de turno {n} ms',
     spx_turn_gap_title:'Milisegundos promedio entre que dejás de hablar y el primer sonido del examinador',
-    spx_transcript:'Transcripción',
+    spx_mic_listen:'Escuchá',
+    spx_mic_speak:'Hablar',
+    spx_mic_muted:'Micrófono silenciado',
+    spx_prep:'Preparación (1 min)',
+    spx_scale_note_none:'Evaluado a partir de tu desempeño oral.',
     spx_mic_denied:'Se denegó el acceso al micrófono. El examen sigue sin reconocimiento de voz.',
     spx_confirm_quit:'¿Salir del examen? Lo que dijiste en esta parte no se guarda.',
     spx_examiner:'Habla el examinador',
@@ -7952,7 +7947,6 @@ const I18N={
     spx_aria_retry_report:'Pedir el informe otra vez',
     spx_aria_again:'Elegir otra parte',
     spx_aria_repeat_part:'Repetir esta parte',
-    spx_aria_copy:'Copiar la transcripción completa',
     spx_aria_part:'Parte {n}, {min} minutos',
     spx_custom_toggle:'Usar mi tarea',
     spx_custom_chip:'Tu tarea',
@@ -8160,9 +8154,9 @@ function setLang(code){
   LANG=next;
   if(D&&D.settings)D.settings.lang=next;
   applyI18n();
-  if(typeof spxRerender==='function')spxRerender();
   save();
   refreshAll();
+  if(typeof spxRerender==='function')spxRerender();
   syncNavOffset();
   if(typeof syncStatus==='function')syncStatus(SYNC_STATE);
 }
@@ -12282,7 +12276,9 @@ function makeTurnTransport(cfg){
          would otherwise become a candidate turn. Turn-based cannot barge in:
          that limitation is stated in the UI, not hidden. */
       if(SPK.speaking||(SPK.lastExaminerAt&&
-          performance.now()-SPK.lastExaminerAt<400)){
+          performance.now()-SPK.lastExaminerAt<400)||
+          (SP_EXAM.screen==='exam'&&((typeof spxCandidateTurnNow==='function'&&!spxCandidateTurnNow())||
+            (typeof spxVoiceBusy==='function'&&(spxVoiceBusy('examiner')||spxVoiceBusy('partner')))))){
         resetTurn();return;
       }
       frames.push(pcm);
@@ -12496,6 +12492,9 @@ function spkBargeIn(){
    pause between the candidate's words. */
 function spkVad(speaking){
   const now=performance.now();
+  if(SPK.examMode&&typeof spxCandidateTurnNow==='function'&&!spxCandidateTurnNow()){
+    speaking=false;
+  }
   if(speaking){
     /* A pause just ended: keep it for the report (the client owns the clock,
        so silences are measured here and never asked from the model). */
@@ -12539,34 +12538,8 @@ function spkAddLine(side,text,who,partial){
   text=text.trim();
   if(!text)return;
   who=who||(side==='in'?'candidate':'examiner');
+  if(partial)return;
   const ts=Math.max(0,(performance.now()-SPK.startedAt)/1000);
-  const box=document.getElementById(side==='in'?'spkInText':'spkOutText');
-  /* A partial update rewrites the row already on screen. The transcript arrives
-     in fragments; appending each one printed the same question several times. */
-  if(box&&box.lastElementChild&&box.lastElementChild.getAttribute('data-who')===who
-     &&(partial||box.lastElementChild.getAttribute('data-partial')==='1')){
-    const last=box.lastElementChild;
-    const span=last.querySelector('.txt');
-    if(span){span.textContent=(who==='partner'?'Partner: ':text);
-      last.setAttribute('data-partial',partial?'1':'0');
-      box.scrollTop=box.scrollHeight;return;}
-  }
-  if(box){
-    const row=document.createElement('div');
-    row.setAttribute('data-who',who);
-    row.setAttribute('data-partial',partial?'1':'0');
-    row.className='spk-line spk-'+(who==='candidate'?'you':who);
-    const t=document.createElement('span');
-    t.className='ts';
-    t.textContent=spkClock(ts);
-    const s=document.createElement('span');
-    s.className='txt';
-    s.textContent=(who==='partner'?'Partner: ':text);
-    row.appendChild(t);
-    row.appendChild(s);
-    box.appendChild(row);
-    box.scrollTop=box.scrollHeight;
-  }
   SPK.lines.push({side:side,who:who,t:Math.round(ts*1000)/1000,text:text});
   if(side==='in'){
     SPK.inCount++;
@@ -12581,7 +12554,6 @@ function spkAddLine(side,text,who,partial){
       SPK.lastExaminerText=text;
     }
   }
-  if(SP_EXAM.screen==='exam'&&!partial)spxRenderTx();
 }
 
 function spkReset(){
@@ -12614,9 +12586,6 @@ function spkReset(){
   if(repPanel)repPanel.style.display='none';
   const repErr=document.getElementById('spkReportErr');
   if(repErr)repErr.style.display='none';
-  ['spkInText','spkOutText'].forEach(function(id){
-    const el=document.getElementById(id);if(el)el.replaceChildren();
-  });
   const e=document.getElementById('spkElapsed');if(e)e.textContent='00:00';
   ['spkSpeaking','spkPartnerVoice'].forEach(function(id){
     const el=document.getElementById(id);
@@ -13230,9 +13199,10 @@ function renderSpeakingReport(data){
   if(ev){
     const items=r.evidence||[];
     ev.innerHTML=items.length?items.map(function(e){
-      return '<li><span class="q">“'+esc(e.quote)+'”</span>'
-        +(e.note?'<span class="n">'+esc(e.note)+'</span>':'')+'</li>';
-    }).join(''):'<li class="spk-dim">No evidence returned.</li>';
+      const label=SPK_SCALE_LABELS[e.scale]||e.scale||'';
+      const note=e.note||t('spx_scale_note_none');
+      return '<li><b>'+esc(label)+'</b><span class="n">'+esc(note)+'</span></li>';
+    }).join(''):'<li class="spk-dim">'+esc(t('spx_scale_note_none'))+'</li>';
   }
   const fx=document.getElementById('spkFixes');
   if(fx){
@@ -13469,7 +13439,7 @@ const SP_EXAM={
   /* Phase 53: `rephraseQi` is the Part 1 question that already got its one
      repeat, so a long silence can never repeat a question twice. */
   rephraseQi:-1,
-  micMuted:false,txShown:0,answerTimer:null,
+  micMuted:false,micOpen:false,answerTimer:null,
   saved:false,entry:null,
   busy:false,error:'',
   /* Phase 50: one session (a single part or the full exam), its plan, the
@@ -13480,12 +13450,10 @@ const SP_EXAM={
 };
 window.SP_EXAM=SP_EXAM;
 
-/* Phase 51: the phase model already says whose floor it is. A joint turn
-   belongs to both candidates, so the microphone listens there too. */
+/* Single active role per turn: returns 'examiner', 'partner', 'candidate' or ''. */
 SP_EXAM.whoTurn=function(){
   const ph=this.phases&&this.phases[this.phase];
   if(!ph)return '';
-  if(ph.who==='both')return 'candidate';
   return ph.who||'';
 };
 
@@ -13809,8 +13777,10 @@ function spxPhasesPart2(task){
   return [
     {key:'spx_listen',who:'examiner',sec:15,qi:0,
       line:SPX_LINES.part2+' '+question},
-    {key:'spx_long_turn',who:'candidate',sec:60,qi:0,prompt:question},
-    {key:'spx_listen',who:'examiner',sec:10,line:SPX_LINES.thanks},
+    {key:'spx_prep',who:'examiner',sec:60,qi:0,prompt:question},
+    {key:'spx_long_turn',who:'candidate',sec:120,qi:0,prompt:question},
+    {key:'spx_listen',who:'examiner',sec:10,qi:1,to:'partner',
+      line:SPX_LINES.thanks+' '+follow},
     {key:'spx_response',who:'partner',sec:30,qi:1,prompt:follow,
       line:spxPartnerLine(t,0)}
   ];
@@ -13822,15 +13792,17 @@ function spxPhasesPart3(task){
   return [
     {key:'spx_listen',who:'examiner',sec:15,
       line:SPX_LINES.part3+' '+situation},
-    {key:'spx_discuss',who:'both',sec:120,prompt:situation,events:[
-      {at:8,who:'partner',prompt:situation,text:spxPartnerLine(t,0)},
-      {at:58,who:'partner',prompt:situation,text:spxPartnerLine(t,1)}
-    ]},
+    {key:'spx_discuss',who:'partner',sec:25,prompt:situation,
+      line:spxPartnerLine(t,0)},
+    {key:'spx_discuss',who:'candidate',sec:35,prompt:situation},
+    {key:'spx_discuss',who:'partner',sec:25,prompt:situation,
+      line:spxPartnerLine(t,1)},
+    {key:'spx_discuss',who:'candidate',sec:35,prompt:situation},
     {key:'spx_decide',who:'examiner',sec:15,
       line:SPX_LINES.part3decide.replace('{decision}',decision)},
-    {key:'spx_decide',who:'both',sec:60,prompt:decision,events:[
-      {at:26,who:'partner',prompt:decision,text:spxPartnerLine(t,2)}
-    ]}
+    {key:'spx_decide',who:'partner',sec:25,prompt:decision,
+      line:spxPartnerLine(t,2)},
+    {key:'spx_decide',who:'candidate',sec:35,prompt:decision}
   ];
 }
 function spxPhasesPart4(task){
@@ -13845,10 +13817,10 @@ function spxPhasesPart4(task){
     const forPartner=qs[i+1]||qs[i]||forYou;
     out.push({key:'spx_listen',who:'examiner',sec:8,qi:i,prompt:forYou,
       to:'candidate',
-      line:(i===0?SPX_LINES.part4+' ':'')+forYou});
+      line:(i===0?SPX_LINES.part4+' ':'')+'You, '+forYou});
     out.push({key:'spx_response',who:'candidate',sec:30,qi:i,prompt:forYou});
     out.push({key:'spx_listen',who:'examiner',sec:8,qi:i,prompt:forPartner,
-      to:'partner',line:SPX_LINES.toPartner.replace('{name}',name)+forPartner});
+      to:'partner',line:'Partner, '+name+', '+forPartner});
     out.push({key:'spx_follow_up',who:'partner',sec:15,qi:i,prompt:forPartner,
       line:spxPartnerLine(t,i)});
   }
@@ -13889,6 +13861,10 @@ function spxSetScreen(name){
   document.querySelectorAll('#spxPanel .spx-screen').forEach(function(el){
     el.classList.toggle('is-on',el.getAttribute('data-spx-screen')===name);
   });
+  const ov=document.getElementById('spxOverlay');
+  if(ov)ov.scrollTop=0;
+  const panel=spx$('spxPanel');
+  if(panel)panel.scrollTop=0;
   if(name==='exam')spxPhaseHeader();
   spxRenderDots();
 }
@@ -14297,7 +14273,6 @@ function spxCommitHeard(){
       h.committed='';
       h.interim='';
     }
-    spxRenderTx();
   }
 }
 /* Phase 52: Part 4's examiner chains with what the candidate already said.
@@ -14314,13 +14289,32 @@ function spxCandidateContext(){
 }
 function spxCandidateTurnNow(){
   if(SP_EXAM.screen!=='exam')return false;
+  if(spxVoiceBusy('examiner')||spxVoiceBusy('partner'))return false;
   return !!(SP_EXAM.whoTurn&&SP_EXAM.whoTurn()==='candidate');
+}
+function spxSyncMicGate(st){
+  st=st||spxTurnState();
+  const isYours=(SP_EXAM.screen==='exam'&&st.who==='candidate');
+  const open=isYours&&!SP_EXAM.micMuted;
+  SP_EXAM.micOpen=open;
+  if(SPK.micStream){
+    SPK.micStream.getAudioTracks().forEach(function(tr){tr.enabled=open});
+  }
+  const btn=spx$('spxMicBtn');
+  if(btn){
+    btn.disabled=!isYours;
+    const state=!isYours?'closed':(SP_EXAM.micMuted?'muted':'open');
+    btn.setAttribute('data-mic-state',state);
+    const label=!isYours?t('spx_mic_listen'):(SP_EXAM.micMuted?t('spx_mic_muted'):t('spx_mic_speak'));
+    if(btn.textContent!==label)btn.textContent=label;
+  }
+  return open;
 }
 function spxSpeechStart(){
   const h=SPK.heard;
   if(!h||!h.supported)return;
   if(h.active||h.want)return;
-  if(!spxCandidateTurnNow())return;
+  if(!spxCandidateTurnNow()||SP_EXAM.micMuted)return;
   if(h.error==='not-allowed'||h.error==='service-not-allowed')return;
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR)return;
@@ -14333,7 +14327,8 @@ function spxSpeechStart(){
       SPX_REC.maxAlternatives=1;
       SPX_REC.onresult=function(ev){
         const heard=SPK.heard;
-        if(!heard)return;
+        /* Never transcribe examiner or partner turns as candidate speech. */
+        if(!heard||!spxCandidateTurnNow()||SP_EXAM.micMuted)return;
         let interim='';
         const finals=[];
         const results=(ev&&ev.results)||[];
@@ -14351,7 +14346,6 @@ function spxSpeechStart(){
           heard.final=(heard.final?heard.final+' ':'')+joined;
         }
         heard.interim=interim.replace(/\s+/g,' ').trim();
-        spxRenderTx();
       };
       SPX_REC.onerror=function(ev){
         const heard=SPK.heard;
@@ -14372,7 +14366,7 @@ function spxSpeechStart(){
         /* A denied permission will not turn into a grant: stop asking and let
            the exam run on its written lines. */
         if(heard.denied){spxSpeechStop();return}
-        if(spxCandidateTurnNow()&&heard.restarts<3){
+        if(spxCandidateTurnNow()&&!SP_EXAM.micMuted&&heard.restarts<3){
           heard.restarts++;
           try{SPX_REC.start();return}catch(e){heard.error='speech_restart'}
         }
@@ -14406,12 +14400,12 @@ function spxSpeechStop(){
     spkAddLine('in',said,'candidate');
   }
   h.interim='';
-  spxRenderTx();
 }
 function spxSpeechSync(){
+  spxSyncMicGate();
   const h=SPK.heard;
   if(!h||!h.supported)return;
-  if(spxCandidateTurnNow())spxSpeechStart();
+  if(spxCandidateTurnNow()&&!SP_EXAM.micMuted)spxSpeechStart();
   else if(h.active||h.want)spxSpeechStop();
 }
 
@@ -14570,6 +14564,73 @@ function spxPartnerSay(text,fallback){
   if(spxPartnerQuestion(line))SP_EXAM.partnerAsked=(Number(SP_EXAM.partnerAsked)||0)+1;
   return line;
 }
+const SPX_TOPIC_STOP=new Set([
+  'that','this','with','from','they','them','their','there','then','than','what',
+  'when','where','which','while','have','been','were','will','would','could','should',
+  'might','must','shall','about','into','over','after','before','between','under',
+  'again','more','most','other','some','such','only','same','very','just','also',
+  'even','still','much','many','every','really','actually','probably','maybe',
+  'think','agree','good','great','nice','well','sure','yeah','right','true','because',
+  'since','although','though','however','rather','prefer','like','want','need','make',
+  'take','give','know','feel','seem','look','thing','things','something','anything',
+  'nothing','everything','someone','everyone','people','person','always','never',
+  'often','sometimes','usually','quite','pretty','kind','sort','going','does','your',
+  'yours','ours','mine','myself','yourself','point','idea','ideas','opinion','answer',
+  'question','questions','talk','tell','part','ever'
+]);
+const SPX_SAFE_PHRASES=[
+  'thank you','what do you think','do you agree','shall we','can you tell me more',
+  'which two','end of part','end of the speaking test','take your time'
+];
+function spxContentWords(text){
+  const m=String(text||'').toLowerCase().match(/[a-z]{4,}/g)||[];
+  return m.filter(function(w){return !SPX_TOPIC_STOP.has(w)});
+}
+function spxOnTopic(line,task,candidateSaid){
+  const txt=String(line||'').trim();
+  if(!txt)return false;
+  const low=txt.toLowerCase();
+  if(low==='why?'||low==='and why?'||low==='what about you?')return true;
+  for(let i=0;i<SPX_SAFE_PHRASES.length;i++){
+    if(low.indexOf(SPX_SAFE_PHRASES[i])>=0)return true;
+  }
+  const t=task||SP_EXAM.task||{};
+  const chunks=[];
+  ['topic','title','situation','decision','question'].forEach(function(k){
+    if(typeof t[k]==='string'&&t[k])chunks.push(t[k]);
+  });
+  ['questions','prompts','options','partnerLines','photoAlt'].forEach(function(k){
+    if(Array.isArray(t[k]))t[k].forEach(function(v){if(typeof v==='string')chunks.push(v)});
+  });
+  if(typeof candidateSaid==='string'&&candidateSaid.trim())chunks.push(candidateSaid);
+  const allowed=spxContentWords(chunks.join(' '));
+  if(!allowed.length)return true;
+  const words=spxContentWords(txt);
+  if(!words.length)return true;
+  for(let i=0;i<words.length;i++){
+    const a=words[i];
+    for(let j=0;j<allowed.length;j++){
+      const b=allowed[j];
+      if(a===b)return true;
+      const sh=a.length<=b.length?a:b,lg=a.length<=b.length?b:a;
+      if(sh.length>=4&&(lg.indexOf(sh)===0||(sh.endsWith('e')&&lg.indexOf(sh.slice(0,-1))===0)))return true;
+    }
+  }
+  return false;
+}
+function spxBankFollowUp(task,ph){
+  const t=task||SP_EXAM.task||{};
+  const asked=new Set((SPK.lines||[]).map(function(l){return spxLineKey(l&&l.text)}));
+  if(ph&&ph.prompt)asked.add(spxLineKey(ph.prompt));
+  const pool=(Array.isArray(t.questions)&&t.questions.length)?t.questions:
+    (Array.isArray(t.prompts)&&t.prompts.length)?t.prompts:[];
+  for(let i=0;i<pool.length;i++){
+    const q=String(pool[i]||'').trim();
+    if(q&&!asked.has(spxLineKey(q)))return q;
+  }
+  const topic=String(t.topic||t.title||'that').trim();
+  return 'Can you tell me a little more about '+topic+'?';
+}
 function spxPartnerTurn(ev){
   spxCommitHeard();
   const question=ev.prompt||ev.text||'';
@@ -14582,12 +14643,13 @@ function spxPartnerTurn(ev){
   }
   const deliver=function(line){
     if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
-    const say=spxPartnerSay(line||fallback,fallback);
+    const valid=line&&spxOnTopic(line,SP_EXAM.task,spxCandidateSaid())?line:'';
+    const say=spxPartnerSay(valid||fallback,fallback);
     if(say)spxSay('partner',say,spxSpeechMs(say));
   };
   spxPartnerFromProvider(question,'partner').then(function(line){
     if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
-    if(line){deliver(line);return}
+    if(line&&spxOnTopic(line,SP_EXAM.task,spxCandidateSaid())){deliver(line);return}
     return spxPartnerFromProvider(question,'partner').then(deliver);
   });
 }
@@ -14666,8 +14728,6 @@ function spxEnterPhase(i,startAt){
     const niche=spxScaleSec(ph.sec);
     if(ph.who==='candidate'){
       spxScriptAnswer(spxSimAnswer(SP_EXAM.part,ph.qi),Math.min(SPX_ANSWER_DELAY_MS,niche*420));
-    }else if(ph.who==='both'){
-      spxScriptAnswer(spxSimAnswer(SP_EXAM.part===3?3:4,0),Math.min(SPX_ANSWER_DELAY_MS,niche*260));
     }
   }
   spxTickRender(spxScaleSec(ph.sec));
@@ -14683,10 +14743,17 @@ function spxNextPhase(){
     spxPartnerFromProvider(ph.prompt||SP_EXAM.lastAsked,'examiner').then(function(line){
       SP_EXAM.followUpBusy=false;
       if(SP_EXAM.screen!=='exam'||SP_EXAM.phase!==phaseAt)return;
-      if(line)spxInsertFollowUp(phaseAt,ph,line);
+      const picked=(line&&spxOnTopic(line,SP_EXAM.task,spxCandidateSaid()))
+        ?line
+        :spxBankFollowUp(SP_EXAM.task,ph);
+      if(picked)spxInsertFollowUp(phaseAt,ph,picked);
       spxNextPhase();
     }).catch(function(){
       SP_EXAM.followUpBusy=false;
+      if(SP_EXAM.screen==='exam'&&SP_EXAM.phase===phaseAt){
+        const fb=spxBankFollowUp(SP_EXAM.task,ph);
+        if(fb)spxInsertFollowUp(phaseAt,ph,fb);
+      }
       spxNextPhase();
     });
     return;
@@ -14772,41 +14839,34 @@ function spxRenderClock(left){
   el.setAttribute('data-low',secs<=SPX_LOW_SECONDS?'1':'0');
 }
 
-/* --- Whose turn it is: one source of truth -------------------------------- */
-/* The phase title, the green turn badge and the role chips all read
-   spxTurnState(), so they cannot say different things in the same frame. A
-   phase key is only allowed as the title when it names the same owner as the
-   floor: a mislabelled phase falls back to the owner's own label. */
+/* --- Whose turn it is: one source of truth (NEVER two active roles) ------ */
 const SPX_TURN_KEYS={
   spx_your_turn:['candidate'],
   spx_long_turn:['candidate'],
-  spx_follow_up:['candidate'],
-  spx_response:['partner'],
+  spx_prep:['examiner'],
+  spx_follow_up:['candidate','partner'],
+  spx_response:['candidate','partner'],
   spx_listen:['examiner'],
   spx_closing:['examiner'],
-  spx_discuss:['both'],
-  spx_decide:['both']
+  spx_discuss:['candidate','partner'],
+  spx_decide:['examiner','candidate','partner']
 };
 function spxTurnState(){
   const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
-  /* A joint turn belongs to both candidates at once, even while the last
-     examiner syllable is still draining. */
-  if(ph&&ph.who==='both')return {who:'both',badge:'spx_discuss'};
   if(spxVoiceBusy('examiner'))return {who:'examiner',badge:'spx_examiner'};
   if(spxVoiceBusy('partner'))return {who:'partner',badge:'spx_partner'};
   if(SPK.mode==='turn'&&SPK.turnState==='thinking')
     return {who:'examiner',badge:'spx_thinking'};
+  if(ph&&ph.who==='examiner')return {who:'examiner',badge:ph.key==='spx_prep'?'spx_prep':'spx_examiner'};
+  if(ph&&ph.who==='partner')return {who:'partner',badge:'spx_partner'};
   if(SPK.mode==='turn'&&SPK.turnState==='listening')
     return {who:'candidate',badge:'spx_listening'};
-  if(ph&&ph.who==='examiner')return {who:'examiner',badge:'spx_examiner'};
-  if(ph&&ph.who==='partner')return {who:'partner',badge:'spx_partner'};
   return {who:'candidate',badge:'spx_your_turn'};
 }
 function spxTurnTitleKey(who){
   const ph=SP_EXAM.phases[SP_EXAM.phase]||null;
   const owners=SPX_TURN_KEYS[ph&&ph.key];
   if(owners&&owners.indexOf(who)>=0)return ph.key;
-  if(who==='both')return 'spx_discuss';
   if(who==='examiner')return 'spx_listen';
   if(who==='partner')return 'spx_response';
   return 'spx_your_turn';
@@ -14818,25 +14878,26 @@ function spxRenderTurn(){
     const title=t(spxTurnTitleKey(st.who));
     if(name.textContent!==title)name.textContent=title;
   }
+  const stage=spx$('spxTurnStage');
+  if(stage)stage.setAttribute('data-who',st.who);
   const el=spx$('spxWho');
   if(el){
-    el.setAttribute('data-who',st.who==='both'?'candidate':st.who);
-    const text=(st.who==='both')
-      ?t('spx_your_turn')+' + '+spxPartnerName()
-      :t(st.badge);
+    el.setAttribute('data-who',st.who);
+    const text=t(st.badge);
     if(el.textContent!==text)el.textContent=text;
   }
   spxRenderRoles(st);
+  spxSyncMicGate(st);
   spkRenderGap();
 }
 function spxRenderRoles(st){
   const box=spx$('spxRoles');
   if(!box)return;
   st=st||spxTurnState();
-  const who=st.who;
+  const target=st.who==='candidate'?'you':st.who;
   box.querySelectorAll('[data-role]').forEach(function(el){
     const role=el.getAttribute('data-role');
-    const on=who==='both'?(role==='partner'||role==='you'):(role===who);
+    const on=(role===target);
     if(on)el.setAttribute('data-on','1');else el.removeAttribute('data-on');
     el.setAttribute('aria-current',on?'true':'false');
   });
@@ -14852,54 +14913,6 @@ function spxRenderPartnerHeader(){
   const nameEl=spx$('spxPartnerName');
   if(nameEl)nameEl.textContent=name;
   spxRenderRoles();
-}
-
-function spxTxLabel(who){
-  if(who==='partner')return spxPartnerName();
-  if(who==='candidate')return t('spx_you_tag');
-  return t('spx_examiner_tag');
-}
-
-function spxRenderTx(){
-  const box=spx$('spxTx');
-  if(!box)return;
-  const lines=SPK.lines||[];
-  if(SP_EXAM.txShown>lines.length){
-    SP_EXAM.txShown=0;
-    box.replaceChildren();
-  }
-  /* The draft is parked while the committed lines render: otherwise the
-     duplicate check below mistakes it for the final `You:` row. */
-  let draft=box.querySelector('.spx-tx-draft');
-  if(draft)draft.remove();
-  for(let i=SP_EXAM.txShown;i<lines.length;i++){
-    const line=lines[i];
-    if(!line||typeof line.text!=='string')continue;
-    const row=document.createElement('div');
-    row.className='spx-tx-line spx-tx-'+line.who;
-    row.textContent=spxTxLabel(line.who)+': '+line.text;
-    /* the same line can be pushed twice (instruction + ready callback);
-       never print the same speaker+text twice in a row */
-    if(box.lastElementChild&&box.lastElementChild.textContent===row.textContent)continue;
-    box.appendChild(row);
-  }
-  SP_EXAM.txShown=lines.length;
-  /* Phase 51: the live recogniser writes a faded draft row, replaced by the
-     normal `You:` line when the turn closes. It is never pushed to SPK.lines,
-     so the transcript cannot print the same answer twice. */
-  const heard=SPK.heard||{};
-  const draftText=heard.active
-    ?String(heard.interim||'').trim()||String(heard.final||'').trim():'';
-  if(draftText){
-    if(!draft){
-      draft=document.createElement('div');
-      draft.className='spx-tx-line spx-tx-candidate spx-tx-draft';
-    }
-    const text=t('spx_you_tag')+': '+draftText;
-    if(draft.textContent!==text)draft.textContent=text;
-    box.appendChild(draft);
-  }
-  box.scrollTop=box.scrollHeight;
 }
 
 function spxTickRender(left){
@@ -14987,7 +15000,7 @@ function spxTickLoop(){
      answer counts for the next question too, so the flag is set in any phase. */
   if(SPK.micSpeaking){
     SP_EXAM.answered=true;
-    if((ph.who==='candidate'||ph.who==='both')&&!SP_EXAM.turnCounted){
+    if(ph.who==='candidate'&&!SP_EXAM.turnCounted){
       SP_EXAM.turnCounted=true;
       spxCountTurn('candidate');
     }
@@ -15002,7 +15015,6 @@ function spxTickLoop(){
       /* A stage line the candidate talked over has not been said yet: keep the
        turn open instead of advancing past it. */
       spxTickRender(Math.max(0,duration-elapsed));
-      spxRenderTx();
       return;
     }else{
       SP_EXAM.pendingLine=null;
@@ -15024,7 +15036,6 @@ function spxTickLoop(){
     ev.done=true;spxFireEvent(ev);
   });
   spxTickRender(Math.max(0,duration-elapsed));
-  spxRenderTx();
   const quiet=spxQueueQuiet();
   if(elapsed>=duration&&spxPart1Holds(ph)){
     /* Phase 53: Part 1 never loses a question to the clock. A silent candidate
@@ -15033,7 +15044,6 @@ function spxTickLoop(){
     spxSilence(now);
     if(SP_EXAM.phases[SP_EXAM.phase]!==ph)return;
     spxTickRender(0);
-    spxRenderTx();
     return;
   }
   if(elapsed>=duration){
@@ -15403,7 +15413,6 @@ SP_EXAM.ready=async function(){
   SP_EXAM.awaitSince=0;
   SP_EXAM.saved=false;
   SP_EXAM.entry=null;
-  SP_EXAM.txShown=0;
   SP_EXAM.turnCounted=false;
   SP_EXAM.partnerIdx=0;
   SP_EXAM.partnerSaid=[];
@@ -15413,7 +15422,6 @@ SP_EXAM.ready=async function(){
   SPK.reportPayload=null;
   SPK.reportId='';
   SPK.reportFull=!!SP_EXAM.full;
-  spx$('spxTx').replaceChildren();
   spxPreloadTaskPhotos(first.task);
   spxPreloadTaskPhotos(SP_EXAM.session.plan.parts[1]&&SP_EXAM.session.plan.parts[1].task);
   spxRenderPartnerHeader();
@@ -15444,8 +15452,13 @@ SP_EXAM.muteMic=function(muted){
   SP_EXAM.micMuted=!!muted;
   if(SP_EXAM.micMuted&&SP_EXAM.answerTimer){clearTimeout(SP_EXAM.answerTimer);SP_EXAM.answerTimer=null}
   SPK.simSpeechUntil=0;
-  if(SPK.micStream)SPK.micStream.getAudioTracks().forEach(function(tr){tr.enabled=!SP_EXAM.micMuted});
+  spxSyncMicGate();
   return SP_EXAM.micMuted;
+};
+
+SP_EXAM.toggleMic=function(){
+  if(SP_EXAM.screen!=='exam'||!spxCandidateTurnNow())return false;
+  return SP_EXAM.muteMic(!SP_EXAM.micMuted);
 };
 
 SP_EXAM.stopEarly=function(){
@@ -15556,61 +15569,6 @@ function spxRenderSpeechCounts(target,speech){
   target.textContent=t('spx_speech_counts',{words:speech.words||0,
     fillers:speech.fillers||0,detail:detail});
 }
-
-/* --- Saved report: the whole session transcript, copied as plain text ----
-   The report screen prints every committed line (candidate, partner and
-   examiner) and the Copy button puts the same lines on the clipboard. Both
-   read `SPK.lines`, the session's own record: nothing is re-requested from
-   the server and nothing is reconstructed from the model's answer. */
-function spxTranscriptLines(){
-  return (SPK.lines||[]).filter(function(line){
-    return line&&typeof line.text==='string'&&line.text.trim();
-  });
-}
-function spxTranscriptText(){
-  return spxTranscriptLines().map(function(line){
-    return spxTxLabel(line.who)+': '+String(line.text).replace(/\s+/g,' ').trim();
-  }).join('\n');
-}
-function spxCopyPlain(text){
-  try{
-    if(navigator.clipboard&&navigator.clipboard.writeText){
-      return navigator.clipboard.writeText(text);
-    }
-  }catch(e){}
-  return new Promise(function(resolve){
-    const area=document.createElement('textarea');
-    area.value=text;
-    area.setAttribute('readonly','');
-    area.style.position='fixed';
-    area.style.opacity='0';
-    document.body.appendChild(area);
-    area.select();
-    try{document.execCommand('copy')}catch(e){}
-    document.body.removeChild(area);
-    resolve();
-  });
-}
-function spxRenderReportTranscript(){
-  const wrap=spx$('spxRpTxWrap');
-  const box=spx$('spxRpTx');
-  if(!wrap||!box)return;
-  const lines=spxTranscriptLines();
-  wrap.style.display=lines.length?'block':'none';
-  box.replaceChildren();
-  lines.forEach(function(line){
-    const row=document.createElement('div');
-    row.className='spx-tx-line spx-tx-'+(line.who||'examiner');
-    row.textContent=spxTxLabel(line.who)+': '+line.text;
-    box.appendChild(row);
-  });
-}
-SP_EXAM.copyTranscript=function(){
-  const text=spxTranscriptText();
-  if(!text)return '';
-  spxCopyPlain(text).catch(function(){});
-  return text;
-};
 
 function spxFinalizeReport(data){
   if(!data||typeof data!=='object')return data;
@@ -15734,11 +15692,9 @@ function spxRenderFeedback(){
       extra=(typeof b.pronunciation==='number'&&derived.pronunciation_source==='azure')
         ?'<span class="spx-note">'+esc(t('spx_pr_note_azure',{score:derived.pronunciation_score}))+'</span>'
         :'<span class="spx-note">'+esc(t('spx_pr_note_none'))+'</span>';
-      extra+='<span class="spx-scale-q">'+esc(t('spx_pr_model_note'))+'</span>';
     }else{
-      extra+='<span class="spx-scale-q">'+(ev
-        ?'“'+esc(ev.quote)+'”'+(ev.note?' — '+esc(ev.note):'')
-        :esc(t('spx_no_evidence')))+'</span>';
+      const noteText=(ev&&ev.note)?ev.note:t('spx_scale_note_none');
+      extra='<span class="spx-note">'+esc(noteText)+'</span>';
     }
     return spxScaleCard(t(pair[1]),b[key],extra);
   }).join('');
@@ -15811,7 +15767,6 @@ function spxRenderReportScreen(){
   spxRenderPartsList(spx$('spxRpParts'),data.parts);
   spxRenderTurnsLine(spx$('spxRpTurns'),data.turns);
   spxRenderSpeechCounts(spx$('spxRpSpeech'),data.speech);
-  spxRenderReportTranscript();
   const tip=spx$('spxRpTip');
   if(tip)tip.textContent=data.tip||'';
 }
@@ -21966,7 +21921,7 @@ function renderToday(){
   const nb=document.getElementById('nextBox');
   if(nb){nb.innerHTML='';nb.style.display='none';}
   if(!todaySlots.length&&!(QUEUE_PENDING&&QUEUE_PENDING.units.length)){
-    if(CURRENT_STUDIO_SOURCE!=='practice')closeSessionStudios();
+    if(CURRENT_STUDIO_SOURCE!=='practice'&&!(window.SP_EXAM&&window.SP_EXAM.screen))closeSessionStudios();
   }else if(CURRENT_STUDIO&&CURRENT_STUDIO_SOURCE==='plan'){
     const sl=todaySlots[0];
     if(!sl||sl.section){
@@ -23656,7 +23611,6 @@ click:{
 'SPK.retryTurn':()=>SPK.retryTurn(),
 'SP_EXAM.back':()=>SP_EXAM.back(),
 'SP_EXAM.close':()=>SP_EXAM.close(),
-'SP_EXAM.copyTranscript':()=>SP_EXAM.copyTranscript(),
 'SP_EXAM.open':()=>SP_EXAM.open(),
 'SP_EXAM.ready':()=>SP_EXAM.ready(),
 'SP_EXAM.removeCustom':()=>SP_EXAM.removeCustom(),
@@ -23669,6 +23623,7 @@ click:{
 'SP_EXAM.start':()=>SP_EXAM.start(),
 'SP_EXAM.startFull':()=>SP_EXAM.startFull(),
 'SP_EXAM.stopEarly':()=>SP_EXAM.stopEarly(),
+'SP_EXAM.toggleMic':()=>SP_EXAM.toggleMic(),
 'accountProfile':()=>{closeAccountSheet(false);openUserModal()},
 'accountSettings':()=>{closeAccountSheet(false);openSettingsModal()},
 'addPasskey':()=>addPasskey(),

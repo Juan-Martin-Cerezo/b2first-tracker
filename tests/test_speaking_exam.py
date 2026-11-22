@@ -746,9 +746,10 @@ def main():
         assert {"who": "examiner", "text": TURN_REPLY} in lines, lines
         assert pg.evaluate("SPK.voices.examiner.nextTime") > audio_before + 0.3, \
             "the reply WAV never reached the playback queue"
-        pg.evaluate("SP_EXAM.txShown=0;spxRenderTx()")
-        hud = pg.evaluate("document.getElementById('spxTx').textContent")
-        assert TURN_TRANSCRIPT in hud and TURN_REPLY in hud, hud
+        assert pg.evaluate("document.getElementById('spxTx')") is None, \
+            "speaking transcript node must not exist in DOM"
+        assert pg.evaluate("document.getElementById('spxRpTx')") is None, \
+            "report transcript node must not exist in DOM"
         latency = pg.evaluate("SPK.turnLatencyMs")
         print("turn latency (client, stop-talking -> first audio): %d ms" % latency)
         out["9b_client_turn"] = {"latency_ms": latency,
@@ -897,7 +898,6 @@ def main():
             () => {
               SPK.running=false;SPK.turnState='';SPK.mode='sim';
               SPK.turnLatencyMs=null;SPK.lastTurnMs=null;spkReset();
-              document.getElementById('spxTx').replaceChildren();
               return true;
             }
         """)
@@ -964,25 +964,26 @@ def main():
             "the indicator said 'Your turn' while the examiner was still talking"
         assert wait_until(
             pg, "(SPK.voices.examiner.speaking===false) && "
-                "(document.getElementById('spxWho').textContent==='Your turn')", 40), \
-            "the indicator never flipped to 'Your turn' after the examiner stopped"
-        assert pg.evaluate("SP_EXAM.phase") == 1, pg.evaluate("SP_EXAM.phase")
+                "(document.getElementById('spxWho').textContent==='Your turn')", 100), \
+            "the indicator never flipped to 'Your turn' after examiner + 1 min prep"
+        assert pg.evaluate("SP_EXAM.phase") == 2, pg.evaluate("SP_EXAM.phase")
         pg.screenshot(path=os.path.join(OUT_DIR, "spx_3_exam.png"))
         out["4_exam"] = pg.evaluate(
             "({clock: document.getElementById('spxClock').textContent,"
             " who: document.getElementById('spxWho').textContent,"
             " phase: SP_EXAM.phase})")
 
-        # --- 5. The full Part 2 run completes in under 200 s ---------------
+        # --- 5. The full Part 2 run completes in under 290 s ---------------
+        # Part 2 is 15s examiner + 60s prep + 120s long turn + 10s examiner + 30s partner = 235s.
         # The feedback screen opens before the report returns ("Marking your
         # part…"), so wait for the report itself, not just the screen.
         assert wait_until(
             pg,
             "SP_EXAM.screen==='feedback' && "
             "(!!(SPK.reportData&&SPK.reportData.bands) || SPK.lastReportError!=='')",
-            200), "the exam never reached feedback"
+            290), "the exam never reached feedback"
         wall = time.time() - t_start
-        assert wall < 200, "Part 2 took %.1f s" % wall
+        assert wall < 290, "Part 2 took %.1f s" % wall
         assert pg.evaluate("SPK.lastReportError") in (None, ""), \
             pg.evaluate("SPK.lastReportError")
         bands = pg.evaluate("(SPK.reportData||{}).bands||null")
@@ -993,9 +994,8 @@ def main():
         assert isinstance(bands["discourse_management"], int), bands
         assert isinstance(bands["interactive_communication"], int), bands
         assert bands["pronunciation"] is None, bands
-        # Part 2's script is 15 + 60 + 10 + 30 s = 115 s of turns, so the
-        # reported duration cannot be the old 120 s guess.
-        assert pg.evaluate("(SPK.reportData||{}).duration_s") >= 115, \
+        # Part 2's script is 15 + 60 + 120 + 10 + 30 s = 235 s of turns.
+        assert pg.evaluate("(SPK.reportData||{}).duration_s") >= 220, \
             pg.evaluate("(SPK.reportData||{}).duration_s")
         pronoun = pg.evaluate(
             "document.querySelectorAll('#spxFbScales .spk-scale')[2].textContent")
@@ -1102,7 +1102,7 @@ def main():
             "SPK.mode='turn';spxRenderVoiceMode();"
             "SP_EXAM.phases=spxPhases();SP_EXAM.phase=0;"
             "spxRenderTask();spxSetScreen('exam');spxRenderClock(30);"
-            "spxRenderTurn();spxRenderTx();")
+            "spxRenderTurn();")
         found, _ = scan_current("exam")
         offenders += found
         # The honest wording: turn-based and upload-on-stop, never "real-time".
