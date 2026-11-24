@@ -26,19 +26,13 @@ with sync_playwright() as p:
     assert pg.eval_on_selector_all("#exGuide button", "els => els.length") == 0, "#exGuide should have pace text only, no Open materials button"
     assert pg.evaluate("document.getElementById('exActiveLibBtn')") is None, "#exActiveLibBtn should be removed"
     assert pg.evaluate("document.getElementById('examLibraryLink')") is None, "#examLibraryLink should be removed"
-    # Card's Open materials button opens Library filtered to that paper and scope='full'
-    pg.click("#examSelectGrid .exam-card[data-paper='rue'] .exam-card-mat-btn")
+    assert pg.eval_on_selector_all("#examSelectGrid .exam-card-mat-btn", "els => els.length") == 0, "Loose Open materials card buttons should be removed"
+    # Clicking a paper card opens the guided wizard in step 1 without leaving #v-exam
+    pg.click("#examSelectGrid .exam-card[data-paper='rue']")
     pg.wait_for_timeout(200)
-    lib_from_card = pg.evaluate(
-        """() => ({
-            view: (document.querySelector('.view.active') || {}).id || '',
-            paper: EXLIB_PRACTICE_STATE.paper,
-            scope: EXLIB_PRACTICE_STATE.scope,
-        })"""
-    )
-    assert lib_from_card == {"view": "v-practice", "paper": "rue", "scope": "full"}, lib_from_card
-    pg.click("nav button[data-view='exam']")
-    pg.wait_for_timeout(200)
+    assert pg.evaluate("(document.querySelector('.view.active')||{}).id === 'v-exam' && document.getElementById('mockStartModal').dataset.step === '1'")
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(150)
     # cambiar a Writing via hidden #exPaper contract
     pg.evaluate("document.getElementById('exPaper').value='w'; renderEx()")
     pg.wait_for_timeout(200)

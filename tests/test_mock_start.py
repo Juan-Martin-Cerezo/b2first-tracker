@@ -1,18 +1,18 @@
-"""Mock start confirmation modal acceptance test.
+"""Mock start guided modal acceptance test (updated for 3-step guided flow).
 
 Verifies:
   1. Clicking a mock paper card (R&UoE / Writing / Listening) does NOT start the
      countdown timer (`#exTimer` stays unchanged over 2s, `exIv === null`).
   2. `#mockStartModal` opens as an accessible dialog (`role="dialog"`, `aria-modal="true"`)
-     with paper title, official duration, focus trap, Escape handling, and >=44px buttons.
+     at step 1 with paper title, official duration, focus trap, Escape handling,
+     and >=48px buttons.
   3. Cancel and Escape close the modal without starting the timer.
-  4. "Open materials" opens Practice Library filtered to that `paper` and `scope='full'`
-     without starting the timer.
-  5. "Start timer" closes the modal and starts the countdown once (`#exTimer` ticks down).
-  6. Full mock pre-flight ("Start 195' sequence") also passes through `#mockStartModal`
-     with full mock copy (195 min written + 14 min Speaking); once confirmed, advancing
+  4. Walking steps 1 -> 2 -> 3 keeps `#v-exam` active, shows paper materials in step 2,
+     and "Start timer" in step 3 closes the modal and starts the countdown once.
+  5. Full mock ("Start full mock") also passes through `#mockStartModal` step 1 -> 2 -> 3
+     with full mock copy (195′ written + 14′ Speaking); once started, advancing
      to the next paper (`fullMockAdvance`) does NOT re-open the modal.
-  7. 390x844 light/dark & EN/ES copy: zero horizontal overflow, zero inline handlers,
+  6. 390x844 light/dark & EN/ES copy: zero horizontal overflow, zero inline handlers,
      zero page errors.
 
 Saves screenshot: tests/out/mock_start_modal_390_light.png.
@@ -44,7 +44,7 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='exam']")
     pg.wait_for_timeout(250)
 
-    # 1. Click R&UoE card -> opens #mockStartModal, timer does NOT start over 2 seconds
+    # 1. Click R&UoE card -> opens #mockStartModal step 1, timer does NOT start over 2 seconds
     pg.click("#examSelectGrid .exam-card[data-paper='rue']")
     pg.wait_for_timeout(150)
     t0 = pg.inner_text("#exTimer")
@@ -56,13 +56,14 @@ with sync_playwright() as p:
     modal_en = pg.evaluate(
         """() => {
             const ov = document.getElementById('mockStartModal');
-            const btns = [...ov.querySelectorAll('button')].map(b => ({
+            const btns = [...ov.querySelectorAll('button')].filter(b => !b.hidden && getComputedStyle(b).display !== 'none').map(b => ({
                 id: b.id,
                 text: b.textContent.trim(),
                 h: Math.round(b.getBoundingClientRect().height),
             }));
             return {
                 open: getComputedStyle(ov).display !== 'none',
+                step: ov.dataset.step,
                 role: ov.getAttribute('role'),
                 ariaModal: ov.getAttribute('aria-modal'),
                 title: document.getElementById('mockStartTitle').textContent.trim(),
@@ -74,11 +75,11 @@ with sync_playwright() as p:
             };
         }"""
     )
-    assert modal_en["open"] and modal_en["role"] == "dialog" and modal_en["ariaModal"] == "true", modal_en
+    assert modal_en["open"] and modal_en["step"] == "1" and modal_en["role"] == "dialog" and modal_en["ariaModal"] == "true", modal_en
     assert "Reading & Use of English" in modal_en["title"], modal_en
     assert "75" in modal_en["body"], modal_en
-    assert modal_en["focusedId"] == "mockStartGoBtn", modal_en
-    assert all(b["h"] >= 44 for b in modal_en["btns"]), f"Button < 44px: {modal_en['btns']}"
+    assert modal_en["focusedId"] == "mockStartNextMatBtn", modal_en
+    assert all(b["h"] >= 48 for b in modal_en["btns"]), f"Button < 48px: {modal_en['btns']}"
     assert modal_en["overflow"] <= 1, f"Modal 390 light overflow: {modal_en}"
     assert not INLINE_HANDLER_RE.search(modal_en["html"]), "Inline handler in #mockStartModal"
 
@@ -93,13 +94,11 @@ with sync_playwright() as p:
     assert pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
 
-    # Focus trap: Tab cycles inside modal
-    pg.keyboard.press("Tab")
-    assert pg.evaluate("document.activeElement.id") == "mockStartMatBtn"
+    # Focus trap in step 1: Tab cycles between NextMat and Cancel
     pg.keyboard.press("Tab")
     assert pg.evaluate("document.activeElement.id") == "mockStartCancelBtn"
     pg.keyboard.press("Tab")
-    assert pg.evaluate("document.activeElement.id") == "mockStartGoBtn"
+    assert pg.evaluate("document.activeElement.id") == "mockStartNextMatBtn"
 
     # Escape closes modal without starting timer
     pg.keyboard.press("Escape")
@@ -117,14 +116,12 @@ with sync_playwright() as p:
         """() => ({
             title: document.getElementById('mockStartTitle').textContent.trim(),
             body: document.getElementById('mockStartBody').textContent.trim(),
-            goText: document.getElementById('mockStartGoBtn').textContent.trim(),
-            matText: document.getElementById('mockStartMatBtn').textContent.trim(),
+            nextText: document.getElementById('mockStartNextMatBtn').textContent.trim(),
             cancelText: document.getElementById('mockStartCancelBtn').textContent.trim(),
         })"""
     )
-    assert "80" in modal_es["body"] and "Writing" in modal_es["body"], modal_es
-    assert modal_es["goText"] == "Empezar contador", modal_es
-    assert modal_es["matText"] == "Abrir materiales", modal_es
+    assert "Writing" in modal_es["title"] and "80" in modal_es["body"], modal_es
+    assert "Continuar a los materiales" in modal_es["nextText"], modal_es
     assert modal_es["cancelText"] == "Cancelar", modal_es
     pg.click("#mockStartCancelBtn")
     pg.wait_for_timeout(150)
@@ -134,26 +131,30 @@ with sync_playwright() as p:
     pg.wait_for_timeout(150)
     out["2_cancel_es"] = modal_es
 
-    # 3. "Open materials" opens Library filtered to paper and scope='full', timer not started
+    # 3. Step 2 shows real materials inside the wizard without leaving #v-exam and without starting timer
     pg.click("#examSelectGrid .exam-card[data-paper='l']")
     pg.wait_for_timeout(150)
-    pg.click("#mockStartMatBtn")
-    pg.wait_for_timeout(250)
-    lib_after_mat = pg.evaluate(
+    pg.click("#mockStartNextMatBtn")
+    pg.wait_for_timeout(200)
+    step2_mat = pg.evaluate(
         """() => ({
             view: (document.querySelector('.view.active') || {}).id || '',
-            paper: EXLIB_PRACTICE_STATE.paper,
-            scope: EXLIB_PRACTICE_STATE.scope,
+            step: document.getElementById('mockStartModal').dataset.step,
+            links: document.querySelectorAll('#mockStartMaterials a[target="_blank"]').length,
             timerRunning: !!exIv,
         })"""
     )
-    assert lib_after_mat == {"view": "v-practice", "paper": "l", "scope": "full", "timerRunning": False}, lib_after_mat
-    out["3_open_materials"] = lib_after_mat
+    assert step2_mat["view"] == "v-exam" and step2_mat["step"] == "2" and step2_mat["links"] >= 3 and not step2_mat["timerRunning"], step2_mat
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(150)
+    out["3_step2_materials"] = step2_mat
 
-    # 4. "Start timer" closes modal and starts countdown once
-    pg.click("nav button[data-view='exam']")
-    pg.wait_for_timeout(200)
+    # 4. Walking 1 -> 2 -> 3 -> "Start timer" closes modal and starts countdown once
     pg.click("#examSelectGrid .exam-card[data-paper='rue']")
+    pg.wait_for_timeout(150)
+    pg.click("#mockStartNextMatBtn")
+    pg.wait_for_timeout(150)
+    pg.click("#mockStartHaveMatBtn")
     pg.wait_for_timeout(150)
     pg.click("#mockStartGoBtn")
     pg.wait_for_timeout(2100)
@@ -168,26 +169,24 @@ with sync_playwright() as p:
     pg.evaluate("exPause()")
     out["4_start_timer"] = started
 
-    # 5. Full mock pre-flight also passes through modal; advancing paper auto-starts without modal
+    # 5. Full mock passes through wizard 1 -> 2 -> 3; advancing paper auto-starts without modal
     pg.click("button[data-action='startFullMock']")
     pg.wait_for_timeout(200)
-    pg.click("#fmStartSeqBtn")
-    pg.wait_for_timeout(150)
     fm_modal = pg.evaluate(
         """() => ({
             open: getComputedStyle(document.getElementById('mockStartModal')).display !== 'none',
+            step: document.getElementById('mockStartModal').dataset.step,
             body: document.getElementById('mockStartBody').textContent.trim(),
             running: exIv !== null,
             fullActive: FULL_MOCK.active,
         })"""
     )
-    assert fm_modal["open"] and not fm_modal["running"] and fm_modal["fullActive"], fm_modal
+    assert fm_modal["open"] and fm_modal["step"] == "1" and not fm_modal["running"] and fm_modal["fullActive"], fm_modal
     assert "195" in fm_modal["body"] and "14" in fm_modal["body"], fm_modal
-    # In full mock modal, "Open materials" keeps user on #v-exam with #fmMaterialsAll visible and timer off
-    pg.click("#mockStartMatBtn")
-    pg.wait_for_timeout(200)
+    pg.click("#mockStartNextMatBtn")
+    pg.wait_for_timeout(150)
     assert pg.evaluate("(document.querySelector('.view.active')||{}).id === 'v-exam' && !document.getElementById('fullMockPreflight').hidden && exIv === null")
-    pg.click("#fmStartSeqBtn")
+    pg.click("#mockStartHaveMatBtn")
     pg.wait_for_timeout(150)
     pg.click("#mockStartGoBtn")
     pg.wait_for_timeout(200)

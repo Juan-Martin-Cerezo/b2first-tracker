@@ -133,9 +133,9 @@ with sync_playwright() as p:
         f"#exPaper should stay hidden in DOM: {redundancies}"
     )
     assert [c["paper"] for c in redundancies["cardMatBtns"]] == ["rue", "w", "l", "sp"], redundancies
-    assert all(c["matBtns"] == 1 for c in redundancies["cardMatBtns"]), redundancies
-    assert redundancies["allOpenMatInExam"] == 4, (
-        f"Expected exactly 4 Open materials buttons in #v-exam (one per paper card), got {redundancies['allOpenMatInExam']}"
+    assert all(c["matBtns"] == 0 for c in redundancies["cardMatBtns"]), redundancies
+    assert redundancies["allOpenMatInExam"] == 0, (
+        f"Expected 0 Open materials buttons in #v-exam (materials live in guided wizard/panel), got {redundancies['allOpenMatInExam']}"
     )
     assert not INLINE_HANDLER_RE.search(redundancies["html"]), "Inline on* handler found in #v-exam"
     out["2_redundancies_removed"] = {
@@ -143,12 +143,15 @@ with sync_playwright() as p:
         "exActiveLibBtn": False,
         "exGuideBtns": 0,
         "exPaperVisible": False,
-        "cardMatBtns": 4,
+        "cardMatBtns": 0,
     }
 
-    # --- 1. Open full mock: 4 samples, "tené todo a mano", 4 material blocks, switching sample updates hrefs ---
+    # --- 1. Open full mock: wizard opens on step 1 with preflight behind; closing wizard exposes all 4 samples & materials ---
     pg.click("button[data-action='startFullMock']")
-    pg.wait_for_timeout(300)
+    pg.wait_for_timeout(250)
+    assert pg.evaluate("getComputedStyle(document.getElementById('mockStartModal')).display !== 'none' && document.getElementById('mockStartModal').dataset.step === '1'")
+    pg.click("#mockStartCancelBtn")
+    pg.wait_for_timeout(200)
 
     fm_s1 = pg.evaluate(
         """() => {
@@ -260,36 +263,44 @@ with sync_playwright() as p:
     pg.wait_for_timeout(120)
     out["1_preflight_materials"] = {"samples": [s["id"] for s in fm_s1["samples"]], "s2_listening_audios": len(s2_l_audios)}
 
-    # --- 3. Start opens modal; "Abrir materiales" closes modal, keeps panel visible, timer NOT started, stays in #v-exam ---
+    # --- 3. Start opens guided wizard step 1; step 2 keeps panel visible & highlighted, timer NOT started, stays in #v-exam ---
     pg.click("#fmStartSeqBtn")
     pg.wait_for_timeout(150)
-    assert pg.evaluate("getComputedStyle(document.getElementById('mockStartModal')).display !== 'none'"), "Modal did not open"
+    assert pg.evaluate("getComputedStyle(document.getElementById('mockStartModal')).display !== 'none' && document.getElementById('mockStartModal').dataset.step === '1'"), "Modal did not open on step 1"
     t_before = pg.inner_text("#exTimer")
-    pg.click("#mockStartMatBtn")
+    pg.click("#mockStartNextMatBtn")
     pg.wait_for_timeout(2100)
     after_mat = pg.evaluate(
         """() => ({
             modalOpen: getComputedStyle(document.getElementById('mockStartModal')).display !== 'none',
+            step: document.getElementById('mockStartModal').dataset.step,
             view: (document.querySelector('.view.active') || {}).id || '',
             preflightVisible: !document.getElementById('fullMockPreflight').hidden,
             materialsVisible: document.getElementById('fmMaterialsAll').getBoundingClientRect().height > 0,
+            modalLinks: document.querySelectorAll('#mockStartMaterials a[target="_blank"]').length,
             timerRunning: exIv !== null,
             timerText: document.getElementById('exTimer').textContent,
         })"""
     )
-    assert not after_mat["modalOpen"], after_mat
-    assert after_mat["view"] == "v-exam", f"Left #v-exam on Open materials: {after_mat}"
+    assert after_mat["modalOpen"] and after_mat["step"] == "2" and after_mat["modalLinks"] >= 3, after_mat
+    assert after_mat["view"] == "v-exam", f"Left #v-exam on materials step: {after_mat}"
     assert after_mat["preflightVisible"] and after_mat["materialsVisible"], after_mat
     assert not after_mat["timerRunning"] and after_mat["timerText"] == t_before, (
-        f"Timer changed after Open materials: {t_before} -> {after_mat}"
+        f"Timer changed in step 2: {t_before} -> {after_mat}"
     )
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(150)
     out["3_modal_open_materials_stays"] = after_mat
 
-    # --- 4. "Empezar contador" starts timer in #fmRunner, hides #exActive, does NOT scroll ---
+    # --- 4. Walking 1 -> 2 -> 3 -> "Empezar contador" starts timer in #fmRunner, hides #exActive, does NOT scroll ---
     pg.evaluate("const el=document.getElementById('fullMockPreflight'); window.scrollTo(0, Math.max(0, el.getBoundingClientRect().top + window.scrollY - 60));")
     pg.wait_for_timeout(150)
     scroll_before = pg.evaluate("Math.round(window.scrollY)")
     pg.click("#fmStartSeqBtn")
+    pg.wait_for_timeout(150)
+    pg.click("#mockStartNextMatBtn")
+    pg.wait_for_timeout(150)
+    pg.click("#mockStartHaveMatBtn")
     pg.wait_for_timeout(150)
     pg.click("#mockStartGoBtn")
     pg.wait_for_timeout(1200)

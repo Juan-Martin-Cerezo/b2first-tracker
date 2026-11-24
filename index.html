@@ -2866,25 +2866,64 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .session-online-wrap{display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;margin:0 0 var(--s3)}
 .session-online-wrap[hidden]{display:none}
 .session-online-cta{min-height:44px;text-decoration:none}
-.exam-card-mat-btn{
-  appearance:none;background:none;border:0;padding:6px 0 0;margin:var(--s1) 0 0;
-  min-height:44px;display:inline-flex;align-items:center;gap:4px;align-self:flex-start;
-  font-family:var(--font);font-size:var(--t-meta);font-weight:600;color:var(--acc-text);
-  text-decoration:underline;text-underline-offset:3px;cursor:pointer;
-}
-.exam-card-mat-btn:hover{color:var(--txt)}
-.exam-card-mat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
 .ex-guide-pace{margin:0;font-size:var(--t-body);line-height:1.5;color:var(--txt)}
 #exActive[hidden]{display:none}
-.mock-start-card{max-width:460px;width:100%;box-sizing:border-box}
+.ex-paper-materials{
+  margin:0 0 var(--s3);padding:var(--s3);text-align:left;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  display:flex;flex-direction:column;gap:var(--s2);min-width:0;
+  transition:border-color 150ms ease,box-shadow 150ms ease;
+}
+.ex-paper-materials[hidden]{display:none}
+.ex-paper-mat-head{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:wrap}
+.ex-paper-mat-hint{font-size:var(--t-meta);color:var(--acc-text);font-weight:600}
+.ex-paper-mat-hint[hidden]{display:none}
+.is-guided-highlight{
+  border-color:var(--acc) !important;
+  box-shadow:0 0 0 3px var(--acc-soft);
+}
+body.mock-guided-step2 #fmMaterialsGrid,
+body.mock-guided-step2 #exPaperMatList{display:none !important}
+body.mock-guided-step2 #fmMatStepNote,
+body.mock-guided-step2 #exPaperMatStepNote{display:inline !important}
+.mock-start-card{max-width:520px;width:100%;box-sizing:border-box}
+.mock-guided-progress{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin:0 0 var(--s3);font-size:var(--t-meta);
+}
+.mock-guided-pill{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px;
+  border-radius:999px;border:1px solid var(--line);background:var(--surface-2);
+  color:var(--txt-2);font-weight:600;line-height:1.2;
+}
+.mock-guided-pill.is-active{
+  background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text);
+}
+.mock-guided-pill.is-done{
+  background:var(--ok-soft);border-color:var(--ok-border);color:var(--ok-text);
+}
+.mock-guided-num{
+  width:18px;height:18px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;background:var(--surface);border:1px solid currentColor;
+  font-variant-numeric:tabular-nums;
+}
+.mock-guided-sep{color:var(--txt-2);font-weight:700}
 .mock-start-title{font-size:var(--t-title);font-weight:600;color:var(--txt);margin:0}
-.mock-start-body{margin:var(--s3) 0 0;font-size:var(--t-body);line-height:1.55;color:var(--txt-2)}
+.mock-start-body{margin:var(--s2) 0 0;font-size:var(--t-body);line-height:1.55;color:var(--txt-2)}
 .mock-start-body strong{color:var(--txt)}
+.mock-start-materials{
+  margin-top:var(--s3);max-height:45vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;gap:var(--s2);padding-right:2px;min-width:0;
+}
+.mock-start-materials[hidden]{display:none}
 .mock-start-actions{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s4)}
-.mock-start-actions .btn{min-height:44px;flex:1 1 auto}
-@media (max-width:480px){
+.mock-start-actions .btn{min-height:48px;flex:1 1 auto;justify-content:center;text-align:center}
+.mock-start-actions .btn[hidden]{display:none}
+@media (max-width:600px){
+  #mockStartModal{padding:12px}
+  .mock-start-card{padding:18px;max-width:100%}
   .mock-start-actions{flex-direction:column;align-items:stretch}
-  .mock-start-actions .btn{width:100%}
+  .mock-start-actions .btn{width:100%;min-height:48px}
 }
 .fm-preflight{margin-bottom:var(--s5);border:1px solid var(--acc-border);scroll-margin-top:64px}
 .fm-preflight[hidden]{display:none}
@@ -4154,17 +4193,31 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   </div>
 </div>
 
-<!-- ============ MOCK START CONFIRMATION MODAL ============
-     Shown before starting any timed mock (single paper or full mock).
-     Timer never starts automatically; user can open materials, start the
-     countdown explicitly, or cancel with Escape / Cancel. -->
-<div id="mockStartModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="mockStartTitle" aria-describedby="mockStartBody" data-action="closeMockStartIfSelf">
+<!-- ============ MOCK START GUIDED WIZARD MODAL ============
+     3-step guided flow (1: Explanation -> 2: Materials -> 3: Timer) for
+     both single-paper mocks and full mock. Timer never starts in steps 1-2. -->
+<div id="mockStartModal" class="overlay modal-top" style="display:none" role="dialog" aria-modal="true" aria-labelledby="mockStartTitle" aria-describedby="mockStartBody" data-step="1" data-action="closeMockStartIfSelf">
   <div class="auth-card mock-start-card">
+    <div class="mock-guided-progress" id="mockGuidedProgress" aria-label="Mock setup progress" data-i18n-aria-label="mock_guided_progress_aria">
+      <span class="mock-guided-pill" data-guided-pill="materials">
+        <span class="mock-guided-num" aria-hidden="true">1</span>
+        <span data-i18n="mock_guided_step_materials">Materials</span>
+      </span>
+      <span class="mock-guided-sep" aria-hidden="true">·</span>
+      <span class="mock-guided-pill" data-guided-pill="timer">
+        <span class="mock-guided-num" aria-hidden="true">2</span>
+        <span data-i18n="mock_guided_step_timer">Timer</span>
+      </span>
+    </div>
     <h3 id="mockStartTitle" class="mock-start-title"></h3>
     <p class="sub mock-start-body" id="mockStartBody"></p>
-    <div class="mock-start-actions">
-      <button type="button" class="btn ok" id="mockStartGoBtn" data-action="confirmMockStart" data-i18n="mock_start_go">Start timer</button>
-      <button type="button" class="btn gray" id="mockStartMatBtn" data-action="openMockStartMaterials" data-i18n="exam_open_materials">Open materials</button>
+    <div id="mockStartMaterials" class="mock-start-materials" hidden></div>
+    <div class="mock-start-actions" id="mockStartActions">
+      <button type="button" class="btn ok mock-start-primary" id="mockStartNextMatBtn" data-action="mockGuidedToMaterials" data-i18n="mock_guided_to_materials">Continue to materials →</button>
+      <button type="button" class="btn ok mock-start-primary" id="mockStartHaveMatBtn" data-action="mockGuidedToTimer" data-i18n="mock_guided_have_materials" hidden>I have the material →</button>
+      <button type="button" class="btn gray" id="mockStartBack1Btn" data-action="mockGuidedBackToExplain" data-i18n="mock_guided_back" hidden>← Back</button>
+      <button type="button" class="btn ok mock-start-primary" id="mockStartGoBtn" data-action="confirmMockStart" data-i18n="mock_start_go" hidden>Start timer</button>
+      <button type="button" class="btn gray" id="mockStartBack2Btn" data-action="mockGuidedBackToMaterials" data-i18n="mock_guided_back_materials" hidden>← Materials</button>
       <button type="button" class="btn gray" id="mockStartCancelBtn" data-action="closeMockStartModal" data-i18n="common_cancel">Cancel</button>
     </div>
   </div>
@@ -5471,7 +5524,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               </div>
               <h3 class="exam-card-title">Reading &amp; Use of English</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_rue">7 parts. Tests your reading comprehension and grammar proficiency.</p>
-              <button type="button" class="exam-card-mat-btn" data-paper="rue" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="w" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
@@ -5480,7 +5532,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               </div>
               <h3 class="exam-card-title">Writing</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_w">2 parts. Essay and a choice of article, email, letter, report or review.</p>
-              <button type="button" class="exam-card-mat-btn" data-paper="w" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="l" data-action="startRealMock" data-keydown="activate">
               <div class="exam-card-top">
@@ -5489,7 +5540,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               </div>
               <h3 class="exam-card-title">Listening</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_l">4 parts. Tests ability to follow and understand spoken English.</p>
-              <button type="button" class="exam-card-mat-btn" data-paper="l" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
             <div class="exam-card" role="button" tabindex="0" data-paper="sp" data-action="openSpeakingExam" data-keydown="activate">
               <div class="exam-card-top">
@@ -5498,7 +5548,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               </div>
               <h3 class="exam-card-title">Speaking</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
-              <button type="button" class="exam-card-mat-btn" data-paper="sp" data-action="openFullPaperLibrary" data-i18n="exam_open_materials">Open materials</button>
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
@@ -5558,7 +5607,10 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
             <div class="fm-materials-wrap">
               <div class="fm-materials-panel" id="fmMaterialsAll">
                 <div class="fm-materials-head">
-                  <div class="fm-block-title" data-i18n="fm_materials_title">All exercises, at hand</div>
+                  <div class="ex-paper-mat-head">
+                    <div class="fm-block-title" data-i18n="fm_materials_title">All exercises, at hand</div>
+                    <span class="ex-paper-mat-hint" id="fmMatStepNote" data-i18n="mock_guided_bg_note" hidden>Open in the wizard above</span>
+                  </div>
                 </div>
                 <div class="fm-materials-grid" id="fmMaterialsGrid"></div>
               </div>
@@ -5612,6 +5664,13 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               <button class="btn" data-action="exStart" data-i18n="common_start">▶ Start</button>
               <button class="btn gray" data-action="exPause">⏸ <span data-i18n="exam_pause">Pause</span></button>
               <button class="btn gray" data-action="exResetUser">↺ <span data-i18n="exam_reset">Reset</span></button>
+            </div>
+            <div id="exPaperMaterials" class="ex-paper-materials" hidden>
+              <div class="ex-paper-mat-head">
+                <div class="fm-block-title" id="exPaperMatTitle" data-i18n="mock_paper_mat_title">Materials for this paper</div>
+                <span class="ex-paper-mat-hint" id="exPaperMatStepNote" data-i18n="mock_guided_bg_note" hidden>Open in the wizard above</span>
+              </div>
+              <div class="fm-mat-links ex-paper-mat-list" id="exPaperMatList"></div>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--r-ctl);padding:var(--s4);text-align:left">
@@ -7329,11 +7388,27 @@ const I18N={
     practice_res_online:'{n} online',
     practice_res_total_one:'1 resource',
     practice_res_total_many:'{n} resources',
-    exam_open_materials:'Open materials',
     mock_start_go:'Start timer',
     mock_start_full_title:'Full mock',
-    mock_start_full_body:'Full mock · 195 written minutes + 14 min Speaking, in official order.',
-    mock_start_paper_body:'You are about to do a <strong>{paper}</strong> mock · {mins} minutes. Open the materials and start the timer when you are ready.',
+    mock_start_full_body:'195′ written in order + 14′ Speaking (R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′). Open the materials first, then move on to the timer.',
+    mock_start_paper_body:'{mins} minutes. Below you have the paper, answer key and audio. Once the material is open, you move on to the timer.',
+    mock_guided_progress_aria:'Mock setup progress',
+    mock_guided_step_materials:'Materials',
+    mock_guided_step_timer:'Timer',
+    mock_guided_to_materials:'Continue to materials →',
+    mock_guided_mat_body:'Open the paper. The answer key and audio stay right here.',
+    mock_guided_have_materials:'I have the material →',
+    mock_guided_back:'← Back',
+    mock_guided_ready_title:'Ready to start',
+    mock_guided_ready_paper_body:'<strong>{paper}</strong> · {mins} minutes. The timer starts when you tap Start.',
+    mock_guided_ready_full_body:'<strong>Full mock</strong> · 195′ written + 14′ Speaking. The timer starts when you tap Start.',
+    mock_guided_back_materials:'← Materials',
+    mock_guided_bg_note:'Open in the wizard above',
+    mock_paper_mat_title:'Materials for this paper',
+    fm_mat_answer_sheet:'Answer sheet (printable)',
+    fm_mat_writing_checklist:'Writing checklist',
+    fm_mat_type_sheet:'Sheet',
+    fm_mat_type_online:'Online',
     ex_guide_pace_rue:'Time distribution: Parts 1–4 (Use of English) ~40–45 min · Parts 5–7 (Reading) ~30–35 min. 52 questions.',
     ex_guide_pace_w:'Exam strategy: Part 1 Essay (5′ plan + 35′ write) → Part 2 of your choice (5′ + 30′) → 5′ review. 140–190 words per text.',
     ex_guide_pace_l:'Pace: 30 questions, ~40 min with preview reading. Never pause the audio.',
@@ -8478,11 +8553,27 @@ const I18N={
     practice_res_online:'{n} online',
     practice_res_total_one:'1 recurso',
     practice_res_total_many:'{n} recursos',
-    exam_open_materials:'Abrir materiales',
     mock_start_go:'Empezar contador',
     mock_start_full_title:'Full mock',
-    mock_start_full_body:'Full mock · 195 minutos escritos + 14 de Speaking, en orden oficial.',
-    mock_start_paper_body:'Vas a hacer un mock de <strong>{paper}</strong> · {mins} minutos. Abrí el material y arrancá el contador cuando estés listo.',
+    mock_start_full_body:'195′ escritos en orden + 14′ Speaking (R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′). Primero abrís los materiales y después pasás al timer.',
+    mock_start_paper_body:'{mins} minutos. Abajo tenés el paper, la key y el audio. Cuando el material esté abierto, pasás al timer.',
+    mock_guided_progress_aria:'Progreso del simulacro',
+    mock_guided_step_materials:'Materiales',
+    mock_guided_step_timer:'Timer',
+    mock_guided_to_materials:'Continuar a los materiales →',
+    mock_guided_mat_body:'Abrí el paper. La key y el audio quedan acá.',
+    mock_guided_have_materials:'Ya tengo el material →',
+    mock_guided_back:'← Volver',
+    mock_guided_ready_title:'Listo para empezar',
+    mock_guided_ready_paper_body:'<strong>{paper}</strong> · {mins} minutos. El contador arranca cuando toques Empezar.',
+    mock_guided_ready_full_body:'<strong>Full mock</strong> · 195′ escritos + 14′ Speaking. El contador arranca cuando toques Empezar.',
+    mock_guided_back_materials:'← Materiales',
+    mock_guided_bg_note:'Abiertos en el asistente',
+    mock_paper_mat_title:'Materiales de este paper',
+    fm_mat_answer_sheet:'Hoja de respuestas (imprimible)',
+    fm_mat_writing_checklist:'Checklist de Writing',
+    fm_mat_type_sheet:'Hoja',
+    fm_mat_type_online:'Online',
     ex_guide_pace_rue:'Distribución de tiempo: Partes 1–4 (Use of English) ~40–45 min · Partes 5–7 (Reading) ~30–35 min. 52 preguntas.',
     ex_guide_pace_w:'Estrategia de examen: Parte 1 Essay (5′ plan + 35′ redacción) → Parte 2 a elección (5′ + 30′) → 5′ revisión. 140–190 palabras por texto.',
     ex_guide_pace_l:'Ritmo: 30 preguntas, ~40 min con lectura previa. No pauses el audio.',
@@ -8598,6 +8689,8 @@ function applyI18n(){
   if(typeof syncAccountSheet==='function')syncAccountSheet();
   if(typeof renderOwnMaterialUI==='function')renderOwnMaterialUI();
   if(typeof renderSessionCoach==='function')renderSessionCoach();
+  if(typeof renderPaperMaterialsPanel==='function')renderPaperMaterialsPanel();
+  if(typeof renderMockStartStep==='function'&&typeof MOCK_START_STATE==='object'&&MOCK_START_STATE.open)renderMockStartStep();
   if(typeof updateIaLoadingProgress==='function'&&IA_STATE==='loading')updateIaLoadingProgress();
 }
 function setLang(code){
@@ -19753,7 +19846,9 @@ const FM_MAT_TYPE_KEYS={
   key:'fm_mat_type_key',
   audio:'fm_mat_type_audio',
   tapescript:'fm_mat_type_tapescript',
-  notes:'fm_mat_type_notes'
+  notes:'fm_mat_type_notes',
+  sheet:'fm_mat_type_sheet',
+  online:'fm_mat_type_online'
 };
 const FULL_MOCK_SAMPLES=[
   {id:'s1',labelKey:'fm_sample_s1',papers:{
@@ -19871,6 +19966,92 @@ function fullMockActiveSample(){
   const avail=availableFullMockSamples();
   return avail.find(s=>s.id===FULL_MOCK.sample)||avail[0]||null;
 }
+function fullMockMaterialsFor(paper){
+  const sample=fullMockActiveSample();
+  if(paper==='full'||paper==='all'){
+    const seq=[
+      {id:'rue',num:1,title:'Reading & Use of English',dur:'75′'},
+      {id:'w',num:2,title:'Writing',dur:'80′'},
+      {id:'l',num:3,title:'Listening',dur:'40′'},
+      {id:'sp',num:4,title:'Speaking',dur:'14′'}
+    ];
+    const groups=seq.map(p=>({
+      paper:p.id,
+      num:p.num,
+      title:p.title,
+      dur:p.dur,
+      items:fmSampleItemsForPaper(sample,p.id)
+    }));
+    if(!groups.some(g=>g.items.length>0)){
+      const online=fullMockOnlineSources().slice(0,4).map(s=>({
+        label:s.n,
+        href:s.url,
+        type:'online',
+        typeLabel:t('fm_mat_type_online'),
+        external:true
+      }));
+      return [{paper:'full',num:0,title:t('mock_start_full_title'),dur:'195′ + 14′',items:online}];
+    }
+    return groups;
+  }
+  const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp')?paper:'rue';
+  const items=[];
+  const seen=new Set();
+  const pushItem=(it)=>{
+    if(!it||!it.href||seen.has(it.href))return;
+    seen.add(it.href);
+    items.push(it);
+  };
+  fmSampleItemsForPaper(sample,p).forEach(pushItem);
+  const extras={
+    rue:[{labelKey:'fm_mat_answer_sheet',mat:'ansRue',type:'sheet'}],
+    w:[
+      {labelKey:'fm_mat_answer_sheet',mat:'ansW',type:'sheet'},
+      {labelKey:'fm_mat_writing_checklist',mat:'wCheck',type:'notes'}
+    ],
+    l:[{labelKey:'fm_mat_answer_sheet',mat:'ansL',type:'sheet'}],
+    sp:[]
+  };
+  (extras[p]||[]).forEach(ex=>{
+    if(MAT[ex.mat]){
+      pushItem({
+        label:t(ex.labelKey),
+        href:MAT[ex.mat],
+        type:ex.type,
+        typeLabel:t(FM_MAT_TYPE_KEYS[ex.type]||'fm_mat_type_notes')
+      });
+    }
+  });
+  if(items.length<3&&typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES)){
+    PRACTICE_SOURCES.filter(s=>s&&s.skill===p&&/^https?:\/\//.test(s.url)).forEach(s=>{
+      if(items.length>=4)return;
+      pushItem({
+        label:s.n,
+        href:s.url,
+        type:'online',
+        typeLabel:t('fm_mat_type_online'),
+        external:true
+      });
+    });
+  }
+  return items;
+}
+function renderPaperMaterialsPanel(showPanel){
+  const panel=document.getElementById('exPaperMaterials');
+  const list=document.getElementById('exPaperMatList');
+  if(!panel||!list)return;
+  if(typeof showPanel==='boolean')panel.hidden=!showPanel;
+  const p=(exPaper==='rue'||exPaper==='w'||exPaper==='l')?exPaper:'rue';
+  const items=fullMockMaterialsFor(p);
+  list.innerHTML=items.length
+    ?items.map(it=>
+      `<a class="fm-mat-link" href="${esc(it.href)}" target="_blank" rel="${it.external?'noopener noreferrer':'noopener'}" data-fm-paper="${esc(p)}" data-fm-type="${esc(it.type)}">`+
+        `<span class="fm-mat-name">${esc(it.label)}${it.external?' ↗':''}</span>`+
+        `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
+      `</a>`
+    ).join('')
+    :`<p class="fm-mat-empty">${esc(t('fm_mat_empty'))}</p>`;
+}
 function fullMockOnlineSources(){
   if(typeof PRACTICE_SOURCES==='undefined'||!Array.isArray(PRACTICE_SOURCES))return [];
   const picked=[];
@@ -19977,20 +20158,21 @@ function renderFullMockPreflight(){
   ];
   const matGrid=document.getElementById('fmMaterialsGrid');
   if(matGrid){
-    matGrid.innerHTML=seq.map(p=>{
-      const items=fmSampleItemsForPaper(activeSample,p.id);
-      const linksHtml=items.length
-        ?`<div class="fm-mat-links">`+items.map(it=>
-            `<a class="fm-mat-link" href="${esc(it.href)}" target="_blank" rel="noopener" data-fm-paper="${p.id}" data-fm-type="${esc(it.type)}">`+
-              `<span class="fm-mat-name">${esc(it.label)}</span>`+
+    const fmGroups=fullMockMaterialsFor('full');
+    matGrid.innerHTML=fmGroups.map(g=>{
+      const linksHtml=g.items.length
+        ?`<div class="fm-mat-links">`+g.items.map(it=>
+            `<a class="fm-mat-link" href="${esc(it.href)}" target="_blank" rel="${it.external?'noopener noreferrer':'noopener'}" data-fm-paper="${esc(g.paper)}" data-fm-type="${esc(it.type)}">`+
+              `<span class="fm-mat-name">${esc(it.label)}${it.external?' ↗':''}</span>`+
               `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
             `</a>`
           ).join('')+`</div>`
         :`<p class="fm-mat-empty">${esc(t('fm_mat_empty'))}</p>`;
-      return `<div class="fm-mat-group" data-fm-mat-paper="${p.id}">`+
+      const heading=g.num?`${g.num}. ${esc(g.title)}`:esc(g.title);
+      return `<div class="fm-mat-group" data-fm-mat-paper="${esc(g.paper)}">`+
         `<div class="fm-mat-group-head">`+
-          `<h3 class="fm-mat-group-title">${p.num}. ${esc(p.title)}</h3>`+
-          `<span class="fm-mat-group-dur">${esc(p.dur)}</span>`+
+          `<h3 class="fm-mat-group-title">${heading}</h3>`+
+          `<span class="fm-mat-group-dur">${esc(g.dur)}</span>`+
         `</div>`+
         linksHtml+
       `</div>`;
@@ -20041,13 +20223,143 @@ function renderFullMockPreflight(){
   }
   syncFullMockRunner();
 }
-const MOCK_START_STATE={open:false,paper:'rue',isFull:false,prevFocus:null};
+const MOCK_START_STATE={open:false,step:1,paper:'rue',isFull:false,prevFocus:null};
 function mockStartFocusables(){
   const ov=document.getElementById('mockStartModal');
   if(!ov)return [];
   return Array.prototype.filter.call(
     ov.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])'),
-    function(el){return !el.disabled&&el.tabIndex>=0&&el.getBoundingClientRect().width>0;});
+    function(el){return !el.disabled&&!el.hidden&&el.tabIndex>=0&&el.getBoundingClientRect().width>0;});
+}
+function clearMockGuidedHighlights(){
+  document.body.classList.remove('mock-guided-step2');
+  ['fmMaterialsAll','fullMockPreflight','exPaperMaterials'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.remove('is-guided-highlight');
+  });
+}
+function renderMockStartMaterials(){
+  const box=document.getElementById('mockStartMaterials');
+  if(!box)return;
+  if(MOCK_START_STATE.isFull){
+    const groups=fullMockMaterialsFor('full');
+    box.innerHTML=groups.map(g=>{
+      const linksHtml=g.items.length
+        ?`<div class="fm-mat-links">`+g.items.map(it=>
+            `<a class="fm-mat-link mock-mat-link" href="${esc(it.href)}" target="_blank" rel="${it.external?'noopener noreferrer':'noopener'}" data-fm-paper="${esc(g.paper)}" data-fm-type="${esc(it.type)}">`+
+              `<span class="fm-mat-name">${esc(it.label)}${it.external?' ↗':''}</span>`+
+              `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
+            `</a>`
+          ).join('')+`</div>`
+        :`<p class="fm-mat-empty">${esc(t('fm_mat_empty'))}</p>`;
+      const heading=g.num?`${g.num}. ${esc(g.title)}`:esc(g.title);
+      return `<div class="fm-mat-group" data-fm-mat-paper="${esc(g.paper)}">`+
+        `<div class="fm-mat-group-head">`+
+          `<h4 class="fm-mat-group-title">${heading}</h4>`+
+          `<span class="fm-mat-group-dur">${esc(g.dur)}</span>`+
+        `</div>`+
+        linksHtml+
+      `</div>`;
+    }).join('');
+  }else{
+    const p=MOCK_START_STATE.paper;
+    const items=fullMockMaterialsFor(p);
+    box.innerHTML=items.length
+      ?`<div class="fm-mat-links">`+items.map(it=>
+          `<a class="fm-mat-link mock-mat-link" href="${esc(it.href)}" target="_blank" rel="${it.external?'noopener noreferrer':'noopener'}" data-fm-paper="${esc(p)}" data-fm-type="${esc(it.type)}">`+
+            `<span class="fm-mat-name">${esc(it.label)}${it.external?' ↗':''}</span>`+
+            `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
+          `</a>`
+        ).join('')+`</div>`
+      :`<p class="fm-mat-empty">${esc(t('fm_mat_empty'))}</p>`;
+  }
+}
+function renderMockStartStep(shouldFocus){
+  const ov=document.getElementById('mockStartModal');
+  if(!ov)return;
+  const step=MOCK_START_STATE.step||1;
+  ov.dataset.step=String(step);
+  const p=MOCK_START_STATE.paper;
+  const paperTitle=examPaperTitle(p);
+  const mins=Math.round((EX_DUR[p]||75*60)/60);
+  const titleEl=document.getElementById('mockStartTitle');
+  const bodyEl=document.getElementById('mockStartBody');
+  const matBox=document.getElementById('mockStartMaterials');
+  const nextMatBtn=document.getElementById('mockStartNextMatBtn');
+  const haveMatBtn=document.getElementById('mockStartHaveMatBtn');
+  const back1Btn=document.getElementById('mockStartBack1Btn');
+  const goBtn=document.getElementById('mockStartGoBtn');
+  const back2Btn=document.getElementById('mockStartBack2Btn');
+  const cancelBtn=document.getElementById('mockStartCancelBtn');
+  const pillMat=ov.querySelector('[data-guided-pill="materials"]');
+  const pillTimer=ov.querySelector('[data-guided-pill="timer"]');
+  if(pillMat){
+    pillMat.classList.toggle('is-active',step===2);
+    pillMat.classList.toggle('is-done',step===3);
+    if(step===2)pillMat.setAttribute('aria-current','step');
+    else pillMat.removeAttribute('aria-current');
+  }
+  if(pillTimer){
+    pillTimer.classList.toggle('is-active',step===3);
+    pillTimer.classList.remove('is-done');
+    if(step===3)pillTimer.setAttribute('aria-current','step');
+    else pillTimer.removeAttribute('aria-current');
+  }
+  if(nextMatBtn)nextMatBtn.hidden=step!==1;
+  if(haveMatBtn)haveMatBtn.hidden=step!==2;
+  if(back1Btn)back1Btn.hidden=step!==2;
+  if(goBtn)goBtn.hidden=step!==3;
+  if(back2Btn)back2Btn.hidden=step!==3;
+  if(cancelBtn)cancelBtn.hidden=step===2;
+  if(step===1){
+    clearMockGuidedHighlights();
+    if(titleEl)titleEl.textContent=MOCK_START_STATE.isFull?t('mock_start_full_title'):paperTitle;
+    if(bodyEl){
+      if(MOCK_START_STATE.isFull)bodyEl.textContent=t('mock_start_full_body');
+      else bodyEl.textContent=t('mock_start_paper_body',{paper:paperTitle,mins:String(mins)});
+    }
+    if(matBox){matBox.hidden=true;matBox.innerHTML='';}
+    if(shouldFocus&&nextMatBtn&&typeof nextMatBtn.focus==='function')nextMatBtn.focus();
+  }else if(step===2){
+    if(titleEl)titleEl.textContent=MOCK_START_STATE.isFull?t('mock_start_full_title'):paperTitle;
+    if(bodyEl)bodyEl.textContent=t('mock_guided_mat_body');
+    if(MOCK_START_STATE.isFull){
+      FULL_MOCK.preflightOpen=true;
+      renderFullMockPreflight();
+      const fmPanel=document.getElementById('fmMaterialsAll');
+      const fmBox=document.getElementById('fullMockPreflight');
+      if(fmPanel)fmPanel.classList.add('is-guided-highlight');
+      if(fmBox&&fmBox.getBoundingClientRect){
+        const r=fmBox.getBoundingClientRect();
+        if(r.top<0||r.top>window.innerHeight*0.75){
+          window.scrollTo({top:Math.max(0,r.top+window.scrollY-60),behavior:'auto'});
+        }
+      }
+    }else{
+      renderPaperMaterialsPanel(true);
+      const pm=document.getElementById('exPaperMaterials');
+      if(pm){
+        pm.classList.add('is-guided-highlight');
+        const r=pm.getBoundingClientRect();
+        if(r.top<0||r.top>window.innerHeight*0.75){
+          window.scrollTo({top:Math.max(0,r.top+window.scrollY-80),behavior:'auto'});
+        }
+      }
+    }
+    document.body.classList.add('mock-guided-step2');
+    renderMockStartMaterials();
+    if(matBox)matBox.hidden=false;
+    if(shouldFocus&&haveMatBtn&&typeof haveMatBtn.focus==='function')haveMatBtn.focus();
+  }else{
+    clearMockGuidedHighlights();
+    if(titleEl)titleEl.textContent=t('mock_guided_ready_title');
+    if(bodyEl){
+      if(MOCK_START_STATE.isFull)bodyEl.innerHTML=t('mock_guided_ready_full_body');
+      else bodyEl.innerHTML=t('mock_guided_ready_paper_body',{paper:esc(paperTitle),mins:String(mins)});
+    }
+    if(matBox){matBox.hidden=true;matBox.innerHTML='';}
+    if(shouldFocus&&goBtn&&typeof goBtn.focus==='function')goBtn.focus();
+  }
 }
 function openMockStartModal(paper,isFull){
   const ov=document.getElementById('mockStartModal');
@@ -20055,29 +20367,41 @@ function openMockStartModal(paper,isFull){
   const p=(paper==='rue'||paper==='w'||paper==='l')?paper:'rue';
   MOCK_START_STATE.paper=p;
   MOCK_START_STATE.isFull=!!isFull;
+  MOCK_START_STATE.step=1;
   MOCK_START_STATE.open=true;
   MOCK_START_STATE.prevFocus=document.activeElement;
-  const titleEl=document.getElementById('mockStartTitle');
-  const bodyEl=document.getElementById('mockStartBody');
-  if(MOCK_START_STATE.isFull){
-    if(titleEl)titleEl.textContent=t('mock_start_full_title');
-    if(bodyEl)bodyEl.textContent=t('mock_start_full_body');
-  }else{
-    const paperTitle=examPaperTitle(p);
-    const mins=Math.round((EX_DUR[p]||75*60)/60);
-    if(titleEl)titleEl.textContent=paperTitle;
-    if(bodyEl)bodyEl.innerHTML=t('mock_start_paper_body',{paper:esc(paperTitle),mins:String(mins)});
-  }
+  if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
   ov.style.display='flex';
-  const goBtn=document.getElementById('mockStartGoBtn');
-  if(goBtn&&typeof goBtn.focus==='function')goBtn.focus();
+  renderMockStartStep(true);
+}
+function mockGuidedToMaterials(){
+  if(!MOCK_START_STATE.open)return;
+  MOCK_START_STATE.step=2;
+  renderMockStartStep(true);
+}
+function mockGuidedBackToExplain(){
+  if(!MOCK_START_STATE.open)return;
+  MOCK_START_STATE.step=1;
+  renderMockStartStep(true);
+}
+function mockGuidedToTimer(){
+  if(!MOCK_START_STATE.open)return;
+  MOCK_START_STATE.step=3;
+  renderMockStartStep(true);
+}
+function mockGuidedBackToMaterials(){
+  if(!MOCK_START_STATE.open)return;
+  MOCK_START_STATE.step=2;
+  renderMockStartStep(true);
 }
 function closeMockStartModal(keepActive){
   const ov=document.getElementById('mockStartModal');
   if(ov)ov.style.display='none';
+  clearMockGuidedHighlights();
   const wasFull=MOCK_START_STATE.isFull;
   const prev=MOCK_START_STATE.prevFocus;
   MOCK_START_STATE.open=false;
+  MOCK_START_STATE.step=1;
   MOCK_START_STATE.prevFocus=null;
   if(!keepActive&&wasFull&&!exIv){
     FULL_MOCK.active=false;
@@ -20097,6 +20421,7 @@ function confirmMockStart(){
     FULL_MOCK.finished=false;
     FULL_MOCK.preflightOpen=true;
     FULL_MOCK.skipConfirmOpen=false;
+    FULL_MOCK.idx=0;
     renderFullMockPreflight();
     if(!exIv)exStart();
     return;
@@ -20105,21 +20430,11 @@ function confirmMockStart(){
     FULL_MOCK.preflightOpen=false;
     renderFullMockPreflight();
   }
+  renderPaperMaterialsPanel(true);
   syncFullMockRunner();
   if(!exIv)exStart();
   const box=document.getElementById('exActive');
   if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
-}
-function openMockStartMaterials(){
-  const isFull=MOCK_START_STATE.isFull;
-  const targetPaper=MOCK_START_STATE.paper;
-  closeMockStartModal(false);
-  if(isFull){
-    FULL_MOCK.preflightOpen=true;
-    renderFullMockPreflight();
-    return;
-  }
-  openFullPaperLibrary(targetPaper);
 }
 document.addEventListener('keydown',function(e){
   const ov=document.getElementById('mockStartModal');
@@ -20146,6 +20461,10 @@ function startRealMock(paper,keepFull,autoStart){
   if(!keepFull){
     FULL_MOCK.started=false;
     FULL_MOCK.skipConfirmOpen=false;
+    if(FULL_MOCK.preflightOpen){
+      FULL_MOCK.preflightOpen=false;
+      renderFullMockPreflight();
+    }
   }
   exPaper=paper;
   const sel=document.getElementById('exPaper');
@@ -20159,6 +20478,7 @@ function startRealMock(paper,keepFull,autoStart){
       FULL_MOCK.preflightOpen=true;
       renderFullMockPreflight();
     }else{
+      renderPaperMaterialsPanel(true);
       syncFullMockRunner();
     }
     if(!exIv)exStart();
@@ -20175,13 +20495,23 @@ function startFullMock(){
   if(currentActiveViewId()!=='exam')showView('exam');
   FULL_MOCK.preflightOpen=true;
   FULL_MOCK.finished=false;
+  FULL_MOCK.active=true;
+  FULL_MOCK.started=false;
+  FULL_MOCK.skipConfirmOpen=false;
+  FULL_MOCK.idx=0;
   if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
   if(typeof loadPlan==='function'&&!PLAN_STATE)loadPlan().then(()=>renderFullMockPreflight());
+  exPaper=FULL_MOCK.phases[0];
+  const sel=document.getElementById('exPaper');
+  if(sel)sel.value=exPaper;
+  renderEx();
+  const titleEl=document.getElementById('exActiveTitle');
+  if(titleEl)titleEl.textContent=examPaperTitle(exPaper);
   renderFullMockPreflight();
-  const box=document.getElementById('fullMockPreflight');
-  if(box)window.scrollTo({top:Math.max(0,box.getBoundingClientRect().top+window.scrollY-60),behavior:'smooth'});
+  openMockStartModal(FULL_MOCK.phases[0],true);
 }
 function closeFullMockPreflight(){
+  if(MOCK_START_STATE.open&&MOCK_START_STATE.isFull)closeMockStartModal(false);
   if(FULL_MOCK.active){
     exPause();
     FULL_MOCK.active=false;
@@ -20310,6 +20640,7 @@ function startExamFromCard(p){startRealMock(p)}
 function renderEx(){
   exPaper=document.getElementById('exPaper').value;
   exReset();
+  renderPaperMaterialsPanel();
   const g=document.getElementById('exGuide');
   const paceKey=exPaper==='rue'?'ex_guide_pace_rue':exPaper==='w'?'ex_guide_pace_w':exPaper==='l'?'ex_guide_pace_l':'ex_guide_pace_full';
   g.innerHTML=`<p class="ex-guide-pace">${esc(t(paceKey))}</p>`;
@@ -24567,7 +24898,7 @@ function loadMaterial(){
   _matLoading=true;
   fetch('/libros.json').then(r=>r.json()).then(data=>{
     _matLoading=false;
-    MATERIALS=data;buildMatIndex();renderEx();renderParts();renderGuides();renderExercisesLibrary();renderFullMockPreflight();
+    MATERIALS=data;buildMatIndex();renderEx();renderParts();renderGuides();renderExercisesLibrary();renderFullMockPreflight();if(typeof MOCK_START_STATE==='object'&&MOCK_START_STATE.open)renderMockStartStep();
   }).catch(()=>{_matLoading=false; /* local file mode: no dynamic material */ });
 }
 document.getElementById('uePart').addEventListener('change',renderGuides);
@@ -24678,7 +25009,10 @@ click:{
 'closeMockStartModal':()=>closeMockStartModal(false),
 'closeMockStartIfSelf':(el,ev)=>{if(ev.target===el)closeMockStartModal(false)},
 'confirmMockStart':()=>confirmMockStart(),
-'openMockStartMaterials':()=>openMockStartMaterials(),
+'mockGuidedToMaterials':()=>mockGuidedToMaterials(),
+'mockGuidedBackToExplain':()=>mockGuidedBackToExplain(),
+'mockGuidedToTimer':()=>mockGuidedToTimer(),
+'mockGuidedBackToMaterials':()=>mockGuidedBackToMaterials(),
 'beginFullMockSequence':()=>beginFullMockSequence(),
 'doAnotherFullMock':()=>doAnotherFullMock(),
 'selectFullMockSample':el=>selectFullMockSample(el.dataset.sample),
