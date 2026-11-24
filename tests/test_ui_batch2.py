@@ -101,9 +101,9 @@ with sync_playwright() as p:
         "() => [...document.querySelectorAll('#exGuide .chip')].filter(a => !a.closest('.listen-test')).length"
     )
     assert orphan_chips == 0, "exam mode still paints a flat chip wall"
-    gl_cards = pg.eval_on_selector_all("#gLChips .listen-test", "els => els.length")
-    assert gl_cards >= 1, "the listening studio did not render grouped cards"
-    out["2_grouped"] = {"exam": titles, "studio": gl_cards}
+    open_cnt_l = pg.evaluate("!!document.getElementById('openContentsL')")
+    assert open_cnt_l, "the listening studio did not render the Open contents button"
+    out["2_grouped"] = {"exam": titles, "studio_open_contents": open_cnt_l}
     pg.locator("#exGuide").screenshot(path=os.path.join(OUT, "exam_listening.png"))
 
     # 3. The personalized study-plan sentence is gone in both languages.
@@ -129,7 +129,7 @@ with sync_playwright() as p:
     first_row = pg.locator("#partsList .step").first
     action_buttons = first_row.locator(".step-actions button")
     labels = [action_buttons.nth(i).inner_text().strip() for i in range(action_buttons.count())]
-    assert labels == ["Start"], f"the row should have only a Start button: {labels}"
+    assert labels[0] == "Start" and len(labels) == 2, f"the row should have Start + Mark done buttons: {labels}"
     action_buttons.first.click()
     pg.wait_for_timeout(300)
     assert pg.evaluate("!document.getElementById('sessionWorkspace').hidden"), "Session workspace did not open"
@@ -169,10 +169,11 @@ with sync_playwright() as p:
     assert body.get("text") == DRAFT.strip(), "the rubric check did not send the draft"
     for key in ("text", "task", "kind", "prompt"):
         assert key in body, f"request body is missing {key}: {body}"
-    checked = pg.eval_on_selector_all("#rubList .rub", "els => els.map(e => e.checked)")
-    reasons = pg.eval_on_selector_all("#rubList .rub-reason", "els => els.map(e => e.textContent.trim())")
-    assert any(checked), "the rubric boxes were not pre-checked"
-    assert all(reasons), f"a criterion has no reason: {reasons}"
+    assert pg.eval_on_selector_all("#wPhase3 input, #wPhase3 select, #wPhase3 textarea", "els => els.length") == 0, (
+        "#wPhase3 still has manual inputs or checkboxes"
+    )
+    reasons = pg.eval_on_selector_all("#rubAiResult .w-phase3-result-item", "els => els.map(e => e.textContent.trim())")
+    assert len(reasons) == 7 and all(reasons), f"AI result missing criterion reasons: {reasons}"
     assert "16/20" in pg.inner_text("#rubAiStatus"), pg.inner_text("#rubAiStatus")
     assert pg.evaluate("D.log.length") == dlog_before, "the rubric check wrote to D.log"
     # Force the hidden session open so the screenshot shows the result.
@@ -184,7 +185,7 @@ with sync_playwright() as p:
     }""")
     pg.wait_for_timeout(300)
     pg.locator("#wPhase3").screenshot(path=os.path.join(OUT, "writing_phase3_ai.png"))
-    out["5_ai_rubric"] = {"endpoint": seen.get("url"), "checked": checked, "status": pg.inner_text("#rubAiStatus")}
+    out["5_ai_rubric"] = {"endpoint": seen.get("url"), "reasons": len(reasons), "status": pg.inner_text("#rubAiStatus")}
     pg.unroute("**/api/ai/writing")
 
     # 6. The matrix is read-only and is the only source of truth for the gates.

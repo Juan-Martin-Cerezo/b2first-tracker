@@ -962,15 +962,63 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .exlib-group-count{font-size:var(--t-meta);color:var(--txt-2);flex:none}
 .exlib-group-sub{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45;overflow-wrap:anywhere}
 .exlib-list{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
-a.exlib-row{
-  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-  width:100%;max-width:100%;min-width:0;min-height:52px;padding:10px 12px;
+.exlib-row-wrap{
+  display:flex;align-items:stretch;width:100%;max-width:100%;min-width:0;
   background:var(--surface);border:1px solid var(--line);border-radius:10px;
-  color:inherit;text-decoration:none;box-sizing:border-box;cursor:pointer;
-  transition:background-color 140ms ease,border-color 140ms ease;
+  overflow:hidden;box-sizing:border-box;
+  transition:border-color 140ms ease,opacity 140ms ease,background-color 140ms ease;
 }
-a.exlib-row:hover,a.exlib-row:focus-visible{background:var(--acc-soft);border-color:var(--acc-border);text-decoration:none}
-a.exlib-row:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.exlib-row-wrap:hover{border-color:var(--acc-border)}
+.exlib-row-wrap.is-practised{background:var(--surface-2);border-color:var(--ok-border)}
+.exlib-row-wrap.is-practised a.exlib-row{opacity:.68}
+.exlib-row-wrap.is-practised a.exlib-row:hover{opacity:1}
+a.exlib-row{
+  flex:1;display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  width:auto;max-width:100%;min-width:0;min-height:52px;padding:10px 12px;
+  background:transparent;border:0;border-radius:0;
+  color:inherit;text-decoration:none;box-sizing:border-box;cursor:pointer;
+  transition:background-color 140ms ease,opacity 140ms ease;
+}
+a.exlib-row:hover,a.exlib-row:focus-visible{background:var(--acc-soft);text-decoration:none}
+a.exlib-row:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.practised-btn{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  min-height:44px;min-width:44px;padding:8px 11px;margin:0;
+  background:transparent;border:0;border-left:1px solid var(--line);
+  font-family:var(--font);font-size:12px;font-weight:600;line-height:1.2;
+  color:var(--txt-2);cursor:pointer;white-space:nowrap;
+  transition:background-color 140ms ease,color 140ms ease;
+}
+.practised-btn:hover{background:var(--acc-soft);color:var(--acc-text)}
+.practised-btn:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.practised-btn.is-done{background:var(--ok-soft);color:var(--ok-text);border-left-color:var(--ok-border)}
+.practised-badge{
+  display:inline-flex;align-items:center;margin-left:6px;padding:1px 7px;border-radius:999px;
+  font-size:11px;font-weight:700;line-height:1.4;vertical-align:middle;
+  background:var(--ok-soft);color:var(--ok-text);border:1px solid var(--ok-border);
+}
+.step.is-practised{opacity:.78;border-color:var(--ok-border)}
+.step-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2)}
+.practised-part-btn.is-done,.practised-mock-btn.is-done{background:var(--ok-soft);color:var(--ok-text);border-color:var(--ok-border)}
+.fm-paper-row.is-practised{opacity:.82;border-color:var(--ok-border)}
+.fm-paper-btns{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2)}
+.session-open-contents{margin:10px 0;display:flex;align-items:center;gap:var(--s2)}
+.session-open-contents-btn{min-height:44px}
+.w-phase3-box{
+  display:flex;flex-direction:column;gap:var(--s3);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  padding:var(--s4);
+}
+.w-phase3-summary{margin:0;font-size:var(--t-body);color:var(--txt);line-height:1.5}
+.w-phase3-cta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3)}
+.w-phase3-ai-btn{min-height:48px;padding:0 var(--s5);font-size:var(--t-sub)}
+.w-phase3-status{font-size:var(--t-meta);font-weight:600;color:var(--txt-2);min-height:20px}
+.w-phase3-result{display:flex;flex-direction:column;gap:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.w-phase3-result[hidden]{display:none}
+.w-phase3-result-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.w-phase3-result-item{font-size:var(--t-meta);line-height:1.45;color:var(--txt)}
+.w-phase3-result-item.is-pass{color:var(--ok-text)}
+.w-phase3-result-item.is-fail{color:var(--warn-text)}
 .exlib-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
 .exlib-row-name{font-size:14px;font-weight:600;color:var(--txt);line-height:1.3;overflow-wrap:anywhere}
 a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
@@ -996,6 +1044,9 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
   .practice-tabs{display:flex;width:100%}
   .practice-tab{flex:1;min-width:0;padding:0 12px}
   .exlib-bar{align-items:flex-start}
+  .exlib-row-wrap{flex-direction:column}
+  .practised-btn{border-left:0;border-top:1px solid var(--line);width:100%;justify-content:flex-start;padding:8px 12px}
+  .practised-btn.is-done{border-left-color:transparent;border-top-color:var(--ok-border)}
 }
 
 /* ---------- LIVE STUDIO (S1: mic -> VAD -> HUD) ---------- */
@@ -1598,7 +1649,7 @@ tbody tr:hover{background:var(--surface-2)}
   align-self:start;
   gap:var(--s4);
 }
-#v-hoy #todaySession h2,#v-hoy #practiceNow h2,#v-hoy #lastSpeaking h2{
+#v-hoy #todaySession h2,#v-hoy #practiceNow h2{
   font-size:var(--t-title);
   font-weight:600;
   line-height:1.25;
@@ -1804,7 +1855,7 @@ tbody tr:hover{background:var(--surface-2)}
   background:transparent;
   border-radius:0;
 }
-#v-hoy .practice-now .sub,#v-hoy #lastSpeaking .sub{
+#v-hoy .practice-now .sub{
   font-size:var(--today-fs-meta);
   line-height:1.5;
 }
@@ -4141,7 +4192,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               </aside>
             </div>
             <div class="card practice-now" id="practiceNow" style="display:none"></div>
-            <div class="card" id="lastSpeaking" style="display:none"></div>
           </div>
 
           <!-- SESSION WORKSPACE: opens from Practice Start, Today or Plan -->
@@ -4204,22 +4254,11 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="ueTimer.start">▶ / ⏸</button>
                       </div>
                     </div>
-                    <div class="wtf-section" id="wtfSectionRue" data-wtf-skill="rue">
-                      <button type="button" class="wtf-toggle" id="wtfToggleRue" data-action="toggleWtfSection" data-wtf-skill="rue" aria-expanded="false" aria-controls="wtfPanelRue">
-                        <span class="wtf-toggle-summary" id="wtfSummaryRue">Materials</span>
-                        <span class="wtf-caret" aria-hidden="true">▾</span>
-                      </button>
-                      <div class="wtf-panel" id="wtfPanelRue" hidden>
-                        <div class="wtf-panel-lead" id="st1GuideLead">📍 <b>Where to find the paper:</b></div>
-                        <div class="wtf-list wtf-compact" id="gUeChips"></div>
-                        <div class="wtf-more-row">
-                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="rue" data-i18n="wtf_more_in_library">More in Library</button>
-                        </div>
-                      </div>
+                    <div class="session-open-contents" id="wtfSectionRue" data-wtf-skill="rue">
+                      <button type="button" class="btn sm gray session-open-contents-btn" id="openContentsRue" data-action="setSessionTab" data-session-tab="contents" data-i18n="session_open_contents">Open contents</button>
                     </div>
                     <div class="guide wtf-notes">
-                      <span id="st1GuidePace"></span><br>
-                      • <b>Official rules:</b> <a href="/files/05-Handbooks/b2-first-handbook.pdf" target="_blank">handbook.pdf</a>
+                      <span id="st1GuidePace"></span>
                     </div>
                     <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">—</b></p>
                     <div style="margin-top:12px">
@@ -4303,8 +4342,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                   <div class="phase-step" data-phase="audit" data-action="switchWritingPhase">
                     <div class="ps-num">Phase 3</div>
-                    <div class="ps-title">🔍 Rubric &amp; review</div>
-                    <div class="ps-time">20:00 · 7-point rubric + Writing corrector</div>
+                    <div class="ps-title" data-i18n="w_phase3_step_title">🔍 AI review</div>
+                    <div class="ps-time" data-i18n="w_phase3_step_sub">Check with AI</div>
                   </div>
                 </div>
 
@@ -4321,18 +4360,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="wPlan.start">▶</button>
                       </div>
                     </div>
-                    <div class="wtf-section" id="wtfSectionW" data-wtf-skill="w">
-                      <button type="button" class="wtf-toggle" id="wtfToggleW" data-action="toggleWtfSection" data-wtf-skill="w" aria-expanded="false" aria-controls="wtfPanelW">
-                        <span class="wtf-toggle-summary" id="wtfSummaryW">Materials</span>
-                        <span class="wtf-caret" aria-hidden="true">▾</span>
-                      </button>
-                      <div class="wtf-panel" id="wtfPanelW" hidden>
-                        <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_w">Where to find the paper:</b></div>
-                        <div class="wtf-list wtf-compact" id="gWChips"></div>
-                        <div class="wtf-more-row">
-                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="w" data-i18n="wtf_more_in_library">More in Library</button>
-                        </div>
-                      </div>
+                    <div class="session-open-contents" id="wtfSectionW" data-wtf-skill="w">
+                      <button type="button" class="btn sm gray session-open-contents-btn" id="openContentsW" data-action="setSessionTab" data-session-tab="contents" data-i18n="session_open_contents">Open contents</button>
                     </div>
                     <div class="guide">
                       📍 <b>Architecture Checklist:</b><br>
@@ -4393,57 +4422,22 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
                 </div>
 
-                <!-- Phase 3: Audit & Rubric (20 min) -->
+                <!-- Phase 3: AI Review -->
                 <div id="wPhase3" style="display:none">
                   <div class="task">
                     <div class="task-head">
                       <div class="task-num">3</div>
                       <div>
-                        <div class="task-title">Phase 3: Rubric &amp; review <span class="t">20 min</span></div>
-                      </div>
-                      <div class="task-meta">
-                        <button class="btn sm gray" data-action="wRev.start">▶ 20:00</button>
+                        <div class="task-title" data-i18n="w_phase3_title">Phase 3: AI Review</div>
                       </div>
                     </div>
-                    <div style="background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:4px;padding:12px;margin-bottom:12px">
-                      <b style="font-size:14px">Grade A Rubric Checklist — <span id="rubCount" style="color:var(--primary)">0/7</span></b>
-                      <div id="rubList" style="margin-top:8px">
-                        <label data-rub="0" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>4-5 paragraphs separated by a blank line<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="1" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>≥4 advanced connectors (Furthermore, Nevertheless, Consequently, As a result...)<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="2" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>1 non-defining relative clause (which/who between commas)<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="3" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>1 passive structure (It is widely believed... / Measures should be implemented...)<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="4" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>1 complex conditional or inversion (Were governments to act... / Not only... but also...)<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="5" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>Consistent register: zero informal language<span class="rub-reason t-xs"></span></span></label>
-                        <label data-rub="6" style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--on-surface);margin:4px 0;text-transform:none"><input type="checkbox" style="width:auto;margin-top:2px" class="rub"> <span>140-190 exact words<span class="rub-reason t-xs"></span></span></label>
+                    <div class="w-phase3-box">
+                      <p class="w-phase3-summary" id="wPhase3DraftSummary" data-i18n="w_phase3_summary_empty">Write your draft in Phase 2, then run the AI check when you are ready.</p>
+                      <div class="w-phase3-cta">
+                        <button class="btn ok w-phase3-ai-btn" type="button" id="rubAiBtn" data-action="checkRubricWithAI" data-i18n="rub_ai_btn">Check with AI</button>
                       </div>
-                      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">
-                        <button class="btn sm" type="button" id="rubAiBtn" data-action="checkRubricWithAI" data-i18n="rub_ai_btn">Check with AI</button>
-                        <span id="rubAiStatus" class="t-xs muted" role="status"></span>
-                      </div>
-                    </div>
-                    <div class="row">
-                      <div><label>Phrasal verbs (C1)</label><input type="number" id="wPv" min="0" value="0"></div>
-                      <div><label>Collocations (C1)</label><input type="number" id="wCol" min="0" value="0"></div>
-                    </div>
-                    <div class="row" style="margin-top:10px">
-                      <div><label>Writing Corrector / Examiner Score (out of 20)</label><input type="number" id="wScore" min="0" max="20" step="0.5" value="0"></div>
-                      <div><label>Audited Score (optional)</label><input type="number" id="auditScore" min="0" max="20" step="0.5"></div>
-                    </div>
-                    <div class="row" style="margin-top:10px">
-                      <div><label>Error Code (if any)</label>
-                        <select id="errCode">
-                          <option value="L-GAP" data-i18n="err_code_lgap">L-GAP — vocabulary gap</option>
-                          <option value="G-ERR" data-i18n="err_code_gerr">G-ERR — grammar error</option>
-                          <option value="T-MIS" data-i18n="err_code_tmis">T-MIS — distractor trap</option>
-                          <option value="T-LIM" data-i18n="err_code_tlim">T-LIM — time limit</option>
-                        </select>
-                      </div>
-                      <div><label>What went wrong?</label><input type="text" id="errDesc" maxlength="400" placeholder="e.g. didn't use inversion"></div>
-                    </div>
-                    <div><label>Corrective action</label><input type="text" id="errFix" maxlength="400" placeholder="e.g. write 5 inversion sentences"></div>
-                    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
-                      <button class="btn ok" data-action="saveW">✔ Save Writing &amp; Progress</button>
-                      <button class="btn gray" data-action="saveErr">🔖 Log error only</button>
+                      <div id="rubAiStatus" class="w-phase3-status" role="status" aria-live="polite"></div>
+                      <div id="rubAiResult" class="w-phase3-result" hidden></div>
                     </div>
                   </div>
                 </div>
@@ -4493,18 +4487,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <button class="btn sm" data-action="lTimer.start">▶</button>
                       </div>
                     </div>
-                    <div class="wtf-section" id="wtfSectionL" data-wtf-skill="l">
-                      <button type="button" class="wtf-toggle" id="wtfToggleL" data-action="toggleWtfSection" data-wtf-skill="l" aria-expanded="false" aria-controls="wtfPanelL">
-                        <span class="wtf-toggle-summary" id="wtfSummaryL">Materials</span>
-                        <span class="wtf-caret" aria-hidden="true">▾</span>
-                      </button>
-                      <div class="wtf-panel" id="wtfPanelL" hidden>
-                        <div class="wtf-panel-lead">📍 <b data-i18n="wtf_lead_l">Audio files &amp; question papers:</b></div>
-                        <div class="wtf-list wtf-compact" id="gLChips"></div>
-                        <div class="wtf-more-row">
-                          <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="l" data-i18n="wtf_more_in_library">More in Library</button>
-                        </div>
-                      </div>
+                    <div class="session-open-contents" id="wtfSectionL" data-wtf-skill="l">
+                      <button type="button" class="btn sm gray session-open-contents-btn" id="openContentsL" data-action="setSessionTab" data-session-tab="contents" data-i18n="session_open_contents">Open contents</button>
                     </div>
                     <div class="guide wtf-notes"><span id="st3Rule">—</span></div>
                     <p id="lFocusNote" style="font-size:12px;color:var(--ok-text);margin:6px 0 0"></p>
@@ -4798,19 +4782,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   </div>
 
                 <div class="sp-today" id="spTodayStack">
-                  <!-- Materials: quiet reference surface, visually distinct from actions -->
-                  <section class="sp-materials wtf-section" id="wtfSectionSp" data-wtf-skill="sp" aria-labelledby="spMaterialsTitle">
-                    <button type="button" class="wtf-toggle" id="wtfToggleSp" data-action="toggleWtfSection" data-wtf-skill="sp" aria-expanded="false" aria-controls="wtfPanelSp">
-                      <span class="wtf-toggle-summary" id="spMaterialsTitle">Materials</span>
-                      <span class="wtf-caret" aria-hidden="true">▾</span>
-                    </button>
-                    <div class="wtf-panel" id="wtfPanelSp" hidden>
-                      <div class="wtf-list wtf-compact" id="gSpChips"></div>
-                      <div class="wtf-more-row">
-                        <button type="button" class="wtf-more-lib" data-action="openPracticeCatalog" data-paper="sp" data-i18n="wtf_more_in_library">More in Library</button>
-                      </div>
-                    </div>
-                  </section>
+                  <!-- Materials opens the unified Contents tab -->
+                  <div class="session-open-contents" id="wtfSectionSp" data-wtf-skill="sp">
+                    <button type="button" class="btn sm gray session-open-contents-btn" id="openContentsSp" data-action="setSessionTab" data-session-tab="contents" data-i18n="session_open_contents">Open contents</button>
+                  </div>
 
                   <!-- Option 1: Speaking Exam -->
                   <section class="sp-option-card" id="spExamCard" aria-labelledby="spExamCardTitle">
@@ -5118,7 +5093,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             <div id="sessionTabContents" role="tabpanel" aria-labelledby="sessionTabContentsBtn" hidden>
               <div class="card" id="exercisesLibraryCard" data-exlib-root="session">
                 <h2 id="sessionContentsTitle" data-i18n="session_contents_title">Contents</h2>
-                <div class="sub" id="sessionContentsSub" data-i18n="session_contents_sub">Papers, answer keys, lesson plans, audio and online practice for this unit.</div>
+                <div class="sub" id="sessionContentsSub" data-i18n="session_contents_sub">Papers, answer keys, audio, tapescripts, checklists and online practice for this unit.</div>
                 <div class="session-online-wrap" id="sessionOnlinePrimaryWrap" hidden>
                   <a id="sessionOnlinePrimaryBtn" class="btn ok session-online-cta" href="#" target="_blank" rel="noopener noreferrer" data-i18n="practice_online_cta">Practise online</a>
                 </div>
@@ -5147,7 +5122,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
                       <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
                       <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
-                      <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
                     </div>
 
                     <div class="chips exlib-chips" id="exLibPartFilter" data-exlib-role="partFilter" role="group"
@@ -5171,6 +5145,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <label class="exlib-free-toggle" for="exLibFullScope">
                           <input type="checkbox" id="exLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
                           <span data-i18n="exlib_scope_full">Full paper only</span>
+                        </label>
+                        <label class="exlib-free-toggle" for="exLibHideDone">
+                          <input type="checkbox" id="exLibHideDone" data-exlib-role="hideDone" data-change="toggleExLibHideDone">
+                          <span data-i18n="exlib_hide_done">Hide done</span>
                         </label>
                         <label class="exlib-sort-wrap" for="exLibSort">
                           <span data-i18n="exlib_sort_label">Sort</span>
@@ -5652,7 +5630,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 
         <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
           <h2 data-i18n="practice_lib_title">Library</h2>
-          <div class="sub" data-i18n="practice_lib_sub">Every local paper, answer key, audio, lesson plan and free online practice source in one place.</div>
+          <div class="sub" data-i18n="practice_lib_sub">Every local paper, answer key, audio, tapescript, checklist and free online practice source in one place.</div>
           <div class="exlib-toolbar">
             <div class="exlib-search-row">
               <label class="sr" for="pracLibSearch" data-i18n="exlib_search_label">Search contents</label>
@@ -5676,7 +5654,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                 <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
                 <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
                 <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="ref" aria-pressed="false" data-action="setExLibPaper" data-i18n="exlib_paper_ref">Reference</button>
               </div>
 
               <div class="chips exlib-chips" id="pracLibPartFilter" data-exlib-role="partFilter" role="group"
@@ -5700,6 +5677,10 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                   <label class="exlib-free-toggle" for="pracLibFullScope">
                     <input type="checkbox" id="pracLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
                     <span data-i18n="exlib_scope_full">Full paper only</span>
+                  </label>
+                  <label class="exlib-free-toggle" for="pracLibHideDone">
+                    <input type="checkbox" id="pracLibHideDone" data-exlib-role="hideDone" data-change="toggleExLibHideDone">
+                    <span data-i18n="exlib_hide_done">Hide done</span>
                   </label>
                   <label class="exlib-sort-wrap" for="pracLibSort">
                     <span data-i18n="exlib_sort_label">Sort</span>
@@ -5979,7 +5960,8 @@ const I18N={
     session_tab_session:'Session',
     session_tab_contents:'Contents',
     session_contents_title:'Contents',
-    session_contents_sub:'Papers, answer keys, lesson plans, audio and online practice for this unit.',
+    session_contents_sub:'Papers, answer keys, audio, tapescripts, checklists and online practice for this unit.',
+    session_open_contents:'Open contents',
     session_contents_see_paper:'See all in this paper',
     session_contents_back_part:'Back to Part {part}',
     practice_filter_rue:'Reading & UoE',
@@ -6072,10 +6054,6 @@ const I18N={
     footer_security:'Security',
     today_recent:'Recent sessions',
     today_recent_sub:'Your last logged entries, newest first.',
-    last_sp_title:'Last speaking exam',
-    last_sp_when:'Took place on {date}',
-    last_sp_parts:'{n} parts done',
-    last_sp_parts_one:'1 part done',
     next_fast_forward:'Fast-forward (+1)',
     metric_streak:'Daily streak',
     recent_empty:'Nothing logged yet. Your first session takes 15 seconds.',
@@ -6974,7 +6952,6 @@ const I18N={
     exlib_clear:'Clear',
     exlib_paper_aria:'Filter library by section',
     exlib_paper_all:'All papers',
-    exlib_paper_ref:'Reference',
     exlib_part_aria:'Filter library by part',
     exlib_part_all:'All parts',
     exlib_part_1:'Part 1',
@@ -6997,24 +6974,29 @@ const I18N={
     exlib_all_parts:'All parts',
     exlib_type_paper:'Paper',
     exlib_type_key:'Answer key',
-    exlib_type_notes:'Examiner notes',
-    exlib_type_lesson:'Lesson plan',
+    exlib_type_tapescript:'Tapescript',
+    exlib_type_checklist:'Checklist',
     exlib_type_audio:'Audio',
     exlib_type_online:'Practice',
-    exlib_type_reference:'Reference',
-    exlib_group_ref_title:'Reference',
-    exlib_group_ref_sub:'Official handbooks, candidate guides, answer sheets, score scales and reference platforms.',
     exlib_origin_local:'Local',
     exlib_origin_online:'Online',
     exlib_filter_action:'Search library',
     exlib_scope_full:'Full paper only',
+    exlib_hide_done:'Hide done',
+    practised_mark:'Mark done',
+    practised_done:'Done ✓',
+    practised_badge:'Done ✓',
+    w_phase3_title:'Phase 3: AI Review',
+    w_phase3_step_title:'🔍 AI review',
+    w_phase3_step_sub:'Check with AI',
+    w_phase3_summary_empty:'Write your draft in Phase 2, then run the AI check when you are ready.',
+    w_phase3_summary_ready:'Draft ready ({kind}, {words} words). Review it with AI when you are ready.',
     practice_lib_title:'Library',
-    practice_lib_sub:'Every local paper, answer key, audio, lesson plan and free online practice source in one place.',
+    practice_lib_sub:'Every local paper, answer key, audio, tapescript, checklist and free online practice source in one place.',
     practice_online_cta:'Practise online',
     practice_res_paper:'Paper',
     practice_res_key:'key',
     practice_res_audio:'audio',
-    practice_res_lesson:'lesson',
     practice_res_online:'{n} online',
     practice_res_total_one:'1 resource',
     practice_res_total_many:'{n} resources',
@@ -7074,7 +7056,8 @@ const I18N={
     session_tab_session:'Sesión',
     session_tab_contents:'Contenidos',
     session_contents_title:'Contenidos',
-    session_contents_sub:'Exámenes, respuestas, guías de clase, audios y práctica online de esta unidad.',
+    session_contents_sub:'Exámenes, respuestas, audios, transcripciones, checklists y práctica online de esta unidad.',
+    session_open_contents:'Abrir Contenidos',
     session_contents_see_paper:'Ver todo en esta prueba',
     session_contents_back_part:'Volver a Parte {part}',
     practice_filter_rue:'Reading y UoE',
@@ -7167,10 +7150,6 @@ const I18N={
     footer_security:'Seguridad',
     today_recent:'Sesiones recientes',
     today_recent_sub:'Tus últimos registros, los más nuevos primero.',
-    last_sp_title:'Último examen de Speaking',
-    last_sp_when:'Se hizo el {date}',
-    last_sp_parts:'{n} partes hechas',
-    last_sp_parts_one:'1 parte hecha',
     next_fast_forward:'Adelantar (+1)',
     metric_streak:'Racha diaria',
     recent_empty:'Todavía no registraste nada. Tu primera sesión dura 15 segundos.',
@@ -8069,7 +8048,6 @@ const I18N={
     exlib_clear:'Limpiar',
     exlib_paper_aria:'Filtrar biblioteca por sección',
     exlib_paper_all:'Todas las pruebas',
-    exlib_paper_ref:'Referencia',
     exlib_part_aria:'Filtrar biblioteca por parte',
     exlib_part_all:'Todas las partes',
     exlib_part_1:'Parte 1',
@@ -8092,24 +8070,29 @@ const I18N={
     exlib_all_parts:'Toda la prueba',
     exlib_type_paper:'Examen',
     exlib_type_key:'Respuestas',
-    exlib_type_notes:'Notas de examinador',
-    exlib_type_lesson:'Guía de clase',
+    exlib_type_tapescript:'Transcripción',
+    exlib_type_checklist:'Checklist',
     exlib_type_audio:'Audio',
     exlib_type_online:'Práctica',
-    exlib_type_reference:'Referencia',
-    exlib_group_ref_title:'Referencia',
-    exlib_group_ref_sub:'Manuales oficiales, guías para candidatos, hojas de respuesta, escalas de puntaje y plataformas de referencia.',
     exlib_origin_local:'Local',
     exlib_origin_online:'Online',
     exlib_filter_action:'Buscar biblioteca',
     exlib_scope_full:'Solo paper completo',
+    exlib_hide_done:'Ocultar hechos',
+    practised_mark:'Ya lo hice',
+    practised_done:'Hecho ✓',
+    practised_badge:'Hecho ✓',
+    w_phase3_title:'Fase 3: Revisión con IA',
+    w_phase3_step_title:'🔍 Revisión IA',
+    w_phase3_step_sub:'Corregir con IA',
+    w_phase3_summary_empty:'Escribí tu borrador en la Fase 2 y revisalo con IA cuando estés listo.',
+    w_phase3_summary_ready:'Borrador listo ({kind}, {words} palabras). Revisalo con IA cuando estés listo.',
     practice_lib_title:'Biblioteca',
-    practice_lib_sub:'Todos los exámenes locales, respuestas, audios, guías y páginas online gratis en un solo lugar.',
+    practice_lib_sub:'Todos los exámenes locales, respuestas, audios, transcripciones, checklists y páginas online gratis en un solo lugar.',
     practice_online_cta:'Practicar online',
     practice_res_paper:'Examen',
     practice_res_key:'respuestas',
     practice_res_audio:'audio',
-    practice_res_lesson:'guía',
     practice_res_online:'{n} online',
     practice_res_total_one:'1 recurso',
     practice_res_total_many:'{n} recursos',
@@ -10005,8 +9988,18 @@ function spxGetCustomTask(part){
 }
 
 /* ---------- LOAD / SAVE (per user) ---------- */
+function normalizePractisedMap(raw){
+  const out={};
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
+  Object.keys(raw).forEach(k=>{
+    if(!k||typeof k!=='string')return;
+    const v=raw[k];
+    if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v))out[k]=v;
+  });
+  return out;
+}
 function blankDoc(){
-  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},spxCustom:spxReadCustomLS(),onboarded:false,onboardStep:1,sessionOffset:0};
+  return {log:[],errs:[],examDates:[],stage:0,stageHistory:[],settings:JSON.parse(JSON.stringify(SETTINGS_DEFAULT)),overrides:{},weekOverrides:{},mat:{},practised:{},diag:null,profile:null,speaking:{seen:{},last:{},partnerRot:0},spxCustom:spxReadCustomLS(),onboarded:false,onboardStep:1,sessionOffset:0};
 }
 /* Nothing is loaded until a session exists: an orphaned local document (a
    deleted user, or the old guest era) stays on disk under its own key but is
@@ -10042,6 +10035,7 @@ function load(){
       overrides: gateNormalizeOverrides(d.overrides),
       weekOverrides: d.weekOverrides||{},
       mat: d.mat||{},
+      practised: normalizePractisedMap(d.practised),
       diag: d.diag||null,
       profile: (d.profile&&typeof d.profile==='object') ? d.profile : null,
       speaking: (d.speaking&&typeof d.speaking==='object')
@@ -10331,6 +10325,7 @@ function syncPull(){
             overrides: d.overrides!==undefined ? gateNormalizeOverrides(d.overrides) : gateNormalizeOverrides(D.overrides),
             weekOverrides: Object.assign({}, D.weekOverrides||{}, d.weekOverrides||{}),
             mat: Object.assign({}, D.mat||{}, d.mat||{}),
+            practised: d.practised!==undefined ? normalizePractisedMap(d.practised) : normalizePractisedMap(D.practised),
             diag: d.diag!==undefined ? d.diag : (D.diag||null),
             profile: (d.profile&&typeof d.profile==='object') ? d.profile : (D.profile||null),
             speaking: (d.speaking&&typeof d.speaking==='object')
@@ -10592,6 +10587,8 @@ function resetStudioPhases(skill){
     if(p1)p1.style.display='block';
     if(p2)p2.style.display='none';
     if(p3)p3.style.display='none';
+    const rs=document.getElementById('rubAiStatus');if(rs)rs.textContent='';
+    const rr=document.getElementById('rubAiResult');if(rr){rr.innerHTML='';rr.hidden=true;}
   }else if(skill==='l'){
     document.querySelectorAll('#lPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='play'));
     const p1=document.getElementById('lPhase1'),p2=document.getElementById('lPhase2');
@@ -10740,6 +10737,19 @@ function openUnitSession(u,opts){
   }
 }
 
+function updateWritingPhase3Summary(){
+  const el=document.getElementById('wPhase3DraftSummary');
+  if(!el)return;
+  const draft=document.getElementById('wTextDraft');
+  const text=draft?draft.value.trim():'';
+  const words=countWords(text);
+  const kind=(document.getElementById('wTipo')||{}).value||'Essay';
+  if(words>0){
+    el.textContent=t('w_phase3_summary_ready',{kind,words});
+  }else{
+    el.textContent=t('w_phase3_summary_empty');
+  }
+}
 function switchWritingPhase(p){
   document.querySelectorAll('#wPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
   const p1=document.getElementById('wPhase1'),p2=document.getElementById('wPhase2'),p3=document.getElementById('wPhase3');
@@ -10748,7 +10758,11 @@ function switchWritingPhase(p){
   if(p3)p3.style.display=(p==='audit'?'block':'none');
   if(p==='plan')wPlan.start();
   else if(p==='write')wWrite.start();
-  else if(p==='audit')wRev.start();
+  else if(p==='audit'){
+    updateWritingPhase3Summary();
+    const btn=document.getElementById('rubAiBtn');
+    if(btn&&typeof btn.focus==='function')btn.focus();
+  }
 }
 
 function switchListeningPhase(p){
@@ -15958,6 +15972,7 @@ function onWritingDraftChange(){
   const words=countWords(text);
   const wcEl=document.getElementById('wLiveWordCount');
   if(wcEl)wcEl.textContent=words+' words';
+  updateWritingPhase3Summary();
   const wInput=document.getElementById('wWords');
   if(wInput&&words>0)wInput.value=words;
   
@@ -16167,15 +16182,15 @@ function saveUE(){
   document.getElementById('ueOk').value=0;document.getElementById('ueRef').value='';
 }
 function saveW(){
-  const score=+document.getElementById('wScore').value;
+  const scoreEl=document.getElementById('wScore');
+  const score=scoreEl?+scoreEl.value:0;
   if(!score){alert(t('alert_set_score'));return}
-  const kind=document.getElementById('wTipo').value;
-  const entry={type:'w',kind,book:document.getElementById('wFuente').value,prompt:document.getElementById('wPrompt').value,words:+document.getElementById('wWords').value,score,min:+document.getElementById('wMin').value,rub:document.querySelectorAll('.rub:checked').length,lex:{pv:+document.getElementById('wPv').value||0,col:+document.getElementById('wCol').value||0}};
+  const kind=(document.getElementById('wTipo')||{}).value||'Essay';
+  const entry={type:'w',kind,book:(document.getElementById('wFuente')||{}).value||'',prompt:(document.getElementById('wPrompt')||{}).value||'',words:+(document.getElementById('wWords')||{}).value||0,score,min:+(document.getElementById('wMin')||{}).value||0,rub:0,lex:{pv:+(document.getElementById('wPv')||{}).value||0,col:+(document.getElementById('wCol')||{}).value||0}};
   const unit=takePlanUnit('w',kind);if(unit)entry.unit=unit;
   log(entry);
-  document.getElementById('wScore').value=0;document.getElementById('wPrompt').value='';
-  document.getElementById('wPv').value=0;document.getElementById('wCol').value=0;
-  document.querySelectorAll('.rub').forEach(c=>c.checked=false);rubCount();
+  if(scoreEl)scoreEl.value=0;
+  const prEl=document.getElementById('wPrompt');if(prEl)prEl.value='';
 }
 function onLPartChange(){
   const partEl=document.getElementById('lPart');
@@ -16834,12 +16849,13 @@ function saveMockListening(){
   document.getElementById('mockLOk').value=0;document.getElementById('mockLRef').value='';
 }
 function saveErr(){
-  const code=document.getElementById('errCode').value,desc=document.getElementById('errDesc').value;
+  const codeEl=document.getElementById('errCode'),descEl=document.getElementById('errDesc'),fixEl=document.getElementById('errFix');
+  const code=codeEl?codeEl.value:'G-ERR',desc=descEl?descEl.value:'';
   if(!desc){alert(t('alert_describe_error'));return}
-  D.errs.unshift({date:today(),code,desc,fix:document.getElementById('errFix').value});
+  D.errs.unshift({date:today(),code,desc,fix:fixEl?fixEl.value:''});
   advanceStageIfReady({save:false});
   save();refreshAll();
-  document.getElementById('errDesc').value='';document.getElementById('errFix').value='';
+  if(descEl)descEl.value='';if(fixEl)fixEl.value='';
 }
 function delLog(i){D.log.splice(i,1);advanceStageIfReady({save:false});save();refreshAll()}
 function delErr(i){D.errs.splice(i,1);advanceStageIfReady({save:false});save();refreshAll()}
@@ -17625,11 +17641,9 @@ function exportData(){
 function importData(ev){
   const f=ev.target.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||!Array.isArray(d.log)||!Array.isArray(d.errs))throw 0;d.stage=gateClampStage(d.stage);d.overrides=gateNormalizeOverrides(d.overrides);d.stageHistory=gateNormalizeStageHistory(d.stageHistory,d.stage,(d.settings&&d.settings.lang)||LANG);D=d;syncLangFromD();advanceStageIfReady({save:false});save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d||!Array.isArray(d.log)||!Array.isArray(d.errs))throw 0;d.stage=gateClampStage(d.stage);d.overrides=gateNormalizeOverrides(d.overrides);d.stageHistory=gateNormalizeStageHistory(d.stageHistory,d.stage,(d.settings&&d.settings.lang)||LANG);d.practised=normalizePractisedMap(d.practised);D=d;syncLangFromD();advanceStageIfReady({save:false});save();refreshAll();alert(t('alert_data_imported'));}catch(e){alert(t('alert_invalid_file'));}};
   r.readAsText(f);ev.target.value='';
 }
-function rubCount(){const n=document.querySelectorAll('.rub:checked').length;const el=document.getElementById('rubCount');if(el)el.textContent=n+'/7';}
-document.querySelectorAll('.rub').forEach(c=>c.addEventListener('change',rubCount));
 /* ---------- PLAN ----------
    Long-term configuration view. Schedule, time, mode and exercises per session
    apply as soon as they change; the only explicit reset is the one behind
@@ -19050,25 +19064,25 @@ const FULL_MOCK_SAMPLES=[
     rue:[['Paper','rueS1'],['Answer key','keyS1']],
     w:[['Paper','wS1']],
     l:[['Paper','lS1'],['Answer key','lkS1'],['Audio','auS1'],['Tapescript','tsS1']],
-    sp:[['Speaking cards','spS1'],['Examiner notes','exC0']]
+    sp:[['Speaking cards','spS1']]
   }},
   {id:'s2',labelKey:'fm_sample_s2',papers:{
     rue:[['Paper','rueS2'],['Answer keys','keyS2']],
     w:[['Paper','wS2'],['Answer keys','keyS2']],
     l:[['Paper','lS2'],['Answer key','lkS2'],['Audio P1','auS2p1'],['Audio P2','auS2p2'],['Audio P3','auS2p3'],['Audio P4','auS2p4']],
-    sp:[['Speaking cards','spS2'],['Examiner notes','exC1']]
+    sp:[['Speaking cards','spS2']]
   }},
   {id:'fs1',labelKey:'fm_sample_fs1',papers:{
     rue:[['Paper','rueFS1'],['Answer key','keyFS1']],
     w:[['Paper','wFS1']],
     l:[['Paper','lFS1'],['Answer key','lkFS1'],['Audio P1','auFS1p1'],['Audio P2','auFS1p2'],['Audio P3','auFS1p3'],['Audio P4','auFS1p4'],['Tapescript','tsFS1']],
-    sp:[['Speaking cards','spFS1'],['Examiner notes','exC3']]
+    sp:[['Speaking cards','spFS1']]
   }},
   {id:'fs2',labelKey:'fm_sample_fs2',papers:{
     rue:[['Paper','rueFS2'],['Answer keys','keyFS2']],
     w:[['Paper','wFS2'],['Answer keys','keyFS2']],
     l:[['Paper','lFS2'],['Answer key','lkFS2'],['Audio','auFS2']],
-    sp:[['Speaking cards','spFS2'],['Examiner notes','exC4']]
+    sp:[['Speaking cards','spFS2']]
   }}
 ];
 const FULL_MOCK_ONLINE_URLS=[
@@ -19133,10 +19147,15 @@ function renderFullMockPreflight(){
     papersEl.innerHTML=seq.map(p=>{
       const pairs=activeSample?(activeSample.papers[p.id]||[]).filter(pair=>!!MAT[pair[1]]):[];
       const quick=pairs.map(pair=>`<a class="chip" href="${esc(MAT[pair[1]])}" target="_blank" rel="noopener">${esc(pair[0])}</a>`).join('');
-      return `<div class="fm-paper-row" data-fm-paper="${p.id}">`+
+      const pKey=practisedMockKey(p.id);
+      const done=isPractised(pKey);
+      return `<div class="fm-paper-row${done?' is-practised':''}" data-fm-paper="${p.id}" data-practised="${done?'1':'0'}">`+
         `<div class="fm-paper-top">`+
-          `<span class="fm-paper-name">${esc(p.title)}<span class="fm-paper-dur">${esc(p.dur)}</span></span>`+
-          `<button type="button" class="btn sm gray" data-paper="${p.id}" data-action="openFullPaperLibrary">${esc(t('exam_open_materials'))}</button>`+
+          `<span class="fm-paper-name">${esc(p.title)}<span class="fm-paper-dur">${esc(p.dur)}</span>${done?`<span class="practised-badge">${esc(t('fm_sample_done'))}</span>`:''}</span>`+
+          `<div class="fm-paper-btns">`+
+            `<button type="button" class="btn sm gray practised-mock-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>`+
+            `<button type="button" class="btn sm gray" data-paper="${p.id}" data-action="openFullPaperLibrary">${esc(t('exam_open_materials'))}</button>`+
+          `</div>`+
         `</div>`+
         (quick?`<div class="fm-paper-links">${quick}</div>`:'')+
         `</div>`;
@@ -19293,16 +19312,16 @@ function examSourcePartTag(part){
   return t('exam_sources_parts_list',{parts:part.join(', ')});
 }
 function openPracticeCatalog(paper,part,scope){
-  const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp'||paper==='ref')?paper:'all';
+  const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp')?paper:'all';
   const partStr=(part&&part!=='all')?String(part):'all';
-  const baseSkill=(p==='all'||p==='ref')?'rue':p;
+  const baseSkill=(p==='all')?'rue':p;
   openUnitSession({skill:baseSkill,value:1,part:partStr==='all'?null:partStr,min:8},{
     origin:'practice',initialTab:'contents',expanded:true,exlibPaper:p,exlibPart:partStr,exlibScope:scope||'all',catalog:p==='all'
   });
 }
 function openPracticeLibrary(opts){
   const o=opts||{};
-  const p=(o.paper==='rue'||o.paper==='w'||o.paper==='l'||o.paper==='sp'||o.paper==='ref')?o.paper:'all';
+  const p=(o.paper==='rue'||o.paper==='w'||o.paper==='l'||o.paper==='sp')?o.paper:'all';
   const partStr=(o.part&&o.part!=='all')?String(o.part):'all';
   const scope=(o.scope==='full')?'full':'all';
   closeSessionStudios();
@@ -19483,14 +19502,12 @@ function partResourceSummary(p,catalog){
   const localItems=mine.filter(it=>it.origin==='local'&&(!it.part.length||it.part.includes(partStr)));
   const onlineItems=rankOnlineSourcesForPart(skill,partStr,false);
   const hasPaper=localItems.some(it=>it.type==='paper');
-  const hasKey=localItems.some(it=>it.type==='key'||it.type==='notes');
+  const hasKey=localItems.some(it=>it.type==='key'||it.type==='tapescript');
   const hasAudio=localItems.some(it=>it.type==='audio');
-  const hasLesson=localItems.some(it=>it.type==='lesson');
   const bits=[];
   if(hasPaper)bits.push(t('practice_res_paper'));
   if(hasKey)bits.push(t('practice_res_key'));
   if(hasAudio)bits.push(t('practice_res_audio'));
-  if(hasLesson)bits.push(t('practice_res_lesson'));
   if(onlineItems.length)bits.push(t('practice_res_online',{n:onlineItems.length}));
   const total=localItems.length+onlineItems.length;
   if(!total)return '';
@@ -19501,31 +19518,39 @@ function renderParts(){
   const el=document.getElementById('partsList');
   if(!el)return;
   const catalog=buildExerciseLibrary();
-  let html='',last='';
+  const groups=[];
   PARTS.forEach((p,i)=>{
-    if(p.g!==last){
-      html+=`<h3 class="folder">${p.g}</h3>`;
-      last=p.g;
-    }
-    const resSummary=partResourceSummary(p,catalog);
-    html+=`<div class="step">
-      <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span></h3>
-      ${resSummary?`<p class="step-res-summary">${esc(resSummary)}</p>`:''}
-      ${p.note?`<p class="step-note">${p.note}</p>`:''}
-      <div class="step-actions">
-        <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
-      </div>
-      ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
-        <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
-        <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
-      </div>`:`<div class="step-log">
-        <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
-        <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
-        <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-        <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
-      </div>`}
-    </div>`;
+    let grp=groups.find(g=>g.name===p.g);
+    if(!grp){grp={name:p.g,items:[]};groups.push(grp);}
+    const pKey=practisedPartKey(p);
+    grp.items.push({p,i,pKey,done:isPractised(pKey)});
+  });
+  let html='';
+  groups.forEach(grp=>{
+    grp.items.sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(a.i-b.i));
+    html+=`<h3 class="folder">${grp.name}</h3>`;
+    grp.items.forEach(({p,i,pKey,done})=>{
+      const resSummary=partResourceSummary(p,catalog);
+      html+=`<div class="step${done?' is-practised':''}" data-practised="${done?'1':'0'}" data-practised-key="${esc(pKey)}">
+        <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span>${done?`<span class="practised-badge">${esc(t('practised_badge'))}</span>`:''}</h3>
+        ${resSummary?`<p class="step-res-summary">${esc(resSummary)}</p>`:''}
+        ${p.note?`<p class="step-note">${p.note}</p>`:''}
+        <div class="step-actions">
+          <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
+          <button type="button" class="btn sm gray practised-part-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>
+        </div>
+        ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
+          <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
+          <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
+          <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
+        </div>`:`<div class="step-log">
+          <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
+          <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
+          <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
+          <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
+        </div>`}
+      </div>`;
+    });
   });
   el.innerHTML=html;
 }
@@ -20156,7 +20181,51 @@ function renderGuides(){
   setMorePart('wtfPanelL',lPartVal);
   setMorePart('wtfPanelSp',String(spPart));
 }
-/* ---------- EXERCISE LIBRARY (ordered local MAT + online PRACTICE_SOURCES) ---------- */
+/* ---------- PRACTISED TRACKING (per user, independent of D.log) ---------- */
+function practisedLibKey(item){
+  if(!item)return '';
+  const partStr=(Array.isArray(item.part)&&item.part.length)?item.part.join(','):'all';
+  const ref=item.origin==='online'?(item.href||item.n):(item.n||item.href);
+  return `lib:${item.type}|${item.skill}|${partStr}|${ref}`;
+}
+function practisedPartKey(p){
+  if(!p)return '';
+  return `part:${p.type}:${p.n}`;
+}
+function practisedMockKey(paper){
+  if(!paper)return '';
+  return `mock:${paper}`;
+}
+function isPractised(key){
+  return !!(D&&D.practised&&key&&D.practised[key]);
+}
+function togglePractised(key){
+  if(!key)return false;
+  if(!D.practised||typeof D.practised!=='object')D.practised={};
+  let next=false;
+  if(D.practised[key]){
+    delete D.practised[key];
+    next=false;
+  }else{
+    D.practised[key]=today();
+    next=true;
+  }
+  save();
+  if(typeof renderExercisesLibrary==='function')renderExercisesLibrary();
+  if(typeof renderParts==='function')renderParts();
+  if(typeof renderFullMockPreflight==='function')renderFullMockPreflight();
+  return next;
+}
+function compareWithPractisedLast(cmp){
+  return (a,b)=>{
+    const da=isPractised(practisedLibKey(a))?1:0;
+    const db=isPractised(practisedLibKey(b))?1:0;
+    if(da!==db)return da-db;
+    return cmp(a,b);
+  };
+}
+
+/* ---------- EXERCISE LIBRARY (real practice only: papers, keys, audio, tapescripts, checklist & online) ---------- */
 const EX_LIB_LOCAL=[
   /* Reading & Use of English */
   {key:'rueS1',skill:'rue',type:'paper',part:[],mins:75,n:'B2 First Sample 1 — Reading & Use of English'},
@@ -20167,57 +20236,23 @@ const EX_LIB_LOCAL=[
   {key:'keyS2',skill:'rue',type:'key',part:[],mins:10,n:'B2 First Sample 2 — R&UoE Answer Keys'},
   {key:'keyFS1',skill:'rue',type:'key',part:[],mins:10,n:'For Schools Sample 1 — R&UoE Answer Key'},
   {key:'keyFS2',skill:'rue',type:'key',part:[],mins:10,n:'For Schools Sample 2 — R&UoE Answer Keys'},
-  {key:'lpR1',skill:'rue',type:'lesson',part:['1'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 1'},
-  {key:'lpR2',skill:'rue',type:'lesson',part:['2'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 2'},
-  {key:'lpR3',skill:'rue',type:'lesson',part:['3'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 3'},
-  {key:'lpR4',skill:'rue',type:'lesson',part:['4'],mins:15,n:'B2 First Lesson Plan — R&UoE Part 4'},
-  {key:'lpR5',skill:'rue',type:'lesson',part:['5'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 5'},
-  {key:'lpR6',skill:'rue',type:'lesson',part:['6'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 6'},
-  {key:'lpR7',skill:'rue',type:'lesson',part:['7'],mins:20,n:'B2 First Lesson Plan — R&UoE Part 7'},
-  {key:'fR1',skill:'rue',type:'lesson',part:['1'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 1'},
-  {key:'fR2',skill:'rue',type:'lesson',part:['2'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 2'},
-  {key:'fR3',skill:'rue',type:'lesson',part:['3'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 3'},
-  {key:'fR4',skill:'rue',type:'lesson',part:['4'],mins:15,n:'For Schools Lesson Plan — R&UoE Part 4'},
-  {key:'fR5',skill:'rue',type:'lesson',part:['5'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 5'},
-  {key:'fR6',skill:'rue',type:'lesson',part:['6'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 6'},
-  {key:'fR7',skill:'rue',type:'lesson',part:['7'],mins:20,n:'For Schools Lesson Plan — R&UoE Part 7'},
-  {key:'rAct1b',skill:'rue',type:'lesson',part:['1'],mins:15,n:'Self-study Reading Activities — Part 1'},
-  {key:'rAct1',skill:'rue',type:'lesson',part:['5','6','7'],mins:25,n:'Self-study Reading Activities 1'},
-  {key:'rAct2',skill:'rue',type:'lesson',part:['5','6','7'],mins:25,n:'Self-study Further Reading Activities'},
-  {key:'rGuide',skill:'rue',type:'lesson',part:['5','6','7'],mins:20,n:'Developing Reading Skills Guide'},
   /* Writing */
   {key:'wS1',skill:'w',type:'paper',part:[],mins:80,n:'B2 First Sample 1 — Writing'},
   {key:'wS2',skill:'w',type:'paper',part:[],mins:80,n:'B2 First Sample 2 — Writing'},
   {key:'wFS1',skill:'w',type:'paper',part:[],mins:80,n:'For Schools Sample 1 — Writing'},
   {key:'wFS2',skill:'w',type:'paper',part:[],mins:80,n:'For Schools Sample 2 — Writing'},
-  {key:'lpW1',skill:'w',type:'lesson',part:['1'],mins:25,n:'B2 First Lesson Plan — Writing Part 1 (Essay)'},
-  {key:'lpW2',skill:'w',type:'lesson',part:['2'],mins:25,n:'B2 First Lesson Plan — Writing Part 2'},
-  {key:'fW1',skill:'w',type:'lesson',part:['1'],mins:25,n:'For Schools Lesson Plan — Writing Part 1'},
-  {key:'fW2',skill:'w',type:'lesson',part:['2'],mins:25,n:'For Schools Lesson Plan — Writing Part 2'},
-  {key:'wAct1',skill:'w',type:'lesson',part:['1'],mins:30,n:'Self-study Writing Activities — Part 1'},
-  {key:'wAct2',skill:'w',type:'lesson',part:['2'],mins:30,n:'Self-study Further Writing Activities — Part 2'},
-  {key:'wCheck',skill:'w',type:'lesson',part:[],mins:10,n:'Writing Improvement Checklist'},
-  {key:'wGuide',skill:'w',type:'lesson',part:[],mins:20,n:'Teacher Guide for Writing'},
+  {key:'wCheck',skill:'w',type:'checklist',part:[],mins:10,n:'Writing Improvement Checklist'},
   /* Listening */
   {key:'lS1',skill:'l',type:'paper',part:[],mins:40,n:'B2 First Sample 1 — Listening'},
   {key:'lS2',skill:'l',type:'paper',part:[],mins:40,n:'B2 First Sample 2 — Listening'},
   {key:'lFS1',skill:'l',type:'paper',part:[],mins:40,n:'For Schools Sample 1 — Listening'},
   {key:'lFS2',skill:'l',type:'paper',part:[],mins:40,n:'For Schools Sample 2 — Listening'},
   {key:'lkS1',skill:'l',type:'key',part:[],mins:10,n:'B2 First Sample 1 — Listening Answer Key'},
-  {key:'tsS1',skill:'l',type:'key',part:[],mins:15,n:'B2 First Sample 1 — Listening Tapescript'},
+  {key:'tsS1',skill:'l',type:'tapescript',part:[],mins:15,n:'B2 First Sample 1 — Listening Tapescript'},
   {key:'lkS2',skill:'l',type:'key',part:[],mins:10,n:'B2 First Sample 2 — Listening Answer Key'},
   {key:'lkFS1',skill:'l',type:'key',part:[],mins:10,n:'For Schools Sample 1 — Listening Answer Key'},
-  {key:'tsFS1',skill:'l',type:'key',part:[],mins:15,n:'For Schools Sample 1 — Listening Tapescript'},
+  {key:'tsFS1',skill:'l',type:'tapescript',part:[],mins:15,n:'For Schools Sample 1 — Listening Tapescript'},
   {key:'lkFS2',skill:'l',type:'key',part:[],mins:10,n:'For Schools Sample 2 — Listening Answer Key'},
-  {key:'lpL1',skill:'l',type:'lesson',part:['1'],mins:20,n:'B2 First Lesson Plan — Listening Part 1'},
-  {key:'lpL2',skill:'l',type:'lesson',part:['2'],mins:20,n:'B2 First Lesson Plan — Listening Part 2'},
-  {key:'lpL3',skill:'l',type:'lesson',part:['3'],mins:20,n:'B2 First Lesson Plan — Listening Part 3'},
-  {key:'lpL4',skill:'l',type:'lesson',part:['4'],mins:20,n:'B2 First Lesson Plan — Listening Part 4'},
-  {key:'fL1',skill:'l',type:'lesson',part:['1'],mins:20,n:'For Schools Lesson Plan — Listening Part 1'},
-  {key:'fL2',skill:'l',type:'lesson',part:['2'],mins:20,n:'For Schools Lesson Plan — Listening Part 2'},
-  {key:'fL3',skill:'l',type:'lesson',part:['3'],mins:20,n:'For Schools Lesson Plan — Listening Part 3'},
-  {key:'fL4',skill:'l',type:'lesson',part:['4'],mins:20,n:'For Schools Lesson Plan — Listening Part 4'},
-  {key:'lGuide',skill:'l',type:'lesson',part:[],mins:20,n:'Teacher Guide for Listening'},
   {key:'auS1',skill:'l',type:'audio',part:[],mins:40,n:'B2 First Sample 1 — Listening Audio (Full)'},
   {key:'auS2p1',skill:'l',type:'audio',part:['1'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 1'},
   {key:'auS2p2',skill:'l',type:'audio',part:['2'],mins:10,n:'B2 First Sample 2 — Listening Audio Part 2'},
@@ -20228,84 +20263,34 @@ const EX_LIB_LOCAL=[
   {key:'auFS1p3',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 3'},
   {key:'auFS1p4',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Sample 1 — Listening Audio Part 4'},
   {key:'auFS2',skill:'l',type:'audio',part:[],mins:40,n:'For Schools Sample 2 — Listening Audio (Full)'},
-  {key:'fL1a',skill:'l',type:'audio',part:['1'],mins:10,n:'For Schools Lesson Audio — Listening Part 1'},
-  {key:'fL2a',skill:'l',type:'audio',part:['2'],mins:10,n:'For Schools Lesson Audio — Listening Part 2'},
-  {key:'fL3a',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Lesson Audio — Listening Part 3'},
-  {key:'fL4a',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Lesson Audio — Listening Part 4'},
-  {key:'hbA1',skill:'l',type:'audio',part:[],mins:40,n:'Handbook Audio — Sample 1 (Full)'},
-  {key:'hbA2p1',skill:'l',type:'audio',part:['1'],mins:10,n:'Handbook Audio — Sample 2 Part 1'},
-  {key:'hbA2p2',skill:'l',type:'audio',part:['2'],mins:10,n:'Handbook Audio — Sample 2 Part 2'},
-  {key:'hbA2p3',skill:'l',type:'audio',part:['3'],mins:10,n:'Handbook Audio — Sample 2 Part 3'},
-  {key:'hbA2p4',skill:'l',type:'audio',part:['4'],mins:10,n:'Handbook Audio — Sample 2 Part 4'},
-  {key:'hbFSp1',skill:'l',type:'audio',part:['1'],mins:10,n:'For Schools Handbook Audio — Part 1'},
-  {key:'hbFSp2',skill:'l',type:'audio',part:['2'],mins:10,n:'For Schools Handbook Audio — Part 2'},
-  {key:'hbFSp3',skill:'l',type:'audio',part:['3'],mins:10,n:'For Schools Handbook Audio — Part 3'},
-  {key:'hbFSp4',skill:'l',type:'audio',part:['4'],mins:10,n:'For Schools Handbook Audio — Part 4'},
-  {key:'hbFS2',skill:'l',type:'audio',part:[],mins:40,n:'For Schools Handbook Audio — Sample 2 (Full)'},
   /* Speaking */
   {key:'spS1',skill:'sp',type:'paper',part:[],mins:14,n:'B2 First Sample 1 — Speaking'},
   {key:'spS2',skill:'sp',type:'paper',part:[],mins:14,n:'B2 First Sample 2 — Speaking'},
   {key:'spFS1',skill:'sp',type:'paper',part:[],mins:14,n:'For Schools Sample 1 — Speaking'},
-  {key:'spFS2',skill:'sp',type:'paper',part:[],mins:14,n:'For Schools Sample 2 — Speaking'},
-  {key:'exC0',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Natalia & Enzo (Sample 1)'},
-  {key:'exC1',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Giulia, Tabatha & Elena (Sample 2)'},
-  {key:'exC2',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Julia & Isabela (Sample 2)'},
-  {key:'exC3',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Francesco & Emma (For Schools 1)'},
-  {key:'exC4',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Lara, Agustina & Mateo (For Schools 2)'},
-  {key:'exC5',skill:'sp',type:'notes',part:[],mins:10,n:'Examiner Notes — Julia & Malena (For Schools 2)'},
-  {key:'lpSp1',skill:'sp',type:'lesson',part:['1'],mins:15,n:'B2 First Lesson Plan — Speaking Part 1'},
-  {key:'lpSp2',skill:'sp',type:'lesson',part:['2'],mins:15,n:'B2 First Lesson Plan — Speaking Part 2'},
-  {key:'lpSp3',skill:'sp',type:'lesson',part:['3'],mins:15,n:'B2 First Lesson Plan — Speaking Part 3'},
-  {key:'lpSp4',skill:'sp',type:'lesson',part:['4'],mins:15,n:'B2 First Lesson Plan — Speaking Part 4'},
-  {key:'fSp1',skill:'sp',type:'lesson',part:['1'],mins:15,n:'For Schools Lesson Plan — Speaking Part 1'},
-  {key:'fSp2',skill:'sp',type:'lesson',part:['2'],mins:15,n:'For Schools Lesson Plan — Speaking Part 2'},
-  {key:'fSp3',skill:'sp',type:'lesson',part:['3'],mins:15,n:'For Schools Lesson Plan — Speaking Part 3'},
-  {key:'fSp4',skill:'sp',type:'lesson',part:['4'],mins:15,n:'For Schools Lesson Plan — Speaking Part 4'},
-  {key:'spAct',skill:'sp',type:'lesson',part:[],mins:20,n:'Self-study Speaking Activities'},
-  {key:'spGuide',skill:'sp',type:'lesson',part:[],mins:20,n:'Teacher Guide for Speaking'}
+  {key:'spFS2',skill:'sp',type:'paper',part:[],mins:14,n:'For Schools Sample 2 — Speaking'}
 ];
-const EX_LIB_REF_LOCAL=[
-  {key:'hb',skill:'ref',type:'reference',part:[],mins:30,n:'B2 First Handbook for Teachers (tapescripts & answer keys)',what:'Official Cambridge B2 First handbook with sample papers, tapescripts and answer keys.'},
-  {key:'hbFS',skill:'ref',type:'reference',part:[],mins:30,n:'B2 First for Schools Handbook for Teachers',what:'Official Cambridge B2 First for Schools handbook with tapescripts and answer keys.'},
-  {key:'cand',skill:'ref',type:'reference',part:[],mins:15,n:'B2 First — Information for Candidates',what:'Official Cambridge candidate booklet explaining exam day, format and tips.'},
-  {key:'candFS',skill:'ref',type:'reference',part:[],mins:15,n:'B2 First for Schools — Information for Candidates',what:'Official candidate guide for the B2 First for Schools edition.'},
-  {key:'score',skill:'ref',type:'reference',part:[],mins:10,n:'Converting Practice Scores to the Cambridge Scale',what:'Official score conversion tables mapping raw marks to Cambridge English Scale (140–190).'},
-  {key:'tips',skill:'ref',type:'reference',part:[],mins:15,n:'Cambridge B2 First — Teaching & Exam Tips',what:'Practical Cambridge exam-day strategies and preparation tips.'},
-  {key:'diffReal',skill:'ref',type:'reference',part:[],mins:10,n:'Sample Papers vs Real Exam — Key Differences',what:'Notes on format differences between official sample papers and the real exam.'},
-  {key:'faqDig',skill:'ref',type:'reference',part:[],mins:10,n:'Digital B2 First Exam — FAQs',what:'Answers to common questions about taking B2 First on computer.'},
-  {key:'ansRue',skill:'ref',type:'reference',part:[],mins:5,n:'Printable Answer Sheet — Reading & Use of English',what:'Official printable answer sheet for timed R&UoE practice.'},
-  {key:'ansW',skill:'ref',type:'reference',part:[],mins:5,n:'Printable Answer Sheet — Writing',what:'Official printable answer sheet for timed Writing practice.'},
-  {key:'ansL',skill:'ref',type:'reference',part:[],mins:5,n:'Printable Answer Sheet — Listening',what:'Official printable answer sheet for timed Listening practice.'},
-  {key:'c1Hb',skill:'ref',type:'reference',part:[],mins:30,n:'C1 Advanced Handbook (stretch reference)',what:'Official Cambridge C1 Advanced handbook for Grade A / C1 stretch preparation.'}
-];
-const EX_LIB_REF_ONLINE=[
-  {n:'Test & Train — Official Cambridge Practice App (Free Demo)',url:'https://testandtrain.cambridgeenglish.org/',skill:'ref',type:'reference',kind:'freemium',part:[],mins:15,what:'Official Cambridge digital exam practice platform with free B2 First demo tasks.'},
-  {n:'Cambridge One — Official Learning Platform',url:'https://www.cambridgeone.org/',skill:'ref',type:'reference',kind:'free',part:[],mins:15,what:'Official Cambridge digital hub for B2 First coursebooks, workbooks and online extras.'}
-];
-const EXLIB_GROUPS=EXAM_SOURCE_GROUPS.concat([
-  {skill:'ref',titleKey:'exlib_group_ref_title',subKey:'exlib_group_ref_sub',en:'Reference'}
-]);
-const EXLIB_PAPER_ORDER={rue:0,w:1,l:2,sp:3,ref:4};
-const EXLIB_TYPE_ORDER={paper:0,key:1,notes:1,audio:2,lesson:3,online:4,reference:5};
+const EXLIB_ALLOWED_TYPES={paper:1,key:1,tapescript:1,checklist:1,audio:1,online:1};
+const EXLIB_BANNED_RE=/\b(lesson plan|teacher guide|handbook|examiner comments?|examiner notes?)\b/i;
+const EXLIB_GROUPS=EXAM_SOURCE_GROUPS.slice();
+const EXLIB_PAPER_ORDER={rue:0,w:1,l:2,sp:3};
+const EXLIB_TYPE_ORDER={paper:0,key:1,tapescript:2,audio:3,checklist:4,online:5};
 const EXLIB_TYPE_KEYS={
   paper:'exlib_type_paper',
   key:'exlib_type_key',
-  notes:'exlib_type_notes',
-  lesson:'exlib_type_lesson',
+  tapescript:'exlib_type_tapescript',
+  checklist:'exlib_type_checklist',
   audio:'exlib_type_audio',
-  online:'exlib_type_online',
-  reference:'exlib_type_reference'
+  online:'exlib_type_online'
 };
 const EXLIB_ORIGIN_KEYS={local:'exlib_origin_local',online:'exlib_origin_online'};
 const EXLIB_SHORT_PAPER_KEYS={
   rue:'practice_filter_rue',
   w:'practice_filter_w',
   l:'practice_filter_l',
-  sp:'practice_filter_sp',
-  ref:'exlib_paper_ref'
+  sp:'practice_filter_sp'
 };
-const EXLIB_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,sort:'exam',expanded:false};
-const EXLIB_PRACTICE_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,sort:'exam',expanded:true};
+const EXLIB_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,hideDone:false,sort:'exam',expanded:false};
+const EXLIB_PRACTICE_STATE={query:'',paper:'all',part:'all',scope:'all',freeOnly:false,hideDone:false,sort:'exam',expanded:true};
 function exLibResolveRoot(elOrId){
   if(typeof elOrId==='string')return elOrId==='practice'?'practice':'session';
   if(elOrId&&typeof elOrId.closest==='function'){
@@ -20323,7 +20308,7 @@ function exLibRootEl(rootId){
 function isFullPaperItem(item){
   if(!item)return false;
   if(item.origin==='local'){
-    return item.type==='paper'||item.type==='key'||item.type==='audio'||item.type==='notes';
+    return item.type==='paper'||item.type==='key'||item.type==='audio'||item.type==='tapescript'||item.type==='checklist';
   }
   return !Array.isArray(item.part)||item.part.length===0||item.part.length>=3;
 }
@@ -20345,15 +20330,15 @@ function compareExLibExam(a,b){
   return String(a.n||'').localeCompare(String(b.n||''),'en',{sensitivity:'base'});
 }
 /* Unit-scoped Contents order:
-   local paper -> answer key / notes -> audio (Listening) -> lesson plan -> online sources of that part.
+   local paper -> answer key / tapescript -> audio (Listening) -> checklist -> online sources of that part.
    Within each type, exact-part items come before multi-part or whole-paper items. */
 function exLibUnitTypeRank(item){
   if(!item)return 9;
   if(item.origin==='online'||item.type==='online')return 4;
   if(item.type==='paper')return 0;
-  if(item.type==='key'||item.type==='notes')return 1;
+  if(item.type==='key'||item.type==='tapescript')return 1;
   if(item.type==='audio')return 2;
-  if(item.type==='lesson')return 3;
+  if(item.type==='checklist')return 3;
   return 5;
 }
 function exLibUnitPartSpecificity(item,unitPart){
@@ -20428,6 +20413,8 @@ function dedupeExerciseLibrary(items){
 function buildExerciseLibrary(){
   const items=[];
   EX_LIB_LOCAL.forEach(m=>{
+    if(!EXLIB_ALLOWED_TYPES[m.type]||m.skill==='ref')return;
+    if(EXLIB_BANNED_RE.test(m.n||''))return;
     const href=MAT[m.key];
     if(!href)return;
     items.push({
@@ -20444,45 +20431,15 @@ function buildExerciseLibrary(){
     });
   });
   const sources=(typeof PRACTICE_SOURCES!=='undefined'&&Array.isArray(PRACTICE_SOURCES))
-    ?PRACTICE_SOURCES.filter(s=>s&&/^https?:\/\//.test(s.url)):[];
+    ?PRACTICE_SOURCES.filter(s=>s&&/^https?:\/\//.test(s.url)&&s.skill&&s.skill!=='ref'):[];
   sources.forEach((s,i)=>{
+    if(EXLIB_BANNED_RE.test(s.n||''))return;
     items.push({
       id:'on_'+i,
       n:s.n,
       skill:s.skill,
       type:'online',
       part:Array.isArray(s.part)?s.part:[],
-      mins:s.mins,
-      origin:'online',
-      kind:s.kind||'free',
-      href:s.url,
-      what:s.what||''
-    });
-  });
-  EX_LIB_REF_LOCAL.forEach(m=>{
-    const href=MAT[m.key];
-    if(!href)return;
-    items.push({
-      id:'ref_loc_'+m.key,
-      n:m.n,
-      skill:'ref',
-      type:'reference',
-      part:[],
-      mins:m.mins,
-      origin:'local',
-      kind:'free',
-      href:href,
-      what:m.what||''
-    });
-  });
-  EX_LIB_REF_ONLINE.forEach((s,i)=>{
-    if(!s||!/^https?:\/\//.test(s.url))return;
-    items.push({
-      id:'ref_on_'+i,
-      n:s.n,
-      skill:'ref',
-      type:'reference',
-      part:[],
       mins:s.mins,
       origin:'online',
       kind:s.kind||'free',
@@ -20503,12 +20460,15 @@ function exLibRowHtml(item,showPaper){
   const rel=isOnline?'noopener noreferrer':'noopener';
   const openTxt=t('exlib_open')+(isOnline?' ↗':'');
   const minPart=exLibMinPart(item);
-  return `<a class="exlib-row" href="${esc(item.href)}" target="_blank" rel="${rel}"`+
+  const pKey=practisedLibKey(item);
+  const done=isPractised(pKey);
+  return `<div class="exlib-row-wrap${done?' is-practised':''}" data-practised="${done?'1':'0'}" data-practised-key="${esc(pKey)}">`+
+    `<a class="exlib-row${done?' is-practised':''}" href="${esc(item.href)}" target="_blank" rel="${rel}"`+
     ` data-skill="${esc(item.skill)}" data-type="${esc(item.type)}" data-origin="${esc(item.origin)}"`+
     ` data-kind="${esc(item.kind)}" data-mins="${item.mins}" data-parts="${esc(item.part.join(','))}"`+
-    ` data-min-part="${minPart}" data-name="${esc(item.n)}">`+
+    ` data-min-part="${minPart}" data-name="${esc(item.n)}" data-practised="${done?'1':'0'}" data-practised-key="${esc(pKey)}">`+
     `<span class="exlib-row-main">`+
-      `<span class="exlib-row-name">${esc(item.n)}</span>`+
+      `<span class="exlib-row-name">${esc(item.n)}${done?`<span class="practised-badge">${esc(t('practised_badge'))}</span>`:''}</span>`+
       `<span class="exlib-row-meta">`+
         `${paperPill}`+
         `<span class="exlib-pill is-type-${esc(item.type)}">${esc(typeTxt)}</span>`+
@@ -20519,12 +20479,15 @@ function exLibRowHtml(item,showPaper){
       `</span>`+
     `</span>`+
     `<span class="exlib-row-open" aria-hidden="true">${esc(openTxt)}</span>`+
-    `</a>`;
+    `</a>`+
+    `<button type="button" class="practised-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>`+
+    `</div>`;
 }
-function setExLibPaper(paper,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).paper=paper||'all';renderExercisesLibrary(r)}
+function setExLibPaper(paper,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).paper=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp')?paper:'all';renderExercisesLibrary(r)}
 function setExLibPart(part,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).part=part||'all';renderExercisesLibrary(r)}
 function toggleExLibFree(on,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).freeOnly=!!on;renderExercisesLibrary(r)}
 function toggleExLibFullScope(on,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).scope=on?'full':'all';renderExercisesLibrary(r)}
+function toggleExLibHideDone(on,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).hideDone=!!on;renderExercisesLibrary(r)}
 function setExLibSort(sort,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).sort=(sort==='shortest'||sort==='az')?sort:'exam';renderExercisesLibrary(r)}
 function onExLibSearch(val,elOrId){const r=exLibResolveRoot(elOrId);exLibStateFor(r).query=String(val||'');renderExercisesLibrary(r)}
 function clearExLibSearch(elOrId){
@@ -20545,6 +20508,7 @@ function resetExLibFilters(forceAll,elOrId){
   st.query='';
   st.freeOnly=false;
   st.scope='all';
+  st.hideDone=false;
   st.sort='exam';
   if(r==='practice'||forceAll||st.expanded||!SESSION_UNIT){
     st.paper='all';
@@ -20568,6 +20532,7 @@ function renderExercisesLibrary(rootId){
   const listEl=root.querySelector('[data-exlib-role="list"]');
   if(!listEl)return;
   const st=exLibStateFor(r);
+  if(st.paper==='ref')st.paper='all';
   const isExpanded=(r==='practice')?true:!!st.expanded;
   const advEl=root.querySelector('[data-exlib-role="adv"]');
   if(advEl)advEl.hidden=!isExpanded;
@@ -20589,14 +20554,17 @@ function renderExercisesLibrary(rootId){
   if(freeCb&&freeCb.checked!==st.freeOnly)freeCb.checked=st.freeOnly;
   const fullCb=root.querySelector('[data-exlib-role="fullScope"]');
   if(fullCb&&fullCb.checked!==(st.scope==='full'))fullCb.checked=(st.scope==='full');
+  const hideDoneCb=root.querySelector('[data-exlib-role="hideDone"]');
+  if(hideDoneCb&&hideDoneCb.checked!==!!st.hideDone)hideDoneCb.checked=!!st.hideDone;
   const sortSel=root.querySelector('[data-exlib-role="sort"]');
   if(sortSel&&sortSel.value!==st.sort)sortSel.value=st.sort;
   const all=buildExerciseLibrary();
   const q=st.query.trim().toLowerCase();
-  const unitScoped=!isExpanded&&st.paper!=='all'&&st.paper!=='ref';
+  const unitScoped=!isExpanded&&st.paper!=='all';
   let filtered=all.filter(item=>{
     if(st.paper!=='all'&&item.skill!==st.paper)return false;
     if(st.scope==='full'&&!isFullPaperItem(item))return false;
+    if(st.hideDone&&isPractised(practisedLibKey(item)))return false;
     if(st.part!=='all'){
       const hasPart=Array.isArray(item.part)&&item.part.includes(st.part);
       const isLocalWholePaper=unitScoped&&item.origin==='local'&&(!Array.isArray(item.part)||!item.part.length);
@@ -20614,8 +20582,9 @@ function renderExercisesLibrary(rootId){
   });
   if(unitScoped&&!q){
     const unitPart=(st.part&&st.part!=='all')?st.part:'';
-    const localRows=filtered.filter(it=>it.origin==='local').sort((a,b)=>compareExLibUnit(a,b,unitPart));
-    const onlineRows=filtered.filter(it=>it.origin==='online').sort((a,b)=>compareExLibUnit(a,b,unitPart)).slice(0,4);
+    const unitCmp=compareWithPractisedLast((a,b)=>compareExLibUnit(a,b,unitPart));
+    const localRows=filtered.filter(it=>it.origin==='local').sort(unitCmp);
+    const onlineRows=filtered.filter(it=>it.origin==='online').sort(unitCmp).slice(0,4);
     filtered=localRows.concat(onlineRows);
   }
   const onlineWrap=r==='session'?document.getElementById('sessionOnlinePrimaryWrap'):null;
@@ -20646,13 +20615,14 @@ function renderExercisesLibrary(rootId){
   if(emptyEl)emptyEl.style.display='none';
   if(!isExpanded){
     const unitPart=(st.part&&st.part!=='all')?st.part:'';
-    const sorted=filtered.slice().sort((a,b)=>compareExLibUnit(a,b,unitPart));
+    const sorted=filtered.slice().sort(compareWithPractisedLast((a,b)=>compareExLibUnit(a,b,unitPart)));
     listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,false)).join('')}</div>`;
     return;
   }
   if(st.sort==='exam'){
+    const examCmp=compareWithPractisedLast(compareExLibExam);
     const html=EXLIB_GROUPS.map(g=>{
-      const grp=filtered.filter(it=>it.skill===g.skill).sort(compareExLibExam);
+      const grp=filtered.filter(it=>it.skill===g.skill).sort(examCmp);
       if(!grp.length)return '';
       const grpCnt=grp.length===1?t('exlib_count_one'):t('exlib_count_many',{n:grp.length});
       return `<section class="exlib-group" data-skill="${esc(g.skill)}">`+
@@ -20665,7 +20635,7 @@ function renderExercisesLibrary(rootId){
     }).join('');
     listEl.innerHTML=html;
   }else{
-    const sorted=filtered.slice().sort(st.sort==='shortest'?compareExLibShortest:compareExLibAZ);
+    const sorted=filtered.slice().sort(compareWithPractisedLast(st.sort==='shortest'?compareExLibShortest:compareExLibAZ));
     listEl.innerHTML=`<div class="exlib-list">${sorted.map(it=>exLibRowHtml(it,true)).join('')}</div>`;
   }
 }
@@ -22000,39 +21970,6 @@ function renderToday(){
       }
     }
   }
-
-  renderLastSpeaking();
-}
-
-/* Last speaking exam card (TODAY): the newest `sp` row in D.log, nothing is
-   recomputed. A full exam is one row with `parts:[1,2,3,4]` (Phase 50); a
-   single-part row carries `part:N`, so it counts as one. */
-function spxLastExamEntry(){
-  let best=null;
-  (D.log||[]).forEach(function(e){
-    if(!e||e.type!=='sp')return;
-    if(!best)return void(best=e);
-    const date=String(e.date||''),bestDate=String(best.date||'');
-    if(date>bestDate||(date===bestDate&&(+e.created_at||0)>(+best.created_at||0)))best=e;
-  });
-  return best;
-}
-function spxExamPartCount(e){
-  if(!e)return 0;
-  if(Array.isArray(e.parts)&&e.parts.length)return e.parts.length;
-  if(Array.isArray(e.part_stats)&&e.part_stats.length)return e.part_stats.length;
-  return (typeof e.part==='number'&&e.part>0)?1:0;
-}
-function renderLastSpeaking(){
-  const el=document.getElementById('lastSpeaking');
-  if(!el)return;
-  const e=spxLastExamEntry();
-  if(!e){el.style.display='none';el.innerHTML='';return}
-  const n=spxExamPartCount(e);
-  const parts=n===1?t('last_sp_parts_one'):n>1?t('last_sp_parts',{n:n}):'';
-  el.style.display='';
-  el.innerHTML=`<h2>${t('last_sp_title')}</h2>
-    <div class="sub">${t('last_sp_when',{date:fmtDate(e.date)})}${parts?' · '+parts:''}</div>`;
 }
 
 /* Exam countdown card: PLAN only, one-time setup. It is visible while no
@@ -22901,17 +22838,11 @@ async function checkRubricWithAI(){
       return;
     }
     const checks=rubricChecks(text,data);
-    document.querySelectorAll('#rubList .rub').forEach(function(box,i){
-      const c=checks[i]||{pass:false,reason:''};
-      box.checked=!!c.pass;
-      const label=box.closest('label');
-      const reasonEl=label?label.querySelector('.rub-reason'):null;
-      if(reasonEl){
-        reasonEl.textContent=' '+c.reason;
-        reasonEl.style.color=c.pass?'var(--ok-text)':'var(--warn-text)';
-      }
-    });
-    if(typeof rubCount==='function')rubCount();
+    const resEl=document.getElementById('rubAiResult');
+    if(resEl){
+      resEl.innerHTML=`<ul class="w-phase3-result-list">${checks.map(c=>`<li class="w-phase3-result-item ${c.pass?'is-pass':'is-fail'}">${esc(c.reason||'')}</li>`).join('')}</ul>`;
+      resEl.hidden=false;
+    }
     const bands=data.bands||{};
     const total=typeof data.total==='number'?data.total
       :['content','communicative_achievement','organisation','language'].reduce(function(s,k){return s+(Number(bands[k])||0)},0);
@@ -23579,7 +23510,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();rubCount();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();updateWritingPhase3Summary();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -23839,6 +23770,7 @@ click:{
 'toggleAccountSheet':()=>toggleAccountSheet(),
 'toggleByoKeyVisibility':()=>toggleByoKeyVisibility(),
 'toggleContentsPaperScope':()=>toggleContentsPaperScope(),
+'togglePractised':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();togglePractised(el.dataset.practisedKey)},
 'toggleWtfSection':el=>toggleWtfSection(el),
 'tourNext':()=>tourNext(),
 'ueTimer.start':()=>ueTimer.start(),
@@ -23869,6 +23801,7 @@ change:{
 'spkSetPart':el=>spkSetPart(el.value),
 'toggleExLibFree':el=>toggleExLibFree(el.checked,el),
 'toggleExLibFullScope':el=>toggleExLibFullScope(el.checked,el),
+'toggleExLibHideDone':el=>toggleExLibHideDone(el.checked,el),
 'updateScheduleFromUI':()=>updateScheduleFromUI()
 },
 input:{

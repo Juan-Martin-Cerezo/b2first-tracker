@@ -102,7 +102,7 @@ def inspect_contents(pg):
 
 def assert_part_first_order(rows, part_str, label):
     assert rows, f"{label}: Contents rendered 0 rows"
-    type_rank = {"paper": 0, "key": 1, "notes": 1, "audio": 2, "lesson": 3, "online": 4, "reference": 5}
+    type_rank = {"paper": 0, "key": 1, "tapescript": 1, "audio": 2, "checklist": 3, "online": 4}
 
     def rank_key(r):
         parts = r["parts"]
@@ -218,10 +218,12 @@ with sync_playwright() as p:
     assert not INLINE_HANDLER_RE.search(practice_info["html"]), "Inline on* handler in #v-practice"
     assert practice_info["scrollWidth"] <= practice_info["clientWidth"] + 1, "Overflow in Practice 390"
     for idx, st in enumerate(practice_info["perStep"]):
-        assert len(st["actBtns"]) == 1, f"Row {idx} should have exactly 1 action button, got {st['actBtns']}"
-        assert st["actBtns"][0]["action"] == "startPart", f"Row {idx} button is not startPart: {st['actBtns']}"
+        assert len(st["actBtns"]) == 2, f"Row {idx} should have Start + Mark done buttons, got {st['actBtns']}"
+        assert st["actBtns"][0]["action"] == "startPart", f"Row {idx} first button is not startPart: {st['actBtns']}"
         assert st["actBtns"][0]["text"] == "Start", f"Row {idx} button label != Start: {st['actBtns']}"
         assert st["actBtns"][0]["h"] >= 44, f"Row {idx} Start button < 44px: {st['actBtns']}"
+        assert st["actBtns"][1]["action"] == "togglePractised", f"Row {idx} second button is not togglePractised: {st['actBtns']}"
+        assert st["actBtns"][1]["h"] >= 44, f"Row {idx} Mark done button < 44px: {st['actBtns']}"
         assert not any("library" in t.lower() for t in st["allTexts"]), (
             f"Row {idx} still mentions Library: {st['allTexts']}"
         )
@@ -289,11 +291,11 @@ with sync_playwright() as p:
 
     local_papers = [r for r in rows if r["origin"] == "local" and r["type"] == "paper"]
     local_keys = [r for r in rows if r["origin"] == "local" and r["type"] == "key"]
-    local_lessons = [r for r in rows if r["origin"] == "local" and r["type"] == "lesson"]
+    local_lessons = [r for r in rows if r["type"] in ("lesson", "reference", "notes")]
     online_rows = [r for r in rows if r["origin"] == "online"]
     assert len(local_papers) >= 1, f"Expected >=1 local paper, got {local_papers}"
     assert len(local_keys) >= 1, f"Expected >=1 local answer key, got {local_keys}"
-    assert len(local_lessons) >= 1, f"Expected >=1 local lesson plan, got {local_lessons}"
+    assert len(local_lessons) == 0, f"Expected 0 lesson/reference/notes items, got {local_lessons}"
     assert len(online_rows) >= 1, f"Expected >=1 online source, got {online_rows}"
     # Verify unit ordering: exact Part 2 items first (no "All parts" before Part 2),
     # then general lessons, full papers ("All parts"), multi-part online, general online.

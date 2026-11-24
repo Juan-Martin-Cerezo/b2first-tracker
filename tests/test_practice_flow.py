@@ -168,14 +168,25 @@ with sync_playwright() as p:
     assert not overlaps(prac["fabBox"], prac["intentPartBox"]), f"FAB overlaps By part card: fab={prac['fabBox']} card={prac['intentPartBox']}"
     assert prac["libBeforeParts"], "#practiceLibraryCard must appear before #practiceParts in DOM"
     assert prac["hasDetails"] and prac["detailsOpen"] is False, f"#practiceParts must be inside closed <details>: {prac}"
-    assert prac["rowCount"] > 50, f"Expected full Library rows in Practice, got {prac['rowCount']}"
+    assert prac["rowCount"] > 40, f"Expected real-practice Library rows in Practice, got {prac['rowCount']}"
     assert prac["countText"] == f"{prac['rowCount']} contents", f"Count mismatch: {prac['countText']!r}"
-    if os.path.exists(os.path.join(REPO, "libros.json")):
-        assert prac["rowCount"] == 187, f"Expected 187 contents in EN, got {prac['rowCount']}"
-    assert prac["groupSkills"] == ["rue", "w", "l", "sp", "ref"], f"Unexpected Library group order: {prac['groupSkills']}"
+    assert prac["groupSkills"] == ["rue", "w", "l", "sp"], f"Unexpected Library group order: {prac['groupSkills']}"
+    # Verify 0 lessons, 0 reference, 0 examiner notes in Library
+    banned_rows = pg.evaluate(
+        """() => [...document.querySelectorAll('#pracLibList a.exlib-row')].filter(a => {
+            const t = a.dataset.type || '';
+            const s = a.dataset.skill || '';
+            const n = (a.dataset.name || '').toLowerCase();
+            return t === 'lesson' || t === 'reference' || t === 'notes' || s === 'ref'
+                || /lesson plan|teacher guide|handbook|examiner (notes|comments)/i.test(n);
+        }).map(a => ({name: a.dataset.name, type: a.dataset.type, skill: a.dataset.skill}))"""
+    )
+    assert banned_rows == [], f"Filler/non-practice items leaked into Library: {banned_rows}"
+    assert pg.locator("#pracLibPaperFilter [data-exlib-paper='ref']").count() == 0, "Reference filter chip still present"
     assert prac["summariesCount"] == 17, f"Expected 17 part summaries, got {prac['summariesCount']}"
     assert prac["startBtnsCount"] == 17, f"Expected 17 Start buttons, got {prac['startBtnsCount']}"
     assert "online" in prac["sampleSummary"].lower(), f"Part 2 summary missing online count: {prac['sampleSummary']!r}"
+    assert "lesson" not in prac["sampleSummary"].lower(), f"Part summary still mentions lesson: {prac['sampleSummary']!r}"
     assert prac["scrollWidth"] <= prac["clientWidth"] + 1, f"Practice 390 light overflow: {prac['scrollWidth']} > {prac['clientWidth']}"
     assert not INLINE_HANDLER_RE.search(prac["html"]), "Inline on* handler in #v-practice"
 
@@ -214,6 +225,114 @@ with sync_playwright() as p:
     pg.evaluate("resetExLibFilters(true, 'practice')")
     pg.wait_for_timeout(150)
     assert pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length") == prac["rowCount"], "Reset did not restore full Library"
+
+    # --- 1b. Practised toggle: marks item, moves to end of group, Hide done hides it, persists across reload ---
+    pg.evaluate("D.practised = {}; save(); refreshAll(); showView('practice');")
+    pg.wait_for_timeout(150)
+    log_len_before = pg.evaluate("D.log.length")
+    first_item = pg.evaluate(
+        """() => {
+            const grp = document.querySelector('#pracLibList .exlib-group[data-skill="rue"]');
+            const wraps = [...grp.querySelectorAll('.exlib-row-wrap')];
+            return {
+                key: wraps[0].dataset.practisedKey,
+                totalInGrp: wraps.length,
+                btnH: Math.round(wraps[0].querySelector('.practised-btn').getBoundingClientRect().height),
+            };
+        }"""
+    )
+    assert first_item["key"].startswith("lib:"), f"Unexpected lib practised key: {first_item}"
+    assert first_item["btnH"] >= 44, f"Practised button height < 44px: {first_item}"
+    pg.locator("#pracLibList .exlib-group[data-skill='rue'] .exlib-row-wrap").first.locator(".practised-btn").click()
+    pg.wait_for_timeout(200)
+
+    after_mark = pg.evaluate(
+        """(key) => {
+            const grp = document.querySelector('#pracLibList .exlib-group[data-skill="rue"]');
+            const wraps = [...grp.querySelectorAll('.exlib-row-wrap')];
+            const last = wraps[wraps.length - 1];
+            return {
+                savedDate: D.practised[key] || '',
+                logLen: D.log.length,
+                lastKey: last ? last.dataset.practisedKey : '',
+                lastDone: last ? last.dataset.practised : '',
+                lastBtnText: last ? last.querySelector('.practised-btn').textContent.trim() : '',
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+        }""",
+        first_item["key"],
+    )
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", after_mark["savedDate"]), f"Practised date not YYYY-MM-DD: {after_mark}"
+    assert after_mark["logLen"] == log_len_before, "Marking practised must not modify D.log"
+    assert after_mark["lastKey"] == first_item["key"], f"Marked item did not move to end of group: {after_mark}"
+    assert after_mark["lastDone"] == "1" and "✓" in after_mark["lastBtnText"], after_mark
+    assert after_mark["overflow"] <= 1, f"Library practised 390 overflow: {after_mark}"
+
+    # Screenshot showing practised state in Library (filter to Part 1 so Hide done + unpractised + Done ✓ at bottom all appear in frame)
+    pg.click("#pracLibPartFilter button[data-exlib-part='1']")
+    pg.wait_for_timeout(150)
+    pg.evaluate("""() => {
+        document.documentElement.setAttribute('data-theme', 'light');
+        const el = document.getElementById('pracLibHideDone');
+        if (el) window.scrollTo(0, Math.max(0, el.getBoundingClientRect().top + window.scrollY - 110));
+        if (document.activeElement) document.activeElement.blur();
+    }""")
+    pg.wait_for_timeout(150)
+    pg.screenshot(path=os.path.join(OUT, "library_practised_390_light.png"))
+    pg.click("#pracLibPartFilter button[data-exlib-part='all']")
+    pg.wait_for_timeout(150)
+
+    # Hide done checkbox removes marked items and updates counter
+    assert not pg.is_checked("#pracLibHideDone"), "Hide done should default off"
+    pg.check("#pracLibHideDone")
+    pg.wait_for_timeout(150)
+    hidden_state = pg.evaluate(
+        """(key) => ({
+            rows: document.querySelectorAll('#pracLibList a.exlib-row').length,
+            countText: document.getElementById('pracLibCount').textContent.trim(),
+            present: !!document.querySelector('#pracLibList .exlib-row-wrap[data-practised-key="' + CSS.escape(key) + '"]'),
+        })""",
+        first_item["key"],
+    )
+    assert hidden_state["present"] is False, f"Hide done did not hide marked item: {hidden_state}"
+    assert hidden_state["rows"] == prac["rowCount"] - 1, f"Hide done row count wrong: {hidden_state}"
+    assert hidden_state["countText"] == f"{hidden_state['rows']} contents", hidden_state
+    pg.uncheck("#pracLibHideDone")
+    pg.wait_for_timeout(150)
+
+    # Persist across reload, then unmark and verify reload
+    pg.wait_for_timeout(500)
+    pg.reload(wait_until="networkidle")
+    pg.wait_for_timeout(400)
+    seed_mat_if_empty(pg)
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(250)
+    persisted = pg.evaluate(
+        """(key) => {
+            const grp = document.querySelector('#pracLibList .exlib-group[data-skill="rue"]');
+            const wraps = [...grp.querySelectorAll('.exlib-row-wrap')];
+            const last = wraps[wraps.length - 1];
+            return {
+                date: (D.practised || {})[key] || '',
+                lastKey: last ? last.dataset.practisedKey : '',
+                lastDone: last ? last.dataset.practised : '',
+            };
+        }""",
+        first_item["key"],
+    )
+    assert persisted["date"] and persisted["lastKey"] == first_item["key"] and persisted["lastDone"] == "1", (
+        f"Practised state did not persist after reload: {persisted}"
+    )
+    # Unmark
+    pg.locator("#pracLibList .exlib-group[data-skill='rue'] .exlib-row-wrap").last.locator(".practised-btn").click()
+    pg.wait_for_timeout(500)
+    pg.reload(wait_until="networkidle")
+    pg.wait_for_timeout(400)
+    seed_mat_if_empty(pg)
+    pg.click("nav button[data-view='practice']")
+    pg.wait_for_timeout(250)
+    assert pg.evaluate("(k) => !(D.practised && D.practised[k])", first_item["key"]), "Unmark did not persist after reload"
+    out["1b_practised_library"] = {"key": first_item["key"], "persisted": True, "hide_done_rows": hidden_state["rows"]}
 
     # EN/ES copy check on Practice Hub
     pg.evaluate("setLang('es')")
@@ -463,6 +582,25 @@ with sync_playwright() as p:
     pg.wait_for_timeout(150)
     next_sample = pg.evaluate("FULL_MOCK.sample")
     assert next_sample != first_sample, f"Do another full mock did not advance sample: {next_sample}"
+
+    # Mark a full mock paper as practised -> stores mock:rue, shows "Hecho" badge in ES, allows unmarking
+    pg.click("#fmPapersList .fm-paper-row[data-fm-paper='rue'] .practised-mock-btn")
+    pg.wait_for_timeout(150)
+    mock_marked = pg.evaluate(
+        """() => {
+            const row = document.querySelector('#fmPapersList .fm-paper-row[data-fm-paper="rue"]');
+            return {
+                saved: (D.practised || {})['mock:rue'] || '',
+                doneAttr: row ? row.dataset.practised : '',
+                text: row ? row.textContent : '',
+            };
+        }"""
+    )
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", mock_marked["saved"]), f"mock:rue not saved: {mock_marked}"
+    assert mock_marked["doneAttr"] == "1" and "Hecho" in mock_marked["text"], mock_marked
+    pg.click("#fmPapersList .fm-paper-row[data-fm-paper='rue'] .practised-mock-btn")
+    pg.wait_for_timeout(150)
+    assert pg.evaluate("!(D.practised && D.practised['mock:rue'])"), "Unmarking mock:rue failed"
 
     # Clicking "Abrir materiales" on Listening in pre-flight opens Library filtered to Listening full paper
     pg.click("#fmPapersList .fm-paper-row[data-fm-paper='l'] button[data-action='openFullPaperLibrary']")
