@@ -82,28 +82,16 @@ with sync_playwright() as p:
 
     pg.evaluate("showView('exam'); document.getElementById('exPaper').value='l'; renderEx()")
     pg.wait_for_timeout(300)
-    exam_cards = pg.eval_on_selector_all(
-        "#exGuide .listen-test",
-        """els => els.map(e => ({
-            title: e.querySelector('.lt-head').textContent.trim(),
-            links: [...e.querySelectorAll('a')].map(a => a.textContent.trim())
-        }))""",
+    assert pg.eval_on_selector_all("#exGuide a, #exGuide .chip", "els => els.length") == 0, (
+        "exam mode #exGuide still has loose links or chips"
     )
-    titles = [c["title"] for c in exam_cards]
-    for wanted in ("Listening test 1", "Listening test 2 · part 1", "Full test 1", "Full test 2", "Handbook exercises"):
-        assert wanted in titles, f"listening card missing in Exam mode: {wanted} ({titles})"
-    for card in exam_cards:
-        if "Audio" in card["links"]:
-            assert any(k in card["links"] for k in ("Tapescript", "Answer key", "Tapescript and key")), (
-                f"audio without a tapescript/key in the same card: {card}"
-            )
-    orphan_chips = pg.evaluate(
-        "() => [...document.querySelectorAll('#exGuide .chip')].filter(a => !a.closest('.listen-test')).length"
+    ex_guide_btn = pg.evaluate(
+        "() => { const b = document.querySelector('#exGuide button[data-action=\"openFullPaperLibrary\"]'); return b ? b.dataset.paper : ''; }"
     )
-    assert orphan_chips == 0, "exam mode still paints a flat chip wall"
+    assert ex_guide_btn == "l", f"#exGuide button missing paper='l': {ex_guide_btn!r}"
     open_cnt_l = pg.evaluate("!!document.getElementById('openContentsL')")
     assert open_cnt_l, "the listening studio did not render the Open contents button"
-    out["2_grouped"] = {"exam": titles, "studio_open_contents": open_cnt_l}
+    out["2_grouped"] = {"exam_guide_paper": ex_guide_btn, "studio_open_contents": open_cnt_l}
     pg.locator("#exGuide").screenshot(path=os.path.join(OUT, "exam_listening.png"))
 
     # 3. The personalized study-plan sentence is gone in both languages.

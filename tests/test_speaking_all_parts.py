@@ -166,24 +166,37 @@ def main():
             assert photo["w"] > 200, "%s did not decode" % photo["src"]
         page.evaluate("() => SP_EXAM.close()")
 
-        # --- C. a whole mock, from Part 1 to the report
+        # --- C. a whole mock, from Part 1 to the report (1->2->3->4 continuously, never back to choose)
         page.evaluate("async () => { SPX_TEST.timeScale = 0.03; await SPX_TEST.startFull(4242) }")
         deadline = time.time() + 240
         final = {}
+        seen_screens = []
+        seen_parts = []
         while time.time() < deadline:
             final = page.evaluate("() => SPX_TEST.state()")
-            if final.get("screen") == "report":
+            scr = final.get("screen")
+            if scr and (not seen_screens or seen_screens[-1] != scr):
+                seen_screens.append(scr)
+            if scr == "exam":
+                pt = final.get("part")
+                if pt and (not seen_parts or seen_parts[-1] != pt):
+                    seen_parts.append(pt)
+            if scr in ("feedback", "report"):
                 break
-            page.wait_for_timeout(600)
+            page.wait_for_timeout(300)
         page.screenshot(path=os.path.join(OUT, "sp4_report.png"))
         browser.close()
 
     planned = [p.get("part") for p in (final.get("plan") or [])]
     stats = final.get("partStats") or {}
-    print("C. planned parts:", planned)
+    print("C. planned parts:", planned, "| seen screens:", seen_screens, "| seen parts:", seen_parts)
     print("C. turn stats:", {k: v for k, v in stats.items()})
     print("C. screen:", final.get("screen"), "| page errors:", errors[:3])
 
+    assert "choose" not in seen_screens, f"Full mock returned to choose screen: {seen_screens}"
+    assert seen_parts == sorted(seen_parts) and seen_parts[0] == 1 and seen_parts[-1] == 4, (
+        f"Full mock parts did not progress monotonically 1->4: {seen_parts}"
+    )
     assert sorted(set(planned)) == [1, 2, 3, 4], "the mock did not plan all four parts: %s" % planned
     total_candidate_turns = 0
     for part in ("1", "2", "3", "4"):

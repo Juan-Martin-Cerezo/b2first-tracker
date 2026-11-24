@@ -518,6 +518,45 @@ def main():
 
         # --- Mobile 390x844 light screenshot + zero overflow ---
         browser_m, pg_m, errors_m = open_app(p, user_obj, viewport=(390, 844))
+        # Direct part flow: spSelectPart(3) + Start goes straight to brief for Part 3 (no choose, no reset to Part 2)
+        pg_m.evaluate("""() => {
+            openUnitSession({skill: 'sp', value: 2, part: 2, min: 4}, {origin: 'practice', initialTab: 'session'});
+            spSelectPart(3);
+        }""")
+        pg_m.wait_for_timeout(150)
+        pg_m.click("#spxOpenBtn")
+        assert wait_until(pg_m, "SP_EXAM.screen==='brief' && SP_EXAM.part===3", 10), (
+            "spSelectPart(3) + Start did not open Part 3 brief directly"
+        )
+        direct_brief = pg_m.evaluate("""() => ({
+            screen: SP_EXAM.screen,
+            part: SP_EXAM.part,
+            full: !!SP_EXAM.full,
+            plannedParts: (SP_EXAM.session && SP_EXAM.session.plan && SP_EXAM.session.plan.parts || []).map(p => p.part),
+            sentence: (document.getElementById('spxBriefSentence') || {}).textContent?.trim() || '',
+            overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        })""")
+        assert direct_brief["screen"] == "brief" and direct_brief["part"] == 3 and not direct_brief["full"], direct_brief
+        assert direct_brief["plannedParts"] == [3], direct_brief
+        assert direct_brief["overflow"] <= 1, f"390x844 direct Part 3 brief overflow: {direct_brief}"
+        pg_m.screenshot(path=os.path.join(OUT_DIR, "speaking_part_direct_390_light.png"))
+        # Ready runs Part 3 directly (no reset to Part 2)
+        pg_m.evaluate("SPK.mode = 'sim'; SPX_TEST.timeScale = 0.05;")
+        pg_m.click("#spxReadyBtn")
+        assert wait_until(pg_m, "SP_EXAM.screen==='exam' && SP_EXAM.part===3", 10), (
+            "SP_EXAM.ready() after spSelectPart(3) did not run Part 3"
+        )
+        assert pg_m.evaluate("SP_EXAM.part === 3 && !SP_EXAM.full"), "Part 3 reset unexpectedly"
+        pg_m.evaluate("SP_EXAM.close()")
+        # Also verify Part 1 and Part 4 direct
+        for target_part in (1, 4):
+            pg_m.evaluate(f"spSelectPart({target_part})")
+            pg_m.click("#spxOpenBtn")
+            assert wait_until(pg_m, f"SP_EXAM.screen==='brief' && SP_EXAM.part==={target_part}", 10), (
+                f"spSelectPart({target_part}) + Start did not go directly to Part {target_part} brief"
+            )
+            pg_m.evaluate("SP_EXAM.close()")
+
         pg_m.evaluate("""() => {
             SP_EXAM.open();
         }""")
