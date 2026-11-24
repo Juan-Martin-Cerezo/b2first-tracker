@@ -498,8 +498,14 @@ with sync_playwright() as p:
                 paper: row.dataset.fmPaper || '',
                 text: row.querySelector('.fm-paper-name')?.textContent.trim() || '',
                 matBtn: !!row.querySelector('button[data-action="openFullPaperLibrary"]'),
-                links: [...row.querySelectorAll('.fm-paper-links a')].map(a => ({
-                    text: a.textContent.trim(),
+                chips: row.querySelectorAll('.fm-paper-links a, .chip').length,
+                practisedBtn: !!row.querySelector('.practised-mock-btn'),
+            }));
+            const matGroups = [...document.querySelectorAll('#fmMaterialsAll .fm-mat-group')].map(g => ({
+                paper: g.dataset.fmMatPaper || '',
+                links: [...g.querySelectorAll('a.fm-mat-link')].map(a => ({
+                    text: a.querySelector('.fm-mat-name')?.textContent.trim() || '',
+                    type: a.dataset.fmType || '',
                     href: a.getAttribute('href') || '',
                 })),
             }));
@@ -513,13 +519,16 @@ with sync_playwright() as p:
                 href: a.getAttribute('href') || '',
                 target: a.getAttribute('target') || '',
             }));
+            const onlineDetails = document.getElementById('fmOnlineDetails');
             return {
                 visible: !!box && !box.hidden,
                 doneVisible: getComputedStyle(document.getElementById('fmDoneBanner')).display !== 'none',
                 timerRunning: !!exIv,
                 papers,
+                matGroups,
                 samples,
                 online,
+                onlineCollapsed: !!(onlineDetails && onlineDetails.tagName === 'DETAILS' && !onlineDetails.open),
                 startSeqExists: !!document.getElementById('fmStartSeqBtn'),
                 aiQuotaText: (document.getElementById('fmAiQuota') || {}).textContent?.trim() || '',
                 allText: box ? box.textContent.toLowerCase() : '',
@@ -532,18 +541,20 @@ with sync_playwright() as p:
     assert not fm["doneVisible"], "Done banner should be hidden before finishing a full mock"
     assert not fm["timerRunning"], "Start full mock started countdown blindly instead of pre-flight"
     assert [x["paper"] for x in fm["papers"]] == ["rue", "w", "l", "sp"], fm["papers"]
-    assert all(x["matBtn"] for x in fm["papers"]), f"Missing Open materials button in pre-flight: {fm['papers']}"
+    assert all(not x["matBtn"] and x["chips"] == 0 and x["practisedBtn"] for x in fm["papers"]), f"Pre-flight rows should only have Done/Mark button: {fm['papers']}"
+    assert [g["paper"] for g in fm["matGroups"]] == ["rue", "w", "l", "sp"], fm["matGroups"]
     assert len(fm["samples"]) >= 2, f"Expected local samples in selector: {fm['samples']}"
     assert len(fm["online"]) >= 4, f"Expected >= 4 online full mocks, got {len(fm['online'])}: {fm['online']}"
+    assert fm["onlineCollapsed"], "More full mocks online should be collapsed inside <details>"
     assert all(o["href"].startswith("https://") and o["target"] == "_blank" for o in fm["online"]), fm["online"]
-    assert fm["startSeqExists"], "Start 195' sequence button missing"
+    assert fm["startSeqExists"], "Start full mock button missing"
     assert fm["aiQuotaText"], "AI speaking quota info missing"
     assert "no hay más" not in fm["allText"] and "no more mocks" not in fm["allText"]
-    # Verify exact materials on R&UoE (paper + key) and Listening (paper + key + audio)
-    rue_links = [x["text"].lower() for x in fm["papers"][0]["links"]]
-    l_links = [x["text"].lower() for x in fm["papers"][2]["links"]]
-    assert any("paper" in t for t in rue_links) and any("key" in t for t in rue_links), rue_links
-    assert any("paper" in t for t in l_links) and any("key" in t for t in l_links) and any("audio" in t for t in l_links), l_links
+    # Verify exact materials in #fmMaterialsAll on R&UoE (paper + key) and Listening (paper + key + audio)
+    rue_types = {x["type"] for x in fm["matGroups"][0]["links"]}
+    l_types = {x["type"] for x in fm["matGroups"][2]["links"]}
+    assert {"paper", "key"} <= rue_types, rue_types
+    assert {"paper", "key", "audio"} <= l_types, l_types
     assert fm["scrollWidth"] <= fm["clientWidth"] + 1, f"Pre-flight 390 overflow: {fm['scrollWidth']} > {fm['clientWidth']}"
 
     pg.evaluate("document.getElementById('fullMockPreflight').scrollIntoView({block:'start'}); if(document.activeElement)document.activeElement.blur();")
@@ -602,8 +613,8 @@ with sync_playwright() as p:
     pg.wait_for_timeout(150)
     assert pg.evaluate("!(D.practised && D.practised['mock:rue'])"), "Unmarking mock:rue failed"
 
-    # Clicking "Abrir materiales" on Listening in pre-flight opens Library filtered to Listening full paper
-    pg.click("#fmPapersList .fm-paper-row[data-fm-paper='l'] button[data-action='openFullPaperLibrary']")
+    # Clicking "Abrir materiales" on Listening card opens Library filtered to Listening full paper
+    pg.click("#examSelectGrid .exam-card[data-paper='l'] .exam-card-mat-btn")
     pg.wait_for_timeout(250)
     l_lib = pg.evaluate(
         """() => ({

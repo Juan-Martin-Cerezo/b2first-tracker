@@ -2874,10 +2874,8 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 .exam-card-mat-btn:hover{color:var(--txt)}
 .exam-card-mat-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
-.ex-active-lib-btn{min-height:44px}
-.ex-guide-actions{margin-bottom:var(--s3)}
-.ex-guide-actions .btn{min-height:44px}
 .ex-guide-pace{margin:0;font-size:var(--t-body);line-height:1.5;color:var(--txt)}
+#exActive[hidden]{display:none}
 .mock-start-card{max-width:460px;width:100%;box-sizing:border-box}
 .mock-start-title{font-size:var(--t-title);font-weight:600;color:var(--txt);margin:0}
 .mock-start-body{margin:var(--s3) 0 0;font-size:var(--t-body);line-height:1.55;color:var(--txt-2)}
@@ -2888,7 +2886,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
   .mock-start-actions{flex-direction:column;align-items:stretch}
   .mock-start-actions .btn{width:100%}
 }
-.fm-preflight{margin-bottom:var(--s5);border:1px solid var(--acc-border);scroll-margin-top:96px}
+.fm-preflight{margin-bottom:var(--s5);border:1px solid var(--acc-border);scroll-margin-top:64px}
 .fm-preflight[hidden]{display:none}
 .fm-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s3)}
 .fm-head>div{min-width:0;flex:1 1 220px}
@@ -2900,8 +2898,53 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .fm-done-banner[hidden]{display:none}
 .fm-done-banner h3{margin:0;font-size:var(--t-sub);color:var(--ok-text)}
 .fm-done-banner p{margin:0;font-size:var(--t-meta);color:var(--txt);line-height:1.45}
-.fm-block{margin-top:var(--s4)}
-.fm-block-title{font-size:var(--t-meta);font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-2);margin:0 0 var(--s2)}
+.fm-layout{display:flex;flex-direction:column;gap:var(--s4);min-width:0}
+.fm-setup-box,.fm-materials-wrap,.fm-extra-box{min-width:0;display:flex;flex-direction:column;gap:var(--s3)}
+.fm-runner{
+  position:sticky;top:54px;z-index:25;
+  background:var(--surface);border:1.5px solid var(--acc);border-radius:var(--r-panel);
+  padding:var(--s3) var(--s4);box-shadow:var(--shadow-2);
+  display:flex;flex-direction:column;gap:var(--s2);min-width:0;
+}
+body.fm-preflight-active .sticky-view-bar{display:none}
+body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:none}
+.fm-runner[hidden]{display:none}
+.fm-runner[data-fm-state="done"]{border-color:var(--ok-border);background:var(--ok-soft)}
+.fm-runner-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2)}
+.fm-runner-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 180px}
+.fm-runner-status{font-size:var(--t-meta);font-weight:700;color:var(--acc-text);line-height:1.35;overflow-wrap:anywhere}
+.fm-runner[data-fm-state="done"] .fm-runner-status{color:var(--ok-text);font-size:var(--t-sub)}
+.fm-runner-done-sub{margin:0;font-size:var(--t-meta);color:var(--txt);line-height:1.4}
+.fm-runner-done-sub[hidden]{display:none}
+.fm-runner-timer{
+  font-family:var(--mono);font-size:clamp(30px, 7.5vw, 42px);font-weight:700;line-height:1.1;
+  letter-spacing:-.02em;color:var(--txt);font-variant-numeric:tabular-nums;
+}
+.fm-runner-timer[hidden]{display:none}
+.fm-runner-controls{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.fm-runner-controls[hidden]{display:none}
+.fm-runner-controls .btn{min-height:44px}
+.fm-skip-confirm{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2);
+  padding:var(--s2) var(--s3);background:var(--surface-2);border:1px solid var(--warn-border, var(--line));
+  border-radius:var(--r-ctl);font-size:var(--t-meta);color:var(--txt);
+}
+.fm-skip-confirm[hidden]{display:none}
+.fm-skip-confirm-msg{flex:1 1 160px;min-width:0;line-height:1.35}
+.fm-skip-confirm-btns{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.fm-skip-confirm-btns .btn{min-height:44px}
+.fm-runner-links{display:flex;flex-wrap:wrap;gap:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.fm-runner-links[hidden]{display:none}
+.fm-runner-link{
+  display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:6px 12px;
+  border-radius:var(--r-ctl);border:1px solid var(--line);background:var(--surface-2);
+  color:var(--txt);text-decoration:none;font-size:var(--t-meta);font-weight:600;
+  transition:border-color 120ms ease,background-color 120ms ease;
+}
+.fm-runner-link:hover,.fm-runner-link:focus-visible{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text);text-decoration:none}
+.fm-block{margin-top:0}
+.fm-block-title{font-size:var(--t-meta);font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-2);margin:0 0 var(--s1)}
+.fm-sample-hint{margin:0 0 var(--s2);font-size:var(--t-meta);color:var(--txt-2);line-height:1.45}
 .fm-samples{display:flex;flex-wrap:wrap;gap:var(--s2)}
 .fm-sample-btn{
   min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);
@@ -2910,31 +2953,88 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 .fm-sample-btn[aria-pressed="true"]{background:var(--acc-soft);border-color:var(--acc);color:var(--acc-text)}
 .fm-sample-done-tag{font-size:11px;padding:1px 6px;border-radius:999px;background:var(--ok-soft);color:var(--ok-text)}
+.fm-materials-panel{
+  display:flex;flex-direction:column;gap:var(--s3);
+  padding:var(--s3);background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);min-width:0;
+}
+.fm-materials-head{display:flex;flex-direction:column;gap:2px}
+.fm-materials-grid{display:grid;grid-template-columns:1fr;gap:var(--s3)}
+.fm-mat-group{
+  display:flex;flex-direction:column;gap:var(--s2);
+  padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);min-width:0;
+}
+.fm-mat-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);flex-wrap:nowrap}
+.fm-mat-group-title{font-size:15px;font-weight:600;color:var(--txt);margin:0;line-height:1.3;min-width:0}
+.fm-mat-group-dur{flex:none;white-space:nowrap;font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums}
+.fm-mat-links{display:flex;flex-direction:column;gap:6px}
+.fm-mat-link{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  min-height:44px;padding:8px 12px;border-radius:var(--r-ctl);
+  border:1px solid var(--line);background:var(--surface-2);color:var(--txt);
+  text-decoration:none;font-size:14px;font-weight:500;line-height:1.3;min-width:0;
+  transition:border-color 120ms ease,background-color 120ms ease;
+}
+.fm-mat-link:hover,.fm-mat-link:focus-visible{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text);text-decoration:none}
+.fm-mat-name{min-width:0;overflow-wrap:anywhere}
+.fm-mat-type{
+  flex:none;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  padding:2px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--txt-2);
+}
+.fm-mat-empty{margin:0;font-size:var(--t-meta);color:var(--txt-2)}
 .fm-papers{display:flex;flex-direction:column;gap:var(--s2)}
 .fm-paper-row{
-  display:flex;flex-direction:column;gap:var(--s2);padding:var(--s3);
+  display:flex;flex-direction:column;gap:var(--s2);padding:var(--s2) var(--s3);
   background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);min-width:0;
 }
+.fm-paper-row.is-current{border-color:var(--acc);background:var(--acc-soft)}
 .fm-paper-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);flex-wrap:wrap}
 .fm-paper-name{font-size:var(--t-body);font-weight:600;color:var(--txt);min-width:0}
 .fm-paper-dur{font-size:var(--t-meta);color:var(--txt-2);font-variant-numeric:tabular-nums;margin-left:6px;font-weight:500}
-.fm-paper-links{display:flex;flex-wrap:wrap;gap:6px}
 .fm-ai-quota{
-  margin-top:var(--s3);padding:var(--s3);background:var(--surface-2);border:1px solid var(--line);
+  padding:var(--s3);background:var(--surface-2);border:1px solid var(--line);
   border-radius:var(--r-ctl);font-size:var(--t-meta);color:var(--txt-2);
   display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2);line-height:1.45;
 }
-.fm-actions{display:flex;flex-wrap:wrap;gap:var(--s2);margin-top:var(--s4);align-items:center}
+.fm-actions{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.fm-actions[hidden]{display:none}
 .fm-actions .btn{min-height:44px}
+.fm-start-btn{width:100%;justify-content:center;text-align:center;line-height:1.3;padding:10px 16px;height:auto}
+.fm-online-details{
+  border:1px solid var(--line);border-radius:var(--r-panel);background:var(--surface-2);padding:var(--s2) var(--s3);
+}
+.fm-online-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  min-height:44px;cursor:pointer;list-style:none;font-size:var(--t-meta);font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--txt-2);
+}
+.fm-online-summary::-webkit-details-marker{display:none}
+.fm-online-summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
+.fm-online-chev{flex:none;transition:transform 150ms ease}
+.fm-online-details[open] .fm-online-chev{transform:rotate(180deg)}
+.fm-online-body{padding-top:var(--s2)}
 .fm-online-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:var(--s2)}
 .fm-online-card{
   display:flex;flex-direction:column;gap:4px;padding:var(--s3);min-height:44px;min-width:0;
-  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-panel);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
   text-decoration:none;color:var(--txt);transition:border-color 120ms ease,background-color 120ms ease;
 }
 .fm-online-card:hover,.fm-online-card:focus-visible{border-color:var(--acc);background:var(--acc-soft);text-decoration:none}
 .fm-online-card b{font-size:14px;color:var(--txt);line-height:1.3;overflow-wrap:anywhere}
 .fm-online-card span{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
+@media (min-width:1024px){
+  .fm-layout{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr);
+    gap:var(--s4);
+    align-items:start;
+  }
+  .fm-runner{grid-column:1;top:68px}
+  .fm-setup-box{grid-column:1}
+  .fm-extra-box{grid-column:1}
+  .fm-materials-wrap{grid-column:2;grid-row:1 / span 4}
+  .fm-materials-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+  .fm-start-btn{width:auto}
+}
 .practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);margin-bottom:var(--s4)}
 .practice-intent-card{
   display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;
@@ -5402,17 +5502,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
-          <p class="u4-library-note">
-            <button type="button" class="u4-library-link" id="examLibraryLink" data-action="openPracticeCatalog" data-i18n="exam_library_link">Papers, keys and practice links live in Library</button>
-          </p>
         </div>
 
-        <!-- Full mock pre-flight: papers in order, sample selector, online mocks & unlimited exit -->
+        <!-- Full mock one-place screen: sample selector, inline runner, all 4 papers' materials & collapsed online mocks -->
         <div class="card fm-preflight" id="fullMockPreflight" hidden>
           <div class="fm-head">
             <div>
-              <h2 data-i18n="fm_title">Full mock — pre-flight</h2>
-              <div class="sub" data-i18n="fm_sub">Check your papers, pick a sample or an online test, and start the official 195′ written sequence followed by 14′ Speaking.</div>
+              <h2 data-i18n="fm_title">Full mock — keep everything at hand</h2>
+              <div class="sub" data-i18n="fm_sub">Pick a sample or open the exercises from any sample. Everything stays on this screen; the timer advances paper by paper.</div>
             </div>
             <button type="button" class="btn sm gray" id="fmCloseBtn" data-action="closeFullMockPreflight" data-i18n="common_close">Close</button>
           </div>
@@ -5424,28 +5521,71 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button type="button" class="btn gray" data-action="openSpeakingExam" data-i18n="fm_open_speaking">Start Speaking (14′)</button>
             </div>
           </div>
-          <div class="fm-block" id="fmSampleBlock">
-            <div class="fm-block-title" data-i18n="fm_sample_label">Choose a local sample</div>
-            <div class="fm-samples" id="fmSampleList" role="group"></div>
-          </div>
-          <div class="fm-block">
-            <div class="fm-block-title" data-i18n="fm_papers_title">Official sequence (4 papers)</div>
-            <div class="fm-papers" id="fmPapersList"></div>
-          </div>
-          <div class="fm-ai-quota" id="fmAiQuota"></div>
-          <div class="fm-actions">
-            <button type="button" class="btn ok" id="fmStartSeqBtn" data-action="beginFullMockSequence" data-i18n="fm_start_seq">Start 195′ sequence</button>
-          </div>
-          <div class="fm-block">
-            <div class="fm-block-title" data-i18n="fm_online_title">More full mocks online (free)</div>
-            <div class="sub" style="margin-bottom:var(--s2)" data-i18n="fm_online_sub">Unlimited free practice outside the local samples. Each opens in a new tab.</div>
-            <div class="fm-online-grid" id="fmOnlineList"></div>
+          <div class="fm-layout">
+            <div class="fm-runner" id="fmRunner" hidden>
+              <div class="fm-runner-top">
+                <div class="fm-runner-meta">
+                  <div class="fm-runner-status" id="fmRunnerTitle"></div>
+                  <p class="fm-runner-done-sub" id="fmRunnerDoneSub" hidden></p>
+                  <div class="fm-runner-timer tnum" id="fmRunnerTimer">01:15:00</div>
+                </div>
+                <div class="fm-runner-controls" id="fmRunnerControls">
+                  <button type="button" class="btn sm ok" id="fmRunnerPauseBtn" data-action="fmTogglePause" data-i18n="exam_pause">Pause</button>
+                  <button type="button" class="btn sm gray" id="fmRunnerSkipBtn" data-action="fmSkipNextPaper" data-i18n="fm_skip_next">Skip to next paper</button>
+                </div>
+              </div>
+              <div class="fm-skip-confirm" id="fmSkipConfirm" hidden>
+                <span class="fm-skip-confirm-msg" id="fmSkipConfirmMsg"></span>
+                <div class="fm-skip-confirm-btns">
+                  <button type="button" class="btn sm ok" id="fmSkipConfirmBtn" data-action="fmConfirmSkip" data-i18n="fm_skip_confirm_yes">Yes, skip</button>
+                  <button type="button" class="btn sm gray" id="fmSkipCancelBtn" data-action="fmCancelSkip" data-i18n="common_cancel">Cancel</button>
+                </div>
+              </div>
+              <div class="fm-runner-links" id="fmRunnerLinks"></div>
+            </div>
+
+            <div class="fm-setup-box">
+              <div class="fm-block" id="fmSampleBlock">
+                <div class="fm-block-title" data-i18n="fm_sample_label">Choose a local sample</div>
+                <p class="fm-sample-hint" id="fmAtHandHint" data-i18n="fm_athand_hint">Or open and keep all full exam exercises at hand right here.</p>
+                <div class="fm-samples" id="fmSampleList" role="group"></div>
+              </div>
+              <div class="fm-actions" id="fmStartActions">
+                <button type="button" class="btn ok fm-start-btn" id="fmStartSeqBtn" data-action="beginFullMockSequence" data-i18n="fm_start_seq">Start full mock · 195′ written + 14′ Speaking</button>
+              </div>
+            </div>
+
+            <div class="fm-materials-wrap">
+              <div class="fm-materials-panel" id="fmMaterialsAll">
+                <div class="fm-materials-head">
+                  <div class="fm-block-title" data-i18n="fm_materials_title">All exercises, at hand</div>
+                </div>
+                <div class="fm-materials-grid" id="fmMaterialsGrid"></div>
+              </div>
+            </div>
+
+            <div class="fm-extra-box">
+              <div class="fm-block">
+                <div class="fm-block-title" data-i18n="fm_papers_title">Official sequence (4 papers)</div>
+                <div class="fm-papers" id="fmPapersList"></div>
+              </div>
+              <div class="fm-ai-quota" id="fmAiQuota"></div>
+              <details class="fm-online-details" id="fmOnlineDetails">
+                <summary class="fm-online-summary">
+                  <span data-i18n="fm_online_title">More full mocks online (free)</span>
+                  <span class="fm-online-chev" aria-hidden="true">▾</span>
+                </summary>
+                <div class="fm-online-body">
+                  <div class="sub" style="margin-bottom:var(--s2)" data-i18n="fm_online_sub">Unlimited free practice outside the local samples. Each opens in a new tab.</div>
+                  <div class="fm-online-grid" id="fmOnlineList"></div>
+                </div>
+              </details>
+            </div>
           </div>
         </div>
 
-        <!-- Advanced selector (test contract) -->
-        <div style="margin:0 0 var(--s5);max-width:480px">
-          <label data-i18n="exam_manual">Or pick the paper manually</label>
+        <!-- Hidden paper selector kept for test contract -->
+        <div hidden aria-hidden="true">
           <select id="exPaper" data-change="renderEx">
             <option value="rue" data-i18n="exam_opt_rue">Reading &amp; Use of English — 75 min (52 questions)</option>
             <option value="w" data-i18n="exam_opt_w">Writing — 80 min (2 texts)</option>
@@ -5472,9 +5612,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
               <button class="btn" data-action="exStart" data-i18n="common_start">▶ Start</button>
               <button class="btn gray" data-action="exPause">⏸ <span data-i18n="exam_pause">Pause</span></button>
               <button class="btn gray" data-action="exResetUser">↺ <span data-i18n="exam_reset">Reset</span></button>
-            </div>
-            <div style="margin:0 0 var(--s3)">
-              <button type="button" class="btn sm gray ex-active-lib-btn" id="exActiveLibBtn" data-action="openActiveExamMaterials" data-i18n="exam_open_mock_materials">Open materials for this mock</button>
             </div>
             <div id="exGuide" class="exam-guide-card" style="text-align:left"></div>
             <div id="exRegister" style="display:none;background:var(--surface-container-low);border:1px solid var(--outline-variant);border-radius:var(--r-ctl);padding:var(--s4);text-align:left">
@@ -6367,7 +6504,6 @@ const I18N={
     exam_in_progress:'In progress',
     exam_pause:'Pause',
     exam_reset:'Reset',
-    exam_manual:'Or pick the paper manually',
     exam_opt_rue:'Reading & Use of English — 75 min (52 questions)',
     exam_opt_w:'Writing — 80 min (2 texts)',
     exam_opt_l:'Listening — 40 min (30 questions)',
@@ -6377,7 +6513,6 @@ const I18N={
     exam_start_full:'Start full mock',
     exam_full_hint:'Full mock runs R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.',
     exam_desc_sp:'4 parts with the AI examiner: interview, long turn, collaborative task and discussion.',
-    exam_library_link:'Papers, keys and practice links live in Library',
     exam_sources_group_rue_title:'Reading & Use of English',
     exam_sources_group_rue_sub:'7 parts · grammar, vocabulary, cloze, word formation and reading comprehension.',
     exam_sources_group_w_title:'Writing',
@@ -7195,7 +7330,6 @@ const I18N={
     practice_res_total_one:'1 resource',
     practice_res_total_many:'{n} resources',
     exam_open_materials:'Open materials',
-    exam_open_mock_materials:'Open materials for this mock',
     mock_start_go:'Start timer',
     mock_start_full_title:'Full mock',
     mock_start_full_body:'Full mock · 195 written minutes + 14 min Speaking, in official order.',
@@ -7204,13 +7338,36 @@ const I18N={
     ex_guide_pace_w:'Exam strategy: Part 1 Essay (5′ plan + 35′ write) → Part 2 of your choice (5′ + 30′) → 5′ review. 140–190 words per text.',
     ex_guide_pace_l:'Pace: 30 questions, ~40 min with preview reading. Never pause the audio.',
     ex_guide_pace_full:'Official exam sequence (195 min): 1. R&UoE 75′ → 2. Writing 80′ → 3. Listening 40′ → 4. Speaking 14′.',
-    fm_title:'Full mock — pre-flight',
-    fm_sub:'Check your papers, pick a sample or an online test, and start the official 195′ written sequence followed by 14′ Speaking.',
+    fm_title:'Full mock — keep everything at hand',
+    fm_sub:'Pick a sample or open the exercises from any sample. Everything stays on this screen; the timer advances paper by paper.',
     fm_sample_label:'Choose a local sample',
+    fm_athand_hint:'Or open and keep all full exam exercises at hand right here.',
+    fm_materials_title:'All exercises, at hand',
+    fm_mat_paper:'Paper',
+    fm_mat_key:'Answer key',
+    fm_mat_keys:'Answer keys',
+    fm_mat_audio:'Audio',
+    fm_mat_audio_part:'Audio Part {n}',
+    fm_mat_tapescript:'Tapescript',
+    fm_mat_speaking_cards:'Speaking cards',
+    fm_mat_examiner_notes:'Examiner notes',
+    fm_mat_type_paper:'Paper',
+    fm_mat_type_key:'Key',
+    fm_mat_type_audio:'Audio',
+    fm_mat_type_tapescript:'Tapescript',
+    fm_mat_type_notes:'Notes',
+    fm_mat_empty:'No local files for this paper yet.',
+    fm_runner_paper:'Paper {n} of 4 · {paper} · {mins}′',
+    fm_runner_resume:'Resume',
+    fm_skip_next:'Skip to next paper',
+    fm_skip_confirm_msg:'Timer is still running. Skip to {next}?',
+    fm_skip_confirm_yes:'Yes, skip',
+    fm_runner_done:'Complete',
+    fm_runner_done_sub:'All 4 papers finished — ready for another?',
     fm_sample_done:'Done',
     fm_sample_none:'Local PDFs are not loaded yet — you can use the free online full mocks below right away.',
     fm_papers_title:'Official sequence (4 papers)',
-    fm_start_seq:'Start 195′ sequence',
+    fm_start_seq:'Start full mock · 195′ written + 14′ Speaking',
     fm_online_title:'More full mocks online (free)',
     fm_online_sub:'Unlimited free practice outside the local samples. Each opens in a new tab.',
     fm_done_title:'Full mock finished — ready for another?',
@@ -7496,7 +7653,6 @@ const I18N={
     exam_in_progress:'En curso',
     exam_pause:'Pausar',
     exam_reset:'Reiniciar',
-    exam_manual:'O elegí la prueba manualmente',
     exam_opt_rue:'Reading & Use of English — 75 min (52 preguntas)',
     exam_opt_w:'Writing — 80 min (2 textos)',
     exam_opt_l:'Listening — 40 min (30 preguntas)',
@@ -7506,7 +7662,6 @@ const I18N={
     exam_start_full:'Empezar simulacro completo',
     exam_full_hint:'El simulacro completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
     exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
-    exam_library_link:'Los exámenes, respuestas y enlaces de práctica están en la Biblioteca',
     exam_sources_group_rue_title:'Reading y Use of English',
     exam_sources_group_rue_sub:'7 partes · gramática, vocabulario, cloze, formación de palabras y comprensión lectora.',
     exam_sources_group_w_title:'Writing',
@@ -8324,7 +8479,6 @@ const I18N={
     practice_res_total_one:'1 recurso',
     practice_res_total_many:'{n} recursos',
     exam_open_materials:'Abrir materiales',
-    exam_open_mock_materials:'Abrir materiales de este simulacro',
     mock_start_go:'Empezar contador',
     mock_start_full_title:'Full mock',
     mock_start_full_body:'Full mock · 195 minutos escritos + 14 de Speaking, en orden oficial.',
@@ -8333,13 +8487,36 @@ const I18N={
     ex_guide_pace_w:'Estrategia de examen: Parte 1 Essay (5′ plan + 35′ redacción) → Parte 2 a elección (5′ + 30′) → 5′ revisión. 140–190 palabras por texto.',
     ex_guide_pace_l:'Ritmo: 30 preguntas, ~40 min con lectura previa. No pauses el audio.',
     ex_guide_pace_full:'Secuencia oficial (195 min): 1. R&UoE 75′ → 2. Writing 80′ → 3. Listening 40′ → 4. Speaking 14′.',
-    fm_title:'Simulacro completo — preparación',
-    fm_sub:'Revisá los materiales, elegí una muestra o un test online, y empezá la secuencia oficial de 195′ escritos seguida por 14′ de Speaking.',
+    fm_title:'Full mock — tené todo a mano',
+    fm_sub:'Elegí una muestra o abrí los ejercicios de cualquier muestra. Todo queda en esta pantalla; el cronómetro avanza paper por paper.',
     fm_sample_label:'Elegí una muestra local',
+    fm_athand_hint:'O abrí y tené a mano todos los ejercicios del full exam acá mismo.',
+    fm_materials_title:'Todos los ejercicios, a mano',
+    fm_mat_paper:'Paper',
+    fm_mat_key:'Answer key',
+    fm_mat_keys:'Answer keys',
+    fm_mat_audio:'Audio',
+    fm_mat_audio_part:'Audio Parte {n}',
+    fm_mat_tapescript:'Tapescript',
+    fm_mat_speaking_cards:'Speaking cards',
+    fm_mat_examiner_notes:'Notas del examinador',
+    fm_mat_type_paper:'Paper',
+    fm_mat_type_key:'Respuestas',
+    fm_mat_type_audio:'Audio',
+    fm_mat_type_tapescript:'Transcripción',
+    fm_mat_type_notes:'Notas',
+    fm_mat_empty:'Todavía no hay archivos locales para este paper.',
+    fm_runner_paper:'Paper {n} de 4 · {paper} · {mins}′',
+    fm_runner_resume:'Reanudar',
+    fm_skip_next:'Saltar al siguiente paper',
+    fm_skip_confirm_msg:'El cronómetro sigue corriendo. ¿Saltar a {next}?',
+    fm_skip_confirm_yes:'Sí, saltar',
+    fm_runner_done:'Completo',
+    fm_runner_done_sub:'Terminaste los 4 papers — ¿hacemos otro?',
     fm_sample_done:'Hecho',
     fm_sample_none:'Todavía no hay PDFs locales cargados — podés usar los full mocks online gratis de abajo ahora mismo.',
     fm_papers_title:'Secuencia oficial (4 pruebas)',
-    fm_start_seq:'Empezar secuencia 195′',
+    fm_start_seq:'Empezar full mock · 195′ escritos + 14′ Speaking',
     fm_online_title:'Más full mocks online (gratis)',
     fm_online_sub:'Práctica gratis ilimitada más allá de las muestras locales. Cada uno abre en pestaña nueva.',
     fm_done_title:'Simulacro terminado — ¿hacemos otro?',
@@ -19570,31 +19747,98 @@ let exLeft=75*60,exIv=null,exPaper='rue';
 /* U4: real mocks. A card sets the paper, its official duration and starts
    the existing countdown in one click. The full mock chains the three written
    papers and hands over to the SP_EXAM speaking test (14 min). */
-const FULL_MOCK={active:false,preflightOpen:false,finished:false,sample:'s1',completedSamples:[],idx:0,phases:['rue','w','l']};
+const FULL_MOCK={active:false,started:false,preflightOpen:false,finished:false,skipConfirmOpen:false,sample:'s1',completedSamples:[],idx:0,phases:['rue','w','l']};
+const FM_MAT_TYPE_KEYS={
+  paper:'fm_mat_type_paper',
+  key:'fm_mat_type_key',
+  audio:'fm_mat_type_audio',
+  tapescript:'fm_mat_type_tapescript',
+  notes:'fm_mat_type_notes'
+};
 const FULL_MOCK_SAMPLES=[
   {id:'s1',labelKey:'fm_sample_s1',papers:{
-    rue:[['Paper','rueS1'],['Answer key','keyS1']],
-    w:[['Paper','wS1']],
-    l:[['Paper','lS1'],['Answer key','lkS1'],['Audio','auS1'],['Tapescript','tsS1']],
-    sp:[['Speaking cards','spS1']]
+    rue:[
+      {labelKey:'fm_mat_paper',mat:'rueS1',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'keyS1',type:'key'}
+    ],
+    w:[
+      {labelKey:'fm_mat_paper',mat:'wS1',type:'paper'}
+    ],
+    l:[
+      {labelKey:'fm_mat_paper',mat:'lS1',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'lkS1',type:'key'},
+      {labelKey:'fm_mat_audio',mat:'auS1',type:'audio'},
+      {labelKey:'fm_mat_tapescript',mat:'tsS1',type:'tapescript'}
+    ],
+    sp:[
+      {labelKey:'fm_mat_speaking_cards',mat:'spS1',type:'paper'},
+      {labelKey:'fm_mat_examiner_notes',mat:'exC0',type:'notes'}
+    ]
   }},
   {id:'s2',labelKey:'fm_sample_s2',papers:{
-    rue:[['Paper','rueS2'],['Answer keys','keyS2']],
-    w:[['Paper','wS2'],['Answer keys','keyS2']],
-    l:[['Paper','lS2'],['Answer key','lkS2'],['Audio P1','auS2p1'],['Audio P2','auS2p2'],['Audio P3','auS2p3'],['Audio P4','auS2p4']],
-    sp:[['Speaking cards','spS2']]
+    rue:[
+      {labelKey:'fm_mat_paper',mat:'rueS2',type:'paper'},
+      {labelKey:'fm_mat_keys',mat:'keyS2',type:'key'}
+    ],
+    w:[
+      {labelKey:'fm_mat_paper',mat:'wS2',type:'paper'},
+      {labelKey:'fm_mat_keys',mat:'keyS2',type:'key'}
+    ],
+    l:[
+      {labelKey:'fm_mat_paper',mat:'lS2',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'lkS2',type:'key'},
+      {labelKey:'fm_mat_audio_part',part:1,mat:'auS2p1',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:2,mat:'auS2p2',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:3,mat:'auS2p3',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:4,mat:'auS2p4',type:'audio'}
+    ],
+    sp:[
+      {labelKey:'fm_mat_speaking_cards',mat:'spS2',type:'paper'},
+      {labelKey:'fm_mat_examiner_notes',suffix:' 2',mat:'exC1',type:'notes'},
+      {labelKey:'fm_mat_examiner_notes',suffix:' 3',mat:'exC2',type:'notes'}
+    ]
   }},
   {id:'fs1',labelKey:'fm_sample_fs1',papers:{
-    rue:[['Paper','rueFS1'],['Answer key','keyFS1']],
-    w:[['Paper','wFS1']],
-    l:[['Paper','lFS1'],['Answer key','lkFS1'],['Audio P1','auFS1p1'],['Audio P2','auFS1p2'],['Audio P3','auFS1p3'],['Audio P4','auFS1p4'],['Tapescript','tsFS1']],
-    sp:[['Speaking cards','spFS1']]
+    rue:[
+      {labelKey:'fm_mat_paper',mat:'rueFS1',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'keyFS1',type:'key'}
+    ],
+    w:[
+      {labelKey:'fm_mat_paper',mat:'wFS1',type:'paper'}
+    ],
+    l:[
+      {labelKey:'fm_mat_paper',mat:'lFS1',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'lkFS1',type:'key'},
+      {labelKey:'fm_mat_audio_part',part:1,mat:'auFS1p1',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:2,mat:'auFS1p2',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:3,mat:'auFS1p3',type:'audio'},
+      {labelKey:'fm_mat_audio_part',part:4,mat:'auFS1p4',type:'audio'},
+      {labelKey:'fm_mat_tapescript',mat:'tsFS1',type:'tapescript'}
+    ],
+    sp:[
+      {labelKey:'fm_mat_speaking_cards',mat:'spFS1',type:'paper'},
+      {labelKey:'fm_mat_examiner_notes',suffix:' FS 1',mat:'exC3',type:'notes'}
+    ]
   }},
   {id:'fs2',labelKey:'fm_sample_fs2',papers:{
-    rue:[['Paper','rueFS2'],['Answer keys','keyFS2']],
-    w:[['Paper','wFS2'],['Answer keys','keyFS2']],
-    l:[['Paper','lFS2'],['Answer key','lkFS2'],['Audio','auFS2']],
-    sp:[['Speaking cards','spFS2']]
+    rue:[
+      {labelKey:'fm_mat_paper',mat:'rueFS2',type:'paper'},
+      {labelKey:'fm_mat_keys',mat:'keyFS2',type:'key'}
+    ],
+    w:[
+      {labelKey:'fm_mat_paper',mat:'wFS2',type:'paper'},
+      {labelKey:'fm_mat_keys',mat:'keyFS2',type:'key'}
+    ],
+    l:[
+      {labelKey:'fm_mat_paper',mat:'lFS2',type:'paper'},
+      {labelKey:'fm_mat_key',mat:'lkFS2',type:'key'},
+      {labelKey:'fm_mat_audio',mat:'auFS2',type:'audio'}
+    ],
+    sp:[
+      {labelKey:'fm_mat_speaking_cards',mat:'spFS2',type:'paper'},
+      {labelKey:'fm_mat_examiner_notes',suffix:' FS 2',mat:'exC4',type:'notes'},
+      {labelKey:'fm_mat_examiner_notes',suffix:' FS 3',mat:'exC5',type:'notes'}
+    ]
   }}
 ];
 const FULL_MOCK_ONLINE_URLS=[
@@ -19606,7 +19850,26 @@ const FULL_MOCK_ONLINE_URLS=[
   'https://www.flo-joe.co.uk/fce/students/tests/'
 ];
 function availableFullMockSamples(){
-  return FULL_MOCK_SAMPLES.filter(s=>Object.values(s.papers).some(arr=>arr.some(pair=>!!MAT[pair[1]])));
+  return FULL_MOCK_SAMPLES.filter(s=>Object.values(s.papers).some(arr=>arr.some(item=>!!MAT[item.mat])));
+}
+function fmSampleItemLabel(item){
+  const base=item.part!=null?t(item.labelKey,{n:item.part}):t(item.labelKey);
+  return base+(item.suffix||'');
+}
+function fmSampleItemsForPaper(sample,paperId){
+  if(!sample||!sample.papers||!sample.papers[paperId])return [];
+  return sample.papers[paperId]
+    .filter(item=>!!MAT[item.mat])
+    .map(item=>({
+      label:fmSampleItemLabel(item),
+      href:MAT[item.mat],
+      type:item.type,
+      typeLabel:t(FM_MAT_TYPE_KEYS[item.type]||'fm_mat_type_paper')
+    }));
+}
+function fullMockActiveSample(){
+  const avail=availableFullMockSamples();
+  return avail.find(s=>s.id===FULL_MOCK.sample)||avail[0]||null;
 }
 function fullMockOnlineSources(){
   if(typeof PRACTICE_SOURCES==='undefined'||!Array.isArray(PRACTICE_SOURCES))return [];
@@ -19620,11 +19883,69 @@ function fullMockOnlineSources(){
 function examPaperTitle(p){
   return p==='rue'?'Reading & Use of English':p==='w'?'Writing':p==='l'?'Listening':p==='sp'?'Speaking':t('exam_full_title');
 }
+function syncFullMockRunner(){
+  const runner=document.getElementById('fmRunner');
+  const exActive=document.getElementById('exActive');
+  const startWrap=document.getElementById('fmStartActions');
+  const runningMode=!!(FULL_MOCK.active&&FULL_MOCK.started);
+  const doneMode=!!(!runningMode&&FULL_MOCK.finished);
+  document.body.classList.toggle('fm-preflight-active',!!FULL_MOCK.preflightOpen);
+  document.body.classList.toggle('fm-running-active',runningMode);
+  if(exActive)exActive.hidden=runningMode;
+  if(startWrap)startWrap.hidden=runningMode;
+  if(!runner)return;
+  runner.hidden=!(runningMode||doneMode);
+  if(runner.hidden)return;
+  const titleEl=document.getElementById('fmRunnerTitle');
+  const doneSub=document.getElementById('fmRunnerDoneSub');
+  const timerEl=document.getElementById('fmRunnerTimer');
+  const ctrlEl=document.getElementById('fmRunnerControls');
+  const skipBox=document.getElementById('fmSkipConfirm');
+  const skipMsg=document.getElementById('fmSkipConfirmMsg');
+  const linksEl=document.getElementById('fmRunnerLinks');
+  const pauseBtn=document.getElementById('fmRunnerPauseBtn');
+  if(runningMode){
+    runner.dataset.fmState='running';
+    const paperId=FULL_MOCK.phases[FULL_MOCK.idx]||'rue';
+    const mins=Math.round((EX_DUR[paperId]||75*60)/60);
+    if(titleEl)titleEl.textContent=t('fm_runner_paper',{n:String(FULL_MOCK.idx+1),paper:examPaperTitle(paperId),mins:String(mins)});
+    if(doneSub)doneSub.hidden=true;
+    if(timerEl)timerEl.hidden=false;
+    if(ctrlEl)ctrlEl.hidden=false;
+    if(pauseBtn)pauseBtn.textContent=exIv?t('exam_pause'):t('fm_runner_resume');
+    if(skipBox)skipBox.hidden=!FULL_MOCK.skipConfirmOpen;
+    if(skipMsg&&FULL_MOCK.skipConfirmOpen){
+      const nextPaper=FULL_MOCK.phases[FULL_MOCK.idx+1]||'sp';
+      skipMsg.textContent=t('fm_skip_confirm_msg',{next:examPaperTitle(nextPaper)});
+    }
+    if(linksEl){
+      const items=fmSampleItemsForPaper(fullMockActiveSample(),paperId);
+      linksEl.hidden=!items.length;
+      linksEl.innerHTML=items.map(it=>
+        `<a class="fm-runner-link" href="${esc(it.href)}" target="_blank" rel="noopener" data-fm-type="${esc(it.type)}">`+
+          `<span>${esc(it.label)}</span>`+
+          `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
+        `</a>`
+      ).join('');
+    }
+  }else{
+    runner.dataset.fmState='done';
+    if(titleEl)titleEl.textContent=t('fm_runner_done');
+    if(doneSub){doneSub.hidden=false;doneSub.textContent=t('fm_runner_done_sub');}
+    if(timerEl)timerEl.hidden=true;
+    if(ctrlEl)ctrlEl.hidden=true;
+    if(skipBox)skipBox.hidden=true;
+    if(linksEl)linksEl.hidden=true;
+  }
+}
 function renderFullMockPreflight(){
   const box=document.getElementById('fullMockPreflight');
   if(!box)return;
   box.hidden=!FULL_MOCK.preflightOpen;
-  if(!FULL_MOCK.preflightOpen)return;
+  if(!FULL_MOCK.preflightOpen){
+    syncFullMockRunner();
+    return;
+  }
   const doneEl=document.getElementById('fmDoneBanner');
   if(doneEl)doneEl.hidden=!FULL_MOCK.finished;
   const avail=availableFullMockSamples();
@@ -19648,28 +19969,47 @@ function renderFullMockPreflight(){
     }
   }
   const activeSample=avail.find(s=>s.id===FULL_MOCK.sample)||null;
+  const seq=[
+    {id:'rue',num:1,title:'Reading & Use of English',seqTitle:'1. Reading & Use of English',dur:'75′'},
+    {id:'w',num:2,title:'Writing',seqTitle:'2. Writing',dur:'80′'},
+    {id:'l',num:3,title:'Listening',seqTitle:'3. Listening',dur:'40′'},
+    {id:'sp',num:4,title:'Speaking',seqTitle:'4. Speaking',dur:'14′'}
+  ];
+  const matGrid=document.getElementById('fmMaterialsGrid');
+  if(matGrid){
+    matGrid.innerHTML=seq.map(p=>{
+      const items=fmSampleItemsForPaper(activeSample,p.id);
+      const linksHtml=items.length
+        ?`<div class="fm-mat-links">`+items.map(it=>
+            `<a class="fm-mat-link" href="${esc(it.href)}" target="_blank" rel="noopener" data-fm-paper="${p.id}" data-fm-type="${esc(it.type)}">`+
+              `<span class="fm-mat-name">${esc(it.label)}</span>`+
+              `<span class="fm-mat-type">${esc(it.typeLabel)}</span>`+
+            `</a>`
+          ).join('')+`</div>`
+        :`<p class="fm-mat-empty">${esc(t('fm_mat_empty'))}</p>`;
+      return `<div class="fm-mat-group" data-fm-mat-paper="${p.id}">`+
+        `<div class="fm-mat-group-head">`+
+          `<h3 class="fm-mat-group-title">${p.num}. ${esc(p.title)}</h3>`+
+          `<span class="fm-mat-group-dur">${esc(p.dur)}</span>`+
+        `</div>`+
+        linksHtml+
+      `</div>`;
+    }).join('');
+  }
   const papersEl=document.getElementById('fmPapersList');
   if(papersEl){
-    const seq=[
-      {id:'rue',title:'1. Reading & Use of English',dur:'75′'},
-      {id:'w',title:'2. Writing',dur:'80′'},
-      {id:'l',title:'3. Listening',dur:'40′'},
-      {id:'sp',title:'4. Speaking',dur:'14′'}
-    ];
+    const currentPaper=(FULL_MOCK.active&&FULL_MOCK.started)?FULL_MOCK.phases[FULL_MOCK.idx]:'';
     papersEl.innerHTML=seq.map(p=>{
-      const pairs=activeSample?(activeSample.papers[p.id]||[]).filter(pair=>!!MAT[pair[1]]):[];
-      const quick=pairs.map(pair=>`<a class="chip" href="${esc(MAT[pair[1]])}" target="_blank" rel="noopener">${esc(pair[0])}</a>`).join('');
       const pKey=practisedMockKey(p.id);
       const done=isPractised(pKey);
-      return `<div class="fm-paper-row${done?' is-practised':''}" data-fm-paper="${p.id}" data-practised="${done?'1':'0'}">`+
+      const isCurr=(p.id===currentPaper);
+      return `<div class="fm-paper-row${done?' is-practised':''}${isCurr?' is-current':''}" data-fm-paper="${p.id}" data-practised="${done?'1':'0'}">`+
         `<div class="fm-paper-top">`+
-          `<span class="fm-paper-name">${esc(p.title)}<span class="fm-paper-dur">${esc(p.dur)}</span>${done?`<span class="practised-badge">${esc(t('fm_sample_done'))}</span>`:''}</span>`+
+          `<span class="fm-paper-name">${esc(p.seqTitle)}<span class="fm-paper-dur">${esc(p.dur)}</span>${done?`<span class="practised-badge">${esc(t('fm_sample_done'))}</span>`:''}</span>`+
           `<div class="fm-paper-btns">`+
             `<button type="button" class="btn sm gray practised-mock-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>`+
-            `<button type="button" class="btn sm gray" data-paper="${p.id}" data-action="openFullPaperLibrary">${esc(t('exam_open_materials'))}</button>`+
           `</div>`+
         `</div>`+
-        (quick?`<div class="fm-paper-links">${quick}</div>`:'')+
         `</div>`;
     }).join('');
   }
@@ -19699,6 +20039,7 @@ function renderFullMockPreflight(){
     onlineEl.innerHTML=online.map(s=>`<a class="fm-online-card" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">`+
       `<b>${esc(s.n)} ↗</b><span>${esc(t('practice_mins',{mins:s.mins}))} · ${esc(t('practice_kind_'+(s.kind||'free')))}</span></a>`).join('');
   }
+  syncFullMockRunner();
 }
 const MOCK_START_STATE={open:false,paper:'rue',isFull:false,prevFocus:null};
 function mockStartFocusables(){
@@ -19740,23 +20081,44 @@ function closeMockStartModal(keepActive){
   MOCK_START_STATE.prevFocus=null;
   if(!keepActive&&wasFull&&!exIv){
     FULL_MOCK.active=false;
+    FULL_MOCK.started=false;
+    FULL_MOCK.skipConfirmOpen=false;
+    syncFullMockRunner();
   }
   if(!keepActive&&prev&&typeof prev.focus==='function')prev.focus();
 }
 function confirmMockStart(){
   if(!MOCK_START_STATE.open)return;
+  const isFull=MOCK_START_STATE.isFull;
   closeMockStartModal(true);
+  if(isFull){
+    FULL_MOCK.active=true;
+    FULL_MOCK.started=true;
+    FULL_MOCK.finished=false;
+    FULL_MOCK.preflightOpen=true;
+    FULL_MOCK.skipConfirmOpen=false;
+    renderFullMockPreflight();
+    if(!exIv)exStart();
+    return;
+  }
   if(FULL_MOCK.preflightOpen){
     FULL_MOCK.preflightOpen=false;
     renderFullMockPreflight();
   }
+  syncFullMockRunner();
   if(!exIv)exStart();
   const box=document.getElementById('exActive');
   if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function openMockStartMaterials(){
-  const targetPaper=MOCK_START_STATE.isFull?'all':MOCK_START_STATE.paper;
+  const isFull=MOCK_START_STATE.isFull;
+  const targetPaper=MOCK_START_STATE.paper;
   closeMockStartModal(false);
+  if(isFull){
+    FULL_MOCK.preflightOpen=true;
+    renderFullMockPreflight();
+    return;
+  }
   openFullPaperLibrary(targetPaper);
 }
 document.addEventListener('keydown',function(e){
@@ -19781,6 +20143,10 @@ function startRealMock(paper,keepFull,autoStart){
   if(paper==='full'){startFullMock();return}
   if(paper==='sp'){openSpeakingExam();return}
   FULL_MOCK.active=!!keepFull;
+  if(!keepFull){
+    FULL_MOCK.started=false;
+    FULL_MOCK.skipConfirmOpen=false;
+  }
   exPaper=paper;
   const sel=document.getElementById('exPaper');
   if(sel)sel.value=paper;
@@ -19788,11 +20154,21 @@ function startRealMock(paper,keepFull,autoStart){
   const titleEl=document.getElementById('exActiveTitle');
   if(titleEl)titleEl.textContent=examPaperTitle(paper);
   if(autoStart){
+    if(keepFull){
+      FULL_MOCK.started=true;
+      FULL_MOCK.preflightOpen=true;
+      renderFullMockPreflight();
+    }else{
+      syncFullMockRunner();
+    }
     if(!exIv)exStart();
-    const box=document.getElementById('exActive');
-    if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
+    if(!keepFull){
+      const box=document.getElementById('exActive');
+      if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
+    }
     return;
   }
+  syncFullMockRunner();
   openMockStartModal(paper,!!keepFull);
 }
 function startFullMock(){
@@ -19803,9 +20179,15 @@ function startFullMock(){
   if(typeof loadPlan==='function'&&!PLAN_STATE)loadPlan().then(()=>renderFullMockPreflight());
   renderFullMockPreflight();
   const box=document.getElementById('fullMockPreflight');
-  if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
+  if(box)window.scrollTo({top:Math.max(0,box.getBoundingClientRect().top+window.scrollY-60),behavior:'smooth'});
 }
 function closeFullMockPreflight(){
+  if(FULL_MOCK.active){
+    exPause();
+    FULL_MOCK.active=false;
+    FULL_MOCK.started=false;
+    FULL_MOCK.skipConfirmOpen=false;
+  }
   FULL_MOCK.preflightOpen=false;
   renderFullMockPreflight();
 }
@@ -19816,7 +20198,9 @@ function selectFullMockSample(sampleId){
 }
 function beginFullMockSequence(){
   FULL_MOCK.active=true;
+  FULL_MOCK.started=false;
   FULL_MOCK.finished=false;
+  FULL_MOCK.skipConfirmOpen=false;
   FULL_MOCK.idx=0;
   startRealMock(FULL_MOCK.phases[0],true,false);
 }
@@ -19825,6 +20209,8 @@ function markFullMockCompleted(){
     FULL_MOCK.completedSamples.push(FULL_MOCK.sample);
   }
   FULL_MOCK.active=false;
+  FULL_MOCK.started=false;
+  FULL_MOCK.skipConfirmOpen=false;
   FULL_MOCK.finished=true;
   FULL_MOCK.preflightOpen=true;
   renderFullMockPreflight();
@@ -19838,24 +20224,75 @@ function doAnotherFullMock(){
     const curIdx=avail.findIndex(s=>s.id===FULL_MOCK.sample);
     FULL_MOCK.sample=avail[(curIdx+1)%avail.length].id;
   }
+  FULL_MOCK.active=false;
+  FULL_MOCK.started=false;
+  FULL_MOCK.skipConfirmOpen=false;
   FULL_MOCK.finished=false;
   FULL_MOCK.preflightOpen=true;
   renderFullMockPreflight();
   const box=document.getElementById('fullMockPreflight');
-  if(box&&box.scrollIntoView)box.scrollIntoView({behavior:'smooth',block:'start'});
+  if(box)window.scrollTo({top:Math.max(0,box.getBoundingClientRect().top+window.scrollY-60),behavior:'smooth'});
 }
 function fullMockAdvance(){
+  FULL_MOCK.skipConfirmOpen=false;
   FULL_MOCK.idx++;
   if(FULL_MOCK.idx>=FULL_MOCK.phases.length){
+    exPause();
     markFullMockCompleted();
     openSpeakingExam();
     return;
   }
   startRealMock(FULL_MOCK.phases[FULL_MOCK.idx],true,true);
 }
+function fmTogglePause(){
+  if(exIv){exPause();}
+  else{exStart();}
+  FULL_MOCK.skipConfirmOpen=false;
+  syncFullMockRunner();
+}
+function fmSkipNextPaper(){
+  if(!FULL_MOCK.active)return;
+  if(exIv){
+    FULL_MOCK.skipConfirmOpen=true;
+    syncFullMockRunner();
+    const btn=document.getElementById('fmSkipConfirmBtn');
+    if(btn&&typeof btn.focus==='function')btn.focus();
+    return;
+  }
+  FULL_MOCK.skipConfirmOpen=false;
+  fullMockAdvance();
+}
+function fmConfirmSkip(){
+  FULL_MOCK.skipConfirmOpen=false;
+  fullMockAdvance();
+}
+function fmCancelSkip(){
+  FULL_MOCK.skipConfirmOpen=false;
+  syncFullMockRunner();
+}
+window.FULL_MOCK_TEST={
+  setLeft(sec){
+    exLeft=Math.max(0,Number(sec)||0);
+    exTick();
+  },
+  state(){
+    return {
+      active:FULL_MOCK.active,
+      started:FULL_MOCK.started,
+      finished:FULL_MOCK.finished,
+      idx:FULL_MOCK.idx,
+      paper:exPaper,
+      left:exLeft,
+      running:!!exIv
+    };
+  }
+};
 function exResetUser(){
   FULL_MOCK.active=false;
+  FULL_MOCK.started=false;
+  FULL_MOCK.skipConfirmOpen=false;
   exReset();
+  syncFullMockRunner();
 }
 /* Open the existing SP_EXAM flow from Exam. The panel lives inside Today's
    speaking studio, so mount it on <body> once and float it as an overlay:
@@ -19875,8 +20312,7 @@ function renderEx(){
   exReset();
   const g=document.getElementById('exGuide');
   const paceKey=exPaper==='rue'?'ex_guide_pace_rue':exPaper==='w'?'ex_guide_pace_w':exPaper==='l'?'ex_guide_pace_l':'ex_guide_pace_full';
-  g.innerHTML=`<div class="ex-guide-actions"><button type="button" class="btn sm gray" data-paper="${esc(exPaper)}" data-action="openFullPaperLibrary">${esc(t('exam_open_materials'))}</button></div>`+
-    `<p class="ex-guide-pace">${esc(t(paceKey))}</p>`;
+  g.innerHTML=`<p class="ex-guide-pace">${esc(t(paceKey))}</p>`;
   const reg=document.getElementById('exRegister'),f=document.getElementById('exRegFields');
   if(exPaper==='rue')f.innerHTML=`<div><label>R&UoE correct (max 52)</label><input type="number" id="exOk" min="0" max="52"></div><div><label>Minutes used</label><input type="number" id="exMin" min="0"></div>`;
   else if(exPaper==='w')f.innerHTML=`<div><label>Text 1 score /20</label><input type="number" id="exW1" min="0" max="20" step="0.5"></div><div><label>Text 2 score /20</label><input type="number" id="exW2" min="0" max="20" step="0.5"></div><div><label>Minutes</label><input type="number" id="exMin" min="0"></div>`;
@@ -19942,10 +20378,6 @@ function openFullPaperLibrary(paper){
   const p=(paper==='rue'||paper==='w'||paper==='l'||paper==='sp')?paper:'all';
   openPracticeLibrary({paper:p,part:'all',scope:'full'});
 }
-function openActiveExamMaterials(){
-  const p=(exPaper==='rue'||exPaper==='w'||exPaper==='l'||exPaper==='sp')?exPaper:'all';
-  openFullPaperLibrary(p);
-}
 function exStart(){
   if(exIv){exPause();return}
   exIv=setInterval(()=>{exLeft--;exTick();if(exLeft<=0){clearInterval(exIv);exIv=null;exTick();
@@ -19958,10 +20390,24 @@ function exStart(){
 function exPause(){if(exIv){clearInterval(exIv);exIv=null;exTick()}}
 function exReset(){if(exIv){clearInterval(exIv);exIv=null}exLeft=EX_DUR[document.getElementById('exPaper').value];exTick()}
 function exTick(){
+  const fmt=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
+  const warnCol=(exIv&&exLeft<600)?'var(--bad-text)':(exIv&&exLeft<1200)?'var(--warn-text)':'';
   const el=document.getElementById('exTimer');
-  el.textContent=String(Math.floor(exLeft/3600)).padStart(2,'0')+':'+String(Math.floor(exLeft%3600/60)).padStart(2,'0')+':'+String(exLeft%60).padStart(2,'0');
-  el.classList.toggle('running',!!exIv);
-  el.style.color=(exIv&&exLeft<600)?'var(--bad-text)':(exIv&&exLeft<1200)?'var(--warn-text)':'';
+  if(el){
+    el.textContent=fmt;
+    el.classList.toggle('running',!!exIv);
+    el.style.color=warnCol;
+  }
+  const fmEl=document.getElementById('fmRunnerTimer');
+  if(fmEl){
+    fmEl.textContent=fmt;
+    fmEl.classList.toggle('running',!!exIv);
+    fmEl.style.color=warnCol;
+  }
+  const fmPause=document.getElementById('fmRunnerPauseBtn');
+  if(fmPause&&FULL_MOCK.active&&FULL_MOCK.started){
+    fmPause.textContent=exIv?t('exam_pause'):t('fm_runner_resume');
+  }
   if(exIv&&exLeft===600)alert(t('alert_10min'));
   if(exIv&&exLeft===300)alert(t('alert_5min'));
 }
@@ -24236,7 +24682,10 @@ click:{
 'beginFullMockSequence':()=>beginFullMockSequence(),
 'doAnotherFullMock':()=>doAnotherFullMock(),
 'selectFullMockSample':el=>selectFullMockSample(el.dataset.sample),
-'openActiveExamMaterials':()=>openActiveExamMaterials(),
+'fmTogglePause':()=>fmTogglePause(),
+'fmSkipNextPaper':()=>fmSkipNextPaper(),
+'fmConfirmSkip':()=>fmConfirmSkip(),
+'fmCancelSkip':()=>fmCancelSkip(),
 'openCycleLibrary':el=>openCycleLibrary(el),
 'openFullPaperLibrary':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();openFullPaperLibrary(el.dataset.paper)},
 'openPracticeByPart':()=>openPracticeByPart(),

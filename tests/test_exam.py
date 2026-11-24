@@ -23,28 +23,10 @@ with sync_playwright() as p:
     assert out["ex_links"] == 0, f"#exGuide should have 0 loose links, got {out['ex_links']}"
     assert out["ex_chips"] == 0, f"#exGuide should have 0 chips, got {out['ex_chips']}"
     assert "open the exam papers" not in pg.inner_text("#exGuide").lower()
-    guide_btn = pg.evaluate(
-        """() => {
-            const b = document.querySelector('#exGuide button[data-action="openFullPaperLibrary"]');
-            const r = b ? b.getBoundingClientRect() : null;
-            return {exists: !!b, paper: b ? b.dataset.paper : '', h: r ? Math.round(r.height) : 0};
-        }"""
-    )
-    assert guide_btn["exists"] and guide_btn["paper"] == "rue" and guide_btn["h"] >= 44, guide_btn
-    # Clicking #exGuide's Open materials button opens the exact same Library as the card button
-    pg.click("#exGuide button[data-action='openFullPaperLibrary']")
-    pg.wait_for_timeout(200)
-    lib_from_guide = pg.evaluate(
-        """() => ({
-            view: (document.querySelector('.view.active') || {}).id || '',
-            paper: EXLIB_PRACTICE_STATE.paper,
-            scope: EXLIB_PRACTICE_STATE.scope,
-        })"""
-    )
-    assert lib_from_guide == {"view": "v-practice", "paper": "rue", "scope": "full"}, lib_from_guide
-    pg.click("nav button[data-view='exam']")
-    pg.wait_for_timeout(200)
-    # Compare against the card's Open materials button
+    assert pg.eval_on_selector_all("#exGuide button", "els => els.length") == 0, "#exGuide should have pace text only, no Open materials button"
+    assert pg.evaluate("document.getElementById('exActiveLibBtn')") is None, "#exActiveLibBtn should be removed"
+    assert pg.evaluate("document.getElementById('examLibraryLink')") is None, "#examLibraryLink should be removed"
+    # Card's Open materials button opens Library filtered to that paper and scope='full'
     pg.click("#examSelectGrid .exam-card[data-paper='rue'] .exam-card-mat-btn")
     pg.wait_for_timeout(200)
     lib_from_card = pg.evaluate(
@@ -54,16 +36,16 @@ with sync_playwright() as p:
             scope: EXLIB_PRACTICE_STATE.scope,
         })"""
     )
-    assert lib_from_guide == lib_from_card, (lib_from_guide, lib_from_card)
+    assert lib_from_card == {"view": "v-practice", "paper": "rue", "scope": "full"}, lib_from_card
     pg.click("nav button[data-view='exam']")
     pg.wait_for_timeout(200)
-    # cambiar a Writing
-    pg.select_option("#exPaper", "w")
+    # cambiar a Writing via hidden #exPaper contract
+    pg.evaluate("document.getElementById('exPaper').value='w'; renderEx()")
     pg.wait_for_timeout(200)
     out["ex_w_timer"] = pg.evaluate("document.getElementById('exTimer').textContent")
     out["ex_w_links"] = pg.eval_on_selector_all("#exGuide a", "els => els.length")
     assert out["ex_w_links"] == 0, f"#exGuide for Writing should have 0 loose links: {out['ex_w_links']}"
-    assert pg.evaluate("document.querySelector('#exGuide button[data-action=\"openFullPaperLibrary\"]').dataset.paper") == "w"
+    assert pg.eval_on_selector_all("#exGuide button", "els => els.length") == 0, "#exGuide for Writing should have 0 buttons"
     # start timer and verify the countdown
     pg.click("button[data-action='exStart']")
     pg.wait_for_timeout(2100)

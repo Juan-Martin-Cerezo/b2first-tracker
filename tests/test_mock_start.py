@@ -183,11 +183,17 @@ with sync_playwright() as p:
     )
     assert fm_modal["open"] and not fm_modal["running"] and fm_modal["fullActive"], fm_modal
     assert "195" in fm_modal["body"] and "14" in fm_modal["body"], fm_modal
+    # In full mock modal, "Open materials" keeps user on #v-exam with #fmMaterialsAll visible and timer off
+    pg.click("#mockStartMatBtn")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("(document.querySelector('.view.active')||{}).id === 'v-exam' && !document.getElementById('fullMockPreflight').hidden && exIv === null")
+    pg.click("#fmStartSeqBtn")
+    pg.wait_for_timeout(150)
     pg.click("#mockStartGoBtn")
     pg.wait_for_timeout(200)
-    assert pg.evaluate("exIv !== null && FULL_MOCK.active && exPaper === 'rue'")
+    assert pg.evaluate("exIv !== null && FULL_MOCK.active && exPaper === 'rue' && !document.getElementById('fmRunner').hidden && document.getElementById('exActive').hidden")
 
-    # Advance to Writing inside started full mock -> auto-starts without reopening modal
+    # Advance to Writing inside started full mock -> auto-starts without reopening modal, stays in #fmRunner
     pg.evaluate("fullMockAdvance()")
     pg.wait_for_timeout(200)
     adv = pg.evaluate(
@@ -196,9 +202,11 @@ with sync_playwright() as p:
             running: exIv !== null,
             paper: exPaper,
             fullActive: FULL_MOCK.active,
+            runnerVisible: !document.getElementById('fmRunner').hidden,
+            exActiveHidden: document.getElementById('exActive').hidden,
         })"""
     )
-    assert adv == {"modalOpen": False, "running": True, "paper": "w", "fullActive": True}, adv
+    assert adv == {"modalOpen": False, "running": True, "paper": "w", "fullActive": True, "runnerVisible": True, "exActiveHidden": True}, adv
     pg.evaluate("exResetUser()")
     out["5_full_mock_modal_and_advance"] = {"modal": fm_modal["body"], "advanced": adv}
 
