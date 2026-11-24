@@ -194,7 +194,7 @@ with sync_playwright() as p:
     assert len(coach_rue["steps"]) == 3, f"Expected 3 coach steps: {coach_rue['steps']}"
     assert "Abrí el ejercicio en Contents" in coach_rue["steps"][0]["text"], coach_rue["steps"][0]
     assert "Iniciá el tiempo" in coach_rue["steps"][1]["text"], coach_rue["steps"][1]
-    assert "Phase 2" in coach_rue["steps"][2]["text"], coach_rue["steps"][2]
+    assert "Fase 2" in coach_rue["steps"][2]["text"], coach_rue["steps"][2]
     assert "Cargá correctas, total y minutos, y guardá." in coach_rue["steps"][2]["text"], coach_rue["steps"][2]
     assert coach_rue["steps"][0]["active"] and not coach_rue["steps"][0]["done"]
     for st in coach_rue["steps"]:
