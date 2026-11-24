@@ -27,6 +27,60 @@ with sync_playwright() as p:
     assert pg.evaluate("document.getElementById('exActiveLibBtn')") is None, "#exActiveLibBtn should be removed"
     assert pg.evaluate("document.getElementById('examLibraryLink')") is None, "#examLibraryLink should be removed"
     assert pg.eval_on_selector_all("#examSelectGrid .exam-card-mat-btn", "els => els.length") == 0, "Loose Open materials card buttons should be removed"
+    assert pg.locator("#v-exam .u4-fullmock-btn").count() == 0, ".u4-fullmock-btn should be removed"
+    exam_txt_low = pg.inner_text("#v-exam").lower()
+    assert "start full mock" not in exam_txt_low and "empezar simulacro completo" not in exam_txt_low, "Old full mock button text still in #v-exam"
+    cards_check = pg.evaluate(
+        """() => {
+            const grid = document.getElementById('examSelectGrid');
+            const gr = grid.getBoundingClientRect();
+            const cards = [...grid.querySelectorAll(':scope > .exam-card')];
+            const mapped = cards.map((c, idx) => {
+                const r = c.getBoundingClientRect();
+                return {
+                    idx,
+                    isFull: c.classList.contains('exam-card-full'),
+                    title: (c.querySelector('.exam-card-title')?.textContent || '').trim(),
+                    meta: (c.querySelector('.exam-card-min')?.textContent || '').trim(),
+                    top: Math.round(r.top),
+                    w: Math.round(r.width),
+                    h: Math.round(r.height),
+                };
+            });
+            const byVisual = [...mapped].sort((a, b) => a.top - b.top);
+            return {
+                count: cards.length,
+                gridW: Math.round(gr.width),
+                domLastIsFull: mapped[mapped.length - 1]?.isFull === true,
+                visualFirst: byVisual[0],
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+        }"""
+    )
+    assert cards_check["count"] == 5, cards_check
+    assert cards_check["domLastIsFull"], cards_check
+    assert cards_check["visualFirst"]["isFull"], cards_check
+    assert cards_check["visualFirst"]["title"] == "Full mock", cards_check
+    assert cards_check["visualFirst"]["meta"] == "195′ + 14′ Speaking", cards_check
+    assert cards_check["visualFirst"]["h"] >= 44, cards_check
+    assert abs(cards_check["visualFirst"]["w"] - cards_check["gridW"]) <= 2, cards_check
+    assert cards_check["overflow"] <= 1, cards_check
+    # Click and Enter on .exam-card-full both open #fullMockPreflight + wizard step 1
+    pg.click("#examSelectGrid .exam-card-full")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('fullMockPreflight').hidden && document.getElementById('mockStartModal').dataset.step === '1'")
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(150)
+    pg.evaluate("closeFullMockPreflight()")
+    pg.wait_for_timeout(150)
+    pg.focus("#examSelectGrid .exam-card-full")
+    pg.keyboard.press("Enter")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('fullMockPreflight').hidden && document.getElementById('mockStartModal').dataset.step === '1'")
+    pg.keyboard.press("Escape")
+    pg.wait_for_timeout(150)
+    pg.evaluate("closeFullMockPreflight()")
+    pg.wait_for_timeout(150)
     # Clicking a paper card opens the guided wizard in step 1 without leaving #v-exam
     pg.click("#examSelectGrid .exam-card[data-paper='rue']")
     pg.wait_for_timeout(200)

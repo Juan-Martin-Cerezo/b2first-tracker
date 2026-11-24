@@ -2206,11 +2206,7 @@ footer{
 }
 .exam-card .exam-card-title{font-size:var(--t-sub);font-weight:600;color:var(--txt)}
 .exam-card .exam-card-desc{font-size:var(--t-body);color:var(--txt-2);line-height:1.45}
-.exam-card-full{background:var(--acc);color:var(--on-primary);border-color:transparent}
-.exam-card-full .exam-card-kicker{color:var(--on-primary)}
-.exam-card-full .exam-card-min{background:color-mix(in oklch, var(--on-primary) 15%, transparent);color:var(--on-primary)}
-.exam-card-full .exam-card-title{color:var(--on-primary)}
-.exam-card-full .exam-card-desc{color:var(--on-primary);opacity:.85}
+.exam-card-full{order:-1;grid-column:1/-1;min-height:44px}
 
 /* ---------- GATES TABS ---------- */
 .gates-tabs{display:flex;border-bottom:1px solid var(--line);gap:4px;flex-wrap:wrap;overflow-x:visible}
@@ -2840,7 +2836,6 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .u4-section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s3);flex-wrap:wrap;margin-bottom:var(--s4)}
 .u4-section-head>div{min-width:0}
 .u4-section-head h2{margin-bottom:var(--s2)}
-.u4-fullmock-btn{flex:none}
 .u4-mock-hint{margin:var(--s3) 0 0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.5}
 .u4-library-note{margin:var(--s2) 0 0;padding-top:var(--s2);border-top:1px solid var(--line)}
 .u4-library-link{
@@ -5514,7 +5509,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               <h2 data-i18n="exam_real_mocks">Real mocks</h2>
               <div class="sub" data-i18n="exam_real_mocks_sub">All four papers in one place. One click starts a real timed mock with the official duration.</div>
             </div>
-            <button class="btn ok u4-fullmock-btn" type="button" data-action="startFullMock" data-i18n="exam_start_full">Start full mock</button>
           </div>
           <div class="exam-select-grid" id="examSelectGrid">
             <div class="exam-card" role="button" tabindex="0" data-paper="rue" data-action="startRealMock" data-keydown="activate">
@@ -5548,6 +5542,14 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               </div>
               <h3 class="exam-card-title">Speaking</h3>
               <p class="exam-card-desc" data-i18n="exam_desc_sp">4 parts with the AI examiner: interview, long turn, collaborative task and discussion.</p>
+            </div>
+            <div class="exam-card exam-card-full" role="button" tabindex="0" data-action="startFullMock" data-keydown="activate">
+              <div class="exam-card-top">
+                <span class="exam-card-kicker" data-i18n="exam_full_card_kicker">All 4 papers</span>
+                <span class="exam-card-min tnum" data-i18n="exam_full_card_meta">195′ + 14′ Speaking</span>
+              </div>
+              <h3 class="exam-card-title" data-i18n="exam_full_card_title">Full mock</h3>
+              <p class="exam-card-desc" data-i18n="exam_full_card_desc">The official sequence: R&amp;UoE → Writing → Listening → Speaking, one timer per paper.</p>
             </div>
           </div>
           <p class="u4-mock-hint" data-i18n="exam_full_hint">Full mock runs R&amp;UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.</p>
@@ -6569,7 +6571,10 @@ const I18N={
     exam_opt_full:'Full exam — 195 min (all components)',
     exam_real_mocks:'Real mocks',
     exam_real_mocks_sub:'All four papers in one place. One click starts a real timed mock with the official duration.',
-    exam_start_full:'Start full mock',
+    exam_full_card_kicker:'All 4 papers',
+    exam_full_card_meta:'195′ + 14′ Speaking',
+    exam_full_card_title:'Full mock',
+    exam_full_card_desc:'The official sequence: R&UoE → Writing → Listening → Speaking, one timer per paper.',
     exam_full_hint:'Full mock runs R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. The timer moves on by itself.',
     exam_desc_sp:'4 parts with the AI examiner: interview, long turn, collaborative task and discussion.',
     exam_sources_group_rue_title:'Reading & Use of English',
@@ -7734,7 +7739,10 @@ const I18N={
     exam_opt_full:'Examen completo — 195 min (todos los componentes)',
     exam_real_mocks:'Simulacros reales',
     exam_real_mocks_sub:'Las cuatro pruebas en un solo lugar. Un clic inicia un simulacro cronometrado con la duración oficial.',
-    exam_start_full:'Empezar simulacro completo',
+    exam_full_card_kicker:'Las 4 pruebas',
+    exam_full_card_meta:'195′ + 14′ Speaking',
+    exam_full_card_title:'Full mock',
+    exam_full_card_desc:'La secuencia oficial: R&UoE → Writing → Listening → Speaking, un timer por paper.',
     exam_full_hint:'El simulacro completo corre R&UoE 75′ → Writing 80′ → Listening 40′ → Speaking 14′. El cronómetro avanza solo.',
     exam_desc_sp:'4 partes con el examinador IA: entrevista, turno largo, tarea colaborativa y discusión.',
     exam_sources_group_rue_title:'Reading y Use of English',

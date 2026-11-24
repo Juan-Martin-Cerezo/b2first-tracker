@@ -170,7 +170,7 @@ with sync_playwright() as p:
     out["4_start_timer"] = started
 
     # 5. Full mock passes through wizard 1 -> 2 -> 3; advancing paper auto-starts without modal
-    pg.click("button[data-action='startFullMock']")
+    pg.click("#examSelectGrid .exam-card-full[data-action='startFullMock']")
     pg.wait_for_timeout(200)
     fm_modal = pg.evaluate(
         """() => ({

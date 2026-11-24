@@ -330,7 +330,7 @@ with sync_playwright() as p:
     out["3_start_timer"] = started
 
     # --- 5. Full mock: same 3-step wizard; runner starts & auto-advances without reopening wizard ---
-    pg.click("button[data-action='startFullMock']")
+    pg.click("#examSelectGrid .exam-card-full[data-action='startFullMock']")
     pg.wait_for_timeout(200)
     fm_s1 = pg.evaluate(
         """() => ({

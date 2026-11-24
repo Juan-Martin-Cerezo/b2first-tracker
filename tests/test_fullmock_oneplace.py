@@ -132,12 +132,76 @@ with sync_playwright() as p:
     assert redundancies["exPaperExists"] and not redundancies["exPaperVisible"], (
         f"#exPaper should stay hidden in DOM: {redundancies}"
     )
-    assert [c["paper"] for c in redundancies["cardMatBtns"]] == ["rue", "w", "l", "sp"], redundancies
+    assert [c["paper"] for c in redundancies["cardMatBtns"]] == ["rue", "w", "l", "sp", ""], redundancies
     assert all(c["matBtns"] == 0 for c in redundancies["cardMatBtns"]), redundancies
     assert redundancies["allOpenMatInExam"] == 0, (
         f"Expected 0 Open materials buttons in #v-exam (materials live in guided wizard/panel), got {redundancies['allOpenMatInExam']}"
     )
     assert not INLINE_HANDLER_RE.search(redundancies["html"]), "Inline on* handler found in #v-exam"
+    full_card_390 = pg.evaluate(
+        """() => {
+            const view = document.getElementById('v-exam');
+            const grid = document.getElementById('examSelectGrid');
+            const gr = grid.getBoundingClientRect();
+            const cards = [...grid.querySelectorAll(':scope > .exam-card')];
+            const rue = grid.querySelector(".exam-card[data-paper='rue']");
+            const full = grid.querySelector('.exam-card-full');
+            const fr = full.getBoundingClientRect();
+            const info = cards.map((c, idx) => {
+                const r = c.getBoundingClientRect();
+                return {
+                    idx,
+                    isFull: c.classList.contains('exam-card-full'),
+                    top: Math.round(r.top),
+                    bottom: Math.round(r.bottom),
+                    w: Math.round(r.width),
+                    h: Math.round(r.height),
+                };
+            });
+            const visualFirst = [...info].sort((a, b) => a.top - b.top)[0];
+            return {
+                count: cards.length,
+                hasOldBtn: !!view.querySelector('.u4-fullmock-btn'),
+                viewTextLower: view.innerText.toLowerCase(),
+                domLastIsFull: info[info.length - 1]?.isFull === true,
+                visualFirstIsFull: visualFirst?.isFull === true,
+                fullKicker: (full.querySelector('.exam-card-kicker')?.textContent || '').trim(),
+                fullMeta: (full.querySelector('.exam-card-min')?.textContent || '').trim(),
+                fullTitle: (full.querySelector('.exam-card-title')?.textContent || '').trim(),
+                fullDesc: (full.querySelector('.exam-card-desc')?.textContent || '').trim(),
+                fullH: Math.round(fr.height),
+                fullW: Math.round(fr.width),
+                gridW: Math.round(gr.width),
+                fullBg: getComputedStyle(full).backgroundColor,
+                rueBg: getComputedStyle(rue).backgroundColor,
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+        }"""
+    )
+    assert full_card_390["count"] == 5, full_card_390
+    assert not full_card_390["hasOldBtn"], full_card_390
+    assert "start full mock" not in full_card_390["viewTextLower"] and "empezar simulacro completo" not in full_card_390["viewTextLower"], full_card_390
+    assert full_card_390["domLastIsFull"] and full_card_390["visualFirstIsFull"], full_card_390
+    assert full_card_390["fullKicker"] == "Las 4 pruebas", full_card_390
+    assert full_card_390["fullMeta"] == "195′ + 14′ Speaking", full_card_390
+    assert full_card_390["fullTitle"] == "Full mock", full_card_390
+    assert "secuencia oficial" in full_card_390["fullDesc"].lower(), full_card_390
+    assert full_card_390["fullH"] >= 44, full_card_390
+    assert abs(full_card_390["fullW"] - full_card_390["gridW"]) <= 2, full_card_390
+    assert full_card_390["fullBg"] == full_card_390["rueBg"], f"Full card should match card surface, got {full_card_390['fullBg']} vs {full_card_390['rueBg']}"
+    assert full_card_390["overflow"] <= 1, full_card_390
+    pg.evaluate("const el=document.querySelector('.u4-real-mocks'); if(el)el.scrollIntoView({block:'start'}); if(document.activeElement)document.activeElement.blur();")
+    pg.wait_for_timeout(150)
+    pg.screenshot(path=os.path.join(OUT, "real_mocks_full_card_390_light.png"))
+    # Enter key on .exam-card-full also opens #fullMockPreflight + wizard step 1
+    pg.focus("#examSelectGrid .exam-card-full")
+    pg.keyboard.press("Enter")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('fullMockPreflight').hidden && getComputedStyle(document.getElementById('mockStartModal')).display !== 'none' && document.getElementById('mockStartModal').dataset.step === '1'")
+    pg.click("#mockStartCancelBtn")
+    pg.wait_for_timeout(150)
+    pg.evaluate("closeFullMockPreflight()")
+    pg.wait_for_timeout(150)
     out["2_redundancies_removed"] = {
         "examLibraryLink": False,
         "exActiveLibBtn": False,
@@ -147,7 +211,7 @@ with sync_playwright() as p:
     }
 
     # --- 1. Open full mock: wizard opens on step 1 with preflight behind; closing wizard exposes all 4 samples & materials ---
-    pg.click("button[data-action='startFullMock']")
+    pg.click("#examSelectGrid .exam-card-full[data-action='startFullMock']")
     pg.wait_for_timeout(250)
     assert pg.evaluate("getComputedStyle(document.getElementById('mockStartModal')).display !== 'none' && document.getElementById('mockStartModal').dataset.step === '1'")
     pg.click("#mockStartCancelBtn")
@@ -474,9 +538,17 @@ with sync_playwright() as p:
             hint: document.getElementById('fmAtHandHint').textContent.trim(),
             startText: document.getElementById('fmStartSeqBtn').textContent.trim(),
             matTitle: document.querySelector('#fmMaterialsAll .fm-block-title').textContent.trim(),
+            fullKicker: document.querySelector('#examSelectGrid .exam-card-full .exam-card-kicker').textContent.trim(),
+            fullMeta: document.querySelector('#examSelectGrid .exam-card-full .exam-card-min').textContent.trim(),
+            fullTitle: document.querySelector('#examSelectGrid .exam-card-full .exam-card-title').textContent.trim(),
+            fullDesc: document.querySelector('#examSelectGrid .exam-card-full .exam-card-desc').textContent.trim(),
             overflow390: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         })"""
     )
+    assert en_check["fullKicker"] == "All 4 papers", en_check
+    assert en_check["fullMeta"] == "195′ + 14′ Speaking", en_check
+    assert en_check["fullTitle"] == "Full mock", en_check
+    assert "official sequence" in en_check["fullDesc"].lower(), en_check
     assert "at hand" in en_check["title"].lower() and "at hand" in en_check["matTitle"].lower(), en_check
     assert "195" in en_check["startText"] and "14" in en_check["startText"], en_check
     assert en_check["overflow390"] <= 1, f"EN 390 overflow: {en_check}"
@@ -490,6 +562,34 @@ with sync_playwright() as p:
     pg.evaluate("setLang('es'); document.documentElement.setAttribute('data-theme', 'light')")
     pg.set_viewport_size({"width": 1280, "height": 800})
     pg.wait_for_timeout(250)
+    desk_real_mocks = pg.evaluate(
+        """() => {
+            const grid = document.getElementById('examSelectGrid');
+            const gr = grid.getBoundingClientRect();
+            const full = grid.querySelector('.exam-card-full').getBoundingClientRect();
+            const papers = ['rue', 'w', 'l', 'sp'].map(p => {
+                const r = grid.querySelector(`.exam-card[data-paper='${p}']`).getBoundingClientRect();
+                return {p, top: Math.round(r.top), left: Math.round(r.left), w: Math.round(r.width)};
+            });
+            return {
+                gridW: Math.round(gr.width),
+                fullW: Math.round(full.width),
+                fullBottom: Math.round(full.bottom),
+                minPaperTop: Math.min(...papers.map(x => x.top)),
+                papers,
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+        }"""
+    )
+    assert desk_real_mocks["overflow"] <= 1, desk_real_mocks
+    assert abs(desk_real_mocks["fullW"] - desk_real_mocks["gridW"]) <= 2, desk_real_mocks
+    assert desk_real_mocks["fullBottom"] <= desk_real_mocks["minPaperTop"], desk_real_mocks
+    assert abs(desk_real_mocks["papers"][0]["top"] - desk_real_mocks["papers"][1]["top"]) <= 2, desk_real_mocks
+    assert abs(desk_real_mocks["papers"][2]["top"] - desk_real_mocks["papers"][3]["top"]) <= 2, desk_real_mocks
+    assert desk_real_mocks["papers"][2]["top"] > desk_real_mocks["papers"][0]["top"], desk_real_mocks
+    pg.evaluate("const el=document.querySelector('.u4-real-mocks'); if(el)el.scrollIntoView({block:'start'}); if(document.activeElement)document.activeElement.blur();")
+    pg.wait_for_timeout(150)
+    pg.screenshot(path=os.path.join(OUT, "real_mocks_full_card_1280_light.png"))
     pg.evaluate("document.getElementById('fullMockPreflight').scrollIntoView({block:'start'}); if(document.activeElement)document.activeElement.blur();")
     pg.wait_for_timeout(150)
     desk = pg.evaluate(
