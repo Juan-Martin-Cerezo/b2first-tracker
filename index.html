@@ -236,7 +236,7 @@ body{
   color:var(--txt);
   font:400 14px/1.5 var(--font);
   min-height:100vh;
-  overflow-x:hidden;
+  overflow-x:clip;
 }
 .auth-card,.spx-overlay,.spx-tx,.ob-plan-preview,.table-wrap,.more-sheet-panel,.acct-sheet-panel{overscroll-behavior-y:contain}
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
@@ -929,6 +929,65 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
   border-color:var(--line);box-shadow:var(--shadow-1);
 }
 .practice-tab:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+/* ---------- SESSION 3-STEP COACH ---------- */
+.session-coach{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s3);
+  margin-bottom:var(--s4);padding:var(--s3);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+  box-shadow:var(--shadow-1);min-width:0;
+}
+.session-coach[hidden]{display:none !important}
+.session-coach-step{
+  display:flex;flex-direction:column;gap:var(--s2);min-width:0;
+  padding:var(--s3);border-radius:var(--r-panel);
+  background:var(--surface-2);border:1px solid var(--line);
+  transition:border-color 140ms ease,background-color 140ms ease;
+}
+.session-coach-step.is-active{
+  border-color:var(--acc);background:var(--acc-soft);
+}
+.session-coach-step.is-done{
+  border-color:var(--ok-border);background:var(--ok-soft);
+}
+.session-coach-head{
+  display:flex;align-items:center;gap:var(--s2);min-width:0;
+}
+.session-coach-num{
+  width:24px;height:24px;flex:none;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;line-height:1;
+  background:var(--surface);color:var(--txt-2);border:1px solid var(--line);
+}
+.session-coach-step.is-active .session-coach-num{
+  background:var(--acc);color:var(--on-primary);border-color:var(--acc);
+}
+.session-coach-step.is-done .session-coach-num{
+  background:var(--ok);color:var(--on-ok);border-color:var(--ok);
+}
+.session-coach-title{
+  font-size:14px;font-weight:700;color:var(--txt);line-height:1.3;
+  overflow-wrap:anywhere;min-width:0;
+}
+.session-coach-desc{
+  margin:0;font-size:14px;color:var(--txt-2);line-height:1.4;
+  overflow-wrap:anywhere;
+}
+.session-coach-step.is-done .session-coach-desc{color:var(--ok-text);font-weight:600}
+.session-coach-timer{
+  display:inline-flex;align-items:center;margin-left:6px;padding:2px 8px;
+  border-radius:999px;background:var(--surface);border:1px solid var(--line);
+  font-size:13px;font-weight:700;color:var(--txt);vertical-align:middle;
+}
+.session-coach-timer:empty{display:none}
+.session-coach-timer.is-running{
+  color:var(--ok-text);border-color:var(--ok-border);background:var(--ok-soft);
+}
+.session-coach-foot{margin-top:auto;padding-top:var(--s1)}
+.session-coach-btn{
+  width:100%;min-height:44px;height:auto;padding:8px 12px;
+  font-size:14px;justify-content:center;white-space:normal;text-align:center;
+}
+.session-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .session-contents-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s2) var(--s3);min-width:0}
 .session-scope-link{
   display:inline-flex;align-items:center;min-height:44px;padding:0 4px;
@@ -1532,7 +1591,7 @@ tbody tr:hover{background:var(--surface-2)}
   transition:border-color 150ms ease, box-shadow 150ms ease;
 }
 .live-word-meter{
-  display:flex;justify-content:space-between;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s2);padding:var(--s2) var(--s3);
   border-radius:var(--r-ctl);background:var(--surface-2);margin-top:var(--s2);font-size:var(--t-meta);
 }
 .contraction-alert{
@@ -2672,16 +2731,59 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 }
 @media (max-width:767px){
   /* forms */
-  select,input[type=number],input[type=text],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
+  select,input[type=number],input[type=text],input[type=search],input[type=time],input[type=date],input[type=password],input[type=file],textarea{
     font-size:16px; /* prevents iOS auto-zoom */
     padding:var(--s2) var(--s3);
+    min-height:44px;
+    width:100%;
   }
   .row{flex-direction:column;gap:var(--s3)}
-  .row>div{min-width:100%}
+  .row>div{min-width:100%;width:100%}
+
+  /* session mobile: sticky bar, stacked coach, readable timer, touch targets */
+  body.session-focus-active #qlFab{display:none !important;opacity:0;pointer-events:none}
+  body.session-focus-active .sticky-view-bar{display:none}
+  .session-topbar{
+    position:sticky;top:48px;z-index:29;
+    padding:var(--s3);gap:var(--s2);
+    background:var(--surface);border:1px solid var(--line);
+    box-shadow:var(--shadow-1);
+  }
+  .session-tabs{display:flex;width:100%;align-self:stretch}
+  .session-tabs .practice-tab{
+    flex:1 1 50%;min-width:0;min-height:48px;height:48px;padding:0 12px;
+  }
+  .session-coach{grid-template-columns:1fr;gap:var(--s2);padding:var(--s3);margin-bottom:var(--s3)}
+  .session-coach-title,.session-coach-desc{font-size:14px}
+  .session-coach-btn{width:100%;min-height:44px;height:auto;padding:10px 14px;font-size:14px}
+  #v-hoy .task .task-head{
+    display:grid;grid-template-columns:36px minmax(0,1fr);align-items:center;
+    gap:var(--s2) var(--s3);
+  }
+  #v-hoy .task .task-head > div:nth-child(2){min-width:0}
+  #v-hoy .task .task-title{font-size:16px;line-height:1.3;overflow-wrap:anywhere}
+  #v-hoy .task .task-meta{
+    grid-column:1 / -1;margin-left:0;margin-top:var(--s1);width:100%;
+    display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+    padding-top:var(--s2);border-top:1px solid var(--line);
+  }
+  #v-hoy .task .task-timer{display:flex;align-items:center;gap:var(--s2)}
+  #v-hoy .task .task-timer .lbl{display:inline;margin:0}
+  #v-hoy .task .task-timer .timer{font-size:20px;line-height:1.2;padding:6px 12px;min-height:44px}
+  #v-hoy .task .task-meta .btn.sm{min-width:44px;min-height:44px;height:44px;padding:0 16px;font-size:15px}
+  #v-hoy .phase-stepper{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #v-hoy #wPhaseStepper{grid-template-columns:1fr}
+  #v-hoy .phase-step{min-height:44px;padding:var(--s3);overflow-wrap:anywhere}
+  #uePhase1,#uePhase2,#wPhase1,#wPhase2,#wPhase3,#lPhase1,#lPhase2{scroll-margin-top:190px}
+  .session-actions{flex-direction:column;gap:var(--s2)}
+  .session-actions .btn,.w-phase3-cta .btn,.sp-option-foot .btn{width:100%;min-height:48px;height:auto;padding:10px 16px}
+  .session-open-contents-btn{width:100%;min-height:44px}
+  .live-word-meter .btn.sm{width:100%;min-height:44px;height:auto}
+  .sp-log-fields{grid-template-columns:1fr}
 }
 @media (max-width:520px){
   /* three-step grids would leave one orphan card: stack them deliberately */
-  .phase-stepper{grid-template-columns:1fr}
+  #wPhaseStepper{grid-template-columns:1fr}
   .card.diag-banner{flex-direction:column;align-items:stretch}
   .card.diag-banner .btn{width:100%}
   #diagPartsTable th,#diagPartsTable td{padding:var(--s2) var(--s1)}
@@ -4240,6 +4342,41 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
             </div>
 
             <div id="sessionTabSession" role="tabpanel" aria-labelledby="sessionTabSessionBtn">
+            <section id="sessionCoach" class="session-coach" aria-label="Session steps" data-i18n-aria-label="coach_aria" hidden>
+              <div class="session-coach-step is-active" id="sessionCoachStep1" data-coach-step="1">
+                <div class="session-coach-head">
+                  <span class="session-coach-num tnum" id="sessionCoachNum1">1</span>
+                  <span class="session-coach-title" id="sessionCoachTitle1">1 · Open the exercise in Contents</span>
+                </div>
+                <p class="session-coach-desc" id="sessionCoachDesc1">Papers, audio, keys and online practice.</p>
+                <div class="session-coach-foot">
+                  <button type="button" class="btn sm gray session-coach-btn" id="sessionCoachBtn1" data-action="setSessionTab" data-session-tab="contents" data-i18n="coach_s1_btn">Open Contents</button>
+                </div>
+              </div>
+              <div class="session-coach-step" id="sessionCoachStep2" data-coach-step="2">
+                <div class="session-coach-head">
+                  <span class="session-coach-num tnum" id="sessionCoachNum2">2</span>
+                  <span class="session-coach-title" id="sessionCoachTitle2">2 · Start the timer</span>
+                </div>
+                <p class="session-coach-desc" id="sessionCoachDesc2">
+                  <span id="sessionCoachDesc2Text">Track your time while you work.</span>
+                  <span class="session-coach-timer tnum" id="sessionCoachTimer"></span>
+                </p>
+                <div class="session-coach-foot">
+                  <button type="button" class="btn sm session-coach-btn" id="sessionCoachBtn2" data-action="sessionCoachTimerAction">Start timer</button>
+                </div>
+              </div>
+              <div class="session-coach-step" id="sessionCoachStep3" data-coach-step="3">
+                <div class="session-coach-head">
+                  <span class="session-coach-num tnum" id="sessionCoachNum3">3</span>
+                  <span class="session-coach-title" id="sessionCoachTitle3">3 · Log your results in Phase 2</span>
+                </div>
+                <p class="session-coach-desc" id="sessionCoachDesc3">Enter correct, total and minutes, and save.</p>
+                <div class="session-coach-foot">
+                  <button type="button" class="btn sm gray session-coach-btn" id="sessionCoachBtn3" data-action="sessionCoachPhase2Action">Go to Phase 2</button>
+                </div>
+              </div>
+            </section>
             <!-- SESSION A (MONDAYS) -->
             <div id="sesA">
               <!-- Studio 1: Full Reading & Use of English Sprint (Week A Monday) -->
@@ -4290,7 +4427,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <span id="st1GuidePace"></span>
                     </div>
                     <p id="semanaP" style="font-size:12px;color:var(--on-surface-variant);margin-top:8px">Session coverage: <b id="semanaTxt">—</b></p>
-                    <div style="margin-top:12px">
+                    <div class="session-actions">
                       <button class="btn" data-action="switchUePhase" data-arg="score">Proceed to Phase 2: Log score →</button>
                     </div>
                   </div>
@@ -4335,7 +4472,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Total questions</label><input type="number" id="ueTotal" min="1" value="52"></div>
                       <div><label>Minutes used</label><input type="number" id="ueMin" min="0" value="75"></div>
                     </div>
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                    <div class="session-actions">
                       <button class="btn ok" data-action="saveUE">✔ Save R&amp;UoE Session</button>
                       <button class="btn gray" data-action="openSoloModal" data-arg="ue">⚡ Log Single Part Instead</button>
                     </div>
@@ -4414,7 +4551,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <div><label>Prompt (paste or type prompt here)</label><input type="text" id="wPrompt" maxlength="400" placeholder="e.g. 'Your English teacher wants you to write an essay on...'"></div>
-                    <div style="margin-top:12px">
+                    <div class="session-actions">
                       <button class="btn" data-action="switchWritingPhase" data-arg="write">Proceed to Phase 2: Live writing →</button>
                     </div>
                   </div>
@@ -4445,7 +4582,7 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       <div><label>Registered word count</label><input type="number" id="wWords" min="100" value="160"></div>
                       <div><label>Total minutes used</label><input type="number" id="wMin" min="0" value="40"></div>
                     </div>
-                    <div style="margin-top:12px">
+                    <div class="session-actions">
                       <button class="btn" data-action="switchWritingPhase" data-arg="audit">Proceed to Phase 3: Rubric &amp; review →</button>
                     </div>
                   </div>
@@ -4595,12 +4732,14 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                         <div id="lOwnStatus" class="l-own-status" role="status" aria-live="polite"></div>
                       </div>
                     </div>
-                    <div class="row">
-                      <div><label id="lOkLbl">Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
-                      <div><label>Part 2 errors (gaps)</label><input type="number" id="lP2" min="0" value="0"></div>
-                      <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
+                    <div id="lPhase1ScoreMount">
+                      <div class="row" id="lScoreRow">
+                        <div><label id="lOkLbl">Correct (out of 30)</label><input type="number" id="lOk" min="0" max="30" value="0"></div>
+                        <div><label>Part 2 errors (gaps)</label><input type="number" id="lP2" min="0" value="0"></div>
+                        <div><label>Minutes used</label><input type="number" id="lMin" min="0" value="40"></div>
+                      </div>
                     </div>
-                    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                    <div class="session-actions">
                       <button class="btn ok" data-action="saveL">✔ Save Listening</button>
                       <button class="btn" data-action="switchListeningPhase" data-arg="pm">Proceed to Phase 2: Post-mortem →</button>
                     </div>
@@ -4617,8 +4756,9 @@ details summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
                       </div>
                     </div>
                     <p style="font-size:14px">Open the tapescript ONLY for questions you got wrong. Identify why you fell for the distractor.</p>
+                    <div id="lPhase2ScoreMount"></div>
                     <div><label>What caught you? (one per line, with error code: T-MIS, L-GAP)</label><textarea id="pmText" rows="3" placeholder="e.g. T-MIS: date distractor · L-GAP: 'out of the blue'"></textarea></div>
-                    <div style="margin-top:10px"><button class="btn ok" data-action="saveL">✔ Save &amp; Finish</button></div>
+                    <div class="session-actions"><button class="btn ok" data-action="saveL">✔ Save &amp; Finish</button></div>
                   </div>
                 </div>
               </div>
@@ -5993,6 +6133,31 @@ const I18N={
     session_open_contents:'Open contents',
     session_contents_see_paper:'See all in this paper',
     session_contents_back_part:'Back to Part {part}',
+    coach_aria:'Session steps',
+    coach_s1_title:'1 · Open the exercise in Contents',
+    coach_s1_pending:'Papers, audio, keys and online practice.',
+    coach_s1_done:'✓ Exercise opened',
+    coach_s1_btn:'Open Contents',
+    coach_s2_title:'2 · Start the timer',
+    coach_s2_pending:'Track your time while you work.',
+    coach_s2_done:'✓ Timer started',
+    coach_s2_sp_pending:'Start the speaking exam.',
+    coach_s2_sp_done:'✓ Speaking started',
+    coach_s2_start:'Start timer',
+    coach_s2_pause:'Pause',
+    coach_s2_sp_btn:'Start speaking',
+    coach_s3_title:'3 · Log your results in Phase 2',
+    coach_s3_title_w:'3 · Review with AI in Phase 3',
+    coach_s3_title_sp:'3 · Finish & save report',
+    coach_s3_rue:'Enter correct, total and minutes, and save.',
+    coach_s3_l:'Enter correct and minutes in the post-mortem, and save.',
+    coach_s3_w:'Review your text with Check with AI (Phase 3).',
+    coach_s3_sp:'Finish the parts; the report saves automatically.',
+    coach_s3_done:'✓ Result saved',
+    coach_s3_btn:'Go to Phase 2',
+    coach_s3_btn_w:'Go to Phase 3',
+    coach_s3_btn_sp_end:'Finish & save',
+    coach_s3_btn_sp_report:'View report',
     practice_filter_rue:'Reading & UoE',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
@@ -7097,6 +7262,31 @@ const I18N={
     session_open_contents:'Abrir Contenidos',
     session_contents_see_paper:'Ver todo en esta prueba',
     session_contents_back_part:'Volver a Parte {part}',
+    coach_aria:'Pasos de la sesión',
+    coach_s1_title:'1 · Abrí el ejercicio en Contents',
+    coach_s1_pending:'Papers, audios, respuestas y práctica online.',
+    coach_s1_done:'✓ Ejercicio abierto',
+    coach_s1_btn:'Abrir Contents',
+    coach_s2_title:'2 · Iniciá el tiempo',
+    coach_s2_pending:'Controlá tu tiempo mientras resolvés.',
+    coach_s2_done:'✓ Tiempo en marcha',
+    coach_s2_sp_pending:'Empezá el examen de speaking.',
+    coach_s2_sp_done:'✓ Speaking iniciado',
+    coach_s2_start:'Iniciar timer',
+    coach_s2_pause:'Pausar',
+    coach_s2_sp_btn:'Empezar speaking',
+    coach_s3_title:'3 · En Phase 2 registrá tus resultados',
+    coach_s3_title_w:'3 · En Phase 3 revisá con AI',
+    coach_s3_title_sp:'3 · Terminá y guardá el reporte',
+    coach_s3_rue:'Cargá correctas, total y minutos, y guardá.',
+    coach_s3_l:'Cargá correctas y minutos en el post-mortem, y guardá.',
+    coach_s3_w:'Revisá tu texto con Check with AI (Phase 3).',
+    coach_s3_sp:'Terminá las partes; el reporte se guarda solo.',
+    coach_s3_done:'✓ Resultado guardado',
+    coach_s3_btn:'Ir a Phase 2',
+    coach_s3_btn_w:'Ir a Phase 3',
+    coach_s3_btn_sp_end:'Terminar y guardar',
+    coach_s3_btn_sp_report:'Ver reporte',
     practice_filter_rue:'Reading y UoE',
     practice_filter_w:'Writing',
     practice_filter_l:'Listening',
@@ -8230,6 +8420,7 @@ function applyI18n(){
   if(typeof syncMobilePrimaryFab==='function')syncMobilePrimaryFab();
   if(typeof syncAccountSheet==='function')syncAccountSheet();
   if(typeof renderOwnMaterialUI==='function')renderOwnMaterialUI();
+  if(typeof renderSessionCoach==='function')renderSessionCoach();
   if(typeof updateIaLoadingProgress==='function'&&IA_STATE==='loading')updateIaLoadingProgress();
 }
 function setLang(code){
@@ -10428,27 +10619,91 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
    SETTINGS_DEFAULT: the PLAN screen no longer edits them. */
 function makeTimer(elId,dur){
   let left=dur*60,iv=null,el=document.getElementById(elId);
-  function render(){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+  function render(){
+    if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+    if(typeof syncSessionCoachTimer==='function')syncSessionCoachTimer();
+  }
   return{
-    start(){if(iv){clearInterval(iv);iv=null;render();return}iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null;left=0}render()},1000);render()},
-    set(s){left=s*60;render()}
+    start(){
+      if(iv){
+        clearInterval(iv);iv=null;render();
+        if(typeof renderSessionCoach==='function')renderSessionCoach();
+        return;
+      }
+      iv=setInterval(()=>{left--;if(left<=0){clearInterval(iv);iv=null;left=0;if(typeof renderSessionCoach==='function')renderSessionCoach()}render()},1000);
+      if(typeof SESSION_COACH==='object'&&SESSION_UNIT){
+        if((elId==='ueTimer'&&SESSION_UNIT.skill==='rue')||(elId==='lTimer'&&SESSION_UNIT.skill==='l')){
+          SESSION_COACH.timer=true;
+        }
+      }
+      render();
+      if(typeof renderSessionCoach==='function')renderSessionCoach();
+    },
+    set(s){left=s*60;render()},
+    stop(){if(iv){clearInterval(iv);iv=null;render()}},
+    isRunning(){return iv!==null},
+    text(){return el?el.textContent:fmtMin(left)}
   }
 }
 const ueTimer=makeTimer('ueTimer',50);
 const lTimer=makeTimer('lTimer',40);
-let wTimerEl,wMode='plan',wPlan,wWrite,wRev;
+let wTimerEl,wMode='plan',wPlan,wWrite,wRev,wTimer;
 (function(){
-  let left=0,iv=null;
+  let left=0,iv=null,started=false;
   function render(){
     const el=document.getElementById('wTimer');
-    if(el){el.textContent=fmtMin(left);el.classList.toggle('running',iv!==null)}
+    if(el){
+      el.textContent=started?fmtMin(left):fmtMin(SETTINGS_DEFAULT.writeMin*60);
+      el.classList.toggle('running',iv!==null&&wMode==='write');
+    }
     const elP=document.getElementById('wPlanTimer');
-    if(elP){elP.textContent=fmtMin(left);elP.classList.toggle('running',iv!==null)}
+    if(elP){
+      elP.textContent=started?fmtMin(left):fmtMin(SETTINGS_DEFAULT.planMin*60);
+      elP.classList.toggle('running',iv!==null&&wMode==='plan');
+    }
+    if(typeof syncSessionCoachTimer==='function')syncSessionCoachTimer();
   }
-  wPlan={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.planMin*60;render()}};
-  wWrite={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.writeMin*60;render()}};
-  wRev={start(){clearInterval(iv);iv=setInterval(tick,1000);left=SETTINGS_DEFAULT.revMin*60;render()}};
-  function tick(){left--;if(left<=0){clearInterval(iv);iv=null}render()}
+  function begin(mode,mins){
+    clearInterval(iv);
+    wMode=mode;
+    left=mins*60;
+    started=true;
+    iv=setInterval(tick,1000);
+    if(typeof SESSION_COACH==='object'&&SESSION_UNIT&&SESSION_UNIT.skill==='w'){
+      SESSION_COACH.timer=true;
+    }
+    render();
+    if(typeof renderSessionCoach==='function')renderSessionCoach();
+  }
+  wPlan={start(){begin('plan',SETTINGS_DEFAULT.planMin)}};
+  wWrite={start(){begin('write',SETTINGS_DEFAULT.writeMin)}};
+  wRev={start(){begin('rev',SETTINGS_DEFAULT.revMin)}};
+  wTimer={
+    isRunning(){return iv!==null},
+    hasStarted(){return started},
+    text(){return fmtMin(left)},
+    toggle(){
+      const targetMode=(typeof W_PHASE!=='undefined'&&W_PHASE==='write')?'write':'plan';
+      if(iv!==null){
+        clearInterval(iv);iv=null;render();
+        if(typeof renderSessionCoach==='function')renderSessionCoach();
+        return;
+      }
+      if(started&&wMode===targetMode&&left>0){
+        iv=setInterval(tick,1000);
+        if(typeof SESSION_COACH==='object'&&SESSION_UNIT&&SESSION_UNIT.skill==='w')SESSION_COACH.timer=true;
+        render();
+        if(typeof renderSessionCoach==='function')renderSessionCoach();
+        return;
+      }
+      if(targetMode==='write')wWrite.start();
+      else wPlan.start();
+    },
+    reset(){
+      clearInterval(iv);iv=null;started=false;wMode='plan';left=SETTINGS_DEFAULT.planMin*60;render();
+    }
+  };
+  function tick(){left--;if(left<=0){clearInterval(iv);iv=null;left=0;if(typeof renderSessionCoach==='function')renderSessionCoach()}render()}
 })();
 const SP_TODAY={mode:'part',part:2};
 function renderSpTodayChoices(){
@@ -10481,6 +10736,10 @@ function spSelectPart(part){
   renderGuides();
 }
 async function spStartExam(){
+  if(typeof SESSION_COACH==='object'&&SESSION_UNIT&&SESSION_UNIT.skill==='sp'){
+    SESSION_COACH.timer=true;
+    if(typeof renderSessionCoach==='function')renderSessionCoach();
+  }
   const panel=spx$('spxPanel');
   const ov=document.getElementById('spxOverlay');
   if(ov)ov.style.display='flex';
@@ -10506,6 +10765,167 @@ let CURRENT_STUDIO_SLOT=null;
 let SESSION_TAB='session';
 let SESSION_UNIT=null;
 let SESSION_ORIGIN='';
+let W_PHASE='plan';
+const SESSION_COACH={contents:false,timer:false,saved:false};
+const COACH_STEP3_COPY={rue:'coach_s3_rue',l:'coach_s3_l',w:'coach_s3_w',sp:'coach_s3_sp'};
+function syncSessionFocusBodyClass(){
+  const hoy=document.getElementById('v-hoy');
+  const active=!!(hoy&&hoy.classList.contains('is-session-focus'));
+  document.body.classList.toggle('session-focus-active',active);
+}
+function coachTimerInfo(){
+  const sk=SESSION_UNIT&&SESSION_UNIT.skill;
+  if(sk==='rue')return {running:ueTimer.isRunning(),text:ueTimer.text()};
+  if(sk==='l')return {running:lTimer.isRunning(),text:lTimer.text()};
+  if(sk==='w'){
+    const running=wTimer.isRunning();
+    const txt=(running||wTimer.hasStarted())
+      ?wTimer.text()
+      :fmtMin((W_PHASE==='write'?SETTINGS_DEFAULT.writeMin:SETTINGS_DEFAULT.planMin)*60);
+    return {running,text:txt};
+  }
+  if(sk==='sp'){
+    const running=(window.SP_EXAM&&SP_EXAM.screen==='exam');
+    const clk=document.getElementById('spxClock');
+    const txt=(running&&clk&&clk.textContent)?clk.textContent:fmtMin(((SESSION_UNIT&&SESSION_UNIT.min)||4)*60);
+    return {running,text:txt};
+  }
+  return {running:false,text:''};
+}
+function syncSessionCoachTimer(){
+  const timerEl=document.getElementById('sessionCoachTimer');
+  if(!timerEl||!SESSION_UNIT)return;
+  const info=coachTimerInfo();
+  if(timerEl.textContent!==info.text)timerEl.textContent=info.text;
+  timerEl.classList.toggle('is-running',!!info.running);
+  const btn2=document.getElementById('sessionCoachBtn2');
+  if(btn2&&SESSION_UNIT.skill!=='sp'){
+    const nextLbl=t(info.running?'coach_s2_pause':'coach_s2_start');
+    if(btn2.textContent!==nextLbl)btn2.textContent=nextLbl;
+  }
+}
+function renderSessionCoach(){
+  const coach=document.getElementById('sessionCoach');
+  if(!coach)return;
+  const u=SESSION_UNIT;
+  const sk=u&&u.skill;
+  if(!u||!sk||u.catalog||!CURRENT_STUDIO){
+    coach.hidden=true;
+    return;
+  }
+  coach.hidden=false;
+  const s1=document.getElementById('sessionCoachStep1');
+  const s2=document.getElementById('sessionCoachStep2');
+  const s3=document.getElementById('sessionCoachStep3');
+  const d1=!!SESSION_COACH.contents;
+  const d2=!!SESSION_COACH.timer;
+  const d3=!!SESSION_COACH.saved;
+  const activeStep=!d1?1:(!d2?2:(!d3?3:0));
+  const paintStep=(el,numEl,idx,done)=>{
+    if(!el)return;
+    el.classList.toggle('is-done',done);
+    el.classList.toggle('is-active',!done&&activeStep===idx);
+    if(numEl)numEl.textContent=done?'✓':String(idx);
+  };
+  paintStep(s1,document.getElementById('sessionCoachNum1'),1,d1);
+  paintStep(s2,document.getElementById('sessionCoachNum2'),2,d2);
+  paintStep(s3,document.getElementById('sessionCoachNum3'),3,d3);
+
+  const t1=document.getElementById('sessionCoachTitle1');
+  if(t1)t1.textContent=t('coach_s1_title');
+  const desc1=document.getElementById('sessionCoachDesc1');
+  if(desc1)desc1.textContent=t(d1?'coach_s1_done':'coach_s1_pending');
+  const btn1=document.getElementById('sessionCoachBtn1');
+  if(btn1)btn1.textContent=t('coach_s1_btn');
+
+  const t2=document.getElementById('sessionCoachTitle2');
+  if(t2)t2.textContent=t('coach_s2_title');
+  const desc2=document.getElementById('sessionCoachDesc2Text');
+  const btn2=document.getElementById('sessionCoachBtn2');
+  if(sk==='sp'){
+    if(desc2)desc2.textContent=t(d2?'coach_s2_sp_done':'coach_s2_sp_pending');
+    if(btn2)btn2.textContent=t('coach_s2_sp_btn');
+  }else{
+    if(desc2)desc2.textContent=t(d2?'coach_s2_done':'coach_s2_pending');
+    if(btn2)btn2.textContent=t(coachTimerInfo().running?'coach_s2_pause':'coach_s2_start');
+  }
+  syncSessionCoachTimer();
+
+  const t3=document.getElementById('sessionCoachTitle3');
+  if(t3){
+    const k=sk==='w'?'coach_s3_title_w':(sk==='sp'?'coach_s3_title_sp':'coach_s3_title');
+    t3.textContent=t(k);
+  }
+  const desc3=document.getElementById('sessionCoachDesc3');
+  if(desc3)desc3.textContent=d3?t('coach_s3_done'):t(COACH_STEP3_COPY[sk]||'coach_s3_rue');
+  const btn3=document.getElementById('sessionCoachBtn3');
+  if(btn3){
+    if(sk==='sp'){
+      const hasRep=!!(window.SP_EXAM&&(SP_EXAM.saved||SP_EXAM.screen==='report'||SP_EXAM.screen==='feedback'||(window.SPK&&SPK.reportData)));
+      btn3.textContent=t(hasRep?'coach_s3_btn_sp_report':'coach_s3_btn_sp_end');
+    }else if(sk==='w'){
+      btn3.textContent=t('coach_s3_btn_w');
+    }else{
+      btn3.textContent=t('coach_s3_btn');
+    }
+  }
+}
+function sessionCoachTimerAction(){
+  const sk=SESSION_UNIT&&SESSION_UNIT.skill;
+  if(sk==='rue')ueTimer.start();
+  else if(sk==='l')lTimer.start();
+  else if(sk==='w')wTimer.toggle();
+  else if(sk==='sp')spStartExam();
+}
+function sessionCoachPhase2Action(){
+  const sk=SESSION_UNIT&&SESSION_UNIT.skill;
+  let target=null;
+  if(sk==='rue'){
+    switchUePhase('score');
+    target=document.getElementById('uePhase2');
+  }else if(sk==='l'){
+    switchListeningPhase('pm');
+    target=document.getElementById('lPhase2');
+  }else if(sk==='w'){
+    switchWritingPhase('audit');
+    target=document.getElementById('wPhase3');
+  }else if(sk==='sp'){
+    if(window.SP_EXAM&&SP_EXAM.screen==='exam'){
+      SP_EXAM.stopEarly();
+      return;
+    }
+    if(window.SP_EXAM&&(SP_EXAM.saved||SP_EXAM.screen==='report'||SP_EXAM.screen==='feedback'||(window.SPK&&SPK.reportData))){
+      const ov=document.getElementById('spxOverlay');
+      const panel=document.getElementById('spxPanel');
+      if(ov)ov.style.display='flex';
+      if(panel)panel.style.display='block';
+      return;
+    }
+    spStartExam();
+    return;
+  }
+  if(target&&typeof target.scrollIntoView==='function'){
+    target.scrollIntoView({behavior:'auto',block:'start'});
+    const saveBtn=target.querySelector('[data-action="saveUE"],[data-action="saveL"],#rubAiBtn');
+    if(saveBtn){
+      const r=saveBtn.getBoundingClientRect();
+      const maxBottom=window.innerWidth<=1023?(window.innerHeight-84):(window.innerHeight-24);
+      if(r.bottom>maxBottom)window.scrollBy(0,Math.ceil(r.bottom-maxBottom));
+    }
+  }
+}
+(function(){
+  const list=document.getElementById('exLibList');
+  if(list){
+    list.addEventListener('click',function(ev){
+      if(!SESSION_UNIT)return;
+      if(ev.target&&ev.target.closest('a.exlib-row, .practised-btn')){
+        SESSION_COACH.contents=true;
+        renderSessionCoach();
+      }
+    });
+  }
+})();
 const SESSION_PAPER_KEYS={rue:'paper_reading',w:'paper_writing',l:'paper_listening',sp:'paper_speaking'};
 function unitPartString(skill,value){
   if(skill==='w'){
@@ -10585,7 +11005,7 @@ function renderSessionTopbar(){
     }
   }
 }
-function setSessionTab(tab){
+function setSessionTab(tab,opts){
   SESSION_TAB=(tab==='contents')?'contents':'session';
   const sesBtn=document.getElementById('sessionTabSessionBtn');
   const cntBtn=document.getElementById('sessionTabContentsBtn');
@@ -10596,11 +11016,15 @@ function setSessionTab(tab){
   if(cntBtn){cntBtn.classList.toggle('active',isCnt);cntBtn.setAttribute('aria-selected',isCnt?'true':'false');}
   if(sesPanel)sesPanel.hidden=isCnt;
   if(cntPanel)cntPanel.hidden=!isCnt;
+  if(isCnt&&!(opts&&opts.init)&&SESSION_UNIT){
+    SESSION_COACH.contents=true;
+  }
   if(isCnt){
     if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
     renderSessionTopbar();
     renderExercisesLibrary();
   }
+  renderSessionCoach();
 }
 function toggleContentsPaperScope(){
   const u=SESSION_UNIT;
@@ -10622,11 +11046,14 @@ function toggleContentsPaperScope(){
 }
 function resetStudioPhases(skill){
   if(skill==='rue'){
+    ueTimer.stop();
     document.querySelectorAll('#uePhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='sprint'));
     const p1=document.getElementById('uePhase1'),p2=document.getElementById('uePhase2');
     if(p1)p1.style.display='block';
     if(p2)p2.style.display='none';
   }else if(skill==='w'){
+    W_PHASE='plan';
+    wTimer.reset();
     document.querySelectorAll('#wPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='plan'));
     const p1=document.getElementById('wPhase1'),p2=document.getElementById('wPhase2'),p3=document.getElementById('wPhase3');
     if(p1)p1.style.display='block';
@@ -10635,6 +11062,10 @@ function resetStudioPhases(skill){
     const rs=document.getElementById('rubAiStatus');if(rs)rs.textContent='';
     const rr=document.getElementById('rubAiResult');if(rr){rr.innerHTML='';rr.hidden=true;}
   }else if(skill==='l'){
+    lTimer.stop();
+    const row=document.getElementById('lScoreRow');
+    const m1=document.getElementById('lPhase1ScoreMount');
+    if(row&&m1&&row.parentElement!==m1)m1.appendChild(row);
     document.querySelectorAll('#lPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase==='play'));
     const p1=document.getElementById('lPhase1'),p2=document.getElementById('lPhase2');
     if(p1)p1.style.display='block';
@@ -10667,6 +11098,9 @@ function selectSessionStudio(id,opts){
   if(id&&!(opts&&opts.keepUnit)){
     const u=inferStudioUnit(id);
     SESSION_UNIT=u;
+    SESSION_COACH.contents=false;
+    SESSION_COACH.timer=false;
+    SESSION_COACH.saved=false;
     if(!SESSION_ORIGIN)SESSION_ORIGIN='hoy';
     EXLIB_STATE.query='';
     EXLIB_STATE.paper=(u&&u.skill)||'all';
@@ -10675,25 +11109,34 @@ function selectSessionStudio(id,opts){
     EXLIB_STATE.freeOnly=false;
     EXLIB_STATE.sort='exam';
     EXLIB_STATE.expanded=!(u&&u.part);
-    setSessionTab('session');
+    setSessionTab('session',{init:true});
     renderSessionTopbar();
     if(typeof renderExercisesLibrary==='function')renderExercisesLibrary('session');
   }
+  renderSessionCoach();
 }
 /* The resting state of TODAY: every studio group closed. */
 function closeSessionStudios(){
   if(window.SP_EXAM&&window.SP_EXAM.screen)window.SP_EXAM.close();
+  ueTimer.stop();
+  lTimer.stop();
+  if(wTimer&&wTimer.reset)wTimer.reset();
   CURRENT_STUDIO='';
   CURRENT_STUDIO_SOURCE='';
   CURRENT_STUDIO_SLOT=null;
   SESSION_TAB='session';
   SESSION_UNIT=null;
   SESSION_ORIGIN='';
+  SESSION_COACH.contents=false;
+  SESSION_COACH.timer=false;
+  SESSION_COACH.saved=false;
   if(typeof PLAN_UNIT_START!=='undefined')PLAN_UNIT_START=null;
   const hoy=document.getElementById('v-hoy');
   if(hoy)hoy.classList.remove('is-session-focus');
+  syncSessionFocusBodyClass();
   const ws=document.getElementById('sessionWorkspace');
   if(ws)ws.hidden=true;
+  renderSessionCoach();
   ['sesA','sesB','sesFull'].forEach(gid=>{
     const el=document.getElementById(gid);
     if(el)el.style.display='none';
@@ -10741,6 +11184,9 @@ function openUnitSession(u,opts){
   resetStudioPhases(skill);
   SESSION_ORIGIN=origin;
   SESSION_UNIT={skill,part:partStr,value,min,catalog:!!o.catalog};
+  SESSION_COACH.contents=false;
+  SESSION_COACH.timer=false;
+  SESSION_COACH.saved=false;
   EXLIB_STATE.query='';
   EXLIB_STATE.paper=o.exlibPaper||skill;
   EXLIB_STATE.part=o.exlibPart!=null?String(o.exlibPart):(partStr||'all');
@@ -10752,6 +11198,7 @@ function openUnitSession(u,opts){
   if(origin==='practice'||origin==='plan'){
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
     if(hoy){hoy.classList.add('active');hoy.classList.add('is-session-focus');}
+    syncSessionFocusBodyClass();
     const navTarget=origin==='plan'?'plan':'practice';
     document.querySelectorAll('nav button[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===navTarget));
     if(typeof closeMoreSheet==='function')closeMoreSheet(false);
@@ -10763,6 +11210,7 @@ function openUnitSession(u,opts){
     if(typeof syncNavOffset==='function')syncNavOffset();
   }else if(hoy){
     hoy.classList.remove('is-session-focus');
+    syncSessionFocusBodyClass();
   }
   selectSessionStudio(UNIT_STUDIO[skill]||'mon-a',{
     fromPlan:fromPlan&&!!slot.day,
@@ -10770,8 +11218,9 @@ function openUnitSession(u,opts){
     source:origin==='practice'?'practice':(fromPlan?'plan':'menu'),
     keepUnit:true
   });
-  setSessionTab(o.initialTab==='contents'?'contents':'session');
+  setSessionTab(o.initialTab==='contents'?'contents':'session',{init:true});
   renderSessionTopbar();
+  renderSessionCoach();
   renderExercisesLibrary('session');
   if(!MATERIALS.length&&typeof loadMaterial==='function')loadMaterial();
   if(origin==='practice'||origin==='plan'){
@@ -10796,6 +11245,7 @@ function updateWritingPhase3Summary(){
   }
 }
 function switchWritingPhase(p){
+  W_PHASE=p;
   document.querySelectorAll('#wPhaseStepper .phase-step').forEach(b=>b.classList.toggle('active',b.dataset.phase===p));
   const p1=document.getElementById('wPhase1'),p2=document.getElementById('wPhase2'),p3=document.getElementById('wPhase3');
   if(p1)p1.style.display=(p==='plan'?'block':'none');
@@ -10808,6 +11258,7 @@ function switchWritingPhase(p){
     const btn=document.getElementById('rubAiBtn');
     if(btn&&typeof btn.focus==='function')btn.focus();
   }
+  renderSessionCoach();
 }
 
 function switchListeningPhase(p){
@@ -10815,6 +11266,9 @@ function switchListeningPhase(p){
   const p1=document.getElementById('lPhase1'),p2=document.getElementById('lPhase2');
   if(p1)p1.style.display=(p==='play'?'block':'none');
   if(p2)p2.style.display=(p==='pm'?'block':'none');
+  const row=document.getElementById('lScoreRow');
+  const mount=document.getElementById(p==='pm'?'lPhase2ScoreMount':'lPhase1ScoreMount');
+  if(row&&mount&&row.parentElement!==mount)mount.appendChild(row);
   if(p==='play')lTimer.start();
 }
 
@@ -15705,6 +16159,7 @@ function spxFinalizeReport(data){
   data.tip=weakest?spxTipFor(weakest.part):'';
   /* The tip names a part: "Repeat this part" re-runs that one, never the four. */
   data.tipPart=weakest?weakest.part:null;
+  if(typeof renderSessionCoach==='function')renderSessionCoach();
   return data;
 }
 
@@ -15771,6 +16226,7 @@ SP_EXAM.saveSessionLog=function(){
   if(fbSave)fbSave.disabled=true;
   const st=spx$('spxLogStatus');
   if(st)st.textContent=t('sp_log_saved');
+  if(typeof renderSessionCoach==='function')renderSessionCoach();
 };
 
 function spxRenderPartsList(target,parts){
@@ -15891,6 +16347,7 @@ SP_EXAM.saveReport=function(){
   SP_EXAM.saved=true;
   spxRenderReportScreen();
   spxSetScreen('report');
+  if(typeof renderSessionCoach==='function')renderSessionCoach();
 };
 
 /* Repeat the part the report is about as a one-part run. A full exam is never
@@ -15953,6 +16410,7 @@ SP_EXAM.close=function(){
   if(panel)panel.style.display='none';
   const ov=document.getElementById('spxOverlay');
   if(ov)ov.style.display='none';
+  if(typeof renderSessionCoach==='function')renderSessionCoach();
 };
 
 /* --- Test surface (only when ?spx_test=1 / localStorage.spx_test) ------- */
@@ -16205,6 +16663,15 @@ function log(e){
   const entry = Object.assign({date:today(), created_at:Date.now()}, e);
   D.log.push(entry);
   D.log.sort((a,b)=>(b.date||'').localeCompare(a.date||'') || ((b.created_at||0) - (a.created_at||0)));
+  if(typeof SESSION_COACH==='object'&&SESSION_UNIT){
+    const k=(e&&e.type)||'';
+    const sk=SESSION_UNIT.skill;
+    const match=(sk==='rue'&&(k==='rue'||k==='ue'))
+      ||(sk==='l'&&(k==='l'||k==='lp'))
+      ||(sk==='w'&&k==='w')
+      ||(sk==='sp'&&k==='sp');
+    if(match)SESSION_COACH.saved=true;
+  }
   advanceStageIfReady({save:false});
   save();
   refreshAll();
@@ -22971,6 +23438,10 @@ async function checkRubricWithAI(){
     const total=typeof data.total==='number'?data.total
       :['content','communicative_achievement','organisation','language'].reduce(function(s,k){return s+(Number(bands[k])||0)},0);
     if(status)status.textContent=total>0?t('rub_ai_score',{score:total}):'';
+    if(typeof SESSION_COACH==='object'&&SESSION_UNIT&&SESSION_UNIT.skill==='w'){
+      SESSION_COACH.saved=true;
+      if(typeof renderSessionCoach==='function')renderSessionCoach();
+    }
   }catch(err){
     if(status)status.textContent=t('rub_ai_error');
   }finally{
@@ -23863,6 +24334,8 @@ click:{
 'saveUE':()=>saveUE(),
 'saveW':()=>saveW(),
 'selectOwnMaterial':el=>selectOwnMaterial(el.dataset.id),
+'sessionCoachPhase2Action':()=>sessionCoachPhase2Action(),
+'sessionCoachTimerAction':()=>sessionCoachTimerAction(),
 'setExamDate':()=>setExamDate(),
 'setExLibPaper':el=>setExLibPaper(el.dataset.exlibPaper,el),
 'setExLibPart':el=>setExLibPart(el.dataset.exlibPart,el),
