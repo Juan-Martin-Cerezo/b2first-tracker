@@ -128,7 +128,7 @@ with sync_playwright() as p:
     assert not pg.evaluate("!!document.getElementById('v-graf')"), "#v-graf still exists"
     pg.click("nav button[data-view='prog']")
     pg.wait_for_timeout(300)
-    for chart_id in ("gEvol", "gPart", "gErr", "gCons"):
+    for chart_id in ("gEvol", "gPart", "gCons"):
         assert pg.evaluate(f"!!document.querySelector('#v-prog #{chart_id}')"), (
             f"{chart_id} is not inside #v-prog"
         )

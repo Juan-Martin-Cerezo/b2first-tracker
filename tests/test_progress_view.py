@@ -6,8 +6,8 @@ Verifies with Playwright + isolated_server():
   * Progress view opens cleanly with zero console/page errors;
   * no horizontal overflow (scrollWidth <= innerWidth + 1);
   * summary KPIs (4) and per-skill bars with last-3 trend (4);
-  * >= 4 SVG charts (#gEvol, #gPart, #gErr, #gCons) with role="img", non-empty
-    <title>/<desc>, real axes, and legends;
+  * 3 SVG charts (#gEvol, #gPart, #gCons) with role="img", non-empty
+    <title>/<desc>, real axes, and legends (no removed errors chart);
   * basic contrast check: axis text fill != surface background (and >= 4.5:1);
   * tap/click interaction updates the inline readout (.pg-tip.has-val);
   * collapsible numeric detail (#progDetail) expands cleanly without overflow;
@@ -142,7 +142,7 @@ INSPECT_JS = r"""() => {
   const innerWidth = window.innerWidth;
   const kpis = document.querySelectorAll('#pgKpis .pg-kpi').length;
   const skills = document.querySelectorAll('#pgSkills .pg-skill').length;
-  const chartIds = ['gEvol', 'gPart', 'gErr', 'gCons'];
+  const chartIds = ['gEvol', 'gPart', 'gCons'];
   const charts = chartIds.map(id => {
     const box = document.getElementById(id);
     const svg = box ? box.querySelector('svg') : null;
@@ -236,7 +236,7 @@ def main():
                     # for the real signal instead of a fixed sleep: a loaded Pi
                     # can take longer than 350 ms and the assertion would race.
                     pg.wait_for_function(
-                        "document.querySelectorAll('.pg-chart svg').length >= 4",
+                        "document.querySelectorAll('.pg-chart svg').length >= 3",
                         timeout=10000,
                     )
                     pg.wait_for_timeout(150)
@@ -251,7 +251,7 @@ def main():
                     assert info["detailOpen"] is False, "numeric detail should start collapsed"
 
                     svg_count = sum(1 for c in info["charts"] if c["hasSvg"])
-                    assert svg_count >= 4, f"expected >=4 SVG charts, got {info['charts']}"
+                    assert svg_count == 3, f"expected 3 SVG charts, got {info['charts']}"
                     for c in info["charts"]:
                         assert c["role"] == "img", f"{c['id']} missing role='img'"
                         assert c["title"], f"{c['id']} has empty <title>"
@@ -365,14 +365,14 @@ def main():
             D.log.unshift(null);
             D.errs.unshift(null);
             renderProgSummary(); renderProgSkills();
-            renderGrafEvol(); renderGrafPart(); renderGrafErr(); renderGrafCons();
+            renderGrafEvol(); renderGrafPart(); renderGrafCons();
             const svgs = [...document.querySelectorAll('#v-prog .pg-svg-wrap > svg')];
             return {
                 svgCount: svgs.length,
                 anyNaN: svgs.some(s => /NaN|undefined/.test(s.innerHTML)),
             };
         }""")
-        assert dirty_state["svgCount"] >= 4 and not dirty_state["anyNaN"], f"dirty data broke charts: {dirty_state}"
+        assert dirty_state["svgCount"] == 3 and not dirty_state["anyNaN"], f"dirty data broke charts: {dirty_state}"
         assert not edge_errors, f"edge case page errors: {edge_errors}"
         out["edges"]["dirty_data"] = dirty_state
 

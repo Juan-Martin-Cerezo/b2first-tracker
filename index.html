@@ -3361,11 +3361,16 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 
-/* === Progress 2 independent flex columns (tablet & desktop) === */
+/* === Progress 2 balanced columns (tablet & desktop) === */
+#progChartsGrid{
+  align-items:stretch;
+}
 #progChartsGrid .col-6{
   display:flex;flex-direction:column;gap:var(--s4);min-width:0;
 }
-#progChartsGrid .col-6>.card{margin-bottom:0}
+#progChartsGrid .col-6>.card{
+  margin-bottom:0;flex:1;display:flex;flex-direction:column;
+}
 
 /* === P1: Progress narrative hierarchy & SVG charts === */
 .pg-kpis{
@@ -3455,12 +3460,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   font-size:var(--t-meta);color:var(--txt-2);align-items:center;
 }
 .pg-leg-item{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.pg-err-summary{
-  display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-bottom:var(--s2);
-}
-.pg-err-total{
-  font-size:var(--t-body);font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums;
-}
 .pg-detail summary{
   display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
   list-style:none;min-height:44px;
@@ -3511,7 +3510,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   .page-head{margin-bottom:var(--s3);gap:var(--s2)}
   .card{padding:var(--s4);margin-bottom:var(--s3)}
   .stat-grid,.exam-select-grid,.grid-12{gap:var(--s3)}
-  .stat-grid,.prog-moved-grid,.u4-real-mocks{margin-bottom:var(--s3)}
+  .stat-grid,.prog-moved-grid,.u4-real-mocks,#progChartsGrid{margin-bottom:var(--s3)}
   .stat-card,.exam-card,.task,.next-session{padding:var(--s4);gap:var(--s2)}
   .streak-card{padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
   #v-hoy .today-aside{padding:var(--s4);gap:var(--s3)}
@@ -5701,7 +5700,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
 
         <div class="card" id="progChartsEmpty" style="display:none">
           <h2 data-i18n="pg_empty_title">Your charts unlock after your first session</h2>
-          <p class="sub" data-i18n="pg_empty_sub">Log one session and this page fills in: progress per skill, evolution over time, weakest parts, errors and weekly consistency.</p>
+          <p class="sub" data-i18n="pg_empty_sub">Log one session and this page fills in: progress per skill, evolution over time, weakest parts and weekly consistency.</p>
           <button type="button" class="btn" data-action="openQuickLog" data-i18n="pg_empty_cta">Log your first session</button>
         </div>
 
@@ -5719,7 +5718,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
           <div id="gEvol" class="pg-chart"></div>
         </div>
 
-        <!-- d) weakest parts · e) errors · e) consistency -->
+        <!-- d) weakest parts · e) consistency -->
         <div class="grid-12" id="progChartsGrid">
           <div class="col-6">
             <div class="card">
@@ -5729,11 +5728,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
             </div>
           </div>
           <div class="col-6">
-            <div class="card">
-              <h2 data-i18n="charts_errors">Errors by type</h2>
-              <div class="sub" data-i18n="charts_errors_sub">Root causes you tagged, per week (last 8 weeks).</div>
-              <div id="gErr" class="pg-chart"></div>
-            </div>
             <div class="card">
               <h2 data-i18n="charts_consistency">Weekly consistency</h2>
               <div class="sub"><span data-i18n="pg_cons_sub">Logs per week, last 12 weeks</span> · <span id="gStreak"></span></div>
@@ -6642,7 +6636,7 @@ const I18N={
     prog_sub:'Monitor your advancement through the B2 First preparation stages. Accuracy is paramount.',
     pg_summary_title:'At a glance',
     pg_empty_title:'Your charts unlock after your first session',
-    pg_empty_sub:'Log one session and this page fills in: progress per skill, evolution over time, weakest parts, errors and weekly consistency.',
+    pg_empty_sub:'Log one session and this page fills in: progress per skill, evolution over time, weakest parts and weekly consistency.',
     pg_empty_cta:'Log your first session',
     pg_skills_title:'Progress by skill',
     pg_skills_sub:'Each bar is the average of your last 3 results; the arrow is the change across those 3. The tick marks the target.',
@@ -6685,15 +6679,6 @@ const I18N={
     pg_part_ontarget:'On target',
     pg_part_title:'Weakest parts: Reading & Use of English parts 1 to 7',
     pg_part_desc:'Horizontal bars ordered from lowest to highest average percentage across {n} parts.',
-    pg_err_empty:'No errors tagged yet — log a mistake in Errors to see your root causes.',
-    pg_err_cta:'Go to Errors',
-    pg_err_total:'Total: {n}',
-    pg_err_trend_down:'{diff} vs prior 4 wks',
-    pg_err_trend_up:'+{diff} vs prior 4 wks',
-    pg_err_trend_same:'same as prior 4 wks',
-    pg_err_recent_only:'{n} in last 4 wks',
-    pg_err_title:'Errors by type over the last 8 weeks',
-    pg_err_desc:'Stacked weekly bars for L-GAP, G-ERR, T-MIS and T-LIM.',
     pg_cons_streak:'Current streak: {n} wk',
     pg_cons_goal:'Goal {goal}/wk',
     pg_cons_met:'Met goal',
@@ -6703,7 +6688,6 @@ const I18N={
     pg_tip_hint:'Tap or hover a point for details',
     pg_tip_sessions:'{n} sessions (goal {goal})',
     pg_tip_part:'Part {p} ({name}): {pct}% · {n} logs',
-    pg_tip_err_week:'{week}: {total} total',
     prog_matrix:'🧗 Progression matrix',
     prog_matrix_sub:'Complete all gates within your current stage to unlock the next one automatically.',
     prog_achieved:'achieved',
@@ -6802,8 +6786,6 @@ const I18N={
     charts_evolution_sub:'Accuracy per skill on one 0–100 % scale, one point per day with results.',
     charts_by_part:'Weakest parts',
     charts_by_part_sub:'Reading & Use of English parts 1–7: average of all your results, worst first.',
-    charts_errors:'Errors by type',
-    charts_errors_sub:'Root causes you tagged, per week (last 8 weeks).',
     charts_consistency:'Weekly consistency',
     err_title:'Error taxonomy',
     err_sub:'Root-cause logging: L-GAP (lexical) · G-ERR (grammar) · T-MIS (distractor) · T-LIM (time). Identify systematic patterns to optimise remaining study time.',
@@ -7810,7 +7792,7 @@ const I18N={
     prog_sub:'Seguí tu avance por las etapas de preparación del B2 First. La precisión es lo más importante.',
     pg_summary_title:'En un vistazo',
     pg_empty_title:'Tus gráficos se desbloquean tras la primera sesión',
-    pg_empty_sub:'Registrá una sesión y esta vista cobra vida: progreso por destreza, evolución, partes débiles, errores y constancia.',
+    pg_empty_sub:'Registrá una sesión y esta vista cobra vida: progreso por destreza, evolución, partes débiles y constancia semanal.',
     pg_empty_cta:'Registrá tu primera sesión',
     pg_skills_title:'Progreso por destreza',
     pg_skills_sub:'Cada barra muestra el promedio de tus últimos 3 resultados; la flecha indica el cambio entre esos 3. La marca señala el objetivo.',
@@ -7853,15 +7835,6 @@ const I18N={
     pg_part_ontarget:'En meta',
     pg_part_title:'Partes débiles: Reading y Use of English partes 1 a 7',
     pg_part_desc:'Barras horizontales ordenadas de menor a mayor porcentaje promedio en {n} partes.',
-    pg_err_empty:'Sin errores etiquetados aún — registrá un fallo en Errores para ver las causas raíz.',
-    pg_err_cta:'Ir a Errores',
-    pg_err_total:'Total: {n}',
-    pg_err_trend_down:'{diff} vs 4 sem previas',
-    pg_err_trend_up:'+{diff} vs 4 sem previas',
-    pg_err_trend_same:'igual que 4 sem previas',
-    pg_err_recent_only:'{n} en últimas 4 sem',
-    pg_err_title:'Errores por tipo en las últimas 8 semanas',
-    pg_err_desc:'Barras semanales apiladas para L-GAP, G-ERR, T-MIS y T-LIM.',
     pg_cons_streak:'Racha actual: {n} sem',
     pg_cons_goal:'Meta {goal}/sem',
     pg_cons_met:'Meta cumplida',
@@ -7871,7 +7844,6 @@ const I18N={
     pg_tip_hint:'Tocá o pasá por un punto para ver detalle',
     pg_tip_sessions:'{n} sesiones (meta {goal})',
     pg_tip_part:'Parte {p} ({name}): {pct} % · {n} reg.',
-    pg_tip_err_week:'{week}: {total} en total',
     prog_matrix:'🧗 Matriz de progresión',
     prog_matrix_sub:'Completá todos los criterios de tu etapa actual para desbloquear la siguiente automáticamente.',
     prog_achieved:'alcanzada',
@@ -7970,8 +7942,6 @@ const I18N={
     charts_evolution_sub:'Acierto por destreza en una escala real de 0–100 %, un punto por día con resultados.',
     charts_by_part:'Partes débiles',
     charts_by_part_sub:'Reading y Use of English partes 1–7: promedio de tus resultados, de peor a mejor.',
-    charts_errors:'Errores por tipo',
-    charts_errors_sub:'Causas raíz que etiquetaste, por semana (últimas 8 semanas).',
     charts_consistency:'Constancia semanal',
     err_title:'Taxonomía de errores',
     err_sub:'Registro de causa raíz: L-GAP (léxico) · G-ERR (gramática) · T-MIS (distractor) · T-LIM (tiempo). Identificá patrones sistemáticos para optimizar el tiempo de estudio restante.',
@@ -22451,105 +22421,6 @@ function renderGrafPart(){
   el.innerHTML=pgSvgWrap(W,H,t('pg_part_title'),t('pg_part_desc',{n:rows.length}),g,leg);
   bindChartTips(el);
 }
-function renderGrafErr(){
-  const el=document.getElementById('gErr');
-  if(!el)return;
-  if(!(D.log&&D.log.length)){el.innerHTML='';return}
-  const codes=['L-GAP','G-ERR','T-MIS','T-LIM'];
-  const rawErrs=Array.isArray(D&&D.errs)?D.errs:[];
-  const errs=rawErrs.filter(e=>e&&typeof e==='object'&&codes.includes(e.code||e.tax)&&pgValidDate(e.date))
-    .map(e=>({code:e.code||e.tax,date:e.date}));
-  if(!errs.length){
-    el.innerHTML=`<div class="empty">${esc(t('pg_err_empty'))}<button type="button" class="btn sm ok" data-action="showView" data-arg="err">${esc(t('pg_err_cta'))}</button></div>`;
-    return;
-  }
-  const latestDate=errs.map(e=>e.date).sort().slice(-1)[0];
-  const weeks=pgRecentWeeks(8,latestDate);
-  const byWeek={};
-  weeks.forEach(w=>{byWeek[w.key]={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0,total:0}});
-  const totals={'L-GAP':0,'G-ERR':0,'T-MIS':0,'T-LIM':0};
-  errs.forEach(e=>{
-    totals[e.code]++;
-    const wk=pgIsoWeekInfo(e.date).key;
-    if(byWeek[wk]){byWeek[wk][e.code]++;byWeek[wk].total++}
-  });
-  const prev4=weeks.slice(0,4).reduce((s,w)=>s+byWeek[w.key].total,0);
-  const last4=weeks.slice(4,8).reduce((s,w)=>s+byWeek[w.key].total,0);
-  let trendCls='flat',trendTxt=t('pg_err_recent_only',{n:last4});
-  if(prev4>0){
-    const diff=last4-prev4;
-    if(diff<0){trendCls='up';trendTxt=t('pg_err_trend_down',{diff:diff})}
-    else if(diff>0){trendCls='down';trendTxt=t('pg_err_trend_up',{diff:diff})}
-    else{trendCls='flat';trendTxt=t('pg_err_trend_same')}
-  }
-
-  const maxWeek=Math.max(1,...weeks.map(w=>byWeek[w.key].total));
-  const step=maxWeek<=4?1:Math.ceil(maxWeek/4);
-  const ymax=Math.max(step*2,Math.ceil(maxWeek/step)*step);
-  const W=pgChartWidth(el,520),H=W<400?195:210;
-  const padL=32,padR=10,padT=14,padB=26;
-  const plotW=W-padL-padR,plotH=H-padT-padB;
-  const ys=v=>padT+plotH*(1-v/ymax);
-
-  const fills={
-    'L-GAP':'var(--acc)',
-    'G-ERR':'url(#pgPatGerr)',
-    'T-MIS':'url(#pgPatTmis)',
-    'T-LIM':'url(#pgPatTlim)'
-  };
-  let g=`<defs>
-    <pattern id="pgPatGerr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <rect width="6" height="6" fill="var(--bad)"/>
-      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--surface)" stroke-width="1.6" stroke-opacity="0.45"/>
-    </pattern>
-    <pattern id="pgPatTmis" width="6" height="6" patternUnits="userSpaceOnUse">
-      <rect width="6" height="6" fill="var(--warn)"/>
-      <circle cx="3" cy="3" r="1.1" fill="var(--surface)" fill-opacity="0.55"/>
-    </pattern>
-    <pattern id="pgPatTlim" width="6" height="6" patternUnits="userSpaceOnUse">
-      <rect width="6" height="6" fill="var(--txt-2)"/>
-      <line x1="0" y1="3" x2="6" y2="3" stroke="var(--surface)" stroke-width="1.4" stroke-opacity="0.45"/>
-    </pattern>
-  </defs>`;
-  for(let v=0;v<=ymax;v+=step){
-    const y=ys(v).toFixed(1);
-    g+=`<line x1="${padL}" x2="${W-padR}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;
-    g+=svgTxt(padL-5,ys(v)+4,v,'var(--txt-2)',10,'end');
-  }
-  g+=`<line x1="${padL}" x2="${padL}" y1="${padT}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
-  g+=`<line x1="${padL}" x2="${W-padR}" y1="${H-padB}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
-
-  const sliceW=plotW/weeks.length;
-  const bw=Math.min(34,Math.max(14,sliceW*0.64));
-  const thin=W<380;
-  weeks.forEach((w,i)=>{
-    const counts=byWeek[w.key];
-    const x=padL+i*sliceW+(sliceW-bw)/2;
-    let curY=H-padB;
-    const parts=[];
-    let segs='';
-    codes.forEach(c=>{
-      const n=counts[c];
-      if(!n)return;
-      const h=plotH*(n/ymax);
-      curY-=h;
-      segs+=`<rect class="pg-bar-shape pg-anim" x="${x.toFixed(1)}" y="${curY.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" fill="${fills[c]}"/>`;
-      parts.push(c+' '+n);
-    });
-    const tip=t('pg_tip_err_week',{week:w.label+' ('+fmtDate(w.dateKey)+')',total:counts.total})+(parts.length?' · '+parts.join(', '):'');
-    g+=`<g class="pg-bar-hit" tabindex="0" role="button" data-tip="${esc(tip)}" aria-label="${esc(tip)}">`
-      +`<rect x="${(padL+i*sliceW).toFixed(1)}" y="${padT}" width="${sliceW.toFixed(1)}" height="${plotH}" fill="transparent"/>`
-      +segs+`</g>`;
-    if(!thin||i%2===0||i===weeks.length-1){
-      g+=svgTxt(x+bw/2,H-8,w.label,'var(--txt-2)',9.5,'middle');
-    }
-  });
-
-  const leg=codes.map(c=>pgLegendSwatch(fills[c],`${c} (${totals[c]})`)).join('');
-  const head=`<div class="pg-err-summary"><span class="pg-err-total">${esc(t('pg_err_total',{n:errs.length}))}</span><span class="pg-skill-trend ${trendCls}">${esc(trendTxt)}</span></div>`;
-  el.innerHTML=head+pgSvgWrap(W,H,t('pg_err_title'),t('pg_err_desc'),g,leg);
-  bindChartTips(el);
-}
 function renderGrafCons(){
   const el=document.getElementById('gCons');
   if(!el)return;
@@ -22567,7 +22438,7 @@ function renderGrafCons(){
   const step=maxVal<=5?1:Math.ceil(maxVal/4);
   const ymax=Math.max(step*2,Math.ceil(maxVal/step)*step);
 
-  const W=pgChartWidth(el,520),H=W<400?195:210;
+  const W=pgChartWidth(el,520),H=W<400?195:228;
   const padL=32,padR=10,padT=16,padB=26;
   const plotW=W-padL-padR,plotH=H-padT-padB;
   const ys=v=>padT+plotH*(1-v/ymax);
@@ -22645,7 +22516,7 @@ function renderProgChartsState(){
     clearTimeout(_pgResizeTimer);
     _pgResizeTimer=setTimeout(()=>{
       _pgLastW=window.innerWidth;
-      renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();
+      renderGrafEvol();renderGrafPart();renderGrafCons();
     },140);
   });
 })();
@@ -24807,7 +24678,7 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='prog')skRenderView('prog',function(){
     advanceStageIfReady();renderGates();renderRecent();renderLog();renderStats();renderErrs();renderWeeklySummary();
     renderProgSummary();renderProgSkills();
-    renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();
+    renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();
   });
   closeMoreSheet(false);
   closeAccountSheet(false);
@@ -24890,7 +24761,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafErr();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();updateWritingPhase3Summary();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();renderSpeakingReport();updateWritingPhase3Summary();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;

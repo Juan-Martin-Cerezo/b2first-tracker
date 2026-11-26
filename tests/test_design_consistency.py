@@ -220,7 +220,7 @@ MEASURE_TAB_JS = """
     // 6. Progress specific: consistent chart margins
     let progCheck = null;
     if (viewId === 'prog') {
-        const chartIds = ['gEvol', 'gPart', 'gErr', 'gCons'];
+        const chartIds = ['gEvol', 'gPart', 'gCons'];
         progCheck = chartIds.map(id => {
             const chartBox = document.getElementById(id);
             const card = chartBox ? chartBox.closest('.card') : null;
