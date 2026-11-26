@@ -1,0 +1,229 @@
+{
+  "id": "04",
+  "title": "B2 First for Schools Sample Paper 2",
+  "variant": "for_schools",
+  "partner": {
+    "name": "Hannah",
+    "home": "Oxford",
+    "voice": "Leda",
+    "persona": "A 17-year-old student from Oxford preparing for B2 First for Schools. Speaks natural British English, thinks aloud briefly when weighing options, and enjoys building on the other candidate's ideas."
+  },
+  "images": {
+    "part2_task1": [
+      "/assets/speaking/exams/04/p2-1a.jpg",
+      "/assets/speaking/exams/04/p2-1b.jpg"
+    ],
+    "part2_task2": [
+      "/assets/speaking/exams/04/p2-2a.jpg",
+      "/assets/speaking/exams/04/p2-2b.jpg"
+    ],
+    "part3_card": "/assets/speaking/exams/04/p3-card.png"
+  },
+  "parts": {
+    "1": {
+      "duration_seconds": 120,
+      "opening": "First we'd like to know something about you.",
+      "categories": [
+        {
+          "name": "People you know",
+          "questions": [
+            {
+              "text": "Who are you most like in your family? Tell us about them.",
+              "followups": [],
+              "topic": "who you are most like in your family",
+              "keywords": ["family", "mother", "mum", "father", "dad", "sister", "brother", "personality", "like", "similar", "patient", "funny", "quiet"]
+            },
+            {
+              "text": "Do you have a best friend?",
+              "followups": ["What do you like about them?"],
+              "topic": "your best friend",
+              "keywords": ["friend", "friends", "best", "kind", "funny", "trust", "school", "years", "together", "laugh", "honest"]
+            },
+            {
+              "text": "Who do you spend time with after school?",
+              "followups": ["What do you do together?"],
+              "topic": "who you spend time with after school",
+              "keywords": ["school", "friends", "family", "brother", "sister", "club", "sport", "homework", "games", "park", "chat"]
+            },
+            {
+              "text": "Tell us about a good teacher you've had.",
+              "followups": [],
+              "topic": "a good teacher you have had",
+              "keywords": ["teacher", "subject", "history", "english", "science", "maths", "patient", "explain", "lessons", "helpful", "kind", "school"]
+            }
+          ]
+        },
+        {
+          "name": "Things you like",
+          "questions": [
+            {
+              "text": "What's your favourite subject at school?",
+              "followups": ["Why do you like it?"],
+              "topic": "your favourite subject at school",
+              "keywords": ["subject", "maths", "science", "history", "art", "english", "biology", "chemistry", "music", "geography", "interesting", "favourite"]
+            },
+            {
+              "text": "Do you like reading?",
+              "followups": ["What do you like to read?", "Why?"],
+              "topic": "reading",
+              "keywords": ["read", "reading", "books", "novels", "fantasy", "comics", "articles", "stories", "relax", "imagination", "library"]
+            },
+            {
+              "text": "Do you enjoy using the internet in your free time?",
+              "followups": ["Why, or why not?"],
+              "topic": "using the internet in your free time",
+              "keywords": ["internet", "online", "videos", "games", "music", "friends", "social", "media", "free", "time", "phone", "computer"]
+            },
+            {
+              "text": "Tell us about the things you like doing at the weekend.",
+              "followups": [],
+              "topic": "things you like doing at the weekend",
+              "keywords": ["weekend", "saturday", "sunday", "friends", "sport", "football", "sleep", "cinema", "park", "family", "games", "relax"]
+            }
+          ]
+        },
+        {
+          "name": "Places you go to",
+          "questions": [
+            {
+              "text": "Do you like your school?",
+              "followups": ["Why, or why not?"],
+              "topic": "your school",
+              "keywords": ["school", "teachers", "friends", "classes", "subjects", "facilities", "like", "enjoy", "strict", "big", "small"]
+            },
+            {
+              "text": "Are there any nice places to go in your area?",
+              "followups": ["What are they?", "Why do you like them?"],
+              "topic": "nice places to go in your area",
+              "keywords": ["park", "cinema", "centre", "shops", "cafe", "river", "beach", "museum", "area", "town", "city", "nice", "places"]
+            },
+            {
+              "text": "Have you been anywhere nice recently?",
+              "followups": ["Where did you go?", "Why?"],
+              "topic": "somewhere nice you have been recently",
+              "keywords": ["went", "visited", "recently", "weekend", "park", "city", "beach", "mountains", "museum", "restaurant", "family", "friends", "trip"]
+            },
+            {
+              "text": "Where would you like to go for your next holiday?",
+              "followups": ["Why would you like to go there?"],
+              "topic": "where you would like to go for your next holiday",
+              "keywords": ["holiday", "visit", "country", "city", "beach", "mountains", "japan", "italy", "spain", "london", "travel", "culture", "food"]
+            }
+          ]
+        }
+      ]
+    },
+    "2": {
+      "duration_seconds": 240,
+      "opening": "In this part of the test, I'm going to give each of you two photographs. I'd like you to talk about your photographs on your own for about a minute, and also to answer a question about your partner's photographs.",
+      "task1": {
+        "title": "Ways of learning",
+        "images": [
+          "/assets/speaking/exams/04/p2-1a.jpg",
+          "/assets/speaking/exams/04/p2-1b.jpg"
+        ],
+        "photo_descriptions": [
+          "four students sitting around a table discussing a newspaper article and taking notes together",
+          "younger school pupils working individually at desktop computers in an IT room"
+        ],
+        "intro": "{candidate}, it's your turn first. Here are your photographs. They show students learning in different ways.",
+        "prompt": "I'd like you to compare the photographs, and say what might be good for the students about learning in these ways.",
+        "card_question": "What might be good for the students about learning in these ways?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "compare_followup": "Which way of learning do you think helps students remember information better?",
+        "followup_to_partner": "{partner}, do you prefer learning things on your own or with friends? Why?",
+        "followup_seconds": 30,
+        "topic": "different ways of learning",
+        "keywords": ["students", "learning", "study", "group", "together", "table", "newspaper", "discuss", "computer", "computers", "technology", "alone", "individually", "classroom", "both", "whereas", "while", "good", "photograph", "picture"]
+      },
+      "task2": {
+        "title": "A day out",
+        "images": [
+          "/assets/speaking/exams/04/p2-2a.jpg",
+          "/assets/speaking/exams/04/p2-2b.jpg"
+        ],
+        "photo_descriptions": [
+          "two teenage friends walking along a path in the grounds of a historic stone castle",
+          "two friends carrying shopping bags along a town centre pavement"
+        ],
+        "intro": "Now, {partner}, here are your photographs. They show friends having a day out together.",
+        "prompt": "I'd like you to compare the photographs, and say what the friends are enjoying about their day out.",
+        "card_question": "What are the friends enjoying about their day out?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "partner_monologue": "Both photographs show two friends spending the day together, though they are doing very different activities. In the first photo, the girls are walking outside near an old castle, so they are probably enjoying the fresh air, the scenery and learning a bit of history. In the second picture, the two friends have been shopping in town and are carrying several bags. They seem happy to have found things they liked and to be chatting together in a lively place.",
+        "followup_to_user": "{candidate}, which of these things would you prefer to do on a day out? Why?",
+        "followup_seconds": 30,
+        "topic": "what you would prefer to do on a day out",
+        "keywords": ["castle", "history", "outdoors", "walk", "shopping", "shops", "town", "friends", "prefer", "first", "second", "day", "out", "nature", "scenery", "clothes", "buy"]
+      }
+    },
+    "3": {
+      "duration_seconds": 240,
+      "title": "School trip",
+      "card_image": "/assets/speaking/exams/04/p3-card.png",
+      "card_question": "Is it a good idea for students to go on school trips?",
+      "options": [
+        "learning about the world",
+        "getting on with people",
+        "doing something different",
+        "help with lessons",
+        "entertainment"
+      ],
+      "prep_seconds": 15,
+      "discussion_seconds": 120,
+      "decision_seconds": 60,
+      "opening": "Now, I'd like you to talk about something together for about two minutes. Here are some reasons why many students go on school trips and a question for you to discuss. First you have some time to look at the task.",
+      "start_discussion": "Now, talk to each other about whether it's a good idea for students to go on school trips.",
+      "decision_prompt": "Thank you. Now you have about a minute to decide which two things are the most important for teachers to think about when they organise school trips for their students.",
+      "closing": "Thank you.",
+      "topic": "whether school trips are a good idea for students",
+      "keywords": ["school", "trip", "trips", "students", "world", "learning", "people", "friends", "different", "routine", "lessons", "classroom", "entertainment", "fun", "teachers", "organise", "safety", "cost", "two", "agree", "think"]
+    },
+    "4": {
+      "duration_seconds": 240,
+      "topic": "school trips and travel",
+      "prompts": ["What do you think?", "Do you agree?", "And you?"],
+      "questions": [
+        {
+          "text": "Do you think school trips should take place on a school day or at the weekend?",
+          "followups": ["Why?"],
+          "topic": "whether school trips should be on a school day or at the weekend",
+          "keywords": ["school", "day", "weekend", "lessons", "family", "free", "time", "teachers", "students", "trip", "trips", "miss", "rest"]
+        },
+        {
+          "text": "If you go on a school trip, is it better to visit a city, or go to the countryside?",
+          "followups": ["Why?"],
+          "topic": "visiting a city versus the countryside on a school trip",
+          "keywords": ["city", "countryside", "museums", "nature", "history", "fresh", "air", "walks", "galleries", "animals", "depends", "better", "trip"]
+        },
+        {
+          "text": "What can students do in class after going on a school trip?",
+          "followups": ["Why?"],
+          "topic": "what students can do in class after a school trip",
+          "keywords": ["class", "project", "presentation", "essay", "report", "photos", "discuss", "share", "learned", "write", "poster", "trip"]
+        },
+        {
+          "text": "What's a good place for students to visit in your country?",
+          "followups": ["Why?"],
+          "topic": "a good place for students to visit in your country",
+          "keywords": ["place", "visit", "country", "museum", "city", "mountains", "history", "nature", "coast", "national", "park", "students", "interesting"]
+        },
+        {
+          "text": "What's the most interesting thing about visiting other countries?",
+          "followups": ["Why?"],
+          "topic": "visiting other countries",
+          "keywords": ["countries", "culture", "food", "language", "people", "traditions", "architecture", "history", "different", "learn", "interesting", "travel"]
+        },
+        {
+          "text": "If you could go anywhere in the world, where would you go?",
+          "followups": ["Why?"],
+          "topic": "where you would go anywhere in the world",
+          "keywords": ["world", "visit", "country", "city", "japan", "italy", "australia", "london", "travel", "culture", "nature", "food", "dream", "go"]
+        }
+      ],
+      "closing": "Thank you. That is the end of the test."
+    }
+  }
+}

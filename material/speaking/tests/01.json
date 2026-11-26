@@ -1,0 +1,229 @@
+{
+  "id": "01",
+  "title": "B2 First Sample Paper 1",
+  "variant": "first",
+  "partner": {
+    "name": "Alex",
+    "home": "Bristol",
+    "voice": "Kore",
+    "persona": "A 22-year-old university student from Bristol preparing for B2 First. Speaks natural British English, occasionally pauses to think, and sometimes disagrees politely or adjusts an opinion."
+  },
+  "images": {
+    "part2_task1": [
+      "/assets/speaking/exams/01/p2-1a.jpg",
+      "/assets/speaking/exams/01/p2-1b.jpg"
+    ],
+    "part2_task2": [
+      "/assets/speaking/exams/01/p2-2a.jpg",
+      "/assets/speaking/exams/01/p2-2b.jpg"
+    ],
+    "part3_card": "/assets/speaking/exams/01/p3-card.png"
+  },
+  "parts": {
+    "1": {
+      "duration_seconds": 120,
+      "opening": "First we'd like to know something about you.",
+      "categories": [
+        {
+          "name": "Likes and dislikes",
+          "questions": [
+            {
+              "text": "How do you like to spend your evenings?",
+              "followups": ["What do you do?", "Why?"],
+              "topic": "how you spend your evenings",
+              "keywords": ["evening", "night", "relax", "watch", "read", "cook", "friends", "home", "music", "study", "walk", "dinner", "series", "film", "work", "family", "sport", "gym"]
+            },
+            {
+              "text": "Do you prefer to spend time on your own or with other people?",
+              "followups": ["Why?"],
+              "topic": "spending time on your own or with other people",
+              "keywords": ["alone", "own", "people", "friends", "family", "social", "quiet", "company", "both", "depends", "prefer", "relax", "chat"]
+            },
+            {
+              "text": "Tell us about a film you really like.",
+              "followups": [],
+              "topic": "a film you really like",
+              "keywords": ["film", "movie", "watch", "story", "actor", "director", "comedy", "drama", "action", "thriller", "cinema", "favourite", "characters", "scene"]
+            },
+            {
+              "text": "Do you like cooking?",
+              "followups": ["What sort of things do you cook?"],
+              "topic": "cooking",
+              "keywords": ["cook", "cooking", "food", "meal", "kitchen", "recipe", "pasta", "dinner", "bake", "eat", "dish", "ingredients"]
+            }
+          ]
+        },
+        {
+          "name": "Special occasions",
+          "questions": [
+            {
+              "text": "Do you normally celebrate special occasions with friends or family?",
+              "followups": ["Why?"],
+              "topic": "celebrating special occasions",
+              "keywords": ["celebrate", "family", "friends", "birthday", "christmas", "dinner", "party", "together", "occasion", "both", "home", "restaurant"]
+            },
+            {
+              "text": "Tell us about a festival or celebration in your country.",
+              "followups": [],
+              "topic": "a festival or celebration in your country",
+              "keywords": ["festival", "celebration", "holiday", "parade", "music", "food", "tradition", "country", "people", "street", "family", "year", "dance"]
+            },
+            {
+              "text": "What did you do on your last birthday?",
+              "followups": [],
+              "topic": "your last birthday",
+              "keywords": ["birthday", "friends", "family", "dinner", "cake", "party", "restaurant", "went", "celebrated", "home", "present", "gift"]
+            },
+            {
+              "text": "Are you going to do anything special this weekend?",
+              "followups": ["Where are you going to go?", "What are you going to do?"],
+              "topic": "your plans for this weekend",
+              "keywords": ["weekend", "saturday", "sunday", "going", "visit", "friends", "family", "rest", "study", "park", "cinema", "dinner", "plans", "nothing"]
+            }
+          ]
+        },
+        {
+          "name": "Media",
+          "questions": [
+            {
+              "text": "How much TV do you watch in a week?",
+              "followups": ["Would you prefer to watch more TV than that or less?", "Why?"],
+              "topic": "how much TV you watch",
+              "keywords": ["tv", "television", "hours", "week", "watch", "series", "news", "much", "little", "never", "programme", "streaming", "netflix", "evening"]
+            },
+            {
+              "text": "Tell us about a TV programme you've seen recently.",
+              "followups": [],
+              "topic": "a TV programme you have seen recently",
+              "keywords": ["programme", "series", "show", "documentary", "news", "watched", "tv", "episode", "interesting", "story", "comedy", "drama"]
+            },
+            {
+              "text": "Do you use the internet much?",
+              "followups": ["Why, or why not?"],
+              "topic": "using the internet",
+              "keywords": ["internet", "online", "phone", "computer", "work", "study", "social", "media", "videos", "news", "every", "day", "hours", "research"]
+            },
+            {
+              "text": "Do you ever listen to the radio?",
+              "followups": ["What programmes do you like?", "Why?"],
+              "topic": "listening to the radio",
+              "keywords": ["radio", "listen", "music", "news", "car", "podcast", "morning", "programme", "station", "never", "sometimes", "driving"]
+            }
+          ]
+        }
+      ]
+    },
+    "2": {
+      "duration_seconds": 240,
+      "opening": "In this part of the test, I'm going to give each of you two photographs. I'd like you to talk about your photographs on your own for about a minute, and also to answer a question about your partner's photographs.",
+      "task1": {
+        "title": "Helping others",
+        "images": [
+          "/assets/speaking/exams/01/p2-1a.jpg",
+          "/assets/speaking/exams/01/p2-1b.jpg"
+        ],
+        "photo_descriptions": [
+          "a physiotherapist or medic helping an injured footballer on a football pitch",
+          "a police officer in the street helping a tourist find directions on a map"
+        ],
+        "intro": "{candidate}, it's your turn first. Here are your photographs. They show people who are helping other people in different situations.",
+        "prompt": "I'd like you to compare the photographs, and say how important it is to help people in these situations.",
+        "card_question": "How important is it to help people in these situations?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "compare_followup": "Which photograph shows a more urgent situation, in your view?",
+        "followup_to_partner": "{partner}, do you find it easy to ask for help when you have a problem? Why, or why not?",
+        "followup_seconds": 30,
+        "topic": "helping people in different situations",
+        "keywords": ["help", "helping", "football", "injured", "sport", "pitch", "police", "officer", "map", "directions", "street", "tourist", "both", "whereas", "while", "important", "serious", "urgent", "photograph", "picture"]
+      },
+      "task2": {
+        "title": "Gardens",
+        "images": [
+          "/assets/speaking/exams/01/p2-2a.jpg",
+          "/assets/speaking/exams/01/p2-2b.jpg"
+        ],
+        "photo_descriptions": [
+          "a man kneeling in a quiet private vegetable garden tending to his plants",
+          "families and visitors relaxing on the large lawn of a grand country house garden"
+        ],
+        "intro": "Now, {partner}, here are your photographs. They show people spending time in different gardens.",
+        "prompt": "I'd like you to compare the photographs, and say what you think the people are enjoying about spending time in these gardens.",
+        "card_question": "What are the people enjoying about spending time in these gardens?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "partner_monologue": "Both photographs show people outdoors in green spaces, though the atmosphere is quite different. In the first picture, a man is on his own in a private vegetable garden, looking after his plants, which probably feels peaceful and satisfying because he can see the results of his work. In contrast, the second photograph shows lots of families sitting on the grass outside a historic country house. I think they are enjoying the sunny weather, having a picnic and spending time together in a lively open space.",
+        "followup_to_user": "{candidate}, which garden would you prefer to spend time in? Why?",
+        "followup_seconds": 30,
+        "topic": "which garden you would prefer to spend time in",
+        "keywords": ["garden", "first", "second", "private", "vegetable", "plants", "quiet", "peaceful", "park", "house", "families", "lawn", "picnic", "prefer", "relax", "nature", "outside", "flowers", "space"]
+      }
+    },
+    "3": {
+      "duration_seconds": 240,
+      "title": "Holiday resort",
+      "card_image": "/assets/speaking/exams/01/p3-card.png",
+      "card_question": "Why would these ideas attract more tourists to the town?",
+      "options": [
+        "building a large nightclub",
+        "building holiday flats",
+        "putting up security cameras",
+        "providing parks",
+        "having more shops"
+      ],
+      "prep_seconds": 15,
+      "discussion_seconds": 120,
+      "decision_seconds": 60,
+      "opening": "Now, I'd like you to talk about something together for about two minutes. I'd like you to imagine that a town wants more tourists to visit. Here are some ideas they're thinking about and a question for you to discuss. First you have some time to look at the task.",
+      "start_discussion": "Now, talk to each other about why these ideas would attract more tourists to the town.",
+      "decision_prompt": "Thank you. Now you have about a minute to decide which idea would be best for the town.",
+      "closing": "Thank you.",
+      "topic": "ideas to attract more tourists to the town",
+      "keywords": ["tourist", "tourists", "town", "nightclub", "flats", "holiday", "security", "cameras", "safe", "safety", "parks", "green", "shops", "shopping", "families", "young", "visitors", "idea", "best", "attract", "agree", "disagree", "think"]
+    },
+    "4": {
+      "duration_seconds": 240,
+      "topic": "holidays and tourism",
+      "prompts": ["What do you think?", "Do you agree?", "And you?"],
+      "questions": [
+        {
+          "text": "Do you think you have to spend a lot of money to have a good holiday?",
+          "followups": ["Why, or why not?"],
+          "topic": "spending money on a holiday",
+          "keywords": ["money", "expensive", "cheap", "budget", "holiday", "travel", "hotel", "camping", "friends", "family", "enjoy", "spend", "cost", "afford"]
+        },
+        {
+          "text": "Some people say we travel too much these days and shouldn't go on so many holidays. What do you think?",
+          "followups": [],
+          "topic": "whether people travel too much these days",
+          "keywords": ["travel", "holidays", "environment", "flights", "planes", "pollution", "culture", "rest", "relax", "agree", "disagree", "stress", "work", "experience"]
+        },
+        {
+          "text": "Do you think people have enough time for holidays these days?",
+          "followups": ["Why, or why not?"],
+          "topic": "having enough time for holidays",
+          "keywords": ["time", "work", "busy", "holiday", "holidays", "days", "week", "weeks", "job", "stress", "enough", "rest", "break", "family"]
+        },
+        {
+          "text": "Why do you think people like to go away on holiday?",
+          "followups": [],
+          "topic": "why people like to go away on holiday",
+          "keywords": ["holiday", "relax", "routine", "escape", "new", "places", "cultures", "weather", "beach", "rest", "change", "stress", "family", "explore"]
+        },
+        {
+          "text": "What do you think is the biggest advantage of living in a place where there are a lot of tourists?",
+          "followups": [],
+          "topic": "the advantages of living in a tourist area",
+          "keywords": ["tourists", "economy", "jobs", "money", "shops", "restaurants", "lively", "culture", "people", "languages", "facilities", "business", "income"]
+        },
+        {
+          "text": "What can people do to have a good holiday in your country?",
+          "followups": ["Why?"],
+          "topic": "having a good holiday in your country",
+          "keywords": ["country", "visit", "mountains", "beach", "city", "food", "nature", "culture", "museums", "coast", "countryside", "travel", "places", "see"]
+        }
+      ],
+      "closing": "Thank you. That is the end of the test."
+    }
+  }
+}

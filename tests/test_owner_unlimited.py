@@ -278,46 +278,38 @@ def main():
 
     # 4. Regular account hits 429 on speaking session #4 (3 mocks/day).
     for idx in range(1, 4):
-        st, body = api("/api/speaking/turn", turn_body(f"reg-s{idx}"),
+        st, body = api("/api/speaking/v3/sessions", {"test_id": "01", "part": 1},
                        token=reg_token, clear_rate=True)
         assert st == 200, f"regular speaking #{idx} failed: {st} {body}"
-    st, body = api("/api/speaking/turn", turn_body("reg-s4"),
+    st, body = api("/api/speaking/v3/sessions", {"test_id": "01", "part": 1},
                    token=reg_token, clear_rate=True)
     assert st == 429 and body.get("error") == "limit_reached" and body.get("limit") == "speaking", \
         f"regular speaking #4 should 429: {st} {body}"
     out["4_regular_speaking_429"] = {"after": 3, "status": st, "error": body.get("error")}
 
     # 5. Owner logs 30 speaking minutes (> 15/user and > 25/instance) and still
-    # opens 3 fresh speaking sessions + mints a Live token without 429.
-    for _ in range(6):
-        st, body = api("/api/speaking/minute", {"seconds": 300},
+    # opens 3 fresh speaking sessions without 429.
+    S.store.speaking_add(OWNER_UID, S._spk_today(), 1800.0, 0)
+    for sid_idx in range(1, 4):
+        st, body = api("/api/speaking/v3/sessions", {"test_id": "01", "part": sid_idx},
                        token=owner_token, clear_rate=True)
-        assert st == 200 and body.get("remaining_s", 0) > 0, (st, body)
-    for sid in ("owner-s1", "owner-s2", "owner-s3"):
-        st, body = api("/api/speaking/turn", turn_body(sid),
-                       token=owner_token, clear_rate=True)
-        assert st == 200, f"owner speaking {sid} failed: {st} {body}"
-    st, tok = api("/api/speaking/token",
-                  {"part": 1, "role": "examiner", "session_id": "owner-live-1"},
-                  token=owner_token, clear_rate=True)
-    assert st == 200 and tok.get("token") == "ephemeral-token-stub", (st, tok)
+        assert st == 200, f"owner speaking #{sid_idx} failed: {st} {body}"
 
     # A fresh regular user is blocked by the daily instance speaking minute ceiling.
-    st, body = api("/api/speaking/turn", turn_body("reg2-s1"),
+    st, body = api("/api/speaking/v3/sessions", {"test_id": "01", "part": 1},
                    token=reg2_token, clear_rate=True)
     assert st == 429 and body.get("error") == "daily speaking limit reached", \
         f"regular user should hit daily speaking minute limit: {st} {body}"
-    out["5_owner_speaking_3"] = {"owner_sessions": 3, "live_mint": 200, "reg2_minutes_429": st}
+    out["5_owner_speaking_3"] = {"owner_sessions": 3, "reg2_minutes_429": st}
 
-    # 6. Global monthly Gemini Live budget (SPK_MONTH_MINUTES) still returns 429 for owner.
+    # 6. Global monthly voice budget (SPK_MONTH_MINUTES) still returns 429 for owner.
     S._spk_month_add(S.SPK_MONTH_MINUTES * 60)
-    st, body = api("/api/speaking/token",
-                   {"part": 1, "role": "examiner", "session_id": "owner-live-2"},
+    st, body = api("/api/speaking/v3/sessions", {"test_id": "01", "part": 1},
                    token=owner_token, clear_rate=True)
     assert st == 429, f"monthly guard did not block owner: {st} {body}"
     assert body.get("limit") == "voice_month", body
     assert body.get("limit_minutes") == S.SPK_MONTH_MINUTES, body
-    out["6_monthly_live_guard_429"] = {
+    out["6_monthly_voice_guard_429"] = {
         "status": st,
         "limit": body.get("limit"),
         "limit_minutes": body.get("limit_minutes"),

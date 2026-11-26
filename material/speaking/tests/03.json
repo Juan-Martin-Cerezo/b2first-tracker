@@ -1,0 +1,229 @@
+{
+  "id": "03",
+  "title": "B2 First for Schools Sample Paper 1",
+  "variant": "for_schools",
+  "partner": {
+    "name": "Oliver",
+    "home": "Cambridge",
+    "voice": "Fenrir",
+    "persona": "A 16-year-old sixth-form student from Cambridge preparing for B2 First for Schools. Speaks natural British English, sometimes changes his mind mid-discussion, and asks follow-up questions."
+  },
+  "images": {
+    "part2_task1": [
+      "/assets/speaking/exams/03/p2-1a.jpg",
+      "/assets/speaking/exams/03/p2-1b.jpg"
+    ],
+    "part2_task2": [
+      "/assets/speaking/exams/03/p2-2a.jpg",
+      "/assets/speaking/exams/03/p2-2b.jpg"
+    ],
+    "part3_card": "/assets/speaking/exams/03/p3-card.png"
+  },
+  "parts": {
+    "1": {
+      "duration_seconds": 120,
+      "opening": "First we'd like to know something about you.",
+      "categories": [
+        {
+          "name": "People you know",
+          "questions": [
+            {
+              "text": "Who are you most like in your family? Tell us about them.",
+              "followups": [],
+              "topic": "who you are most like in your family",
+              "keywords": ["family", "mother", "mum", "father", "dad", "sister", "brother", "personality", "like", "similar", "patient", "funny", "quiet", "active"]
+            },
+            {
+              "text": "Do you have a best friend?",
+              "followups": ["What do you like about them?"],
+              "topic": "your best friend",
+              "keywords": ["friend", "friends", "best", "kind", "funny", "trust", "school", "years", "together", "laugh", "honest", "support"]
+            },
+            {
+              "text": "Who do you spend time with after school?",
+              "followups": ["What do you do together?"],
+              "topic": "who you spend time with after school",
+              "keywords": ["school", "friends", "family", "brother", "sister", "club", "sport", "homework", "games", "park", "chat", "music"]
+            },
+            {
+              "text": "Tell us about a good teacher you've had.",
+              "followups": [],
+              "topic": "a good teacher you have had",
+              "keywords": ["teacher", "subject", "history", "english", "science", "maths", "patient", "explain", "lessons", "helpful", "kind", "school", "interesting"]
+            }
+          ]
+        },
+        {
+          "name": "Things you like",
+          "questions": [
+            {
+              "text": "What's your favourite subject at school?",
+              "followups": ["Why do you like it?"],
+              "topic": "your favourite subject at school",
+              "keywords": ["subject", "maths", "science", "history", "art", "english", "biology", "chemistry", "music", "geography", "interesting", "favourite", "like"]
+            },
+            {
+              "text": "Do you like reading?",
+              "followups": ["What do you like to read?", "Why?"],
+              "topic": "reading",
+              "keywords": ["read", "reading", "books", "novels", "fantasy", "comics", "articles", "stories", "relax", "imagination", "library", "prefer"]
+            },
+            {
+              "text": "Do you enjoy using the internet in your free time?",
+              "followups": ["Why, or why not?"],
+              "topic": "using the internet in your free time",
+              "keywords": ["internet", "online", "videos", "games", "music", "friends", "social", "media", "free", "time", "phone", "computer"]
+            },
+            {
+              "text": "Tell us about the things you like doing at the weekend.",
+              "followups": [],
+              "topic": "things you like doing at the weekend",
+              "keywords": ["weekend", "saturday", "sunday", "friends", "sport", "football", "sleep", "cinema", "park", "family", "games", "relax", "music"]
+            }
+          ]
+        },
+        {
+          "name": "Places you go to",
+          "questions": [
+            {
+              "text": "Do you like your school?",
+              "followups": ["Why, or why not?"],
+              "topic": "your school",
+              "keywords": ["school", "teachers", "friends", "classes", "subjects", "facilities", "like", "enjoy", "strict", "big", "small", "nice"]
+            },
+            {
+              "text": "Are there any nice places to go in your area?",
+              "followups": ["What are they?", "Why do you like them?"],
+              "topic": "nice places to go in your area",
+              "keywords": ["park", "cinema", "centre", "shops", "cafe", "river", "beach", "museum", "area", "town", "city", "nice", "places", "square"]
+            },
+            {
+              "text": "Have you been anywhere nice recently?",
+              "followups": ["Where did you go?", "Why?"],
+              "topic": "somewhere nice you have been recently",
+              "keywords": ["went", "visited", "recently", "weekend", "park", "city", "beach", "mountains", "museum", "restaurant", "family", "friends", "trip"]
+            },
+            {
+              "text": "Where would you like to go for your next holiday?",
+              "followups": ["Why would you like to go there?"],
+              "topic": "where you would like to go for your next holiday",
+              "keywords": ["holiday", "visit", "country", "city", "beach", "mountains", "japan", "italy", "spain", "london", "travel", "culture", "food", "next"]
+            }
+          ]
+        }
+      ]
+    },
+    "2": {
+      "duration_seconds": 240,
+      "opening": "In this part of the test, I'm going to give each of you two photographs. I'd like you to talk about your photographs on your own for about a minute, and also to answer a question about your partner's photographs.",
+      "task1": {
+        "title": "Trying to win",
+        "images": [
+          "/assets/speaking/exams/03/p2-1a.jpg",
+          "/assets/speaking/exams/03/p2-1b.jpg"
+        ],
+        "photo_descriptions": [
+          "a professional tennis player serving in a packed stadium in front of a huge crowd",
+          "young girls sprinting closely together on a running track during a race"
+        ],
+        "intro": "{candidate}, it's your turn first. Here are your photographs. They show people trying to win in different situations.",
+        "prompt": "I'd like you to compare the photographs, and say what you think might be difficult for the people about trying to win in these situations.",
+        "card_question": "What might be difficult for the people about trying to win in these situations?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "compare_followup": "Which of these sports do you think puts more pressure on the competitor, and why?",
+        "followup_to_partner": "{partner}, which sport would you prefer to do? Why?",
+        "followup_seconds": 30,
+        "topic": "trying to win in different sports",
+        "keywords": ["tennis", "stadium", "crowd", "pressure", "nervous", "running", "race", "track", "girls", "fast", "tired", "difficult", "win", "competition", "both", "whereas", "while", "sport", "photograph", "picture"]
+      },
+      "task2": {
+        "title": "Spending time outside",
+        "images": [
+          "/assets/speaking/exams/03/p2-2a.jpg",
+          "/assets/speaking/exams/03/p2-2b.jpg"
+        ],
+        "photo_descriptions": [
+          "a large group of teenagers having a picnic around tables in a sunny park",
+          "a few teenage friends strolling down a town street lined with cafes and shops"
+        ],
+        "intro": "Now, {partner}, here are your photographs. They show people spending time outside in different situations.",
+        "prompt": "I'd like you to compare the photographs, and say what you think the people are enjoying about spending time outside in these situations.",
+        "card_question": "What are the people enjoying about spending time outside in these situations?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "partner_monologue": "Both photographs show young people enjoying each other's company outdoors, although the settings are quite different. In the first picture, a big group of teenagers is having a picnic in a park, sharing food and drinks under the trees, so they probably enjoy the relaxed atmosphere and being together. By contrast, the second photograph shows smaller groups of friends walking through a quiet town street past cafes. They seem to be enjoying chatting and looking around the shops at their own pace.",
+        "followup_to_user": "{candidate}, which of these things would you prefer to do? Why?",
+        "followup_seconds": 30,
+        "topic": "whether you would prefer a picnic in a park or walking in town",
+        "keywords": ["picnic", "park", "town", "street", "walk", "walking", "friends", "food", "shops", "cafes", "prefer", "first", "second", "outside", "relax", "group", "quiet", "nature"]
+      }
+    },
+    "3": {
+      "duration_seconds": 240,
+      "title": "After-school classes",
+      "card_image": "/assets/speaking/exams/03/p3-card.png",
+      "card_question": "Why might students want to learn to do these skills?",
+      "options": [
+        "speak another foreign language",
+        "draw well",
+        "play a musical instrument",
+        "play a sport",
+        "cook a meal"
+      ],
+      "prep_seconds": 15,
+      "discussion_seconds": 120,
+      "decision_seconds": 60,
+      "opening": "Now, I'd like you to talk about something together for about two minutes. I'd like you to imagine that a school is going to start some after-school classes to encourage their students to learn new skills. Here are some ideas for the classes and a question for you to discuss. First you have some time to look at the task.",
+      "start_discussion": "Now, talk to each other about why students might want to learn to do these skills.",
+      "decision_prompt": "Thank you. Now you have about a minute to decide which two would be the easiest to learn to do well.",
+      "closing": "Thank you.",
+      "topic": "after-school classes to learn new skills",
+      "keywords": ["language", "foreign", "draw", "drawing", "art", "music", "musical", "instrument", "sport", "cook", "cooking", "meal", "skills", "students", "classes", "easiest", "learn", "useful", "practice", "practise", "two", "agree", "think"]
+    },
+    "4": {
+      "duration_seconds": 240,
+      "topic": "after-school activities and trying new things",
+      "prompts": ["What do you think?", "Do you agree?", "And you?"],
+      "questions": [
+        {
+          "text": "Do you think classes like these would be popular with students?",
+          "followups": ["Why, or why not?"],
+          "topic": "whether after-school classes would be popular",
+          "keywords": ["classes", "popular", "students", "fun", "useful", "tired", "homework", "friends", "free", "skills", "depends", "enjoy"]
+        },
+        {
+          "text": "How important do you think it is for people to try new activities?",
+          "followups": ["Why?"],
+          "topic": "the importance of trying new activities",
+          "keywords": ["important", "new", "activities", "skills", "friends", "confidence", "discover", "talent", "boring", "routine", "experience", "learn"]
+        },
+        {
+          "text": "Why do you think some people don't like to try new things?",
+          "followups": [],
+          "topic": "why some people avoid trying new things",
+          "keywords": ["afraid", "nervous", "shy", "mistakes", "fail", "comfort", "zone", "routine", "time", "confident", "scared", "change"]
+        },
+        {
+          "text": "A lot of people enjoy doing sport after school. Do you think this is a good thing?",
+          "followups": ["Why, or why not?"],
+          "topic": "doing sport after school",
+          "keywords": ["sport", "healthy", "fit", "team", "friends", "stress", "relax", "energy", "homework", "good", "balance", "exercise"]
+        },
+        {
+          "text": "What do students enjoy doing after school in your country?",
+          "followups": ["Why?"],
+          "topic": "what students do after school in your country",
+          "keywords": ["students", "school", "football", "sport", "music", "friends", "park", "games", "study", "english", "clubs", "home", "country"]
+        },
+        {
+          "text": "Do you think it's better to go out and do things after school or is it better to stay at home?",
+          "followups": ["Why?"],
+          "topic": "going out versus staying at home after school",
+          "keywords": ["out", "home", "stay", "rest", "homework", "friends", "active", "tired", "balance", "depends", "better", "relax", "social"]
+        }
+      ],
+      "closing": "Thank you. That is the end of the test."
+    }
+  }
+}

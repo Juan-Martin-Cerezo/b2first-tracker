@@ -1,0 +1,229 @@
+{
+  "id": "02",
+  "title": "B2 First Sample Paper 2",
+  "variant": "first",
+  "partner": {
+    "name": "Sophie",
+    "home": "Leeds",
+    "voice": "Aoede",
+    "persona": "A 24-year-old trainee architect from Leeds taking B2 First. Speaks natural British English, sometimes hesitates before deciding, and offers balanced counter-arguments."
+  },
+  "images": {
+    "part2_task1": [
+      "/assets/speaking/exams/02/p2-1a.jpg",
+      "/assets/speaking/exams/02/p2-1b.jpg"
+    ],
+    "part2_task2": [
+      "/assets/speaking/exams/02/p2-2a.jpg",
+      "/assets/speaking/exams/02/p2-2b.jpg"
+    ],
+    "part3_card": "/assets/speaking/exams/02/p3-card.png"
+  },
+  "parts": {
+    "1": {
+      "duration_seconds": 120,
+      "opening": "First we'd like to know something about you.",
+      "categories": [
+        {
+          "name": "Likes and dislikes",
+          "questions": [
+            {
+              "text": "How do you like to spend your evenings?",
+              "followups": ["What do you do?", "Why?"],
+              "topic": "how you spend your evenings",
+              "keywords": ["evening", "night", "relax", "watch", "read", "cook", "friends", "home", "music", "study", "walk", "dinner", "series", "film", "work", "family"]
+            },
+            {
+              "text": "Do you prefer to spend time on your own or with other people?",
+              "followups": ["Why?"],
+              "topic": "spending time on your own or with other people",
+              "keywords": ["alone", "own", "people", "friends", "family", "social", "quiet", "company", "both", "depends", "prefer", "relax"]
+            },
+            {
+              "text": "Tell us about a film you really like.",
+              "followups": [],
+              "topic": "a film you really like",
+              "keywords": ["film", "movie", "watch", "story", "actor", "director", "comedy", "drama", "action", "thriller", "cinema", "favourite", "characters"]
+            },
+            {
+              "text": "Do you like cooking?",
+              "followups": ["What sort of things do you cook?"],
+              "topic": "cooking",
+              "keywords": ["cook", "cooking", "food", "meal", "kitchen", "recipe", "pasta", "dinner", "bake", "eat", "dish"]
+            }
+          ]
+        },
+        {
+          "name": "Special occasions",
+          "questions": [
+            {
+              "text": "Do you normally celebrate special occasions with friends or family?",
+              "followups": ["Why?"],
+              "topic": "celebrating special occasions",
+              "keywords": ["celebrate", "family", "friends", "birthday", "christmas", "dinner", "party", "together", "occasion", "both", "home"]
+            },
+            {
+              "text": "Tell us about a festival or celebration in your country.",
+              "followups": [],
+              "topic": "a festival or celebration in your country",
+              "keywords": ["festival", "celebration", "holiday", "parade", "music", "food", "tradition", "country", "people", "street", "family", "year"]
+            },
+            {
+              "text": "What did you do on your last birthday?",
+              "followups": [],
+              "topic": "your last birthday",
+              "keywords": ["birthday", "friends", "family", "dinner", "cake", "party", "restaurant", "went", "celebrated", "home", "present"]
+            },
+            {
+              "text": "Are you going to do anything special this weekend?",
+              "followups": ["Where are you going to go?", "What are you going to do?"],
+              "topic": "your plans for this weekend",
+              "keywords": ["weekend", "saturday", "sunday", "going", "visit", "friends", "family", "rest", "study", "park", "cinema", "dinner", "plans", "nothing"]
+            }
+          ]
+        },
+        {
+          "name": "Media",
+          "questions": [
+            {
+              "text": "How much TV do you watch in a week?",
+              "followups": ["Would you prefer to watch more TV than that or less?", "Why?"],
+              "topic": "how much TV you watch",
+              "keywords": ["tv", "television", "hours", "week", "watch", "series", "news", "much", "little", "never", "programme", "streaming"]
+            },
+            {
+              "text": "Tell us about a TV programme you've seen recently.",
+              "followups": [],
+              "topic": "a TV programme you have seen recently",
+              "keywords": ["programme", "series", "show", "documentary", "news", "watched", "tv", "episode", "interesting", "story", "comedy", "drama"]
+            },
+            {
+              "text": "Do you use the internet much?",
+              "followups": ["Why, or why not?"],
+              "topic": "using the internet",
+              "keywords": ["internet", "online", "phone", "computer", "work", "study", "social", "media", "videos", "news", "every", "day", "hours"]
+            },
+            {
+              "text": "Do you ever listen to the radio?",
+              "followups": ["What programmes do you like?", "Why?"],
+              "topic": "listening to the radio",
+              "keywords": ["radio", "listen", "music", "news", "car", "podcast", "morning", "programme", "station", "never", "sometimes"]
+            }
+          ]
+        }
+      ]
+    },
+    "2": {
+      "duration_seconds": 240,
+      "opening": "In this part of the test, I'm going to give each of you two photographs. I'd like you to talk about your photographs on your own for about a minute, and also to answer a question about your partner's photographs.",
+      "task1": {
+        "title": "Travelling",
+        "images": [
+          "/assets/speaking/exams/02/p2-1a.jpg",
+          "/assets/speaking/exams/02/p2-1b.jpg"
+        ],
+        "photo_descriptions": [
+          "passengers sitting inside a city bus, several looking at their mobile phones",
+          "passengers climbing the steps to board a regional propeller aeroplane"
+        ],
+        "intro": "{candidate}, it's your turn first. Here are your photographs. They show people travelling in different situations.",
+        "prompt": "I'd like you to compare the photographs, and say why you think the people have decided to travel in these situations.",
+        "card_question": "Why have the people decided to travel in these situations?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "compare_followup": "Which of these journeys do you think takes more planning, and why?",
+        "followup_to_partner": "{partner}, do you enjoy travelling by plane? Why, or why not?",
+        "followup_seconds": 30,
+        "topic": "people travelling in different situations",
+        "keywords": ["bus", "plane", "aeroplane", "flight", "airport", "travel", "travelling", "commute", "work", "university", "holiday", "business", "cheap", "fast", "distance", "both", "whereas", "while", "passengers", "photograph", "picture"]
+      },
+      "task2": {
+        "title": "Looking at things",
+        "images": [
+          "/assets/speaking/exams/02/p2-2a.jpg",
+          "/assets/speaking/exams/02/p2-2b.jpg"
+        ],
+        "photo_descriptions": [
+          "two visitors in a quiet art gallery looking closely at framed paintings on the wall",
+          "a woman in a clothes shop looking through garments on a rail"
+        ],
+        "intro": "Now, {partner}, here are your photographs. They show people who are looking at things in different situations.",
+        "prompt": "I'd like you to compare the photographs, and say why you think the people are looking at these things.",
+        "card_question": "Why are the people looking at these things?",
+        "check": "All right?",
+        "long_turn_seconds": 60,
+        "partner_monologue": "Both pictures show people studying things quite carefully, although their reasons are very different. In the first photograph, two visitors are in an art gallery admiring classic paintings, probably because they want to learn about art or simply enjoy a calm afternoon. On the other hand, the second picture shows a woman browsing clothes in a shop. She is probably deciding whether something suits her or fits her budget, so her focus is much more practical.",
+        "followup_to_user": "{candidate}, do you ever go to art galleries or museums? Why, or why not?",
+        "followup_seconds": 30,
+        "topic": "going to art galleries or museums",
+        "keywords": ["art", "gallery", "galleries", "museum", "museums", "paintings", "history", "culture", "visit", "interesting", "boring", "enjoy", "sometimes", "never", "often", "exhibitions", "travel"]
+      }
+    },
+    "3": {
+      "duration_seconds": 240,
+      "title": "Keeping fit",
+      "card_image": "/assets/speaking/exams/02/p3-card.png",
+      "card_question": "How important are these things for keeping fit and healthy?",
+      "options": [
+        "sleeping eight hours every night",
+        "spending time outdoors each day",
+        "eating at regular times",
+        "visiting the doctor regularly",
+        "going to the gym"
+      ],
+      "prep_seconds": 15,
+      "discussion_seconds": 120,
+      "decision_seconds": 60,
+      "opening": "Now, I'd like you to talk about something together for about two minutes. Here are some things people often do to keep fit and healthy and a question for you to discuss. First you have some time to look at the task.",
+      "start_discussion": "Now, talk to each other about how important these things are for keeping fit and healthy.",
+      "decision_prompt": "Thank you. Now you have about a minute to decide which two are most important for keeping fit in the long term.",
+      "closing": "Thank you.",
+      "topic": "keeping fit and healthy",
+      "keywords": ["sleep", "sleeping", "hours", "night", "outdoors", "outside", "fresh", "air", "eating", "regular", "diet", "food", "doctor", "check", "gym", "exercise", "fit", "healthy", "important", "long", "term", "two", "agree", "think"]
+    },
+    "4": {
+      "duration_seconds": 240,
+      "topic": "keeping fit and healthy",
+      "prompts": ["What do you think?", "Do you agree?", "And you?"],
+      "questions": [
+        {
+          "text": "What is the advantage of keeping fit with friends?",
+          "followups": [],
+          "topic": "the advantage of keeping fit with friends",
+          "keywords": ["friends", "motivation", "motivated", "fun", "enjoy", "together", "routine", "support", "exercise", "sport", "gym", "team", "quit"]
+        },
+        {
+          "text": "Some people say it is a waste of time going to a gym because you can exercise outside for free. What do you think?",
+          "followups": [],
+          "topic": "going to a gym versus exercising outside",
+          "keywords": ["gym", "outside", "outdoors", "free", "equipment", "weather", "rain", "cost", "money", "weights", "classes", "running", "park", "agree", "disagree"]
+        },
+        {
+          "text": "Is it possible to live healthily without spending a lot of money?",
+          "followups": ["Why, or why not?"],
+          "topic": "living healthily without spending a lot of money",
+          "keywords": ["money", "cheap", "expensive", "healthy", "food", "cook", "vegetables", "walk", "run", "exercise", "free", "budget", "possible"]
+        },
+        {
+          "text": "Do you think the government should spend more money on sports and leisure facilities?",
+          "followups": ["Why, or why not?"],
+          "topic": "government spending on sports and leisure facilities",
+          "keywords": ["government", "money", "sports", "leisure", "facilities", "parks", "pools", "health", "public", "community", "young", "people", "taxes"]
+        },
+        {
+          "text": "Some people say it's a school's responsibility to help students keep fit. Do you agree?",
+          "followups": [],
+          "topic": "whether schools should help students keep fit",
+          "keywords": ["school", "schools", "students", "responsibility", "parents", "sport", "pe", "lessons", "fit", "healthy", "habits", "agree", "disagree"]
+        },
+        {
+          "text": "Do you think advertising makes people worry too much about keeping fit and how they look?",
+          "followups": ["Why, or why not?"],
+          "topic": "advertising and body image",
+          "keywords": ["advertising", "adverts", "social", "media", "worry", "pressure", "look", "appearance", "body", "fit", "unrealistic", "people", "young"]
+        }
+      ],
+      "closing": "Thank you. That is the end of the test."
+    }
+  }
+}

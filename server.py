@@ -17,10 +17,13 @@ Endpoints:
   GET /api/progress?download=1 → downloads the saved progress (JSON)
   GET /api/progress → list of backups (JSON) {file, size, date}
   PUT /api/progress → saves the progress (JSON body) and backs up the previous one
-  POST /api/speaking/report → four-scale speaking report (pronunciation from Azure PA,
-                     interactive communication as proxies only)
-  GET /api/speaking/capabilities → {live, turn}: which transport this key can run
-  POST /api/speaking/turn → one spoken turn: transcript + examiner reply + its audio
+  GET /api/speaking/v3/catalog → 4 official sample tests + user own tasks (no scripts)
+  POST /api/speaking/v3/sessions → start a new Speaking v3 session (intro)
+  POST /api/speaking/v3/sessions/<id>/turn → one push-to-talk audio turn (no transcript returned)
+  POST /api/speaking/v3/sessions/<id>/skip → demo skip with formal examiner phrase
+  POST /api/speaking/v3/sessions/<id>/report → 3-band Cambridge report (no pronunciation)
+  DELETE /api/speaking/v3/sessions/<id> → delete session
+  GET/POST/DELETE /api/speaking/v3/own-tasks → multipart own tasks with images
   POST /api/password-reset/request → queues a manual reset (never reveals whether the
                      account exists; no email is sent)
   GET /favicon.ico → 204 (does not exist, don't log a 404)
@@ -49,9 +52,12 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
 import plans
-import speech
-import speaking_prompts
-import speaking_report
+from speaking_v3 import (
+    catalog as spk3_catalog,
+    engine as spk3_engine,
+    multipart as spk3_multipart,
+    voice as spk3_voice,
+)
 import legal
 import webauthn
 import oauth_google
@@ -190,70 +196,17 @@ BYO_TRUSTED_BASES = tuple(
     if item.strip()
 )
 
-# --- Azure Pronunciation Assessment (S2) -----------------------------------
-# The key lives only in the systemd environment, is never sent to the browser,
-# never logged and never written to data/. Without it the endpoint degrades to
-# 503 speech_not_configured and the Pronunciation band stays "not measured".
-SPK_AZURE_KEY = os.environ.get("B2_SPK_AZURE_KEY", "")
-SPK_AZURE_REGION = os.environ.get("B2_SPK_AZURE_REGION", "")
-SPK_AZURE_ENDPOINT = os.environ.get("B2_SPK_AZURE_ENDPOINT", "")
-SPK_PA_PATH = ("/speech/recognition/conversation/cognitiveservices/v1"
-               "?language=en-US&format=detailed")
-SPK_PA_TIMEOUT = speech.PA_TIMEOUT
-SPK_PA_MAX_B64 = 2 * 1024 * 1024     # base64 characters of audio (2 MB)
-SPK_PA_MAX_BODY = 2 * 1024 * 1024    # hard body cap for /api/speaking/pa (2 MB)
-SPK_PA_RATE_PER_MIN = 30             # calls per minute per user
-SPK_PA_DAILY_DEFAULT = 60            # calls per day per user
-
-# --- Gemini Live examiner (S3) ---------------------------------------------
-# The Google key only mints short-lived ephemeral tokens: the browser connects
-# straight to Google and the Pi never sees a byte of audio. The key itself is
-# never sent to the browser, never logged and never written under data/.
-# Verified against ai.google.dev/gemini-api/docs/ephemeral-tokens and
-# .../docs/live-api/get-started-websocket on 2026-10-30.
-SPK_TOKEN_TTL_S = 30 * 60            # expireTime: the session may send for 30 min
-SPK_TOKEN_NEW_SESSION_S = 60         # newSessionExpireTime: open it within 1 min
-SPK_TOKEN_RATE_PER_MIN = 10          # token mints per minute per user
+# --- Speaking v3 (turn-based Cambridge B2 First examiner + partner) --------
 SPK_MIN_DAILY_DEFAULT = 60           # minutes per user per day
 SPK_MIN_DAILY_TOTAL_DEFAULT = 600    # minutes per instance per day
-SPK_MINUTE_MAX_BODY = 4096           # POST /api/speaking/minute body cap
-SPK_MINUTE_MAX_CALL_S = 300          # max seconds accepted in one report
-SPK_PARTNER_MAX_BODY = 8000          # POST /api/speaking/partner body cap
-SPK_PARTNER_RATE_PER_MIN = 30        # partner lines per minute per user
-DEFAULT_SPK_MODEL = "gemini-3.8-live"
-DEFAULT_SPK_TOKEN_URL = "https://generativelanguage.googleapis.com/v1beta/auth_tokens"
-DEFAULT_SPK_WS_URL = ("wss://generativelanguage.googleapis.com/ws/"
-                      "google.ai.generativelanguage.v1beta.GenerativeService"
-                      ".BidiGenerateContentConstrained")
-
-# --- S5: four-scale speaking report ----------------------------------------
-# One text-model call per report. Pronunciation never comes from here: it is
-# mapped from the Azure PA scores (speaking_report.band_from_pa), so the model
-# cannot invent it. Interactive Communication stays null with proxies beside it.
-SPK_REPORT_RATE_PER_MIN = 6          # reports per minute per user
-SPK_REPORT_MAX_BODY = 512 * 1024     # request body cap (transcript + PA words)
-SPK_REPORT_CACHE_MAX = 200           # idempotent replays kept in memory
-SPK_REPORT_CACHE_TTL = 3600          # seconds a replay stays valid
-
-# --- Phase 36: turn-based voice examiner -----------------------------------
-# One round trip per spoken turn: the candidate's audio goes up, the examiner's
-# transcript, reply and voice come back. Chosen because the owner's key exposes
-# zero models with bidiGenerateContent, so the Live socket stays silent.
-# Nothing is stored and no audio or transcript text is ever logged: only
-# timings and outcomes reach the audit chain.
-SPK_TURN_MAX_S = 25                  # longest accepted candidate turn (seconds)
-SPK_TURN_MAX_BYTES = 800 * 1024      # decoded audio cap for one turn
-SPK_TURN_MAX_B64 = (SPK_TURN_MAX_BYTES * 4) // 3 + 16
-SPK_TURN_MAX_BODY = 1200 * 1024      # body cap, decided before parsing
-SPK_TURN_MAX_SAY = 400               # chars a controller line may ask to speak
-SPK_TURN_HISTORY_TURNS = 6           # rolling window; never persisted
-SPK_TURN_HISTORY_CHARS = 500
-SPK_TURN_RATE_PER_MIN = 20           # turns per minute per account
 SPK_TURN_TIMEOUT = 20                # seconds per upstream call
-# Phase C2: one turn must never hold its thread longer than this, whatever the
-# upstream does. Each upstream call inside a turn is capped to what is left.
 SPK_TURN_DEADLINE = SPK_TURN_TIMEOUT + 5
-SPK_TURN_SESSION_TTL_S = 3 * 3600    # a mock is paid once per session
+SPK3_TURN_MAX_BODY = 8 * 1024 * 1024        # POST /api/speaking/v3/sessions/<id>/turn
+SPK3_OWN_TASK_MAX_BODY = 22 * 1024 * 1024   # POST /api/speaking/v3/own-tasks (multipart + images)
+SPK3_SESSION_RATE_PER_MIN = 20
+SPK3_TURN_RATE_PER_MIN = 40
+SPK3_REPORT_RATE_PER_MIN = 20
+SPK3_OWN_TASK_RATE_PER_MIN = 20
 
 # --- Listening own material (per-user audio + task/key/script) --------------
 LISTENING_MAT_MAX_AUDIO = 20 * 1024 * 1024           # 20 MB decoded audio per item
@@ -292,31 +245,20 @@ def _route_body_cap(path, method="POST"):
     """
     if path == "/api/listening/material" and method == "POST":
         return LISTENING_MAT_MAX_BODY
+    if path == "/api/speaking/v3/own-tasks" and method == "POST":
+        return SPK3_OWN_TASK_MAX_BODY
+    if (method == "POST" and path.startswith("/api/speaking/v3/sessions/")
+            and path.endswith("/turn")):
+        return SPK3_TURN_MAX_BODY
     return {
-        "/api/speaking/pa": SPK_PA_MAX_BODY,
-        "/api/speaking/turn": SPK_TURN_MAX_BODY,
-        "/api/speaking/report": SPK_REPORT_MAX_BODY,
-        "/api/speaking/minute": SPK_MINUTE_MAX_BODY,
-        "/api/speaking/partner": SPK_PARTNER_MAX_BODY,
         "/api/progress": PROGRESS_MAX_BYTES,
     }.get(path, B2_MAX_BODY)
 
 # Money guard. Google Cloud has no hard dollar cap: when the credit runs out the
 # card is charged. This process is the only client of the API key, so the ceiling
-# lives here. Measured cost is $0.007 per wall-clock minute of Live audio, so the
-# default 900 min/month tops out around $6.30 — below a $10 credit balance.
+# lives here. Default 900 min/month protects the operator's credit balance.
 SPK_MONTH_MINUTES = int(os.environ.get("B2_SPK_MONTHLY_MINUTES") or "900")
 _SPK_SPEND_LOCK = threading.Lock()
-SPK_TURN_SESSIONS_MAX = 500          # accounts remembered for that window
-SPK_TURN_PCM_RATE = 16000            # client wire format: 16 kHz mono 16-bit
-SPK_PCM_BYTES_PER_S = SPK_TURN_PCM_RATE * 2
-SPK_TTS_RATE = 24000                 # Gemini TTS output: 24 kHz mono 16-bit
-DEFAULT_SPK_TURN_MODEL = "gemini-2.5-flash"
-DEFAULT_SPK_TTS_MODEL = "gemini-2.5-flash-preview-tts"
-SPK_TTS_VOICES = {"examiner": "Puck", "partner": "Kore"}
-SPK_TURN_MIMES = ("audio/pcm", "audio/wav", "audio/x-wav", "audio/wave", "audio/l16")
-SPK_TTS_CACHE_MAX = 40               # cached scripted lines, LRU by mtime
-SPK_WARM_MAX_LINES = 24              # lines one warm request may pre-generate
 
 # --- Phase C2: bounded concurrency towards the speaking upstream ------------
 # One spoken turn needs one upstream call, and turn, TTS, report,
@@ -1198,127 +1140,7 @@ def _ai_left_for(uid):
     return max(0, cap - plans.writing_used(uid, "day"))
 
 
-# --- Daily PA quota (same shape as the AI quota; protects the Azure key) ---
-_SPK_QUOTA_LOCK = threading.Lock()
-_SPK_QUOTA = {}  # {date iso: {quota_key: int}}
-
-
-def _spk_pa_daily_limit():
-    """Daily PA calls per user (B2_SPK_PA_DAILY_PER_USER, default 60)."""
-    try:
-        return max(0, int(os.environ.get("B2_SPK_PA_DAILY_PER_USER",
-                                         str(SPK_PA_DAILY_DEFAULT))))
-    except ValueError:
-        return SPK_PA_DAILY_DEFAULT
-
-
-def _spk_pa_quota_today():
-    """Today's counter (auto-reset: previous days are dropped on access)."""
-    today = date.today().isoformat()
-    for k in list(_SPK_QUOTA):
-        if k != today:
-            del _SPK_QUOTA[k]
-    return _SPK_QUOTA.setdefault(today, {})
-
-
-def _spk_pa_quota_left(quota_key):
-    with _SPK_QUOTA_LOCK:
-        return _spk_pa_daily_limit() - _spk_pa_quota_today().get(quota_key, 0)
-
-
-def _spk_pa_quota_consume(quota_key):
-    with _SPK_QUOTA_LOCK:
-        day = _spk_pa_quota_today()
-        day[quota_key] = day.get(quota_key, 0) + 1
-
-
-def _spk_azure_key():
-    """Azure subscription key from env (module constant first, then os.environ)."""
-    value = SPK_AZURE_KEY or os.environ.get("B2_SPK_AZURE_KEY", "")
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _spk_pa_url():
-    """Recognition URL: B2_SPK_AZURE_ENDPOINT override, else the regional host."""
-    endpoint = SPK_AZURE_ENDPOINT or os.environ.get("B2_SPK_AZURE_ENDPOINT", "")
-    endpoint = endpoint.strip().rstrip("/") if isinstance(endpoint, str) else ""
-    if endpoint:
-        return endpoint if "speech/recognition" in endpoint else endpoint + SPK_PA_PATH
-    region = SPK_AZURE_REGION or os.environ.get("B2_SPK_AZURE_REGION", "")
-    region = region.strip() if isinstance(region, str) else ""
-    if not region:
-        return ""
-    return f"https://{region}.stt.speech.microsoft.com{SPK_PA_PATH}"
-
-
-# --- Gemini Live: token minting + speaking-minute budget (S3) --------------
-def _spk_google_key():
-    """Google API key from env only (never from the module constant cache)."""
-    value = os.environ.get("B2_SPK_GOOGLE_KEY", "")
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _spk_model():
-    value = os.environ.get("B2_SPK_GOOGLE_MODEL", DEFAULT_SPK_MODEL)
-    value = value.strip() if isinstance(value, str) else ""
-    return value or DEFAULT_SPK_MODEL
-
-
-def _spk_token_url():
-    """Token provisioning URL (B2_SPK_GOOGLE_TOKEN_URL overrides it for tests)."""
-    value = os.environ.get("B2_SPK_GOOGLE_TOKEN_URL", DEFAULT_SPK_TOKEN_URL)
-    value = value.strip() if isinstance(value, str) else ""
-    return value or DEFAULT_SPK_TOKEN_URL
-
-
-def _spk_ws_url():
-    """WSS endpoint the browser connects to (no token in it)."""
-    value = os.environ.get("B2_SPK_WS_URL", DEFAULT_SPK_WS_URL)
-    value = value.strip() if isinstance(value, str) else ""
-    return value or DEFAULT_SPK_WS_URL
-
-
-def _spk_iso_after(seconds):
-    """UTC ISO-8601 timestamp `seconds` in the future, e.g. ...Z."""
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + seconds))
-
-
-def _spk_mint_token(api_key):
-    """Mint a single-use ephemeral token. Return (token, error).
-
-    Contract verified against ai.google.dev/gemini-api/docs/ephemeral-tokens:
-    POST /v1beta/auth_tokens with `uses`, `expireTime` and
-    `newSessionExpireTime`; the token is the `name` field of the response.
-    """
-    body = json.dumps({
-        "uses": 1,
-        "expireTime": _spk_iso_after(SPK_TOKEN_TTL_S),
-        "newSessionExpireTime": _spk_iso_after(SPK_TOKEN_NEW_SESSION_S),
-    }).encode("utf-8")
-    req = urllib.request.Request(
-        _spk_token_url(),
-        data=body,
-        headers={
-            "Content-Type": "application/json",
-            "x-goog-api-key": api_key,
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            raw = resp.read(64 * 1024)
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError):
-        return None, "upstream_failed"
-    try:
-        obj = json.loads(raw.decode("utf-8"))
-    except (ValueError, UnicodeDecodeError):
-        return None, "invalid_upstream"
-    token = obj.get("name") if isinstance(obj, dict) else None
-    if not isinstance(token, str) or not token.strip():
-        return None, "invalid_upstream"
-    return token.strip(), None
-
-
+# --- Speaking v3 quotas & monthly voice budget guard -----------------------
 def _spk_min_limits():
     """(minutes per user, minutes for the instance) for today."""
     def _int(name, default):
@@ -1348,261 +1170,15 @@ def _spk_remaining_s(uid):
 
 
 def _spk_metrics_today():
-    """(minutes spoken today across users, tokens minted today)."""
+    """(minutes spoken today across users, sessions started today)."""
     today = _spk_today()
     seconds = 0.0
-    tokens = 0
+    sessions = 0
     for uid in store.list_users():
         rec = store.speaking_read(uid, today)
         seconds += rec["seconds"]
-        tokens += rec["tokens_minted"]
-    return round(seconds / 60.0, 1), tokens
-
-
-# --- Phase 36: turn-based voice — helpers ----------------------------------
-def _spk_turn_base():
-    """Gemini API base for the turn path (B2_SPK_TURN_BASE overrides it)."""
-    value = os.environ.get("B2_SPK_TURN_BASE", DEFAULT_GEMINI_BASE)
-    value = value.strip().rstrip("/") if isinstance(value, str) else ""
-    return value or DEFAULT_GEMINI_BASE
-
-
-def _spk_turn_model():
-    value = os.environ.get("B2_SPK_TURN_MODEL", DEFAULT_SPK_TURN_MODEL)
-    value = value.strip() if isinstance(value, str) else ""
-    return value or DEFAULT_SPK_TURN_MODEL
-
-
-def _spk_tts_model():
-    value = os.environ.get("B2_SPK_TTS_MODEL", DEFAULT_SPK_TTS_MODEL)
-    value = value.strip() if isinstance(value, str) else ""
-    return value or DEFAULT_SPK_TTS_MODEL
-
-
-def _spk_live_enabled():
-    """The operator says this key can run Live (B2_SPK_LIVE=1)."""
-    raw = os.environ.get("B2_SPK_LIVE", "")
-    return str(raw).strip().lower() in ("1", "true", "yes", "on")
-
-
-_SPK_LIVE_LOCK = threading.Lock()
-_SPK_LIVE_CACHE = {"at": 0.0, "model": "", "ok": False}
-SPK_LIVE_PROBE_TTL = 600
-
-
-def _spk_model_has_live(api_key, model):
-    """True only when `model` lists bidiGenerateContent. Cached, fails closed."""
-    now = time.time()
-    with _SPK_LIVE_LOCK:
-        if (_SPK_LIVE_CACHE["at"] and _SPK_LIVE_CACHE["model"] == model
-                and now - _SPK_LIVE_CACHE["at"] < SPK_LIVE_PROBE_TTL):
-            return _SPK_LIVE_CACHE["ok"]
-    ok = False
-    try:
-        # Ask for THIS model. `/models` is paginated at 50 and the Live model is
-        # not on the first page: scanning the list is how we wrongly reported
-        # live:false while gemini-3.8-live was available all along.
-        req = urllib.request.Request(
-            _spk_turn_base() + "/models/" + str(model),
-            headers={"x-goog-api-key": api_key},
-        )
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            raw = resp.read(256 * 1024)
-        single = json.loads(raw.decode("utf-8"))
-        body = {"models": [single] if isinstance(single, dict) else []}
-        for item in body.get("models") or []:
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("name") or "").split("/")[-1]
-            methods = item.get("supportedGenerationMethods") or []
-            if name == model and "bidiGenerateContent" in methods:
-                ok = True
-                break
-    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError,
-            OSError, ValueError, UnicodeDecodeError):
-        ok = False
-    with _SPK_LIVE_LOCK:
-        _SPK_LIVE_CACHE.update({"at": now, "model": model, "ok": ok})
-    return ok
-
-
-def _spk_live_available():
-    """`live:true` needs the operator's flag AND a model that really offers it."""
-    if not _spk_live_enabled():
-        return False
-    api_key = _spk_google_key()
-    if not api_key:
-        return False
-    return _spk_model_has_live(api_key, _spk_model())
-
-
-# Phase 52: earlier answers are data too. Part 4's examiner chains its follow-up
-# with the last three candidate lines of the session, so they are flattened,
-# stripped of control characters, capped and kept newest-last.
-SPK_CONTEXT_LINES = 3
-SPK_CONTEXT_CHARS = 300
-
-
-def _spk_candidate_context(value):
-    if not isinstance(value, list):
-        return []
-    lines = []
-    for item in value:
-        if not isinstance(item, str):
-            continue
-        line = re.sub(r"[\x00-\x1f\x7f]", " ", item)
-        line = re.sub(r"\s+", " ", line).strip()[:SPK_CONTEXT_CHARS]
-        if line:
-            lines.append(line)
-    return lines[-SPK_CONTEXT_LINES:]
-
-
-_SPK_STOPWORDS = frozenset({
-    "that", "this", "with", "from", "they", "them", "their", "there",
-    "then", "than", "what", "when", "where", "which", "while", "whom",
-    "whose", "have", "has", "had", "been", "being", "were", "will",
-    "would", "could", "should", "might", "must", "shall", "about",
-    "into", "over", "after", "before", "between", "under", "again",
-    "further", "once", "here", "more", "most", "other", "some", "such",
-    "only", "same", "very", "just", "also", "even", "still", "much",
-    "many", "every", "really", "actually", "basically", "probably",
-    "maybe", "perhaps", "think", "thinks", "thought", "believe",
-    "agree", "interesting", "good", "great", "nice", "well", "sure",
-    "yeah", "right", "true", "because", "since", "although", "though",
-    "however", "therefore", "rather", "prefer", "like", "want", "need",
-    "make", "makes", "made", "take", "takes", "took", "give", "gives",
-    "gave", "know", "knows", "knew", "feel", "feels", "felt", "seem",
-    "seems", "look", "looks", "thing", "things", "something", "anything",
-    "nothing", "everything", "someone", "everyone", "people", "person",
-    "always", "never", "often", "sometimes", "usually", "quite",
-    "pretty", "kind", "sort", "going", "does", "doesn", "didn", "don",
-    "won", "wouldn", "couldn", "shouldn", "isn", "aren", "wasn", "weren",
-    "haven", "hasn", "hadn", "your", "yours", "ours", "mine", "myself",
-    "yourself", "himself", "herself", "itself", "themselves", "point",
-    "idea", "opinion", "sense", "means", "mean", "guess", "suppose",
-})
-
-_SPK_INFLECTION_SUFFIXES = ("s", "es", "ed", "er", "est", "ing", "ly", "d", "r", "n")
-
-
-def _spk_content_tokens(text):
-    """Lowercase content words (>=4 letters, excluding stopwords)."""
-    words = re.findall(r"[a-z]+", str(text or "").lower())
-    return [w for w in words if len(w) >= 4 and w not in _SPK_STOPWORDS]
-
-
-def _spk_tokens_match(a, b):
-    if a == b:
-        return True
-    short, long_ = (a, b) if len(a) <= len(b) else (b, a)
-    if len(short) >= 4 and long_.startswith(short):
-        if long_[len(short):] in _SPK_INFLECTION_SUFFIXES:
-            return True
-    if len(short) >= 4 and short.endswith("e") and long_.startswith(short[:-1]):
-        if long_[len(short) - 1:] in ("ing", "ed", "er", "est"):
-            return True
-    if len(short) >= 4 and short.endswith("y") and long_.startswith(short[:-1]):
-        if long_[len(short) - 1:] in ("ies", "ied", "ier", "iest", "ily"):
-            return True
-    return False
-
-
-def _spk_is_grounded(line, said_tokens):
-    """True when `line` shares at least one content word (>=4 letters) with `said_tokens`."""
-    if not said_tokens:
-        return True
-    line_tokens = _spk_content_tokens(line)
-    for lt in line_tokens:
-        for st in said_tokens:
-            if _spk_tokens_match(lt, st):
-                return True
-    return False
-
-
-def _spk_norm_tokens(text):
-    return set(re.findall(r"[a-z0-9]+", str(text or "").lower()))
-
-
-def _spk_token_similarity(a, b):
-    ta = _spk_norm_tokens(a)
-    tb = _spk_norm_tokens(b)
-    if not ta or not tb:
-        return 0.0
-    return len(ta & tb) / float(len(ta | tb))
-
-
-def _spk_pick_detail(said, said_tokens):
-    """Pick a concrete detail from `said` to quote in a strict retry prompt."""
-    if not said_tokens:
-        return str(said or "").strip()[:80]
-    seen = []
-    for tok in said_tokens:
-        if tok not in seen:
-            seen.append(tok)
-    ordered = sorted(seen, key=lambda w: (-len(w), seen.index(w)))
-    return ", ".join(ordered[:2])
-
-
-def _spk_extract_partner_line(content):
-    line = ""
-    try:
-        obj = json.loads(content)
-        if isinstance(obj, dict):
-            for key in ("line", "reply", "sentence"):
-                value = obj.get(key)
-                if isinstance(value, str) and value.strip():
-                    line = value
-                    break
-    except (ValueError, TypeError):
-        pass
-    if not line:
-        line = str(content or "")
-    line = re.sub(r"[\x00-\x1f\x7f]", " ", line)
-    line = re.sub(r"\s+", " ", line).strip()
-    line = re.sub(r"^(?:[-*•]\s+|\d+[.)]\s+)", "", line).strip()
-    return line.strip('"').strip("'").strip()
-
-
-def _spk_clean_partner_line(line, mode):
-    """Enforce word and sentence caps on the partner/examiner reply."""
-    line = re.sub(r"\s+", " ", str(line or "")).strip().strip('"').strip()
-    if not line:
-        return ""
-    if mode == "examiner":
-        sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if s.strip()]
-        if sents:
-            line = sents[0]
-        words = line.split()
-        if len(words) > 20:
-            line = " ".join(words[:20])
-        if not line.endswith("?"):
-            line = line.rstrip(".! ,;:-") + "?"
-        if len(line) > 240:
-            line = line[:239].rsplit(" ", 1)[0].rstrip(".! ,;:-") + "?"
-        return line
-    sents = [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if s.strip()]
-    if len(sents) > 2:
-        line = " ".join(sents[:2])
-    words = line.split()
-    if len(words) > 35:
-        if len(sents) >= 2 and 4 <= len(sents[0].split()) <= 35:
-            line = sents[0]
-        else:
-            ended_q = line.endswith("?")
-            line = " ".join(words[:35]).rstrip(",;:-")
-            if not line.endswith((".", "!", "?")):
-                line += "?" if ended_q else "."
-    if len(line) > 240:
-        ended_q = line.endswith("?")
-        cut = line[:239].rsplit(" ", 1)[0].rstrip(",;:-")
-        if cut and not cut.endswith((".", "!", "?")):
-            cut += "?" if ended_q else "."
-        line = cut
-    return line
-
-
-_SPK_TURN_LOCK = threading.Lock()
-_SPK_TURN_SESSIONS = {}   # {uid: {session_id: first_seen}}
+        sessions += rec["tokens_minted"]
+    return round(seconds / 60.0, 1), sessions
 
 
 def _spk_spend_file():
@@ -1640,444 +1216,6 @@ def _spk_month_add(seconds):
 
 def _spk_budget_left_s():
     return max(0.0, SPK_MONTH_MINUTES * 60.0 - _spk_month_seconds())
-
-
-def _spk_turn_session_known(uid, session_id):
-    """Has this account already opened (and paid for) this exam session?"""
-    if not session_id:
-        return False
-    now = time.time()
-    with _SPK_TURN_LOCK:
-        seen = _SPK_TURN_SESSIONS.setdefault(uid, {})
-        for sid, stamp in list(seen.items()):
-            if now - stamp > SPK_TURN_SESSION_TTL_S:
-                seen.pop(sid, None)
-        return session_id in seen
-
-
-def _spk_turn_session_mark(uid, session_id):
-    """Remember a session after its first successful turn (mock already paid)."""
-    if not session_id:
-        return
-    with _SPK_TURN_LOCK:
-        _SPK_TURN_SESSIONS.setdefault(uid, {})[session_id] = time.time()
-        while len(_SPK_TURN_SESSIONS) > SPK_TURN_SESSIONS_MAX:
-            _SPK_TURN_SESSIONS.pop(next(iter(_SPK_TURN_SESSIONS)))
-
-
-def _spk_wav_bytes(pcm, rate=SPK_TTS_RATE):
-    """Wrap mono 16-bit PCM in a RIFF/WAVE container `decodeAudioData` accepts."""
-    return struct.pack(
-        "<4sI4s4sIHHIIHH4sI",
-        b"RIFF", 36 + len(pcm), b"WAVE", b"fmt ", 16, 1, 1,
-        rate, rate * 2, 2, 16, b"data", len(pcm),
-    ) + pcm
-
-
-def _spk_gemini_text(body):
-    """Join the text parts of a Gemini response, or None when there are none."""
-    try:
-        parts = body["candidates"][0]["content"]["parts"]
-    except (KeyError, IndexError, TypeError):
-        return None
-    chunks = [p.get("text") for p in parts
-              if isinstance(p, dict) and isinstance(p.get("text"), str)]
-    text = "".join(chunks)
-    return text or None
-
-
-def _spk_gemini_finish_reason(body):
-    """Return the first candidate's finishReason string, or None."""
-    try:
-        cand = body["candidates"][0]
-    except (KeyError, IndexError, TypeError):
-        return None
-    reason = cand.get("finishReason") if isinstance(cand, dict) else None
-    return reason if isinstance(reason, str) else None
-
-
-_SPK_TURN_REPEAT = "Sorry, I did not catch that. Could you say it again, please?"
-
-_SPK_TURN_RULE = """
-VOICE LINE, TURN BY TURN
-These rules override the part block above wherever they disagree.
-- The candidate's audio is ONE turn. Transcribe it verbatim in `transcript`
-  (English, no timestamps, no speaker labels). If there is no clear speech,
-  use "" — NEVER guess, complete or invent words.
-- Then write your own next turn in `reply`: exactly the words you say out loud,
-  in English. Your reply is AT MOST 10 words (6-9 is ideal) — a long line costs
-  seconds of speech. The exam rules above still apply.
-- REACT FIRST. Your reply must contain at least one concrete word or phrase
-  from `transcript` and show that you heard it.
-- If the transcript is empty: do not invent an answer. Say you could not hear
-  the audio and ask the candidate to repeat it, in 10 words or fewer.
-- If the transcript has fewer than 4 words or is off-topic: ask a short
-  follow-up ("Why?" / "Can you tell me more about X?") using a word they said.
-  Do NOT advance to the next scripted question.
-- For PART 1 and PART 4 (when acting as the interlocutor with the numbered
-  question list above): if the candidate answered the current question on-topic
-  in at least 4 words, ADVANCE to the next unasked question in that numbered
-  list, strictly in order, phrased shortly. You may open with 2-3 words echoing
-  what they said (e.g. "Right, trips stick — should parents pay?").
-  NEVER rephrase or re-ask the question they just answered (for example, never
-  ask why something is useful/good after they already explained why), and
-  NEVER chain "Why?" on the same point.
-  If all questions in the list have already been asked and answered, close with
-  the part's closing line from above. Keep the 10-word limit: if the next
-  listed question does not fit, use a faithful short version of it.
-- For PART 2 and PART 3: this turn is a conversation, not a reading of the
-  question list. The scripted question list is a FALLBACK for silence, not a
-  script to read; never ask a question that could have been asked without
-  listening, and only move on after an on-topic answer of at least 4 words.
-- NEVER change part or topic. Stay strictly on the current part's topic and task bank;
-  never invent unrelated questions or switch to another part.
-- Never describe the audio, never mention transcription, never add JSON prose.
-Return only the JSON object.
-"""
-
-_SPK_TURN_SCHEMA = {
-    "type": "object",
-    "properties": {"transcript": {"type": "string"}, "reply": {"type": "string"}},
-    "required": ["transcript", "reply"],
-}
-
-
-def _spk_turn_instruction(role, part, task):
-    """The same role prompt the Live socket would have used, plus the JSON rule."""
-    base = (speaking_prompts.partner_instruction(part or 1, task)
-            if role == "partner"
-            else speaking_prompts.examiner_instruction(part or 1, task))
-    return base + _SPK_TURN_RULE
-
-
-def _spk_turn_history(raw):
-    """Sanitise the rolling history: last 6 turns, known speakers, capped text."""
-    out = []
-    if not isinstance(raw, list):
-        return out
-    for item in raw[-SPK_TURN_HISTORY_TURNS:]:
-        if not isinstance(item, dict):
-            continue
-        who, text = item.get("who"), item.get("text")
-        if who not in ("candidate", "examiner", "partner"):
-            continue
-        if not isinstance(text, str) or not text.strip():
-            continue
-        out.append({"who": who, "text": text.strip()[:SPK_TURN_HISTORY_CHARS]})
-    return out
-
-
-_SPK_TURN_WHO = {"candidate": "Candidate", "partner": "Candidate B",
-                 "examiner": "Examiner"}
-
-
-def _spk_turn_contents(history):
-    """History as Gemini `contents`, each turn labelled with who said it.
-
-    Labels matter: the reply must react to the candidate, not to its own
-    previous line. Consecutive same-role turns are merged.
-    """
-    contents = []
-    for turn in history:
-        role = "model" if turn["who"] == "examiner" else "user"
-        text = "{}: {}".format(_SPK_TURN_WHO.get(turn["who"], "Candidate"),
-                               turn["text"])
-        if contents and contents[-1]["role"] == role:
-            contents[-1]["parts"].append({"text": text})
-        else:
-            contents.append({"role": role, "parts": [{"text": text}]})
-    return contents
-
-
-def _spk_turn_understand(api_key, system, history, audio_b64, mime, deadline=None):
-    """One Gemini call: transcribe the candidate's audio AND write the reply.
-
-    Returns ``(transcript, reply, ms, error)``. One call instead of two is what
-    keeps the stop-talking → first-audio latency inside the target; `ms` is the
-    whole call, so the response reports stt as 0 and the cost under llm.
-    The call runs inside the instance gate and under the turn ``deadline``
-    (monotonic); a caller that cannot be served gets "busy" or
-    "upstream_timeout" without touching the provider.
-    """
-    value, error = _spk_run(
-        lambda timeout: _spk_turn_understand_locked(
-            api_key, system, history, audio_b64, mime, timeout),
-        deadline)
-    if error:
-        return None, None, 0, error
-    return value
-
-
-def _spk_turn_understand_locked(api_key, system, history, audio_b64, mime,
-                                timeout):
-    contents = _spk_turn_contents(history)
-    spoken = [
-        {"inlineData": {"mimeType": mime, "data": audio_b64}},
-        {"text": "That was the candidate's spoken turn. Return the JSON object."},
-    ]
-    if contents and contents[-1]["role"] == "user":
-        contents[-1]["parts"].extend(spoken)   # one user turn, not two in a row
-    else:
-        contents.append({"role": "user", "parts": spoken})
-    payload = {
-        "systemInstruction": {"parts": [{"text": system}]},
-        "contents": contents,
-        "generationConfig": {
-            "temperature": 0.4,
-            # Transcript (~25 s) + reply (8-14 words) + JSON wrapper fit with
-            # headroom in 320 tokens; thinking adds ~2 s and buys nothing.
-            "maxOutputTokens": 320,
-            "thinkingConfig": {"thinkingBudget": 0},
-            "responseMimeType": "application/json",
-            "responseSchema": _SPK_TURN_SCHEMA,
-        },
-    }
-    started = time.time()
-    body, error = _provider_complete(_spk_turn_base(), api_key, _spk_turn_model(),
-                                     payload, wire="gemini",
-                                     timeout=timeout)
-    ms = int((time.time() - started) * 1000)
-    if error:
-        return None, None, ms, error
-    if _spk_gemini_finish_reason(body) == "MAX_TOKENS":
-        return None, None, ms, "turn_truncated"
-    text = _spk_gemini_text(body)
-    if text is None:
-        return None, None, ms, "upstream_failed"
-    try:
-        obj = json.loads(text)
-    except ValueError:
-        return None, None, ms, "turn_truncated"
-    if not isinstance(obj, dict):
-        return None, None, ms, "upstream_failed"
-    transcript, reply = obj.get("transcript"), obj.get("reply")
-    if not isinstance(transcript, str) or not isinstance(reply, str) or not reply.strip():
-        return None, None, ms, "upstream_failed"
-    return transcript.strip()[:2000], reply.strip()[:900], ms, None
-
-
-def _spk_tts(api_key, text, voice, deadline=None):
-    """One TTS call. Returns ``(wav_bytes, ms, error)``; PCM is wrapped as WAV."""
-    value, error = _spk_run(
-        lambda timeout: _spk_tts_locked(api_key, text, voice, timeout),
-        deadline)
-    if error:
-        return None, 0, error
-    return value
-
-
-def _spk_tts_locked(api_key, text, voice, timeout):
-    payload = {
-        "contents": [{"parts": [{"text": text}]}],
-        "generationConfig": {
-            "responseModalities": ["AUDIO"],
-            "speechConfig": {"voiceConfig": {
-                "prebuiltVoiceConfig": {"voiceName": voice}}},
-        },
-    }
-    started = time.time()
-    body, error = _provider_complete(_spk_turn_base(), api_key, _spk_tts_model(),
-                                     payload, wire="gemini",
-                                     timeout=timeout,
-                                     max_bytes=4 * 1024 * 1024)
-    ms = int((time.time() - started) * 1000)
-    if error:
-        return None, ms, error
-    data = None
-    try:
-        parts = body["candidates"][0]["content"]["parts"]
-    except (KeyError, IndexError, TypeError):
-        parts = []
-    for part in parts if isinstance(parts, list) else []:
-        if not isinstance(part, dict):
-            continue
-        blob = part.get("inlineData")
-        if isinstance(blob, dict) and isinstance(blob.get("data"), str):
-            data = blob["data"]
-            break
-    if not data:
-        return None, ms, "upstream_failed"
-    try:
-        pcm = base64.b64decode(data, validate=False)
-    except (ValueError, binascii.Error):
-        return None, ms, "upstream_failed"
-    if not pcm:
-        return None, ms, "upstream_failed"
-    return _spk_wav_bytes(pcm), ms, None
-
-
-# --- Phase 37: TTS cache for the scripted lines -----------------------------
-# The scripted lines never change between sessions, so paying 0.3 s + audio
-# duration for each one on every turn is waste. They are cached by the sha256
-# of (text, voice): the filename carries no text, the bytes are WAV only. The
-# cache is the ONLY thing this feature writes under data/, and it is LRU-capped.
-_SPK_TTS_LOCK = threading.Lock()
-_SPK_WARM_LOCK = threading.Lock()
-_SPK_WARM_INFLIGHT = set()
-
-
-def _spk_tts_dir():
-    return os.path.join(DATA_DIR, "tts")
-
-
-def _spk_tts_cache_path(text, voice):
-    digest = hashlib.sha256((text + "\x00" + voice).encode("utf-8")).hexdigest()
-    return os.path.join(_spk_tts_dir(), digest + ".wav")
-
-
-def _spk_tts_cache_get(text, voice):
-    """Cached WAV for (text, voice) or None. A hit refreshes the LRU stamp."""
-    path = _spk_tts_cache_path(text, voice)
-    try:
-        with open(path, "rb") as fh:
-            data = fh.read(4 * 1024 * 1024 + 1)
-        if not data or len(data) > 4 * 1024 * 1024:
-            return None
-        os.utime(path, None)
-        return data
-    except OSError:
-        return None
-
-
-def _spk_tts_cache_prune():
-    """Keep the newest SPK_TTS_CACHE_MAX .wav files, drop the rest."""
-    try:
-        entries = [(entry.stat().st_mtime, entry.path)
-                   for entry in os.scandir(_spk_tts_dir())
-                   if entry.is_file() and entry.name.endswith(".wav")]
-    except OSError:
-        return
-    entries.sort()
-    for _mtime, path in entries[:-SPK_TTS_CACHE_MAX]:
-        try:
-            os.remove(path)
-        except OSError:
-            pass
-
-
-def _spk_tts_cache_put(text, voice, wav):
-    """Write a WAV as 0600, atomically, and prune the cache to its cap."""
-    directory = _spk_tts_dir()
-    try:
-        os.makedirs(directory, mode=0o700, exist_ok=True)
-        try:
-            os.chmod(directory, 0o700)
-        except OSError:
-            pass
-        tmp = os.path.join(directory, ".tmp-" + secrets.token_hex(8))
-        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        try:
-            with os.fdopen(fd, "wb") as fh:
-                fh.write(wav)
-                fh.flush()
-                os.fsync(fh.fileno())
-        except Exception:
-            try:
-                os.remove(tmp)
-            except OSError:
-                pass
-            raise
-        os.replace(tmp, _spk_tts_cache_path(text, voice))
-        try:
-            os.chmod(_spk_tts_cache_path(text, voice), 0o600)
-        except OSError:
-            pass
-        _spk_tts_cache_prune()
-    except OSError:
-        return
-
-
-def _spk_tts_cached(api_key, text, voice, deadline=None):
-    """``(wav, ms, cached, error)``: cache first, upstream TTS on a miss."""
-    started = time.time()
-    with _SPK_TTS_LOCK:
-        cached = _spk_tts_cache_get(text, voice)
-    if cached is not None:
-        return cached, int((time.time() - started) * 1000), True, None
-    wav, ms, error = _spk_tts(api_key, text, voice, deadline=deadline)
-    if error:
-        return None, ms, False, error
-    # One paid upstream call, one tick of the instance meter. A cache hit above
-    # returns before this line, so it costs nothing.
-    _ai_total_consume()
-    with _SPK_TTS_LOCK:
-        _spk_tts_cache_put(text, voice, wav)
-    return wav, ms, False, None
-
-
-def _spk_warm_lines(raw):
-    """Sanitise the scripted lines a client asks to pre-generate."""
-    if not isinstance(raw, list):
-        return []
-    out, seen = [], set()
-    for item in raw[:SPK_WARM_MAX_LINES]:
-        if not isinstance(item, str):
-            continue
-        text = item.strip()[:SPK_TURN_MAX_SAY]
-        if text and text not in seen:
-            seen.add(text)
-            out.append(text)
-    return out
-
-
-def _spk_warm_async(api_key, lines, voice):
-    """Generate the missing scripted lines in the background; return queued N."""
-    lines = [line for line in lines if isinstance(line, str) and line.strip()]
-    if not lines:
-        return 0
-    key = (voice, tuple(lines))
-    with _SPK_WARM_LOCK:
-        if key in _SPK_WARM_INFLIGHT:
-            return 0
-        _SPK_WARM_INFLIGHT.add(key)
-
-    def run():
-        try:
-            for line in lines:
-                try:
-                    _spk_tts_cached(api_key, line.strip(), voice)
-                except Exception:
-                    pass
-        finally:
-            with _SPK_WARM_LOCK:
-                _SPK_WARM_INFLIGHT.discard(key)
-
-    threading.Thread(target=run, name="spk-tts-warm", daemon=True).start()
-    return len(lines)
-
-
-# --- S5 report idempotency: a retry must not buy a second LLM call ----------
-_SPK_REPORT_LOCK = threading.Lock()
-_SPK_REPORT_CACHE = {}   # {(uid, request_id): (timestamp, result)}
-
-
-def _spk_report_cache_get(uid, request_id):
-    """A previous successful report for this (user, request_id), or None."""
-    if not request_id:
-        return None
-    now = time.time()
-    with _SPK_REPORT_LOCK:
-        for key, (stamp, _result) in list(_SPK_REPORT_CACHE.items()):
-            if now - stamp > SPK_REPORT_CACHE_TTL:
-                _SPK_REPORT_CACHE.pop(key, None)
-        hit = _SPK_REPORT_CACHE.get((uid, request_id))
-        return hit[1] if hit else None
-
-
-def _spk_report_cache_put(uid, request_id, result):
-    """Remember a successful report so a retry replays it without the model."""
-    if not request_id:
-        return
-    with _SPK_REPORT_LOCK:
-        _SPK_REPORT_CACHE[(uid, request_id)] = (time.time(), result)
-        while len(_SPK_REPORT_CACHE) > SPK_REPORT_CACHE_MAX:
-            _SPK_REPORT_CACHE.pop(next(iter(_SPK_REPORT_CACHE)))
-
-
-def _speaking_report_cache_clear():
-    """Test hook: drop every cached report."""
-    with _SPK_REPORT_LOCK:
-        _SPK_REPORT_CACHE.clear()
 
 
 def _validate_ai_payload(obj):
@@ -3574,8 +2712,10 @@ def change_password(user_id, current, new_password):
 def delete_user(user_id):
     """Remove the account: data dir, users.json record and every session token."""
     store.remove_user(user_id)
-    # A closed account leaves no usage row behind.
+    # A closed account leaves no usage row or speaking v3 data behind.
     plans.forget_user(user_id)
+    spk3_engine.forget_user_sessions(user_id)
+    spk3_catalog.forget_user_own_tasks(user_id)
     # Phase 34: the Google link and any passkeys must not outlive the account.
     _oauth_forget_user(user_id)
     _webauthn_forget_user(user_id)
@@ -5396,6 +4536,12 @@ class H(BaseHTTPRequestHandler):
         effective_global_cap = MAX_BODY_BYTES
         if self.command == "POST" and path == "/api/listening/material":
             effective_global_cap = LISTENING_MAT_MAX_BODY
+        elif self.command == "POST" and path == "/api/speaking/v3/own-tasks":
+            effective_global_cap = SPK3_OWN_TASK_MAX_BODY
+        elif (self.command == "POST"
+              and path.startswith("/api/speaking/v3/sessions/")
+              and path.endswith("/turn")):
+            effective_global_cap = SPK3_TURN_MAX_BODY
         if clen > effective_global_cap:
             msg = ("audio too large (max 20 MB)"
                    if path == "/api/listening/material" else "payload too large")
@@ -5407,16 +4553,10 @@ class H(BaseHTTPRequestHandler):
             if clen > _route_body_cap(path, self.command):
                 self._reject(413, {"error": "payload too large"})
                 return
-            # CSRF defence in depth on every mutating API route, including
-            # /api/speaking/turn (it checks the token too, but a cross-site
-            # browser page must not get that far).
+            # CSRF defence in depth on every mutating API route.
             if not self._csrf_ok():
                 self._reject(403, {"error": "cross-site request rejected"})
                 return
-        if path == "/api/speaking/pa" and clen > SPK_PA_MAX_BODY:
-            _audit("pa_rejected", "", _real_ip(self), self._rid, {"reason": "too_large"})
-            self._reject(413, {"error": "audio too large"})
-            return
         if path == "/api/progress" and self.command == "PUT" and clen > PROGRESS_MAX_BYTES:
             self._reject(413, {"error": "progress too large"})
             return
@@ -6471,930 +5611,287 @@ class H(BaseHTTPRequestHandler):
             self._send(204, b"", "image/x-icon")
             return
 
-        # --- Phase 36: which transport may this deployment advertise? --------
-        # `live` is only true when the operator asserts Live AND the configured
-        # model really lists bidiGenerateContent; `turn` is always available
-        # because it is the transport that works with a plain API key.
-        if path == "/api/speaking/capabilities":
-            if self.command != "GET":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            self._send_json(200, {"live": _spk_live_available(), "turn": True})
-            return
+        # --- Speaking v3 API (/api/speaking/v3/...) ------------------------
+        if path.startswith("/api/speaking/v3/"):
+            sub = path[len("/api/speaking/v3/"):]
 
-        # --- Phase 50: the partner's line ----------------------------------
-        # A GET is a capability probe (no model call); a POST asks for one
-        # sentence for Alex. Both run on the same provider client as the
-        # Writing Corrector: the user's key when the BYO headers are present,
-        # otherwise the owner's configured text model.
-        if path == "/api/speaking/partner":
-            if self.command == "GET":
+            # GET /api/speaking/v3/catalog
+            if sub == "catalog":
+                if self.command != "GET":
+                    self._send_json(405, {"error": "method not allowed"})
+                    return
                 uid, auth_err = self._auth()
                 if not uid:
                     self._send_json(401, {"error": auth_err or "invalid session"})
                     return
-                byo, byo_err = _byo_from_headers(self.headers)
-                if byo_err:
-                    self._send_json(400, {"error": byo_err})
-                    return
-                available = bool(byo) or bool((os.environ.get("B2_AI_KEY") or "").strip())
-                self._send_json(200, {"available": available})
+                self._send_json(200, {
+                    "tests": spk3_catalog.list_public_tests(),
+                    "own_tasks": spk3_catalog.list_own_tasks(uid),
+                })
                 return
 
-        # --- S3: Gemini Live examiner — ephemeral token + minute ledger -------
-        # The browser connects straight to Google with a single-use token, so no
-        # audio ever reaches this process. The key only signs the mint request.
-        if path == "/api/speaking/token":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._rate_limited("spk_tok:" + uid, SPK_TOKEN_RATE_PER_MIN, 60):
-                return
-            # S4: one token per voice. `role` picks the system instruction
-            # (examiner or partner); `part` is echoed for the client's director.
-            role, part, task = "examiner", 0, None
-            if self._clen() > 0:
-                left = self._clen()
-                raw = self.rfile.read(min(left, 4096))
-                left -= len(raw)
-                while left > 0:              # keep the connection in sync
-                    chunk = self.rfile.read(min(left, 4096))
-                    if not chunk:
-                        break
-                    left -= len(chunk)
-                try:
-                    req = json.loads(raw.decode("utf-8") or "{}")
-                except (ValueError, UnicodeDecodeError):
-                    req = {}
-                session_id = ""
-                if isinstance(req, dict):
-                    if req.get("role") == "partner":
-                        role = "partner"
+            # POST /api/speaking/v3/sessions
+            if sub == "sessions":
+                if self.command != "POST":
+                    self._send_json(405, {"error": "method not allowed"})
+                    return
+                uid, auth_err = self._auth()
+                if not uid:
+                    self._drain()
+                    self._send_json(401, {"error": auth_err or "invalid session"})
+                    return
+                if self._rate_limited("spk3_sess:" + uid, SPK3_SESSION_RATE_PER_MIN, 60, "user"):
+                    return
+                req, jerr = self._json_body(limit=16384)
+                if jerr:
+                    self._send_json(jerr, {"error": "invalid_json" if jerr == 400 else "payload too large"})
+                    return
+                # Quota checks: 3 mocks / 45 min per day (owner unlimited) + 900 min monthly guard
+                if not self._speaking_gate(uid):
+                    return
+                if _spk_remaining_s(uid) <= 0:
+                    reset = (date.today() + timedelta(days=1)).isoformat()
+                    _spk_stat("rate_limited_429")
+                    self._send_json(429, {"error": "daily speaking limit reached", "reset": reset})
+                    return
+                if _spk_budget_left_s() <= 0:
+                    t = time.gmtime()
+                    ny, nm = (t.tm_year + 1, 1) if t.tm_mon == 12 else (t.tm_year, t.tm_mon + 1)
+                    nxt = "%04d-%02d-01T00:00:00Z" % (ny, nm)
+                    self._send_json(429, {
+                        "error": "voice budget exhausted for this month",
+                        "limit": "voice_month",
+                        "limit_minutes": SPK_MONTH_MINUTES,
+                        "reset": nxt,
+                    })
+                    return
+                test_hour = None
+                if spk3_voice.is_test_mode() and self.headers.get("X-Test-Hour") is not None:
                     try:
-                        part = int(req.get("part") or 0)
-                    except (TypeError, ValueError):
-                        part = 0
-                    if part not in (1, 2, 3, 4):
-                        part = 0
-                    # Phase 35: the task the candidate sees on screen travels with
-                    # the mint so the examiner asks exactly those questions.
-                    # `clean_task()` whitelists and caps it; a malformed task
-                    # degrades to the generic exam, it never rejects the mint.
-                    task = req.get("task")
-                    # The exam session id lets the partner's token ride on the
-                    # mock the examiner's token already paid for.
-                    session_id = str(req.get("session_id") or "")[:64]
-            api_key = _spk_google_key()
-            if not api_key:
-                # One line, no secret: only the missing knob is named.
-                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
-                        f"rid={self._rid} speaking/token disabled: "
-                        f"B2_SPK_GOOGLE_KEY missing\n")
-                with _LOG_LOCK:
-                    print(line, end="", flush=True)
-                self._send_json(503, {"error": "speech_not_configured"})
-                return
-            charged = bool(session_id) and _spk_turn_session_known(uid, session_id)
-            if not charged and not self._speaking_gate(uid):
-                return
-            if _spk_remaining_s(uid) <= 0:
-                reset = (date.today() + timedelta(days=1)).isoformat()
-                self._send_json(429, {"error": "daily speaking limit reached",
-                                      "reset": reset})
-                return
-            if _spk_budget_left_s() <= 0:
-                # The monthly voice budget is spent: refuse to mint rather than
-                # letting Google bill the card past the credit balance.
-                t = time.gmtime()
-                ny, nm = (t.tm_year + 1, 1) if t.tm_mon == 12 else (t.tm_year, t.tm_mon + 1)
-                nxt = "%04d-%02d-01T00:00:00Z" % (ny, nm)
-                self._send_json(429, {"error": "voice budget exhausted for this month",
-                                      "limit": "voice_month",
-                                      "limit_minutes": SPK_MONTH_MINUTES,
-                                      "reset": nxt})
-                return
-            token, mint_err = _spk_mint_token(api_key)
-            if not token:
-                self._send_json(502, {"error": "token_mint_failed",
-                                      "reason": mint_err})
-                return
-            # A failed mint never burns a mock: the plan meter is bumped only
-            # once Google handed us a token.
-            if not charged:
-                # One mock per exam, not per voice: the examiner and the partner
-                # are two tokens of the same test, and charging each one made a
-                # account unable to open the second voice.
+                        test_hour = int(self.headers.get("X-Test-Hour"))
+                    except ValueError:
+                        test_hour = None
+                res, code, err = spk3_engine.create_session(
+                    uid,
+                    test_id=req.get("test_id"),
+                    part=req.get("part", 0),
+                    own_task_id=req.get("own_task_id"),
+                    tz_offset_minutes=req.get("tz_offset_minutes"),
+                    hour=test_hour,
+                )
+                if err:
+                    self._send_json(code, {"error": err})
+                    return
+                # Consume 1 mock per started session (single part, full, or own task)
                 plans.speaking_add_mock(uid)
-                if session_id:
-                    _spk_turn_session_mark(uid, session_id)
-            # The microsecond meter counts every mint (observability); only the
-            # mock ledger above is per exam.
-            store.speaking_add(uid, _spk_today(), 0, 1)
-            _audit("token_minted", uid, _real_ip(self), self._rid,
-                   {"part": part, "role": role})
-            # `instruction` is the examiner's own system prompt (not a secret):
-            # the browser has to send it in the setup message itself.
-            # Phase 35: it is built from the part AND the task on screen, so the
-            # examiner asks those questions, in that order, and nothing else.
-            instruction = (speaking_prompts.partner_instruction(part or 1, task)
-                           if role == "partner"
-                           else speaking_prompts.examiner_instruction(part or 1, task))
-            self._send_json(200, {
-                "token": token,
-                "expires_in": SPK_TOKEN_TTL_S,
-                "model": _spk_model(),
-                "ws_url": _spk_ws_url(),
-                "role": role,
-                "part": part,
-                "instruction": instruction,
-            })
-            return
-
-        # --- Phase 36: one spoken turn, one round trip ------------------------
-        # POST {audio_b64, mime, part, role, history, task, session_id}
-        #   → {transcript, reply, audio_b64, mime:"audio/wav", ms}
-        # The audio of ONE turn travels up and is dropped; nothing is written to
-        # disk, nothing text-shaped is logged. `say` (no audio) is the TTS-only
-        # form used for the controller's scripted lines, so the exam can open
-        # and hand over without a candidate turn in between.
-        if path == "/api/speaking/turn":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._rate_limited("spk_turn:" + uid, SPK_TURN_RATE_PER_MIN, 60, "user"):
-                return
-            if self._clen() > SPK_TURN_MAX_BODY:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                if not isinstance(req, dict):
-                    raise ValueError("not dict")
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(400, {"error": "invalid_json"})
-                return
-            del raw
-            api_key = _spk_google_key()
-            if not api_key:
-                self._send_json(503, {"error": "speech_not_configured"})
-                return
-            role = "partner" if req.get("role") == "partner" else "examiner"
-            try:
-                part = int(req.get("part") or 0)
-            except (TypeError, ValueError):
-                part = 0
-            if part not in (1, 2, 3, 4):
-                part = 0
-            task = speaking_prompts.clean_task(req.get("task"))
-            voice = SPK_TTS_VOICES.get(role, SPK_TTS_VOICES["examiner"])
-            # Phase 38: `tts:"none"` means the browser speaks the reply text
-            # with speechSynthesis — the turn costs the reply call only. The
-            # default stays "gemini" so an old client keeps the old behaviour.
-            tts = req.get("tts")
-            tts = tts if tts in ("gemini", "none") else "gemini"
-
-            # Phase 37: the client asks once, when a part opens, to pre-generate
-            # the scripted lines it is about to speak. Free: no model call, no
-            # mock, no minutes, and it returns immediately (the work is a
-            # daemon thread).
-            if req.get("warm") is True:
-                if tts == "none":
-                    # Nothing to pre-generate: the device voice needs no audio.
-                    self._send_json(200, {"warmed": 0, "voice": voice,
-                                          "tts": "none"})
-                    return
-                lines = _spk_warm_lines(req.get("lines"))
-                if not lines:
-                    lines = speaking_prompts.scripted_lines(part or 1, task, role)
-                lines.append(_SPK_TURN_REPEAT)
-                queued = _spk_warm_async(api_key, lines, voice)
-                self._send_json(200, {"warmed": queued, "voice": voice})
-                return
-
-            # One mock per session, not per turn: the gate runs the first time a
-            # session id is seen, and a known session keeps working afterwards.
-            session_id = req.get("session_id")
-            session_id = session_id.strip()[:64] if isinstance(session_id, str) else ""
-            known = _spk_turn_session_known(uid, session_id)
-            if not known and not self._speaking_gate(uid):
-                return
-            if _spk_remaining_s(uid) <= 0:
-                reset = (date.today() + timedelta(days=1)).isoformat()
-                _spk_stat("rate_limited_429")
-                self._send_json(429, {"error": "daily speaking limit reached",
-                                      "reset": reset})
-                return
-
-            started = time.time()
-            # Phase C2: the whole turn has a hard budget. Both upstream calls
-            # (reply, then TTS) share it, so a stuck provider cannot hold the
-            # handler thread past this point.
-            deadline = time.monotonic() + SPK_TURN_DEADLINE
-            say = req.get("say")
-            if "audio_b64" not in req and isinstance(say, str) and say.strip():
-                text = say.strip()[:SPK_TURN_MAX_SAY]
-                if tts == "none":
-                    # No TTS call, no cache write, no quota: the browser speaks.
-                    total = int((time.time() - started) * 1000)
-                    if session_id and not known:
-                        _spk_turn_session_mark(uid, session_id)
-                        plans.speaking_add_mock(uid)
-                    _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                           {"part": part, "role": role, "ms": total,
-                            "say": True, "tts": "none"})
-                    self._send_json(200, {
-                        "transcript": "", "reply": text,
-                        "audio_b64": None, "mime": None,
-                        "ms": {"stt": 0, "llm": 0, "tts": 0,
-                               "total": total, "cached": False},
-                    })
-                    return
-                wav, tts_ms, cached, tts_err = _spk_tts_cached(
-                    api_key, text, voice, deadline=deadline)
-                if tts_err:
-                    self._spk_refuse(tts_err, {"error": "tts_failed",
-                                               "reason": tts_err})
-                    return
-                if session_id and not known:
-                    _spk_turn_session_mark(uid, session_id)
-                    plans.speaking_add_mock(uid)
-                _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                       {"part": part, "role": role, "ms": tts_ms,
-                        "say": True, "cached": cached})
-                self._send_json(200, {
-                    "transcript": "", "reply": text,
-                    "audio_b64": base64.b64encode(wav).decode("ascii"),
-                    "mime": "audio/wav",
-                    "ms": {"stt": 0, "llm": 0, "tts": tts_ms,
-                           "total": tts_ms, "cached": cached},
+                store.speaking_add(uid, _spk_today(), 0.0, 1)
+                _audit("speaking_v3_session_start", uid, _real_ip(self), self._rid, {
+                    "test_id": str(req.get("test_id") or "")[:32],
+                    "part": res["state"]["target_part"],
+                    "own_task": bool(req.get("own_task_id")),
                 })
+                self._send_json(200, res)
                 return
 
-            audio_b64 = req.get("audio_b64")
-            if not isinstance(audio_b64, str) or not audio_b64:
-                self._send_json(422, {"error": "invalid_audio"})
-                return
-            # Size and duration are decided from the base64 length: a 30 s clip
-            # is refused before one byte is decoded.
-            if len(audio_b64) > SPK_TURN_MAX_B64:
-                self._send_json(413, {"error": "audio too large"})
-                return
-            mime = req.get("mime")
-            mime = mime.strip().lower() if isinstance(mime, str) else ""
-            if not mime.startswith(SPK_TURN_MIMES):
-                mime = "audio/pcm;rate=16000"
-            is_wav = "wav" in mime or mime.startswith("audio/l16")
-            try:
-                decoded = base64.b64decode(audio_b64, validate=False)
-            except (ValueError, binascii.Error):
-                self._send_json(422, {"error": "invalid_audio"})
-                return
-            audio_bytes = max(0, len(decoded) - (44 if is_wav else 0))
-            if (audio_bytes > SPK_TURN_MAX_BYTES
-                    or audio_bytes / float(SPK_PCM_BYTES_PER_S) > SPK_TURN_MAX_S):
-                self._send_json(413, {"error": "audio too large"})
-                return
-            del decoded
-
-            history = _spk_turn_history(req.get("history"))
-            stream = req.get("stream") is True
-            system = _spk_turn_instruction(role, part, task)
-            transcript, reply, llm_ms, llm_err = _spk_turn_understand(
-                api_key, system, history, audio_b64, mime, deadline=deadline)
-            if llm_err:
-                self._spk_refuse(llm_err, {"error": "turn_failed",
-                                           "reason": llm_err})
-                return
-            # One upstream reply call, one tick of the instance meter. Fast mode
-            # stops here (one call per turn); natural mode adds the TTS tick.
-            _ai_total_consume()
-            transcript = (transcript or "").strip()
-            reply = (reply or "").strip()
-            # Never invent what was not heard: an empty transcript gets the
-            # server's own repeat request, whatever the model tried to say.
-            if not transcript or not reply:
-                reply = _SPK_TURN_REPEAT
-            elif task and not speaking_prompts.is_on_topic(
-                reply, part or 1, task, transcript=transcript
-            ):
-                # Enforce topic/part coherence: off-topic replies fall back to
-                # the scripted line from the current part & task bank.
-                reply = speaking_prompts.scripted_fallback(
-                    part or 1, task, role=role, history=history
-                )
-
-            if tts == "none":
-                # The browser owns the voice: no TTS request is built, cached or
-                # paid for. The reply text is the whole answer.
-                total = int((time.time() - started) * 1000)
-                if session_id and not known:
-                    _spk_turn_session_mark(uid, session_id)
-                    plans.speaking_add_mock(uid)
-                _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                       {"part": part, "role": role, "ms": total,
-                        "tts": "none"})
-                ms = {"stt": 0, "llm": llm_ms, "tts": 0,
-                      "total": total, "cached": False}
-                if stream:
-                    self._send_ndjson_start()
-                    self._send_ndjson({
-                        "type": "text", "transcript": transcript,
-                        "reply": reply,
-                        "ms": {"stt": 0, "llm": llm_ms},
-                    })
-                    self._send_ndjson({"type": "audio", "audio_b64": None,
-                                       "mime": None, "ms": ms})
+            # /api/speaking/v3/sessions/<id>[/turn|/skip|/report]
+            if sub.startswith("sessions/"):
+                parts_sub = sub[len("sessions/"):].split("/")
+                sid = parts_sub[0]
+                tail = parts_sub[1] if len(parts_sub) == 2 else None
+                if len(parts_sub) > 2 or not sid:
+                    self._send_json(404, {"error": "not found"})
                     return
-                self._send_json(200, {
-                    "transcript": transcript,
-                    "reply": reply,
-                    "audio_b64": None,
-                    "mime": None,
-                    "ms": ms,
-                })
-                return
 
-            if stream:
-                # Text first, audio second: the examiner's words reach the UI
-                # while TTS is still running, and playback starts on arrival.
-                self._send_ndjson_start()
-                self._send_ndjson({
-                    "type": "text", "transcript": transcript, "reply": reply,
-                    "ms": {"stt": 0, "llm": llm_ms},
-                })
-                wav, tts_ms, cached, tts_err = _spk_tts_cached(
-                    api_key, reply, voice, deadline=deadline)
-                if tts_err:
-                    # The text is already on its way, so do not fail the turn:
-                    # tell the client to use the device voice. A dead TTS quota
-                    # must degrade, not break the exam.
-                    self._send_ndjson({"type": "audio", "audio_b64": None,
-                                       "fallback": "device", "reason": tts_err,
-                                       "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms}})
+                uid, auth_err = self._auth()
+                if not uid:
+                    self._drain()
+                    self._send_json(401, {"error": auth_err or "invalid session"})
                     return
-                total = int((time.time() - started) * 1000)
-                if session_id and not known:
-                    _spk_turn_session_mark(uid, session_id)
-                    plans.speaking_add_mock(uid)
-                _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                       {"part": part, "role": role, "ms": total, "cached": cached})
-                self._send_ndjson({
-                    "type": "audio",
-                    "audio_b64": base64.b64encode(wav).decode("ascii"),
-                    "mime": "audio/wav",
-                    "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
-                           "total": total, "cached": cached},
-                })
-                return
 
-            wav, tts_ms, cached, tts_err = _spk_tts_cached(
-                api_key, reply, voice, deadline=deadline)
-            if tts_err:
-                # Same degrade as the streaming path: the turn happened, only the
-                # voice is missing. The client speaks the text itself.
-                self._send_json(200, {
-                    "transcript": transcript, "reply": reply, "audio_b64": None,
-                    "mime": "audio/wav", "fallback": "device", "reason": tts_err,
-                    "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
-                           "total": int((time.time() - started) * 1000)},
-                })
-                return
-            total = int((time.time() - started) * 1000)
-            if session_id and not known:
-                _spk_turn_session_mark(uid, session_id)
-                plans.speaking_add_mock(uid)
-            _audit("speaking_turn", uid, _real_ip(self), self._rid,
-                   {"part": part, "role": role, "ms": total, "cached": cached})
-            self._send_json(200, {
-                "transcript": transcript,
-                "reply": reply,
-                "audio_b64": base64.b64encode(wav).decode("ascii"),
-                "mime": "audio/wav",
-                "ms": {"stt": 0, "llm": llm_ms, "tts": tts_ms,
-                       "total": total, "cached": cached},
-            })
-            return
+                # DELETE /api/speaking/v3/sessions/<id>
+                if tail is None:
+                    if self.command != "DELETE":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    if not spk3_engine.delete_session(uid, sid):
+                        self._send_json(404, {"error": "session_not_found"})
+                        return
+                    self._send_json(200, {"deleted": True, "session_id": sid})
+                    return
 
-        # Client-reported spoken seconds. The browser is the clock (it owns the
-        # session), so the ledger is advisory but persisted: 0600 per user,
-        # one file per day, the same lock as progress.json.
-        if path == "/api/speaking/minute":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._clen() > SPK_MINUTE_MAX_BODY:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                if not isinstance(req, dict):
-                    raise ValueError("not dict")
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(400, {"error": "invalid json"})
-                return
-            seconds = req.get("seconds")
-            if (isinstance(seconds, bool) or not isinstance(seconds, (int, float))
-                    or not math.isfinite(seconds)
-                    or seconds < 0 or seconds > SPK_MINUTE_MAX_CALL_S):
-                self._send_json(422, {"error": "invalid seconds"})
-                return
-            rec = store.speaking_add(uid, _spk_today(), float(seconds))
-            _spk_month_add(float(seconds))   # feeds the monthly money guard
-            plans.speaking_add_seconds(uid, seconds)
-            per_user_min, _total_min = _spk_min_limits()
-            service_limits = _plan_for(uid)["limits"]["speaking"]
-            service_used = plans.speaking_used(uid, service_limits["window"]) \
-                if service_limits else {"seconds": 0}
-            self._send_json(200, {
-                "remaining_s": _spk_remaining_s(uid),
-                "used_s": int(round(rec["seconds"])),
-                "cap_s": per_user_min * 60,
-                "plan_remaining_s": max(0, int(service_limits["minutes"] * 60
-                                           - service_used["seconds"]))
-                if service_limits else 0,
-            })
-            return
-
-        # --- Phase 50: the partner's line ----------------------------------
-        if path == "/api/speaking/partner":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._clen() > SPK_PARTNER_MAX_BODY:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            if self._rate_limited("spk_partner:" + uid,
-                                  SPK_PARTNER_RATE_PER_MIN, 60):
-                return
-            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b"{}"
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                if not isinstance(req, dict):
-                    raise ValueError("not dict")
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(400, {"error": "invalid_json"})
-                return
-            question = req.get("question")
-            topic = req.get("topic")
-            if not isinstance(question, str) or not question.strip():
-                self._send_json(422, {"error": "invalid_question"})
-                return
-            question = question.strip()[:300]
-            topic = topic.strip()[:120] if isinstance(topic, str) else ""
-            # Phase 51: what the candidate said is data, not instructions. It is
-            # flattened to one line, stripped of control characters and capped.
-            said = req.get("candidate_said")
-            if isinstance(said, str):
-                said = re.sub(r"[\x00-\x1f\x7f]", " ", said)
-                said = re.sub(r"\s+", " ", said).strip()[:600]
-            else:
-                said = ""
-            context = _spk_candidate_context(req.get("candidate_context"))
-            partner_said = _spk_candidate_context(req.get("partner_said"))
-            mode = "examiner" if req.get("mode") == "examiner" else "partner"
-            if mode == "examiner":
-                system = (
-                    "You are the Cambridge B2 First speaking examiner. Pick one "
-                    "concrete detail from what the candidate just said (a specific "
-                    "word, place, reason, activity or example actually mentioned) "
-                    "and ask exactly one short follow-up question (maximum 20 words) "
-                    "about that detail. Stay strictly on the current part and topic; "
-                    "never change part or topic or invent unrelated questions. "
-                    "When earlier answers are provided, connect "
-                    "the question to them. Never repeat or rephrase the previous "
-                    "examiner question. It must end with a question mark. No "
-                    "comments, no praise, no quotation marks. Return JSON with "
-                    "exactly one key: {\"line\": \"...\"}."
-                )
-                user_block = (
-                    "Topic: " + (topic or "the Speaking exam") + "\n"
-                    "Examiner's question (do NOT repeat or rephrase this): "
-                    + question + "\n"
-                    + ("Earlier answers from the candidate, oldest first:\n"
-                       + "\n".join("  - " + item for item in context) + "\n"
-                       if context else "")
-                    + ("Lines already spoken (do NOT repeat):\n"
-                       + "\n".join("  - " + item for item in partner_said) + "\n"
-                       if partner_said else "")
-                    + "The candidate said: " + (said or "(nothing heard)") + "\n"
-                    "One follow-up question:"
-                )
-            else:
-                system = (
-                    "You are Alex, a B2 First (Cambridge English) speaking candidate, "
-                    "a friendly 17-year-old student. React to one concrete detail in "
-                    "what the other candidate just said — a specific word or phrase "
-                    "actually there (the transport, place, reason, activity, etc.), "
-                    "not the general topic. Stay strictly on the current part and topic; "
-                    "never change part or topic or invent unrelated questions. Take a clear stance (agree and add a "
-                    "reason or example, or disagree politely) and, if natural, ask "
-                    "a short question back. Maximum 35 words, one or two sentences, "
-                    "natural spoken British English, no lists, no quotation marks. "
-                    "Forbidden: starting with empty filler like \"That's interesting\", "
-                    "\"I see\", or \"I agree\"; repeating the candidate's line "
-                    "verbatim; reusing or paraphrasing any line Alex already said. "
-                    "Return JSON with exactly one key: {\"line\": \"...\"}."
-                )
-                user_block = (
-                    "Topic: " + (topic or "the Speaking exam") + "\n"
-                    "Examiner's question to Alex: " + question + "\n"
-                    + ("Earlier things the other candidate said, oldest first:\n"
-                       + "\n".join("  - " + item for item in context) + "\n"
-                       if context else "")
-                    + ("Lines Alex already said (do NOT repeat or paraphrase):\n"
-                       + "\n".join("  - " + item for item in partner_said) + "\n"
-                       if partner_said else "")
-                    + "What the other candidate just said: "
-                    + (said or "(nothing heard)") + "\n"
-                    "Alex's reply (1-2 sentences, max 35 words):"
-                )
-            byo, byo_err = _byo_from_headers(self.headers)
-            if byo_err:
-                self._send_json(400, {"error": byo_err})
-                return
-            if not byo and not (os.environ.get("B2_AI_KEY") or "").strip():
-                self._send_json(503, {"error": "ai_not_configured"})
-                return
-            if not said:
-                # Nothing was heard: do not spend a model call on a generic line.
-                self._send_json(200, {"line": ""})
-                return
-            content, err = _ai_text_complete(system, user_block, byo)
-            if err:
-                self._spk_refuse(err, {"error": err})
-                return
-            line = _spk_clean_partner_line(_spk_extract_partner_line(content), mode)
-            said_tokens = _spk_content_tokens(said)
-            avoid_lines = ([question] + partner_said) if mode == "examiner" else partner_said
-            grounded = _spk_is_grounded(line, said_tokens) if line else False
-            repeated = (
-                (any(_spk_token_similarity(line, prev) >= 0.8 for prev in avoid_lines)
-                 or (mode == "partner" and _spk_token_similarity(line, said) >= 0.85))
-                if line else False
-            )
-            if line and (not grounded or repeated):
-                detail = _spk_pick_detail(said, said_tokens)
-                reasons = []
-                if not grounded and detail:
-                    reasons.append(
-                        f'You MUST directly mention or react to "{detail}" from what '
-                        f'the candidate said, without starting with empty filler like '
-                        f'"That\'s interesting", "I see", or "I agree".'
+                # POST /api/speaking/v3/sessions/<id>/turn
+                if tail == "turn":
+                    if self.command != "POST":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    if self._rate_limited("spk3_turn:" + uid, SPK3_TURN_RATE_PER_MIN, 60, "user"):
+                        return
+                    if self._clen() > SPK3_TURN_MAX_BODY:
+                        self._drain()
+                        self._send_json(413, {"error": "payload too large"})
+                        return
+                    raw = self.rfile.read(self._clen()) if self._clen() > 0 else b"{}"
+                    try:
+                        req = json.loads(raw.decode("utf-8"))
+                        if not isinstance(req, dict):
+                            raise ValueError("not dict")
+                    except (ValueError, UnicodeDecodeError):
+                        self._send_json(400, {"error": "invalid_json"})
+                        return
+                    del raw
+                    # X-Test-Transcript is honoured ONLY in explicit offline test mode!
+                    test_tx = (
+                        self.headers.get("X-Test-Transcript")
+                        if spk3_voice.is_test_mode()
+                        else None
                     )
-                if repeated:
-                    reasons.append(
-                        f'Your draft repeated an earlier line. Give a completely '
-                        f'different response that reacts to "{detail}".'
+                    res, code, err = spk3_engine.handle_turn(
+                        uid,
+                        sid,
+                        audio_b64=req.get("audio_b64", ""),
+                        mime=req.get("mime", "audio/wav"),
+                        action=req.get("action"),
+                        time_up=bool(req.get("time_up")),
+                        elapsed_part_seconds=req.get("elapsed_part_seconds"),
+                        test_transcript=test_tx,
                     )
-                if reasons:
-                    retry_block = user_block + "\n\nSTRICT CORRECTION: " + " ".join(reasons)
-                    retry_content, retry_err = _ai_text_complete(system, retry_block, byo)
-                    if not retry_err and retry_content:
-                        cand = _spk_clean_partner_line(
-                            _spk_extract_partner_line(retry_content), mode)
-                        if cand:
-                            cand_grounded = _spk_is_grounded(cand, said_tokens)
-                            cand_repeated = (
-                                any(_spk_token_similarity(cand, prev) >= 0.8
-                                    for prev in avoid_lines)
-                                or (mode == "partner"
-                                    and _spk_token_similarity(cand, said) >= 0.85)
-                            )
-                            score1 = (not repeated, grounded)
-                            score2 = (not cand_repeated, cand_grounded)
-                            if score2 >= score1:
-                                line = cand
-            if line and not speaking_prompts.is_on_topic(
-                line,
-                part=1,
-                task={"topic": topic, "questions": [question] if question else []},
-                transcript=said,
-            ):
-                line = ""
-            if not line:
-                if mode == "examiner":
-                    self._send_json(200, {"line": ""})
-                else:
-                    self._send_json(502, {"error": "empty_reply"})
-                return
-            self._send_json(200, {"line": line})
-            return
-
-        # --- S5: four-scale speaking report ------------------------------------
-        # The transcript is data, not instructions: it reaches the text model
-        # only inside the phase-17 fence. Pronunciation is NOT asked from the
-        # model — it is mapped here from the Azure PA scores (or reported as
-        # "not measured"). The report is also the only place the log entry is
-        # born, and it is born on the client: a failure here never touches the
-        # log, the streak or the progress document.
-        if path == "/api/speaking/report":
-            if self.command != "POST":
-                self._send_json(405, {"error": "method not allowed"})
-                return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
-                return
-            if self._clen() > SPK_REPORT_MAX_BODY:
-                self._drain()
-                self._send_json(413, {"error": "payload too large"})
-                return
-            if self._rate_limited("spk_rep:" + uid, SPK_REPORT_RATE_PER_MIN, 60):
-                return
-            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                if not isinstance(req, dict):
-                    raise ValueError("not dict")
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(400, {"error": "invalid_json"})
-                return
-            del raw
-            clean, bad = speaking_report.validate_payload(req)
-            if bad:
-                self._send_json(422, {"error": bad})
-                return
-            request_id = clean["request_id"]
-            cached = _spk_report_cache_get(uid, request_id)
-            if cached is not None:
-                # Same request_id: replay the exact result, no second LLM call.
-                self._send_json(200, cached)
-                return
-            # Phase 30: the report can run on the user's own key too. With a
-            # user key the daily server quota is skipped (their cost) but the
-            # per-minute limit above and the hourly account cap still apply.
-            byo, byo_err = _byo_from_headers(self.headers)
-            if byo_err:
-                self._send_json(400, {"error": byo_err})
-                return
-            if byo:
-                if self._rate_limited("ai:byo:hour:user:" + uid, BYO_RATE_PER_HOUR,
-                                      3600, "user"):
-                    return
-            else:
-                if not (os.environ.get("B2_AI_KEY") or "").strip():
-                    # No shared text-model key: fail before spending a quota unit.
-                    self._send_json(503, {"error": "ai_not_configured"})
-                    return
-                # The report is an LLM call, so it shares the daily writing
-                # allowance. No separate counter to drift.
-                if not self._writing_gate(uid, _real_ip(self)):
-                    return
-            # Only the candidate's own turns are graded. Examiner and partner
-            # turns are context for the proxies, never text for the model.
-            candidate = speaking_report.candidate_text(clean["transcript"])
-            abuse = _ai_abuse_reason(candidate)
-            if abuse:
-                # An injection attempt is audited but still graded as text:
-                # the fence is the barrier, not a heuristic that can drop a
-                # legitimate session.
-                _audit("ai_blocked", uid, _real_ip(self), self._rid,
-                       {"reason": abuse, "chars": len(candidate)})
-            user_block, _nonce = speaking_report.report_message(
-                _fit_ai_text(candidate),
-                dialogue=_fit_ai_text(speaking_report.dialogue_text(clean["transcript"]))
-                if clean["interactive"] else None)
-            if not byo:
-                self._writing_consume(uid, _real_ip(self))
-            content, ai_err = _ai_text_complete(
-                speaking_report.system_prompt(clean["interactive"]), user_block,
-                byo=byo)
-            if ai_err:
-                if ai_err == "ai_not_configured":
-                    self._send_json(503, {"error": ai_err})
-                else:
-                    self._spk_refuse(ai_err, {"error": ai_err})
-                return
-            if content is None or len(content.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
-                self._send_json(502, {"error": "bad_model_output"})
-                return
-            text = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
-            if _leaks_system_prompt(text, strong_only=True):
-                _audit("ai_blocked", uid, _real_ip(self), self._rid,
-                       {"reason": "prompt_leak"})
-                self._send_json(502, {"error": "unsafe_output"})
-                return
-            try:
-                model_obj = json.loads(text)
-            except (ValueError, TypeError):
-                self._send_json(502, {"error": "bad_model_output"})
-                return
-            graded = speaking_report.parse_model_output(model_obj, clean["interactive"])
-            if graded is None:
-                # Never echo the raw output: it is untrusted text.
-                self._send_json(502, {"error": "bad_model_output"})
-                return
-            pron = speaking_report.band_from_pa(clean["pa"])
-            result = {
-                "bands": {
-                    "grammar_vocabulary": graded["bands"]["grammar_vocabulary"],
-                    "discourse_management": graded["bands"]["discourse_management"],
-                    "pronunciation": pron["band"],
-                    # Phase 35: graded only when the client declares that the
-                    # session had an interlocutor (a partner voice). Without that
-                    # declaration it stays null and the UI says "not scored".
-                    "interactive_communication":
-                        graded["bands"].get("interactive_communication"),
-                },
-                "derived": {
-                    "pronunciation_score": pron["score"],
-                    "pronunciation_source": pron["source"],
-                },
-                "proxies": speaking_report.proxies(clean["transcript"],
-                                                   clean["metrics"]),
-                "evidence": graded["evidence"],
-                "fixes": graded["fixes"],
-                "worst": pron["worst"],
-                "part": clean["part"],
-                "duration_s": clean["duration_s"],
-                "metrics": clean["metrics"],
-                "stored_transcript": False,
-                "request_id": request_id,
-            }
-            if clean["store_transcript"]:
-                try:
-                    stamp = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
-                    stamp += f"-{int(time.time() * 1000) % 1000:03d}"
-                    store.write_speaking_transcript(uid, stamp, {
-                        "type": "sp",
-                        "date": date.today().isoformat(),
-                        "part": clean["part"],
-                        "duration_s": clean["duration_s"],
-                        "request_id": request_id,
-                        "transcript": clean["transcript"],
-                        "metrics": clean["metrics"],
-                        "bands": result["bands"],
-                        "derived": result["derived"],
+                    if err:
+                        self._send_json(code, {"error": err})
+                        return
+                    # Meter speaking time (daily 45 min + monthly 900 min guard)
+                    if req.get("action") != "prep_done":
+                        turn_s = req.get("duration_s")
+                        try:
+                            turn_s = max(0.0, min(120.0, float(turn_s))) if turn_s is not None else 10.0
+                        except (TypeError, ValueError):
+                            turn_s = 10.0
+                        if turn_s > 0:
+                            plans.speaking_add_seconds(uid, turn_s)
+                            store.speaking_add(uid, _spk_today(), turn_s, 0)
+                            _spk_month_add(turn_s)
+                    _audit("speaking_v3_turn", uid, _real_ip(self), self._rid, {
+                        "phase": res["state"]["phase"],
+                        "step": res["state"]["step"],
+                        "accepted": bool(res.get("accepted")),
+                        "retry": bool(res.get("retry")),
+                        "done": bool(res.get("done")),
                     })
-                    result["stored_transcript"] = True
-                except (OSError, ValueError):
-                    result["stored_transcript"] = False
-            _spk_report_cache_put(uid, request_id, result)
-            self._send_json(200, result)
-            return
+                    self._send_json(200, res)
+                    return
 
-        # --- S2: Azure Pronunciation Assessment --------------------------------
-        # One short candidate turn in, phoneme scores out. The audio is forwarded
-        # and discarded inside this handler: never written to data/, never logged,
-        # never kept in memory past the response. The Azure key never reaches the
-        # browser. Without a key the endpoint says so (503) and the Pronunciation
-        # band stays "not measured" instead of being guessed.
-        if path == "/api/speaking/pa":
-            if self.command != "POST":
+                # POST /api/speaking/v3/sessions/<id>/skip
+                if tail == "skip":
+                    if self.command != "POST":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    self._drain()
+                    res, code, err = spk3_engine.handle_skip(uid, sid)
+                    if err:
+                        self._send_json(code, {"error": err})
+                        return
+                    _audit("speaking_v3_skip", uid, _real_ip(self), self._rid, {
+                        "phase": res["state"]["phase"],
+                        "step": res["state"]["step"],
+                        "done": bool(res.get("done")),
+                    })
+                    self._send_json(200, res)
+                    return
+
+                # POST /api/speaking/v3/sessions/<id>/report
+                if tail == "report":
+                    if self.command != "POST":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    if self._rate_limited("spk3_rep:" + uid, SPK3_REPORT_RATE_PER_MIN, 60, "user"):
+                        return
+                    req, jerr = self._json_body(limit=4096)
+                    if jerr:
+                        self._send_json(jerr, {"error": "invalid_json" if jerr == 400 else "payload too large"})
+                        return
+                    res, code, err = spk3_engine.generate_report(
+                        uid, sid, save=(req.get("save") is True)
+                    )
+                    if err:
+                        self._send_json(code, {"error": err})
+                        return
+                    self._send_json(200, res)
+                    return
+
+                self._send_json(404, {"error": "not found"})
+                return
+
+            # GET/POST /api/speaking/v3/own-tasks
+            if sub == "own-tasks":
+                uid, auth_err = self._auth()
+                if not uid:
+                    self._drain()
+                    self._send_json(401, {"error": auth_err or "invalid session"})
+                    return
+                if self.command == "GET":
+                    self._send_json(200, {"own_tasks": spk3_catalog.list_own_tasks(uid)})
+                    return
+                if self.command == "POST":
+                    if self._rate_limited("spk3_own:" + uid, SPK3_OWN_TASK_RATE_PER_MIN, 60, "user"):
+                        return
+                    if self._clen() > SPK3_OWN_TASK_MAX_BODY:
+                        self._drain()
+                        self._send_json(413, {"error": "payload too large"})
+                        return
+                    raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
+                    fields, files, perr = spk3_multipart.parse_multipart(
+                        self.headers.get("Content-Type", ""),
+                        raw,
+                        max_file_bytes=spk3_catalog.OWN_TASK_MAX_IMAGE_BYTES,
+                    )
+                    del raw
+                    if perr:
+                        pcode = 413 if perr == "image_too_large" else 400
+                        self._send_json(pcode, {"error": perr})
+                        return
+                    item, code, err = spk3_catalog.create_own_task(uid, fields, files)
+                    if err:
+                        self._send_json(code, {"error": err})
+                        return
+                    _audit("speaking_v3_own_task_created", uid, _real_ip(self), self._rid, {
+                        "part": item["part"], "images": len(item["images"]),
+                    })
+                    self._send_json(code, item)
+                    return
                 self._send_json(405, {"error": "method not allowed"})
                 return
-            uid, auth_err = self._auth()
-            if not uid:
-                self._drain()
-                self._send_json(401, {"error": auth_err or "invalid session"})
+
+            # DELETE /api/speaking/v3/own-tasks/<id> or GET .../own-tasks/<id>/images/<file>
+            if sub.startswith("own-tasks/"):
+                parts_sub = sub[len("own-tasks/"):].split("/")
+                uid, auth_err = self._auth()
+                if not uid:
+                    self._drain()
+                    self._send_json(401, {"error": auth_err or "invalid session"})
+                    return
+                if len(parts_sub) == 1 and parts_sub[0]:
+                    if self.command != "DELETE":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    tid = parts_sub[0]
+                    if not spk3_catalog.delete_own_task(uid, tid):
+                        self._send_json(404, {"error": "own_task_not_found"})
+                        return
+                    self._send_json(200, {"deleted": True, "id": tid})
+                    return
+                if len(parts_sub) == 3 and parts_sub[1] == "images":
+                    if self.command != "GET":
+                        self._send_json(405, {"error": "method not allowed"})
+                        return
+                    data, mime = spk3_catalog.get_own_task_image(uid, parts_sub[0], parts_sub[2])
+                    if data is None:
+                        self._send_json(404, {"error": "image_not_found"})
+                        return
+                    self._send_raw(200, data, mime, {"Cache-Control": "private, max-age=300"})
+                    return
+                self._send_json(404, {"error": "not found"})
                 return
-            api_key = _spk_azure_key()
-            url = _spk_pa_url()
-            if not api_key or not url:
-                # One line, no secret: just which knob is missing.
-                missing = "B2_SPK_AZURE_KEY" if not api_key else "B2_SPK_AZURE_REGION"
-                line = (f"{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())} "
-                        f"rid={self._rid} speaking/pa disabled: {missing} missing\n")
-                with _LOG_LOCK:
-                    print(line, end="", flush=True)
-                self._drain()
-                self._send_json(503, {"error": "speech_not_configured"})
-                return
-            if self._rate_limited("spk_pa:" + uid, SPK_PA_RATE_PER_MIN, 60):
-                return
-            raw = self.rfile.read(self._clen()) if self._clen() > 0 else b""
-            try:
-                req = json.loads(raw.decode("utf-8"))
-                if not isinstance(req, dict):
-                    raise ValueError("not dict")
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(400, {"error": "invalid json"})
-                return
-            del raw
-            fmt = req.get("format")
-            fmt = fmt.strip().lower() if isinstance(fmt, str) else ""
-            if fmt not in ("wav", "ogg"):
-                _audit("pa_rejected", uid, _real_ip(self), self._rid,
-                       {"reason": "format"})
-                self._send_json(422, {"error": "unsupported format"})
-                return
-            audio_b64 = req.get("audio_b64")
-            if not isinstance(audio_b64, str) or not audio_b64:
-                _audit("pa_rejected", uid, _real_ip(self), self._rid,
-                       {"reason": "missing_audio"})
-                self._send_json(422, {"error": "audio_b64 required"})
-                return
-            if len(audio_b64) > SPK_PA_MAX_B64:
-                _audit("pa_rejected", uid, _real_ip(self), self._rid,
-                       {"reason": "too_large"})
-                self._send_json(413, {"error": "audio too large"})
-                return
-            try:
-                audio = base64.b64decode(audio_b64, validate=True)
-            except (ValueError, binascii.Error):
-                _audit("pa_rejected", uid, _real_ip(self), self._rid,
-                       {"reason": "invalid_base64"})
-                self._send_json(422, {"error": "invalid base64"})
-                return
-            ok, reason = speech.validate_audio(audio, fmt)
-            if not ok:
-                del audio
-                _audit("pa_rejected", uid, _real_ip(self), self._rid,
-                       {"reason": "invalid_audio"})
-                self._send_json(422, {"error": "invalid audio", "reason": reason})
-                return
-            ref_text = req.get("ref_text")
-            ref_text = ref_text.strip()[:500] if isinstance(ref_text, str) else ""
-            quota_key = "user:" + uid
-            if _spk_pa_quota_left(quota_key) <= 0:
-                del audio
-                reset = (date.today() + timedelta(days=1)).isoformat()
-                self._send_json(429, {"error": "daily pronunciation quota reached",
-                                      "reset": reset})
-                return
-            _spk_pa_quota_consume(quota_key)
-            ctype = ("audio/wav; codecs=audio/pcm; samplerate=16000"
-                     if fmt == "wav" else "audio/ogg; codecs=opus")
-            up_req = urllib.request.Request(
-                url,
-                data=audio,
-                headers={
-                    "Ocp-Apim-Subscription-Key": api_key,
-                    "Pronunciation-Assessment": speech.pa_config_header(ref_text),
-                    "Content-Type": ctype,
-                },
-                method="POST",
-            )
-            # Phase C2: PA spends the same provider budget as every other
-            # speaking call, so it queues on the same instance gate.
-            timeout, refused = _spk_enter(time.monotonic() + SPK_TURN_DEADLINE)
-            if refused:
-                del audio
-                self._spk_refuse(refused, {"error": "upstream provider failed"})
-                return
-            try:
-                # No retry on purpose: a second attempt is a second bill.
-                with urllib.request.urlopen(
-                        up_req, timeout=min(SPK_PA_TIMEOUT, timeout)) as resp:
-                    up_raw = resp.read(1024 * 1024)
-            except TimeoutError:
-                del audio
-                self._spk_refuse("upstream_timeout", {"error": "upstream provider failed"})
-                return
-            except urllib.error.URLError as exc:   # HTTPError included
-                del audio
-                timed_out = isinstance(getattr(exc, "reason", None), TimeoutError)
-                self._spk_refuse("upstream_timeout" if timed_out else "",
-                                 {"error": "upstream provider failed"})
-                return
-            except OSError:
-                del audio
-                self._spk_refuse("", {"error": "upstream provider failed"})
-                return
-            finally:
-                _spk_release()
-            del audio
-            try:
-                up_json = json.loads(up_raw.decode("utf-8"))
-            except (ValueError, UnicodeDecodeError):
-                self._send_json(502, {"error": "invalid provider response"})
-                return
-            del up_raw
-            result = speech.parse_pa_response(up_json)
-            if not result.get("ok"):
-                self._send_json(422, {"error": result.get("error", "recognition_failed")})
-                return
-            self._send_json(200, result)
+
+            self._send_json(404, {"error": "not found"})
             return
 
         # Phase 30: "Test connection" for a user-supplied provider key. Sends
