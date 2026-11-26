@@ -38,7 +38,7 @@ Self-study learners preparing for the Cambridge B2 First exam face two practical
 - **4-band Cambridge Writing corrector:** Grades Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*, quoting exact sentences from the user's draft, naming two concrete weaknesses, and proposing three targeted rewrites.
 - **4-part AI Speaking examiner:** Runs a single part or the full 14-minute B2 First oral exam (Part 1: 2 min, Part 2: 4 min with Wikimedia Commons photo pairs, Part 3: 4 min collaborative card, Part 4: 4 min discussion), including a second-candidate **partner** role from Part 2 onward and custom prompt support (*Use my own task*).
 - **Local VAD Live Studio:** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speech ratio, pauses, and longest silence locally without recording or uploading audio.
-- **Real Mocks & Practice Library:** Guided full-mock start inside **Exam → Real mocks** (materials to timer in one screen), a searchable Library of local sample papers, answer keys, audio, tapescripts, checklists, and 26 verified online practice sources, plus private user-uploaded Listening practice files.
+- **Real Mocks & Practice Library:** Guided full-mock start inside **Exam → Real mocks** (materials to timer in one screen), a searchable Library of local sample papers, answer keys, audio, tapescripts, checklists, and 74 verified online practice sources, plus private user-uploaded Listening practice files.
 - **Honest progress tracking:** Three zero-dependency SVG charts (*Evolution over time*, *Weakest parts*, *Weekly consistency*), a stage Progression Matrix, and a separate Error Taxonomy view (*L-GAP*, *G-ERR*, *T-MIS*, *T-LIM*).
 
 ---
@@ -108,7 +108,7 @@ Works directly on https://firsttracker.app or locally at `http://127.0.0.1:8088`
 | **Pronunciation score** | Optional Azure Pronunciation Assessment (`POST /api/speaking/pa`) | When no Azure key is configured, returns `503 speech_not_configured` and displays **`not measured`** (`no medida`) — never guessed by the LLM. |
 | **Daily AI quotas** | 5 Writing evaluations and 3 Speaking mocks (45 min) per UTC day per standard account + instance-wide monthly cap | Shared hosted keys are budgeted; users can add their own provider key in Settings to bypass shared limits. |
 | **Accounts** | Username + 12-char password, Google OAuth, passkeys, TOTP MFA | An account is required (no anonymous/local-only mode). Password resets without Google OAuth are manual requests because no email is required. |
-| **Exam materials** | Original Speaking task bank (`material/speaking.json`), 12-item diagnostic, writing samples, 26 verified online sources, private user Listening uploads | Official copyrighted Cambridge past papers are not redistributed in the repository; users open official external links or upload personal files privately. |
+| **Exam materials** | Original Speaking task bank (`material/speaking.json`), 12-item diagnostic, writing samples, 74 verified online sources, private user Listening uploads | Official copyrighted Cambridge past papers are not redistributed in the repository; users open official external links or upload personal files privately. |
 
 ---
 

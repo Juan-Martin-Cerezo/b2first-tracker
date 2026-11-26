@@ -37,11 +37,11 @@ Self-study candidates preparing for the Cambridge B2 First can check Reading, Us
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/writing-progress.webp" alt="Writing Corrector while grading: essay draft, progress bar, step-by-step status, and elapsed timer"></td>
-    <td width="50%"><img src="docs/screenshots/exam-sources.webp" alt="Exam Sources: 26 hand-checked official resources grouped by paper with live search and filter chips"></td>
+    <td width="50%"><img src="docs/screenshots/exam-sources.webp" alt="Exam Sources: 74 hand-checked official resources grouped by paper with live search and filter chips"></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Writing Corrector:</b> 4-band Cambridge marking with live grading steps</sub></td>
-    <td align="center"><sub><b>Exam Sources:</b> 26 curated resources grouped by paper with search & filters</sub></td>
+    <td align="center"><sub><b>Exam Sources:</b> 74 curated resources grouped by paper with search & filters</sub></td>
   </tr>
 </table>
 
@@ -53,7 +53,7 @@ Self-study candidates preparing for the Cambridge B2 First can check Reading, Us
 - **Writing corrector on all four Cambridge bands:** Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*. Every band quotes evidence from your text, lists concrete weaknesses, rewrites three sentences, and displays a step-by-step progress bar with elapsed time while grading.
 - **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, turn-based STT/TTS voice (plus optional real-time Gemini Live or browser-voice fallback), a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
 - **Live Studio (local VAD):** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speaking time and silences in real time; no audio is recorded or uploaded.
-- **Practice & Real mocks:** Timed drills for every exam part, a guided Full Mock sequence inside **Exam → Real mocks** (materials to timer in one screen), and a unified searchable **Library** combining local sample papers, answer keys, audio, tapescripts, checklists, and 26 verified online sources — plus private user-uploaded Listening practice files.
+- **Practice & Real mocks:** Timed drills for every exam part, a guided Full Mock sequence inside **Exam → Real mocks** (materials to timer in one screen), and a unified searchable **Library** combining local sample papers, answer keys, audio, tapescripts, checklists, and 74 verified online sources — plus private user-uploaded Listening practice files.
 - **Progress, Error Taxonomy, and Progression Matrix:** Three zero-dependency SVG charts track score evolution over time, weakest Reading & Use of English parts, and weekly consistency, alongside a stage Progression Matrix and a dedicated root-cause Error Taxonomy view (*L-GAP*, *G-ERR*, *T-MIS*, *T-LIM*).
 
 ---
@@ -293,7 +293,7 @@ uv run --no-project --with playwright --with httpx python test_landing_honest.py
 | **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_progress_view.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, three SVG charts. |
 | **Writing AI & guards** | `test_ai.py`, `test_ai_guard.py`, `test_writing_progress.py` | Strict JSON schema validation, injection/leak guards, live progress bar and elapsed timer, rate limits. |
 | **Speaking exam & voice** | `test_speaking_exam.py`, `test_speaking_turns.py`, `test_speaking_live.py`, `test_speaking_custom_task.py`, `test_partner_grounding.py`, `test_speaking_pa.py`, `test_speaking_turn_budget.py` | All 4 parts, turn flow, custom tasks, grounded partner replies, Live tokens, turn-based TTS, Azure PA `not measured` contract, monthly budget. |
-| **Materials & sources** | `test_practice_real.py`, `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Real exam resources, paired keys, 26 searchable Exam sources, private Listening uploads. |
+| **Materials & sources** | `test_practice_real.py`, `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Real exam resources, paired keys, 74 searchable Exam sources, private Listening uploads. |
 | **Auth & accounts** | `test_register.py`, `test_multiuser.py`, `test_auth_methods.py`, `test_mfa.py`, `test_owner_unlimited.py` | Account isolation, Google OAuth, WebAuthn passkeys, TOTP MFA, owner limits, export & deletion. |
 | **Security, legal & load** | `test_security2.py`, `test_security3.py`, `test_server_hardening.py`, `test_legal.py`, `test_readme_limits.py`, `test_capacity.py` | Lockout/backoff, hash-chained audit log, CSP, raw HTTP limits, `/privacy` `/terms` `/security`, measured p95 throughput. |
 
