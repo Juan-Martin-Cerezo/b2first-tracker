@@ -1151,9 +1151,9 @@ body.speaking-open{overflow:hidden}
 .speaking-overlay.is-open{display:flex}
 .spk3-shell{
   width:100%;max-width:860px;margin:0 auto;min-height:100dvh;
-  display:flex;flex-direction:column;padding:var(--s4);box-sizing:border-box;
+  display:flex;flex-direction:column;padding:var(--s3) var(--s4);box-sizing:border-box;
 }
-.spk3-view{display:none;flex:1 1 auto;flex-direction:column;min-width:0}
+.spk3-view{display:none;flex:1 1 auto;flex-direction:column;min-width:0;min-height:0}
 .spk3-view.is-active{display:flex}
 .spk3-head{
   position:sticky;top:0;z-index:4;background:var(--bg);
@@ -1294,8 +1294,8 @@ body.speaking-open{overflow:hidden}
 }
 .spk3-timer[data-low="1"]{color:var(--bad-text)}
 .spk3-exam-body{
-  flex:1 1 auto;display:flex;flex-direction:column;justify-content:space-between;
-  gap:var(--s3);padding-top:var(--s3);min-width:0;
+  flex:1 1 auto;display:flex;flex-direction:column;justify-content:flex-start;
+  gap:var(--s2);padding-top:var(--s2);min-width:0;min-height:0;
 }
 .spk3-panel{display:contents}
 .spk3-panel-timer-row{display:none}
@@ -1341,45 +1341,62 @@ body.speaking-open{overflow:hidden}
 
 /* Center exam desk: table visuals (Part 2 photos / Part 3 card) or Conversation stage (Intro / Part 1 / Part 4) */
 .spk3-desk{
-  order:3;flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  order:3;flex:1 1 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:center;
   min-height:160px;width:100%;min-width:0;
 }
 .spk3-photos{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);
-  width:100%;align-items:center;
+  flex:1 1 auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);
+  width:100%;min-height:0;align-content:center;align-items:center;justify-items:center;
+  padding:var(--s3);box-sizing:border-box;
+  border-radius:var(--r-panel);border:1px solid var(--line);background:var(--surface);
+  box-shadow:var(--shadow-1);
 }
 .spk3-photos[hidden]{display:none}
 .spk3-photo-frame{
-  margin:0;border-radius:var(--r-ctl);overflow:hidden;
+  margin:0;width:100%;border-radius:var(--r-ctl);overflow:hidden;
   background:var(--surface-2);border:1px solid var(--line);box-shadow:var(--shadow-1);
-  min-width:0;
+  min-width:0;display:flex;align-items:center;justify-content:center;
 }
 .spk3-photo-frame img{
   display:block;width:100%;height:auto;aspect-ratio:4/3;
   max-height:min(38vh,320px);object-fit:cover;background:var(--surface-2);
 }
+@media (max-width:639px){
+  .spk3-photos{grid-template-columns:1fr;padding:var(--s2)}
+  .spk3-photo-frame{width:auto;max-width:100%;height:min(25dvh,215px);aspect-ratio:4/3}
+  .spk3-photo-frame img{width:100%;height:100%;max-height:none;aspect-ratio:auto}
+}
 .spk3-card-wrap{
-  width:100%;display:flex;flex-direction:column;align-items:center;gap:var(--s2);min-width:0;
+  flex:1 1 auto;width:100%;min-height:0;box-sizing:border-box;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s2);min-width:0;
+  padding:var(--s3);border-radius:var(--r-panel);border:1px solid var(--line);background:var(--surface);
+  box-shadow:var(--shadow-1);
 }
 .spk3-card-wrap[hidden]{display:none}
 .spk3-card-img{
-  display:block;max-width:100%;max-height:min(44vh,360px);width:auto;height:auto;
+  display:block;width:100%;max-width:100%;max-height:min(52dvh,420px);height:auto;min-height:0;flex:0 1 auto;
   object-fit:contain;border-radius:var(--r-ctl);border:1px solid var(--line);
   background:#fff;box-shadow:var(--shadow-1);
+}
+.spk3-card-wrap:has(.spk3-prep-pill:not([hidden])) .spk3-card-img{
+  max-height:calc(100% - 48px);
 }
 .spk3-prep-pill{
   display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;
   background:var(--acc-soft);border:1px solid var(--acc-border);color:var(--acc-text);
-  font-size:var(--fs-sm);font-weight:700;font-variant-numeric:tabular-nums;
+  font-size:var(--fs-sm);font-weight:700;font-variant-numeric:tabular-nums;flex:none;
 }
 .spk3-prep-pill[hidden]{display:none}
 
 /* Conversation stage for non-image parts (Intro, Part 1, Part 4) */
 .spk3-conv-stage{
-  width:100%;min-height:150px;padding:var(--s5) var(--s4);box-sizing:border-box;
+  flex:1 1 auto;width:100%;min-height:180px;padding:var(--s5) var(--s4);box-sizing:border-box;
   border-radius:var(--r-panel);border:1px solid var(--line);background:var(--surface);
   box-shadow:var(--shadow-1);display:flex;flex-direction:column;align-items:center;
-  justify-content:center;gap:var(--s3);text-align:center;
+  justify-content:space-between;gap:var(--s4);text-align:center;
+}
+.spk3-conv-foot{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s2);
 }
 .spk3-conv-stage[hidden]{display:none}
 .spk3-conv-speaker{
@@ -1442,7 +1459,7 @@ body.speaking-open{overflow:hidden}
 /* Thumb-zone push-to-talk dock + preflight + checking status */
 .spk3-dock{
   order:4;position:sticky;bottom:0;z-index:3;
-  padding:var(--s2) 0 max(var(--s3),env(safe-area-inset-bottom));
+  padding:var(--s2) 0 max(var(--s2),env(safe-area-inset-bottom));
   background:var(--bg);
   display:flex;flex-direction:column;align-items:center;gap:var(--s2);
 }
@@ -1527,33 +1544,50 @@ body.speaking-open{overflow:hidden}
 
 /* Desktop two-column exam layout (>= 900px) */
 @media (min-width:900px){
-  .spk3-shell{max-width:1220px;padding:var(--s3) var(--s5)}
+  .spk3-shell{max-width:1260px;padding:var(--s3) var(--s5)}
+  .spk3-shell:has(#speakingViewExam.is-active){
+    height:100dvh;max-height:100dvh;overflow:hidden;
+  }
   .spk3-head{padding:0 0 var(--s2) 0}
   .spk3-head .spk3-timer{display:none}
   .spk3-exam-body{
-    display:grid;grid-template-columns:minmax(0,1.65fr) minmax(310px,360px);
-    gap:var(--s5);align-items:start;padding-top:var(--s4);
+    flex:1 1 0%;min-height:0;
+    display:grid;grid-template-columns:minmax(0,1.75fr) minmax(300px,350px);
+    grid-template-rows:minmax(0,1fr);
+    gap:var(--s5);align-items:stretch;padding-top:var(--s3);
   }
   .spk3-desk{
-    order:unset;grid-column:1;min-height:min(68vh,560px);
-    justify-content:flex-start;align-items:stretch;
+    order:unset;grid-column:1;height:100%;min-height:0;
+    justify-content:center;align-items:stretch;
   }
-  .spk3-photos{gap:var(--s4)}
+  .spk3-photos{gap:var(--s4);padding:var(--s4);height:100%;min-height:0}
+  .spk3-photo-frame{width:100%;height:auto;max-height:100%;aspect-ratio:4/3}
   .spk3-photo-frame img{
-    max-height:min(68vh,540px);aspect-ratio:4/3;object-fit:cover;
+    width:100%;height:100%;max-height:none;aspect-ratio:auto;object-fit:cover;
   }
+  .spk3-card-wrap{height:100%;min-height:0;padding:var(--s4);gap:var(--s3)}
   .spk3-card-img{
-    max-height:min(74vh,620px);width:100%;height:auto;object-fit:contain;
+    max-height:100%;width:100%;height:auto;object-fit:contain;
   }
   .spk3-conv-stage{
-    min-height:min(64vh,500px);padding:var(--s6);gap:var(--s4);
+    height:100%;min-height:0;padding:clamp(36px,7vh,72px) var(--s6);
+    justify-content:space-between;gap:var(--s4);
   }
-  .spk3-conv-timer{font-size:52px}
-  .spk3-wave{height:58px;gap:8px}
-  .spk3-wave i{width:6px}
+  .spk3-conv-speaker{padding:8px 18px;font-size:var(--fs-md)}
+  .spk3-conv-timer{font-size:clamp(52px,6vw,72px)}
+  .spk3-conv-status{font-size:var(--fs-md)}
+  .spk3-wave{height:76px;gap:10px}
+  .spk3-wave i{width:7px}
+  .spk3-wave i:nth-child(1){height:22px}
+  .spk3-wave i:nth-child(2){height:42px}
+  .spk3-wave i:nth-child(3){height:58px}
+  .spk3-wave i:nth-child(4){height:34px}
+  .spk3-wave i:nth-child(5){height:64px}
+  .spk3-wave i:nth-child(6){height:38px}
+  .spk3-wave i:nth-child(7){height:22px}
   .spk3-panel{
     display:flex;flex-direction:column;gap:var(--s3);grid-column:2;
-    position:sticky;top:68px;align-self:start;
+    position:sticky;top:68px;align-self:start;max-height:100%;overflow-y:auto;
     background:var(--surface);border:1px solid var(--line);
     border-radius:var(--r-panel);padding:var(--s4);box-shadow:var(--shadow-1);
   }
@@ -4482,8 +4516,10 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               <span id="speakingStageSpeaker">Examiner · Mr Thompson</span>
             </div>
             <div class="spk3-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="spk3-conv-timer" id="speakingStageTimer" aria-hidden="true">--:--</div>
-            <p class="spk3-conv-status" id="speakingStageStatus" data-i18n="spv3_stage_listening">Listening</p>
+            <div class="spk3-conv-foot">
+              <div class="spk3-conv-timer" id="speakingStageTimer" aria-hidden="true">--:--</div>
+              <p class="spk3-conv-status" id="speakingStageStatus" data-i18n="spv3_stage_listening">Listening</p>
+            </div>
           </div>
         </div>
 
