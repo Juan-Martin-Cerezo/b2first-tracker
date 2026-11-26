@@ -31,7 +31,7 @@ def wait_mic(pg, timeout=15000):
     )
 
 
-def say(pg, text, confirm=True):
+def say(pg, text):
     pg.evaluate(
         """(tx) => {
             window.__SPK_TEST_AUDIO_STUB__ = true;
@@ -44,9 +44,6 @@ def say(pg, text, confirm=True):
     pg.mouse.down()
     pg.wait_for_timeout(120)
     pg.mouse.up()
-    if confirm:
-        pg.wait_for_selector("#speakingPreflight:not([hidden])", timeout=5000)
-        pg.click("#speakingCheckBtn")
 
 
 def main():
@@ -95,7 +92,7 @@ def main():
         assert mic_state == "sending", f"Expected sending state while checking, got {mic_state}"
         chk_visible = pg.is_visible("#speakingCheckingBox")
         chk_txt = (pg.text_content("#speakingCheckingBox") or "").lower()
-        assert chk_visible and "checking" in chk_txt and "please wait" not in chk_txt, (chk_visible, chk_txt)
+        assert chk_visible and "checking your answer" in chk_txt and "please wait" not in chk_txt, (chk_visible, chk_txt)
         pg.wait_for_timeout(3000)
         during_b = pg.text_content("#speakingTimer").strip()
         assert during_a == during_b, (

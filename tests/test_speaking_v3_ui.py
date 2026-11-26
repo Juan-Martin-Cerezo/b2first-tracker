@@ -66,12 +66,8 @@ def wait_for_mic_ready(pg, timeout=15000):
     pg.wait_for_timeout(160)
 
 
-def hold_to_speak(pg, transcript_text, hold_ms=120, confirm=True):
-    """Simulate push-to-talk pointerdown -> pointerup with stub audio and test transcript.
-
-    When `confirm=True` (default), clicks `#speakingCheckBtn` if the preflight sheet
-    is shown (i.e. when `spk3_auto_check` is not enabled).
-    """
+def hold_to_speak(pg, transcript_text, hold_ms=120):
+    """Simulate push-to-talk pointerdown -> pointerup with stub audio and test transcript."""
     pg.evaluate(
         """(tx) => {
             window.__SPK_TEST_AUDIO_STUB__ = true;
@@ -89,10 +85,29 @@ def hold_to_speak(pg, transcript_text, hold_ms=120, confirm=True):
     rec_state = pg.evaluate("() => document.getElementById('speakingMicBtn').getAttribute('data-mic-state')")
     assert rec_state == "recording", f"Expected recording state during hold, got {rec_state}"
     pg.mouse.up()
-    if confirm:
-        pg.wait_for_timeout(80)
-        if pg.is_visible("#speakingPreflight"):
-            pg.click("#speakingCheckBtn")
+
+
+def install_next_turn_delay(pg, delay_ms=1500):
+    """Delay the next /turn fetch once inside the page so checking UI stays visible."""
+    pg.evaluate(
+        """(ms) => {
+            if (!window.__origFetch) window.__origFetch = window.fetch;
+            window.__nextTurnDelayMs = ms;
+            if (!window.__delayPatched) {
+                window.__delayPatched = true;
+                window.fetch = function(url, opts) {
+                    const p = window.__origFetch.apply(this, arguments);
+                    if (window.__nextTurnDelayMs > 0 && String(url).includes('/turn')) {
+                        const waitMs = window.__nextTurnDelayMs;
+                        window.__nextTurnDelayMs = 0;
+                        return new Promise((resolve, reject) => setTimeout(() => p.then(resolve, reject), waitMs));
+                    }
+                    return p;
+                };
+            }
+        }""",
+        delay_ms,
+    )
 
 
 def main():
@@ -216,65 +231,96 @@ def main():
         assert any(x.startswith("examiner|dis:true") for x in intro_log), f"Examiner did not speak with mic disabled: {intro_log}"
         assert intro_log[-1] == "you|dis:false", f"Expected YOU active with mic enabled after intro audio: {intro_log}"
 
-        # 3. Preflight UX: releasing mic does NOT auto-send the first time!
-        # Verify Record again discards audio, Check answer sends, and Always check automatically persists.
-        pg.evaluate("() => { localStorage.removeItem('spk3_auto_check'); window.__roleLog = []; }")
-        net_calls.clear()
-        canary_name = "My name is Juan"
-        hold_to_speak(pg, canary_name, confirm=False)
-        pg.wait_for_selector("#speakingPreflight:not([hidden])", timeout=5000)
-        pf_txt = pg.text_content("#speakingPreflightMsg") or ""
-        assert "Answer recorded" in pf_txt and "10–30 seconds" in pf_txt, pf_txt
-        turn_posts_before = [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
-        assert not turn_posts_before, f"Audio was sent before user clicked Check answer: {turn_posts_before}"
-
-        # All preflight buttons >= 48px on mobile
-        pf_btn_heights = pg.evaluate(
-            """() => ['#speakingCheckBtn', '#speakingRecordAgainBtn', '#speakingPreflightSkipBtn'].map(sel => {
-                const r = document.querySelector(sel).getBoundingClientRect();
-                return { sel, h: Math.round(r.height) };
-            })"""
+        # 3. Direct auto-send UX (no preflight, no buttons, animated checking state)
+        removed_count = pg.evaluate(
+            "() => document.querySelectorAll('#speakingPreflight, #speakingCheckBtn, #speakingRecordAgainBtn, #speakingPreflightSkipBtn, #speakingAutoCheck').length"
         )
-        assert all(b["h"] >= 48 for b in pf_btn_heights), f"Preflight button < 48px: {pf_btn_heights}"
+        assert removed_count == 0, f"Preflight elements still present in DOM: {removed_count}"
 
-        # Record again discards pending audio without sending /turn
-        pg.click("#speakingRecordAgainBtn")
-        wait_for_mic_ready(pg)
-        assert not pg.is_visible("#speakingPreflight")
-        assert not [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
-
-        # Record again and click Check answer -> partner speaks THEN examiner speaks, mic disabled during both!
         pg.evaluate("() => { window.__roleLog = []; }")
-        hold_to_speak(pg, canary_name, confirm=False)
-        pg.wait_for_selector("#speakingPreflight:not([hidden])", timeout=5000)
-        pg.click("#speakingCheckBtn")
+        net_calls.clear()
+        install_next_turn_delay(pg, 1400)
+        canary_name = "My name is Juan"
+        hold_to_speak(pg, canary_name)
+        pg.wait_for_selector("#speakingCheckingBox:not([hidden])", timeout=5000)
+
+        turn_posts_immediate = [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
+        assert turn_posts_immediate, f"Releasing mic did not send POST /turn immediately: {net_calls}"
+
+        chk_info = pg.evaluate(
+            """() => {
+                const box = document.getElementById('speakingCheckingBox');
+                const stage = document.getElementById('speakingConvStage');
+                const stageBar = stage.querySelector('.spk3-wave i');
+                const chkBar = box.querySelector('.spk3-checking-wave i');
+                const progBar = box.querySelector('.spk3-checking-bar');
+                return {
+                    visible: !box.hidden,
+                    waveBars: box.querySelectorAll('.spk3-wave i').length,
+                    buttons: box.querySelectorAll('button').length,
+                    hasProgress: !!box.querySelector('.spk3-checking-progress .spk3-checking-bar'),
+                    title: (document.getElementById('speakingCheckingTitle').textContent || '').trim(),
+                    note: (document.getElementById('speakingCheckingNote').textContent || '').trim(),
+                    micState: document.getElementById('speakingMicBtn').getAttribute('data-mic-state'),
+                    micDisabled: document.getElementById('speakingMicBtn').disabled,
+                    stageLive: stage.getAttribute('data-live'),
+                    stageAnim: stageBar ? getComputedStyle(stageBar).animationName : '',
+                    chkAnim: chkBar ? getComputedStyle(chkBar).animationName : '',
+                    progAnim: progBar ? getComputedStyle(progBar).animationName : '',
+                };
+            }"""
+        )
+        assert chk_info["visible"] and chk_info["waveBars"] == 7, chk_info
+        assert chk_info["buttons"] == 0 and chk_info["hasProgress"], chk_info
+        assert "Checking your answer" in chk_info["title"] and chk_info["title"].endswith("s"), chk_info
+        assert chk_info["note"] == "Checking your answers takes a few seconds.", chk_info
+        assert chk_info["micState"] == "sending" and chk_info["micDisabled"], chk_info
+        assert chk_info["stageLive"] == "checking" and chk_info["stageAnim"] == "spk3Wave", chk_info
+        assert chk_info["chkAnim"] == "spk3Wave" and chk_info["progAnim"] == "spk3Progress", chk_info
+        assert_no_horizontal_overflow(pg, "checking-intro-390")
+
+        # Verify prefers-reduced-motion disables animations while keeping progress & text visible
+        pg.emulate_media(reduced_motion="reduce")
+        rm_info = pg.evaluate(
+            """() => {
+                const box = document.getElementById('speakingCheckingBox');
+                const stageBar = document.querySelector('#speakingConvStage .spk3-wave i');
+                const chkBar = box.querySelector('.spk3-checking-wave i');
+                const progBar = box.querySelector('.spk3-checking-bar');
+                return {
+                    visible: !box.hidden,
+                    stageAnim: getComputedStyle(stageBar).animationName,
+                    chkAnim: getComputedStyle(chkBar).animationName,
+                    progAnim: getComputedStyle(progBar).animationName,
+                    progW: progBar.getBoundingClientRect().width,
+                };
+            }"""
+        )
+        assert rm_info["visible"] and rm_info["progW"] > 0, rm_info
+        assert rm_info["stageAnim"] == "none" and rm_info["chkAnim"] == "none" and rm_info["progAnim"] == "none", rm_info
+        pg.emulate_media(reduced_motion="no-preference")
+
         wait_for_mic_ready(pg)
+        assert not pg.is_visible("#speakingCheckingBox"), "Checking box remained visible after mic ready"
         seq_log = pg.evaluate("() => window.__roleLog.slice()")
         p_idx = next((i for i, x in enumerate(seq_log) if x == "partner|dis:true"), -1)
         e_idx = next((i for i, x in enumerate(seq_log) if x == "examiner|dis:true" and i > p_idx), -1)
         y_idx = next((i for i, x in enumerate(seq_log) if x == "you|dis:false" and i > e_idx), -1)
         assert 0 <= p_idx < e_idx < y_idx, f"Sequence did not respect partner -> examiner -> you with mic locked: {seq_log}"
         assert_no_script_or_transcript_in_dom(pg, "after-name", [canary_name])
-        results["preflight"] = {"shown": True, "record_again_safe": True, "btn_heights": pf_btn_heights}
+        results["auto_checking"] = {"immediate_post": True, "wave_bars": 7, "reduced_motion_ok": True}
 
-        # Verify retry (accepted: false, retry: true) does not display "wrong answer"
-        # Also enable "Always check automatically" checkbox on this turn and confirm localStorage persistence!
-        hold_to_speak(pg, "I like pizza", confirm=False)
-        pg.wait_for_selector("#speakingPreflight:not([hidden])", timeout=5000)
-        pg.check("#speakingAutoCheck")
-        assert pg.evaluate("() => localStorage.getItem('spk3_auto_check')") == "1"
-        pg.click("#speakingCheckBtn")
+        # Verify retry (accepted: false, retry: true) sends directly and does not display "wrong answer"
+        hold_to_speak(pg, "I like pizza")
         wait_for_mic_ready(pg)
         assert pg.evaluate("() => SPEAKING.step") == "ask_home"
         assert_no_script_or_transcript_in_dom(pg, "after-retry", ["I like pizza"])
 
-        # With spk3_auto_check=1 active, next recording sends directly WITHOUT preflight!
+        # Answer ask_home -> enters Part 2
         net_calls.clear()
-        hold_to_speak(pg, "I live in Buenos Aires", confirm=False)
+        hold_to_speak(pg, "I live in Buenos Aires")
         wait_for_mic_ready(pg)
-        assert not pg.is_visible("#speakingPreflight")
-        assert any(c[0] == "POST" and "/turn" in c[1] for c in net_calls), "Auto-check did not submit automatically"
-        results["auto_check"] = {"persisted": True, "sent_directly": True}
+        assert any(c[0] == "POST" and "/turn" in c[1] for c in net_calls), "Turn did not submit automatically"
 
         assert pg.evaluate("() => SPEAKING.phase") == "part2"
         p2_info = pg.evaluate(
@@ -317,8 +363,31 @@ def main():
         results["part2_mobile"] = p2_info
 
         # Complete Part 2 (comparing photos -> partner sequence -> Task 2 photos -> follow-up -> report!)
+        # Delay Part 2 turn briefly to verify checking panel is visible over photos on mobile + capture screenshot
+        install_next_turn_delay(pg, 1400)
         canary_p2 = "Both photographs show people helping others, whereas the first shows a football player and the second shows a police officer."
         hold_to_speak(pg, canary_p2)
+        pg.wait_for_selector("#speakingCheckingBox:not([hidden])", timeout=5000)
+        pg.wait_for_timeout(150)
+        p2_chk_rect = pg.evaluate(
+            """() => {
+                const r = document.getElementById('speakingCheckingBox').getBoundingClientRect();
+                const guide = document.getElementById('speakingPartGuide').getBoundingClientRect();
+                const photo1 = document.getElementById('speakingPhoto1').getBoundingClientRect();
+                return {
+                    top: Math.round(r.top),
+                    bottom: Math.round(r.bottom),
+                    vh: window.innerHeight,
+                    w: Math.round(r.width),
+                    guideBottom: Math.round(guide.bottom),
+                    photo1Top: Math.round(photo1.top),
+                };
+            }"""
+        )
+        assert p2_chk_rect["w"] > 200 and p2_chk_rect["bottom"] <= p2_chk_rect["vh"], p2_chk_rect
+        assert p2_chk_rect["photo1Top"] >= p2_chk_rect["guideBottom"], p2_chk_rect
+        assert_no_horizontal_overflow(pg, "checking-part2-390")
+        pg.screenshot(path=os.path.join(OUT_DIR, "speaking_v3_checking_390.png"))
         wait_for_mic_ready(pg)
         p2_t2_srcs = pg.evaluate(
             "() => [document.getElementById('speakingPhoto1').getAttribute('src'), document.getElementById('speakingPhoto2').getAttribute('src')]"
@@ -402,19 +471,45 @@ def main():
         assert_no_script_or_transcript_in_dom(pg, "part3-390")
         pg.screenshot(path=os.path.join(OUT_DIR, "speaking_v3_part3_390.png"))
 
-        # Test safe Skip question from preflight (must call /skip and NEVER /turn!)
-        pg.evaluate("() => localStorage.removeItem('spk3_auto_check')")
+        # Verify Part 3 discussion auto-submits POST /turn immediately on release
         net_calls.clear()
-        hold_to_speak(pg, "Providing parks is a nice idea", confirm=False)
-        pg.wait_for_selector("#speakingPreflight:not([hidden])", timeout=5000)
-        pg.click("#speakingPreflightSkipBtn")
+        hold_to_speak(pg, "Providing parks is a nice idea")
+        wait_for_mic_ready(pg)
+        turn_posts = [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
+        assert turn_posts and pg.evaluate("() => SPEAKING.step") == "discussion_1", f"Auto-send failed in Part 3: {net_calls}"
+
+        # Verify safe Skip turn ONLY appears when mic is denied, calling /skip and NEVER /turn
+        assert not pg.is_visible("#speakingSkipBtn"), "Skip button must stay hidden while mic works"
+        pg.evaluate(
+            """() => {
+                window.__SPK_TEST_AUDIO_STUB__ = false;
+                window.__origGetUserMedia = navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
+                if (navigator.mediaDevices) {
+                    navigator.mediaDevices.getUserMedia = () => Promise.reject(new Error('Permission denied'));
+                }
+            }"""
+        )
+        net_calls.clear()
+        box = pg.locator("#speakingMicBtn").bounding_box()
+        pg.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+        pg.mouse.down()
+        pg.wait_for_selector("#speakingSkipBtn:not([hidden])", timeout=5000)
+        pg.mouse.up()
+        pg.click("#speakingSkipBtn")
         wait_for_mic_ready(pg)
         skip_posts = [c for c in net_calls if c[0] == "POST" and "/skip" in c[1]]
-        turn_posts = [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
-        assert skip_posts and not turn_posts, f"Preflight skip race: skip={skip_posts}, turn={turn_posts}"
+        turn_posts_after_skip = [c for c in net_calls if c[0] == "POST" and "/turn" in c[1]]
+        assert skip_posts and not turn_posts_after_skip, f"Mic-denied skip race: skip={skip_posts}, turn={turn_posts_after_skip}"
         assert pg.evaluate("() => SPEAKING.step") == "decision_0"
-        pg.evaluate("() => localStorage.setItem('spk3_auto_check', '1')")
-        results["part3"] = {"step": p3_state["step"], "prep_done_sent": True, "safe_skip": True}
+        pg.evaluate(
+            """() => {
+                window.__SPK_TEST_AUDIO_STUB__ = true;
+                if (navigator.mediaDevices && window.__origGetUserMedia) {
+                    navigator.mediaDevices.getUserMedia = window.__origGetUserMedia;
+                }
+            }"""
+        )
+        results["part3"] = {"step": p3_state["step"], "prep_done_sent": True, "auto_send": True, "safe_mic_denied_skip": True}
 
         # 6. Own task: open form, test validation per part, create Part 2 own task, start & verify images, delete
         pg.evaluate("() => { SPEAKING.backToChooser(); }")
@@ -633,8 +728,34 @@ def main():
         assert_no_script_or_transcript_in_dom(dpg, "desktop-part4-1280")
         dpg.screenshot(path=os.path.join(OUT_DIR, "speaking_v3_part4_1280.png"))
 
+        # Desktop checking state screenshot (Part 4: shows animated stage wave + checking panel in sidebar)
+        install_next_turn_delay(dpg, 1400)
+        hold_to_speak(dpg, "I think people enjoy holidays because they can relax and explore new places.")
+        dpg.wait_for_selector("#speakingCheckingBox:not([hidden])", timeout=5000)
+        dpg.wait_for_timeout(150)
+        chk_desk = dpg.evaluate(
+            """() => {
+                const box = document.getElementById('speakingCheckingBox').getBoundingClientRect();
+                const stage = document.getElementById('speakingConvStage');
+                const stageBar = stage.querySelector('.spk3-wave i');
+                return {
+                    sw: document.documentElement.scrollWidth,
+                    iw: window.innerWidth,
+                    boxBottom: Math.round(box.bottom),
+                    vh: window.innerHeight,
+                    stageLive: stage.getAttribute('data-live'),
+                    stageAnim: getComputedStyle(stageBar).animationName,
+                    hasProgress: !!document.querySelector('#speakingCheckingBox .spk3-checking-bar'),
+                };
+            }"""
+        )
+        assert chk_desk["sw"] <= chk_desk["iw"] and chk_desk["boxBottom"] <= chk_desk["vh"], chk_desk
+        assert chk_desk["stageLive"] == "checking" and chk_desk["stageAnim"] == "spk3Wave" and chk_desk["hasProgress"], chk_desk
+        dpg.screenshot(path=os.path.join(OUT_DIR, "speaking_v3_checking_1280.png"))
+        wait_for_mic_ready(dpg)
+
         assert d_errors == [], f"Desktop page errors: {d_errors}"
-        results["desktop"] = {"part2": desk_info, "part3": p3_desk, "part4": p4_desk}
+        results["desktop"] = {"part2": desk_info, "part3": p3_desk, "part4": p4_desk, "checking": chk_desk}
         dctx.close()
 
         browser.close()
