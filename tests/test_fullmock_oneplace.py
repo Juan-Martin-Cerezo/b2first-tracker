@@ -499,11 +499,13 @@ with sync_playwright() as p:
     after_l = pg.evaluate(
         """() => ({
             view: (document.querySelector('.view.active') || {}).id || '',
-            spxOpen: getComputedStyle(document.getElementById('spxOverlay')).display !== 'none',
+            spxOpen: getComputedStyle(document.getElementById('speakingOverlay')).display !== 'none',
+            speakingView: window.SPEAKING ? SPEAKING.view : '',
+            speakingPart: window.SPEAKING ? SPEAKING.targetPart : -1,
             timerRunning: exIv !== null,
         })"""
     )
-    assert after_l["view"] == "v-exam" and after_l["spxOpen"] and not after_l["timerRunning"], after_l
+    assert after_l["view"] == "v-exam" and after_l["spxOpen"] and after_l["speakingView"] == "exam" and after_l["speakingPart"] == 0 and not after_l["timerRunning"], after_l
 
     # Close Speaking overlay -> back on the exact same screen with "Completo" + "Hacer otro"
     pg.evaluate("SP_EXAM.close()")

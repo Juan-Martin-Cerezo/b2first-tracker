@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 
 from helpers import isolated_server, login_owner
 
-URL = isolated_server() + "/"
+URL = isolated_server(extra_env={"B2_SPK_TEST_MODE": "1"}) + "/"
 OUT = {}
 
 ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -105,30 +105,26 @@ with sync_playwright() as p:
 
         if paper == "sp":
             pg.wait_for_function(
-                "() => SP_EXAM.full && SP_EXAM.session && SP_EXAM.screen === 'brief'",
+                "() => window.SPEAKING && SPEAKING.isOpen && SPEAKING.view === 'exam' && SPEAKING.targetPart === 0",
                 timeout=15000,
             )
             state = pg.evaluate(
                 """() => ({
                     full: !!SP_EXAM.full,
                     screen: SP_EXAM.screen,
-                    parts: (SP_EXAM.session.plan.parts || []).map(x => x.part),
-                    overlay: getComputedStyle(document.getElementById('spxOverlay')).display,
+                    targetPart: SPEAKING.targetPart,
+                    overlay: getComputedStyle(document.getElementById('speakingOverlay')).display,
                     solo: getComputedStyle(document.getElementById('soloModal')).display,
                 })"""
             )
-            assert state["full"] is True, f"Speaking did not start the full paper: {state}"
-            assert state["parts"] == [1, 2, 3, 4], (
-                f"Speaking started a subset of the paper: {state}"
-            )
+            assert state["full"] is True and state["targetPart"] == 0, f"Speaking did not start the full paper: {state}"
             assert state["overlay"] != "none", f"the speaking overlay is not open: {state}"
             assert state["solo"] == "none", f"the per-part modal opened instead: {state}"
 
             saved = pg.evaluate(
                 """() => saveSP({
-                    bands: {grammar_vocabulary: 5, discourse_management: 5,
-                            pronunciation: null, interactive_communication: 5},
-                    part: 2, duration_s: 120, full: true, parts: []
+                    bands: {grammar_vocabulary: 5, discourse: 5, interactive: 5},
+                    part: 0, duration_s: 840, full: true
                 })"""
             )
             assert saved["type"] == "sp", f"the full speaking session did not log `sp`: {saved}"

@@ -51,11 +51,11 @@ authoritative result is the one issued by Cambridge.
 
 Every account has the full service. To keep AI provider costs predictable, the
 service applies **daily fair-use limits** per UTC day — currently **5 writing
-evaluations** and **3 Speaking mocks (up to 45 minutes)** per account, plus an
-instance-wide monthly cap on live voice minutes. The current meter is visible
-under **Settings → Usage limits**. Limits reset automatically and never change
-the work already saved in your account. Accounts using their own provider key
-(BYO) are not metered by the service.
+evaluations** and **3 Speaking mocks (up to 45 minutes; single-part and full sessions
+each count as 1 mock)** per account, plus an instance-wide monthly cap on voice
+minutes. The current meter is visible under **Settings → Usage limits**. Limits
+reset automatically and never change the work already saved in your account.
+Accounts using their own provider key (BYO) are not metered by the service.
 
 Automated scraping, credential stuffing, deliberately exhausting quotas, or using
 the AI endpoint for anything other than your own study is prohibited.
@@ -79,12 +79,12 @@ server never stores it.
 
 ## 6. Third-party services
 
-The app uses **Google** for live speaking audio and, optionally, text generation,
-**DeepSeek** for writing corrections by default, and **Microsoft Azure** for
-pronunciation only when the operator configures it. The hosting and edge network
-providers deliver the HTTP request to the service. Their availability, pricing and
-policies are outside this service's control. An outage of any of them may disable
-the related feature.
+The app uses **Google** (Gemini API) for push-to-talk Speaking speech recognition and
+examiner/partner voice synthesis (and optionally text generation), and **DeepSeek**
+for writing corrections and optional partner lines by default. The hosting and edge
+network providers deliver the HTTP request to the service. Their availability,
+pricing and policies are outside this service's control. An outage of any of them may
+disable the related feature.
 
 ## 7. Content, conduct, and Cambridge materials
 
@@ -96,13 +96,13 @@ personal data.
 
 **Cambridge trademarks and copyrighted materials.** Cambridge and B2 First are
 trademarks of Cambridge University Press & Assessment. This service is an independent
-study tool and is not affiliated with or endorsed by Cambridge. Original Speaking
-tasks in the app's task bank are written in the B2 First format and are not official
-past papers. Any third-party sample papers, answer keys, audio tracks, or exam books
-you open through external links or upload privately under Listening → Own material
-remain the property of their respective copyright holders and may be used strictly for
-your own personal, non-commercial study — do not redistribute or share copyrighted
-exam materials through the service.
+study tool and is not affiliated with or endorsed by Cambridge. The four Speaking
+sample exams bundled for personal practice are credited in `assets/speaking/exams/CREDITS.md`
+and are strictly for individual, non-commercial study — do not redistribute them.
+Any third-party sample papers, answer keys, audio tracks, or images you open through
+external links or upload privately under Listening → Own material or Speaking → Use
+my own task remain the property of their respective copyright holders and may be used
+strictly for your own personal, non-commercial study.
 
 ## 8. Availability, changes and termination
 

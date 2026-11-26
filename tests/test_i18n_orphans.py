@@ -36,9 +36,6 @@ RUNTIME_KEYS = {
     "ai_state_loading": "ai_state_",             # t('ai_state_' + state)
     "ai_state_ok": "ai_state_",
     "ai_state_error": "ai_state_",
-    "spx_brief_part2": "spx_brief_part",         # t('spx_brief_part' + SP_EXAM.part)
-    "spx_brief_part3": "spx_brief_part",
-    "spx_brief_part4": "spx_brief_part",
     "plan_reset_field_rotationMode": "plan_reset_field_",   # t('plan_reset_field_' + field)
     "plan_reset_field_rueCycle": "plan_reset_field_",
     "plan_reset_field_wCycle": "plan_reset_field_",

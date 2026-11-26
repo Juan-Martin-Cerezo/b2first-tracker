@@ -4,9 +4,9 @@
 
 **Changelog**
 
-- 1.4 — 2026-11-26 · Clarified that speaking transcripts are never stored by the web
-  app (`store_transcript: false`) and aligned retention and quota references with the
-  current code.
+- 1.4 — 2026-11-26 · Updated Speaking v3 privacy boundary: push-to-talk audio is
+  processed in memory only and never written to disk; spoken text is never stored or
+  returned; own-task images stay private to your account until deleted.
 - 1.3 — 2026-11-18 · Hosted service: accounts and progress live on the provider's
   server. Internal host details removed from the public policy.
 - 1.2 — 2026-11-04 · Speaking exam: recognition runs in the browser, the application
@@ -39,7 +39,9 @@ are private to the service and are not served to anyone else.
 | Sessions | `sha256(token)` and expiry timestamps — the token itself is never written |
 | Progress | practice log, error log, profile, settings |
 | Backups | the last 20 versions of your progress |
-| Speaking ledger | minutes spoken today (a number, no audio, no transcript) |
+| Speaking ledger | minutes spoken and mocks started today (numbers only, no audio, no spoken text) |
+| Speaking sessions | temporary 24-hour session state containing only phase/step counters, boolean flags, and numeric micro-scores (mode `0600`, zero audio, zero candidate text) |
+| Own Speaking tasks | task prompts and up to 4 uploaded images per task (PNG/JPG/WebP, max 5 MB each, up to 20 tasks per account) stored privately until you delete the task or account |
 | Usage counters | writing and speaking counters for the current day |
 | Security audit | event type, timestamp, request id, account name or id, hashed client address |
 | Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash |
@@ -77,17 +79,18 @@ capped at 500 entries.
 
 ## 3. What is never stored
 
-- **Speaking audio is never written to disk.** The live examiner streams microphone
-  audio from your browser directly to Google; it does not pass through our server.
-  Turn-based voice and pronunciation clips are held in memory for the single
-  provider request and are deleted in the same handler. No speaking audio file,
-  temporary file or log entry is created. (Only audio files you explicitly upload
-  yourself under Listening → Own material are stored in your private account
-  directory, and you can delete them at any time.)
-- **Speaking transcripts are not stored.** The web app always sends
-  `store_transcript: false` when requesting a Speaking report. Only the summary
-  report row (date, bands, and counts) is saved to your progress if you explicitly
-  click **Save report**; your spoken turns are never written to disk.
+- **Speaking audio is never written to disk.** Push-to-talk voice clips from the
+  Speaking exam are held in memory only for the single turn request, forwarded to
+  Google Gemini for in-memory speech recognition, and discarded immediately in the
+  same handler. No speaking audio file, temporary file, or audio log entry is created.
+  (Only audio files you explicitly upload yourself under Listening → Own material are
+  stored in your private account directory, and you can delete them at any time.)
+- **Candidate speech is never stored or returned.** Speaking v3 does not return
+  spoken text to the browser and never writes spoken text to disk. Session files store
+  only exam state, boolean flags, and numeric micro-scores, and expire automatically
+  after 24 hours. Only the compact 3-band summary (Grammar & Vocabulary, Discourse
+  Management, Interactive Communication) and session flags are saved to your progress
+  when you press **Save report**.
 - No writing or answer is logged in the audit log or in product events. The AI
   request sends the text you chose to correct and receives feedback; the text is
   not persisted by the service beyond the request (the accepted result is saved
@@ -100,31 +103,14 @@ capped at 500 entries.
   (`https://static.cloudflareinsights.com`) for page views, country, and referrer;
   no other external script is allowed by the Content-Security-Policy.
 
-**Speech recognition in the Speaking exam.** The exam transcript is written by
-the browser's own speech recogniser (`SpeechRecognition` / `webkitSpeechRecognition`,
-`en-GB`), not by our server. The application never records your voice and
-never uploads audio for recognition: no recording is created, no audio file is
-written, and no audio passes through our server. The recogniser belongs to the
-browser, and a browser may use its vendor's speech service to turn speech into
-text; that path belongs to the browser, not to this application. With no AI
-provider configured, the recognised text stays in the browser and is discarded
-when the exam closes. With a provider configured (the service's text key or your
-own), only text leaves the browser: the last recognised candidate line goes to
-the partner endpoint for one reaction, and the transcript with its timings goes
-to the report endpoint only when you ask for a report. Neither request carries
-audio. The only Speaking features that send audio are the optional voices listed
-in §4.
-
 ## 4. Third parties that receive data
 
 | Provider | When | What it receives | Where it processes |
 | --- | --- | --- | --- |
 | **Cloudflare, Inc.** | Every public request | the full HTTP request **in plaintext** (TLS terminates at Cloudflare's edge), including headers, path, cookies and request bodies; your IP address; cookie-free aggregate Web Analytics (page views, country, referrer) | global edge network |
 | **Google Identity (OAuth)** | Only if you press “Continue with Google” | the authorization request (`openid email profile`), your Google account choice and the authorization code; the code is exchanged server-side and never stored | Google infrastructure outside Argentina |
-| **Google (Gemini Live)** | Speaking Parts 1–4 with the live examiner/partner | your microphone audio (16 kHz PCM), the examiner script, and the session token | Google infrastructure outside Argentina |
-| **Google (Gemini API)** | If the operator configures Gemini as the text provider, or for speaking-report generation | the text you asked to correct or the transcript you chose to analyse | Google infrastructure |
-| **DeepSeek** | Writing corrections and speaking reports, by default | the text you explicitly submitted for correction, plus the task type | DeepSeek infrastructure |
-| **Microsoft Azure AI Speech** | Pronunciation assessment, only when the operator has configured it | at most 10 seconds of audio per turn and, optionally, the reference sentence | Microsoft regional speech endpoints |
+| **Google (Gemini API)** | Speaking v3 push-to-talk turns (STT & TTS), or when configured as the Writing text provider | one push-to-talk audio clip per turn (for in-memory recognition) and examiner/partner prompt text for speech synthesis; or the writing draft you submit | Google infrastructure |
+| **DeepSeek** | Writing corrections and optional Speaking partner replies, by default | the writing draft you explicitly submitted for correction (plus task type), or brief in-memory turn context for a partner reply | DeepSeek infrastructure |
 
 Cloudflare sees requests at the edge, so it can read them even though the hop
 from Cloudflare to the origin is encrypted. This is a property of terminating
@@ -140,10 +126,6 @@ not a guarantee about Google's internal processing.
 **DeepSeek.** DeepSeek receives the writing text and may retain it under its own
 API terms. This application sends no account identifier with the request, but
 the provider sees the request from the server's address.
-
-**Azure** is used only when the operator has configured a speech key and region.
-If it is not configured, the endpoint answers `speech not configured` and
-pronunciation is reported as *not measured*; the app never invents that score.
 
 ## 5. Why each piece exists
 
@@ -172,7 +154,8 @@ pronunciation is reported as *not measured*; the app never invents that score.
 | Session tokens | 30 days sliding, with a 90-day absolute ceiling |
 | Recovery requests | 90 days, pruned on the next request; capped at 500 entries |
 | Speaking audio | never stored |
-| Speaking transcripts | never stored by the web app (`store_transcript: false`) |
+| Speaking sessions (state/scores only) | 24 hours, then automatically pruned |
+| Own Speaking tasks & images | until you delete the task or the account |
 | Own Listening material | until you delete the item or the account |
 
 The retention limits are enforced by an idempotent daily job on the server. It is
@@ -186,9 +169,9 @@ not something you need to run.
   own audit events.
 - **Delete the account.** Same **Account** panel → **Delete my account** → enter
   your password and type `DELETE`. This removes the account record (including any
-  TOTP MFA configuration), every session, the progress directory including backups
-  and any uploaded Listening material, the usage row, your Google link and your
-  passkeys. A final audit event records that an account was
+  TOTP MFA configuration), every session, the progress directory including backups,
+  any Speaking v3 sessions and own-task images, any uploaded Listening material,
+  the usage row, your Google link and your passkeys. A final audit event records that an account was
   deleted; it contains the account id, never the username.
 - **Clear your own provider key.** Open **Settings** → the **AI provider**
   card → **Clear key**. A BYO key lives only in your browser's localStorage and

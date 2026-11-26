@@ -32,7 +32,7 @@ def main():
         pg.evaluate("try{openSpeakingExam()}catch(e){}")
         pg.wait_for_timeout(300)
         check("speaking overlay open",
-              pg.evaluate("getComputedStyle(document.getElementById('spxOverlay')).display!=='none'"))
+              pg.evaluate("getComputedStyle(document.getElementById('speakingOverlay')).display!=='none'"))
         pg.evaluate("showPlanLimit()")
         pg.wait_for_timeout(200)
         check("plan limit modal open",
