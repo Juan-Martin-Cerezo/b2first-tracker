@@ -280,7 +280,80 @@ _CONVERSATION_CUES = frozenset({
     "expensive", "cheap", "healthy", "relax", "relaxing", "fun", "popular",
     "opinion", "reason", "example", "especially", "personally", "definitely",
     "probably", "suppose", "first", "second", "both", "either", "neither",
+    "sure", "true", "right", "point", "idea", "ideas", "option", "options",
+    "choice", "choose", "pick", "decide", "sensible", "practical", "maybe",
+    "perhaps", "actually", "honestly", "fair", "sense", "totally", "partly",
+    "completely", "convinced", "view", "perspective", "however", "whereas",
+    "although", "though", "because", "would", "could", "might", "should",
 })
+
+_COOPERATIVE_RE = re.compile(
+    r"\b(?:"
+    r"i\s+(?:totally\s+|completely\s+|partly\s+|really\s+|quite\s+|don['’]?t\s+)?agree"
+    r"|i\s+(?:partly\s+|totally\s+)?disagree"
+    r"|that['’]?s\s+(?:true|right|fair|a\s+(?:good|fair|great)\s+point|interesting|sensible)"
+    r"|that\s+is\s+(?:true|right|fair|a\s+(?:good|fair|great)\s+point)"
+    r"|i['’]?m\s+not\s+(?:really\s+|completely\s+|entirely\s+)?sure"
+    r"|i\s+am\s+not\s+(?:really\s+|completely\s+)?sure"
+    r"|not\s+(?:really|sure|necessarily|always|quite)"
+    r"|i\s+(?:don['’]?t\s+)?think\s+so"
+    r"|i\s+see\s+(?:your\s+point|what\s+you\s+mean)"
+    r"|you['’]?re\s+(?:probably\s+)?right|you\s+are\s+right"
+    r"|you['’]?ve\s+got\s+a\s+point|good\s+point|fair\s+point|fair\s+enough"
+    r"|it\s+depends|that\s+makes\s+sense|makes\s+sense"
+    r"|what\s+do\s+you\s+think|how\s+about|what\s+about"
+    r"|shall\s+we\s+(?:move\s+on|look\s+at|talk\s+about|choose|pick|go\s+with)"
+    r"|let['’]?s\s+(?:move\s+on|talk\s+about|choose|go\s+with)"
+    r"|yes\s*,?\s*(?:definitely|exactly|absolutely|i\s+do|i\s+would|probably|true|sure)"
+    r"|no\s*,?\s*(?:not\s+really|i\s+don['’]?t|i\s+wouldn['’]?t)"
+    r"|in\s+my\s+(?:opinion|view)|to\s+be\s+honest|on\s+the\s+other\s+hand"
+    r")\b",
+    re.IGNORECASE,
+)
+
+_PART3_META_START_RE = re.compile(
+    r"^(?:(?:excuse\s+me|sorry|well|um|uh|so|hey)[,.]?\s+)?"
+    r"(?:"
+    r"(?:can|could|may|shall)\s+i\s+(?:start|begin|go\s+first)"
+    r"|do\s+you\s+mind\s+if\s+i\s+(?:start|begin|go\s+first)"
+    r"|mind\s+if\s+i\s+(?:start|begin|go\s+first)"
+    r"|would\s+you\s+like\s+me\s+to\s+(?:start|begin|go\s+first)"
+    r"|i(?:'ll|\s+will|\s+can)\s+(?:start|begin|go\s+first)"
+    r"|let\s+me\s+(?:start|begin|go\s+first)"
+    r")"
+    r"(?:\s+(?:first|off|now|please))?[\s?!.,]*$",
+    re.IGNORECASE,
+)
+
+
+def is_part3_meta_start(text):
+    """Return True if candidate is asking/offering to start Part 3 ('Can I start?', 'Shall I start?', 'I'll start')."""
+    s = re.sub(r"\s+", " ", str(text or "")).strip()
+    if not s:
+        return False
+    words = re.findall(r"[a-zA-Z']+", s)
+    if len(words) > 9:
+        return False
+    return bool(_PART3_META_START_RE.match(s))
+
+
+def detect_mentioned_options(text, options):
+    """Return options from `options` whose content words appear in `text` (in-memory only)."""
+    s = str(text or "").lower()
+    if not s or not options:
+        return []
+    words = [w.strip("'") for w in re.findall(r"[a-z']+", s) if len(w.strip("'")) >= 3 and w.strip("'") not in _STOPWORDS]
+    if not words:
+        return []
+    matched = []
+    for opt in options:
+        opt_toks = [
+            tok for tok in re.findall(r"[a-z]+", str(opt or "").lower())
+            if len(tok) >= 3 and tok not in _STOPWORDS
+        ]
+        if any(_stem_match(w, ot) for w in words for ot in opt_toks):
+            matched.append(opt)
+    return matched
 
 
 def _stem_match(a, b):
@@ -296,7 +369,7 @@ def _stem_match(a, b):
     return False
 
 
-def validate_topic_answer(text, question_text="", topic="", keywords=None, part=1):
+def validate_topic_answer(text, question_text="", topic="", keywords=None, part=1, allow_cooperative=False):
     """Validate an answer in Part 1, Part 2 follow-up, Part 3, or Part 4.
 
     Returns ``(ok, reason)`` where reason is one of:
@@ -309,7 +382,11 @@ def validate_topic_answer(text, question_text="", topic="", keywords=None, part=
         return False, "non_english"
 
     words = re.findall(r"[a-zA-Z']+", s.lower())
+    interactive_part = (part in (3, 4)) or bool(allow_cooperative)
+
     if len(words) < 2:
+        # In Part 3/4, allow single-word cooperative markers only if unambiguous?
+        # Keep minimum 2 words (e.g. "I agree", "Not sure", "That's true") so accidental noise is rejected.
         return False, "off_topic"
 
     # Build expected semantic field from keywords + question + topic
@@ -334,6 +411,11 @@ def validate_topic_answer(text, question_text="", topic="", keywords=None, part=
             if not re.search(r"\b(?:cook|cooking|food|meal|eat|dish)\b", f"{question_text} {topic}", re.IGNORECASE):
                 return False, "off_topic"
 
+    # In Part 3 and Part 4, cooperative short reactions ("I agree", "That's true",
+    # "I'm not sure", "Good point") are legitimate interactive turns!
+    if interactive_part and _COOPERATIVE_RE.search(s):
+        return True, "ok"
+
     # Check overlap with expected keywords
     content_words = [w.strip("'") for w in words if len(w.strip("'")) >= 3 and w.strip("'") not in _STOPWORDS]
     topic_hit = any(
@@ -344,17 +426,20 @@ def validate_topic_answer(text, question_text="", topic="", keywords=None, part=
     if topic_hit:
         return True, "ok"
 
+    # In Part 3/4, accept reasonable opinion/reaction statements that express a stance
+    # without demanding exact card keywords.
+    stance_hits = sum(
+        1 for w in words
+        if w in _CONVERSATION_CUES or w in ("because", "since", "although", "while", "whereas", "would", "could", "might", "yes", "no")
+    )
+    if interactive_part and stance_hits >= 1 and len(words) >= 3:
+        return True, "ok"
+
     # For very short answers without any topic hit, reject as off-topic
     if len(words) < 5:
         return False, "off_topic"
 
-    # If answer is longer (>= 6 words), require either a clear conversational
-    # stance + substantive explanation AND not obviously unrelated.
-    # For strictness: if expected keywords exist and there is ZERO overlap,
-    # check if it's a plausible paraphrased answer (contains stance/explanation
-    # words like "because", "prefer", "usually", "think") vs random unrelated
-    # statement ("My dog chased a blue car down the street").
-    stance_hits = sum(1 for w in words if w in _CONVERSATION_CUES or w in ("because", "since", "although", "while", "whereas", "would", "could", "might"))
+    # If answer is longer (>= 8 words) with clear conversational stance, accept paraphrased answers.
     if stance_hits >= 2 and len(words) >= 8:
         return True, "ok"
 

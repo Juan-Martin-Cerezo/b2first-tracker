@@ -12,6 +12,7 @@ Privacy contract:
   plus comments — NEVER pronunciation.
 """
 import base64
+import concurrent.futures
 import os
 import re
 import secrets
@@ -250,34 +251,58 @@ def _build_ui(test, phase, step, target_part):
     return {"part": target_part, "timer_seconds": 0, "images": [], "card": None}
 
 
+def _synth_one_clip(clip, partner_voice):
+    wav, err = voice.synthesize_speech(
+        clip["text"],
+        role=clip["speaker"],
+        partner_voice=partner_voice,
+        cacheable=bool(clip.get("cacheable", False)),
+    )
+    if err:
+        return None, err
+    return {
+        "speaker": clip["speaker"],
+        "audio_b64": base64.b64encode(wav).decode("ascii"),
+        "mime": "audio/wav",
+        "step": clip.get("step", ""),
+        "ui": clip.get("ui"),
+    }, None
+
+
 def _synth_sequence(clips, partner_voice):
     """Synthesise an ordered list of `{speaker, text, step, ui, cacheable}` clips.
 
-    Returns ``(audio_clips, error)``. Strips `text` completely from the output
+    Synthesises multi-clip turns concurrently with ThreadPoolExecutor while
+    strictly preserving clip order. Strips `text` completely from the output
     so no spoken transcript/script ever leaks in HTTP responses.
     """
-    out = []
-    for clip in clips:
-        wav, err = voice.synthesize_speech(
-            clip["text"],
-            role=clip["speaker"],
-            partner_voice=partner_voice,
-            cacheable=bool(clip.get("cacheable", False)),
-        )
-        if err:
-            return None, err
-        out.append({
-            "speaker": clip["speaker"],
-            "audio_b64": base64.b64encode(wav).decode("ascii"),
-            "mime": "audio/wav",
-            "step": clip.get("step", ""),
-            "ui": clip.get("ui"),
-        })
-    return out, None
+    if not clips:
+        return [], None
+    if len(clips) == 1:
+        item, err = _synth_one_clip(clips[0], partner_voice)
+        return ([item], None) if not err else (None, err)
+
+    workers = min(len(clips), 4)
+    results = [None] * len(clips)
+    first_err = None
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        future_map = {
+            pool.submit(_synth_one_clip, clip, partner_voice): idx
+            for idx, clip in enumerate(clips)
+        }
+        for fut in concurrent.futures.as_completed(future_map):
+            idx = future_map[fut]
+            item, err = fut.result()
+            if err and first_err is None:
+                first_err = err
+            results[idx] = item
+    if first_err:
+        return None, first_err
+    return results, None
 
 
 def _public_state(sess):
-    return {
+    st = {
         "phase": sess["phase"],
         "step": sess["step"],
         "part": sess["current_part"],
@@ -285,6 +310,9 @@ def _public_state(sess):
         "question_index": sess.get("q_idx", 0),
         "retries": sess.get("step_retries", 0),
     }
+    if sess.get("phase") == "part3":
+        st["covered_count"] = len(sess.get("covered_options") or [])
+    return st
 
 
 def _enter_part(sess, test, part_num, with_transition=False):
@@ -335,6 +363,10 @@ def _enter_part(sess, test, part_num, with_transition=False):
     if part_num == 3:
         sess["phase"] = "part3"
         sess["step"] = "prep"
+        sess["covered_options"] = []
+        sess["focus_option"] = ""
+        sess["part3_meta_used"] = False
+        sess["part3_dec_started_at_elapsed"] = 0.0
         p3 = test["parts"]["3"]
         ui = _build_ui(test, "part3", "prep", sess["target_part"])
         prefix = f"{tone.part_transition(3)} " if with_transition else "Thank you. "
@@ -343,16 +375,16 @@ def _enter_part(sess, test, part_num, with_transition=False):
             "text": f"{prefix}{p3['opening']}",
             "step": "part3_prep",
             "ui": ui,
-            "cacheable": with_transition,
+            "cacheable": True,
         })
         return clips
 
-    # Part 4
+    # Part 4 (Round 0 = odd 1-based: examiner asks user first)
     sess["phase"] = "part4"
-    sess["step"] = "q_0"
+    sess["step"] = "q_0_user"
     qs = _select_part4_questions(test)
     q0 = qs[0]["text"]
-    ui = _build_ui(test, "part4", "q_0", sess["target_part"])
+    ui = _build_ui(test, "part4", "q_0_user", sess["target_part"])
     prefix = f"{tone.part_transition(4)} " if with_transition else "Thank you. "
     clips.append({
         "speaker": "examiner",
@@ -605,17 +637,37 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
         # Special non-audio transition: Part 3 15-second prep timer completed
         if sess["phase"] == "part3" and sess["step"] == "prep" and action == "prep_done":
             p3 = test["parts"]["3"]
+            opts = list(p3.get("options") or [])
+            first_opt = opts[0] if opts else ""
             sess["step"] = "discussion_0"
             sess["q_idx"] = 0
             sess["step_retries"] = 0
+            sess["focus_option"] = first_opt
+            sess["covered_options"] = [first_opt] if first_opt else []
+            sess["part3_meta_used"] = False
+            sess["part3_dec_started_at_elapsed"] = 0.0
             ui = _build_ui(test, "part3", "discussion_0", sess["target_part"])
-            clips = [{
-                "speaker": "examiner",
-                "text": p3["start_discussion"],
-                "step": "part3_start_discussion",
-                "ui": ui,
-                "cacheable": True,
-            }]
+            partner_open = voice.generate_partner_line(
+                "part3_open", test,
+                question_text=p3.get("card_question", ""),
+                focus_option=first_opt,
+            )
+            clips = [
+                {
+                    "speaker": "examiner",
+                    "text": p3["start_discussion"],
+                    "step": "part3_start_discussion",
+                    "ui": ui,
+                    "cacheable": True,
+                },
+                {
+                    "speaker": "partner",
+                    "text": partner_open,
+                    "step": "part3_partner_open",
+                    "ui": ui,
+                    "cacheable": True,
+                },
+            ]
             audio_clips, err = _synth_sequence(clips, partner_voice)
             if err:
                 return None, (503 if err == "speech_not_configured" else 502), err
@@ -761,7 +813,7 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
                 "text": f"Thank you. {partner_name}, {_lc_first(partner_q)}",
                 "step": f"part1_partner_q_{idx}",
                 "ui": ui_p1,
-                "cacheable": False,
+                "cacheable": True,
             })
             clips.append({
                 "speaker": "partner",
@@ -876,15 +928,62 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
                 clips.extend(end_clips)
 
         # ---------------------------------------------------------------
-        # PHASE: PART 3 (4 min: 15s prep + 2 min discussion + 1 min decision)
+        # PHASE: PART 3 (4 min: 15s prep + ~2 min discussion + ~1 min decision)
         # ---------------------------------------------------------------
         elif phase == "part3":
             p3 = test["parts"]["3"]
+            opts = list(p3.get("options") or [])
             # If user spoke directly during prep, seamlessly treat as discussion_0
             if step == "prep":
                 step = "discussion_0"
                 sess["step"] = "discussion_0"
                 sess["q_idx"] = 0
+                if not sess.get("covered_options") and opts:
+                    sess["focus_option"] = opts[0]
+                    sess["covered_options"] = [opts[0]]
+
+            elapsed_val = 0.0
+            if elapsed_part_seconds is not None:
+                try:
+                    elapsed_val = float(elapsed_part_seconds)
+                except (TypeError, ValueError):
+                    elapsed_val = 0.0
+
+            # Meta-turn at the start of discussion ("Can I start?" / "Shall I start?" / "I'll start"):
+            # Partner replies "Yes, go ahead." and does NOT count as a content turn.
+            if (
+                step.startswith("discussion")
+                and int(sess.get("q_idx") or 0) == 0
+                and not sess.get("part3_meta_used")
+                and validation.is_part3_meta_start(transcript)
+            ):
+                sess["part3_meta_used"] = True
+                sess["step_retries"] = 0
+                ui_disc = _build_ui(test, "part3", step, sess["target_part"])
+                go_line = voice.generate_partner_line("part3_meta_go_ahead", test)
+                clips = [{
+                    "speaker": "partner",
+                    "text": go_line,
+                    "step": "part3_partner_meta_go",
+                    "ui": ui_disc,
+                    "cacheable": True,
+                }]
+                audio_clips, tts_err = _synth_sequence(clips, partner_voice)
+                if tts_err:
+                    return None, (503 if tts_err == "speech_not_configured" else 502), tts_err
+                _save_session(sess)
+                return {
+                    "accepted": True,
+                    "retry": False,
+                    "meta_turn": True,
+                    "speaker": audio_clips[0]["speaker"],
+                    "audio_b64": audio_clips[0]["audio_b64"],
+                    "mime": "audio/wav",
+                    "sequence": audio_clips,
+                    "state": _public_state(sess),
+                    "ui": ui_disc,
+                    "done": False,
+                }, 200, None
 
             ok, reason = validation.validate_topic_answer(
                 transcript,
@@ -892,6 +991,7 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
                 topic=p3.get("topic", "the task on the card"),
                 keywords=p3.get("keywords"),
                 part=3,
+                allow_cooperative=True,
             )
             if not ok:
                 resp, code, r_err = _handle_retry(
@@ -903,38 +1003,42 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
                     return resp, code, r_err
                 accepted = False
 
+            # Track covered card options strictly from the test's own option list (never candidate text)
+            covered = list(sess.get("covered_options") or [])
+            mentioned = validation.detect_mentioned_options(transcript, opts) if accepted else []
+            for m_opt in mentioned:
+                if m_opt in opts and m_opt not in covered:
+                    covered.append(m_opt)
+            cur_focus = mentioned[-1] if mentioned else (sess.get("focus_option") or (opts[0] if opts else ""))
+            if cur_focus and cur_focus in opts and cur_focus not in covered:
+                covered.append(cur_focus)
+
             _record_turn_score(sess, transcript, accepted=accepted, part=3)
             sess["step_retries"] = 0
 
             if step.startswith("discussion"):
                 idx = int(sess.get("q_idx") or 0)
-                ui_disc = _build_ui(test, "part3", step, sess["target_part"])
-                partner_reply = voice.generate_partner_line(
-                    "part3_discussion", test,
-                    question_text=p3.get("card_question", ""),
-                    turn_index=idx,
-                    candidate_summary=transcript if accepted else "",
-                )
-                clips.append({
-                    "speaker": "partner",
-                    "text": partner_reply,
-                    "step": f"part3_partner_disc_{idx}",
-                    "ui": ui_disc,
-                    "cacheable": False,
-                })
-                elapsed_val = 0.0
-                if elapsed_part_seconds is not None:
-                    try:
-                        elapsed_val = float(elapsed_part_seconds)
-                    except (TypeError, ValueError):
-                        elapsed_val = 0.0
+                prep_s = int(p3.get("prep_seconds", 15))
+                disc_elapsed = max(0.0, elapsed_val - prep_s) if elapsed_part_seconds is not None else 0.0
+                sess["covered_options"] = covered
+
                 if part_expired:
                     end_clips, done = _finish_current_part(sess, test)
                     clips.extend(end_clips)
-                elif idx >= 2 or elapsed_val >= 135:
+                elif idx >= 4 or disc_elapsed >= 110:
+                    # ~110-120s of discussion or 5 user turns -> examiner decision_prompt + partner opens negotiation
                     sess["step"] = "decision_0"
                     sess["q_idx"] = 0
+                    sess["part3_dec_started_at_elapsed"] = elapsed_val
+                    prop_opt = covered[0] if covered else (opts[0] if opts else "")
+                    sess["focus_option"] = prop_opt
                     ui_dec = _build_ui(test, "part3", "decision_0", sess["target_part"])
+                    partner_dec_open = voice.generate_partner_line(
+                        "part3_decision_open", test,
+                        question_text=p3.get("decision_prompt", ""),
+                        focus_option=prop_opt,
+                        covered_options=covered,
+                    )
                     clips.append({
                         "speaker": "examiner",
                         "text": p3["decision_prompt"],
@@ -942,47 +1046,98 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
                         "ui": ui_dec,
                         "cacheable": True,
                     })
+                    clips.append({
+                        "speaker": "partner",
+                        "text": partner_dec_open,
+                        "step": "part3_partner_dec_open",
+                        "ui": ui_dec,
+                        "cacheable": True,
+                    })
                 else:
+                    # Pure candidate-to-candidate discussion: NO examiner clip between turns!
+                    uncovered = [o for o in opts if o not in covered]
+                    if uncovered:
+                        next_opt = uncovered[0]
+                    elif opts:
+                        others = [o for o in opts if o != cur_focus]
+                        next_opt = others[idx % len(others)] if others else opts[0]
+                    else:
+                        next_opt = ""
+                    if next_opt and next_opt not in covered:
+                        covered.append(next_opt)
+                    sess["covered_options"] = covered
+                    sess["focus_option"] = next_opt or cur_focus
+
+                    ui_disc = _build_ui(test, "part3", step, sess["target_part"])
+                    partner_reply = voice.generate_partner_line(
+                        "part3_discussion", test,
+                        question_text=p3.get("card_question", ""),
+                        turn_index=idx,
+                        candidate_summary=transcript if accepted else "",
+                        focus_option=cur_focus,
+                        next_option=next_opt,
+                        covered_options=covered,
+                    )
+                    clips.append({
+                        "speaker": "partner",
+                        "text": partner_reply,
+                        "step": f"part3_partner_disc_{idx}",
+                        "ui": ui_disc,
+                        "cacheable": False,
+                    })
                     sess["q_idx"] = idx + 1
                     sess["step"] = f"discussion_{idx + 1}"
 
             else:
-                # Decision phase (1 minute)
+                # Decision phase (~60 s or up to 3 user turns): real negotiation between candidates
                 idx = int(sess.get("q_idx") or 0)
-                ui_dec = _build_ui(test, "part3", step, sess["target_part"])
-                partner_reply = voice.generate_partner_line(
-                    "part3_decision", test,
-                    question_text=p3.get("decision_prompt", ""),
-                    turn_index=idx,
-                    candidate_summary=transcript if accepted else "",
-                )
-                clips.append({
-                    "speaker": "partner",
-                    "text": partner_reply,
-                    "step": f"part3_partner_dec_{idx}",
-                    "ui": ui_dec,
-                    "cacheable": False,
-                })
-                if part_expired or idx >= 1:
+                sess["covered_options"] = covered
+                dec_start = float(sess.get("part3_dec_started_at_elapsed") or 0.0)
+                dec_elapsed = max(0.0, elapsed_val - dec_start) if elapsed_part_seconds is not None else 0.0
+
+                if part_expired or idx >= 2 or dec_elapsed >= 58:
                     end_clips, done = _finish_current_part(sess, test)
                     clips.extend(end_clips)
                 else:
+                    ui_dec = _build_ui(test, "part3", step, sess["target_part"])
+                    alt_candidates = [o for o in (covered or opts) if o != cur_focus]
+                    alt_opt = alt_candidates[idx % len(alt_candidates)] if alt_candidates else (opts[-1] if opts else "")
+                    partner_reply = voice.generate_partner_line(
+                        "part3_decision", test,
+                        question_text=p3.get("decision_prompt", ""),
+                        turn_index=idx,
+                        candidate_summary=transcript if accepted else "",
+                        focus_option=cur_focus,
+                        next_option=alt_opt,
+                        covered_options=covered,
+                    )
+                    clips.append({
+                        "speaker": "partner",
+                        "text": partner_reply,
+                        "step": f"part3_partner_dec_{idx}",
+                        "ui": ui_dec,
+                        "cacheable": False,
+                    })
                     sess["q_idx"] = idx + 1
                     sess["step"] = f"decision_{idx + 1}"
 
         # ---------------------------------------------------------------
-        # PHASE: PART 4 (4 min: discussion questions from PDF, alternating)
+        # PHASE: PART 4 (4 min: alternating user-first & partner-first rounds)
         # ---------------------------------------------------------------
         elif phase == "part4":
             qs = _select_part4_questions(test)
             idx = min(int(sess.get("q_idx") or 0), len(qs) - 1)
             q_obj = qs[idx]
+            cand_name = sess.get("candidate_name") or "Candidate"
+            is_react = step.endswith("_react")
+
             ok, reason = validation.validate_topic_answer(
                 transcript,
                 question_text=q_obj["text"],
                 topic=q_obj.get("topic", ""),
                 keywords=q_obj.get("keywords"),
                 part=4,
+                allow_cooperative=True,
             )
             if not ok:
                 resp, code, r_err = _handle_retry(
@@ -998,45 +1153,125 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
             sess["step_retries"] = 0
             ui_p4 = _build_ui(test, "part4", sess["step"], sess["target_part"])
 
-            prompts = test["parts"]["4"].get("prompts") or ["What do you think?", "Do you agree?", "And you?"]
-            prompt_phrase = prompts[idx % len(prompts)]
-            partner_ans = voice.generate_partner_line(
-                "part4", test,
-                question_text=q_obj["text"],
-                turn_index=idx,
-                candidate_summary=transcript if accepted else "",
-            )
-            clips.append({
-                "speaker": "examiner",
-                "text": f"Thank you. {partner_name}, {prompt_phrase[0].lower() + prompt_phrase[1:]}",
-                "step": f"part4_partner_q_{idx}",
-                "ui": ui_p4,
-                "cacheable": False,
-            })
-            clips.append({
-                "speaker": "partner",
-                "text": partner_ans,
-                "step": f"part4_partner_a_{idx}",
-                "ui": ui_p4,
-                "cacheable": False,
-            })
+            if idx % 2 == 0 and not is_react:
+                # Odd round (1st, 3rd): user answered -> examiner asks partner same question ->
+                # partner gives own opinion -> examiner invites user to react to partner!
+                if part_expired:
+                    end_clips, done = _finish_current_part(sess, test)
+                    clips.extend(end_clips)
+                else:
+                    partner_ans = voice.generate_partner_line(
+                        "part4_answer", test,
+                        question_text=q_obj["text"],
+                        turn_index=idx,
+                        candidate_summary=transcript if accepted else "",
+                    )
+                    live_llm = bool(voice.google_api_key() and not voice.is_test_mode())
+                    react_prompt = (
+                        f"Thank you. {cand_name}, do you agree with {partner_name}?"
+                        if idx == 0
+                        else f"Thank you. {cand_name}, what do you think about what {partner_name} said?"
+                    )
+                    clips.append({
+                        "speaker": "examiner",
+                        "text": f"Thank you. And you, {partner_name}?",
+                        "step": f"part4_partner_q_{idx}",
+                        "ui": ui_p4,
+                        "cacheable": True,
+                    })
+                    clips.append({
+                        "speaker": "partner",
+                        "text": partner_ans,
+                        "step": f"part4_partner_a_{idx}",
+                        "ui": ui_p4,
+                        "cacheable": not live_llm,
+                    })
+                    clips.append({
+                        "speaker": "examiner",
+                        "text": react_prompt,
+                        "step": f"part4_user_react_q_{idx}",
+                        "ui": ui_p4,
+                        "cacheable": False,
+                    })
+                    sess["step"] = f"q_{idx}_react"
 
-            next_idx = idx + 1
-            if part_expired or next_idx >= len(qs):
-                end_clips, done = _finish_current_part(sess, test)
-                clips.extend(end_clips)
+            elif idx % 2 == 0 and is_react:
+                # Odd round completed: advance to next round (even round -> partner goes FIRST!)
+                next_idx = idx + 1
+                if part_expired or next_idx >= len(qs):
+                    end_clips, done = _finish_current_part(sess, test)
+                    clips.extend(end_clips)
+                else:
+                    nq = qs[next_idx]
+                    sess["q_idx"] = next_idx
+                    sess["step"] = f"q_{next_idx}_user"
+                    partner_own = voice.generate_partner_line(
+                        "part4_answer", test,
+                        question_text=nq["text"],
+                        turn_index=next_idx,
+                    )
+                    in_bank = nq["text"] in voice._PART4_PARTNER_BANK
+                    clips.append({
+                        "speaker": "examiner",
+                        "text": f"Thank you. {partner_name}, {_lc_first(nq['text'])}",
+                        "step": f"part4_partner_first_q_{next_idx}",
+                        "ui": ui_p4,
+                        "cacheable": True,
+                    })
+                    clips.append({
+                        "speaker": "partner",
+                        "text": partner_own,
+                        "step": f"part4_partner_first_a_{next_idx}",
+                        "ui": ui_p4,
+                        "cacheable": in_bank,
+                    })
+                    clips.append({
+                        "speaker": "examiner",
+                        "text": f"Thank you. And you, {cand_name}? {_lc_first(nq['text'])}",
+                        "step": f"part4_q_{next_idx}",
+                        "ui": ui_p4,
+                        "cacheable": False,
+                    })
+
             else:
-                sess["q_idx"] = next_idx
-                sess["step"] = f"q_{next_idx}"
-                nq = qs[next_idx]["text"]
-                cand_name = sess.get("candidate_name") or "Candidate"
+                # Even round (2nd, 4th): partner went first, user just answered ->
+                # examiner asks partner "Do you agree?" -> partner reacts -> next round (or finish)
+                partner_react = voice.generate_partner_line(
+                    "part4_react", test,
+                    question_text=q_obj["text"],
+                    turn_index=idx,
+                    candidate_summary=transcript if accepted else "",
+                )
                 clips.append({
                     "speaker": "examiner",
-                    "text": f"Thank you. {cand_name}, {_lc_first(nq)}",
-                    "step": f"part4_q_{next_idx}",
+                    "text": f"Thank you. {partner_name}, do you agree?",
+                    "step": f"part4_partner_react_q_{idx}",
+                    "ui": ui_p4,
+                    "cacheable": True,
+                })
+                clips.append({
+                    "speaker": "partner",
+                    "text": partner_react,
+                    "step": f"part4_partner_react_a_{idx}",
                     "ui": ui_p4,
                     "cacheable": False,
                 })
+
+                next_idx = idx + 1
+                if part_expired or next_idx >= len(qs):
+                    end_clips, done = _finish_current_part(sess, test)
+                    clips.extend(end_clips)
+                else:
+                    nq = qs[next_idx]
+                    sess["q_idx"] = next_idx
+                    sess["step"] = f"q_{next_idx}_user"
+                    clips.append({
+                        "speaker": "examiner",
+                        "text": f"Thank you. {cand_name}, {_lc_first(nq['text'])}",
+                        "step": f"part4_q_{next_idx}",
+                        "ui": ui_p4,
+                        "cacheable": False,
+                    })
 
         # Synthesise all audio clips for this turn
         audio_clips, tts_err = _synth_sequence(clips, partner_voice)
@@ -1085,7 +1320,7 @@ def _part2_partner_sequence(sess, test):
             "text": f"Thank you. {t1['followup_to_partner'].format(candidate=cand_name, partner=partner_name)}",
             "step": "part2_ask_partner_followup",
             "ui": ui_t1,
-            "cacheable": False,
+            "cacheable": "{candidate}" not in t1["followup_to_partner"],
         },
         {
             "speaker": "partner",
@@ -1102,7 +1337,7 @@ def _part2_partner_sequence(sess, test):
             ),
             "step": "part2_partner_prompt",
             "ui": ui_t2_partner,
-            "cacheable": False,
+            "cacheable": "{candidate}" not in t2["intro"],
         },
         {
             "speaker": "partner",
@@ -1200,16 +1435,31 @@ def handle_skip(uid, session_id):
 
         elif phase == "part3":
             p3 = test["parts"]["3"]
+            opts = list(p3.get("options") or [])
             if step == "prep":
+                first_opt = opts[0] if opts else ""
                 sess["step"] = "discussion_0"
                 sess["q_idx"] = 0
+                sess["focus_option"] = first_opt
+                sess["covered_options"] = [first_opt] if first_opt else []
                 ui_d = _build_ui(test, "part3", "discussion_0", sess["target_part"])
-                clips = [{"speaker": "examiner", "text": p3["start_discussion"], "step": "part3_start_discussion", "ui": ui_d, "cacheable": True}]
+                partner_open = voice.generate_partner_line("part3_open", test, focus_option=first_opt)
+                clips = [
+                    {"speaker": "examiner", "text": p3["start_discussion"], "step": "part3_start_discussion", "ui": ui_d, "cacheable": True},
+                    {"speaker": "partner", "text": partner_open, "step": "part3_partner_open", "ui": ui_d, "cacheable": True},
+                ]
             elif step.startswith("discussion"):
                 sess["step"] = "decision_0"
                 sess["q_idx"] = 0
+                covered = list(sess.get("covered_options") or [])
+                prop_opt = covered[0] if covered else (opts[0] if opts else "")
+                sess["focus_option"] = prop_opt
                 ui_dec = _build_ui(test, "part3", "decision_0", sess["target_part"])
-                clips = [{"speaker": "examiner", "text": f"{tone.CANONICAL['skip_advance']} {p3['decision_prompt']}", "step": "part3_decision_prompt", "ui": ui_dec, "cacheable": False}]
+                partner_dec_open = voice.generate_partner_line("part3_decision_open", test, focus_option=prop_opt)
+                clips = [
+                    {"speaker": "examiner", "text": f"{tone.CANONICAL['skip_advance']} {p3['decision_prompt']}", "step": "part3_decision_prompt", "ui": ui_dec, "cacheable": True},
+                    {"speaker": "partner", "text": partner_dec_open, "step": "part3_partner_dec_open", "ui": ui_dec, "cacheable": True},
+                ]
             else:
                 end_clips, done = _finish_current_part(sess, test)
                 clips = [{"speaker": "examiner", "text": tone.CANONICAL["skip_advance"], "step": "skip", "ui": _build_ui(test, phase, step, sess["target_part"]), "cacheable": True}] + end_clips
@@ -1222,15 +1472,25 @@ def handle_skip(uid, session_id):
                 clips = [{"speaker": "examiner", "text": tone.CANONICAL["skip_advance"], "step": "skip", "ui": _build_ui(test, phase, step, sess["target_part"]), "cacheable": True}] + end_clips
             else:
                 sess["q_idx"] = idx
-                sess["step"] = f"q_{idx}"
+                sess["step"] = f"q_{idx}_user"
                 ui_p4 = _build_ui(test, "part4", sess["step"], sess["target_part"])
-                clips = [{
-                    "speaker": "examiner",
-                    "text": f"{tone.CANONICAL['skip_advance']} {qs[idx]['text']}",
-                    "step": f"part4_q_{idx}",
-                    "ui": ui_p4,
-                    "cacheable": False,
-                }]
+                nq = qs[idx]
+                cand_name = sess.get("candidate_name") or "Candidate"
+                if idx % 2 == 1:
+                    partner_own = voice.generate_partner_line("part4_answer", test, question_text=nq["text"], turn_index=idx)
+                    clips = [
+                        {"speaker": "examiner", "text": f"{tone.CANONICAL['skip_advance']} {partner_name}, {_lc_first(nq['text'])}", "step": f"part4_partner_first_q_{idx}", "ui": ui_p4, "cacheable": True},
+                        {"speaker": "partner", "text": partner_own, "step": f"part4_partner_first_a_{idx}", "ui": ui_p4, "cacheable": nq["text"] in voice._PART4_PARTNER_BANK},
+                        {"speaker": "examiner", "text": f"Thank you. And you, {cand_name}? {_lc_first(nq['text'])}", "step": f"part4_q_{idx}", "ui": ui_p4, "cacheable": False},
+                    ]
+                else:
+                    clips = [{
+                        "speaker": "examiner",
+                        "text": f"{tone.CANONICAL['skip_advance']} {cand_name}, {_lc_first(nq['text'])}",
+                        "step": f"part4_q_{idx}",
+                        "ui": ui_p4,
+                        "cacheable": False,
+                    }]
 
         audio_clips, tts_err = _synth_sequence(clips, partner_voice)
         if tts_err:

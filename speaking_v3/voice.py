@@ -37,7 +37,7 @@ DEFAULT_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_STT_MODEL = "gemini-2.5-flash"
 DEFAULT_TTS_MODEL = "gemini-2.5-flash-preview-tts"
 TTS_SAMPLE_RATE = 24000
-TTS_CACHE_MAX = 120
+TTS_CACHE_MAX = 400
 AUDIO_MAX_BYTES = 5 * 1024 * 1024
 
 _TTS_LOCK = threading.Lock()
@@ -509,7 +509,112 @@ _PART1_PARTNER_BANK = {
 }
 
 
-def generate_partner_line(kind, test, question_text="", turn_index=0, candidate_summary=""):
+_PART4_PARTNER_BANK = {
+    # Test 01: Holidays and tourism
+    "Do you think you have to spend a lot of money to have a good holiday?": (
+        "No, not really. Some of my favourite trips have been quite cheap — camping with friends "
+        "or visiting a nearby coastal town. What matters most is who you're with and getting a proper break."
+    ),
+    "Some people say we travel too much these days and shouldn't go on so many holidays. What do you think?": (
+        "Well, I can see why people worry about the environmental impact of frequent flights. "
+        "At the same time, travelling opens your mind, so perhaps taking fewer but longer trips is a sensible compromise."
+    ),
+    "Do you think people have enough time for holidays these days?": (
+        "Probably not, to be honest. Many jobs are quite demanding and people struggle to switch off "
+        "even when they're away, so having slightly longer breaks would do everyone a lot of good."
+    ),
+    "Why do you think people like to go away on holiday?": (
+        "Mainly to escape their everyday routine, I'd say. Seeing unfamiliar places, trying different food "
+        "and simply not worrying about work or studying helps people come back feeling refreshed."
+    ),
+    "What do you think is the biggest advantage of living in a place where there are a lot of tourists?": (
+        "The main advantage is probably the boost to the local economy — shops, cafes and transport stay lively, "
+        "and you get to meet people from all sorts of backgrounds."
+    ),
+    "What can people do to have a good holiday in your country?": (
+        "There's quite a lot of variety, really. You can explore historic cities and museums, "
+        "or head out to the countryside and national parks for walking and fresh air."
+    ),
+    # Test 02: Keeping fit and healthy
+    "What is the advantage of keeping fit with friends?": (
+        "I think the biggest advantage is motivation. When you've arranged to meet a friend for a run or a class, "
+        "you're far less likely to cancel just because you feel tired."
+    ),
+    "Some people say it is a waste of time going to a gym because you can exercise outside for free. What do you think?": (
+        "Well, exercising outdoors is great when the weather's decent, though in winter it's dark and rainy. "
+        "A gym also gives you proper equipment and structured classes, so it's not a waste for everyone."
+    ),
+    "Is it possible to live healthily without spending a lot of money?": (
+        "Yes, definitely. Cooking simple meals with seasonal vegetables is usually cheaper than takeaways, "
+        "and walking, cycling or stretching at home costs nothing at all."
+    ),
+    "Do you think the government should spend more money on sports and leisure facilities?": (
+        "I think so, yes. Investing in public parks, swimming pools and local sports centres encourages "
+        "people to stay active, which probably saves healthcare costs in the long run."
+    ),
+    "Some people say it's a school's responsibility to help students keep fit. Do you agree?": (
+        "I partly agree — schools should definitely provide good sports lessons and clubs, "
+        "though families also play a huge role in building healthy habits at home."
+    ),
+    "Do you think advertising makes people worry too much about keeping fit and how they look?": (
+        "Yes, quite often. Social media and adverts tend to show unrealistic body types, "
+        "which can put unnecessary pressure on young people instead of focusing on genuine health."
+    ),
+    # Test 03: After-school activities and trying new things
+    "Do you think classes like these would be popular with students?": (
+        "I think they would, especially if they feel relaxed and practical rather than like extra homework. "
+        "Learning something creative with friends after school is a nice way to unwind."
+    ),
+    "How important do you think it is for people to try new activities?": (
+        "Quite important, really. Trying unfamiliar things builds confidence and helps you discover "
+        "talents you didn't know you had, rather than sticking to the same routine."
+    ),
+    "Why do you think some people don't like to try new things?": (
+        "Mainly because they're afraid of making mistakes or looking silly in front of others. "
+        "It's much more comfortable to stay with what you already know you're good at."
+    ),
+    "A lot of people enjoy doing sport after school. Do you think this is a good thing?": (
+        "Definitely, yes. After sitting in classrooms all day, doing sport helps students burn off energy, "
+        "reduce stress and learn how to work together as a team."
+    ),
+    "What do students enjoy doing after school in your country?": (
+        "Quite a mix — lots of teenagers play football or go to music and drama clubs, "
+        "while others prefer hanging out in local cafes or gaming with friends."
+    ),
+    "Do you think it's better to go out and do things after school or is it better to stay at home?": (
+        "I'd say a balance is best. Going out keeps you active and social, "
+        "but everyone needs a couple of quiet afternoons at home to rest and catch up on schoolwork."
+    ),
+    # Test 04: School trips and travel
+    "Do you think school trips should take place on a school day or at the weekend?": (
+        "On a school day, I'd say. Most students and teachers need their weekends to rest and see family, "
+        "and a trip during the week feels like part of your actual education."
+    ),
+    "If you go on a school trip, is it better to visit a city, or go to the countryside?": (
+        "It depends on the subject, really. Cities are brilliant for museums, theatre and history, "
+        "whereas the countryside is ideal for geography, wildlife and outdoor team activities."
+    ),
+    "What can students do in class after going on a school trip?": (
+        "They could work in small groups to prepare a short presentation or display with their photographs, "
+        "which helps everyone remember what they actually learnt on the trip."
+    ),
+    "What's a good place for students to visit in your country?": (
+        "I'd recommend somewhere like Bath or York — they're easy to walk around, packed with history "
+        "and have plenty of engaging museums for school groups."
+    ),
+    "What's the most interesting thing about visiting other countries?": (
+        "For me it's experiencing everyday life in a different culture — hearing another language, "
+        "trying local dishes and noticing small differences in how people live."
+    ),
+    "If you could go anywhere in the world, where would you go?": (
+        "I'd love to visit Japan one day. The blend of ancient temples, modern cities and amazing food "
+        "seems completely different from anything I've experienced in Europe."
+    ),
+}
+
+
+def generate_partner_line(kind, test, question_text="", turn_index=0, candidate_summary="",
+                          focus_option="", next_option="", covered_options=None):
     """Produce a natural B2 British-English partner response.
 
     Uses Gemini when configured (and not in test mode), falling back cleanly
@@ -519,28 +624,91 @@ def generate_partner_line(kind, test, question_text="", turn_index=0, candidate_
     partner_cfg = test.get("partner") or {}
     partner_name = partner_cfg.get("name", "Alex")
     partner_home = partner_cfg.get("home", "Bristol")
+    p3_opts = test.get("parts", {}).get("3", {}).get("options") or ["the first idea", "the second idea"]
 
     if kind == "intro_name":
         return f"I'm {partner_name}."
     if kind == "intro_home":
         return f"I live in {partner_home}."
+    if kind == "part3_meta_go_ahead":
+        return "Yes, go ahead."
+    if kind == "part3_open":
+        opt0 = focus_option or p3_opts[0]
+        return f"Shall we start with {opt0}? What do you think about that one?"
+    if kind == "part3_decision_open":
+        opt0 = focus_option or p3_opts[0]
+        return (
+            f"Well, if we have to narrow it down, I'd probably lean towards {opt0} "
+            f"because it seems quite practical. What do you think?"
+        )
     if kind == "part2_monologue":
         return test["parts"]["2"]["task2"].get("partner_monologue") or (
             "Both photographs show quite different situations. In the first picture, "
             "things look fairly calm, whereas the second seems much busier and livelier."
         )
 
-    # Try live LLM for interactive Part 3 / Part 4 / Part 2 followup when key exists
+    # Curated Part 2 follow-up for built-in tests avoids a redundant LLM call
+    if kind == "part2_followup" and test.get("id") in ("01", "02", "03", "04"):
+        tid = test.get("id")
+        if tid == "01":
+            return (
+                "To be honest, I don't always find it easy to ask for help at first — "
+                "I usually try to sort things out myself, though if it's serious I'll definitely ask a friend."
+            )
+        if tid == "02":
+            return (
+                "I quite enjoy flying for longer journeys because it saves so much time, "
+                "even though waiting around at airports can be a bit tiring."
+            )
+        if tid == "03":
+            return (
+                "I think I'd prefer tennis, actually. Running looks exhausting, "
+                "whereas tennis seems a bit more tactical — though playing in front of a huge crowd would make me nervous."
+            )
+        return (
+            "Well, I used to prefer studying on my own, but lately I've realised "
+            "working with friends helps because you can test each other and share ideas."
+        )
+
+    # Curated Part 4 own answer when partner goes first (no candidate summary yet)
+    if kind == "part4_answer" and not candidate_summary and question_text in _PART4_PARTNER_BANK:
+        return _PART4_PARTNER_BANK[question_text]
+
+    # Try live LLM for interactive turns when API key exists (outside test mode)
     api_key = google_api_key()
-    if api_key and not is_test_mode() and kind in ("part3_discussion", "part3_decision", "part4", "part2_followup"):
+    llm_kinds = ("part3_discussion", "part3_decision", "part4_answer", "part4_react", "part4", "part2_followup")
+    if api_key and not is_test_mode() and kind in llm_kinds:
         persona = partner_cfg.get("persona") or f"A B2 First candidate from {partner_home}."
+        extra_guidance = ""
+        if kind == "part3_discussion":
+            extra_guidance = (
+                f"React directly to your partner's view on '{focus_option or p3_opts[0]}' "
+                f"(partially agree or politely disagree with a brief reason), then move the conversation "
+                f"on to a DIFFERENT card idea: '{next_option or p3_opts[-1]}' and ask for their view. "
+                f"Do not repeat already covered ideas unnecessarily ({', '.join(covered_options or [])})."
+            )
+        elif kind == "part3_decision":
+            extra_guidance = (
+                f"Negotiate genuinely towards a decision. You may propose '{next_option or focus_option or p3_opts[0]}', "
+                "push back gently, compromise, or politely maintain your view (agreement is not mandatory)."
+            )
+        elif kind == "part4_answer":
+            extra_guidance = (
+                "Give YOUR OWN clear, reasoned opinion answering the examiner's question directly. "
+                "Do not merely say 'I agree' with the other candidate."
+            )
+        elif kind in ("part4_react", "part4"):
+            extra_guidance = (
+                "React naturally to the other candidate's answer — agree, partly disagree, or add a fresh angle "
+                "related to the examiner's question."
+            )
+
         sys_prompt = (
             f"You are {partner_name}, a B2 First speaking candidate. {persona} "
             "Speak natural spoken British English (NEVER American spellings or words like "
-            "gotten, mom, math, vacation, soccer, sidewalk, color, organize). "
+            "gotten, mom, math, vacation, soccer, sidewalk, color, organize, favorite, center). "
             "Keep your turn to 1-3 natural sentences (20-45 words). "
-            "You may pause briefly ('Well,', 'Hmm,'), politely disagree, or adjust your view, "
-            "and in Part 3 ask a short question back to keep the discussion collaborative. "
+            f"{extra_guidance} "
             "Return JSON: {\"line\": \"...\"}"
         )
         user_msg = (
@@ -585,70 +753,62 @@ def generate_partner_line(kind, test, question_text="", turn_index=0, candidate_
         )
 
     if kind == "part2_followup":
-        tid = test.get("id")
-        if tid == "01":
-            return (
-                "To be honest, I don't always find it easy to ask for help at first — "
-                "I usually try to sort things out myself, though if it's serious I'll definitely ask a friend."
-            )
-        if tid == "02":
-            return (
-                "I quite enjoy flying for longer journeys because it saves so much time, "
-                "even though waiting around at airports can be a bit tiring."
-            )
-        if tid == "03":
-            return (
-                "I think I'd prefer tennis, actually. Running looks exhausting, "
-                "whereas tennis seems a bit more tactical — though playing in front of a huge crowd would make me nervous."
-            )
-        if tid == "04":
-            return (
-                "Well, I used to prefer studying on my own, but lately I've realised "
-                "working with friends helps because you can test each other and share ideas."
-            )
         return (
             "I'd probably prefer the calmer option, because it's easier to concentrate, "
             "though both situations have their own appeal."
         )
 
     if kind == "part3_discussion":
-        opts = test["parts"]["3"].get("options") or ["the first option", "the second option"]
-        opt_a = opts[turn_index % len(opts)]
-        opt_b = opts[(turn_index + 1) % len(opts)]
+        opt_cur = focus_option or p3_opts[turn_index % len(p3_opts)]
+        opt_nxt = next_option or p3_opts[(turn_index + 1) % len(p3_opts)]
+        if opt_nxt == opt_cur and len(p3_opts) > 1:
+            opt_nxt = p3_opts[(p3_opts.index(opt_cur) + 1) % len(p3_opts)] if opt_cur in p3_opts else p3_opts[-1]
+        templates = [
+            f"Hmm, I see your point about {opt_cur}, though it might not appeal to everyone. Shall we move on to {opt_nxt}? What do you think?",
+            f"That's a fair point, actually — I hadn't looked at {opt_cur} that way. What about {opt_nxt}? Could that make a bigger difference?",
+            f"I partly agree with you there, although {opt_cur} could have practical drawbacks. On the other hand, how do you feel about {opt_nxt}?",
+            f"True, I can see why {opt_cur} would be attractive. Still, {opt_nxt} is worth considering too — would you say that's easier to organise?",
+            f"Yes, that makes sense, though I'm slightly sceptical about how well {opt_cur} would work long term. Do you think {opt_nxt} might be stronger?",
+            f"Good point — both have clear pros and cons. Looking at {opt_nxt}, I'd say it's quite appealing as well, wouldn't you?",
+        ]
+        return templates[turn_index % len(templates)]
+
+    if kind == "part3_decision":
+        opt_cur = focus_option or p3_opts[0]
+        opt_alt = next_option or (p3_opts[-1] if len(p3_opts) > 1 else opt_cur)
+        if opt_alt == opt_cur and len(p3_opts) > 1:
+            opt_alt = p3_opts[1]
         if turn_index == 0:
             return (
-                f"Hmm, I see what you mean, though I'm not completely sure about {opt_a}. "
-                f"What about {opt_b}? Do you think that would make a bigger difference?"
+                f"Hmm, I see why you'd pick that, though I'm still quite keen on {opt_alt} as well. "
+                f"Do you think {opt_cur} would work better alongside it?"
             )
         if turn_index == 1:
             return (
-                f"Actually, you've got a point there — I hadn't thought of it that way. "
-                f"On the other hand, {opt_b} might be easier to organise in practice. How do you see it?"
+                f"Fair enough, you've almost convinced me — I suppose {opt_cur} is a sensible choice overall, "
+                f"even if I still have a soft spot for {opt_alt}. Shall we settle on that?"
             )
         return (
-            f"Fair enough, I partly agree with that. Still, I think {opt_a} is worth considering "
-            f"alongside {opt_b} before we rule anything out."
+            f"All right then, I think we've weighed up the main points well — "
+            f"even if we don't agree on every detail, {opt_cur} feels like a realistic choice."
         )
 
-    if kind == "part3_decision":
-        opts = test["parts"]["3"].get("options") or ["the first idea", "the second idea"]
-        opt_a = opts[0]
-        opt_b = opts[-1] if len(opts) > 1 else opts[0]
-        if turn_index == 0:
-            return (
-                f"Well, if we have to choose, I'd lean towards {opt_a} first, "
-                f"though I'm torn between that and {opt_b}. Which two would you pick?"
-            )
-        return (
-            f"Yes, I think I've changed my mind slightly — going with your suggestion "
-            f"alongside {opt_b} feels like the most sensible choice overall. Shall we agree on those?"
-        )
+    if kind == "part4_answer":
+        if question_text in _PART4_PARTNER_BANK:
+            return _PART4_PARTNER_BANK[question_text]
+        own_fallbacks = [
+            "Personally, I think it really depends on someone's circumstances — having a sensible balance usually works much better than going to extremes.",
+            "In my view, there are clear benefits, though people often overlook the practical costs and the amount of time involved.",
+            "I'd say it's mostly positive, especially for younger people, provided it's well organised and doesn't put too much pressure on anyone.",
+            "Well, on the whole I'm quite optimistic about it, because shared experiences tend to be far more memorable in the long run.",
+        ]
+        return own_fallbacks[turn_index % len(own_fallbacks)]
 
-    # Part 4 fallback
-    p4_lines = [
-        "Well, I partly agree, though I think it really depends on someone's circumstances and how much free time they've got.",
+    # Part 4 reaction fallback ("part4_react" or legacy "part4")
+    p4_react_lines = [
+        "Well, I partly agree with that, though I think it really depends on someone's circumstances and how much free time they've got.",
         "Hmm, I'm not entirely convinced about that. On the one hand it sounds appealing, but on the other hand there are practical drawbacks to consider.",
         "Actually, I'd look at it slightly differently — having a good balance usually matters far more than going to extremes.",
         "That's a fair point. In my experience, people enjoy things much more when they're well organised and not overly expensive.",
     ]
-    return p4_lines[turn_index % len(p4_lines)]
+    return p4_react_lines[turn_index % len(p4_react_lines)]
