@@ -15,7 +15,7 @@ El examiner es un examinador Cambridge formal. **Siempre** habla en inglés brit
 Reglas de estilo obligatorias:
 
 - Británico: `organise`, `programme`, `colour`, `favourite`, `centre`, `practise` (verbo), `at the weekend`, `shall`, `have got`. Prohibido: `gotten`, `mom`, `math`, `vacation`, `fall`, `sidewalk`, `cell phone`, `soccer`, `train station` (usar `railway station`), `color`, `organize`.
-- Registro formal: `Good morning`, `I'd like you to…`, `Would you mind…?`, `I'm afraid…`, `I do apologise`, `Forgive me`, `May I ask…?`, `Thank you very much`, `Shall we…?`, `Very well`.
+- Registro formal: `Good morning`, `I'd like you to…`, `Would you mind…?`, `I'm afraid…`, `I beg your pardon`, `I'm terribly sorry`, `Forgive me`, `May I ask…?`, `Thank you very much`, `Shall we…?`, `Very well`.
 - Prohibido: `Hi`, `Hey`, `Yeah`, `Okay`, `OK`, `gonna`, `wanna`, `stuff`, `guys`, `no worries`, `got it`, `Great job!`, `Awesome`, emojis, signos de exclamación múltiples.
 - Contracciones solo donde el guion Cambridge real las usa (`I'd like`, `it's`). Nada de `gonna` ni `wanna`.
 - El examiner no halaga: dice `Thank you`, `That's fine`, `Very well`. No dice `Excellent!` ni `Well done!`.
@@ -23,15 +23,17 @@ Reglas de estilo obligatorias:
 
 Frases canónicas (usar exactamente estas o una variante igual de formal):
 
-- No entendió el nombre: `I do apologise. I didn't quite catch your name. Would you mind saying it again?`
-- No entendió la ciudad: `Forgive me — I didn't quite catch where you live. Would you mind repeating that?`
+- No oyó el nombre: `I beg your pardon. I didn't quite hear your name. Would you mind repeating it?`
+- No oyó la ciudad: `I beg your pardon. I didn't quite hear where you live. Would you mind repeating that?`
+- No oyó algo en general: `I'm terribly sorry. I didn't quite hear that. Would you mind saying it again?`
+- No entendió el contenido: `I'm afraid I didn't quite follow. Would you mind explaining that again?`
 - Respuesta off-topic: `I'm afraid that wasn't quite what I asked. Would you mind answering the question about …?`
 - Habló en español: `I'm afraid I didn't quite follow that. Would you mind repeating it in English?`
 - Silencio: `Take your time. Do let me know when you're ready.`
 - Cierre de parte: `Thank you very much. That brings us to the end of this part.`
 - Transición: `Thank you. We'll now move on to Part … .`
 
-Prohibido literalmente: `Sorry, I didn't catch your name`, `Could you say it again?` solo, `No problem`, `Alright?` (solo `All right?` cuando lo dice el guion), `Let's go`, `Ready?`.
+Prohibido literalmente: `catch` (en cualquier forma: `catch your name`, `didn't catch`), `Could you please repeat the question?`, `Pardon?` solo, `Sorry?` solo, `What?`, `No problem`, `Alright?` (solo `All right?` cuando lo dice el guion), `Let's go`, `Ready?`.
 
 ## 1. Contenido: 4 exámenes exactos
 
@@ -57,10 +59,10 @@ Estado `intro`, fuera del timer de examen:
 
 1. Examiner (TTS): saludo según hora local del servidor/usuario + “My name is Mr Thompson.”
 2. Examiner: “And your names are?”
-3. Usuario responde por micrófono. **Analizar semánticamente**: acepta “Juan”, “My name is Juan”, “I’m Juan”, nombre + apellido. Si dice otra cosa (ej. “I like pizza”), el examiner responde con la frase formal canónica: “I do apologise. I didn’t quite catch your name. Would you mind saying it again?” y reintenta. Máximo 2 reintentos; si sigue mal, avanza y registra `name_ok=false` para el reporte.
+3. Usuario responde por micrófono. **Analizar semánticamente**: acepta “Juan”, “My name is Juan”, “I’m Juan”, nombre + apellido. Si dice otra cosa (ej. “I like pizza”), el examiner responde con la frase formal canónica: “I beg your pardon. I didn’t quite hear your name. Would you mind repeating it?” y reintenta. Máximo 2 reintentos; si sigue mal, avanza y registra `name_ok=false` para el reporte.
 4. Partner (voz distinta, IA): dice su nombre (“I’m Alex.” / el que corresponda al test) **después** de que habló el usuario.
 5. Examiner: “Where do you live, <nombre usuario>?”
-6. Usuario responde; validar que sea ciudad/país/zona (“I live in Buenos Aires”, “Buenos Aires”, “Argentina”). Si no, repregunta formal (“Forgive me — I didn’t quite catch where you live. Would you mind repeating that?”), máximo 2. Registra `home_ok`.
+6. Usuario responde; validar que sea ciudad/país/zona (“I live in Buenos Aires”, “Buenos Aires”, “Argentina”). Si no, repregunta formal (“I beg your pardon. I didn’t quite hear where you live. Would you mind repeating that?”), máximo 2. Registra `home_ok`.
 7. Examiner: “And you, <partner>?” → partner responde con su ciudad fija.
 8. Recién ahí: si el usuario eligió una parte, saltar directo a esa parte. Si es full, empezar Part 1.
 
@@ -80,7 +82,7 @@ El examiner **examina también al partner**: en Part 1 y Part 4 el partner respo
 Cada turno de audio se transcribe y se analiza antes de responder:
 
 - Si la respuesta no contesta la pregunta (nombre, ciudad, pregunta de Part 1/4, o aporte en Part 3), el examiner **no la acepta**: repregunta o pide aclaración de forma natural, máximo 2 veces; luego sigue y lo marca en el reporte.
-- Si el usuario habla en español u otro idioma, el examiner pide en inglés formal que repita en inglés (“I’m afraid I didn’t quite follow that. Would you mind repeating it in English?”).
+- Si el usuario habla en español u otro idioma, el examiner pide en inglés formal que repita en inglés (“I’m afraid I didn’t understand. Would you mind repeating that in English?”).
 - Si hay silencio o audio vacío: “Take your time. Do let me know when you’re ready.” y reintenta; no inventar respuesta.
 - En Part 2 el usuario habla hasta 1 min: no interrumpir por validez; al terminar, si no comparó las fotos, el examiner puede hacer una follow-up (“Which photo shows…?”).
 - Guardar solo banderas booleanas/contadores (`name_ok`, `home_ok`, `off_topic_turns`), nunca transcript ni audio.
@@ -125,7 +127,7 @@ Tests propios, sin depender de micrófono físico:
 - `test_speaking_v3_own_task.py`: form multipart, validación por parte, ejecución single/full; no requiere JSON.
 - `test_speaking_v3_privacy.py`: turn no devuelve transcript; archivos de sesión no contienen audio/transcript; reporte sin pronunciación; historial viejo borrado.
 - `test_speaking_v3_catalog.py`: exactamente 4 tests, títulos, partner, 4 partes cada uno, assets existen y no contienen texto de examiner.
-- `test_speaking_v3_tone.py`: recorrer TODAS las líneas del examiner en los 4 guiones y en las respuestas de validación. Fallar si aparece cualquier término prohibido (`Sorry, I didn't catch`, `Okay`, `OK`, `Hi`, `Hey`, `gonna`, `wanna`, `stuff`, `guys`, `gotten`, `mom`, `math`, `vacation`, `fall`, `sidewalk`, `soccer`, `color`, `organize`, `Excellent!`, `Well done!`), si hay spelling americano, o si las frases de reintento no son las canónicas. El partner queda exento del registro formal, pero no de las reglas de idioma.
+- `test_speaking_v3_tone.py`: recorrer TODAS las líneas del examiner en los 4 guiones y en las respuestas de validación. Fallar si aparece cualquier término prohibido (`catch` (cualquier forma), `Could you please repeat the question?`, `Pardon?` solo, `Okay`, `OK`, `Hi`, `Hey`, `gonna`, `wanna`, `stuff`, `guys`, `gotten`, `mom`, `math`, `vacation`, `fall`, `sidewalk`, `soccer`, `color`, `organize`, `Excellent!`, `Well done!`), si hay spelling americano, o si las frases de reintento no son las canónicas. El partner queda exento del registro formal, pero no de las reglas de idioma.
 - Tests con proveedor stub/offline; audio WAV sintético o `X-Test-Transcript` solo en modo test. Nada de red real.
 
 Usar `uv run --no-project --with playwright --with httpx` si hace falta. Todos exit 0.
