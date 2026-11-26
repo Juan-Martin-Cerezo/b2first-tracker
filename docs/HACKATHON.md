@@ -66,7 +66,7 @@ The backend (`server.py`) acts as a strict, rate-limited proxy and validator —
 - **Backend:** Python 3.11+ standard library only (`http.server.ThreadingHTTPServer`, `urllib.request`, `hashlib`, `hmac`, `secrets`, `json`) — zero third-party Python runtime dependencies, zero external database.
 - **Frontend:** Vanilla HTML, CSS (`oklch` light/dark tokens), and JavaScript in a single-file app (`index.html`) plus public landing page (`landing.html`), using browser `MediaRecorder` and Web Audio API. Zero build step, zero JS frameworks, zero external font/JS CDNs.
 - **Storage & auth:** Atomic per-account JSON files (`0600`/`0700`) with 20-version backup rotation (`store.py`), PBKDF2-HMAC-SHA256 (600,000 iterations), SHA-256 hashed session tokens, SHA-256 hash-chained audit log, optional Google OAuth 2.0 + PKCE (`oauth_google.py`), WebAuthn passkeys (`webauthn.py`), and RFC 6238 TOTP MFA (`mfa.py`).
-- **Verification:** 160 standalone automated test suites under `tests/` using Playwright and HTTPX against isolated temporary servers with offline provider stubs.
+- **Verification:** 142 standalone automated test suites under `tests/` using Playwright and HTTPX against isolated temporary servers with offline provider stubs.
 
 ---
 

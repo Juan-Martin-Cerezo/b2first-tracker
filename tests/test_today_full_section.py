@@ -138,6 +138,13 @@ with sync_playwright() as p:
             continue
 
         expected_paper, official, log_type = WRITTEN[paper]
+        # Guided mock start: materials -> timer confirmation.
+        pg.click("#mockStartNextMatBtn")
+        pg.wait_for_timeout(120)
+        pg.click("#mockStartHaveMatBtn")
+        pg.wait_for_timeout(120)
+        pg.click("#mockStartGoBtn")
+        pg.wait_for_timeout(180)
         state = pg.evaluate(
             """() => ({
                 exPaper: exPaper,
