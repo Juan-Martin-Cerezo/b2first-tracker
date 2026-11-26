@@ -159,14 +159,20 @@ def main():
             _assert_examiner_clean(f"{tid}.p4.offtopic", tone.off_topic_prompt(q["topic"]))
 
         # Check all generated partner lines for this test
-        for kind in ("intro_name", "intro_home", "part2_monologue", "part2_followup", "part3_discussion", "part3_decision", "part4"):
-            for idx in range(4):
+        for kind in (
+            "intro_name", "intro_home", "part2_monologue", "part2_followup",
+            "part3_open", "part3_meta_go_ahead", "part3_discussion",
+            "part3_decision_open", "part3_decision", "part4_answer", "part4_react", "part4",
+        ):
+            for idx in range(6):
                 line = voice.generate_partner_line(kind, doc, turn_index=idx)
                 _assert_partner_clean(f"{tid}.partner.{kind}.{idx}", line)
 
-    # Check entire Part 1 partner bank
+    # Check entire Part 1 and Part 4 partner banks
     for q_text, ans in voice._PART1_PARTNER_BANK.items():
-        _assert_partner_clean(f"partner_bank.{q_text}", ans)
+        _assert_partner_clean(f"partner_bank_p1.{q_text}", ans)
+    for q_text, ans in voice._PART4_PARTNER_BANK.items():
+        _assert_partner_clean(f"partner_bank_p4.{q_text}", ans)
 
     # 3. Live in-process engine sweep across all 4 tests: capture EVERY spoken clip
     helpers.isolated_data_dir(prefix="b2tone-")

@@ -7,6 +7,7 @@ Run: python3 tests/test_speaking_v3_parts.py
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -16,6 +17,7 @@ sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, TESTS_DIR)
 
 import helpers  # noqa: E402
+from speaking_v3 import engine, voice  # noqa: E402
 
 
 def _req(base, method, path, payload=None, token=None, headers=None):
@@ -171,53 +173,163 @@ def main():
     cst, ctype, craw = _get_bytes(base, r["ui"]["card"])
     assert cst == 200 and "png" in ctype.lower() and craw[:8] == b"\x89PNG\r\n\x1a\n"
 
-    # Part 3: prep_done -> 120s discussion
-    st, r = _req(
-        base, "POST", f"/api/speaking/v3/sessions/{fsid}/turn",
-        {"action": "prep_done"}, token=owner_tok,
-    )
-    assert st == 200 and r["state"]["step"] == "discussion_0"
-    assert r["ui"]["subtimer_seconds"] == 120
+    # Part 3: prep_done -> examiner start_discussion + partner opening line -> 120s discussion
+    spoken_log = []
+    orig_synth = voice.synthesize_speech
 
-    # Part 3: 3 discussion turns -> 60s decision
-    for msg in [
-        "Providing parks would attract families and tourists who want green spaces in the town.",
-        "Building holiday flats makes it easier for visitors to stay longer, although shops are also important.",
-        "Security cameras might make tourists feel safe, whereas a large nightclub mainly appeals to young people.",
-    ]:
-        r = _turn(base, fsid, owner_tok, msg)
-        assert r["accepted"] is True
+    def spy_synth(text, role="examiner", partner_voice=None, cacheable=False):
+        spoken_log.append((role, text))
+        return orig_synth(text, role=role, partner_voice=partner_voice, cacheable=cacheable)
 
-    assert r["state"]["phase"] == "part3" and r["state"]["step"] == "decision_0"
-    assert r["ui"]["subtimer_seconds"] == 60
+    voice.synthesize_speech = spy_synth
+    try:
+        spoken_log.clear()
+        st, r = _req(
+            base, "POST", f"/api/speaking/v3/sessions/{fsid}/turn",
+            {"action": "prep_done"}, token=owner_tok,
+        )
+        assert st == 200 and r["state"]["step"] == "discussion_0"
+        assert r["ui"]["subtimer_seconds"] == 120
+        assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner"], r["sequence"]
+        partner_open_lines = [txt for role, txt in spoken_log if role == "partner"]
+        assert partner_open_lines and "shall we start with" in partner_open_lines[0].lower(), partner_open_lines
 
-    # Part 3: 2 decision turns -> transitions to Part 4
-    r = _turn(base, fsid, owner_tok, "I think providing parks and having more shops are the best ideas for tourists.")
-    assert r["state"]["phase"] == "part3" and r["state"]["step"] == "decision_1"
-    r = _turn(base, fsid, owner_tok, "Yes, I agree, parks and holiday flats together would attract the widest range of visitors.")
-    assert r["state"]["phase"] == "part4"
-    assert r["ui"]["part"] == 4 and r["ui"]["timer_seconds"] == 240
-    assert r["ui"]["card"] is None and r["ui"]["images"] == []
+        # Part 3 meta-turn: "Can I start?" -> partner says "Yes, go ahead.", does NOT count as content turn!
+        spoken_log.clear()
+        r_meta = _turn(base, fsid, owner_tok, "Can I start?")
+        assert r_meta["accepted"] is True and r_meta.get("meta_turn") is True
+        assert r_meta["state"]["step"] == "discussion_0" and r_meta["state"]["question_index"] == 0
+        assert [c["speaker"] for c in r_meta["sequence"]] == ["partner"]
+        assert spoken_log == [("partner", "Yes, go ahead.")], spoken_log
 
-    # Part 4: 4 discussion questions -> finished!
-    p4_answers = [
-        "No, you do not have to spend a lot of money to enjoy a good holiday with friends or family.",
-        "I partly agree that people travel too much, especially because frequent flights can harm the environment.",
-        "Many workers do not have enough time for holidays because their jobs are busy and stressful.",
-        "People like going away on holiday to escape their routine, relax and explore new places and cultures.",
-    ]
-    for idx, ans in enumerate(p4_answers):
-        r = _turn(base, fsid, owner_tok, ans)
-        assert r["accepted"] is True
-        if idx < 3:
-            assert r["state"]["phase"] == "part4" and r["done"] is False
-        else:
-            assert r["state"]["phase"] == "finished" and r["done"] is True
+        # Part 3 discussion: 5 user turns (including short cooperative turns!), partner covers distinct ideas,
+        # NO examiner interruptions between turns, and does NOT end at 3 turns!
+        disc_turns = [
+            "I think building a nightclub would mainly attract young tourists in the summer.",
+            "I agree",
+            "That's true",
+            "I'm not sure, maybe providing parks is better for families.",
+            "Having more shops could also keep visitors busy when it rains.",
+        ]
+        partner_disc_lines = []
+        for idx, msg in enumerate(disc_turns):
+            spoken_log.clear()
+            r = _turn(base, fsid, owner_tok, msg)
+            assert r["accepted"] is True, (idx, msg, r)
+            if idx < 4:
+                assert r["state"]["phase"] == "part3" and r["state"]["step"] == f"discussion_{idx + 1}", (idx, r["state"])
+                # Strictly candidate-to-candidate: NO examiner clips during discussion!
+                assert [c["speaker"] for c in r["sequence"]] == ["partner"], (idx, r["sequence"])
+                p_txt = [txt for role, txt in spoken_log if role == "partner"][0]
+                partner_disc_lines.append(p_txt)
+            else:
+                # 5th turn transitions to decision_0: examiner decision_prompt + partner opens negotiation
+                assert r["state"]["phase"] == "part3" and r["state"]["step"] == "decision_0", r["state"]
+                assert r["ui"]["subtimer_seconds"] == 60
+                assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner"], r["sequence"]
+
+        # Partner covered multiple distinct card options and never repeated the exact same line
+        assert len(set(partner_disc_lines)) == len(partner_disc_lines) == 4, partner_disc_lines
+        assert r["state"].get("covered_count", 0) >= 4, r["state"]
+
+        # Part 3 decision: 3 user turns of negotiation -> transitions to Part 4
+        r = _turn(base, fsid, owner_tok, "I'm not sure about a nightclub, I think providing parks is better for everyone.")
+        assert r["state"]["phase"] == "part3" and r["state"]["step"] == "decision_1"
+        assert [c["speaker"] for c in r["sequence"]] == ["partner"]
+
+        r = _turn(base, fsid, owner_tok, "True, holiday flats are useful too, though parks attract families all year.")
+        assert r["state"]["phase"] == "part3" and r["state"]["step"] == "decision_2"
+        assert [c["speaker"] for c in r["sequence"]] == ["partner"]
+
+        r = _turn(base, fsid, owner_tok, "I still prefer parks, even if we don't completely agree.")
+        assert r["state"]["phase"] == "part4" and r["state"]["step"] == "q_0_user", r["state"]
+        assert r["ui"]["part"] == 4 and r["ui"]["timer_seconds"] == 240
+        assert r["ui"]["card"] is None and r["ui"]["images"] == []
+
+        # Part 4: alternating odd/even rounds with partner's own opinion + user reaction!
+        # Round 0 (odd: user first) -> user answers -> examiner asks partner -> partner gives own opinion -> examiner asks user to react
+        spoken_log.clear()
+        r = _turn(base, fsid, owner_tok, "No, you do not have to spend a lot of money to enjoy a good holiday with friends or family.")
+        assert r["accepted"] is True and r["state"]["phase"] == "part4" and r["state"]["step"] == "q_0_react", r["state"]
+        assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner", "examiner"]
+        p4_r0_partner = [txt for role, txt in spoken_log if role == "partner"][0]
+        assert "cheap" in p4_r0_partner.lower() or "camping" in p4_r0_partner.lower() or "holiday" in p4_r0_partner.lower(), p4_r0_partner
+        assert any(role == "examiner" and "agree with alex" in txt.lower() for role, txt in spoken_log), spoken_log
+
+        # Round 0 reaction by user -> advances to Round 1 (even: partner goes FIRST!)
+        spoken_log.clear()
+        r = _turn(base, fsid, owner_tok, "Yes, I agree with Alex, spending time with friends matters more than expensive hotels.")
+        assert r["accepted"] is True and r["state"]["phase"] == "part4" and r["state"]["step"] == "q_1_user", r["state"]
+        assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner", "examiner"]
+        p4_r1_partner = [txt for role, txt in spoken_log if role == "partner"][0]
+        assert "flight" in p4_r1_partner.lower() or "travel" in p4_r1_partner.lower(), p4_r1_partner
+
+        # Round 1 user answers -> examiner asks partner "do you agree?" -> partner reacts -> Round 2 (odd: user first)
+        spoken_log.clear()
+        r = _turn(base, fsid, owner_tok, "I partly agree that people travel too much, especially because frequent flights can harm the environment.")
+        assert r["accepted"] is True and r["state"]["phase"] == "part4" and r["state"]["step"] == "q_2_user", r["state"]
+        assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner", "examiner"]
+
+        # Round 2 (odd: user first) -> answer -> partner opinion -> user reacts -> Round 3 (even: partner first)
+        r = _turn(base, fsid, owner_tok, "Many workers do not have enough time for holidays because their jobs are busy and stressful.")
+        assert r["accepted"] is True and r["state"]["step"] == "q_2_react"
+        r = _turn(base, fsid, owner_tok, "That's true, longer breaks would definitely help people relax.")
+        assert r["accepted"] is True and r["state"]["step"] == "q_3_user"
+        assert [c["speaker"] for c in r["sequence"]] == ["examiner", "partner", "examiner"]
+
+        # Round 3 (even: partner went first) -> user answers -> partner reacts -> finished!
+        r = _turn(base, fsid, owner_tok, "People like going away on holiday to escape their routine, relax and explore new places and cultures.")
+        assert r["accepted"] is True and r["state"]["phase"] == "finished" and r["done"] is True
+    finally:
+        voice.synthesize_speech = orig_synth
 
     st, rep_full = _req(base, "POST", f"/api/speaking/v3/sessions/{fsid}/report", {}, token=owner_tok)
     assert st == 200 and rep_full["flags"]["part2_compared"] is True
     for k in ("grammar_vocabulary", "discourse", "interactive"):
         assert 0.0 <= rep_full["bands"][k] <= 5.0
+
+    # 2b. Verify Part 3 time-based cutoff (~110s discussion -> elapsed_part_seconds=125) transitions to decision
+    st, st3 = _req(base, "POST", "/api/speaking/v3/sessions", {"test_id": "02", "part": 3}, token=owner_tok)
+    assert st == 200
+    s3id = st3["session_id"]
+    _complete_intro(base, s3id, owner_tok)
+    st, _ = _req(base, "POST", f"/api/speaking/v3/sessions/{s3id}/turn", {"action": "prep_done"}, token=owner_tok)
+    assert st == 200
+    r_time_dec = _turn(
+        base, s3id, owner_tok,
+        "Sleeping eight hours every night is essential for energy and concentration.",
+        extra={"elapsed_part_seconds": 126},
+    )
+    assert r_time_dec["state"]["phase"] == "part3" and r_time_dec["state"]["step"] == "decision_0", r_time_dec["state"]
+
+    # 2c. Measure & verify parallel TTS latency speedup vs sequential while preserving clip order
+    orig_synth2 = voice.synthesize_speech
+    sim_delay = 0.12
+
+    def slow_synth(text, role="examiner", partner_voice=None, cacheable=False):
+        time.sleep(sim_delay)
+        return orig_synth2(text, role=role, partner_voice=partner_voice, cacheable=False)
+
+    voice.synthesize_speech = slow_synth
+    try:
+        test_clips = [
+            {"speaker": "examiner", "text": f"Examiner clip {i}", "step": f"s{i}", "ui": None, "cacheable": False}
+            for i in range(4)
+        ]
+        t_seq0 = time.monotonic()
+        for c in test_clips:
+            voice.synthesize_speech(c["text"], role=c["speaker"], partner_voice="Kore", cacheable=False)
+        seq_ms = (time.monotonic() - t_seq0) * 1000.0
+
+        t_par0 = time.monotonic()
+        par_out, par_err = engine._synth_sequence(test_clips, "Kore")
+        par_ms = (time.monotonic() - t_par0) * 1000.0
+        assert not par_err and len(par_out) == 4
+        assert [c["step"] for c in par_out] == ["s0", "s1", "s2", "s3"], "Parallel TTS broke clip order!"
+        assert par_ms < seq_ms * 0.55, f"Parallel TTS not faster enough: par={par_ms:.1f}ms vs seq={seq_ms:.1f}ms"
+        print(f"LATENCY 4-clip TTS: sequential={seq_ms:.1f}ms -> parallel={par_ms:.1f}ms ({seq_ms/par_ms:.2f}x speedup)")
+    finally:
+        voice.synthesize_speech = orig_synth2
 
     # 3. Skip & Delete endpoints
     st, ss = _req(base, "POST", "/api/speaking/v3/sessions", {"test_id": "03", "part": 1}, token=owner_tok)

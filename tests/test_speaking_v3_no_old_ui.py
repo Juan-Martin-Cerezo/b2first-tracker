@@ -62,8 +62,11 @@ def main():
     js_block = m_js.group(0)
     if "pronunciation" in js_block.lower():
         failures.append("Forbidden word 'pronunciation' inside Speaking v3 JS engine")
-    if "localStorage" in js_block:
-        failures.append("Speaking v3 JS engine must not touch localStorage")
+    # Only the boolean preference `spk3_auto_check` may touch localStorage (never transcripts/audio/session)
+    ls_calls = re.findall(r"localStorage\.[A-Za-z]+\([^)]*\)", js_block)
+    for call in ls_calls:
+        if "AUTO_CHECK_KEY" not in call and "spk3_auto_check" not in call:
+            failures.append(f"Speaking v3 JS engine touched unexpected localStorage key: {call}")
     if "console.log" in js_block:
         failures.append("Speaking v3 JS engine must not console.log")
 

@@ -133,8 +133,8 @@ def main():
         assert len(r_name["sequence"]) == 2
         assert r_name["sequence"][0]["speaker"] == "partner"
         assert r_name["sequence"][1]["speaker"] == "examiner"
-        assert spoken[0] == ("partner", "I'm Alex.")
-        assert "Where do you live, Juan?" in spoken[1][1]
+        assert ("partner", "I'm Alex.") in spoken, spoken
+        assert any(r == "examiner" and "Where do you live, Juan?" in txt for r, txt in spoken), spoken
         # Verify distinct audio voices (examiner vs partner)
         f_partner = _wav_freq_signature(r_name["sequence"][0]["audio_b64"])
         f_examiner = _wav_freq_signature(r_name["sequence"][1]["audio_b64"])
@@ -164,9 +164,10 @@ def main():
         assert r_home["state"]["phase"] == "part4"
         assert r_home["ui"]["part"] == 4
         assert r_home["ui"]["timer_seconds"] == 240
-        assert spoken[0][0] == "examiner" and "And you, Alex?" in spoken[0][1]
-        assert spoken[1] == ("partner", "I live in Bristol.")
-        assert spoken[2][0] == "examiner" and "Part 4" in spoken[2][1]
+        assert [c["speaker"] for c in r_home["sequence"]] == ["examiner", "partner", "examiner"]
+        assert any(r == "examiner" and "And you, Alex?" in txt for r, txt in spoken), spoken
+        assert ("partner", "I live in Bristol.") in spoken, spoken
+        assert any(r == "examiner" and "Part 4" in txt for r, txt in spoken), spoken
 
         # Check report records name_ok=True, home_ok=True (even after 1 retry each)
         st, rep = _req(base, "POST", f"/api/speaking/v3/sessions/{sid}/report", {}, token=tok)
