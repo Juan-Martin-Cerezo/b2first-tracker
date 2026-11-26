@@ -37,7 +37,7 @@ Self-study learners preparing for the Cambridge B2 First exam face two practical
 - **Adaptive daily plan & 3-step session coach:** An optional 12-question baseline diagnostic ranks weak Reading & Use of English parts. Two rotation modes (*By part* and *Full paper each session*) derive today's session directly from the sessions already logged, paired with a mobile-friendly 3-step session coach and official Cambridge timings.
 - **4-band Cambridge Writing corrector:** Grades Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*, quoting exact sentences from the user's draft, naming two concrete weaknesses, and proposing three targeted rewrites.
 - **4-part Cambridge Speaking exam:** Four complete Cambridge sample exams (*B2 First Sample Paper 1 & 2*, *B2 First for Schools Sample Paper 1 & 2*) plus **Use my own task** (multipart form + image upload). Runs a single part or the full 14-minute oral exam with mandatory formal British examiner introduction, AI candidate partner, push-to-talk audio, Part 2 photo pairs, Part 3 task cards with 15-second preparation, and a 3-band report (no transcripts, no pronunciation scoring).
-- **Real Mocks & Practice Library:** Guided full-mock start inside **Exam → Real mocks** (materials to timer in one screen, handing straight into Speaking), a searchable Library of local sample papers, answer keys, audio, tapescripts, checklists, and 74 verified online practice sources, plus private user-uploaded Listening practice files.
+- **Real Mocks & Practice Library:** Guided full-mock start inside **Exam → Real mocks** (materials to timer in one screen, handing straight into Speaking), a searchable Library of local sample papers, answer keys, audio, tapescripts, checklists, and 81 verified online practice sources, plus private user-uploaded Listening practice files.
 - **Honest progress tracking:** Three zero-dependency SVG charts (*Evolution over time*, *Weakest parts*, *Weekly consistency*), a stage Progression Matrix, and a separate Error Taxonomy view (*L-GAP*, *G-ERR*, *T-MIS*, *T-LIM*).
 
 ---
@@ -66,7 +66,7 @@ The backend (`server.py`) acts as a strict, rate-limited proxy and validator —
 - **Backend:** Python 3.11+ standard library only (`http.server.ThreadingHTTPServer`, `urllib.request`, `hashlib`, `hmac`, `secrets`, `json`) — zero third-party Python runtime dependencies, zero external database.
 - **Frontend:** Vanilla HTML, CSS (`oklch` light/dark tokens), and JavaScript in a single-file app (`index.html`) plus public landing page (`landing.html`), using browser `MediaRecorder` and Web Audio API. Zero build step, zero JS frameworks, zero external font/JS CDNs.
 - **Storage & auth:** Atomic per-account JSON files (`0600`/`0700`) with 20-version backup rotation (`store.py`), PBKDF2-HMAC-SHA256 (600,000 iterations), SHA-256 hashed session tokens, SHA-256 hash-chained audit log, optional Google OAuth 2.0 + PKCE (`oauth_google.py`), WebAuthn passkeys (`webauthn.py`), and RFC 6238 TOTP MFA (`mfa.py`).
-- **Verification:** 143 standalone automated test suites under `tests/` using Playwright and HTTPX against isolated temporary servers with offline provider stubs.
+- **Verification:** 144 standalone automated test suites under `tests/` using Playwright and HTTPX against isolated temporary servers with offline provider stubs.
 
 ---
 
@@ -101,7 +101,7 @@ Works directly on https://firsttracker.app or locally at `http://127.0.0.1:8088`
 | **Speaking voice** | 4 Cambridge sample papers + multipart own tasks, mandatory intro, push-to-talk Gemini STT/TTS, AI partner, 3-band report | Requires server `B2_SPK_GOOGLE_KEY` (returns `503 speech_not_configured` when unset — never simulates voices). Pronunciation is not scored. |
 | **Daily AI quotas** | 5 Writing evaluations and 3 Speaking mocks (45 min) per UTC day per standard account + instance-wide monthly cap | Shared hosted keys are budgeted; users can add their own provider key in Settings to bypass shared limits. |
 | **Accounts** | Username + 12-char password, Google OAuth, passkeys, TOTP MFA | An account is required (no anonymous/local-only mode). Password resets without Google OAuth are manual requests because no email is required. |
-| **Exam materials** | 4 Speaking sample papers for personal practice (`assets/speaking/exams/CREDITS.md`), 12-item diagnostic, writing samples, 74 verified online sources, private user Listening & Speaking own-task uploads | Official copyrighted Cambridge past papers are not redistributed as downloadable files; users open official external links or upload personal files privately. |
+| **Exam materials** | 4 Speaking sample papers for personal practice (`assets/speaking/exams/CREDITS.md`), 12-item diagnostic, writing samples, 81 verified online sources, private user Listening & Speaking own-task uploads | Official copyrighted Cambridge past papers are not redistributed as downloadable files; users open official external links or upload personal files privately. |
 
 ---
 
