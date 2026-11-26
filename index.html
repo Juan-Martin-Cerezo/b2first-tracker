@@ -11318,7 +11318,9 @@ const SPEAKING=(function(){
     renderTimer();
     state.partTimerIv=setInterval(()=>{
       if(!state.isOpen||state.view!=='exam'){stopPartTimer();return;}
-      if(state.partTimerPaused)return;
+      // "Please wait…" (busy) means nobody is speaking: the official clock
+      // must not run while the answer is being checked.
+      if(state.partTimerPaused||state.busy)return;
       state.partTimerLeft=Math.max(0,state.partTimerLeft-1);
       renderTimer();
       if(state.partTimerLeft<=0){
