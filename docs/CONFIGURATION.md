@@ -38,13 +38,13 @@ With no AI keys configured, the app still starts and runs accounts, study plans,
 
 ## Usage limits, concurrency & owner accounts
 
-Per-account service caps (`5` writing evaluations, `1` speaking mock, and `15` speaking minutes per UTC day) are defined in [`plans.py`](../plans.py). Instance-wide caps and overrides are configured via environment variables:
+Per-account service caps (`5` writing evaluations, `3` speaking mocks, and `45` speaking minutes per UTC day) are defined in [`plans.py`](../plans.py). Instance-wide caps and overrides are configured via environment variables:
 
 | Variable | Default | Effect |
 | --- | --- | --- |
 | `B2_AI_DAILY_PER_USER` | `200` | Low-level per-user text AI call ceiling in `server.py` (standard accounts hit `plans.py`'s `5`/day writing cap first). |
 | `B2_AI_DAILY_TOTAL` | `1200` | Instance-wide daily text AI call cap across non-owner accounts. Hosted instances typically lower this (e.g. `20`) to match prepaid budget. |
-| `B2_SPK_MIN_DAILY_PER_USER` | `60` | Low-level per-user daily speaking minute ceiling in `server.py` (standard accounts hit `plans.py`'s `15` min/day cap first). |
+| `B2_SPK_MIN_DAILY_PER_USER` | `60` | Low-level per-user daily speaking minute ceiling in `server.py` (standard accounts hit `plans.py`'s `45` min/day cap first). |
 | `B2_SPK_MIN_DAILY_TOTAL` | `600` | Instance-wide daily speaking minute cap across non-owner accounts. Hosted instances typically lower this (e.g. `25`) to fit monthly budget. |
 | `B2_SPK_MONTHLY_MINUTES` | `900` | Global monthly Gemini Live minute guard (`data/spk_spend.json`). Applies to **every** account, including owners, to cap real monthly spend. |
 | `B2_SPK_MAX_INFLIGHT` | `4` | Maximum concurrent upstream Speaking turn/TTS calls per instance. |
@@ -67,8 +67,10 @@ Per-account service caps (`5` writing evaluations, `1` speaking mock, and `15` s
 | `B2_PUBLIC_HEALTH` | `0` | Set to `1` to include absolute filesystem paths in `/api/health`. Keep `0` in production. |
 | `B2_NO_CACHE` | `0` | Set to `1` to disable static asset compression/ETag caching (benchmarking only). |
 | `B2_CONNECTION_LIMIT` | `512` | Maximum simultaneous open sockets before returning `503 busy`. |
+| `B2_REQUEST_QUEUE_SIZE` | `256` | TCP `listen()` backlog size for the HTTP server. |
 | `B2_KEEPALIVE_TIMEOUT` | `5` | Idle HTTP keep-alive socket timeout in seconds. |
 | `B2_KEEPALIVE_MAX_REQUESTS` | `100` | Maximum requests served per keep-alive connection. |
+| `B2_TOKENS_FLUSH_S` | `60` | Interval in seconds for flushing session `last_seen` timestamps to disk. |
 | `B2_RATE_USER_API` | `1200` | Authenticated API requests per minute per account. |
 | `B2_RATE_IP_AUTH` | `240` | Auth endpoint requests (login/register/password) per minute per IP. |
 | `B2_RATE_IP_ANON` | `600` | Unauthenticated requests per minute per IP. |

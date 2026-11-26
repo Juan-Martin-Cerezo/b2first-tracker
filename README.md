@@ -9,11 +9,18 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 [![Live app](https://img.shields.io/badge/live-firsttracker.app-2563eb)](https://firsttracker.app)
 [![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B%20stdlib-3f3f46)](server.py)
 [![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)](index.html)
-[![Tests](https://img.shields.io/badge/tests-149%20suites-16a34a)](tests/run_all.sh)
+[![Tests](https://img.shields.io/badge/tests-160%20suites-16a34a)](tests/run_all.sh)
 [![AI](https://img.shields.io/badge/AI-Gemini%20%2B%20DeepSeek-0f766e)](#how-the-ai-is-used)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3f3f46)](LICENSE)
 
-**Live service:** https://firsttracker.app
+**Live service:** https://firsttracker.app  
+**Privacy in one line:** Accounts and progress live in private per-account JSON files; speaking audio and speaking transcripts are never stored on disk, and the only analytics is cookie-free aggregate Cloudflare Web Analytics.
+
+---
+
+## Problem
+
+Self-study candidates preparing for the Cambridge B2 First can check Reading, Use of English, and Listening against answer keys, but hit two walls: **Writing** and **Speaking** have no key, and studying without structure makes it hard to keep all 17 exam parts rotating before exam day. B2 First Tracker pairs a deterministic daily study plan with rubric-grounded AI feedback for Writing and a timed 4-part Speaking examiner.
 
 ---
 
@@ -22,7 +29,7 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/today.webp" alt="Today view: scheduled Reading part 1 session with timer and collapsible Materials blocks"></td>
-    <td width="50%"><img src="docs/screenshots/speaking-exam.webp" alt="Speaking Exam Part 2: two Wikimedia Commons photographs, task prompt, countdown clock, examiner indicator, and live transcript"></td>
+    <td width="50%"><img src="docs/screenshots/speaking-exam.webp" alt="Speaking Exam Part 2: two Wikimedia Commons photographs, task prompt, countdown clock, and examiner indicator"></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Today:</b> scheduled session, timer, and collapsible Materials</sub></td>
@@ -42,12 +49,12 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 
 ## What it does
 
-- **Daily exam plan derived from your log:** An optional 12-question diagnostic ranks your weakest exam parts. Two rotations (*By part* and *Full paper each session*) derive today's session directly from the units already logged, with official Cambridge timings, streak shields, and exam-day countdown.
+- **Daily exam plan and 3-step session coach:** An optional 12-question diagnostic ranks your weakest exam parts. Two rotations (*By part* and *Full paper each session*) derive today's session directly from the units already logged, with a mobile-ready 3-step session coach, official Cambridge timings, streak shields, and exam-day countdown.
 - **Writing corrector on all four Cambridge bands:** Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*. Every band quotes evidence from your text, lists concrete weaknesses, rewrites three sentences, and displays a step-by-step progress bar with elapsed time while grading.
-- **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
+- **Cambridge AI Speaking examiner (Parts 1–4):** Runs a full 14-minute mock or a single part with official timings, turn-based STT/TTS voice (plus optional real-time Gemini Live or browser-voice fallback), a partner role from Part 2 onward that reacts to what you actually said, and custom task support (*Use my own task*).
 - **Live Studio (local VAD):** Browser-only `AudioWorklet` voice activity detection (`assets/spk-vad.js`) measures speaking time and silences in real time; no audio is recorded or uploaded.
-- **Practice (By part & unified Library):** Timed drills for every exam part alongside a single searchable, sortable **Library** tab combining local papers, answer keys, audio, lesson plans, examiner notes, reference handbooks, and verified online sources — plus private user-uploaded Listening practice files and inline session materials.
-- **Progress by part and error type:** Four zero-dependency SVG charts track score trajectory, accuracy per exam part, error taxonomy (*vocabulary*, *grammar*, *distractor*, *time limit*), and skill consistency.
+- **Practice & Real mocks:** Timed drills for every exam part, a guided Full Mock sequence inside **Exam → Real mocks** (materials to timer in one screen), and a unified searchable **Library** combining local sample papers, answer keys, audio, tapescripts, checklists, and 26 verified online sources — plus private user-uploaded Listening practice files.
+- **Progress, Error Taxonomy, and Progression Matrix:** Three zero-dependency SVG charts track score evolution over time, weakest Reading & Use of English parts, and weekly consistency, alongside a stage Progression Matrix and a dedicated root-cause Error Taxonomy view (*L-GAP*, *G-ERR*, *T-MIS*, *T-LIM*).
 
 ---
 
@@ -55,9 +62,9 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 
 | Provider | Task | Model | Approx. cost | Fallback |
 | --- | --- | --- | --- | --- |
-| **Google (Gemini Live)** | Real-time Speaking examiner (Parts 1–4) | `gemini-3.8-live` (ephemeral token; direct browser ↔ Google WebSocket) | ~$0.0088 / min (~$0.123 per 14-min mock) | Turn-based Gemini 2.5 Flash, or browser speech synthesis/recognition |
-| **Google (Gemini API)** | Turn-based Speaking voice (STT + reply + TTS) | `gemini-2.5-flash` + `gemini-2.5-flash-preview-tts` | ~$0.047 per 14-min mock | Browser Web Speech API (`SpeechRecognition` + `speechSynthesis`) |
-| **DeepSeek** *(default; or Gemini)* | Writing 4-band grading, Speaking partner reactions, Speaking report | `deepseek-chat` (DeepSeek V4.1 Flash; strict JSON capped at 8 KB) | ~$0.0011–$0.0022 / writing; ~$0.0008 / report; ~$0.0003 / partner line | Bring-your-own key (BYO); scripted partner lines from task bank |
+| **Google (Gemini API)** *(default voice)* | Turn-based Speaking examiner (single-call STT + contextual reply, followed by TTS voice) | `gemini-2.5-flash` + `gemini-2.5-flash-preview-tts` | ~$0.047 per 14-min mock | Browser Web Speech API (`SpeechRecognition` + `speechSynthesis`) |
+| **Google (Gemini Live)** *(optional)* | Real-time Speaking examiner (Parts 1–4, direct browser ↔ Google WebSocket via ephemeral token) | `gemini-3.8-live` | ~$0.0088 / min (~$0.123 per 14-min mock) | Turn-based Gemini 2.5 Flash, or browser speech synthesis/recognition |
+| **DeepSeek** *(default; or Gemini)* | Writing 4-band grading, Speaking partner reactions, Speaking report | `deepseek-chat` (strict JSON capped at 8 KB) | ~$0.0011–$0.0022 / writing; ~$0.0008 / report; ~$0.0003 / partner line | Bring-your-own key (BYO); scripted partner lines from task bank |
 | **Microsoft Azure AI Speech** *(optional)* | Speaking Pronunciation band (0–5) | Azure Pronunciation Assessment (`POST /api/speaking/pa`) | Optional (operator-configured) | Returns `503 speech_not_configured`; report displays `not measured` |
 
 - **Server-side keys only:** Shared API keys live in the server environment (`chmod 600` env file) and never reach the browser or the repository.
@@ -267,7 +274,7 @@ Measured against published DeepSeek and Google Gemini API pricing (documented in
 
 ## Testing
 
-The repository ships **149 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
+The repository ships **160 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
 
 ```bash
 cd tests
@@ -283,10 +290,10 @@ uv run --no-project --with playwright --with httpx python test_landing_honest.py
 | Group | Representative suites | What they verify |
 | --- | --- | --- |
 | **UI, layout & i18n** | `test_final.py`, `test_layout.py`, `test_mobile.py`, `test_i18n.py`, `test_landing_honest.py` | Every view renders with zero JS/CSP errors, light/dark contrast >= 4.5:1, EN/ES parity, 360/390/768/1440 px layout. |
-| **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, four SVG charts. |
+| **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_progress_view.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, three SVG charts. |
 | **Writing AI & guards** | `test_ai.py`, `test_ai_guard.py`, `test_writing_progress.py` | Strict JSON schema validation, injection/leak guards, live progress bar and elapsed timer, rate limits. |
-| **Speaking exam & voice** | `test_speaking_exam.py`, `test_speaking_live.py`, `test_speaking_custom_task.py`, `test_partner_grounding.py`, `test_speaking_pa.py`, `test_speaking_turn_budget.py` | All 4 parts, custom tasks, grounded partner replies, Live tokens, turn-based TTS, Azure PA `not measured` contract, monthly budget. |
-| **Materials & sources** | `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Block layout with paired keys, 26 searchable Exam sources, private Listening uploads. |
+| **Speaking exam & voice** | `test_speaking_exam.py`, `test_speaking_turns.py`, `test_speaking_live.py`, `test_speaking_custom_task.py`, `test_partner_grounding.py`, `test_speaking_pa.py`, `test_speaking_turn_budget.py` | All 4 parts, turn flow, custom tasks, grounded partner replies, Live tokens, turn-based TTS, Azure PA `not measured` contract, monthly budget. |
+| **Materials & sources** | `test_practice_real.py`, `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Real exam resources, paired keys, 26 searchable Exam sources, private Listening uploads. |
 | **Auth & accounts** | `test_register.py`, `test_multiuser.py`, `test_auth_methods.py`, `test_mfa.py`, `test_owner_unlimited.py` | Account isolation, Google OAuth, WebAuthn passkeys, TOTP MFA, owner limits, export & deletion. |
 | **Security, legal & load** | `test_security2.py`, `test_security3.py`, `test_server_hardening.py`, `test_legal.py`, `test_readme_limits.py`, `test_capacity.py` | Lockout/backoff, hash-chained audit log, CSP, raw HTTP limits, `/privacy` `/terms` `/security`, measured p95 throughput. |
 
@@ -294,13 +301,25 @@ uv run --no-project --with playwright --with httpx python test_landing_honest.py
 
 ## Privacy & security
 
-Progress lives in private per-account JSON files on the server (PBKDF2-HMAC-SHA256 @ 600,000 iterations, SHA-256 hashed tokens, hash-chained audit log, zero speaking audio written to disk, and only cookie-free aggregate Cloudflare Web Analytics — no ads or profiling).
+Progress lives in private per-account JSON files on the server (PBKDF2-HMAC-SHA256 @ 600,000 iterations, SHA-256 hashed tokens, hash-chained audit log, zero speaking audio or speaking transcripts written to disk, and only cookie-free aggregate Cloudflare Web Analytics — no ads or profiling).
 
 - [Privacy Policy](docs/PRIVACY.md) (`/privacy`)
 - [Terms of Use](docs/TERMS.md) (`/terms`)
 - [Security Policy](docs/SECURITY.md) (`/security`) & [Security Model](SECURITY.md)
 - [Data Map](docs/DATA-MAP.md) & [ASVS 4.0.3 Checklist](docs/SECURITY-CHECKLIST.md)
+- [Hackathon Submission Notes](docs/HACKATHON.md)
 - [Documentation Index](docs/README.md)
+
+---
+
+## Credits & attribution
+
+- **Runtime & web platform:** Python 3.11+ standard library (`http.server`, `hashlib`, `hmac`, `secrets`, `urllib.request`, `json`), vanilla HTML/CSS/JavaScript, Web Audio API (`AudioWorklet`), and the browser Web Speech API (`SpeechRecognition`, `speechSynthesis`). Zero third-party Python or JS runtime dependencies.
+- **AI APIs & pretrained models:** [DeepSeek API](https://platform.deepseek.com/) (`deepseek-chat`) for Writing grading, Speaking partner grounding, and Speaking reports; [Google Gemini API](https://ai.google.dev/) (`gemini-2.5-flash`, `gemini-2.5-flash-preview-tts`, and optional `gemini-3.8-live`) for turn-based and optional live Speaking voice; optional [Microsoft Azure AI Speech](https://azure.microsoft.com/en-us/products/ai-services/ai-speech) for Pronunciation Assessment.
+- **Photography:** Speaking Part 2 photographs are sourced from Wikimedia Commons under their respective open licenses; full attribution and license URLs are recorded in [`assets/speaking/CREDITS.json`](assets/speaking/CREDITS.json).
+- **Testing & tooling (dev-only):** [Playwright](https://playwright.dev/python/) (Apache-2.0) and [HTTPX](https://www.python-httpx.org/) (BSD-3-Clause), invoked via `uv` for automated verification only.
+- **Exam framework disclaimer:** Cambridge and B2 First are trademarks of Cambridge University Press & Assessment. Assessment criteria follow the publicly published B2 First handbook scales; this project is an independent study tool and is not affiliated with or endorsed by Cambridge.
+- **AI coding assistants:** Parts of the codebase, refactoring, automated test suites, and documentation were drafted and reviewed with AI coding assistants (Claude and Gemini) under the author's direction and verification.
 
 ---
 

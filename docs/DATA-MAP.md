@@ -17,7 +17,7 @@ layers.
 | Own Listening material | optional practice audio (up to 20 MB/file, 40 MB and 10 items per account) plus task, answer key and script metadata | per-account private directory; streamed to the owner via Range requests |
 | Speaking ledger | seconds spoken and tokens minted today; no audio | per-account private directory |
 | Monthly Speaking guard | aggregate monthly seconds for the instance-wide Gemini Live budget (`spk_spend.json`); no user data, no audio | private, atomic writes |
-| Transcripts | only when the client explicitly asks to save a session | per-account private directory |
+| Speaking transcripts | **not stored by the web app** — the client always sends `store_transcript: false`; only the summary report row lands in progress when the user clicks Save report | not written to disk |
 | Audit log | security events with a SHA-256 hash chain (previous-hash on every line) | private, rotates at 5 MB, 90-day retention |
 | Usage counters | per-account writing and speaking counters and the last-seen date | private |
 | Product events | whitelisted event names and scalar props with a salted address hash | private, 7-day retention |
@@ -37,7 +37,7 @@ restrictive permissions and re-checked on every write.
   truncated hash of the client address.
 - No User-Agent string: sessions store a hash of the user agent.
 - No passwords, tokens or provider keys in plaintext.
-- No speaking or pronunciation audio and no writing content in any log. Speaking
+- No speaking or pronunciation audio, no speaking transcripts from the web app, and no writing content in any log. Speaking
   audio is never written to disk; AI text is forwarded per request and only the
   accepted result lands in the user's own progress. (Optional Listening practice
   audio uploaded by the user lives only in that account's private directory until

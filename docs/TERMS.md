@@ -1,9 +1,12 @@
 # Terms of Use — B2 First Tracker
 
-**Version 1.2** · Last updated: 2026-11-18 · Served live at `/terms`
+**Version 1.3** · Last updated: 2026-11-26 · Served live at `/terms`
 
 **Changelog**
 
+- 1.3 — 2026-11-26 · Updated daily Speaking fair-use limits to match `plans.py`
+  (3 mocks / 45 min per UTC day) and added explicit Cambridge copyright and personal
+  educational use terms.
 - 1.2 — 2026-11-18 · Hosted service: accounts live on the provider's server, there
   is no purchase flow, and the fair-use limits are stated plainly.
 - 1.1 — 2026-11-02 · Account recovery: reset requests from the login screen, manual
@@ -15,11 +18,12 @@ These terms govern your use of the hosted B2 First Tracker service at
 `https://firsttracker.app`. By creating an account you accept them, together with
 the Privacy Policy at `/privacy`.
 
-## 1. The service
+## 1. The service and educational use
 
-B2 First Tracker is a hosted study tool for the Cambridge B2 First exam. Accounts
-and progress live on the provider's server, and you use the app from a browser.
-The service is provided **as is**, with no service-level agreement.
+B2 First Tracker is a hosted, non-commercial educational study tool for the Cambridge
+B2 First exam. Accounts and progress live on the provider's server, and you use the app
+from a browser for personal exam preparation. The service is provided **as is**, with
+no service-level agreement.
 
 ## 2. No guarantee of a Cambridge score or result
 
@@ -47,7 +51,7 @@ authoritative result is the one issued by Cambridge.
 
 Every account has the full service. To keep AI provider costs predictable, the
 service applies **daily fair-use limits** per UTC day — currently **5 writing
-evaluations** and **1 Speaking mock (up to 15 minutes)** per account, plus an
+evaluations** and **3 Speaking mocks (up to 45 minutes)** per account, plus an
 instance-wide monthly cap on live voice minutes. The current meter is visible
 under **Settings → Usage limits**. Limits reset automatically and never change
 the work already saved in your account. Accounts using their own provider key
@@ -82,13 +86,23 @@ providers deliver the HTTP request to the service. Their availability, pricing a
 policies are outside this service's control. An outage of any of them may disable
 the related feature.
 
-## 7. Content and conduct
+## 7. Content, conduct, and Cambridge materials
 
 You keep ownership of everything you write. You grant the service only the
 permission needed to store your progress and to forward the text or audio you
 explicitly submit for correction or scoring. Do not submit content that is
 illegal, that you have no right to share, or that contains another person's
 personal data.
+
+**Cambridge trademarks and copyrighted materials.** Cambridge and B2 First are
+trademarks of Cambridge University Press & Assessment. This service is an independent
+study tool and is not affiliated with or endorsed by Cambridge. Original Speaking
+tasks in the app's task bank are written in the B2 First format and are not official
+past papers. Any third-party sample papers, answer keys, audio tracks, or exam books
+you open through external links or upload privately under Listening → Own material
+remain the property of their respective copyright holders and may be used strictly for
+your own personal, non-commercial study — do not redistribute or share copyrighted
+exam materials through the service.
 
 ## 8. Availability, changes and termination
 

@@ -1,9 +1,12 @@
 # Privacy Policy — B2 First Tracker
 
-**Version 1.3** · Last updated: 2026-11-18 · Served live at `/privacy`
+**Version 1.4** · Last updated: 2026-11-26 · Served live at `/privacy`
 
 **Changelog**
 
+- 1.4 — 2026-11-26 · Clarified that speaking transcripts are never stored by the web
+  app (`store_transcript: false`) and aligned retention and quota references with the
+  current code.
 - 1.3 — 2026-11-18 · Hosted service: accounts and progress live on the provider's
   server. Internal host details removed from the public policy.
 - 1.2 — 2026-11-04 · Speaking exam: recognition runs in the browser, the application
@@ -36,8 +39,7 @@ are private to the service and are not served to anyone else.
 | Sessions | `sha256(token)` and expiry timestamps — the token itself is never written |
 | Progress | practice log, error log, profile, settings |
 | Backups | the last 20 versions of your progress |
-| Speaking ledger | minutes spoken today (a number, no audio) |
-| Transcripts | only if you explicitly ask to save a session |
+| Speaking ledger | minutes spoken today (a number, no audio, no transcript) |
 | Usage counters | writing and speaking counters for the current day |
 | Security audit | event type, timestamp, request id, account name or id, hashed client address |
 | Product events | feature name, duration, truncated error text, random tab id, account id, salted address hash |
@@ -82,6 +84,10 @@ capped at 500 entries.
   temporary file or log entry is created. (Only audio files you explicitly upload
   yourself under Listening → Own material are stored in your private account
   directory, and you can delete them at any time.)
+- **Speaking transcripts are not stored.** The web app always sends
+  `store_transcript: false` when requesting a Speaking report. Only the summary
+  report row (date, bands, and counts) is saved to your progress if you explicitly
+  click **Save report**; your spoken turns are never written to disk.
 - No writing or answer is logged in the audit log or in product events. The AI
   request sends the text you chose to correct and receives feedback; the text is
   not persisted by the service beyond the request (the accepted result is saved
@@ -166,8 +172,8 @@ pronunciation is reported as *not measured*; the app never invents that score.
 | Session tokens | 30 days sliding, with a 90-day absolute ceiling |
 | Recovery requests | 90 days, pruned on the next request; capped at 500 entries |
 | Speaking audio | never stored |
+| Speaking transcripts | never stored by the web app (`store_transcript: false`) |
 | Own Listening material | until you delete the item or the account |
-| Transcripts | until you delete them or the account |
 
 The retention limits are enforced by an idempotent daily job on the server. It is
 not something you need to run.

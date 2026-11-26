@@ -19,6 +19,7 @@ This directory holds the public policies, configuration reference, security docu
 | [../SECURITY.md](../SECURITY.md) | Detailed threat model, implemented controls, backups, residual risks, and disclosure process. | When auditing the server or evaluating security guarantees. |
 | [DATA-MAP.md](DATA-MAP.md) | Concrete map of every stored data category, retention rule, and account deletion sequence. | When verifying data minimization and GDPR/Ley 25.326 deletion behavior. |
 | [SECURITY-CHECKLIST.md](SECURITY-CHECKLIST.md) | OWASP ASVS 4.0.3 Level 2 verification checklist mapped to code and tests. | When reviewing control coverage and reproducing audit checks. |
+| [HACKATHON.md](HACKATHON.md) | Devpost submission pack for Build Your First AI App 2026 (summary, AI architecture, 2–3 min demo script, honest limitations, credits). | When reviewing or presenting the hackathon submission. |
 | [REPO-ABOUT.md](REPO-ABOUT.md) | GitHub repository About panel copy (description, website, topics). | When updating repository metadata on GitHub. |
 
 ## Internal documentation (not product docs)
