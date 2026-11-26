@@ -11094,6 +11094,9 @@ const SPEAKING=(function(){
     partTimerPart:0,
     partDuration:0,
     partStartedAt:0,
+    partTimerPaused:false,
+    partTimerPauseAt:0,
+    partTimerPausedMs:0,
     partTimeUp:false,
     prepIv:null,
     prepLeft:0,
@@ -11159,6 +11162,20 @@ const SPEAKING=(function(){
   }
   function stopPartTimer(){
     if(state.partTimerIv){clearInterval(state.partTimerIv);state.partTimerIv=null;}
+  }
+  function pausePartTimer(){
+    // Checking what the candidate said must not eat the official part time.
+    if(!state.partTimerIv||state.partTimerPaused)return;
+    state.partTimerPaused=true;
+    state.partTimerPauseAt=Date.now();
+  }
+  function resumePartTimer(){
+    if(!state.partTimerPaused)return;
+    if(state.partTimerPauseAt){
+      state.partTimerPausedMs+=Date.now()-state.partTimerPauseAt;
+      state.partTimerPauseAt=0;
+    }
+    state.partTimerPaused=false;
   }
   function stopPrepTimer(){
     if(state.prepIv){clearInterval(state.prepIv);state.prepIv=null;}
@@ -11294,10 +11311,14 @@ const SPEAKING=(function(){
     state.partDuration=dur;
     state.partTimerLeft=dur;
     state.partStartedAt=Date.now();
+    state.partTimerPaused=false;
+    state.partTimerPauseAt=0;
+    state.partTimerPausedMs=0;
     state.partTimeUp=false;
     renderTimer();
     state.partTimerIv=setInterval(()=>{
       if(!state.isOpen||state.view!=='exam'){stopPartTimer();return;}
+      if(state.partTimerPaused)return;
       state.partTimerLeft=Math.max(0,state.partTimerLeft-1);
       renderTimer();
       if(state.partTimerLeft<=0){
@@ -11443,6 +11464,7 @@ const SPEAKING=(function(){
     const token=state.playbackToken;
     state.canSpeak=false;
     state.busy=false;
+    resumePartTimer();
     syncMicButton();
 
     for(let i=0;i<clips.length;i++){
@@ -11514,6 +11536,7 @@ const SPEAKING=(function(){
   async function sendPrepDone(){
     if(!state.sessionId||state.busy)return;
     state.busy=true;
+    pausePartTimer();
     state.canSpeak=false;
     syncMicButton();
     try{
@@ -11525,6 +11548,7 @@ const SPEAKING=(function(){
       const data=await r.json().catch(()=>({}));
       if(!r.ok){
         state.busy=false;
+        resumePartTimer();
         handleHttpError(r.status,data,'speakingExamErr');
         syncMicButton();
         return;
@@ -11535,6 +11559,7 @@ const SPEAKING=(function(){
       await playSequence(seq,data.state,data.ui,!!data.done);
     }catch(e){
       state.busy=false;
+      resumePartTimer();
       setError('speakingExamErr',t('spv3_err_generic'));
       state.canSpeak=true;
       syncMicButton();
@@ -11664,6 +11689,7 @@ const SPEAKING=(function(){
     const durationS=Math.max(0.2,Math.round(((Date.now()-state.recStartMs)/1000)*10)/10);
     state.recording=false;
     state.busy=true;
+    pausePartTimer();
     state.canSpeak=false;
     syncMicButton();
 
@@ -11697,7 +11723,8 @@ const SPEAKING=(function(){
 
   async function submitTurn(audioB64,mime,durationS){
     if(!state.sessionId){state.busy=false;syncMicButton();return;}
-    const elapsedPart=state.partStartedAt?Math.round((Date.now()-state.partStartedAt)/1000):0;
+    const pausedMs=(state.partTimerPausedMs||0)+(state.partTimerPaused&&state.partTimerPauseAt?Date.now()-state.partTimerPauseAt:0);
+    const elapsedPart=state.partStartedAt?Math.max(0,Math.round((Date.now()-state.partStartedAt-pausedMs)/1000)):0;
     const body={
       audio_b64:audioB64,
       mime:mime||'audio/wav',
@@ -11721,6 +11748,7 @@ const SPEAKING=(function(){
       const data=await r.json().catch(()=>({}));
       if(!r.ok){
         state.busy=false;
+        resumePartTimer();
         handleHttpError(r.status,data,'speakingExamErr');
         if(r.status!==410){state.canSpeak=true;}
         syncMicButton();
@@ -11732,6 +11760,7 @@ const SPEAKING=(function(){
       await playSequence(seq,data.state,data.ui,!!data.done);
     }catch(e){
       state.busy=false;
+      resumePartTimer();
       setError('speakingExamErr',t('spv3_err_generic'));
       state.canSpeak=true;
       syncMicButton();
@@ -11741,6 +11770,7 @@ const SPEAKING=(function(){
   async function skipTurn(){
     if(!state.sessionId||state.busy)return;
     state.busy=true;
+    pausePartTimer();
     state.canSpeak=false;
     syncMicButton();
     try{
@@ -11752,6 +11782,7 @@ const SPEAKING=(function(){
       const data=await r.json().catch(()=>({}));
       if(!r.ok){
         state.busy=false;
+        resumePartTimer();
         handleHttpError(r.status,data,'speakingExamErr');
         syncMicButton();
         return;
@@ -11762,6 +11793,7 @@ const SPEAKING=(function(){
       await playSequence(seq,data.state,data.ui,!!data.done);
     }catch(e){
       state.busy=false;
+      resumePartTimer();
       setError('speakingExamErr',t('spv3_err_generic'));
       state.canSpeak=true;
       syncMicButton();
@@ -11988,6 +12020,7 @@ const SPEAKING=(function(){
       const data=await r.json().catch(()=>({}));
       if(!r.ok){
         state.busy=false;
+        resumePartTimer();
         handleHttpError(r.status,data,'speakingExamErr');
         syncMicButton();
         return false;
@@ -12003,6 +12036,7 @@ const SPEAKING=(function(){
       return true;
     }catch(e){
       state.busy=false;
+      resumePartTimer();
       setError('speakingExamErr',t('spv3_err_generic'));
       syncMicButton();
       return false;

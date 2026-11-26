@@ -9,7 +9,7 @@ Practice the Cambridge B2 First with an AI examiner, a writing corrector and a p
 [![Live app](https://img.shields.io/badge/live-firsttracker.app-2563eb)](https://firsttracker.app)
 [![Python 3.11+ stdlib](https://img.shields.io/badge/python-3.11%2B%20stdlib-3f3f46)](server.py)
 [![Vanilla JS, no build](https://img.shields.io/badge/vanilla%20JS-no%20build-3f3f46)](index.html)
-[![Tests](https://img.shields.io/badge/tests-142%20suites-16a34a)](tests/run_all.sh)
+[![Tests](https://img.shields.io/badge/tests-143%20suites-16a34a)](tests/run_all.sh)
 [![AI](https://img.shields.io/badge/AI-Gemini%20%2B%20DeepSeek-0f766e)](#how-the-ai-is-used)
 [![License: MIT](https://img.shields.io/badge/license-MIT-3f3f46)](LICENSE)
 
@@ -207,7 +207,7 @@ Measured against published DeepSeek and Google Gemini API pricing (documented in
 
 ## Testing
 
-The repository ships **142 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
+The repository ships **143 standalone test suites** under `tests/test_*.py` (no pytest required). Every suite boots an isolated server with a throwaway `DATA_DIR`, a free port, and offline provider stubs, so real user data is never touched and no network calls are made.
 
 ```bash
 cd tests
