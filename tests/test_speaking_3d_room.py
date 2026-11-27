@@ -1285,7 +1285,9 @@ def main():
 
             if pid == "02":
                 # Drag left (-260 px) to frame female partner Sophie for screenshot
-                gbox = gpg.locator("#speaking3dStage").bounding_box()
+                gpg.wait_for_selector("#speaking3dStage canvas", timeout=5000)
+                gbox = gpg.locator("#speaking3dStage canvas").bounding_box()
+                assert gbox, "3D canvas has no box; the stage is not visible"
                 gsx = gbox["x"] + gbox["width"] * 0.50
                 gsy = gbox["y"] + gbox["height"] * 0.50
                 gpg.evaluate("() => window.SPK3D.setActiveRole('you')")
