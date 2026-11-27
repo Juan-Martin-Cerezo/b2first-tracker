@@ -12275,7 +12275,9 @@ const SPEAKING=(function(){
         }
         const src=ctx.createBufferSource();
         src.buffer=audioBuf;
-        src.connect(ctx.destination);
+        const analyser=(window.SPK3D&&SPK3D.isMounted())?ctx.createAnalyser():null;
+        if(analyser){analyser.fftSize=256;analyser.smoothingTimeConstant=0.35;src.connect(analyser);analyser.connect(ctx.destination);}
+        else{src.connect(ctx.destination);}
         state.activeSource=src;
         let settled=false;
         let guard=null;
@@ -12284,12 +12286,15 @@ const SPEAKING=(function(){
           settled=true;
           if(guard){clearTimeout(guard);guard=null;}
           if(state.activeSource===src)state.activeSource=null;
+          if(window.SPK3D){try{SPK3D.setSpeaking(null,null);}catch(_e){}}
           resolve(ok&&token===state.playbackToken);
         };
         src.onended=()=>done(true);
         guard=setTimeout(()=>done(true),Math.max(durMs+800,1500));
+        if(window.SPK3D){try{SPK3D.setSpeaking(role,analyser);}catch(_e){}}
         src.start(0);
       }catch(e){
+        if(window.SPK3D){try{SPK3D.setSpeaking(null,null);}catch(_e){}}
         setTimeout(()=>resolve(token===state.playbackToken),Math.min(estMs,260));
       }
     });

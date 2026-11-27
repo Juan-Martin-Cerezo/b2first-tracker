@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Playwright tests for Speaking 3D exam room (Phase SPK3D-1).
+"""Playwright tests for Speaking 3D exam room (Phase SPK3D-1 & SPK3D-2).
 
 Run: cd tests && uv run --with playwright python test_speaking_3d_room.py
 """
@@ -105,6 +105,48 @@ def probe_canvas_variance(pg):
                     uniqueColors: uniq.size,
                     mean: Math.round(mean * 100) / 100,
                     variance: Math.round(variance * 100) / 100,
+                });
+            };
+            img.onerror = () => reject(new Error('canvas_decode_failed'));
+            img.src = url;
+        })"""
+    )
+
+
+def probe_bottom_left_partner_cloth(pg):
+    """Sample bottom-left 10% of the 3D canvas and compute fraction matching partner clothing 0x6b7350."""
+    return pg.evaluate(
+        """() => new Promise((resolve, reject) => {
+            const c = document.querySelector('#speaking3dStage canvas');
+            if (!c) return resolve({ ok: false, reason: 'no_canvas' });
+            const url = c.toDataURL('image/png');
+            const img = new Image();
+            img.onload = () => {
+                const off = document.createElement('canvas');
+                off.width = img.width;
+                off.height = img.height;
+                const ctx = off.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const sw = Math.max(1, Math.floor(off.width * 0.10));
+                const sh = Math.max(1, Math.floor(off.height * 0.10));
+                const sy = Math.max(0, off.height - sh);
+                const data = ctx.getImageData(0, sy, sw, sh).data;
+                // Partner cloth base 0x6b7350 = (107, 115, 80); olive green (g >= r - 2, g - b >= 18)
+                let total = 0;
+                let matched = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i], g = data[i + 1], b = data[i + 2];
+                    total++;
+                    const direct = Math.abs(r - 107) <= 18 && Math.abs(g - 115) <= 18 && Math.abs(b - 80) <= 18 && (g - b) >= 18;
+                    const shadedOlive = g >= 35 && g <= 165 && g >= r - 2 && r >= b + 12 && (g - b) >= 18;
+                    if (direct || shadedOlive) matched++;
+                }
+                resolve({
+                    ok: true,
+                    box: [0, sy, sw, sh],
+                    total,
+                    matched,
+                    ratio: total ? Math.round((matched / total) * 10000) / 10000 : 0,
                 });
             };
             img.onerror = () => reject(new Error('canvas_decode_failed'));
@@ -248,8 +290,70 @@ def main():
         probe = probe_canvas_variance(dpg)
         assert probe["ok"] and probe["variance"] > 0 and probe["uniqueColors"] > 1, probe
 
+        bl_probe = probe_bottom_left_partner_cloth(dpg)
+        assert bl_probe["ok"] and bl_probe["ratio"] <= 0.08, f"Partner clipping bottom-left: {bl_probe}"
+
         desktop_shot = os.path.join(OUT_DIR, "speaking3d_desktop_1280.png")
         dpg.screenshot(path=desktop_shot)
+
+        # 2b. Deterministic mouth-sync check with fake analyser (no real audio)
+        dpg.evaluate(
+            """() => {
+                const fake = {
+                    frequencyBinCount: 128,
+                    getByteFrequencyData(a) { a.fill(180); }
+                };
+                window.SPK3D.setSpeaking('examiner', fake);
+            }"""
+        )
+        dpg.wait_for_timeout(350)
+        mouth_open_state = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        assert isinstance(mouth_open_state, dict), mouth_open_state
+        assert all(isinstance(mouth_open_state[k], (int, float)) for k in ("mouthOpen", "headYaw", "headPitch")), mouth_open_state
+        assert mouth_open_state["mouthOpen"] > 1.0, f"Examiner mouth did not open: {mouth_open_state}"
+
+        mouth_shot = os.path.join(OUT_DIR, "speaking3d_mouth_open_1280.png")
+        dpg.screenshot(path=mouth_shot)
+
+        dpg.evaluate("() => window.SPK3D.setSpeaking(null, null)")
+        dpg.wait_for_timeout(300)
+        mouth_closed_state = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        assert mouth_closed_state["mouthOpen"] < 0.6, f"Examiner mouth did not close: {mouth_closed_state}"
+
+        # 2c. Deterministic gaze & head turn check (partner turns, assessor stays head-down)
+        dpg.evaluate("() => window.SPK3D.setActiveRole('partner')")
+        dpg.wait_for_timeout(900)
+        partner_on_partner = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        assessor_on_partner = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
+        gaze_shot = os.path.join(OUT_DIR, "speaking3d_gaze_partner_1280.png")
+        dpg.screenshot(path=gaze_shot)
+
+        dpg.evaluate("() => window.SPK3D.setActiveRole('examiner')")
+        dpg.wait_for_timeout(900)
+        partner_on_examiner = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        assessor_on_examiner = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
+        dpg.wait_for_timeout(150)
+        partner_settled = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+
+        partner_yaw_delta = abs(partner_on_examiner["headYaw"] - partner_on_partner["headYaw"])
+        partner_settle_drift = abs(partner_settled["headYaw"] - partner_on_examiner["headYaw"])
+        assessor_yaw_delta = abs(assessor_on_examiner["headYaw"] - assessor_on_partner["headYaw"])
+        assert partner_yaw_delta > 0.3, {
+            "partner_on_partner": partner_on_partner,
+            "partner_on_examiner": partner_on_examiner,
+        }
+        assert partner_settle_drift < 0.06, {
+            "partner_on_examiner": partner_on_examiner,
+            "partner_settled": partner_settled,
+        }
+        assert assessor_on_partner["headPitch"] < 0 and assessor_on_examiner["headPitch"] < 0, {
+            "assessor_on_partner": assessor_on_partner,
+            "assessor_on_examiner": assessor_on_examiner,
+        }
+        assert assessor_yaw_delta <= 0.05, {
+            "assessor_on_partner": assessor_on_partner,
+            "assessor_on_examiner": assessor_on_examiner,
+        }
 
         # Toggle back to classic mid-session -> canvas removed, #speakingPhotos restored, exam preserved
         dpg.click("#speaking3dBtn")
@@ -271,7 +375,21 @@ def main():
         assert after_toggle["phase"] == "part2", after_toggle
         assert after_toggle["btnPressed"] == "false" and after_toggle["btnLabel"] == "3D room", after_toggle
         assert d_errors == [], f"Desktop 3D page errors: {d_errors}"
-        results["desktop_3d"] = {"state": desk3d, "probe": probe, "after_toggle": after_toggle}
+        results["desktop_3d"] = {
+            "state": desk3d,
+            "probe": probe,
+            "bottom_left": bl_probe,
+            "mouth_open": mouth_open_state,
+            "mouth_closed": mouth_closed_state,
+            "gaze": {
+                "partner_on_partner": partner_on_partner,
+                "partner_on_examiner": partner_on_examiner,
+                "partner_settled": partner_settled,
+                "assessor_on_partner": assessor_on_partner,
+                "assessor_on_examiner": assessor_on_examiner,
+            },
+            "after_toggle": after_toggle,
+        }
         dctx.close()
 
         # 3. Mobile 390x844 ?spk3d=1 + no horizontal overflow + screenshot

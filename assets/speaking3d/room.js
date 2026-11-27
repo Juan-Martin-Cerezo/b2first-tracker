@@ -3,6 +3,37 @@ import * as THREE from '../vendor/three/three.module.min.js';
 const VALID_ROLES = new Set(['examiner', 'partner', 'you', null]);
 const BREATH_HZ = 0.25;
 const BREATH_AMP = 0.006;
+const MAX_DT = 0.05;
+const SPRING_K = 28;
+const SPRING_D = 9;
+const MAX_YAW = 0.55;
+const MAX_YAW_REDUCED = 0.26;
+const MAX_PITCH = 0.18;
+const MAX_ROLL = 0.04;
+const MAX_EYE_YAW = 0.06;
+const MAX_EYE_PITCH = 0.04;
+const ASSESSOR_PITCH_DOWN = -0.30;
+const ASSESSOR_PITCH_GLANCE = -0.12;
+const ASSESSOR_YAW_BASE = -0.04;
+const ASSESSOR_CYCLE_S = 9.0;
+const ASSESSOR_GLANCE_S = 1.2;
+const MOUTH_BASE_SCALE = 0.25;
+const MOUTH_SCALE_GAIN = 1.9;
+const MOUTH_BASE_Y = 0.072;
+const MOUTH_DROP_Y = 0.008;
+const MOUTH_ATTACK_S = 0.06;
+const MOUTH_RELEASE_S = 0.13;
+const SILENCE_FLOOR = 4;
+const SILENCE_TIMEOUT_S = 0.4;
+const FOV_DESKTOP = 58;
+const FOV_MOBILE = 66;
+const CAM_NEAR = 0.045;
+
+// Preallocated scratch objects for zero per-frame allocations
+const _vHeadWorld = new THREE.Vector3();
+const _vTargetWorld = new THREE.Vector3();
+const _vLocal = new THREE.Vector3();
+const _qInvTorso = new THREE.Quaternion();
 
 let cachedSupported = null;
 let mounted = false;
@@ -14,10 +45,13 @@ let keyLight = null;
 let rafId = 0;
 let lastMobile = null;
 let clockStart = 0;
+let lastFrameMs = 0;
 let reducedMotionOverride = null;
 let prefersReducedMotion = false;
 let containerVisible = true;
 let contextLost = false;
+let speakingData = null;
+let silentSec = 0;
 
 let resizeObserver = null;
 let intersectionObserver = null;
@@ -35,6 +69,11 @@ const state = {
 };
 
 let avatars = [];
+let avatarMap = { examiner: null, partner: null, assessor: null };
+
+function clamp(v, lo, hi) {
+  return v < lo ? lo : (v > hi ? hi : v);
+}
 
 function detectReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
@@ -147,14 +186,17 @@ function buildAvatar(cfg, sharedGeos, shadows) {
     metalness: 0.0
   });
   const mouthMat = new THREE.MeshStandardMaterial({
-    color: 0x9b645c,
-    roughness: 0.65,
+    color: 0x3a2320,
+    roughness: 0.75,
     metalness: 0.02
   });
 
   // Breathing group (hips anchored at y=0, scales subtly along Y)
   const torsoGroup = new THREE.Group();
   torsoGroup.name = cfg.name + '_torso';
+  if (cfg.leanX) {
+    torsoGroup.rotation.x = cfg.leanX;
+  }
   root.add(torsoGroup);
 
   const torsoMesh = new THREE.Mesh(sharedGeos.torso, clothMat);
@@ -192,10 +234,11 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   neckMesh.castShadow = shadows;
   torsoGroup.add(neckMesh);
 
-  // Head group pivoted at neck top (y = 0.61) so phase 2 can rotate gaze/nod
+  // Head group pivoted at neck top (y = 0.61) for gaze turns and nodding
   const headGroup = new THREE.Group();
   headGroup.name = cfg.name + '_head';
   headGroup.position.set(0, 0.61, 0);
+  headGroup.rotation.order = 'YXZ';
   torsoGroup.add(headGroup);
 
   const headMesh = new THREE.Mesh(sharedGeos.head, skinMat);
@@ -213,15 +256,19 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   hairMesh.castShadow = shadows;
   headGroup.add(hairMesh);
 
-  // Eyes (two spheres r=0.012 on -Z front of face)
+  // Eyes (two spheres r=0.012 on -Z front of face, pivoted at head centre for subtle gaze shift)
+  const eyesGroup = new THREE.Group();
+  eyesGroup.position.set(0, 0.132, 0);
+  eyesGroup.rotation.order = 'YXZ';
   const eyesMesh = new THREE.InstancedMesh(sharedGeos.eye, eyeMat, 2);
   const em = new THREE.Matrix4();
-  em.makeTranslation(-0.034, 0.132, -0.094);
+  em.makeTranslation(-0.034, 0, -0.094);
   eyesMesh.setMatrixAt(0, em);
-  em.makeTranslation(0.034, 0.132, -0.094);
+  em.makeTranslation(0.034, 0, -0.094);
   eyesMesh.setMatrixAt(1, em);
   eyesMesh.instanceMatrix.needsUpdate = true;
-  headGroup.add(eyesMesh);
+  eyesGroup.add(eyesMesh);
+  headGroup.add(eyesGroup);
 
   // Brows (two thin boxes)
   const browsMesh = new THREE.InstancedMesh(sharedGeos.brow, browMat, 2);
@@ -241,10 +288,11 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   noseMesh.rotation.x = -Math.PI * 0.48;
   headGroup.add(noseMesh);
 
-  // Mouth (thin box scaled at runtime in phase 2)
+  // Mouth (dark thin box scaled at runtime from audio RMS)
   const mouthMesh = new THREE.Mesh(sharedGeos.mouth, mouthMat);
   mouthMesh.name = 'mouth';
-  mouthMesh.position.set(0, 0.072, -0.096);
+  mouthMesh.position.set(0, MOUTH_BASE_Y, -0.097);
+  mouthMesh.scale.y = MOUTH_BASE_SCALE;
   headGroup.add(mouthMesh);
 
   // Optional clipboard for assessor
@@ -271,11 +319,28 @@ function buildAvatar(cfg, sharedGeos, shadows) {
     torsoGroup.add(clipGroup);
   }
 
+  const initYaw = cfg.name === 'assessor' ? ASSESSOR_YAW_BASE : 0;
+  const initPitch = cfg.name === 'assessor' ? ASSESSOR_PITCH_DOWN : 0;
+  headGroup.rotation.set(initPitch, initYaw, 0);
+
   root.userData = {
+    name: cfg.name,
     head: headGroup,
+    eyes: eyesGroup,
     mouth: mouthMesh,
+    jaw: headGroup.getObjectByName('jaw') || null,
     torso: torsoGroup,
-    phaseOffset: cfg.phaseOffset
+    mouthBaseY: MOUTH_BASE_Y,
+    phaseOffset: cfg.phaseOffset,
+    yaw: initYaw,
+    yawVel: 0,
+    pitch: initPitch,
+    pitchVel: 0,
+    roll: 0,
+    rollVel: 0,
+    eyeYaw: 0,
+    eyePitch: 0,
+    mouthOpen: 0
   };
 
   return root;
@@ -413,9 +478,9 @@ function buildScene(mobile) {
 
   // Chairs (3 chairs batched into 3 InstancedMeshes: seats, backs, legs)
   const seatsCfg = [
-    { x: -0.78, z: 1.02, rotY: -0.18 },          // Partner
-    { x: 0.10, z: -1.02, rotY: Math.PI },        // Examiner
-    { x: -1.18, z: -0.45, rotY: -Math.PI * 0.72 } // Assessor
+    { x: -0.66, z: 0.58, rotY: -1.18 },          // Partner
+    { x: 0.14, z: -1.00, rotY: Math.PI },        // Examiner
+    { x: -1.16, z: -0.52, rotY: -Math.PI * 0.74 } // Assessor
   ];
   const chairMat = new THREE.MeshStandardMaterial({
     color: 0x4b4f55,
@@ -478,14 +543,15 @@ function buildScene(mobile) {
     eye: new THREE.SphereGeometry(0.012, 10, 8),
     brow: new THREE.BoxGeometry(0.032, 0.007, 0.012),
     nose: new THREE.ConeGeometry(0.013, 0.034, 10),
-    mouth: new THREE.BoxGeometry(0.044, 0.009, 0.012)
+    mouth: new THREE.BoxGeometry(0.046, 0.016, 0.014)
   };
 
   const avatarConfigs = [
     {
       name: 'examiner',
-      pos: [0.10, 0.46, -1.02],
+      pos: [0.14, 0.46, -1.00],
       rotY: Math.PI,
+      leanX: 0,
       skinColor: 0xd8b49a,
       clothColor: 0x2f3d56,
       hairColor: 0x524b46,
@@ -502,8 +568,9 @@ function buildScene(mobile) {
     },
     {
       name: 'partner',
-      pos: [-0.78, 0.46, 1.02],
-      rotY: -0.18,
+      pos: [-0.66, 0.46, 0.58],
+      rotY: -1.18,
+      leanX: -0.06,
       skinColor: 0xdfbda5,
       clothColor: 0x6b7350,
       hairColor: 0x4b3525,
@@ -520,8 +587,9 @@ function buildScene(mobile) {
     },
     {
       name: 'assessor',
-      pos: [-1.18, 0.46, -0.45],
-      rotY: -Math.PI * 0.72,
+      pos: [-1.16, 0.46, -0.52],
+      rotY: -Math.PI * 0.74,
+      leanX: 0,
       skinColor: 0xcfa88d,
       clothColor: 0x5b5b5b,
       hairColor: 0x3b312a,
@@ -538,8 +606,10 @@ function buildScene(mobile) {
     }
   ];
 
+  avatarMap = { examiner: null, partner: null, assessor: null };
   avatars = avatarConfigs.map(cfg => {
     const grp = buildAvatar(cfg, sharedGeos, shadows);
+    avatarMap[cfg.name] = grp;
     s.add(grp);
     return grp;
   });
@@ -564,24 +634,217 @@ function isStageActive() {
   return rect.width > 1 && rect.height > 1;
 }
 
-function applyIdlePose(elapsedSec) {
+function sampleSpeakingAmplitude(dt) {
+  const analyser = state.speakingAnalyser;
+  if (!state.speakingRole || !analyser || !speakingData) {
+    silentSec = 0;
+    return 0;
+  }
+  try {
+    analyser.getByteFrequencyData(speakingData);
+  } catch (e) {
+    return 0;
+  }
+  const len = speakingData.length;
+  if (!len) return 0;
+  const sampleRate = analyser.context && analyser.context.sampleRate ? analyser.context.sampleRate : 48000;
+  const binHz = (sampleRate * 0.5) / len;
+  const minBin = Math.max(0, Math.floor(80 / binHz));
+  const maxBin = Math.min(len - 1, Math.ceil(4000 / binHz));
+  let sumSq = 0;
+  let count = 0;
+  for (let b = minBin; b <= maxBin; b++) {
+    const v = speakingData[b];
+    sumSq += v * v;
+    count++;
+  }
+  const rms = count > 0 ? Math.sqrt(sumSq / count) : 0;
+  if (rms < SILENCE_FLOOR) {
+    silentSec += dt;
+  } else {
+    silentSec = 0;
+  }
+  if (silentSec > SILENCE_TIMEOUT_S) return 0;
+  return clamp((rms / 255) * 3.2, 0, 1);
+}
+
+function resolveGazeTarget(name, focusRole, outVec) {
+  if (name === 'examiner') {
+    if (focusRole === 'partner' && avatarMap.partner && avatarMap.partner.userData) {
+      avatarMap.partner.userData.head.getWorldPosition(outVec);
+      outVec.y += 0.12;
+      return true;
+    }
+    outVec.copy(camera.position);
+    return true;
+  }
+  if (name === 'partner') {
+    if (focusRole === 'partner' || focusRole === 'you') {
+      outVec.copy(camera.position);
+      return true;
+    }
+    if (avatarMap.examiner && avatarMap.examiner.userData) {
+      avatarMap.examiner.userData.head.getWorldPosition(outVec);
+      outVec.y += 0.12;
+      return true;
+    }
+    outVec.copy(camera.position);
+    return true;
+  }
+  return false;
+}
+
+function updateAvatars(dt, elapsedSec) {
   const calm = isReducedMotion();
+  const focusRole = state.speakingRole || state.activeRole;
+  const ampTarget = sampleSpeakingAmplitude(dt);
+  let settled = true;
+
   for (let i = 0; i < avatars.length; i++) {
     const ud = avatars[i].userData;
-    if (!ud || !ud.torso) continue;
+    if (!ud || !ud.torso || !ud.head) continue;
+
+    // 1. Subtle breathing (disabled in reduced motion)
     if (calm) {
       ud.torso.scale.y = 1;
     } else {
       ud.torso.scale.y = 1 + BREATH_AMP * Math.sin(2 * Math.PI * BREATH_HZ * elapsedSec + ud.phaseOffset);
     }
+
+    // 2. Head gaze + spring easing
+    let targetYaw = 0;
+    let targetPitch = 0;
+    let targetRoll = 0;
+    let targetEyeYaw = 0;
+    let targetEyePitch = 0;
+
+    if (ud.name === 'assessor') {
+      // Assessor never follows the speaker: stays head-down writing with periodic page-glance
+      if (calm) {
+        targetYaw = ASSESSOR_YAW_BASE;
+        targetPitch = ASSESSOR_PITCH_DOWN;
+      } else {
+        const cycle = elapsedSec % ASSESSOR_CYCLE_S;
+        const glance = cycle >= (ASSESSOR_CYCLE_S - ASSESSOR_GLANCE_S);
+        const basePitch = glance ? ASSESSOR_PITCH_GLANCE : ASSESSOR_PITCH_DOWN;
+        const writeOsc = 0.006 * Math.sin(2 * Math.PI * 0.9 * elapsedSec);
+        targetPitch = basePitch + writeOsc;
+        targetYaw = ASSESSOR_YAW_BASE + 0.004 * Math.sin(2 * Math.PI * 0.9 * elapsedSec + 1.1);
+      }
+      targetRoll = 0;
+    } else if (camera && resolveGazeTarget(ud.name, focusRole, _vTargetWorld)) {
+      ud.head.getWorldPosition(_vHeadWorld);
+      _vHeadWorld.y += 0.12;
+      _vLocal.subVectors(_vTargetWorld, _vHeadWorld);
+      ud.torso.getWorldQuaternion(_qInvTorso).invert();
+      _vLocal.applyQuaternion(_qInvTorso);
+
+      const rawYaw = Math.atan2(-_vLocal.x, -_vLocal.z);
+      const horiz = Math.hypot(_vLocal.x, _vLocal.z) || 1e-4;
+      const rawPitch = Math.atan2(_vLocal.y, horiz);
+
+      if (calm) {
+        targetYaw = clamp(rawYaw, -MAX_YAW_REDUCED, MAX_YAW_REDUCED);
+        targetPitch = 0;
+        targetRoll = 0;
+      } else {
+        targetYaw = clamp(rawYaw, -MAX_YAW, MAX_YAW);
+        targetPitch = clamp(rawPitch, -MAX_PITCH, MAX_PITCH);
+        targetRoll = 0;
+        if (focusRole === ud.name) {
+          targetYaw = clamp(
+            targetYaw + 0.05 * Math.sin(2 * Math.PI * 0.35 * elapsedSec + ud.phaseOffset),
+            -MAX_YAW,
+            MAX_YAW
+          );
+          targetPitch = clamp(
+            targetPitch + 0.02 * Math.sin(2 * Math.PI * 0.22 * elapsedSec + ud.phaseOffset),
+            -MAX_PITCH,
+            MAX_PITCH
+          );
+          targetRoll = clamp(
+            0.015 * Math.sin(2 * Math.PI * 0.19 * elapsedSec + ud.phaseOffset),
+            -MAX_ROLL,
+            MAX_ROLL
+          );
+        }
+      }
+
+      // Subtle eye lead/counter-rotation toward the gaze target
+      targetEyeYaw = clamp(rawYaw - ud.yaw, -MAX_EYE_YAW, MAX_EYE_YAW);
+      targetEyePitch = calm ? 0 : clamp(rawPitch - ud.pitch, -MAX_EYE_PITCH, MAX_EYE_PITCH);
+    }
+
+    if (dt > 0) {
+      ud.yawVel += ((targetYaw - ud.yaw) * SPRING_K - ud.yawVel * SPRING_D) * dt;
+      ud.yaw += ud.yawVel * dt;
+      ud.pitchVel += ((targetPitch - ud.pitch) * SPRING_K - ud.pitchVel * SPRING_D) * dt;
+      ud.pitch += ud.pitchVel * dt;
+      ud.rollVel += ((targetRoll - ud.roll) * SPRING_K - ud.rollVel * SPRING_D) * dt;
+      ud.roll += ud.rollVel * dt;
+
+      const eyeLerp = 1 - Math.exp(-dt * 14);
+      ud.eyeYaw += (targetEyeYaw - ud.eyeYaw) * eyeLerp;
+      ud.eyePitch += (targetEyePitch - ud.eyePitch) * eyeLerp;
+    }
+
+    ud.head.rotation.set(ud.pitch, ud.yaw, ud.roll);
+    if (ud.eyes) {
+      ud.eyes.rotation.set(ud.eyePitch, ud.eyeYaw, 0);
+    }
+
+    if (
+      Math.abs(targetYaw - ud.yaw) > 0.003 ||
+      Math.abs(ud.yawVel) > 0.005 ||
+      Math.abs(targetPitch - ud.pitch) > 0.003 ||
+      Math.abs(ud.pitchVel) > 0.005
+    ) {
+      settled = false;
+    }
+
+    // 3. Amplitude mouth-sync (assessor stays silent)
+    if (ud.mouth) {
+      const targetOpen = ud.name === state.speakingRole && ud.name !== 'assessor' ? ampTarget : 0;
+      if (dt > 0) {
+        const tau = targetOpen > ud.mouthOpen ? MOUTH_ATTACK_S : MOUTH_RELEASE_S;
+        ud.mouthOpen += (targetOpen - ud.mouthOpen) * Math.min(1, dt / tau);
+        if (ud.mouthOpen < 0.001 && targetOpen === 0) ud.mouthOpen = 0;
+      }
+      ud.mouth.scale.y = MOUTH_BASE_SCALE + ud.mouthOpen * MOUTH_SCALE_GAIN;
+      ud.mouth.position.y = ud.mouthBaseY - ud.mouthOpen * MOUTH_DROP_Y;
+      if (ud.jaw) {
+        ud.jaw.rotation.x = -ud.mouthOpen * 0.14;
+      }
+      if (ud.mouthOpen > 0.001 || targetOpen > 0) {
+        settled = false;
+      }
+    }
   }
+
+  return settled;
 }
 
-function renderOnce() {
-  if (!mounted || !renderer || !scene || !camera || contextLost) return;
-  const elapsed = (performance.now() - clockStart) * 0.001;
-  applyIdlePose(elapsed);
+function renderOnce(dtOverride) {
+  if (!mounted || !renderer || !scene || !camera || contextLost) return true;
+  const now = performance.now();
+  const totalDt = typeof dtOverride === 'number'
+    ? dtOverride
+    : Math.min(Math.max(0, (now - lastFrameMs) * 0.001), 0.15);
+  lastFrameMs = now;
+  const elapsed = (now - clockStart) * 0.001;
+  let settled = true;
+  if (totalDt <= 0) {
+    settled = updateAvatars(0, elapsed);
+  } else {
+    let rem = totalDt;
+    while (rem > 0) {
+      const step = Math.min(rem, MAX_DT);
+      rem -= step;
+      settled = updateAvatars(step, elapsed - rem);
+    }
+  }
   renderer.render(scene, camera);
+  return settled;
 }
 
 function stopLoop() {
@@ -591,11 +854,17 @@ function stopLoop() {
   }
 }
 
+function shouldKeepAnimating(settled) {
+  if (!isReducedMotion()) return true;
+  if (state.speakingRole && state.speakingAnalyser) return true;
+  return !settled;
+}
+
 function tick() {
   rafId = 0;
   if (!isStageActive()) return;
-  renderOnce();
-  if (!isReducedMotion()) {
+  const settled = renderOnce();
+  if (shouldKeepAnimating(settled)) {
     rafId = requestAnimationFrame(tick);
   }
 }
@@ -605,8 +874,9 @@ function syncLoop() {
     stopLoop();
     return;
   }
-  renderOnce();
-  if (isReducedMotion()) {
+  lastFrameMs = performance.now();
+  const settled = renderOnce(0);
+  if (!shouldKeepAnimating(settled)) {
     stopLoop();
   } else if (!rafId) {
     rafId = requestAnimationFrame(tick);
@@ -626,7 +896,7 @@ function updateSize() {
   if (mobile !== lastMobile) {
     lastMobile = mobile;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
-    camera.fov = mobile ? 62 : 55;
+    camera.fov = mobile ? FOV_MOBILE : FOV_DESKTOP;
     if (keyLight) {
       keyLight.castShadow = !mobile;
       renderer.shadowMap.enabled = !mobile;
@@ -731,6 +1001,11 @@ function unmount() {
   camera = null;
   keyLight = null;
   avatars = [];
+  avatarMap = { examiner: null, partner: null, assessor: null };
+  state.speakingRole = null;
+  state.speakingAnalyser = null;
+  speakingData = null;
+  silentSec = 0;
   container = null;
   lastMobile = null;
   contextLost = false;
@@ -789,14 +1064,16 @@ function mount(containerEl) {
   const initW = Math.max(2, Math.floor(rect.width || containerEl.clientWidth || 320));
   const initH = Math.max(2, Math.floor(rect.height || containerEl.clientHeight || 240));
 
-  camera = new THREE.PerspectiveCamera(mobile ? 62 : 55, initW / initH, 0.1, 25);
-  camera.position.set(0, 1.18, 1.72);
-  camera.lookAt(0, 1.05, -0.55);
+  camera = new THREE.PerspectiveCamera(mobile ? FOV_MOBILE : FOV_DESKTOP, initW / initH, CAM_NEAR, 25);
+  camera.position.set(0.64, 1.16, 2.00);
+  camera.lookAt(-0.02, 0.94, -0.55);
 
   scene = buildScene(mobile);
+  scene.updateMatrixWorld(true);
   renderer = webglRenderer;
   container = containerEl;
   clockStart = performance.now();
+  lastFrameMs = clockStart;
   mounted = true;
 
   containerEl.innerHTML = '';
@@ -842,7 +1119,7 @@ function mount(containerEl) {
   window.addEventListener('resize', onWindowResize);
 
   // Render first frame synchronously so canvas is populated immediately
-  renderOnce();
+  renderOnce(0);
   syncLoop();
   return true;
 }
@@ -855,13 +1132,31 @@ function setActiveRole(role) {
   const next = role === undefined ? null : role;
   if (!VALID_ROLES.has(next)) return;
   state.activeRole = next;
+  if (mounted && !rafId) syncLoop();
 }
 
 function setSpeaking(role, analyser) {
   const next = role === undefined ? null : role;
   if (!VALID_ROLES.has(next)) return;
   state.speakingRole = next;
-  state.speakingAnalyser = analyser && typeof analyser === 'object' ? analyser : null;
+  if (
+    next &&
+    analyser &&
+    typeof analyser === 'object' &&
+    typeof analyser.getByteFrequencyData === 'function'
+  ) {
+    const binCount = Math.max(1, Number(analyser.frequencyBinCount) || 128);
+    if (!speakingData || speakingData.length !== binCount) {
+      speakingData = new Uint8Array(binCount);
+    }
+    state.speakingAnalyser = analyser;
+    silentSec = 0;
+  } else {
+    state.speakingAnalyser = null;
+    speakingData = null;
+    silentSec = 0;
+  }
+  if (mounted && !rafId) syncLoop();
 }
 
 function setPart(partNumber) {
@@ -894,9 +1189,19 @@ function showCard(url) {
 function setReducedMotion(bool) {
   reducedMotionOverride = Boolean(bool);
   if (mounted) {
-    applyIdlePose(0);
     syncLoop();
   }
+}
+
+function getDebugState(role) {
+  if (!mounted || typeof role !== 'string') return null;
+  const av = avatarMap[role];
+  if (!av || !av.userData || !av.userData.head || !av.userData.mouth) return null;
+  return {
+    mouthOpen: Number(av.userData.mouth.scale.y),
+    headYaw: Number(av.userData.head.rotation.y),
+    headPitch: Number(av.userData.head.rotation.x)
+  };
 }
 
 const SPK3D = {
@@ -910,6 +1215,9 @@ const SPK3D = {
   showImages,
   showCard,
   setReducedMotion,
+  __debug: {
+    state: getDebugState
+  },
   version: '1'
 };
 
