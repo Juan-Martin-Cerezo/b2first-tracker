@@ -7,13 +7,14 @@ const MAX_DT = 0.05;
 const SPRING_K = 28;
 const SPRING_D = 9;
 const MAX_YAW = 0.55;
+const MAX_YAW_PARTNER = 1.15;
 const MAX_YAW_REDUCED = 0.26;
 const MAX_PITCH = 0.18;
 const MAX_ROLL = 0.04;
 const MAX_EYE_YAW = 0.06;
 const MAX_EYE_PITCH = 0.04;
 const ASSESSOR_PITCH_DOWN = -0.30;
-const ASSESSOR_PITCH_GLANCE = -0.12;
+const ASSESSOR_PITCH_GLANCE = -0.08;
 const ASSESSOR_YAW_BASE = -0.04;
 const ASSESSOR_CYCLE_S = 9.0;
 const ASSESSOR_GLANCE_S = 1.2;
@@ -25,15 +26,37 @@ const MOUTH_ATTACK_S = 0.06;
 const MOUTH_RELEASE_S = 0.13;
 const SILENCE_FLOOR = 4;
 const SILENCE_TIMEOUT_S = 0.4;
-const FOV_DESKTOP = 58;
-const FOV_MOBILE = 66;
+const FOV_DESKTOP = 62;
+const FOV_MOBILE = 68;
 const CAM_NEAR = 0.045;
+
+// Camera base pose (candidate eyes above hips (0.18, 0.46, 0.82))
+const CAM_BASE_POS = new THREE.Vector3(0.18, 1.22, 0.82);
+const CAM_BASE_TARGET = new THREE.Vector3(0.10, 1.08, -0.55);
+const _camBaseDir = new THREE.Vector3().subVectors(CAM_BASE_TARGET, CAM_BASE_POS).normalize();
+const CAM_BASE_YAW = Math.atan2(-_camBaseDir.x, -_camBaseDir.z);
+const CAM_BASE_PITCH = Math.asin(Math.max(-1, Math.min(1, _camBaseDir.y)));
+
+// Look-around drag constants
+const LOOK_SENS = 0.0042;
+const LOOK_YAW_MIN = -0.55;
+const LOOK_YAW_MAX = 0.55;
+const LOOK_PITCH_MIN = -0.30;
+const LOOK_PITCH_MAX = 0.22;
+const LOOK_INERTIA_DECAY = 0.90;
+const LOOK_INERTIA_STOP = 0.0006;
+const LOOK_IDLE_RETURN_S = 2.5;
+const LOOK_RETURN_DUR_S = 0.6;
+const LOOK_DRAG_TAP_PX = 10;
 
 // Preallocated scratch objects for zero per-frame allocations
 const _vHeadWorld = new THREE.Vector3();
 const _vTargetWorld = new THREE.Vector3();
 const _vLocal = new THREE.Vector3();
 const _qInvTorso = new THREE.Quaternion();
+const _frustum = new THREE.Frustum();
+const _projScreen = new THREE.Matrix4();
+const _box3 = new THREE.Box3();
 
 let cachedSupported = null;
 let mounted = false;
@@ -53,11 +76,37 @@ let contextLost = false;
 let speakingData = null;
 let silentSec = 0;
 
+// Look-around runtime state
+let lookYaw = 0;
+let lookPitch = 0;
+let lookVelYaw = 0;
+let lookVelPitch = 0;
+let lookDragging = false;
+let lookReturning = false;
+let lookPointerId = null;
+let lookStartX = 0;
+let lookStartY = 0;
+let lookLastX = 0;
+let lookLastY = 0;
+let lookLastMoveMs = 0;
+let lookDragDist = 0;
+let lookIdleStartMs = 0;
+let lookReturnStartYaw = 0;
+let lookReturnStartPitch = 0;
+let lookReturnStartMs = 0;
+let suppressClickUntil = 0;
+
+// Render timing ring buffer (last 120 frames, zero allocations)
+const renderTimes = new Float64Array(120);
+let renderTimeIdx = 0;
+let renderTimeCount = 0;
+
 let resizeObserver = null;
 let intersectionObserver = null;
 let motionMql = null;
 let motionListener = null;
 let overlayObserver = null;
+let viewObserver = null;
 
 const state = {
   activeRole: null,
@@ -69,7 +118,8 @@ const state = {
 };
 
 let avatars = [];
-let avatarMap = { examiner: null, partner: null, assessor: null };
+let avatarMap = { examiner: null, partner: null, assessor: null, you: null };
+let allFigures = [];
 
 function clamp(v, lo, hi) {
   return v < lo ? lo : (v > hi ? hi : v);
@@ -91,8 +141,10 @@ function isReducedMotion() {
 function isMobileViewport() {
   if (typeof window === 'undefined') return false;
   const narrow = window.matchMedia ? window.matchMedia('(max-width: 767px)').matches : false;
+  const shortH = window.matchMedia ? window.matchMedia('(max-height: 520px)').matches : false;
+  const coarse = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
   const touch = typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 1;
-  return Boolean(narrow || touch);
+  return Boolean(narrow || shortH || coarse || touch);
 }
 
 function supported() {
@@ -118,20 +170,22 @@ function supported() {
   return cachedSupported;
 }
 
-function makeCapsuleBetween(p0, p1, radius) {
+function makeCapsuleBetween(p0, p1, radius, endTrim) {
   const dir = new THREE.Vector3().subVectors(p1, p0);
-  const len = Math.max(0.02, dir.length());
-  const mid = new THREE.Vector3().addVectors(p0, p1).multiplyScalar(0.5);
+  const fullLen = Math.max(0.04, dir.length());
+  const trim = endTrim || 0;
+  const len = Math.max(0.03, fullLen - trim);
+  const unit = dir.clone().normalize();
+  const pEnd = p0.clone().addScaledVector(unit, len);
+  const mid = new THREE.Vector3().addVectors(p0, pEnd).multiplyScalar(0.5);
   const quat = new THREE.Quaternion().setFromUnitVectors(
     new THREE.Vector3(0, 1, 0),
-    dir.clone().normalize()
+    unit
   );
-  // Base CapsuleGeometry(radius, 1, ...) has total height (1 + 2*radius);
-  // scale Y to approximate segment length cleanly.
-  const cylLen = Math.max(0.01, len - radius * 1.4);
-  const scaleY = cylLen / 0.2;
+  // Shared CapsuleGeometry(0.044, 0.2) has total unscaled height 0.288 along Y.
+  const scaleY = Math.max(0.25, len / 0.288);
   const m = new THREE.Matrix4();
-  m.compose(mid, quat, new THREE.Vector3(1, Math.max(0.4, scaleY), 1));
+  m.compose(mid, quat, new THREE.Vector3(1, scaleY, 1));
   return m;
 }
 
@@ -209,10 +263,10 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   armMesh.castShadow = shadows;
   armMesh.receiveShadow = shadows;
   const pose = cfg.armPose;
-  armMesh.setMatrixAt(0, makeCapsuleBetween(pose.shL, pose.elL, 0.04));
-  armMesh.setMatrixAt(1, makeCapsuleBetween(pose.elL, pose.hdL, 0.036));
-  armMesh.setMatrixAt(2, makeCapsuleBetween(pose.shR, pose.elR, 0.04));
-  armMesh.setMatrixAt(3, makeCapsuleBetween(pose.elR, pose.hdR, 0.036));
+  armMesh.setMatrixAt(0, makeCapsuleBetween(pose.shL, pose.elL, 0.04, 0));
+  armMesh.setMatrixAt(1, makeCapsuleBetween(pose.elL, pose.hdL, 0.036, 0.032));
+  armMesh.setMatrixAt(2, makeCapsuleBetween(pose.shR, pose.elR, 0.04, 0));
+  armMesh.setMatrixAt(3, makeCapsuleBetween(pose.elR, pose.hdR, 0.036, 0.032));
   armMesh.instanceMatrix.needsUpdate = true;
   torsoGroup.add(armMesh);
 
@@ -295,7 +349,7 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   mouthMesh.scale.y = MOUTH_BASE_SCALE;
   headGroup.add(mouthMesh);
 
-  // Optional clipboard for assessor
+  // Optional clipboard for assessor (plain clipboard held in lap, no second table)
   if (cfg.clipboard) {
     const boardMat = new THREE.MeshStandardMaterial({
       color: 0x6f533c,
@@ -346,6 +400,59 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   return root;
 }
 
+function buildCandidateSelf(sharedGeos, shadows) {
+  // First-person seated candidate ("you"): hips directly under the camera at (0.18, 0.46, 0.82),
+  // forearms/hands resting calmly on the candidate edge of the table without blocking materials.
+  const root = new THREE.Group();
+  root.name = 'you';
+  root.position.set(0.18, 0.46, 0.82);
+  root.rotation.y = 0;
+
+  const skinMat = new THREE.MeshStandardMaterial({
+    color: 0xdab69b,
+    roughness: 0.72,
+    metalness: 0.02
+  });
+  const clothMat = new THREE.MeshStandardMaterial({
+    color: 0x3b4d63,
+    roughness: 0.84,
+    metalness: 0.03
+  });
+
+  const pose = {
+    shL: new THREE.Vector3(-0.19, 0.44, 0.0),
+    elL: new THREE.Vector3(-0.24, 0.31, -0.34),
+    hdL: new THREE.Vector3(-0.15, 0.315, -0.58),
+    shR: new THREE.Vector3(0.19, 0.44, 0.0),
+    elR: new THREE.Vector3(0.26, 0.31, -0.34),
+    hdR: new THREE.Vector3(0.24, 0.315, -0.58)
+  };
+
+  const armMesh = new THREE.InstancedMesh(sharedGeos.armSeg, clothMat, 4);
+  armMesh.castShadow = shadows;
+  armMesh.receiveShadow = shadows;
+  armMesh.setMatrixAt(0, makeCapsuleBetween(pose.shL, pose.elL, 0.038, 0));
+  armMesh.setMatrixAt(1, makeCapsuleBetween(pose.elL, pose.hdL, 0.034, 0.034));
+  armMesh.setMatrixAt(2, makeCapsuleBetween(pose.shR, pose.elR, 0.038, 0));
+  armMesh.setMatrixAt(3, makeCapsuleBetween(pose.elR, pose.hdR, 0.034, 0.034));
+  armMesh.instanceMatrix.needsUpdate = true;
+  root.add(armMesh);
+
+  const handsMesh = new THREE.InstancedMesh(sharedGeos.hand, skinMat, 2);
+  handsMesh.castShadow = shadows;
+  handsMesh.receiveShadow = shadows;
+  const hm = new THREE.Matrix4();
+  hm.makeTranslation(pose.hdL.x, pose.hdL.y, pose.hdL.z);
+  handsMesh.setMatrixAt(0, hm);
+  hm.makeTranslation(pose.hdR.x, pose.hdR.y, pose.hdR.z);
+  handsMesh.setMatrixAt(1, hm);
+  handsMesh.instanceMatrix.needsUpdate = true;
+  root.add(handsMesh);
+
+  root.userData = { name: 'you' };
+  return root;
+}
+
 function buildScene(mobile) {
   const shadows = !mobile;
   const s = new THREE.Scene();
@@ -378,7 +485,7 @@ function buildScene(mobile) {
   fill.position.set(0, 1.32, 1.55);
   s.add(fill);
 
-  // Room: 5.0 x 4.0 x 2.6 (w x d x h). Ceiling omitted (backface culling).
+  // Room: 5.0 x 5.2 x 2.6 (w x d x h) so back wall sits cleanly behind the assessor at z=-1.72
   const wallMat = new THREE.MeshStandardMaterial({
     color: 0xe9e6df,
     roughness: 0.92,
@@ -390,24 +497,25 @@ function buildScene(mobile) {
     metalness: 0.0
   });
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 4.0), floorMat);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 5.2), floorMat);
   floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, 0, -0.4);
   floor.receiveShadow = shadows;
   s.add(floor);
 
   const backWall = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 2.6), wallMat);
-  backWall.position.set(0, 1.3, -2.0);
+  backWall.position.set(0, 1.3, -2.55);
   backWall.receiveShadow = shadows;
   s.add(backWall);
 
-  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 2.6), wallMat);
-  leftWall.position.set(-2.5, 1.3, 0);
+  const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), wallMat);
+  leftWall.position.set(-2.5, 1.3, -0.4);
   leftWall.rotation.y = Math.PI / 2;
   leftWall.receiveShadow = shadows;
   s.add(leftWall);
 
-  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 2.6), wallMat);
-  rightWall.position.set(2.5, 1.3, 0);
+  const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), wallMat);
+  rightWall.position.set(2.5, 1.3, -0.4);
   rightWall.rotation.y = -Math.PI / 2;
   rightWall.receiveShadow = shadows;
   s.add(rightWall);
@@ -419,7 +527,7 @@ function buildScene(mobile) {
     metalness: 0.0
   });
   const baseboard = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.1, 0.02), trimMat);
-  baseboard.position.set(0, 0.05, -1.99);
+  baseboard.position.set(0, 0.05, -2.54);
   s.add(baseboard);
 
   // Soft ceiling emissive panel at y=2.58
@@ -434,7 +542,7 @@ function buildScene(mobile) {
   ceilingPanel.rotation.x = Math.PI / 2;
   s.add(ceilingPanel);
 
-  // Table: 1.60 x 0.80, top at y=0.74, 0.04 thick, light wood 0xb08a5e
+  // Table: 1.60 x 0.80, top at y=0.74, centred at (0, 0.74, 0), candidate edge z=+0.40
   const woodMat = new THREE.MeshStandardMaterial({
     color: 0xb08a5e,
     roughness: 0.64,
@@ -465,7 +573,7 @@ function buildScene(mobile) {
   tableLegs.instanceMatrix.needsUpdate = true;
   s.add(tableLegs);
 
-  // Desk pad: 1.30 x 0.55 at y=0.745, beige 0xd9d2c3
+  // Desk pad: 1.30 x 0.55 at y=0.744, beige 0xd9d2c3
   const padMat = new THREE.MeshStandardMaterial({
     color: 0xd9d2c3,
     roughness: 0.9,
@@ -476,20 +584,21 @@ function buildScene(mobile) {
   deskPad.receiveShadow = shadows;
   s.add(deskPad);
 
-  // Chairs (3 chairs batched into 3 InstancedMeshes: seats, backs, legs)
+  // Chairs: two-vs-two layout (4 chairs batched into 3 InstancedMeshes; assessor uses plain side chair)
   const seatsCfg = [
-    { x: -0.66, z: 0.58, rotY: -1.18 },          // Partner
-    { x: 0.14, z: -1.00, rotY: Math.PI },        // Examiner
-    { x: -1.16, z: -0.52, rotY: -Math.PI * 0.74 } // Assessor
+    { x: -0.62, z: 0.82, rotY: 0.30 },           // Partner (candidate left)
+    { x: 0.18, z: 0.82, rotY: 0.0 },             // You (candidate right)
+    { x: 0.18, z: -0.86, rotY: Math.PI },        // Examiner (interlocutor at table)
+    { x: -0.52, z: -1.72, rotY: Math.PI * 0.94 } // Assessor (behind examiner, offset left)
   ];
   const chairMat = new THREE.MeshStandardMaterial({
     color: 0x4b4f55,
     roughness: 0.76,
     metalness: 0.14
   });
-  const seatMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.04, 0.45), chairMat, 3);
-  const backMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.5, 0.04), chairMat, 3);
-  const cLegMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.036, 0.42, 0.036), chairMat, 12);
+  const seatMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.04, 0.45), chairMat, 4);
+  const backMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.45, 0.5, 0.04), chairMat, 4);
+  const cLegMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.036, 0.42, 0.036), chairMat, 16);
   seatMesh.castShadow = shadows;
   seatMesh.receiveShadow = shadows;
   backMesh.castShadow = shadows;
@@ -546,12 +655,13 @@ function buildScene(mobile) {
     mouth: new THREE.BoxGeometry(0.046, 0.016, 0.014)
   };
 
+  // Two-vs-two exam geometry: examiner + assessor facing partner + candidate ("you")
   const avatarConfigs = [
     {
       name: 'examiner',
-      pos: [0.14, 0.46, -1.00],
+      pos: [0.18, 0.46, -0.86],
       rotY: Math.PI,
-      leanX: 0,
+      leanX: -0.05,
       skinColor: 0xd8b49a,
       clothColor: 0x2f3d56,
       hairColor: 0x524b46,
@@ -559,36 +669,37 @@ function buildScene(mobile) {
       clipboard: false,
       armPose: {
         shL: new THREE.Vector3(-0.17, 0.45, 0.0),
-        elL: new THREE.Vector3(-0.22, 0.27, -0.17),
-        hdL: new THREE.Vector3(-0.14, 0.295, -0.45),
+        elL: new THREE.Vector3(-0.22, 0.30, -0.22),
+        hdL: new THREE.Vector3(-0.14, 0.335, -0.48),
         shR: new THREE.Vector3(0.17, 0.45, 0.0),
-        elR: new THREE.Vector3(0.22, 0.27, -0.17),
-        hdR: new THREE.Vector3(0.14, 0.295, -0.45)
+        elR: new THREE.Vector3(0.22, 0.30, -0.22),
+        hdR: new THREE.Vector3(0.14, 0.335, -0.48)
       }
     },
     {
       name: 'partner',
-      pos: [-0.66, 0.46, 0.58],
-      rotY: -1.18,
-      leanX: -0.06,
+      pos: [-0.62, 0.46, 0.82],
+      rotY: 0.30,
+      leanX: -0.05,
       skinColor: 0xdfbda5,
       clothColor: 0x6b7350,
       hairColor: 0x4b3525,
       phaseOffset: 2.1,
       clipboard: false,
       armPose: {
+        // Forearms resting cleanly on the candidate table edge (right forearm visible bottom-left)
         shL: new THREE.Vector3(-0.17, 0.45, 0.0),
-        elL: new THREE.Vector3(-0.21, 0.26, -0.16),
-        hdL: new THREE.Vector3(-0.13, 0.29, -0.42),
+        elL: new THREE.Vector3(-0.12, 0.31, -0.26),
+        hdL: new THREE.Vector3(0.08, 0.33, -0.46),
         shR: new THREE.Vector3(0.17, 0.45, 0.0),
-        elR: new THREE.Vector3(0.21, 0.27, -0.18),
-        hdR: new THREE.Vector3(0.15, 0.295, -0.44)
+        elR: new THREE.Vector3(0.24, 0.31, -0.28),
+        hdR: new THREE.Vector3(0.41, 0.335, -0.50)
       }
     },
     {
       name: 'assessor',
-      pos: [-1.16, 0.46, -0.52],
-      rotY: -Math.PI * 0.74,
+      pos: [-0.52, 0.46, -1.72],
+      rotY: Math.PI * 0.94,
       leanX: 0,
       skinColor: 0xcfa88d,
       clothColor: 0x5b5b5b,
@@ -606,7 +717,7 @@ function buildScene(mobile) {
     }
   ];
 
-  avatarMap = { examiner: null, partner: null, assessor: null };
+  avatarMap = { examiner: null, partner: null, assessor: null, you: null };
   avatars = avatarConfigs.map(cfg => {
     const grp = buildAvatar(cfg, sharedGeos, shadows);
     avatarMap[cfg.name] = grp;
@@ -614,13 +725,21 @@ function buildScene(mobile) {
     return grp;
   });
 
+  const youGrp = buildCandidateSelf(sharedGeos, shadows);
+  avatarMap.you = youGrp;
+  s.add(youGrp);
+  allFigures = avatars.concat([youGrp]);
+
   return s;
 }
 
 function isSpeakingOverlayClosed() {
   if (typeof document === 'undefined') return false;
   const ov = document.getElementById('speakingOverlay');
-  return Boolean(ov && !ov.classList.contains('is-open'));
+  if (ov && !ov.classList.contains('is-open')) return true;
+  const examView = document.getElementById('speakingViewExam');
+  if (examView && !examView.classList.contains('is-active')) return true;
+  return false;
 }
 
 function isStageActive() {
@@ -632,6 +751,11 @@ function isStageActive() {
   if (isSpeakingOverlayClosed()) return false;
   const rect = container.getBoundingClientRect();
   return rect.width > 1 && rect.height > 1;
+}
+
+function syncCanvasTouchAction(active) {
+  if (!renderer || !renderer.domElement) return;
+  renderer.domElement.style.touchAction = active ? 'none' : '';
 }
 
 function sampleSpeakingAmplitude(dt) {
@@ -694,6 +818,60 @@ function resolveGazeTarget(name, focusRole, outVec) {
   return false;
 }
 
+function updateLook(dt, nowMs) {
+  if (!camera) return true;
+  const now = typeof nowMs === 'number' ? nowMs : performance.now();
+  const hasMaterial = Boolean(state.images || state.card);
+  const displaced = Math.abs(lookYaw) > 0.0005 || Math.abs(lookPitch) > 0.0005;
+
+  if (!lookDragging) {
+    const moving = Math.abs(lookVelYaw) >= LOOK_INERTIA_STOP || Math.abs(lookVelPitch) >= LOOK_INERTIA_STOP;
+    if (moving && dt > 0) {
+      const frames = dt * 60;
+      const decay = Math.pow(LOOK_INERTIA_DECAY, frames);
+      lookYaw = clamp(lookYaw + lookVelYaw * frames, LOOK_YAW_MIN, LOOK_YAW_MAX);
+      lookPitch = clamp(lookPitch + lookVelPitch * frames, LOOK_PITCH_MIN, LOOK_PITCH_MAX);
+      lookVelYaw *= decay;
+      lookVelPitch *= decay;
+      if (Math.abs(lookVelYaw) < LOOK_INERTIA_STOP) lookVelYaw = 0;
+      if (Math.abs(lookVelPitch) < LOOK_INERTIA_STOP) lookVelPitch = 0;
+    } else if (!moving && lookReturning) {
+      if (hasMaterial) {
+        lookReturning = false;
+      } else {
+        const elapsed = Math.max(0, (now - lookReturnStartMs) * 0.001);
+        const u = clamp(elapsed / LOOK_RETURN_DUR_S, 0, 1);
+        const ease = 1 - Math.pow(1 - u, 3);
+        lookYaw = lookReturnStartYaw * (1 - ease);
+        lookPitch = lookReturnStartPitch * (1 - ease);
+        if (u >= 1) {
+          lookYaw = 0;
+          lookPitch = 0;
+          lookReturning = false;
+          lookIdleStartMs = 0;
+        }
+      }
+    } else if (!moving && displaced && !hasMaterial) {
+      if (!lookIdleStartMs) lookIdleStartMs = now;
+      if ((now - lookIdleStartMs) * 0.001 >= LOOK_IDLE_RETURN_S) {
+        lookReturning = true;
+        lookReturnStartYaw = lookYaw;
+        lookReturnStartPitch = lookPitch;
+        lookReturnStartMs = now;
+      }
+    } else if (!displaced) {
+      lookIdleStartMs = 0;
+    }
+  }
+
+  camera.rotation.order = 'YXZ';
+  camera.rotation.set(CAM_BASE_PITCH + lookPitch, CAM_BASE_YAW + lookYaw, 0);
+
+  const stillDisplaced = Math.abs(lookYaw) > 0.0005 || Math.abs(lookPitch) > 0.0005;
+  const stillMoving = Math.abs(lookVelYaw) >= LOOK_INERTIA_STOP || Math.abs(lookVelPitch) >= LOOK_INERTIA_STOP;
+  return !lookDragging && !lookReturning && !stillMoving && (hasMaterial || !stillDisplaced);
+}
+
 function updateAvatars(dt, elapsedSec) {
   const calm = isReducedMotion();
   const focusRole = state.speakingRole || state.activeRole;
@@ -719,7 +897,7 @@ function updateAvatars(dt, elapsedSec) {
     let targetEyePitch = 0;
 
     if (ud.name === 'assessor') {
-      // Assessor never follows the speaker: stays head-down writing with periodic page-glance
+      // Assessor is independent of setActiveRole: head-down writing with a brief glance every ~9 s
       if (calm) {
         targetYaw = ASSESSOR_YAW_BASE;
         targetPitch = ASSESSOR_PITCH_DOWN;
@@ -742,20 +920,21 @@ function updateAvatars(dt, elapsedSec) {
       const rawYaw = Math.atan2(-_vLocal.x, -_vLocal.z);
       const horiz = Math.hypot(_vLocal.x, _vLocal.z) || 1e-4;
       const rawPitch = Math.atan2(_vLocal.y, horiz);
+      const yawLim = ud.name === 'partner' ? MAX_YAW_PARTNER : MAX_YAW;
 
       if (calm) {
         targetYaw = clamp(rawYaw, -MAX_YAW_REDUCED, MAX_YAW_REDUCED);
         targetPitch = 0;
         targetRoll = 0;
       } else {
-        targetYaw = clamp(rawYaw, -MAX_YAW, MAX_YAW);
+        targetYaw = clamp(rawYaw, -yawLim, yawLim);
         targetPitch = clamp(rawPitch, -MAX_PITCH, MAX_PITCH);
         targetRoll = 0;
         if (focusRole === ud.name) {
           targetYaw = clamp(
             targetYaw + 0.05 * Math.sin(2 * Math.PI * 0.35 * elapsedSec + ud.phaseOffset),
-            -MAX_YAW,
-            MAX_YAW
+            -yawLim,
+            yawLim
           );
           targetPitch = clamp(
             targetPitch + 0.02 * Math.sin(2 * Math.PI * 0.22 * elapsedSec + ud.phaseOffset),
@@ -833,18 +1012,26 @@ function renderOnce(dtOverride) {
   lastFrameMs = now;
   const elapsed = (now - clockStart) * 0.001;
   let settled = true;
+  let lookSettled = true;
   if (totalDt <= 0) {
     settled = updateAvatars(0, elapsed);
+    lookSettled = updateLook(0, now);
   } else {
     let rem = totalDt;
     while (rem > 0) {
       const step = Math.min(rem, MAX_DT);
       rem -= step;
       settled = updateAvatars(step, elapsed - rem);
+      lookSettled = updateLook(step, now);
     }
   }
+  const r0 = performance.now();
   renderer.render(scene, camera);
-  return settled;
+  const rMs = performance.now() - r0;
+  renderTimes[renderTimeIdx] = rMs;
+  renderTimeIdx = (renderTimeIdx + 1) % renderTimes.length;
+  if (renderTimeCount < renderTimes.length) renderTimeCount++;
+  return settled && lookSettled;
 }
 
 function stopLoop() {
@@ -862,7 +1049,9 @@ function shouldKeepAnimating(settled) {
 
 function tick() {
   rafId = 0;
-  if (!isStageActive()) return;
+  const active = isStageActive();
+  syncCanvasTouchAction(active);
+  if (!active) return;
   const settled = renderOnce();
   if (shouldKeepAnimating(settled)) {
     rafId = requestAnimationFrame(tick);
@@ -870,7 +1059,9 @@ function tick() {
 }
 
 function syncLoop() {
-  if (!isStageActive()) {
+  const active = isStageActive();
+  syncCanvasTouchAction(active);
+  if (!active) {
     stopLoop();
     return;
   }
@@ -889,6 +1080,7 @@ function updateSize() {
   const w = Math.floor(rect.width);
   const h = Math.floor(rect.height);
   if (w < 2 || h < 2) {
+    syncCanvasTouchAction(false);
     stopLoop();
     return;
   }
@@ -908,6 +1100,109 @@ function updateSize() {
   syncLoop();
 }
 
+function onPointerDown(ev) {
+  if (!mounted || !renderer || !renderer.domElement) return;
+  if (ev.button && ev.button !== 0) return;
+  // Single-pointer look only; ignore second finger (no zoom, no pinch)
+  if (lookPointerId !== null) {
+    lookDragging = false;
+    lookPointerId = null;
+    lookVelYaw = 0;
+    lookVelPitch = 0;
+    return;
+  }
+  lookPointerId = ev.pointerId;
+  lookDragging = true;
+  lookReturning = false;
+  lookVelYaw = 0;
+  lookVelPitch = 0;
+  lookIdleStartMs = 0;
+  lookStartX = ev.clientX;
+  lookStartY = ev.clientY;
+  lookLastX = ev.clientX;
+  lookLastY = ev.clientY;
+  lookLastMoveMs = performance.now();
+  lookDragDist = 0;
+  renderer.domElement.dataset.wasDrag = '0';
+  try {
+    renderer.domElement.setPointerCapture(ev.pointerId);
+  } catch (e) {}
+  if (!rafId) syncLoop();
+}
+
+function onPointerMove(ev) {
+  if (!lookDragging || ev.pointerId !== lookPointerId) return;
+  const dx = ev.clientX - lookLastX;
+  const dy = ev.clientY - lookLastY;
+  lookLastX = ev.clientX;
+  lookLastY = ev.clientY;
+  lookLastMoveMs = performance.now();
+
+  const dist = Math.hypot(ev.clientX - lookStartX, ev.clientY - lookStartY);
+  if (dist > lookDragDist) lookDragDist = dist;
+  if (lookDragDist > LOOK_DRAG_TAP_PX && renderer && renderer.domElement) {
+    renderer.domElement.dataset.wasDrag = '1';
+  }
+
+  const dyaw = dx * LOOK_SENS;
+  const dpitch = dy * LOOK_SENS;
+  lookYaw = clamp(lookYaw + dyaw, LOOK_YAW_MIN, LOOK_YAW_MAX);
+  lookPitch = clamp(lookPitch + dpitch, LOOK_PITCH_MIN, LOOK_PITCH_MAX);
+  lookVelYaw = lookVelYaw * 0.5 + clamp(dyaw, -0.005, 0.005) * 0.5;
+  lookVelPitch = lookVelPitch * 0.5 + clamp(dpitch, -0.005, 0.005) * 0.5;
+
+  updateLook(0);
+}
+
+function finishPointerDrag(ev) {
+  if (ev.pointerId !== lookPointerId) return;
+  if (renderer && renderer.domElement) {
+    try {
+      renderer.domElement.releasePointerCapture(ev.pointerId);
+    } catch (e) {}
+  }
+  if (performance.now() - lookLastMoveMs > 60) {
+    lookVelYaw = 0;
+    lookVelPitch = 0;
+  }
+  if (lookDragDist > LOOK_DRAG_TAP_PX) {
+    suppressClickUntil = performance.now() + 300;
+  }
+  lookDragging = false;
+  lookPointerId = null;
+  lookIdleStartMs = performance.now();
+  if (!rafId) syncLoop();
+}
+
+function onCanvasClickCapture(ev) {
+  // A drag > 10 px must never trigger a tap/click (future lightbox relies on this)
+  if (performance.now() < suppressClickUntil) {
+    ev.preventDefault();
+    ev.stopPropagation();
+  }
+}
+
+function resetLookState() {
+  lookYaw = 0;
+  lookPitch = 0;
+  lookVelYaw = 0;
+  lookVelPitch = 0;
+  lookDragging = false;
+  lookReturning = false;
+  lookPointerId = null;
+  lookStartX = 0;
+  lookStartY = 0;
+  lookLastX = 0;
+  lookLastY = 0;
+  lookLastMoveMs = 0;
+  lookDragDist = 0;
+  lookIdleStartMs = 0;
+  lookReturnStartYaw = 0;
+  lookReturnStartPitch = 0;
+  lookReturnStartMs = 0;
+  suppressClickUntil = 0;
+}
+
 function onVisibilityChange() {
   syncLoop();
 }
@@ -919,6 +1214,7 @@ function onWindowResize() {
 function onContextLost(ev) {
   ev.preventDefault();
   contextLost = true;
+  syncCanvasTouchAction(false);
   stopLoop();
 }
 
@@ -966,6 +1262,10 @@ function unmount() {
     try { overlayObserver.disconnect(); } catch (e) {}
     overlayObserver = null;
   }
+  if (viewObserver) {
+    try { viewObserver.disconnect(); } catch (e) {}
+    viewObserver = null;
+  }
   if (motionMql && motionListener) {
     try {
       if (typeof motionMql.removeEventListener === 'function') {
@@ -984,10 +1284,17 @@ function unmount() {
     window.removeEventListener('resize', onWindowResize);
   }
   if (renderer && renderer.domElement) {
-    renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
-    renderer.domElement.removeEventListener('webglcontextrestored', onContextRestored);
-    if (renderer.domElement.parentNode) {
-      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    const c = renderer.domElement;
+    c.style.touchAction = '';
+    c.removeEventListener('pointerdown', onPointerDown);
+    c.removeEventListener('pointermove', onPointerMove);
+    c.removeEventListener('pointerup', finishPointerDrag);
+    c.removeEventListener('pointercancel', finishPointerDrag);
+    c.removeEventListener('click', onCanvasClickCapture, true);
+    c.removeEventListener('webglcontextlost', onContextLost);
+    c.removeEventListener('webglcontextrestored', onContextRestored);
+    if (c.parentNode) {
+      c.parentNode.removeChild(c);
     }
   }
   if (scene) {
@@ -1001,11 +1308,15 @@ function unmount() {
   camera = null;
   keyLight = null;
   avatars = [];
-  avatarMap = { examiner: null, partner: null, assessor: null };
+  allFigures = [];
+  avatarMap = { examiner: null, partner: null, assessor: null, you: null };
   state.speakingRole = null;
   state.speakingAnalyser = null;
   speakingData = null;
   silentSec = 0;
+  resetLookState();
+  renderTimeIdx = 0;
+  renderTimeCount = 0;
   container = null;
   lastMobile = null;
   contextLost = false;
@@ -1027,6 +1338,9 @@ function mount(containerEl) {
   lastMobile = mobile;
   contextLost = false;
   containerVisible = true;
+  resetLookState();
+  renderTimeIdx = 0;
+  renderTimeCount = 0;
 
   let webglRenderer;
   try {
@@ -1057,6 +1371,11 @@ function mount(containerEl) {
   canvas.style.display = 'block';
   canvas.setAttribute('aria-hidden', 'true');
 
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointermove', onPointerMove);
+  canvas.addEventListener('pointerup', finishPointerDrag);
+  canvas.addEventListener('pointercancel', finishPointerDrag);
+  canvas.addEventListener('click', onCanvasClickCapture, true);
   canvas.addEventListener('webglcontextlost', onContextLost, false);
   canvas.addEventListener('webglcontextrestored', onContextRestored, false);
 
@@ -1065,8 +1384,9 @@ function mount(containerEl) {
   const initH = Math.max(2, Math.floor(rect.height || containerEl.clientHeight || 240));
 
   camera = new THREE.PerspectiveCamera(mobile ? FOV_MOBILE : FOV_DESKTOP, initW / initH, CAM_NEAR, 25);
-  camera.position.set(0.64, 1.16, 2.00);
-  camera.lookAt(-0.02, 0.94, -0.55);
+  camera.position.copy(CAM_BASE_POS);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.set(CAM_BASE_PITCH, CAM_BASE_YAW, 0);
 
   scene = buildScene(mobile);
   scene.updateMatrixWorld(true);
@@ -1098,6 +1418,11 @@ function mount(containerEl) {
     if (ov) {
       overlayObserver = new MutationObserver(() => syncLoop());
       overlayObserver.observe(ov, { attributes: true, attributeFilter: ['class'] });
+    }
+    const examView = document.getElementById('speakingViewExam');
+    if (examView) {
+      viewObserver = new MutationObserver(() => syncLoop());
+      viewObserver.observe(examView, { attributes: true, attributeFilter: ['class'] });
     }
   }
   if (typeof window !== 'undefined' && window.matchMedia) {
@@ -1204,6 +1529,93 @@ function getDebugState(role) {
   };
 }
 
+function getDebugSeats() {
+  if (!mounted) return null;
+  const out = {};
+  ['you', 'partner', 'examiner', 'assessor'].forEach(k => {
+    const obj = avatarMap[k];
+    if (obj) {
+      out[k] = [
+        Math.round(obj.position.x * 1000) / 1000,
+        Math.round(obj.position.y * 1000) / 1000,
+        Math.round(obj.position.z * 1000) / 1000
+      ];
+    }
+  });
+  return out;
+}
+
+function getDebugLook() {
+  return {
+    yaw: Number(lookYaw),
+    pitch: Number(lookPitch),
+    dragging: Boolean(lookDragging),
+    returning: Boolean(lookReturning)
+  };
+}
+
+function getDebugStats() {
+  if (!mounted || !renderer || !scene || !camera) return null;
+  scene.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  _projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  _frustum.setFromProjectionMatrix(_projScreen);
+
+  let figuresVisible = 0;
+  for (let i = 0; i < allFigures.length; i++) {
+    _box3.setFromObject(allFigures[i]);
+    if (!_box3.isEmpty() && _frustum.intersectsBox(_box3)) {
+      figuresVisible++;
+    }
+  }
+
+  let medianRenderMs = 0;
+  if (renderTimeCount > 0) {
+    const arr = Array.from(renderTimes.subarray(0, renderTimeCount)).sort((a, b) => a - b);
+    const mid = Math.floor(arr.length / 2);
+    medianRenderMs = arr.length % 2 ? arr[mid] : (arr[mid - 1] + arr[mid]) * 0.5;
+  }
+
+  return {
+    figuresVisible,
+    drawCalls: renderer.info.render.calls,
+    triangles: renderer.info.render.triangles,
+    dpr: renderer.getPixelRatio(),
+    shadows: Boolean(renderer.shadowMap.enabled),
+    mobile: Boolean(lastMobile),
+    renderSamples: renderTimeCount,
+    medianRenderMs: Math.round(medianRenderMs * 1000) / 1000
+  };
+}
+
+function benchRender(frames) {
+  if (!mounted || !renderer || !scene || !camera || contextLost) return null;
+  const n = Math.max(1, Math.min(600, Math.round(Number(frames) || 120)));
+  const samples = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    updateAvatars(1 / 60, ((performance.now() - clockStart) * 0.001) + i / 60);
+    updateLook(1 / 60, performance.now());
+    const t0 = performance.now();
+    renderer.render(scene, camera);
+    samples[i] = performance.now() - t0;
+  }
+  const sorted = Array.from(samples).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const medianMs = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) * 0.5;
+  const p95Ms = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
+  return {
+    frames: n,
+    medianMs: Math.round(medianMs * 1000) / 1000,
+    p95Ms: Math.round(p95Ms * 1000) / 1000,
+    maxMs: Math.round(sorted[sorted.length - 1] * 1000) / 1000,
+    dpr: renderer.getPixelRatio(),
+    shadows: Boolean(renderer.shadowMap.enabled),
+    mobile: Boolean(lastMobile),
+    drawCalls: renderer.info.render.calls,
+    triangles: renderer.info.render.triangles
+  };
+}
+
 const SPK3D = {
   supported,
   mount,
@@ -1216,7 +1628,11 @@ const SPK3D = {
   showCard,
   setReducedMotion,
   __debug: {
-    state: getDebugState
+    state: getDebugState,
+    seats: getDebugSeats,
+    look: getDebugLook,
+    stats: getDebugStats,
+    bench: benchRender
   },
   version: '1'
 };

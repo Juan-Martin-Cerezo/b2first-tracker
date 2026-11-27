@@ -1623,6 +1623,217 @@ body.speaking-open{overflow:hidden}
   .spk3-mic-btn{max-width:none}
 }
 
+/* Immersive 3D exam stage and in-scene HUD (Classic 2D mode stays untouched) */
+.spk3-hud-hint{display:none}
+.spk3-shell:has(#speakingViewExam.is-active.is-3d){
+  max-width:none;width:100%;padding:0;height:100dvh;max-height:100dvh;overflow:hidden;
+}
+#speakingViewExam.is-3d{
+  --spk3d-head-h:56px;
+  width:100%;height:100dvh;max-height:100dvh;overflow:hidden;background:#14181f;
+}
+#speakingViewExam.is-3d .spk3-head{
+  height:var(--spk3d-head-h);min-height:var(--spk3d-head-h);max-height:var(--spk3d-head-h);
+  box-sizing:border-box;flex:none;padding:0 12px;gap:8px;z-index:12;
+  background:#14181f;color:#f6f8fb;border-bottom:1px solid rgba(255,255,255,.12);
+}
+#speakingViewExam.is-3d .spk3-head-title{overflow:hidden}
+#speakingViewExam.is-3d .spk3-head-title h2{
+  font-size:15px;line-height:1.2;color:#f6f8fb;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#speakingViewExam.is-3d .spk3-head-sub{display:none}
+#speakingViewExam.is-3d .spk3-head-right{gap:8px}
+/* Dark translucent HUD pills with light text guarantee >= 4.5:1 WCAG AA contrast over any scene brightness */
+#speakingViewExam.is-3d .spk3-head .spk3-timer{
+  display:inline-flex;align-items:center;justify-content:center;order:1;
+  height:32px;min-width:62px;padding:0 10px;border-radius:999px;
+  font-size:14px;font-weight:700;text-align:center;
+  background:rgba(12,16,22,.78);border:1px solid rgba(255,255,255,.22);color:#f6f8fb;
+}
+#speakingViewExam.is-3d .spk3-head .spk3-timer[data-low="1"]{
+  background:rgba(127,29,29,.88);border-color:rgba(252,165,165,.6);color:#fee2e2;
+}
+#speakingViewExam.is-3d .spk3-3d-btn{
+  order:2;min-height:44px;height:44px;min-width:44px;padding:0 12px;border-radius:999px;
+  font-size:13px;background:rgba(12,16,22,.78);border:1px solid rgba(255,255,255,.24);color:#f6f8fb;
+}
+#speakingViewExam.is-3d #speakingCloseExamBtn{
+  order:3;min-height:44px;height:44px;min-width:44px;padding:0 12px;border-radius:999px;
+  font-size:13px;background:rgba(12,16,22,.78);border:1px solid rgba(255,255,255,.24);color:#f6f8fb;
+}
+#speakingViewExam.is-3d .spk3-icon-btn:hover{
+  background:rgba(30,41,59,.92);border-color:rgba(147,197,253,.6);
+}
+#speakingViewExam.is-3d .spk3-icon-btn:focus-visible,
+#speakingViewExam.is-3d .spk3-mic-btn:focus-visible,
+#speakingViewExam.is-3d .spk3-skip-btn:focus-visible{
+  outline:3px solid #93c5fd;outline-offset:2px;
+}
+#speakingViewExam.is-3d .spk3-err{
+  position:absolute;top:calc(var(--spk3d-head-h) + 8px);left:50%;transform:translateX(-50%);
+  z-index:15;margin:0;max-width:min(520px,calc(100% - 24px));
+}
+#speakingViewExam.is-3d .spk3-exam-body{
+  position:relative;isolation:isolate;display:block;width:100%;padding:0;gap:0;
+  flex:0 0 auto;height:min(calc(100dvh - var(--spk3d-head-h)),75vw);min-height:0;
+}
+#speakingViewExam.is-3d .spk3-desk,
+#speakingViewExam.is-3d .spk3-desk.is-3d{
+  position:relative;width:100%;height:100%;max-height:none;min-height:0;
+  aspect-ratio:auto;order:unset;grid-column:unset;
+}
+#speakingViewExam.is-3d .spk3-stage{
+  position:absolute;inset:0;border-radius:0;border:0;z-index:1;
+}
+#speakingViewExam.is-3d .spk3-stage canvas{z-index:0}
+#speakingViewExam.is-3d .spk3-panel{
+  position:absolute;inset:0;z-index:5;pointer-events:none;display:block;
+  width:100%;height:100%;max-height:none;overflow:visible;
+  padding:0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+  grid-column:unset;
+}
+#speakingViewExam.is-3d .spk3-roles{
+  position:absolute;top:10px;left:10px;z-index:6;pointer-events:auto;
+  display:inline-flex;flex-direction:row;align-items:center;gap:6px;
+  max-width:calc(100% - 20px);order:unset;
+}
+#speakingViewExam.is-3d .spk3-role{
+  display:inline-flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;
+  height:32px;padding:0 10px;border-radius:999px;box-sizing:border-box;
+  border:1px solid rgba(255,255,255,.22);background:rgba(12,16,22,.72);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  color:#f6f8fb;box-shadow:none;flex:none;
+}
+#speakingViewExam.is-3d .spk3-role-dot{width:8px;height:8px;background:rgba(246,248,251,.45)}
+#speakingViewExam.is-3d .spk3-role-tag{
+  font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:none;line-height:1;
+}
+#speakingViewExam.is-3d .spk3-role-name{
+  font-size:12px;font-weight:500;color:rgba(246,248,251,.85);line-height:1;
+}
+#speakingViewExam.is-3d #speakingRoleYou .spk3-role-name{display:none}
+#speakingViewExam.is-3d .spk3-role[data-role="examiner"][data-active="true"]{
+  background:rgba(24,52,96,.88);border-color:#93c5fd;color:#eff6ff;
+}
+#speakingViewExam.is-3d .spk3-role[data-role="examiner"][data-active="true"] .spk3-role-dot{background:#60a5fa}
+#speakingViewExam.is-3d .spk3-role[data-role="partner"][data-active="true"]{
+  background:rgba(82,52,14,.88);border-color:#fcd34d;color:#fffbeb;
+}
+#speakingViewExam.is-3d .spk3-role[data-role="partner"][data-active="true"] .spk3-role-dot{background:#fbbf24}
+#speakingViewExam.is-3d .spk3-role[data-role="you"][data-active="true"]{
+  background:rgba(16,66,40,.88);border-color:#86efac;color:#f0fdf4;
+}
+#speakingViewExam.is-3d .spk3-role[data-role="you"][data-active="true"] .spk3-role-dot{background:#4ade80}
+#speakingViewExam.is-3d .spk3-panel-timer-row{
+  position:absolute;left:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:6;
+  pointer-events:auto;display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  padding:0;border:0;max-width:calc(50% - 54px);
+}
+#speakingViewExam.is-3d .spk3-panel-timer{display:none}
+#speakingViewExam.is-3d .spk3-panel-part{
+  display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;
+  background:rgba(12,16,22,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);color:#f6f8fb;
+  font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;
+}
+#speakingViewExam.is-3d .spk3-hud-hint{
+  display:inline-flex;align-items:center;min-height:24px;padding:2px 10px;border-radius:999px;
+  background:rgba(12,16,22,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.18);color:#f6f8fb;
+  font-size:12px;font-weight:500;line-height:1.25;
+}
+#speakingViewExam.is-3d .spk3-hud-hint[hidden]{display:none}
+#speakingViewExam.is-3d .spk3-part-guide{
+  position:absolute;width:1px;height:1px;padding:0;margin:0;overflow:hidden;
+  clip-path:inset(50%);border:0;pointer-events:none;
+}
+#speakingViewExam.is-3d .spk3-dock{
+  position:static;display:contents;pointer-events:none;background:transparent;padding:0;
+}
+#speakingViewExam.is-3d .spk3-mic-btn{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:max(8px,env(safe-area-inset-bottom));z-index:7;pointer-events:auto;
+  width:72px;height:72px;min-width:72px;min-height:72px;max-width:72px;
+  padding:0;border-radius:50%;overflow:visible;
+  background:rgba(12,16,22,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.36);color:#f6f8fb;
+  box-shadow:0 6px 20px rgba(0,0,0,.35);
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+}
+#speakingViewExam.is-3d .spk3-mic-btn[data-mic-state="ready"]{
+  background:rgba(16,86,48,.78);border-color:rgba(134,239,172,.78);color:#f0fdf4;
+}
+#speakingViewExam.is-3d .spk3-mic-btn[data-mic-state="recording"]{
+  background:rgba(185,28,28,.88);border-color:rgba(252,165,165,.85);color:#fff;
+  transform:translateX(-50%) scale(0.96);
+}
+#speakingViewExam.is-3d .spk3-mic-btn:disabled,
+#speakingViewExam.is-3d .spk3-mic-btn[data-mic-state="listen"],
+#speakingViewExam.is-3d .spk3-mic-btn[data-mic-state="sending"],
+#speakingViewExam.is-3d .spk3-mic-btn[data-mic-state="prep"]{
+  background:rgba(12,16,22,.55);border-color:rgba(255,255,255,.28);color:#e2e8f0;
+  box-shadow:0 4px 14px rgba(0,0,0,.28);
+}
+#speakingViewExam.is-3d .spk3-mic-svg{
+  width:24px;height:24px;pointer-events:none;transform:translateY(-6px);
+}
+#speakingViewExam.is-3d #speakingMicLbl{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:-2px;
+  white-space:nowrap;font-size:12px;font-weight:700;line-height:1.2;
+  padding:2px 8px;border-radius:999px;pointer-events:none;
+  background:rgba(12,16,22,.86);border:1px solid rgba(255,255,255,.2);color:#f6f8fb;
+}
+#speakingViewExam.is-3d .spk3-skip-btn{
+  position:absolute;right:10px;bottom:max(10px,env(safe-area-inset-bottom));
+  z-index:7;pointer-events:auto;
+  min-height:44px;height:44px;min-width:44px;padding:0 14px;border-radius:999px;
+  font-size:12px;font-weight:700;
+  background:rgba(12,16,22,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.26);color:#f6f8fb;
+}
+#speakingViewExam.is-3d .spk3-checking{
+  position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:auto;
+  width:auto;max-width:min(320px,calc(100% - 24px));padding:10px 14px;border-radius:14px;
+  background:rgba(12,16,22,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(147,197,253,.45);color:#f6f8fb;
+}
+#speakingViewExam.is-3d .spk3-checking-note{color:#cbd5e1}
+@media (max-width:767px){
+  #speakingViewExam.is-3d .spk3-role-name{display:none}
+}
+@media (max-height:520px){
+  #speakingViewExam.is-3d{--spk3d-head-h:52px}
+  #speakingViewExam.is-3d .spk3-role[data-active="false"]{width:32px;padding:0}
+  #speakingViewExam.is-3d .spk3-role[data-active="false"] .spk3-role-tag,
+  #speakingViewExam.is-3d .spk3-role[data-active="false"] .spk3-role-name{
+    position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);
+  }
+  #speakingViewExam.is-3d .spk3-role[data-active="true"]{width:auto;padding:0 10px}
+  #speakingViewExam.is-3d .spk3-role[data-active="true"] .spk3-role-tag{
+    position:static;width:auto;height:auto;overflow:visible;clip-path:none;
+  }
+  #speakingViewExam.is-3d .spk3-role[data-active="true"] .spk3-role-name{display:none}
+}
+@media (orientation:landscape) and (max-width:1023px){
+  #speakingViewExam.is-3d .spk3-exam-body{
+    height:calc(100dvh - var(--spk3d-head-h));flex:1 1 auto;
+  }
+}
+@media (min-width:1024px){
+  #speakingViewExam.is-3d .spk3-exam-body{
+    height:calc(100dvh - var(--spk3d-head-h));min-height:420px;flex:1 1 auto;
+  }
+  #speakingViewExam.is-3d .spk3-mic-btn{
+    width:64px;height:64px;min-width:64px;min-height:64px;max-width:64px;
+    bottom:max(38px,calc(env(safe-area-inset-bottom) + 32px));
+  }
+  #speakingViewExam.is-3d .spk3-mic-svg{transform:none}
+  #speakingViewExam.is-3d #speakingMicLbl{
+    bottom:auto;top:calc(100% + 6px);padding:3px 10px;background:rgba(12,16,22,.78);
+  }
+}
+
 /* Report view */
 .spk3-report-body{
   display:flex;flex-direction:column;gap:var(--s4);padding:var(--s4) 0 var(--s6);
@@ -4815,6 +5026,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
         <aside class="spk3-panel" id="speakingPanel">
           <div class="spk3-panel-timer-row">
             <span class="spk3-panel-part" id="speakingPanelPart">Introduction</span>
+            <span class="spk3-hud-hint" id="speaking3dHint" data-i18n="spv3_tap_enlarge" hidden>Tap the photos to enlarge</span>
             <span class="spk3-panel-timer" id="speakingPanelTimer" aria-hidden="true">--:--</span>
           </div>
 
@@ -7651,6 +7863,7 @@ const I18N={
     spv3_skip_turn:'Skip turn',
     spv3_3d_on:'3D room',
     spv3_3d_off:'Classic view',
+    spv3_tap_enlarge:'Tap the photos to enlarge',
     l_own_opt:'My own material',
     l_own_heading:'My own listening material',
     l_own_empty:'No saved material yet. Add audio, written questions or a transcript below.',
@@ -8757,6 +8970,7 @@ const I18N={
     spv3_skip_turn:'Saltar turno',
     spv3_3d_on:'Sala 3D',
     spv3_3d_off:'Vista clásica',
+    spv3_tap_enlarge:'Tocá las fotos para ampliar',
     l_own_opt:'Mi material',
     l_own_heading:'Mi material de Listening',
     l_own_empty:'Todavía no guardaste material. Subí un audio o pegá la tarea o transcripción abajo.',
@@ -11830,17 +12044,35 @@ const SPEAKING=(function(){
   function hide2dDesk(){
     ['speakingPhotos','speakingCardWrap','speakingConvStage'].forEach(id=>{const el=$(id);if(el)el.hidden=true;});
   }
+  function sync3dHint(){
+    const hint=$('speaking3dHint');
+    if(!hint)return;
+    const hasMats=Boolean(state.ui&&((Array.isArray(state.ui.images)&&state.ui.images.length>=2)||state.ui.card));
+    hint.hidden=!(state.spk3dActive&&hasMats);
+  }
+  function sync3dTabOrder(active){
+    const order=[['speakingMicBtn',1],['speakingSkipBtn',2],['speaking3dBtn',3],['speakingCloseExamBtn',4]];
+    order.forEach(([id,idx])=>{
+      const el=$(id);
+      if(!el)return;
+      if(active)el.setAttribute('tabindex',String(idx));
+      else el.removeAttribute('tabindex');
+    });
+  }
   function teardown3d(restore){
-    const st=$('speaking3dStage'),dk=$('speakingDesk');
+    const st=$('speaking3dStage'),dk=$('speakingDesk'),vw=$('speakingViewExam');
     if(window.SPK3D&&typeof window.SPK3D.unmount==='function'){try{window.SPK3D.unmount();}catch(e){}}
     state.spk3dActive=false;
     if(st)st.hidden=true;
     if(dk)dk.classList.remove('is-3d');
+    if(vw)vw.classList.remove('is-3d');
+    sync3dTabOrder(false);
+    sync3dHint();
     sync3dToggleBtn();
     if(restore)applyDeskUi(state.ui);
   }
   function sync3dStage(){
-    const api=window.SPK3D,st=$('speaking3dStage'),dk=$('speakingDesk');
+    const api=window.SPK3D,st=$('speaking3dStage'),dk=$('speakingDesk'),vw=$('speakingViewExam');
     if(!state.isOpen||state.view!=='exam'){
       if(state.spk3dActive||(api&&api.isMounted&&api.isMounted()))teardown3d(false);
       return;
@@ -11849,20 +12081,31 @@ const SPEAKING=(function(){
     if(typeof api.supported!=='function'||!api.supported()){if(state.spk3dActive)teardown3d(true);warn3dUnavailable();return;}
     if(!want3d()){
       if(state.spk3dActive||(api.isMounted&&api.isMounted()))teardown3d(true);
-      else{if(st)st.hidden=true;if(dk)dk.classList.remove('is-3d');sync3dToggleBtn();}
+      else{if(st)st.hidden=true;if(dk)dk.classList.remove('is-3d');if(vw)vw.classList.remove('is-3d');sync3dTabOrder(false);sync3dHint();sync3dToggleBtn();}
       return;
     }
     if(!st||!dk)return;
-    hide2dDesk();dk.classList.add('is-3d');st.hidden=false;
+    hide2dDesk();dk.classList.add('is-3d');if(vw)vw.classList.add('is-3d');st.hidden=false;
     let ok=false;const t0=performance.now();
     try{ok=api.mount(st)!==false&&!!api.isMounted();}catch(e){ok=false;}
     if(!ok||performance.now()-t0>2000){
       try{api.unmount();}catch(e){}
-      state.spk3dActive=false;st.hidden=true;dk.classList.remove('is-3d');
+      state.spk3dActive=false;st.hidden=true;dk.classList.remove('is-3d');if(vw)vw.classList.remove('is-3d');
+      sync3dTabOrder(false);sync3dHint();
       warn3dUnavailable();applyDeskUi(state.ui);return;
     }
     state.spk3dActive=true;
-    try{api.setActiveRole(state.activeRole||null);api.setPart(state.currentPart||0);}catch(e){}
+    sync3dTabOrder(true);
+    sync3dHint();
+    try{
+      api.setActiveRole(state.activeRole||null);
+      api.setPart(state.currentPart||0);
+      const imgs=(state.ui&&Array.isArray(state.ui.images)&&state.ui.images.length>=2)?state.ui.images:null;
+      const card=(state.ui&&state.ui.card)?state.ui.card:null;
+      const p1=$('speakingPhoto1'),p2=$('speakingPhoto2'),ci=$('speakingCardImg');
+      api.showImages(imgs?[p1?p1.src:imgs[0],p2?p2.src:imgs[1]]:null);
+      api.showCard(card?(ci?ci.src:card):null);
+    }catch(e){}
     sync3dToggleBtn();
   }
   function toggle3d(){
@@ -12209,6 +12452,7 @@ const SPEAKING=(function(){
         window.SPK3D.showCard(card?(cardImg?cardImg.src:''):null);
       }catch(e){}
     }
+    sync3dHint();
     syncStageVisual();
   }
 
@@ -13136,6 +13380,24 @@ const SPEAKING=(function(){
         ev.preventDefault();
         finishRecordingAndSend(ev);
       }
+    });
+    document.addEventListener('keydown',ev=>{
+      if(!state.isOpen||state.view!=='exam'||!state.spk3dActive)return;
+      if(ev.key!==' '||ev.repeat)return;
+      const tgt=ev.target;
+      if(tgt===btn)return;
+      if(tgt&&typeof tgt.closest==='function'&&tgt.closest('button,input,textarea,select,a'))return;
+      ev.preventDefault();
+      startRecording(ev);
+    });
+    document.addEventListener('keyup',ev=>{
+      if(!state.isOpen||state.view!=='exam'||!state.spk3dActive)return;
+      if(ev.key!==' ')return;
+      const tgt=ev.target;
+      if(tgt===btn)return;
+      if(tgt&&typeof tgt.closest==='function'&&tgt.closest('button,input,textarea,select,a'))return;
+      ev.preventDefault();
+      finishRecordingAndSend(ev);
     });
   })();
 
