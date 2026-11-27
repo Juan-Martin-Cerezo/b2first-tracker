@@ -3298,6 +3298,45 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
 .practice-intent-card:active{transform:scale(.97)}
 .practice-intent-card:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .practice-intent-title{font-size:inherit;font-weight:600;color:inherit;line-height:1.2}
+.practice-overview{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s4)}
+.practice-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.practice-progress-card{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+.practice-progress-card .pp-label{font-size:var(--t-sm);color:var(--txt-2);font-weight:600}
+.practice-progress-card .pp-value{margin-top:4px;font-size:22px;font-weight:700;line-height:1.15;color:var(--txt)}
+.practice-progress-card .pp-bar{height:6px;margin-top:var(--s2);border-radius:999px;background:var(--surface-2);overflow:hidden}
+.practice-progress-card .pp-bar span{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.practice-recent{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+.practice-recent h3{font-size:var(--t-body);font-weight:650;margin:0 0 var(--s2)}
+.practice-recent-row{display:flex;justify-content:space-between;gap:var(--s3);padding:8px 0;border-top:1px solid var(--line);font-size:var(--t-sm)}
+.practice-recent-row:first-of-type{border-top:0}
+.practice-recent-row .pr-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:normal}
+.practice-recent-row .pr-date{color:var(--txt-2);flex:none}
+.practice-part-chooser{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s4)}
+.ppc-group{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+.ppc-group h3{font-size:var(--t-body);font-weight:650;margin:0 0 var(--s2)}
+.ppc-list{display:grid;gap:var(--s2)}
+.part-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s3);width:100%;min-height:56px;padding:8px var(--s3);text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);color:var(--txt);font-family:var(--font);font-size:15px;font-weight:600;line-height:1.25;cursor:pointer}
+.part-row:hover{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+.part-row:active{transform:scale(.99)}
+.part-row .pr-meta{flex:none;font-size:12px;font-weight:500;color:var(--txt-2)}
+.part-row .pr-chev{flex:none;width:16px;height:16px;color:var(--txt-2)}
+.part-row.is-done{border-color:var(--ok-border,var(--line))}
+@media (min-width:700px){
+  .ppc-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:700px){
+  .practice-progress-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media (min-width:900px){
+  .practice-shell{max-width:760px}
+  .practice-head{flex-direction:column;align-items:stretch;gap:var(--s4);margin-top:var(--s5)}
+  .practice-head-copy{flex:none}
+  .practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4);width:100%}
+  .practice-intent-card{height:120px;padding:var(--s4);flex-direction:column;gap:var(--s3);font-size:var(--t-title);white-space:normal}
+  .practice-intent-card .ico{width:28px;height:28px}
+  .practice-overview{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--s4);align-items:start}
+  .practice-progress-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 #practiceLibraryCard{margin-top:0;scroll-margin-top:96px;padding:var(--s4)}
 .prac-lib-toolbar{display:flex;flex-direction:column;gap:var(--s2);margin:0 0 var(--s3);min-width:0}
 .prac-lib-row{display:flex;align-items:center;gap:var(--s2);min-width:0;flex-wrap:nowrap}
@@ -3542,7 +3581,8 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   .practice-head{flex-direction:column;align-items:stretch;gap:var(--s3);margin-bottom:var(--s3)}
   .practice-head-copy{flex:none}
   .practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);width:100%}
-  .practice-intent-card{width:100%;min-width:0;padding:0 var(--s3);font-size:14px}
+  .practice-intent-card{width:100%;min-width:0;min-height:92px;padding:var(--s3) var(--s2);flex-direction:column;gap:var(--s2);font-size:16px;white-space:normal;line-height:1.25}
+  .practice-intent-card .ico{width:24px;height:24px}
   .prac-active-chip,.prac-active-clear{height:48px;min-height:48px}
   #practiceFiltersSheet .exlib-chip{height:48px;min-height:48px}
 }
@@ -5847,6 +5887,9 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
                 <div class="session-online-wrap" id="sessionOnlinePrimaryWrap" hidden>
                   <a id="sessionOnlinePrimaryBtn" class="btn ok session-online-cta" href="#" target="_blank" rel="noopener noreferrer" data-i18n="practice_online_cta">Practise online</a>
                 </div>
+                <div class="session-online-wrap" id="sessionWritingCta" hidden>
+                  <button type="button" class="btn ok session-online-cta" data-action="openWritingCorrectorFromDraft" data-i18n="ai_open_corrector">Open Writing corrector →</button>
+                </div>
                 <div class="exlib-toolbar">
                   <div class="exlib-search-row">
                     <label class="sr" for="exLibSearch" data-i18n="exlib_search_label">Search contents</label>
@@ -6416,14 +6459,17 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
                 <svg class="ico" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg>
                 <span class="practice-intent-title" data-i18n="practice_intent_mock_title">Full mock</span>
               </button>
-              <button type="button" class="practice-intent-card" id="practiceIntentByPart" data-action="openPracticeByPart" aria-haspopup="dialog" aria-controls="practicePartsModal" title="One part, exact resources" data-i18n-title="practice_intent_part_sub">
+              <button type="button" class="practice-intent-card" id="practiceIntentByPart" data-action="scrollToPracticeParts" title="One part, exact resources" data-i18n-title="practice_intent_part_sub">
                 <svg class="ico" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg>
                 <span class="practice-intent-title" data-i18n="practice_intent_part_title">Practise by part</span>
               </button>
             </div>
           </div>
 
-          <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
+          <div id="practiceOverview" class="practice-overview"></div>
+          <div id="practicePartChooser" class="practice-part-chooser"></div>
+
+          <div class="card" id="practiceLibraryCard" data-exlib-root="practice" hidden>
             <div class="prac-lib-toolbar">
               <div class="prac-lib-row">
                 <label class="sr" for="pracLibSearch" data-i18n="exlib_search_label">Search contents</label>
@@ -6690,7 +6736,10 @@ const I18N={
     more_desc_ia:'Cambridge B2 rubric grading',
     plan_edit_intake_short:'Edit intake',
     practice_head_title:'Practice',
-    practice_head_sub:'Papers, answer keys, audio and online practice in one place.',
+    practice_head_sub:'Choose a full mock or one part. You go straight to the session.',
+    practice_recent_title:'Recent practice',
+    practice_recent_empty:'Nothing logged yet. Start a part and it will show up here.',
+    practice_choose_part:'Choose a part',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 papers, official timing',
     practice_intent_part_title:'Practise by part',
@@ -7322,6 +7371,7 @@ const I18N={
     ai_target_words:'Target: 140–190 words',
     ai_target_short:'(target 140–190)',
     ai_submit:'Correct it',
+    ai_open_corrector:'Open Writing corrector →',
     ai_correcting:'Correcting…',
     ai_progress_label:'Correction progress',
     ai_step_read:'Reading your text',
@@ -7681,7 +7731,7 @@ const I18N={
     part_log_save:'Save',
     part_log_practised:'Save as practised',
     part_log_sp_hint:'Record this speaking part to save your session and mark it done.',
-    parts_modal_sub:'17 parts across 4 papers. Start a session, open contents or log a result.',
+    parts_modal_sub:'Pick a part. It opens straight in the session.',
     practised_mark:'Mark done',
     practised_done:'Done ✓',
     practised_badge:'Done ✓',
@@ -7790,7 +7840,10 @@ const I18N={
     more_desc_ia:'Corrección con rúbrica B2',
     plan_edit_intake_short:'Editar perfil',
     practice_head_title:'Práctica',
-    practice_head_sub:'Exámenes, respuestas, audio y práctica online en un solo lugar.',
+    practice_head_sub:'Elegí un mock completo o una parte. Vas directo a la sesión.',
+    practice_recent_title:'Práctica reciente',
+    practice_recent_empty:'Todavía no registraste nada. Empezá una parte y aparece acá.',
+    practice_choose_part:'Elegí una parte',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 pruebas, tiempo oficial',
     practice_intent_part_title:'Practicar por parte',
@@ -8422,6 +8475,7 @@ const I18N={
     ai_target_words:'Objetivo: 140–190 palabras',
     ai_target_short:'(objetivo 140–190)',
     ai_submit:'Corregirlo',
+    ai_open_corrector:'Abrir corrector de Writing →',
     ai_correcting:'Corrigiendo…',
     ai_progress_label:'Progreso de la corrección',
     ai_step_read:'Leyendo tu texto',
@@ -8781,7 +8835,7 @@ const I18N={
     part_log_save:'Guardar',
     part_log_practised:'Guardar como practicado',
     part_log_sp_hint:'Guardá esta parte de speaking para registrar tu práctica y marcarla como hecha.',
-    parts_modal_sub:'17 partes en 4 pruebas. Empezá una sesión, abrí contenidos o registrá tu resultado.',
+    parts_modal_sub:'Elegí una parte. Se abre directo en la sesión.',
     practised_mark:'Ya lo hice',
     practised_done:'Hecho ✓',
     practised_badge:'Hecho ✓',
@@ -11352,6 +11406,8 @@ function renderSessionTopbar(){
       scopeBtn.hidden=true;
     }
   }
+  const wcta=document.getElementById('sessionWritingCta');
+  if(wcta)wcta.hidden=!(u&&u.skill==='w'&&!u.catalog);
 }
 function setSessionTab(tab,opts){
   SESSION_TAB=(tab==='contents')?'contents':'session';
@@ -17227,7 +17283,14 @@ function startPart(i){
   closePracticeByPart(false);
   const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
   const value=skill==='w'?(p.kind||(p.n===1?'Essay':'Article')):p.n;
-  openUnitSession({skill,value,part:p.n,min:p.min},{origin:'practice',fromPlan:false,armPlanUnit:false,initialTab:'contents'});
+  if(skill==='sp'){
+    if(window.SPEAKING&&typeof SPEAKING.open==='function')SPEAKING.open('01',p.n);
+    return;
+  }
+  openUnitSession({skill,value,part:p.n,min:p.min},{
+    origin:'practice',fromPlan:false,armPlanUnit:false,
+    initialTab:skill==='w'?'contents':'session'
+  });
 }
 function partResourceSummary(p,catalog){
   const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
@@ -17276,9 +17339,6 @@ function renderParts(){
         </div>
         <div class="step-actions">
           <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
-          <button type="button" class="btn sm gray" data-i="${i}" data-action="openPartContents">${esc(t('part_open_contents'))}</button>
-          <button type="button" class="btn sm gray" data-i="${i}" data-action="openPartLogModal">${esc(t('part_log_result'))}</button>
-          <button type="button" class="btn sm gray practised-part-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>
         </div>
       </div>`;
     });
@@ -17519,6 +17579,40 @@ function rankOnlineSourcesForPart(skill,partOpt,allowGeneric){
   const partSpecific=pool.filter(s=>Array.isArray(s.part)&&s.part.length>0);
   const generic=allowGeneric?pool.filter(s=>!Array.isArray(s.part)||s.part.length===0):[];
   return partSpecific.concat(generic);
+}
+function renderPracticePartChooser(){
+  const el=document.getElementById('practicePartChooser');
+  if(!el)return;
+  const groups=[];
+  PARTS.forEach((p,i)=>{
+    let grp=groups.find(g=>g.name===p.g);
+    if(!grp){grp={name:p.g,items:[]};groups.push(grp);}
+    grp.items.push({p,i,done:isPractised(practisedPartKey(p))});
+  });
+  el.innerHTML=`<h2 class="page-sub" style="margin:0 0 var(--s1);font-weight:650;color:var(--txt)">${esc(t('practice_choose_part'))}</h2>`+
+    groups.map(grp=>`<section class="ppc-group"><h3>${esc(grp.name)}</h3><div class="ppc-list">`+
+      grp.items.map(({p,i,done})=>{
+        const meta=p.q?`${p.q} q · ~${p.min} min`:`~${p.min} min`;
+        return `<button type="button" class="part-row${done?' is-done':''}" data-i="${i}" data-action="startPart">
+          <span>Part ${p.n} — ${esc(p.t)}${done?' ✓':''}</span>
+          <span class="pr-meta">${esc(meta)}</span><span class="pr-chev" aria-hidden="true">›</span>
+        </button>`;
+      }).join('')+
+    `</div></section>`).join('');
+}
+function scrollToPracticeParts(){
+  const el=document.getElementById('practicePartChooser');
+  if(el&&typeof el.scrollIntoView==='function')el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderPracticeOverview(){
+  const el=document.getElementById('practiceOverview');
+  if(!el)return;
+  const recent=(Array.isArray(D.log)?D.log:[]).slice(-4).reverse();
+  const rows=recent.length?recent.map(e=>{
+    const name=e.note||e.kind||(e.part?`Part ${e.part}`:'Practice');
+    return `<div class="practice-recent-row"><span class="pr-name">${esc(name)}</span><span class="pr-date">${esc(fmtDate(e.date))}</span></div>`;
+  }).join(''):`<div class="practice-recent-row"><span class="pr-name" style="color:var(--txt-2)">${esc(t('practice_recent_empty'))}</span></div>`;
+  el.innerHTML=`<div class="practice-recent"><h3>${esc(t('practice_recent_title'))}</h3>${rows}</div>`;
 }
 function renderPracticeNow(){
   const box=document.getElementById('practiceNow');
@@ -21084,6 +21178,8 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='diag')skRenderView('diag',renderDiag);
   if(viewId==='practice')skRenderView('practice',function(){
     renderExercisesLibrary('practice');
+    renderPracticeOverview();
+    renderPracticePartChooser();
     renderParts();
   });
   if(viewId==='plan')skRenderView('plan',function(){renderPlan();renderWeeklyPlan()});
@@ -21178,7 +21274,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();updateWritingPhase3Summary();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPracticeOverview();renderPracticePartChooser();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();updateWritingPhase3Summary();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;
@@ -21313,6 +21409,7 @@ click:{
 'openCycleLibrary':el=>openCycleLibrary(el),
 'openFullPaperLibrary':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();openFullPaperLibrary(el.dataset.paper)},
 'openPracticeByPart':()=>openPracticeByPart(),
+'scrollToPracticeParts':()=>scrollToPracticeParts(),
 'closePracticeByPart':()=>closePracticeByPart(true),
 'closePracticeByPartIfSelf':(el,ev)=>{if(ev.target===el)closePracticeByPart(true)},
 'openPracticeFilters':()=>openPracticeFilters(),
