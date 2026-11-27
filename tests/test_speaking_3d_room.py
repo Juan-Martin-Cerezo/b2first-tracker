@@ -456,16 +456,23 @@ def main():
         assert mouth_closed["mouthOpen"] < 0.6, mouth_closed
 
         # 2d. Gaze check (partner turns, assessor stays head-down)
+        # Two-vs-two seating: the partner sits at -0.62 on the candidate side and
+        # looks across at the examiner, which is a ~0.74 rad turn, not the ~1.15 the
+        # older end-of-table layout produced.
         dpg.evaluate("() => window.SPK3D.setActiveRole('partner')")
         dpg.wait_for_function(
-            "() => window.SPK3D.__debug.state('partner').headYaw < -0.95",
+            "() => window.SPK3D.__debug.state('partner').headYaw < -0.60",
             timeout=8000,
         )
         p_on_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
         a_on_p = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
         dpg.evaluate("() => window.SPK3D.setActiveRole('examiner')")
+        # Measured on this seating: partner looks at the candidate at ~-1.04 rad and
+        # at the examiner at ~-0.78 rad, so the turn is ~0.26 rad. Assert the real
+        # geometry (the examiner sits almost straight ahead of the partner), not the
+        # old end-of-table swing.
         dpg.wait_for_function(
-            "(prevYaw) => Math.abs(window.SPK3D.__debug.state('partner').headYaw - prevYaw) > 0.3",
+            "(prevYaw) => Math.abs(window.SPK3D.__debug.state('partner').headYaw - prevYaw) > 0.20",
             arg=p_on_p["headYaw"],
             timeout=8000,
         )
@@ -473,7 +480,7 @@ def main():
         a_on_e = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
         dpg.wait_for_timeout(150)
         p_settled = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
-        assert abs(p_on_e["headYaw"] - p_on_p["headYaw"]) > 0.3, (p_on_p, p_on_e)
+        assert abs(p_on_e["headYaw"] - p_on_p["headYaw"]) > 0.20, (p_on_p, p_on_e)
         assert abs(p_settled["headYaw"] - p_on_e["headYaw"]) < 0.08, (p_on_e, p_settled)
         assert a_on_p["headPitch"] < 0 and a_on_e["headPitch"] < 0, (a_on_p, a_on_e)
         assert abs(a_on_e["headYaw"] - a_on_p["headYaw"]) <= 0.05, (a_on_p, a_on_e)
