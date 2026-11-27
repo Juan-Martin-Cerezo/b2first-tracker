@@ -192,6 +192,10 @@ def apply_guards(bands, facts, audit, kind=None):
     - Grammar errors NEVER clamp ``organisation``.
     - ``ca_informal_sustained`` is skipped for ``email`` tasks because informal
       emails are a legitimate B2 First Part 2 genre.
+    - ``content_zero_all`` (applied last, after every other clamp) mirrors the
+      official Cambridge rule that a script with no relevant content
+      (``content == 0``) scores 0 on every scale; it is deterministic in code,
+      not model-decided, and never fires on ``content == 1``.
 
     Returns ``(guarded_bands, applied_rule_ids)``.
     """
@@ -277,5 +281,13 @@ def apply_guards(bands, facts, audit, kind=None):
     if words > 250:
         clamp("content", 4, "length_over_250")
         clamp("communicative_achievement", 4, "length_over_250")
+
+    # 10. Official Cambridge Content = 0 rule (applied LAST, after every other clamp):
+    # a script with no relevant content scores 0 on every scale (deterministic, never fires on 1).
+    if out["content"] == 0:
+        for k in BAND_KEYS:
+            out[k] = 0
+        if "content_zero_all" not in applied:
+            applied.append("content_zero_all")
 
     return out, applied

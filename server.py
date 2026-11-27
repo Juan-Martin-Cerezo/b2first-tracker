@@ -1573,8 +1573,9 @@ def run_writing_pipeline(clean_text, kind, task_prompt, base, api_key, model, wi
         return 200, {"refused": True, "reason": data}, 0, metrics
 
     validated = data
+    raw_bands = dict(validated["bands"])
     guarded_bands, guards_applied = writing_grade.apply_guards(
-        validated["bands"], facts, audit, kind=kind
+        raw_bands, facts, audit, kind=kind
     )
     collapsed = False
     if writing_grade.is_collapsed(guarded_bands) and not guards_applied:
@@ -1582,13 +1583,15 @@ def run_writing_pipeline(clean_text, kind, task_prompt, base, api_key, model, wi
         r_outcome, r_data = _call_score(rescore_user, max_attempts=1, stage="rescore")
         if r_outcome == "ok":
             validated = r_data
+            raw_bands = dict(validated["bands"])
             guarded_bands, guards_applied = writing_grade.apply_guards(
-                validated["bands"], facts, audit, kind=kind
+                raw_bands, facts, audit, kind=kind
             )
             collapsed = writing_grade.is_collapsed(guarded_bands)
         else:
             collapsed = True
 
+    validated["raw_bands"] = raw_bands
     validated["bands"] = guarded_bands
     validated["total"] = sum(guarded_bands.values())
     validated["model"] = model

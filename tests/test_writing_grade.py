@@ -203,10 +203,36 @@ b, applied = wg.apply_guards(BASE_BANDS, dict(NEUTRAL_FACTS, words=251), None)
 assert b["content"] == 4 and b["communicative_achievement"] == 4 and applied == ["length_over_250"], (b, applied)
 assert b["organisation"] == 5 and b["language"] == 5
 
+# 3j. content_zero_all (Cambridge Content = 0 rule): fires on content 0, never on 1, applied LAST.
+c0_bands = {"content": 0, "communicative_achievement": 4, "organisation": 4, "language": 5}
+b, applied = wg.apply_guards(c0_bands, NEUTRAL_FACTS, None)
+assert b == {"content": 0, "communicative_achievement": 0, "organisation": 0, "language": 0}, (b, applied)
+assert sum(b.values()) == 0
+assert applied == ["content_zero_all"], applied
+
+# Never fires on content == 1 (even when off_topic guard fires).
+c1_bands = {"content": 1, "communicative_achievement": 4, "organisation": 4, "language": 5}
+b, applied = wg.apply_guards(c1_bands, NEUTRAL_FACTS, audit_off)
+assert b == {"content": 1, "communicative_achievement": 4, "organisation": 4, "language": 5}, (b, applied)
+assert "content_zero_all" not in applied, applied
+
+# Applied LAST after other guards.
+b, applied = wg.apply_guards(
+    {"content": 0, "communicative_achievement": 5, "organisation": 5, "language": 5},
+    dict(inf_facts, words=95, paragraphs=1),
+    audit_basic,
+    kind="Essay",
+)
+assert b == {"content": 0, "communicative_achievement": 0, "organisation": 0, "language": 0}, (b, applied)
+assert sum(b.values()) == 0
+assert applied[-1] == "content_zero_all", applied
+assert "content_short_100" in applied and "organisation_no_paragraphs" in applied
+assert "ca_informal_sustained" in applied and "language_basic_errors" in applied
+
 out["3_all_guards"] = True
 
 # 4. Monotonicity: guards ONLY lower, NEVER raise, and never mutate caller dict.
-low_bands = {"content": 0, "communicative_achievement": 1, "organisation": 1, "language": 1}
+low_bands = {"content": 1, "communicative_achievement": 1, "organisation": 1, "language": 1}
 low_copy = dict(low_bands)
 extreme_facts = dict(
     words=50,
@@ -222,12 +248,33 @@ assert low_bands == low_copy, "apply_guards mutated caller bands dict"
 for k in low_bands:
     assert b_low[k] == low_bands[k], f"guard changed already-low {k}: {low_bands[k]} -> {b_low[k]}"
 assert "content_short_100" in app_low and "organisation_no_paragraphs" in app_low, app_low
+assert "content_zero_all" not in app_low, app_low
+
+zero_bands = {"content": 0, "communicative_achievement": 1, "organisation": 1, "language": 1}
+zero_copy = dict(zero_bands)
+b_zero, app_zero = wg.apply_guards(zero_bands, extreme_facts, audit_basic, kind="Essay")
+assert zero_bands == zero_copy, "apply_guards mutated caller bands dict"
+assert b_zero == {"content": 0, "communicative_achievement": 0, "organisation": 0, "language": 0}, b_zero
+for k in zero_bands:
+    assert b_zero[k] <= zero_bands[k], f"guard raised {k}: {zero_bands[k]} -> {b_zero[k]}"
+assert app_zero[-1] == "content_zero_all", app_zero
 
 for start in range(6):
     inp = {k: start for k in ("content", "communicative_achievement", "organisation", "language")}
     res, _ = wg.apply_guards(inp, extreme_facts, audit_all, kind="Essay")
     for k in inp:
         assert res[k] <= inp[k], f"guard raised {k} from {inp[k]} to {res[k]}"
+for c_val in (0, 1, 5):
+    for other_val in range(6):
+        inp = {
+            "content": c_val,
+            "communicative_achievement": other_val,
+            "organisation": other_val,
+            "language": other_val,
+        }
+        res, _ = wg.apply_guards(inp, extreme_facts, audit_all, kind="Essay")
+        for k in inp:
+            assert res[k] <= inp[k], f"guard raised {k} from {inp[k]} to {res[k]}"
 out["4_guards_only_lower"] = True
 
 # 5. Collapse detection.
