@@ -26,7 +26,6 @@ TABS = (
     ("prog", "progress"),
     ("plan", "plan"),
     ("practice", "practice"),
-    ("resources", "resources"),
     ("err", "errors"),
     ("ia", "writing"),
 )
@@ -94,8 +93,6 @@ SEED_JS = """
     D.sessionOffset = todayIdx > 0 ? -todayIdx : 0;
     save();
     refreshAll();
-    renderResources();
-    renderMaterial();
     setIaState('error', 'Text is too short (minimum 40 words required for B2 grading).');
 }
 """
@@ -202,7 +199,7 @@ MEASURE_TAB_JS = """
     // 5. Exam specific: tabular-nums and right-aligned duration & parts on paper cards
     let examCheck = null;
     if (viewId === 'exam') {
-        const paperCards = Array.from(root.querySelectorAll('#examSelectGrid .exam-card')).filter(isVisible);
+        const paperCards = Array.from(root.querySelectorAll('#examSelectGrid .exam-card[data-paper]')).filter(isVisible);
         examCheck = paperCards.map(c => {
             const cr = c.getBoundingClientRect();
             const minEl = c.querySelector('.exam-card-min');
@@ -237,25 +234,18 @@ MEASURE_TAB_JS = """
         });
     }
 
-    // 7. Practice specific: consistent .step row heights, uniform padding/gap, single button variant & height
+    // 7. Practice specific: compact hub with search + Filters button + Library list (no inline <details> or chip walls)
     let practiceCheck = null;
     if (viewId === 'practice') {
-        const steps = Array.from(root.querySelectorAll('#partsList .step')).filter(isVisible);
-        const stepBtns = Array.from(root.querySelectorAll('#partsList .step button')).filter(isVisible);
+        const rows = Array.from(root.querySelectorAll('#pracLibList a.exlib-row')).filter(isVisible);
+        const search = document.getElementById('pracLibSearch');
+        const filtersBtn = document.getElementById('pracLibFiltersBtn');
         practiceCheck = {
-            stepCount: steps.length,
-            stepHeights: steps.map(s => Math.round(s.getBoundingClientRect().height)),
-            stepPaddings: steps.map(s => {
-                const cs = getComputedStyle(s);
-                return [
-                    Math.round(parseFloat(cs.paddingTop)),
-                    Math.round(parseFloat(cs.paddingRight)),
-                    Math.round(parseFloat(cs.paddingBottom)),
-                    Math.round(parseFloat(cs.paddingLeft)),
-                ];
-            }),
-            buttonVariants: Array.from(new Set(stepBtns.map(b => b.className.trim()))),
-            buttonHeights: Array.from(new Set(stepBtns.map(b => Math.round(b.getBoundingClientRect().height)))),
+            rowCount: rows.length,
+            hasDetails: !!document.getElementById('practicePartsDetails'),
+            inlineChips: root.querySelectorAll('.exlib-chip').length,
+            searchH: search ? Math.round(search.getBoundingClientRect().height) : 0,
+            filtersH: filtersBtn ? Math.round(filtersBtn.getBoundingClientRect().height) : 0,
         };
     }
 
@@ -553,22 +543,11 @@ def main():
 
                 if view_id == "practice":
                     pc = m["practiceCheck"]
-                    assert pc["stepCount"] == 17, f"{vw}px practice: expected 17 part rows, got {pc['stepCount']}"
-                    assert max(pc["stepHeights"]) - min(pc["stepHeights"]) <= 1, (
-                        f"{vw}px practice: part rows do not have consistent height: {pc['stepHeights']}"
-                    )
-                    for pad in pc["stepPaddings"]:
-                        assert pad == [16, 16, 16, 16], f"{vw}px practice: step padding {pad} != [16, 16, 16, 16]"
-                    # Fase 126: a part row has one primary action (Start) and one
-                    # secondary (Resources). The rule is "no invented styles", not
-                    # "one variant only": any variant outside this pair is a defect.
-                    allowed = {"btn sm", "btn sm gray"}
-                    assert set(pc["buttonVariants"]) <= allowed, (
-                        f"{vw}px practice: unexpected button variants: {pc['buttonVariants']}"
-                    )
-
-                    assert pc["buttonHeights"] == [44], (
-                        f"{vw}px practice: practice button heights {pc['buttonHeights']} != [44]"
+                    assert pc["rowCount"] > 0, f"{vw}px practice: expected Library rows, got {pc}"
+                    assert not pc["hasDetails"], f"{vw}px practice: legacy #practicePartsDetails still in DOM"
+                    assert pc["inlineChips"] == 0, f"{vw}px practice: inline filter chips still in #v-practice"
+                    assert pc["searchH"] == 48 and pc["filtersH"] == 48, (
+                        f"{vw}px practice: toolbar controls not 48px: {pc}"
                     )
 
                 if view_id == "resources":
@@ -684,8 +663,7 @@ def main():
         ), f"Errors empty state does not use unified .empty pattern: {empty_check}"
 
         focus_targets = [
-            ("practice", "#v-practice #partsList .step button"),
-            ("resources", "#v-resources #practiceGrid a.btn"),
+            ("practice", "#v-practice #pracLibFiltersBtn"),
             ("err", "#v-err #errCode2"),
             ("ia", "#v-ia #iaKind"),
         ]

@@ -100,7 +100,7 @@ with sync_playwright() as p:
     assert dup_ids == [], f"Duplicate DOM ids found: {dup_ids}"
     out["duplicate_ids"] = 0
 
-    # --- 1. Nav Practice opens Library first, in first viewport, parts collapsed ---
+    # --- 1. Nav Practice opens Library first, real content in first viewport, no inline filter chips, no <details> ---
     pg.click("nav button[data-view='practice']")
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'light'); window.scrollTo(0, 0)")
     pg.wait_for_timeout(250)
@@ -109,14 +109,18 @@ with sync_playwright() as p:
         """() => {
             const view = document.getElementById('v-practice');
             const libCard = document.getElementById('practiceLibraryCard');
-            const parts = document.getElementById('practiceParts');
-            const details = parts ? parts.closest('details') : null;
+            const partsModal = document.getElementById('practicePartsModal');
+            const filtersSheet = document.getElementById('practiceFiltersSheet');
             const countEl = document.getElementById('pracLibCount');
             const searchEl = document.getElementById('pracLibSearch');
+            const filtersBtn = document.getElementById('pracLibFiltersBtn');
+            const filtersBadge = document.getElementById('pracLibFiltersBadge');
+            const activeBar = document.getElementById('pracLibActiveFilters');
             const fab = document.getElementById('qlFab');
             const intentMock = document.getElementById('practiceIntentFullMock');
             const intentPart = document.getElementById('practiceIntentByPart');
             const rows = [...document.querySelectorAll('#pracLibList a.exlib-row')];
+            const firstRow = rows[0] || null;
             const groupSkills = [...document.querySelectorAll('#pracLibList .exlib-group')].map(g => g.dataset.skill);
             const summaries = [...document.querySelectorAll('#partsList .step .step-res-summary')]
                 .map(e => e.textContent.trim());
@@ -125,19 +129,23 @@ with sync_playwright() as p:
                 const b = el.getBoundingClientRect();
                 return {top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right), w: Math.round(b.width), h: Math.round(b.height)};
             };
-            const libBeforeParts = !!(libCard && parts && (libCard.compareDocumentPosition(parts) & Node.DOCUMENT_POSITION_FOLLOWING));
             return {
                 active: view.classList.contains('active'),
                 libVisible: !!libCard && getComputedStyle(libCard).display !== 'none' && !libCard.hidden,
                 libBox: box(libCard),
                 searchBox: box(searchEl),
+                filtersBtnBox: box(filtersBtn),
+                filtersBadgeHidden: !!filtersBadge && filtersBadge.hidden,
+                activeBarHidden: !!activeBar && activeBar.hidden,
                 countBox: box(countEl),
+                firstRowBox: box(firstRow),
                 fabBox: box(fab),
                 intentMockBox: box(intentMock),
                 intentPartBox: box(intentPart),
-                libBeforeParts,
-                hasDetails: !!details,
-                detailsOpen: details ? details.open : null,
+                inlineFilterChipsInView: view.querySelectorAll('.exlib-chip, #pracLibPaperFilter, #pracLibPartFilter, #pracLibSort').length,
+                hasLegacyDetails: !!document.getElementById('practicePartsDetails') || view.querySelectorAll('details').length > 0,
+                filtersSheetHidden: !!filtersSheet && filtersSheet.hidden,
+                partsModalHidden: !!partsModal && partsModal.hidden,
                 startBtnsCount: document.querySelectorAll('#partsList .step button[data-action="startPart"]').length,
                 countText: countEl ? countEl.textContent.trim() : '',
                 rowCount: rows.length,
@@ -160,14 +168,21 @@ with sync_playwright() as p:
     assert prac["libVisible"], "Library is not visible in #v-practice without clicks"
     assert prac["libBox"] and prac["libBox"]["top"] < 844, f"Library not in first viewport: {prac['libBox']}"
     assert prac["searchBox"] and 0 <= prac["searchBox"]["top"] and prac["searchBox"]["bottom"] <= 844, f"Search not visible without scroll: {prac['searchBox']}"
+    assert prac["searchBox"]["h"] >= 48, f"Search input < 48px on mobile: {prac['searchBox']}"
+    assert prac["filtersBtnBox"] and prac["filtersBtnBox"]["h"] >= 48, f"Filters btn < 48px on mobile: {prac['filtersBtnBox']}"
+    assert prac["filtersBadgeHidden"], "Filters badge should be hidden with 0 active filters"
+    assert prac["activeBarHidden"], "Active filters bar should be hidden with 0 active filters"
     assert prac["countBox"] and prac["countBox"]["bottom"] <= 844, f"Counter not visible without scroll: {prac['countBox']}"
-    assert prac["intentMockBox"] and prac["intentMockBox"]["h"] >= 44, f"Full mock card missing or <44px: {prac['intentMockBox']}"
-    assert prac["intentPartBox"] and prac["intentPartBox"]["h"] >= 44, f"Practise by part card missing or <44px: {prac['intentPartBox']}"
+    assert prac["firstRowBox"] and prac["firstRowBox"]["top"] < 460, f"First real content row not high in first mobile viewport: {prac['firstRowBox']}"
+    assert prac["intentMockBox"] and prac["intentMockBox"]["h"] >= 48, f"Full mock action missing or <48px: {prac['intentMockBox']}"
+    assert prac["intentPartBox"] and prac["intentPartBox"]["h"] >= 48, f"Practise by part action missing or <48px: {prac['intentPartBox']}"
     assert not overlaps(prac["fabBox"], prac["searchBox"]), f"FAB overlaps search: fab={prac['fabBox']} search={prac['searchBox']}"
-    assert not overlaps(prac["fabBox"], prac["intentMockBox"]), f"FAB overlaps Full mock card: fab={prac['fabBox']} card={prac['intentMockBox']}"
-    assert not overlaps(prac["fabBox"], prac["intentPartBox"]), f"FAB overlaps By part card: fab={prac['fabBox']} card={prac['intentPartBox']}"
-    assert prac["libBeforeParts"], "#practiceLibraryCard must appear before #practiceParts in DOM"
-    assert prac["hasDetails"] and prac["detailsOpen"] is False, f"#practiceParts must be inside closed <details>: {prac}"
+    assert not overlaps(prac["fabBox"], prac["intentMockBox"]), f"FAB overlaps Full mock btn: fab={prac['fabBox']} card={prac['intentMockBox']}"
+    assert not overlaps(prac["fabBox"], prac["intentPartBox"]), f"FAB overlaps By part btn: fab={prac['fabBox']} card={prac['intentPartBox']}"
+    assert prac["inlineFilterChipsInView"] == 0, f"Inline filter chips still inside #v-practice: {prac['inlineFilterChipsInView']}"
+    assert not prac["hasLegacyDetails"], "Giant inline <details> still present in #v-practice"
+    assert prac["filtersSheetHidden"], "#practiceFiltersSheet should start hidden"
+    assert prac["partsModalHidden"], "#practicePartsModal should start hidden"
     assert prac["rowCount"] > 40, f"Expected real-practice Library rows in Practice, got {prac['rowCount']}"
     assert prac["countText"] == f"{prac['rowCount']} contents", f"Count mismatch: {prac['countText']!r}"
     assert prac["groupSkills"] == ["rue", "w", "l", "sp"], f"Unexpected Library group order: {prac['groupSkills']}"
@@ -190,9 +205,10 @@ with sync_playwright() as p:
     assert prac["scrollWidth"] <= prac["clientWidth"] + 1, f"Practice 390 light overflow: {prac['scrollWidth']} > {prac['clientWidth']}"
     assert not INLINE_HANDLER_RE.search(prac["html"]), "Inline on* handler in #v-practice"
 
-    # Screenshots at scroll=0 (390 light & dark, and 1280 light)
+    # Screenshots at scroll=0 (390 light & dark, and 1280 light — filters closed)
     pg.evaluate("if(document.activeElement)document.activeElement.blur(); window.scrollTo(0, 0)")
     pg.wait_for_timeout(150)
+    pg.screenshot(path=os.path.join(OUT, "practice_ux_390.png"))
     pg.screenshot(path=os.path.join(OUT, "practice_hub_390_light.png"))
 
     pg.evaluate("document.documentElement.setAttribute('data-theme', 'dark'); window.scrollTo(0, 0)")
@@ -207,24 +223,54 @@ with sync_playwright() as p:
     pg.wait_for_timeout(150)
     desk_overflow = pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth")
     assert desk_overflow <= 1, f"Practice 1280 overflow: {desk_overflow}"
+    pg.screenshot(path=os.path.join(OUT, "practice_ux_1280.png"))
     pg.screenshot(path=os.path.join(OUT, "practice_hub_1280_light.png"))
 
     pg.set_viewport_size({"width": 390, "height": 844})
     pg.evaluate("window.scrollTo(0, 0)")
     pg.wait_for_timeout(150)
 
-    # Library filters work inside Practice
+    # Library search + Filters sheet workflow (open -> pick paper & part -> screenshot -> apply -> close -> active chips -> reset)
     pg.fill("#pracLibSearch", "open cloze")
     pg.wait_for_timeout(150)
     filtered_search = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
     assert 0 < filtered_search < prac["rowCount"], f"Search filter failed: {filtered_search}"
-    pg.click("#pracLibPaperFilter button[data-exlib-paper='rue']")
+    pg.fill("#pracLibSearch", "")
     pg.wait_for_timeout(120)
-    filtered_rue = pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length")
-    assert filtered_rue > 0, "R&UoE filter returned 0 rows"
-    pg.evaluate("resetExLibFilters(true, 'practice')")
+
+    pg.click("#pracLibFiltersBtn")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('practiceFiltersSheet').hidden"), "Filters sheet did not open"
+    pg.click("#pracLibPaperFilter button[data-exlib-paper='rue']")
+    pg.click("#pracLibPartFilter button[data-exlib-part='2']")
     pg.wait_for_timeout(150)
-    assert pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length") == prac["rowCount"], "Reset did not restore full Library"
+    assert pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1, "Filters sheet 390 overflow"
+    pg.screenshot(path=os.path.join(OUT, "practice_ux_filters_390.png"))
+    pg.click("#pracLibFiltersApply")
+    pg.wait_for_timeout(200)
+    after_apply = pg.evaluate(
+        """() => ({
+            sheetHidden: document.getElementById('practiceFiltersSheet').hidden,
+            badgeText: document.getElementById('pracLibFiltersBadge').textContent.trim(),
+            badgeHidden: document.getElementById('pracLibFiltersBadge').hidden,
+            activeHidden: document.getElementById('pracLibActiveFilters').hidden,
+            activeChips: [...document.querySelectorAll('#pracLibActiveFilters .prac-active-chip')].map(b => b.textContent.trim()),
+            rows: document.querySelectorAll('#pracLibList a.exlib-row').length,
+            skills: [...new Set([...document.querySelectorAll('#pracLibList a.exlib-row')].map(a => a.dataset.skill))],
+            firstRowTop: Math.round(document.querySelector('#pracLibList a.exlib-row').getBoundingClientRect().top),
+        })"""
+    )
+    assert after_apply["sheetHidden"], "Filters sheet did not close on Apply"
+    assert not after_apply["badgeHidden"] and after_apply["badgeText"] == "2", f"Unexpected filters badge: {after_apply}"
+    assert not after_apply["activeHidden"] and len(after_apply["activeChips"]) == 2, f"Active filter chips missing: {after_apply}"
+    assert after_apply["rows"] > 0 and after_apply["skills"] == ["rue"], f"Filtered rows mismatch: {after_apply}"
+    assert after_apply["firstRowTop"] < 700, f"Filtered list not visible near top: {after_apply}"
+    # Clear active filters via inline summary bar Clear button
+    pg.click("#pracLibActiveFilters .prac-active-clear")
+    pg.wait_for_timeout(150)
+    assert pg.eval_on_selector_all("#pracLibList a.exlib-row", "els => els.length") == prac["rowCount"], "Clear did not restore full Library"
+    assert pg.evaluate("document.getElementById('pracLibActiveFilters').hidden"), "Active filters bar did not hide after Clear"
+    assert pg.evaluate("document.getElementById('pracLibFiltersBadge').hidden"), "Badge did not hide after Clear"
 
     # --- 1b. Practised toggle: marks item, moves to end of group, Hide done hides it, persists across reload ---
     pg.evaluate("D.practised = {}; save(); refreshAll(); showView('practice');")
@@ -242,7 +288,7 @@ with sync_playwright() as p:
         }"""
     )
     assert first_item["key"].startswith("lib:"), f"Unexpected lib practised key: {first_item}"
-    assert first_item["btnH"] >= 44, f"Practised button height < 44px: {first_item}"
+    assert first_item["btnH"] >= 48, f"Practised button height < 48px on mobile: {first_item}"
     pg.locator("#pracLibList .exlib-group[data-skill='rue'] .exlib-row-wrap").first.locator(".practised-btn").click()
     pg.wait_for_timeout(200)
 
@@ -268,23 +314,12 @@ with sync_playwright() as p:
     assert after_mark["lastDone"] == "1" and "✓" in after_mark["lastBtnText"], after_mark
     assert after_mark["overflow"] <= 1, f"Library practised 390 overflow: {after_mark}"
 
-    # Screenshot showing practised state in Library (filter to Part 1 so Hide done + unpractised + Done ✓ at bottom all appear in frame)
-    pg.click("#pracLibPartFilter button[data-exlib-part='1']")
+    # Hide done via Filters sheet removes marked items and updates counter
+    pg.click("#pracLibFiltersBtn")
     pg.wait_for_timeout(150)
-    pg.evaluate("""() => {
-        document.documentElement.setAttribute('data-theme', 'light');
-        const el = document.getElementById('pracLibHideDone');
-        if (el) window.scrollTo(0, Math.max(0, el.getBoundingClientRect().top + window.scrollY - 110));
-        if (document.activeElement) document.activeElement.blur();
-    }""")
-    pg.wait_for_timeout(150)
-    pg.screenshot(path=os.path.join(OUT, "library_practised_390_light.png"))
-    pg.click("#pracLibPartFilter button[data-exlib-part='all']")
-    pg.wait_for_timeout(150)
-
-    # Hide done checkbox removes marked items and updates counter
     assert not pg.is_checked("#pracLibHideDone"), "Hide done should default off"
     pg.check("#pracLibHideDone")
+    pg.click("#pracLibFiltersApply")
     pg.wait_for_timeout(150)
     hidden_state = pg.evaluate(
         """(key) => ({
@@ -297,7 +332,7 @@ with sync_playwright() as p:
     assert hidden_state["present"] is False, f"Hide done did not hide marked item: {hidden_state}"
     assert hidden_state["rows"] == prac["rowCount"] - 1, f"Hide done row count wrong: {hidden_state}"
     assert hidden_state["countText"] == f"{hidden_state['rows']} contents", hidden_state
-    pg.uncheck("#pracLibHideDone")
+    pg.click("#pracLibActiveFilters .prac-active-clear")
     pg.wait_for_timeout(150)
 
     # Persist across reload, then unmark and verify reload
@@ -343,15 +378,15 @@ with sync_playwright() as p:
             sub: document.querySelector('#v-practice .page-sub').textContent.trim(),
             mockTitle: document.querySelector('#practiceIntentFullMock .practice-intent-title').textContent.trim(),
             partTitle: document.querySelector('#practiceIntentByPart .practice-intent-title').textContent.trim(),
-            summary: document.getElementById('practicePartsSummary').textContent.trim(),
+            filtersBtn: document.querySelector('#pracLibFiltersBtn [data-i18n="exlib_filters_btn"]').textContent.trim(),
             count: document.getElementById('pracLibCount').textContent.trim(),
             overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         })"""
     )
     assert es_hub["title"] == "Práctica", es_hub
-    assert "full mock" in es_hub["sub"].lower() and "papers" in es_hub["sub"].lower(), es_hub
+    assert "exámenes" in es_hub["sub"].lower() and "audio" in es_hub["sub"].lower(), es_hub
     assert es_hub["mockTitle"] == "Full mock" and es_hub["partTitle"] == "Practicar por parte", es_hub
-    assert "ejercicios por parte" in es_hub["summary"].lower(), es_hub
+    assert es_hub["filtersBtn"] == "Filtros", es_hub
     assert "contenidos" in es_hub["count"].lower(), es_hub
     assert es_hub["overflow"] <= 1, f"Practice 390 ES overflow: {es_hub}"
     pg.evaluate("setLang('en')")
@@ -371,17 +406,70 @@ with sync_playwright() as p:
     pg.click("nav button[data-view='practice']")
     pg.wait_for_timeout(250)
 
-    # Intent 2: "Practise by part" opens the parts <details>
-    assert pg.evaluate("!document.getElementById('practicePartsDetails').open"), "Details should still be closed before clicking Practise by part"
+    # Intent 2: "Practise by part" opens #practicePartsModal (NOT scrolling to a bottom <details>)
+    assert pg.evaluate("document.getElementById('practicePartsModal').hidden"), "Parts modal should start closed"
     pg.click("#practiceIntentByPart")
     pg.wait_for_timeout(250)
     parts_opened = pg.evaluate(
+        """() => {
+            const modal = document.getElementById('practicePartsModal');
+            return {
+                open: !!modal && !modal.hidden,
+                scrollY: Math.round(window.scrollY),
+                visibleStarts: [...modal.querySelectorAll('#partsList .step button[data-action="startPart"]')].filter(b => b.getBoundingClientRect().height >= 48).length,
+                inlineInputs: modal.querySelectorAll('#partsList .step input, #partsList .step select').length,
+                logBtns: modal.querySelectorAll('#partsList .step button[data-action="openPartLogModal"]').length,
+                contentsBtns: modal.querySelectorAll('#partsList .step button[data-action="openPartContents"]').length,
+                overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            };
+        }"""
+    )
+    assert parts_opened["open"] is True and parts_opened["visibleStarts"] == 17, f"Practise by part modal did not reveal 17 Start buttons: {parts_opened}"
+    assert parts_opened["inlineInputs"] == 0, f"Part cards still have inline inputs: {parts_opened}"
+    assert parts_opened["logBtns"] == 17 and parts_opened["contentsBtns"] == 17, parts_opened
+    assert parts_opened["overflow"] <= 1, f"By-part modal 390 overflow: {parts_opened}"
+    pg.screenshot(path=os.path.join(OUT, "practice_ux_bypart_390.png"))
+
+    # Desktop 1280 screenshot of By-part modal (2-column grid, 760-860px wide dialog)
+    pg.set_viewport_size({"width": 1280, "height": 800})
+    pg.wait_for_timeout(150)
+    bypart_desk = pg.evaluate(
+        """() => {
+            const p = document.querySelector('#practicePartsModal .prac-parts-panel');
+            const grid = document.querySelector('#partsList .parts-group-grid');
+            const cols = grid ? getComputedStyle(grid).gridTemplateColumns.split(' ').length : 0;
+            return {w: p ? Math.round(p.getBoundingClientRect().width) : 0, cols};
+        }"""
+    )
+    assert 760 <= bypart_desk["w"] <= 860 and bypart_desk["cols"] == 2, f"Desktop by-part dialog mismatch: {bypart_desk}"
+    pg.screenshot(path=os.path.join(OUT, "practice_ux_bypart_1280.png"))
+    pg.set_viewport_size({"width": 390, "height": 844})
+    pg.wait_for_timeout(150)
+
+    # Open "Log result" mini modal on Reading Part 1 (data-i="0"), enter 7/8 in 8 min, Save -> closes, logs & marks done!
+    log_before_part = pg.evaluate("D.log.length")
+    pg.click("#partsList .step button[data-action='openPartLogModal'][data-i='0']")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('practicePartLogModal').hidden"), "Log result modal did not open"
+    pg.fill("#ptOk0", "7")
+    pg.fill("#ptTot0", "8")
+    pg.fill("#ptMin0", "8")
+    pg.click("#practicePartLogSaveBtn")
+    pg.wait_for_timeout(200)
+    after_part_log = pg.evaluate(
         """() => ({
-            open: document.getElementById('practicePartsDetails').open,
-            visibleStarts: [...document.querySelectorAll('#partsList .step button[data-action="startPart"]')].filter(b => b.getBoundingClientRect().height >= 44).length,
+            logModalHidden: document.getElementById('practicePartLogModal').hidden,
+            logLen: D.log.length,
+            lastEntry: D.log[0] || null,
+            markedDone: !!(D.practised && D.practised['part:ue:1']),
         })"""
     )
-    assert parts_opened["open"] is True and parts_opened["visibleStarts"] == 17, f"Practise by part did not reveal 17 Start buttons: {parts_opened}"
+    assert after_part_log["logModalHidden"], "Log result modal did not close on Save"
+    assert after_part_log["logLen"] == log_before_part + 1, f"Part result not saved to D.log: {after_part_log}"
+    assert after_part_log["lastEntry"]["correct"] == 7 and after_part_log["lastEntry"]["total"] == 8, after_part_log
+    assert after_part_log["markedDone"], f"Saving part result did not mark part as done: {after_part_log}"
+    # Clean up test practised state for part:ue:1
+    pg.evaluate("delete D.practised['part:ue:1']; save(); renderParts();")
 
     out["1_practice_library"] = {"rows": prac["rowCount"], "count": prac["countText"], "summary_p2": prac["sampleSummary"]}
 
@@ -488,7 +576,7 @@ with sync_playwright() as p:
     # --- 4 & 5. Exam Full Mock Pre-flight, exact materials & unlimited exit --
     pg.click("nav button[data-view='exam']")
     pg.wait_for_timeout(250)
-    pg.click("button[data-action='startFullMock']")
+    pg.click("#v-exam [data-action='startFullMock']")
     pg.wait_for_timeout(250)
 
     fm = pg.evaluate(
@@ -588,6 +676,7 @@ with sync_playwright() as p:
     assert done_es["scrollWidth"] <= done_es["clientWidth"] + 1, "Pre-flight 390 ES overflow"
 
     # Clicking "Hacer otro full mock" advances to next sample cleanly
+    pg.evaluate("if (typeof closeMockStartModal === 'function') closeMockStartModal(false)")
     first_sample = fm["samples"][0]["id"]
     pg.click("#fmDoAnotherBtn")
     pg.wait_for_timeout(150)
@@ -613,21 +702,39 @@ with sync_playwright() as p:
     pg.wait_for_timeout(150)
     assert pg.evaluate("!(D.practised && D.practised['mock:rue'])"), "Unmarking mock:rue failed"
 
-    # Clicking "Abrir materiales" on Listening card opens Library filtered to Listening full paper
-    pg.click("#examSelectGrid .exam-card[data-paper='l'] .exam-card-mat-btn")
+    # openFullPaperLibrary('l') opens Library filtered to Listening full paper with active chips
+    pg.evaluate("openFullPaperLibrary('l')")
     pg.wait_for_timeout(250)
     l_lib = pg.evaluate(
         """() => ({
             view: (document.querySelector('.view.active') || {}).id || '',
             paper: EXLIB_PRACTICE_STATE.paper,
             scope: EXLIB_PRACTICE_STATE.scope,
+            badgeText: document.getElementById('pracLibFiltersBadge').textContent.trim(),
+            activeChips: document.querySelectorAll('#pracLibActiveFilters .prac-active-chip').length,
             types: [...new Set([...document.querySelectorAll('#pracLibList a.exlib-row')].map(a => a.dataset.type))],
             skills: [...new Set([...document.querySelectorAll('#pracLibList a.exlib-row')].map(a => a.dataset.skill))],
         })"""
     )
     assert l_lib["view"] == "v-practice" and l_lib["paper"] == "l" and l_lib["scope"] == "full", l_lib
+    assert l_lib["badgeText"] == "2" and l_lib["activeChips"] == 2, l_lib
     assert l_lib["skills"] == ["l"], l_lib
     assert "paper" in l_lib["types"] and "key" in l_lib["types"] and "audio" in l_lib["types"], l_lib
+
+    # Resources button inside By-part modal closes modal and filters Library to that paper + part
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(150)
+    pg.click("#partsList .step button[data-action='openPartContents'][data-i='1']")
+    pg.wait_for_timeout(200)
+    part_res = pg.evaluate(
+        """() => ({
+            modalHidden: document.getElementById('practicePartsModal').hidden,
+            paper: EXLIB_PRACTICE_STATE.paper,
+            part: EXLIB_PRACTICE_STATE.part,
+            rows: document.querySelectorAll('#pracLibList a.exlib-row').length,
+        })"""
+    )
+    assert part_res["modalHidden"] and part_res["paper"] == "rue" and part_res["part"] == "2" and part_res["rows"] > 0, part_res
 
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(150)
@@ -642,6 +749,11 @@ with sync_playwright() as p:
         "es_do_another": done_es["btnText"],
     }
     out["screenshots"] = [
+        "practice_ux_1280.png",
+        "practice_ux_390.png",
+        "practice_ux_filters_390.png",
+        "practice_ux_bypart_390.png",
+        "practice_ux_bypart_1280.png",
         "practice_hub_390_light.png",
         "practice_hub_390_dark.png",
         "practice_hub_1280_light.png",

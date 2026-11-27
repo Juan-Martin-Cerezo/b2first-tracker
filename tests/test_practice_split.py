@@ -28,30 +28,35 @@ with sync_playwright() as p:
     pg.evaluate("setLang('en')")
     pg.wait_for_timeout(400)
 
-    # 1. Practice opens on Library first, has #partsList inside closed <details>, and no legacy DOM.
+    # 1. Practice opens on Library first, #partsList lives in #practicePartsModal (no inline <details>), no legacy DOM.
     pg.evaluate("showView('practice')")
     pg.wait_for_timeout(300)
     assert pg.evaluate("document.querySelector('.view.active').id") == "v-practice", "Practice is not active"
     assert pg.evaluate("!!document.querySelector('#v-practice #practiceLibraryCard')"), "#practiceLibraryCard missing"
-    assert pg.evaluate("!!document.querySelector('#v-practice #partsList')"), "#partsList is not in Practice"
-    assert pg.eval_on_selector_all("#v-practice #partsList .step", "els => els.length") > 0, (
+    assert not pg.evaluate("!!document.getElementById('practicePartsDetails')"), "Legacy #practicePartsDetails <details> still exists"
+    assert pg.evaluate("!!document.querySelector('#practicePartsModal #partsList')"), "#partsList is not in #practicePartsModal"
+    assert pg.evaluate("document.getElementById('practicePartsModal').hidden"), "#practicePartsModal should start hidden"
+    assert pg.eval_on_selector_all("#practicePartsModal #partsList .step", "els => els.length") > 0, (
         "Practice has no exercise rows"
     )
     for removed in (
         "v-resources", "v-exercises", "v-libros",
         "practiceGrid", "practiceResources", "practiceBooks",
         "practiceTabs", "practiceTabLibrary", "practiceTabLibraryBtn",
+        "practicePartsDetails",
     ):
         assert not pg.evaluate(f"!!document.getElementById('{removed}')"), (
             f"Legacy #{removed} still exists in DOM"
         )
-    out["practice"] = {"steps": pg.eval_on_selector_all("#v-practice #partsList .step", "els => els.length")}
+    out["practice"] = {"steps": pg.eval_on_selector_all("#practicePartsModal #partsList .step", "els => els.length")}
 
-    # 2. Opening parts <details> and clicking Start opens the session workspace on Contents.
-    pg.click("#practicePartsSummary")
-    pg.wait_for_timeout(150)
+    # 2. Opening Practise by part modal and clicking Start opens the session workspace on Contents.
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("!document.getElementById('practicePartsModal').hidden"), "#practicePartsModal did not open"
     pg.click("#partsList .step button[data-action='startPart'][data-i='1']")
     pg.wait_for_timeout(300)
+    assert pg.evaluate("document.getElementById('practicePartsModal').hidden"), "#practicePartsModal did not close on Start"
     assert pg.evaluate("!document.getElementById('sessionWorkspace').hidden"), "Session workspace did not open"
     assert pg.evaluate("!document.getElementById('sessionTabContents').hidden"), "Contents tab should start open"
     assert pg.evaluate("document.getElementById('sessionTabSession').hidden"), "Session tab should start hidden"

@@ -238,7 +238,7 @@ body{
   min-height:100vh;
   overflow-x:clip;
 }
-.auth-card,.speaking-overlay,.ob-plan-preview,.table-wrap,.more-sheet-panel,.acct-sheet-panel{overscroll-behavior-y:contain}
+.auth-card,.speaking-overlay,.ob-plan-preview,.table-wrap,.more-sheet-panel,.acct-sheet-panel,.prac-sheet-body,.prac-parts-body,.prac-log-panel{overscroll-behavior-y:contain}
 img{outline:1px solid var(--img-outline);outline-offset:-1px}
 a{color:var(--acc-text);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -1022,7 +1022,7 @@ input[type=checkbox],input[type=radio]{width:auto;accent-color:var(--acc)}
 .exlib-group-sub{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45;overflow-wrap:anywhere}
 .exlib-list{display:flex;flex-direction:column;gap:8px;min-width:0;width:100%}
 .exlib-row-wrap{
-  display:flex;align-items:stretch;width:100%;max-width:100%;min-width:0;
+  display:flex;align-items:center;width:100%;max-width:100%;min-width:0;
   background:var(--surface);border:1px solid var(--line);border-radius:10px;
   overflow:hidden;box-sizing:border-box;
   transition:border-color 140ms ease,opacity 140ms ease,background-color 140ms ease;
@@ -1042,15 +1042,15 @@ a.exlib-row:hover,a.exlib-row:focus-visible{background:var(--acc-soft);text-deco
 a.exlib-row:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
 .practised-btn{
   flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;
-  min-height:44px;min-width:44px;padding:8px 11px;margin:0;
-  background:transparent;border:0;border-left:1px solid var(--line);
+  height:44px;min-height:44px;min-width:44px;padding:0 12px;margin:0 var(--s2) 0 0;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
   font-family:var(--font);font-size:12px;font-weight:600;line-height:1.2;
   color:var(--txt-2);cursor:pointer;white-space:nowrap;
-  transition:background-color 140ms ease,color 140ms ease;
+  transition:background-color 140ms ease,color 140ms ease,border-color 140ms ease;
 }
-.practised-btn:hover{background:var(--acc-soft);color:var(--acc-text)}
-.practised-btn:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
-.practised-btn.is-done{background:var(--ok-soft);color:var(--ok-text);border-left-color:var(--ok-border)}
+.practised-btn:hover{background:var(--acc-soft);color:var(--acc-text);border-color:var(--acc-border)}
+.practised-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.practised-btn.is-done{background:var(--ok-soft);color:var(--ok-text);border-color:var(--ok-border)}
 .practised-badge{
   display:inline-flex;align-items:center;margin-left:6px;padding:1px 7px;border-radius:999px;
   font-size:11px;font-weight:700;line-height:1.4;vertical-align:middle;
@@ -1098,14 +1098,21 @@ a.exlib-row:hover .exlib-row-name{color:var(--acc-text)}
 .exlib-row-open{flex:none;font-size:13px;font-weight:600;color:var(--acc-text);white-space:nowrap;padding-left:4px}
 .exlib-empty{display:flex;flex-direction:column;align-items:flex-start;gap:var(--s3);padding:var(--s4);background:var(--surface-2);border:1px dashed var(--line);border-radius:var(--r-panel)}
 .exlib-empty p{margin:0;font-size:var(--t-meta);color:var(--txt-2);line-height:1.45}
+@media (max-width:767px){
+  .practised-btn{height:48px;min-height:48px;min-width:48px}
+}
 @media (max-width:480px){
   .session-topbar{padding:var(--s3)}
   .practice-tabs{display:flex;width:100%}
   .practice-tab{flex:1;min-width:0;padding:0 12px}
   .exlib-bar{align-items:flex-start}
-  .exlib-row-wrap{flex-direction:column}
-  .practised-btn{border-left:0;border-top:1px solid var(--line);width:100%;justify-content:flex-start;padding:8px 12px}
-  .practised-btn.is-done{border-left-color:transparent;border-top-color:var(--ok-border)}
+  .exlib-row-wrap{flex-direction:column;align-items:stretch}
+  .practised-btn{
+    border:0;border-top:1px solid var(--line);border-radius:0;margin:0;
+    width:100%;height:48px;min-height:48px;justify-content:flex-start;padding:0 12px;
+    background:transparent;
+  }
+  .practised-btn.is-done{border-top-color:var(--ok-border)}
 }
 
 /* ---------- SPEAKING TODAY (card inside Today studio) ---------- */
@@ -2364,24 +2371,8 @@ tbody tr:hover{background:var(--surface-2)}
 #v-plan .sched-day-select,#v-plan .sched-time-input{min-width:0;max-width:100%}
 #v-plan .plan-shell .page-head>div{min-width:0}
 
-/* ---------- PRACTICE: part cards stay readable at every width ---------- */
-#v-practice .step{
-  display:flex;flex-direction:column;justify-content:space-between;
-  gap:var(--s2);padding:var(--s4);margin-bottom:var(--s3);
-  height:232px;min-height:232px;
-}
-#v-practice .step:last-child{margin-bottom:0}
-#v-practice .step>h3{min-width:0;margin:0}
-#v-practice .step>h3>span{min-width:0}
-#v-practice .step-actions,#v-practice .step-log{margin-top:0}
-/* Every target on PRACTICE measures at least 44x44, like PLAN. */
-#v-practice .btn{height:var(--btn-h-tertiary);min-height:var(--btn-h-tertiary);min-width:44px}
+/* ---------- PRACTICE: targets & compact hub ---------- */
 #v-practice .btn.sm::after{inset:0;min-width:0;min-height:0}
-@media (max-width:560px){
-  #v-practice .step{height:300px;min-height:300px}
-  #v-practice .step-log{grid-template-columns:repeat(3,minmax(0,1fr))}
-  #v-practice .step-log .step-log-end{grid-column:1 / -1}
-}
 
 /* ---------- ERROR TAXONOMY ---------- */
 #errList{display:grid;grid-template-columns:1fr;grid-auto-rows:1fr;gap:var(--s3)}
@@ -3285,35 +3276,288 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   .fm-materials-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
   .fm-start-btn{width:auto}
 }
-.practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3);margin-bottom:var(--s4)}
+/* ---------- PRACTICE UX (compact hub + filters sheet + by-part & log modals) ---------- */
+.practice-shell{width:100%;max-width:1040px;margin:0 auto}
+.practice-head{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:var(--s3) var(--s4);margin-bottom:var(--s4);flex-wrap:wrap;
+}
+.practice-head-copy{min-width:0;flex:1 1 280px}
+.practice-head .page-sub{margin-top:var(--s1);max-width:60ch}
+.practice-intents{display:flex;align-items:center;gap:var(--s2);margin:0;flex:0 0 auto}
 .practice-intent-card{
-  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;
-  min-height:68px;padding:var(--s3) var(--s4);text-align:left;cursor:pointer;
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
-  font-family:var(--font);color:var(--txt);box-shadow:var(--shadow-1);
-  transition:border-color 140ms ease,background-color 140ms ease,transform 140ms ease;
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  height:48px;min-height:48px;padding:0 var(--s4);text-align:center;cursor:pointer;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-ctl);
+  font-family:var(--font);font-size:var(--t-body);font-weight:600;color:var(--txt);
+  line-height:1.2;white-space:nowrap;box-shadow:var(--shadow-1);
+  transition:border-color 140ms ease,background-color 140ms ease,color 140ms ease,transform 120ms ease-out;
 }
-.practice-intent-card:hover{border-color:var(--acc);background:var(--acc-soft)}
-.practice-intent-card:active{transform:scale(.98)}
+.practice-intent-card .ico{width:16px;height:16px;flex:none;color:var(--acc-text)}
+.practice-intent-card:hover{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+.practice-intent-card:active{transform:scale(.97)}
 .practice-intent-card:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.practice-intent-title{font-size:var(--t-sub);font-weight:600;color:var(--txt);line-height:1.25}
-.practice-intent-sub{font-size:var(--t-meta);color:var(--txt-2);line-height:1.35}
-#practiceLibraryCard{margin-top:0;scroll-margin-top:96px}
-.practice-parts-details{scroll-margin-top:96px}
-.practice-parts-summary{
-  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-  min-height:44px;cursor:pointer;list-style:none;
-  font-size:var(--t-sub);font-weight:600;color:var(--txt);line-height:1.3;
+.practice-intent-title{font-size:inherit;font-weight:600;color:inherit;line-height:1.2}
+#practiceLibraryCard{margin-top:0;scroll-margin-top:96px;padding:var(--s4)}
+.prac-lib-toolbar{display:flex;flex-direction:column;gap:var(--s2);margin:0 0 var(--s3);min-width:0}
+.prac-lib-row{display:flex;align-items:center;gap:var(--s2);min-width:0;flex-wrap:nowrap}
+.prac-lib-row .exlib-search-input{flex:1 1 120px;min-width:0;height:48px;min-height:48px}
+.prac-lib-row .exlib-clear-btn{height:48px;min-height:48px;min-width:48px;padding:0 var(--s3)}
+.prac-filters-btn{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:48px;min-height:48px;min-width:48px;padding:0 var(--s3);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
+  color:var(--txt);font-family:var(--font);font-size:var(--t-body);font-weight:600;
+  line-height:1.2;cursor:pointer;white-space:nowrap;
+  transition:border-color 140ms ease,background-color 140ms ease,color 140ms ease,transform 120ms ease-out;
 }
-.practice-parts-summary::-webkit-details-marker{display:none}
-.practice-parts-summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:var(--r-ctl)}
-.practice-parts-summary-chev{flex:none;color:var(--txt-2);transition:transform 150ms ease}
-.practice-parts-details[open] .practice-parts-summary-chev{transform:rotate(180deg)}
-#practiceParts{scroll-margin-top:96px}
-.practice-parts-details[open] #practiceParts{margin-top:var(--s3)}
+.prac-filters-btn .ico{width:16px;height:16px;flex:none;color:var(--txt-2)}
+.prac-filters-btn:hover{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+.prac-filters-btn:hover .ico,.prac-filters-btn.has-active .ico{color:var(--acc-text)}
+.prac-filters-btn:active{transform:scale(.97)}
+.prac-filters-btn.has-active{background:var(--acc-soft);border-color:var(--acc-border);color:var(--acc-text)}
+.prac-filter-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:20px;height:20px;padding:0 6px;border-radius:999px;
+  background:var(--acc);color:var(--on-primary);
+  font-size:11px;font-weight:700;line-height:1;
+}
+.prac-filter-badge[hidden]{display:none}
+.prac-lib-row .exlib-count{flex:none;white-space:nowrap;margin-left:var(--s1)}
+.prac-active-filters{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);min-width:0;
+}
+.prac-active-filters[hidden]{display:none}
+.prac-active-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  height:44px;min-height:44px;padding:0 var(--s3);
+  border:1px solid var(--acc-border);border-radius:999px;
+  background:var(--acc-soft);color:var(--acc-text);
+  font-family:var(--font);font-size:var(--t-meta);font-weight:600;line-height:1.2;
+  cursor:pointer;white-space:nowrap;max-width:100%;
+  transition:background-color 140ms ease,border-color 140ms ease;
+}
+.prac-active-chip:hover{border-color:var(--acc);background:color-mix(in oklch, var(--acc) 14%, var(--surface))}
+.prac-active-chip-x{font-size:14px;line-height:1;opacity:.8}
+.prac-active-clear{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:44px;min-height:44px;min-width:44px;padding:0 var(--s3);
+  border:1px solid transparent;border-radius:var(--r-ctl);
+  background:transparent;color:var(--txt-2);
+  font-family:var(--font);font-size:var(--t-meta);font-weight:600;cursor:pointer;
+  transition:background-color 140ms ease,color 140ms ease;
+}
+.prac-active-clear:hover{background:var(--surface-2);color:var(--txt)}
+
+/* Filters Sheet (mobile bottom sheet / desktop centered modal) */
+.prac-sheet-overlay{
+  position:fixed;inset:0;z-index:140;
+  background:var(--overlay-bg);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity 180ms ease;
+}
+.prac-sheet-overlay[hidden]{display:none}
+.prac-sheet-overlay.is-open{opacity:1}
+.prac-sheet-panel{
+  width:100%;max-width:600px;max-height:88dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface);color:var(--txt);
+  border:1px solid var(--line);border-bottom:0;
+  border-radius:var(--r-modal) var(--r-modal) 0 0;
+  box-shadow:var(--shadow-3);
+  transform:translateY(20px);
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.prac-sheet-overlay.is-open .prac-sheet-panel{transform:translateY(0)}
+.prac-sheet-panel:focus{outline:0}
+.prac-sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:var(--s2) auto 0;flex:none}
+.prac-sheet-head{
+  flex:none;display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  padding:var(--s3) var(--s4);border-bottom:1px solid var(--line);
+}
+.prac-sheet-title{font-size:var(--t-title);font-weight:600;color:var(--txt);margin:0;line-height:1.25}
+.prac-sheet-sub{font-size:var(--t-meta);color:var(--txt-2);margin:2px 0 0;line-height:1.35}
+.prac-sheet-close{
+  flex:none;display:grid;place-items:center;
+  width:48px;height:48px;min-width:48px;min-height:48px;padding:0;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
+  color:var(--txt-2);cursor:pointer;
+  transition:background-color 140ms ease,color 140ms ease;
+}
+.prac-sheet-close:hover{background:var(--acc-soft);color:var(--txt);border-color:var(--acc-border)}
+.prac-sheet-close svg{width:18px;height:18px;display:block}
+.prac-sheet-body{
+  flex:1;overflow-y:auto;padding:var(--s4);
+  display:flex;flex-direction:column;gap:var(--s4);min-width:0;
+}
+.prac-filter-group{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+.prac-filter-label{
+  font-size:var(--t-meta);font-weight:600;color:var(--txt-2);
+  letter-spacing:.04em;text-transform:uppercase;margin:0;
+}
+.prac-filter-checks{display:flex;flex-direction:column;gap:var(--s2)}
+.prac-filter-checks .exlib-free-toggle{
+  width:100%;min-height:48px;padding:0 var(--s3);
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-ctl);
+  justify-content:flex-start;
+}
+.prac-filter-checks .exlib-free-toggle:hover{border-color:var(--acc-border)}
+.prac-sheet-body .exlib-sort-select{width:100%;height:48px;min-height:48px}
+.prac-sheet-foot{
+  flex:none;display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
+  padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--line);background:var(--surface);
+}
+.prac-sheet-foot .btn{height:48px;min-height:48px;flex:1}
+
+/* Practise by part Modal (mobile full-screen sheet / desktop 840px dialog) */
+.prac-parts-overlay{
+  position:fixed;inset:0;z-index:140;
+  background:var(--overlay-bg);
+  display:flex;align-items:stretch;justify-content:center;
+  opacity:0;transition:opacity 180ms ease;
+}
+.prac-parts-overlay[hidden]{display:none}
+.prac-parts-overlay.is-open{opacity:1}
+.prac-parts-panel{
+  width:100%;height:100dvh;max-height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--txt);
+  transform:translateY(16px);
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1);
+}
+.prac-parts-overlay.is-open .prac-parts-panel{transform:translateY(0)}
+.prac-parts-panel:focus{outline:0}
+.prac-parts-head{
+  flex:none;position:sticky;top:0;z-index:2;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
+  padding:max(var(--s3), env(safe-area-inset-top, 0px)) var(--s4) var(--s3);
+  background:var(--surface);border-bottom:1px solid var(--line);
+}
+.prac-parts-body{
+  flex:1;overflow-y:auto;
+  padding:var(--s4) var(--s4) calc(var(--s6) + env(safe-area-inset-bottom, 0px));
+  min-width:0;
+}
+.parts-group{margin-bottom:var(--s5)}
+.parts-group:last-child{margin-bottom:0}
+.parts-group-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);
+  margin:0 0 var(--s2);
+}
+.parts-group-title{font-size:var(--t-sub);font-weight:600;color:var(--acc-text);margin:0}
+.parts-group-count{font-size:var(--t-meta);color:var(--txt-2);flex:none}
+.parts-group-grid{display:grid;grid-template-columns:1fr;gap:var(--s2)}
+#partsList .step{
+  display:flex;flex-direction:column;justify-content:space-between;gap:var(--s2);
+  padding:var(--s3) var(--s4);margin:0;height:auto;min-height:0;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-panel);
+  box-shadow:var(--shadow-1);min-width:0;
+}
+#partsList .step.is-practised{border-color:var(--ok-border);background:var(--surface-2)}
+#partsList .step-top{display:flex;flex-direction:column;gap:4px;min-width:0}
+#partsList .step>h3,#partsList .step .step-top>h3{
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px var(--s2);
+  font-size:var(--t-body);font-weight:600;line-height:1.3;color:var(--txt);margin:0;min-width:0;
+}
+#partsList .step .step-meta{font-size:var(--t-meta);font-weight:400;color:var(--txt-2);font-variant-numeric:tabular-nums}
+#partsList .step .step-res-summary{font-size:var(--t-meta);color:var(--txt-2);margin:0;line-height:1.4;overflow-wrap:anywhere}
+#partsList .step .step-note{font-size:var(--t-meta);color:var(--ok-text);margin:0;line-height:1.4}
+#partsList .step .step-actions{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);margin-top:var(--s1);
+}
+#partsList .step .step-actions .btn{
+  width:100%;height:48px;min-height:48px;min-width:0;padding:0 var(--s2);
+  font-size:13px;white-space:nowrap;
+}
+
+/* Log Result Mini Modal */
+.prac-log-overlay{
+  position:fixed;inset:0;z-index:150;
+  background:var(--overlay-bg);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;transition:opacity 160ms ease;
+}
+.prac-log-overlay[hidden]{display:none}
+.prac-log-overlay.is-open{opacity:1}
+.prac-log-panel{
+  width:100%;max-width:440px;max-height:85dvh;
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--surface);color:var(--txt);
+  border:1px solid var(--line);border-bottom:0;
+  border-radius:var(--r-modal) var(--r-modal) 0 0;
+  box-shadow:var(--shadow-3);
+  transform:translateY(16px);
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1);
+}
+.prac-log-overlay.is-open .prac-log-panel{transform:translateY(0)}
+.prac-log-panel:focus{outline:0}
+.prac-log-body{padding:var(--s4);display:flex;flex-direction:column;gap:var(--s3);overflow-y:auto}
+.prac-log-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:var(--s3)}
+.prac-log-grid label{margin-top:0}
+.prac-log-hint{margin:0;font-size:var(--t-body);color:var(--txt-2);line-height:1.45}
+.prac-log-foot{
+  display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
+  padding:var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  border-top:1px solid var(--line);background:var(--surface);
+}
+.prac-log-foot .btn{height:48px;min-height:48px;flex:1}
+
+@media (min-width:600px){
+  .prac-log-overlay{align-items:center;padding:var(--s4)}
+  .prac-log-panel{border-bottom:1px solid var(--line);border-radius:var(--r-card);transform:translateY(8px)}
+  .prac-log-foot{padding:var(--s3) var(--s4) var(--s4)}
+  .prac-log-foot .btn{flex:0 0 auto;min-width:110px}
+}
+@media (min-width:768px){
+  .prac-sheet-overlay{align-items:center;padding:var(--s5)}
+  .prac-sheet-panel{
+    width:min(560px, calc(100vw - 48px));max-height:min(86vh, 720px);
+    border-bottom:1px solid var(--line);border-radius:var(--r-card);transform:translateY(8px);
+  }
+  .prac-sheet-handle{display:none}
+  .prac-sheet-close{width:44px;height:44px;min-width:44px;min-height:44px}
+  .prac-sheet-foot{padding:var(--s3) var(--s4) var(--s4)}
+  .prac-sheet-foot .btn{flex:0 0 auto;min-width:120px}
+  .prac-parts-overlay{align-items:center;padding:var(--s5)}
+  .prac-parts-panel{
+    width:min(860px, calc(100vw - 48px));height:auto;max-height:min(86vh, 840px);
+    border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow-3);
+    background:var(--surface);transform:translateY(8px);
+  }
+  .prac-parts-head{padding:var(--s4) var(--s5)}
+  .prac-parts-body{padding:var(--s4) var(--s5) var(--s5);background:var(--bg)}
+  .parts-group-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+  #partsList .step .step-actions{
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+  }
+  #partsList .step .step-actions .btn{
+    width:auto;height:44px;min-height:44px;min-width:44px;padding:0 10px;font-size:12px;
+  }
+}
+@media (max-width:1023px){
+  #v-practice{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+}
 @media (max-width:767px){
-  .practice-intents{gap:var(--s2);margin-bottom:var(--s3)}
-  .practice-intent-card{padding:var(--s3);min-height:60px}
+  .practice-head{flex-direction:column;align-items:stretch;gap:var(--s3);margin-bottom:var(--s3)}
+  .practice-head-copy{flex:none}
+  .practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);width:100%}
+  .practice-intent-card{width:100%;min-width:0;padding:0 var(--s3);font-size:14px}
+  .prac-active-chip,.prac-active-clear{height:48px;min-height:48px}
+  #practiceFiltersSheet .exlib-chip{height:48px;min-height:48px}
+}
+@media (max-width:480px){
+  #practiceLibraryCard{padding:var(--s3)}
+  .prac-lib-row{gap:var(--s1)}
+  .prac-lib-row .exlib-search-input{padding:var(--s2) 10px;font-size:14px}
+  .prac-filters-btn{padding:0 10px;gap:4px;font-size:13px}
+  .prac-lib-row .exlib-count{font-size:12px;margin-left:2px}
+}
+@media (max-width:359px){
+  .practice-intent-card{padding:0 var(--s2);font-size:13px;gap:4px}
+  .practice-intent-card .ico{display:none}
+  .prac-lib-row{flex-wrap:wrap}
+  .prac-lib-row .exlib-search-input{flex:1 1 130px}
 }
 @media (max-width:768px){
   .u4-real-mocks{margin-bottom:var(--s4)}
@@ -3767,7 +4011,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   #v-hoy .today-rest-streak,
   #v-prog .prog-streak-card,
   #v-prog .prog-metric-streak,
-  #v-practice #practiceParts > .sub,
   #v-ia #iaCard > h2,
   #v-err .card:has(> #errPills > .empty){display:none}
 }
@@ -4757,6 +5000,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
     <symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 006 .5l2-2a4 4 0 00-6-6l-1 1"/><path d="M14 10a4 4 0 00-6-.5l-2 2a4 4 0 006 6l1-1"/></symbol>
     <symbol id="ic-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></symbol>
     <symbol id="ic-audio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="16" r="2"/></symbol>
+    <symbol id="ic-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
     <symbol id="ic-flame" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13.5 2.2c.2 2.4-1 4.1-2.4 5.5-1.4 1.4-2.1 2.7-2.1 4.1 0 1.2.6 2.2 1.5 2.8-.2-.7-.1-1.6.5-2.4.5-.8 1.5-1.5 1.8-2.6.8 1.1 1.7 2.1 1.7 3.8 0 .8-.3 1.5-.7 2 .9-.6 1.5-1.7 1.5-3 0-1.6-.6-3-1.4-4.1.6-.4 1.2-.1 1.8.6 1.2 1.5 1.8 3.2 1.8 5 0 3.7-2.7 6.5-6.5 6.5S5.5 17.6 5.5 13.7c0-3 1.7-5.5 3.9-7.6 1.8-1.7 3.6-2.9 4.1-3.9z"/></symbol>
   </defs>
 </svg>
@@ -4856,6 +5100,110 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
       <div class="acct-actions">
         <button type="button" class="acct-action-btn" id="acctSettingsBtn" data-action="accountSettings" data-i18n="settings_title">Settings</button>
         <button type="button" class="acct-action-btn" id="acctProfileBtn" data-action="accountProfile" data-i18n="acct_profile">Profile &amp; switch user</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRACTICE FILTERS SHEET (mobile bottom sheet / desktop modal) ============ -->
+  <div id="practiceFiltersSheet" class="prac-sheet-overlay" data-exlib-root="practice" data-action="closePracticeFiltersIfSelf" role="dialog" aria-modal="true" aria-labelledby="practiceFiltersTitle" hidden>
+    <div class="prac-sheet-panel" tabindex="-1">
+      <div class="prac-sheet-handle" aria-hidden="true"></div>
+      <div class="prac-sheet-head">
+        <h2 class="prac-sheet-title" id="practiceFiltersTitle" data-i18n="exlib_filters_title">Filter library</h2>
+        <button type="button" class="prac-sheet-close" id="practiceFiltersClose" data-action="closePracticeFilters" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="prac-sheet-body">
+        <div class="prac-filter-group">
+          <span class="prac-filter-label" data-i18n="exlib_filters_paper">Paper</span>
+          <div class="chips exlib-chips" id="pracLibPaperFilter" data-exlib-role="paperFilter" role="group"
+            aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
+            <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
+            <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
+            <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
+            <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
+            <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
+          </div>
+        </div>
+
+        <div class="prac-filter-group">
+          <span class="prac-filter-label" data-i18n="exlib_filters_part">Part</span>
+          <div class="chips exlib-chips" id="pracLibPartFilter" data-exlib-role="partFilter" role="group"
+            aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
+            <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
+            <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
+          </div>
+        </div>
+
+        <div class="prac-filter-group">
+          <span class="prac-filter-label" data-i18n="exlib_filters_options">Options</span>
+          <div class="prac-filter-checks">
+            <label class="exlib-free-toggle" for="pracLibFreeOnly">
+              <input type="checkbox" id="pracLibFreeOnly" data-exlib-role="freeOnly" data-change="toggleExLibFree">
+              <span data-i18n="exlib_free_only">Free only</span>
+            </label>
+            <label class="exlib-free-toggle" for="pracLibFullScope">
+              <input type="checkbox" id="pracLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
+              <span data-i18n="exlib_scope_full">Full paper only</span>
+            </label>
+            <label class="exlib-free-toggle" for="pracLibHideDone">
+              <input type="checkbox" id="pracLibHideDone" data-exlib-role="hideDone" data-change="toggleExLibHideDone">
+              <span data-i18n="exlib_hide_done">Hide done</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="prac-filter-group">
+          <label class="prac-filter-label" for="pracLibSort" data-i18n="exlib_sort_label">Sort</label>
+          <select id="pracLibSort" data-exlib-role="sort" class="exlib-sort-select" data-change="setExLibSort">
+            <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
+            <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
+            <option value="az" data-i18n="exlib_sort_az">A–Z</option>
+          </select>
+        </div>
+      </div>
+      <div class="prac-sheet-foot">
+        <button type="button" class="btn gray" id="pracLibFiltersReset" data-action="resetPracticeFilters" data-i18n="exlib_filters_reset">Reset</button>
+        <button type="button" class="btn" id="pracLibFiltersApply" data-action="applyPracticeFilters" data-i18n="exlib_filters_apply">Apply filters</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRACTISE BY PART MODAL (desktop wide dialog / mobile full-screen sheet) ============ -->
+  <div id="practicePartsModal" class="prac-parts-overlay" data-action="closePracticeByPartIfSelf" role="dialog" aria-modal="true" aria-labelledby="practicePartsTitle" hidden>
+    <div class="prac-parts-panel" tabindex="-1">
+      <div class="prac-parts-head">
+        <div style="min-width:0">
+          <h2 class="prac-sheet-title" id="practicePartsTitle" data-i18n="practice_intent_part_title">Practise by part</h2>
+          <p class="prac-sheet-sub" data-i18n="parts_modal_sub">17 parts across 4 papers. Start a session, open contents or log a result.</p>
+        </div>
+        <button type="button" class="prac-sheet-close" id="practicePartsClose" data-action="closePracticeByPart" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="prac-parts-body" id="practiceParts">
+        <div id="partsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PART LOG RESULT MINI MODAL ============ -->
+  <div id="practicePartLogModal" class="prac-log-overlay" data-action="closePartLogModalIfSelf" role="dialog" aria-modal="true" aria-labelledby="practicePartLogTitle" hidden>
+    <div class="prac-log-panel" tabindex="-1">
+      <div class="prac-sheet-head">
+        <div style="min-width:0">
+          <h2 class="prac-sheet-title" id="practicePartLogTitle" data-i18n="part_log_title">Log result</h2>
+          <p class="prac-sheet-sub" id="practicePartLogSub"></p>
+        </div>
+        <button type="button" class="prac-sheet-close" id="practicePartLogClose" data-action="closePartLogModal" aria-label="Close" data-i18n-aria-label="common_close"><svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-close"/></svg></button>
+      </div>
+      <div class="prac-log-body" id="practicePartLogBody"></div>
+      <div class="prac-log-foot">
+        <button type="button" class="btn gray" id="practicePartLogCancel" data-action="closePartLogModal" data-i18n="common_cancel">Cancel</button>
+        <button type="button" class="btn" id="practicePartLogSaveBtn" data-action="savePart" data-i="0" data-i18n="part_log_save">Save</button>
       </div>
     </div>
   </div>
@@ -6057,108 +6405,52 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
 
       <!-- ============ PRACTICE (Hub) ============ -->
       <section id="v-practice" class="view">
-        <div class="page-head">
-          <div>
-            <h1 class="page-title" data-i18n="practice_head_title">Practice</h1>
-            <p class="page-sub" data-i18n="practice_head_sub">Choose a full mock or a part. Every option opens its papers, keys, audio and free online practice.</p>
-          </div>
-        </div>
-
-        <div class="practice-intents" id="practiceIntents">
-          <button type="button" class="practice-intent-card" id="practiceIntentFullMock" data-action="startFullMock">
-            <span class="practice-intent-title" data-i18n="practice_intent_mock_title">Full mock</span>
-            <span class="practice-intent-sub" data-i18n="practice_intent_mock_sub">4 papers, official timing</span>
-          </button>
-          <button type="button" class="practice-intent-card" id="practiceIntentByPart" data-action="openPracticeByPart">
-            <span class="practice-intent-title" data-i18n="practice_intent_part_title">Practise by part</span>
-            <span class="practice-intent-sub" data-i18n="practice_intent_part_sub">One part, exact resources</span>
-          </button>
-        </div>
-
-        <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
-          <h2 data-i18n="practice_lib_title">Library</h2>
-          <div class="sub" data-i18n="practice_lib_sub">Every local paper, answer key, audio, tapescript, checklist and free online practice source in one place.</div>
-          <div class="exlib-toolbar">
-            <div class="exlib-search-row">
-              <label class="sr" for="pracLibSearch" data-i18n="exlib_search_label">Search contents</label>
-              <input type="search" id="pracLibSearch" data-exlib-role="search" class="exlib-search-input" autocomplete="off"
-                placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
-                aria-label="Search contents" data-i18n-aria-label="exlib_search_label"
-                data-input="onExLibSearch" data-keydown="exLibSearchKey">
-              <button type="button" id="pracLibClear" data-exlib-role="clear" class="btn sm gray exlib-clear-btn" style="display:none"
-                data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
+        <div class="practice-shell">
+          <div class="practice-head">
+            <div class="practice-head-copy">
+              <h1 class="page-title" data-i18n="practice_head_title">Practice</h1>
+              <p class="page-sub" data-i18n="practice_head_sub">Papers, answer keys, audio and online practice in one place.</p>
             </div>
-
-            <div class="session-contents-status">
-              <div class="exlib-count tnum" id="pracLibCount" data-exlib-role="count" aria-live="polite"></div>
-            </div>
-
-            <div id="pracLibAdvancedFilters" data-exlib-role="adv" class="exlib-advanced">
-              <div class="chips exlib-chips" id="pracLibPaperFilter" data-exlib-role="paperFilter" role="group"
-                aria-label="Filter library by section" data-i18n-aria-label="exlib_paper_aria">
-                <button type="button" class="chip exlib-chip on" data-exlib-paper="all" aria-pressed="true" data-action="setExLibPaper" data-i18n="exlib_paper_all">All papers</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="rue" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_rue">Reading &amp; UoE</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="w" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_w">Writing</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="l" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_l">Listening</button>
-                <button type="button" class="chip exlib-chip" data-exlib-paper="sp" aria-pressed="false" data-action="setExLibPaper" data-i18n="practice_filter_sp">Speaking</button>
-              </div>
-
-              <div class="chips exlib-chips" id="pracLibPartFilter" data-exlib-role="partFilter" role="group"
-                aria-label="Filter library by part" data-i18n-aria-label="exlib_part_aria">
-                <button type="button" class="chip exlib-chip on" data-exlib-part="all" aria-pressed="true" data-action="setExLibPart" data-i18n="exlib_part_all">All parts</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="1" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_1">Part 1</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="2" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_2">Part 2</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="3" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_3">Part 3</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="4" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_4">Part 4</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="5" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_5">Part 5</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="6" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_6">Part 6</button>
-                <button type="button" class="chip exlib-chip" data-exlib-part="7" aria-pressed="false" data-action="setExLibPart" data-i18n="exlib_part_7">Part 7</button>
-              </div>
-
-              <div class="exlib-bar">
-                <div class="exlib-bar-controls">
-                  <label class="exlib-free-toggle" for="pracLibFreeOnly">
-                    <input type="checkbox" id="pracLibFreeOnly" data-exlib-role="freeOnly" data-change="toggleExLibFree">
-                    <span data-i18n="exlib_free_only">Free only</span>
-                  </label>
-                  <label class="exlib-free-toggle" for="pracLibFullScope">
-                    <input type="checkbox" id="pracLibFullScope" data-exlib-role="fullScope" data-change="toggleExLibFullScope">
-                    <span data-i18n="exlib_scope_full">Full paper only</span>
-                  </label>
-                  <label class="exlib-free-toggle" for="pracLibHideDone">
-                    <input type="checkbox" id="pracLibHideDone" data-exlib-role="hideDone" data-change="toggleExLibHideDone">
-                    <span data-i18n="exlib_hide_done">Hide done</span>
-                  </label>
-                  <label class="exlib-sort-wrap" for="pracLibSort">
-                    <span data-i18n="exlib_sort_label">Sort</span>
-                    <select id="pracLibSort" data-exlib-role="sort" class="exlib-sort-select" data-change="setExLibSort">
-                      <option value="exam" data-i18n="exlib_sort_exam">Exam order</option>
-                      <option value="shortest" data-i18n="exlib_sort_shortest">Shortest first</option>
-                      <option value="az" data-i18n="exlib_sort_az">A–Z</option>
-                    </select>
-                  </label>
-                </div>
-              </div>
+            <div class="practice-intents" id="practiceIntents">
+              <button type="button" class="practice-intent-card" id="practiceIntentFullMock" data-action="startFullMock" title="4 papers, official timing" data-i18n-title="practice_intent_mock_sub">
+                <svg class="ico" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-exam"/></svg>
+                <span class="practice-intent-title" data-i18n="practice_intent_mock_title">Full mock</span>
+              </button>
+              <button type="button" class="practice-intent-card" id="practiceIntentByPart" data-action="openPracticeByPart" aria-haspopup="dialog" aria-controls="practicePartsModal" title="One part, exact resources" data-i18n-title="practice_intent_part_sub">
+                <svg class="ico" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-parts"/></svg>
+                <span class="practice-intent-title" data-i18n="practice_intent_part_title">Practise by part</span>
+              </button>
             </div>
           </div>
 
-          <div id="pracLibList" data-exlib-role="list" class="exlib-groups"></div>
-          <div id="pracLibEmpty" data-exlib-role="empty" class="exlib-empty" style="display:none">
-            <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
-            <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
+          <div class="card" id="practiceLibraryCard" data-exlib-root="practice">
+            <div class="prac-lib-toolbar">
+              <div class="prac-lib-row">
+                <label class="sr" for="pracLibSearch" data-i18n="exlib_search_label">Search contents</label>
+                <input type="search" id="pracLibSearch" data-exlib-role="search" class="exlib-search-input" autocomplete="off"
+                  placeholder="Search by name, paper or part…" data-i18n-placeholder="exlib_search_ph"
+                  aria-label="Search contents" data-i18n-aria-label="exlib_search_label"
+                  data-input="onExLibSearch" data-keydown="exLibSearchKey">
+                <button type="button" id="pracLibClear" data-exlib-role="clear" class="btn sm gray exlib-clear-btn" style="display:none"
+                  data-action="clearExLibSearch" data-i18n="exlib_clear">Clear</button>
+                <button type="button" id="pracLibFiltersBtn" class="prac-filters-btn" data-action="openPracticeFilters"
+                  aria-haspopup="dialog" aria-controls="practiceFiltersSheet" aria-expanded="false">
+                  <svg class="ico" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><use href="#ic-filter"/></svg>
+                  <span data-i18n="exlib_filters_btn">Filters</span>
+                  <span id="pracLibFiltersBadge" class="prac-filter-badge tnum" hidden>0</span>
+                </button>
+                <div class="exlib-count tnum" id="pracLibCount" data-exlib-role="count" aria-live="polite"></div>
+              </div>
+              <div id="pracLibActiveFilters" data-exlib-role="activeFilters" class="prac-active-filters" hidden></div>
+            </div>
+
+            <div id="pracLibList" data-exlib-role="list" class="exlib-groups"></div>
+            <div id="pracLibEmpty" data-exlib-role="empty" class="exlib-empty" style="display:none">
+              <p data-i18n="exlib_empty">No items match these filters. Try clearing the search or switching back to all papers and parts.</p>
+              <button type="button" class="btn sm gray" data-action="resetExLibFilters" data-i18n="exlib_reset">Reset filters</button>
+            </div>
           </div>
         </div>
-
-        <details class="card practice-parts-details" id="practicePartsDetails">
-          <summary class="practice-parts-summary" id="practicePartsSummary">
-            <span data-i18n="parts_exercises_summary">Exercises by part · save your score</span>
-            <span class="practice-parts-summary-chev" aria-hidden="true">▾</span>
-          </summary>
-          <div id="practiceParts">
-            <div class="sub" data-i18n="parts_exercises_sub">Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.</div>
-            <div id="partsList"></div>
-          </div>
-        </details>
       </section>
 
       <!-- ============ AI WRITING CORRECTOR ============ -->
@@ -6398,7 +6690,7 @@ const I18N={
     more_desc_ia:'Cambridge B2 rubric grading',
     plan_edit_intake_short:'Edit intake',
     practice_head_title:'Practice',
-    practice_head_sub:'Choose a full mock or a part. Every option opens its papers, keys, audio and free online practice.',
+    practice_head_sub:'Papers, answer keys, audio and online practice in one place.',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 papers, official timing',
     practice_intent_part_title:'Practise by part',
@@ -6668,8 +6960,6 @@ const I18N={
     exam_log_result:'📝 Log your result',
     exam_save_result:'✔ Save result',
     parts_exercises:'Exercises by part',
-    parts_exercises_summary:'Exercises by part · save your score',
-    parts_exercises_sub:'Every exercise of the 4 papers, in exam order. Each with its target time, a Start link and result logging.',
     lt_test_1:'Listening test 1',
     lt_test_2_part:'Listening test 2 · part {n}',
     lt_full_1:'Full test 1',
@@ -7372,6 +7662,26 @@ const I18N={
     exlib_filter_action:'Search library',
     exlib_scope_full:'Full paper only',
     exlib_hide_done:'Hide done',
+    exlib_filters_btn:'Filters',
+    exlib_filters_title:'Filter library',
+    exlib_filters_apply:'Apply filters',
+    exlib_filters_reset:'Reset',
+    exlib_filters_paper:'Paper',
+    exlib_filters_part:'Part',
+    exlib_filters_options:'Options',
+    exlib_filters_clear_all:'Clear',
+    exlib_filters_remove:'Remove filter',
+    part_open_contents:'Resources',
+    part_log_result:'Log result',
+    part_log_title:'Log result',
+    part_log_correct:'Correct',
+    part_log_total:'Total',
+    part_log_score:'Score /20',
+    part_log_minutes:'Minutes',
+    part_log_save:'Save',
+    part_log_practised:'Save as practised',
+    part_log_sp_hint:'Record this speaking part to save your session and mark it done.',
+    parts_modal_sub:'17 parts across 4 papers. Start a session, open contents or log a result.',
     practised_mark:'Mark done',
     practised_done:'Done ✓',
     practised_badge:'Done ✓',
@@ -7380,8 +7690,6 @@ const I18N={
     w_phase3_step_sub:'Check with AI',
     w_phase3_summary_empty:'Write your draft in Phase 2, then run the AI check when you are ready.',
     w_phase3_summary_ready:'Draft ready ({kind}, {words} words). Review it with AI when you are ready.',
-    practice_lib_title:'Library',
-    practice_lib_sub:'Every local paper, answer key, audio, tapescript, checklist and free online practice source in one place.',
     practice_online_cta:'Practise online',
     practice_res_paper:'Paper',
     practice_res_key:'key',
@@ -7482,7 +7790,7 @@ const I18N={
     more_desc_ia:'Corrección con rúbrica B2',
     plan_edit_intake_short:'Editar perfil',
     practice_head_title:'Práctica',
-    practice_head_sub:'Elegí un full mock o una parte. Cada opción abre sus papers, keys, audio y práctica online gratis.',
+    practice_head_sub:'Exámenes, respuestas, audio y práctica online en un solo lugar.',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 pruebas, tiempo oficial',
     practice_intent_part_title:'Practicar por parte',
@@ -7752,8 +8060,6 @@ const I18N={
     exam_log_result:'📝 Registrar resultado',
     exam_save_result:'✔ Guardar resultado',
     parts_exercises:'Ejercicios por parte',
-    parts_exercises_summary:'Ejercicios por parte · guardá tu puntaje',
-    parts_exercises_sub:'Todos los ejercicios de las 4 pruebas, en orden de examen. Cada uno con su tiempo objetivo, un botón para empezar y registro de resultados.',
     lt_test_1:'Test de listening 1',
     lt_test_2_part:'Test de listening 2 · parte {n}',
     lt_full_1:'Test completo 1',
@@ -8456,6 +8762,26 @@ const I18N={
     exlib_filter_action:'Buscar biblioteca',
     exlib_scope_full:'Solo paper completo',
     exlib_hide_done:'Ocultar hechos',
+    exlib_filters_btn:'Filtros',
+    exlib_filters_title:'Filtrar biblioteca',
+    exlib_filters_apply:'Aplicar filtros',
+    exlib_filters_reset:'Restablecer',
+    exlib_filters_paper:'Prueba',
+    exlib_filters_part:'Parte',
+    exlib_filters_options:'Opciones',
+    exlib_filters_clear_all:'Limpiar',
+    exlib_filters_remove:'Quitar filtro',
+    part_open_contents:'Recursos',
+    part_log_result:'Registrar resultado',
+    part_log_title:'Registrar resultado',
+    part_log_correct:'Correctas',
+    part_log_total:'Total',
+    part_log_score:'Puntaje /20',
+    part_log_minutes:'Minutos',
+    part_log_save:'Guardar',
+    part_log_practised:'Guardar como practicado',
+    part_log_sp_hint:'Guardá esta parte de speaking para registrar tu práctica y marcarla como hecha.',
+    parts_modal_sub:'17 partes en 4 pruebas. Empezá una sesión, abrí contenidos o registrá tu resultado.',
     practised_mark:'Ya lo hice',
     practised_done:'Hecho ✓',
     practised_badge:'Hecho ✓',
@@ -8464,8 +8790,6 @@ const I18N={
     w_phase3_step_sub:'Corregir con IA',
     w_phase3_summary_empty:'Escribí tu borrador en la Fase 2 y revisalo con IA cuando estés listo.',
     w_phase3_summary_ready:'Borrador listo ({kind}, {words} palabras). Revisalo con IA cuando estés listo.',
-    practice_lib_title:'Biblioteca',
-    practice_lib_sub:'Todos los exámenes locales, respuestas, audios, transcripciones, checklists y páginas online gratis en un solo lugar.',
     practice_online_cta:'Practicar online',
     practice_res_paper:'Examen',
     practice_res_key:'respuestas',
@@ -16587,12 +16911,19 @@ function openPracticeCatalog(paper,part,scope){
     origin:'practice',initialTab:'contents',expanded:true,exlibPaper:p,exlibPart:partStr,exlibScope:scope||'all',catalog:p==='all'
   });
 }
+let _pracFiltersTrigger=null;
+let _pracPartsTrigger=null;
+let _pracLogTrigger=null;
+let _pracLogIdx=-1;
 function openPracticeLibrary(opts){
   const o=opts||{};
   const p=(o.paper==='rue'||o.paper==='w'||o.paper==='l'||o.paper==='sp')?o.paper:'all';
   const partStr=(o.part&&o.part!=='all')?String(o.part):'all';
   const scope=(o.scope==='full')?'full':'all';
   closeSessionStudios();
+  if(typeof closeMockStartModal==='function')closeMockStartModal(false);
+  closePracticeFilters(false);
+  closePracticeByPart(false);
   EXLIB_PRACTICE_STATE.query='';
   EXLIB_PRACTICE_STATE.paper=p;
   EXLIB_PRACTICE_STATE.part=partStr;
@@ -16604,12 +16935,137 @@ function openPracticeLibrary(opts){
   const card=document.getElementById('practiceLibraryCard');
   if(card&&card.scrollIntoView)card.scrollIntoView({behavior:'smooth',block:'start'});
 }
+function openPracticeFilters(){
+  const sheet=document.getElementById('practiceFiltersSheet');
+  const btn=document.getElementById('pracLibFiltersBtn');
+  if(!sheet)return;
+  closePartLogModal(false);
+  closePracticeByPart(false);
+  _pracFiltersTrigger=document.activeElement;
+  renderExercisesLibrary('practice');
+  sheet.hidden=false;
+  sheet.classList.add('is-open');
+  if(btn)btn.setAttribute('aria-expanded','true');
+  syncSheetBodyLock();
+  const panel=sheet.querySelector('.prac-sheet-panel')||sheet;
+  if(panel&&typeof panel.focus==='function')panel.focus();
+}
+function closePracticeFilters(restoreFocus){
+  const sheet=document.getElementById('practiceFiltersSheet');
+  const btn=document.getElementById('pracLibFiltersBtn');
+  if(!sheet)return;
+  const wasOpen=!sheet.hidden;
+  sheet.classList.remove('is-open');
+  sheet.hidden=true;
+  if(btn)btn.setAttribute('aria-expanded','false');
+  syncSheetBodyLock();
+  if(restoreFocus!==false&&wasOpen){
+    const target=btn||_pracFiltersTrigger;
+    if(target&&typeof target.focus==='function')target.focus();
+  }
+}
+function applyPracticeFilters(){
+  renderExercisesLibrary('practice');
+  closePracticeFilters(true);
+}
+function resetPracticeFilters(){
+  EXLIB_PRACTICE_STATE.paper='all';
+  EXLIB_PRACTICE_STATE.part='all';
+  EXLIB_PRACTICE_STATE.freeOnly=false;
+  EXLIB_PRACTICE_STATE.scope='all';
+  EXLIB_PRACTICE_STATE.hideDone=false;
+  EXLIB_PRACTICE_STATE.sort='exam';
+  renderExercisesLibrary('practice');
+}
+function removePracticeFilter(kind){
+  if(kind==='paper')EXLIB_PRACTICE_STATE.paper='all';
+  else if(kind==='part')EXLIB_PRACTICE_STATE.part='all';
+  else if(kind==='freeOnly')EXLIB_PRACTICE_STATE.freeOnly=false;
+  else if(kind==='scope')EXLIB_PRACTICE_STATE.scope='all';
+  else if(kind==='hideDone')EXLIB_PRACTICE_STATE.hideDone=false;
+  else if(kind==='sort')EXLIB_PRACTICE_STATE.sort='exam';
+  renderExercisesLibrary('practice');
+}
 function openPracticeByPart(){
-  const det=document.getElementById('practicePartsDetails');
-  if(det)det.open=true;
+  const modal=document.getElementById('practicePartsModal');
+  if(!modal)return;
+  closePracticeFilters(false);
+  closePartLogModal(false);
+  _pracPartsTrigger=document.activeElement;
   if(typeof renderParts==='function')renderParts();
-  const target=document.getElementById('practiceParts')||det;
-  if(target&&target.scrollIntoView)target.scrollIntoView({behavior:'smooth',block:'start'});
+  modal.hidden=false;
+  modal.classList.add('is-open');
+  syncSheetBodyLock();
+  const panel=modal.querySelector('.prac-parts-panel')||modal;
+  if(panel&&typeof panel.focus==='function')panel.focus();
+}
+function closePracticeByPart(restoreFocus){
+  const modal=document.getElementById('practicePartsModal');
+  if(!modal)return;
+  closePartLogModal(false);
+  const wasOpen=!modal.hidden;
+  modal.classList.remove('is-open');
+  modal.hidden=true;
+  syncSheetBodyLock();
+  if(restoreFocus!==false&&wasOpen){
+    const btn=document.getElementById('practiceIntentByPart');
+    const target=btn||_pracPartsTrigger;
+    if(target&&typeof target.focus==='function')target.focus();
+  }
+}
+function openPartContents(i){
+  const p=PARTS[i];
+  if(!p)return;
+  const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
+  closePracticeByPart(false);
+  openPracticeLibrary({paper:skill,part:String(p.n),scope:'all'});
+}
+function openPartLogModal(i){
+  const p=PARTS[i];
+  const modal=document.getElementById('practicePartLogModal');
+  const body=document.getElementById('practicePartLogBody');
+  const sub=document.getElementById('practicePartLogSub');
+  const saveBtn=document.getElementById('practicePartLogSaveBtn');
+  if(!p||!modal||!body)return;
+  _pracLogTrigger=document.activeElement;
+  _pracLogIdx=i;
+  if(sub)sub.textContent=`Part ${p.n} — ${p.t} · ~${p.min} min`;
+  if(saveBtn){
+    saveBtn.dataset.i=String(i);
+    saveBtn.textContent=p.type==='sp'?t('part_log_practised'):t('part_log_save');
+  }
+  if(p.type==='sp'){
+    body.innerHTML=`<p class="prac-log-hint">${esc(t('part_log_sp_hint'))}</p>`+
+      `<div><label for="ptMin${i}">${esc(t('part_log_minutes'))}</label><input type="number" id="ptMin${i}" min="0" value="${p.min}" data-keydown="partLogEnter"></div>`;
+  }else if(p.type==='w'){
+    body.innerHTML=`<div class="prac-log-grid">`+
+      `<div><label for="ptOk${i}">${esc(t('part_log_score'))}</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0" data-keydown="partLogEnter"></div>`+
+      `<div><label for="ptMin${i}">${esc(t('part_log_minutes'))}</label><input type="number" id="ptMin${i}" min="0" value="${p.min}" data-keydown="partLogEnter"></div>`+
+      `</div>`;
+  }else{
+    body.innerHTML=`<div class="prac-log-grid">`+
+      `<div><label for="ptOk${i}">${esc(t('part_log_correct'))}</label><input type="number" id="ptOk${i}" min="0" value="0" data-keydown="partLogEnter"></div>`+
+      `<div><label for="ptTot${i}">${esc(t('part_log_total'))}</label><input type="number" id="ptTot${i}" min="1" value="${p.q}" data-keydown="partLogEnter"></div>`+
+      `<div><label for="ptMin${i}">${esc(t('part_log_minutes'))}</label><input type="number" id="ptMin${i}" min="0" value="${p.min}" data-keydown="partLogEnter"></div>`+
+      `</div>`;
+  }
+  modal.hidden=false;
+  modal.classList.add('is-open');
+  syncSheetBodyLock();
+  const firstInp=body.querySelector('input');
+  if(firstInp&&typeof firstInp.focus==='function')firstInp.focus();
+  else if(saveBtn&&typeof saveBtn.focus==='function')saveBtn.focus();
+}
+function closePartLogModal(restoreFocus){
+  const modal=document.getElementById('practicePartLogModal');
+  if(!modal)return;
+  const wasOpen=!modal.hidden;
+  modal.classList.remove('is-open');
+  modal.hidden=true;
+  syncSheetBodyLock();
+  if(restoreFocus!==false&&wasOpen&&_pracLogTrigger&&typeof _pracLogTrigger.focus==='function'){
+    _pracLogTrigger.focus();
+  }
 }
 function openCycleLibrary(el){
   const skill=(el&&el.dataset&&el.dataset.skill)||practiceRotationSkill()||'rue';
@@ -16768,6 +17224,7 @@ function listeningTestCards(){return resourceGrid(listeningCardsArray())}
 function startPart(i){
   const p=PARTS[i];
   if(!p)return;
+  closePracticeByPart(false);
   const skill=p.type==='lp'?'l':p.type==='w'?'w':p.type==='sp'?'sp':'rue';
   const value=skill==='w'?(p.kind||(p.n===1?'Essay':'Article')):p.n;
   openUnitSession({skill,value,part:p.n,min:p.min},{origin:'practice',fromPlan:false,armPlanUnit:false,initialTab:'contents'});
@@ -16806,43 +17263,63 @@ function renderParts(){
   let html='';
   groups.forEach(grp=>{
     grp.items.sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(a.i-b.i));
-    html+=`<h3 class="folder">${grp.name}</h3>`;
+    const doneCnt=grp.items.filter(x=>x.done).length;
+    const countLabel=doneCnt?`${doneCnt}/${grp.items.length}`:`${grp.items.length}`;
+    html+=`<section class="parts-group"><div class="parts-group-head"><h3 class="parts-group-title">${esc(grp.name)}</h3><span class="parts-group-count tnum">${esc(countLabel)}</span></div><div class="parts-group-grid">`;
     grp.items.forEach(({p,i,pKey,done})=>{
       const resSummary=partResourceSummary(p,catalog);
-      html+=`<div class="step${done?' is-practised':''}" data-practised="${done?'1':'0'}" data-practised-key="${esc(pKey)}">
-        <h3>Part ${p.n} — ${p.t} <span class="t">${p.q?p.q+' questions · ~'+p.min+' min':'~'+p.min+' min'}</span>${done?`<span class="practised-badge">${esc(t('practised_badge'))}</span>`:''}</h3>
-        ${resSummary?`<p class="step-res-summary">${esc(resSummary)}</p>`:''}
-        ${p.note?`<p class="step-note">${p.note}</p>`:''}
+      html+=`<div class="step${done?' is-practised':''}" data-practised="${done?'1':'0'}" data-practised-key="${esc(pKey)}" data-part-idx="${i}">
+        <div class="step-top">
+          <h3>Part ${p.n} — ${esc(p.t)} <span class="step-meta">${p.q?p.q+' q · ~'+p.min+' min':'~'+p.min+' min'}</span>${done?`<span class="practised-badge">${esc(t('practised_badge'))}</span>`:''}</h3>
+          ${resSummary?`<p class="step-res-summary">${esc(resSummary)}</p>`:''}
+          ${p.note?`<p class="step-note">${esc(p.note)}</p>`:''}
+        </div>
         <div class="step-actions">
           <button type="button" class="btn sm" data-i="${i}" data-action="startPart">${esc(t('part_start'))}</button>
+          <button type="button" class="btn sm gray" data-i="${i}" data-action="openPartContents">${esc(t('part_open_contents'))}</button>
+          <button type="button" class="btn sm gray" data-i="${i}" data-action="openPartLogModal">${esc(t('part_log_result'))}</button>
           <button type="button" class="btn sm gray practised-part-btn${done?' is-done':''}" data-action="togglePractised" data-practised-key="${esc(pKey)}" aria-pressed="${done?'true':'false'}">${esc(t(done?'practised_done':'practised_mark'))}</button>
         </div>
-        ${p.type==='sp'?`<div class="step-log"><div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ I practiced it</button></div></div>`:p.type==='w'?`<div class="step-log">
-          <div><label>Score /20</label><input type="number" id="ptOk${i}" min="0" max="20" step="0.5" value="0"></div>
-          <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-          <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
-        </div>`:`<div class="step-log">
-          <div><label>Correct</label><input type="number" id="ptOk${i}" min="0" value="0"></div>
-          <div><label>Total</label><input type="number" id="ptTot${i}" min="1" value="${p.q}"></div>
-          <div><label>Minutes</label><input type="number" id="ptMin${i}" min="0" value="${p.min}"></div>
-          <div class="step-log-end"><button type="button" class="btn sm gray" data-i="${i}" data-action="savePart">✔ Save</button></div>
-        </div>`}
       </div>`;
     });
+    html+=`</div></section>`;
   });
   el.innerHTML=html;
 }
 function savePart(i){
   const p=PARTS[i];
-  if(p.type==='sp'){log({type:'sp',part:p.n,note:p.t});return}
-  if(p.type==='w'){
-    const score=+document.getElementById('ptOk'+i).value,min=+document.getElementById('ptMin'+i).value;
-    log({type:'w',kind:p.kind,score,min});
+  if(!p)return;
+  const markDone=()=>{
+    if(!D.practised||typeof D.practised!=='object')D.practised={};
+    const key=practisedPartKey(p);
+    if(key)D.practised[key]=today();
+    save();
+    closePartLogModal(true);
+    if(typeof renderParts==='function')renderParts();
+    if(typeof renderExercisesLibrary==='function')renderExercisesLibrary('practice');
+  };
+  const minEl=document.getElementById('ptMin'+i);
+  const okEl=document.getElementById('ptOk'+i);
+  const totEl=document.getElementById('ptTot'+i);
+  if(p.type==='sp'){
+    const min=minEl?+minEl.value||p.min:p.min;
+    log({type:'sp',part:p.n,min,note:p.t});
+    markDone();
     return;
   }
-  const ok=+document.getElementById('ptOk'+i).value,tot=+document.getElementById('ptTot'+i).value,min=+document.getElementById('ptMin'+i).value;
+  if(p.type==='w'){
+    const score=okEl?+okEl.value||0:0;
+    const min=minEl?+minEl.value||0:p.min;
+    log({type:'w',kind:p.kind,score,min});
+    markDone();
+    return;
+  }
+  const ok=okEl?+okEl.value||0:0;
+  const tot=totEl?+totEl.value||0:(p.q||1);
+  const min=minEl?+minEl.value||0:p.min;
   if(!tot){alert(t('alert_set_total'));return}
   log({type:p.type,part:p.n,correct:ok,total:tot,min,note:p.t});
+  markDone();
 }
 
 /* ---------- LOG TABLE + STATS ----------
@@ -16989,16 +17466,10 @@ function renderErrPills(){
    separate tools/check_sources.py re-checks them without gating the suite.
    part:[] means the source trains the whole paper. */
 const PRACTICE_SOURCES=[
- {n:"Cambridge English — learning activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?level=independent",skill:"rue",kind:"free",part:[],what:"96 official Cambridge interactive activities at Independent level, no sign-up needed.",mins:20},
  {n:"Cambridge English — B2 First preparation",url:"https://www.cambridgeenglish.org/exams-and-tests/qualifications/first/preparation/",skill:"rue",kind:"free",part:[],what:"Free official sample papers, answer keys and tapescripts, plus exam-day tips from Cambridge.",mins:30},
  {n:"Flo-Joe — FCE Use of English",url:"https://www.flo-joe.co.uk/fce/students/tests/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Multiple-choice cloze, open cloze, word formation and key word transformation across four tests, marked instantly.",mins:15},
  {n:"Exam English — FCE Use of English",url:"https://www.examenglish.com/FCE/fce_use_of_english.html",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Eight interactive Use of English tests covering parts 1 to 4, marked as you go.",mins:20},
- {n:"Test-English — B2 Use of English",url:"https://test-english.com/use-of-english/b2/",skill:"rue",kind:"free",part:["1","2","3","4"],what:"Eleven B2 multiple-choice gap tests with the answers shown after each set.",mins:15},
  {n:"Exam English — FCE Reading",url:"https://www.examenglish.com/FCE/fce_reading.html",skill:"rue",kind:"free",part:["5","6","7"],what:"Two full FCE reading sets covering multiple choice, gapped text and multiple matching.",mins:25},
- {n:"Cambridge English — reading activities",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=reading&level=independent",skill:"rue",kind:"free",part:["5","6","7"],what:"16 official Independent-level reading tasks on scanning, implied meaning and reading for detail.",mins:20},
- {n:"British Council — B2 reading",url:"https://learnenglish.britishcouncil.org/free-resources/reading/b2",skill:"rue",kind:"free",part:["5","6","7"],what:"B2 articles and reviews with preparation tasks and comprehension questions.",mins:20},
- {n:"Cambridge English — grammar activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=grammar&level=independent",skill:"rue",kind:"free",part:["1","2","4"],what:"Official Cambridge Independent-level grammar drills on conditionals, modals, tenses and clauses.",mins:15},
- {n:"Cambridge English — vocabulary activities (B1–B2)",url:"https://www.cambridgeenglish.org/learning-english/activities-for-learners/?skill=vocabulary&level=independent",skill:"rue",kind:"free",part:["1","3"],what:"Official Cambridge vocabulary tasks targeting collocations, phrasal verbs and word families.",mins:15},
  {n:"Exam English — FCE Part 1: Multiple-choice cloze",url:"https://www.examenglish.com/FCE/fce_use_of_english_part1.htm",skill:"rue",kind:"free",part:["1"],what:"Interactive B2 First Part 1 gap-fill text with four options per blank and automatic scoring.",mins:10},
  {n:"Exam English — FCE Part 2: Open cloze",url:"https://www.examenglish.com/FCE/fce_use_of_english_part2.htm",skill:"rue",kind:"free",part:["2"],what:"Interactive B2 First Part 2 open cloze exercise testing grammar words with immediate feedback.",mins:10},
  {n:"Exam English — FCE Part 3: Word formation",url:"https://www.examenglish.com/FCE/fce_use_of_english_part3.htm",skill:"rue",kind:"free",part:["3"],what:"Interactive B2 First Part 3 word formation task converting root words with answers checked instantly.",mins:10},
@@ -17591,6 +18062,32 @@ function exLibStateFor(rootId){
 function exLibRootEl(rootId){
   return document.getElementById(rootId==='practice'?'practiceLibraryCard':'exercisesLibraryCard');
 }
+function exLibControlsEl(rootId){
+  return rootId==='practice'?(document.getElementById('practiceFiltersSheet')||exLibRootEl('practice')):exLibRootEl('session');
+}
+function exLibActiveFiltersList(st){
+  const items=[];
+  if(st.paper&&st.paper!=='all'){
+    items.push({kind:'paper',label:t(EXLIB_SHORT_PAPER_KEYS[st.paper]||'practice_filter_rue')});
+  }
+  if(st.part&&st.part!=='all'){
+    items.push({kind:'part',label:t('exlib_part_'+st.part)||('Part '+st.part)});
+  }
+  if(st.freeOnly){
+    items.push({kind:'freeOnly',label:t('exlib_free_only')});
+  }
+  if(st.scope==='full'){
+    items.push({kind:'scope',label:t('exlib_scope_full')});
+  }
+  if(st.hideDone){
+    items.push({kind:'hideDone',label:t('exlib_hide_done')});
+  }
+  if(st.sort&&st.sort!=='exam'){
+    const sortKey=st.sort==='shortest'?'exlib_sort_shortest':'exlib_sort_az';
+    items.push({kind:'sort',label:t('exlib_sort_label')+': '+t(sortKey)});
+  }
+  return items;
+}
 function isFullPaperItem(item){
   if(!item)return false;
   if(item.origin==='local'){
@@ -17822,28 +18319,53 @@ function renderExercisesLibrary(rootId){
   const isExpanded=(r==='practice')?true:!!st.expanded;
   const advEl=root.querySelector('[data-exlib-role="adv"]');
   if(advEl)advEl.hidden=!isExpanded;
+  const ctlHost=exLibControlsEl(r);
   const inp=root.querySelector('[data-exlib-role="search"]');
   if(inp&&inp.value!==st.query)inp.value=st.query;
   const clearBtn=root.querySelector('[data-exlib-role="clear"]');
   if(clearBtn)clearBtn.style.display=st.query.trim()?'':'none';
-  root.querySelectorAll('[data-exlib-role="paperFilter"] [data-exlib-paper]').forEach(b=>{
-    const on=b.getAttribute('data-exlib-paper')===st.paper;
-    b.classList.toggle('on',on);
-    b.setAttribute('aria-pressed',on?'true':'false');
-  });
-  root.querySelectorAll('[data-exlib-role="partFilter"] [data-exlib-part]').forEach(b=>{
-    const on=b.getAttribute('data-exlib-part')===st.part;
-    b.classList.toggle('on',on);
-    b.setAttribute('aria-pressed',on?'true':'false');
-  });
-  const freeCb=root.querySelector('[data-exlib-role="freeOnly"]');
-  if(freeCb&&freeCb.checked!==st.freeOnly)freeCb.checked=st.freeOnly;
-  const fullCb=root.querySelector('[data-exlib-role="fullScope"]');
-  if(fullCb&&fullCb.checked!==(st.scope==='full'))fullCb.checked=(st.scope==='full');
-  const hideDoneCb=root.querySelector('[data-exlib-role="hideDone"]');
-  if(hideDoneCb&&hideDoneCb.checked!==!!st.hideDone)hideDoneCb.checked=!!st.hideDone;
-  const sortSel=root.querySelector('[data-exlib-role="sort"]');
-  if(sortSel&&sortSel.value!==st.sort)sortSel.value=st.sort;
+  if(ctlHost){
+    ctlHost.querySelectorAll('[data-exlib-role="paperFilter"] [data-exlib-paper]').forEach(b=>{
+      const on=b.getAttribute('data-exlib-paper')===st.paper;
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-pressed',on?'true':'false');
+    });
+    ctlHost.querySelectorAll('[data-exlib-role="partFilter"] [data-exlib-part]').forEach(b=>{
+      const on=b.getAttribute('data-exlib-part')===st.part;
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-pressed',on?'true':'false');
+    });
+    const freeCb=ctlHost.querySelector('[data-exlib-role="freeOnly"]');
+    if(freeCb&&freeCb.checked!==st.freeOnly)freeCb.checked=st.freeOnly;
+    const fullCb=ctlHost.querySelector('[data-exlib-role="fullScope"]');
+    if(fullCb&&fullCb.checked!==(st.scope==='full'))fullCb.checked=(st.scope==='full');
+    const hideDoneCb=ctlHost.querySelector('[data-exlib-role="hideDone"]');
+    if(hideDoneCb&&hideDoneCb.checked!==!!st.hideDone)hideDoneCb.checked=!!st.hideDone;
+    const sortSel=ctlHost.querySelector('[data-exlib-role="sort"]');
+    if(sortSel&&sortSel.value!==st.sort)sortSel.value=st.sort;
+  }
+  if(r==='practice'){
+    const activeFilters=exLibActiveFiltersList(st);
+    const badge=document.getElementById('pracLibFiltersBadge');
+    const fBtn=document.getElementById('pracLibFiltersBtn');
+    const bar=root.querySelector('[data-exlib-role="activeFilters"]');
+    if(badge){
+      badge.textContent=String(activeFilters.length);
+      badge.hidden=activeFilters.length===0;
+    }
+    if(fBtn)fBtn.classList.toggle('has-active',activeFilters.length>0);
+    if(bar){
+      if(!activeFilters.length){
+        bar.hidden=true;
+        bar.innerHTML='';
+      }else{
+        bar.hidden=false;
+        bar.innerHTML=activeFilters.map(f=>
+          `<button type="button" class="prac-active-chip" data-action="removePracticeFilter" data-filter-kind="${esc(f.kind)}" aria-label="${esc(t('exlib_filters_remove'))}: ${esc(f.label)}">${esc(f.label)} <span class="prac-active-chip-x" aria-hidden="true">×</span></button>`
+        ).join('')+`<button type="button" class="prac-active-clear" data-action="resetExLibFilters">${esc(t('exlib_filters_clear_all'))}</button>`;
+      }
+    }
+  }
   const all=buildExerciseLibrary();
   const q=st.query.trim().toLowerCase();
   const unitScoped=!isExpanded&&st.paper!=='all';
@@ -20473,7 +20995,10 @@ function syncTopbarCompact(){
 function syncSheetBodyLock(){
   const moreOpen=(document.getElementById('moreSheet')||{}).style?.display==='flex';
   const acctOpen=(document.getElementById('accountSheet')||{}).style?.display==='flex';
-  const locked=moreOpen||acctOpen;
+  const pfOpen=!(document.getElementById('practiceFiltersSheet')||{hidden:true}).hidden;
+  const ppOpen=!(document.getElementById('practicePartsModal')||{hidden:true}).hidden;
+  const plOpen=!(document.getElementById('practicePartLogModal')||{hidden:true}).hidden;
+  const locked=moreOpen||acctOpen||pfOpen||ppOpen||plOpen;
   document.documentElement.classList.toggle('sheet-open',locked);
   document.body.classList.toggle('sheet-open',locked);
 }
@@ -20560,7 +21085,7 @@ function toggleAccountSheet(){
   else openAccountSheet();
 }
 function trapSheetKeydown(sheet,onClose,e){
-  if(!sheet||sheet.style.display==='none')return false;
+  if(!sheet||sheet.hidden||sheet.style.display==='none')return false;
   if(e.key==='Escape'){
     e.preventDefault();
     e.stopPropagation();
@@ -20618,6 +21143,8 @@ function activateNavView(viewId,isUserClick){
   });
   closeMoreSheet(false);
   closeAccountSheet(false);
+  closePracticeFilters(false);
+  closePracticeByPart(false);
   if(window.innerWidth<=1023&&(window.scrollY||window.pageYOffset||0)>0)window.scrollTo(0,0);
   syncMoreActiveState(viewId);
   updateTopbarViewTitle(viewId);
@@ -20676,6 +21203,9 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
     });
   }
   document.addEventListener('keydown',e=>{
+    if(trapSheetKeydown(document.getElementById('practicePartLogModal'),()=>closePartLogModal(true),e))return;
+    if(trapSheetKeydown(document.getElementById('practicePartsModal'),()=>closePracticeByPart(true),e))return;
+    if(trapSheetKeydown(document.getElementById('practiceFiltersSheet'),()=>closePracticeFilters(true),e))return;
     if(trapSheetKeydown(acctSheet,()=>closeAccountSheet(true),e))return;
     trapSheetKeydown(sheet,()=>closeMoreSheet(true),e);
   });
@@ -20832,6 +21362,18 @@ click:{
 'openCycleLibrary':el=>openCycleLibrary(el),
 'openFullPaperLibrary':(el,ev)=>{if(ev&&ev.stopPropagation)ev.stopPropagation();openFullPaperLibrary(el.dataset.paper)},
 'openPracticeByPart':()=>openPracticeByPart(),
+'closePracticeByPart':()=>closePracticeByPart(true),
+'closePracticeByPartIfSelf':(el,ev)=>{if(ev.target===el)closePracticeByPart(true)},
+'openPracticeFilters':()=>openPracticeFilters(),
+'closePracticeFilters':()=>closePracticeFilters(true),
+'closePracticeFiltersIfSelf':(el,ev)=>{if(ev.target===el)closePracticeFilters(true)},
+'applyPracticeFilters':()=>applyPracticeFilters(),
+'resetPracticeFilters':()=>resetPracticeFilters(),
+'removePracticeFilter':el=>removePracticeFilter(el.dataset.filterKind),
+'openPartContents':el=>openPartContents(+el.dataset.i),
+'openPartLogModal':el=>openPartLogModal(+el.dataset.i),
+'closePartLogModal':()=>closePartLogModal(true),
+'closePartLogModalIfSelf':(el,ev)=>{if(ev.target===el)closePartLogModal(true)},
 'openPracticeLibrary':el=>openPracticeLibrary({paper:el.dataset.paper,part:el.dataset.part,scope:el.dataset.scope}),
 'closePlanLimit':()=>closePlanLimit(),
 'closePlanLimitIfSelf':(el,ev)=>{if(ev.target===el)closePlanLimit()},
@@ -21003,6 +21545,7 @@ keydown:{
 'exLibSearchKey':(el,ev)=>exLibSearchKey(el,ev),
 'loginEnter':(el,ev)=>{if(ev.key==='Enter')doLogin()},
 'mfaEnter':(el,ev)=>{if(ev.key==='Enter')doLoginMfa()},
+'partLogEnter':(el,ev)=>{if(ev.key==='Enter'){ev.preventDefault();const b=document.getElementById('practicePartLogSaveBtn');if(b)savePart(+b.dataset.i)}},
 'registerEnter':(el,ev)=>{if(ev.key==='Enter')doRegister()}
 }
 };

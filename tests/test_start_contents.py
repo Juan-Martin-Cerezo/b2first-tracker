@@ -157,27 +157,26 @@ with sync_playwright() as p:
             }"""
         )
 
-    # 1. Practice opens on Library first, with #practiceParts inside a closed <details>;
-    #    opening it reveals all 17 part rows, each with exactly 1 Start button and no Library button.
+    # 1. Practice opens on Library first, with #partsList inside #practicePartsModal (no inline <details>);
+    #    opening it reveals all 17 part rows with compact actions (Start, Open contents, Log result, Mark done).
     pg.click("nav button[data-view='practice']")
     pg.wait_for_timeout(250)
     pre_open = pg.evaluate(
         """() => {
             const libCard = document.getElementById('practiceLibraryCard');
-            const parts = document.getElementById('practiceParts');
-            const details = parts ? parts.closest('details') : null;
+            const modal = document.getElementById('practicePartsModal');
             return {
                 libVisible: !!libCard && getComputedStyle(libCard).display !== 'none' && !libCard.hidden,
                 libTop: libCard ? Math.round(libCard.getBoundingClientRect().top) : 9999,
-                libBeforeParts: !!(libCard && parts && (libCard.compareDocumentPosition(parts) & Node.DOCUMENT_POSITION_FOLLOWING)),
-                detailsClosed: !!details && details.open === false,
+                hasLegacyDetails: !!document.getElementById('practicePartsDetails'),
+                modalHidden: !!modal && modal.hidden === true,
                 pracCount: (document.getElementById('pracLibCount') || {}).textContent?.trim() || '',
             };
         }"""
     )
     assert pre_open["libVisible"] and pre_open["libTop"] < 844, f"Library not visible in first viewport: {pre_open}"
-    assert pre_open["libBeforeParts"], "#practiceLibraryCard must come before #practiceParts"
-    assert pre_open["detailsClosed"], f"#practiceParts must be in a closed <details>: {pre_open}"
+    assert not pre_open["hasLegacyDetails"], "Legacy #practicePartsDetails <details> should be removed"
+    assert pre_open["modalHidden"], f"#practicePartsModal must start hidden: {pre_open}"
     assert pre_open["pracCount"], "Practice Library counter empty"
 
     pg.click("#practiceIntentByPart")
@@ -185,7 +184,8 @@ with sync_playwright() as p:
     practice_info = pg.evaluate(
         """() => {
             const view = document.getElementById('v-practice');
-            const steps = [...view.querySelectorAll('#partsList .step')];
+            const modal = document.getElementById('practicePartsModal');
+            const steps = [...modal.querySelectorAll('#partsList .step')];
             const perStep = steps.map(s => {
                 const actBtns = [...s.querySelectorAll('.step-actions button')].map(b => ({
                     text: b.textContent.trim(),
@@ -193,11 +193,12 @@ with sync_playwright() as p:
                     h: Math.round(b.getBoundingClientRect().height),
                 }));
                 const allTexts = [...s.querySelectorAll('button')].map(b => b.textContent.trim());
-                return { actBtns, allTexts };
+                const inlineInputs = s.querySelectorAll('input, select').length;
+                return { actBtns, allTexts, inlineInputs };
             });
             return {
                 active: view.classList.contains('active'),
-                detailsOpen: !!document.getElementById('practicePartsDetails')?.open,
+                modalOpen: !!modal && !modal.hidden,
                 hasPracticeTabs: !!document.getElementById('practiceTabs'),
                 hasTabLibrary: !!document.getElementById('practiceTabLibrary'),
                 hasTabLibraryBtn: !!document.getElementById('practiceTabLibraryBtn'),
@@ -205,25 +206,28 @@ with sync_playwright() as p:
                 perStep,
                 scrollWidth: document.documentElement.scrollWidth,
                 clientWidth: document.documentElement.clientWidth,
-                html: view.outerHTML,
+                html: view.outerHTML + modal.outerHTML,
             };
         }"""
     )
     assert practice_info["active"], "#v-practice is not active"
-    assert practice_info["detailsOpen"], "#practicePartsDetails did not open"
+    assert practice_info["modalOpen"], "#practicePartsModal did not open"
     assert not practice_info["hasPracticeTabs"], "#practiceTabs still exists"
     assert not practice_info["hasTabLibrary"], "#practiceTabLibrary still exists"
     assert not practice_info["hasTabLibraryBtn"], "#practiceTabLibraryBtn still exists"
     assert practice_info["stepCount"] == 17, f"Expected 17 parts, got {practice_info['stepCount']}"
-    assert not INLINE_HANDLER_RE.search(practice_info["html"]), "Inline on* handler in #v-practice"
+    assert not INLINE_HANDLER_RE.search(practice_info["html"]), "Inline on* handler in #v-practice or #practicePartsModal"
     assert practice_info["scrollWidth"] <= practice_info["clientWidth"] + 1, "Overflow in Practice 390"
     for idx, st in enumerate(practice_info["perStep"]):
-        assert len(st["actBtns"]) == 2, f"Row {idx} should have Start + Mark done buttons, got {st['actBtns']}"
+        assert st["inlineInputs"] == 0, f"Row {idx} still has inline inputs: {st}"
+        assert len(st["actBtns"]) == 4, f"Row {idx} should have Start + Open contents + Log result + Mark done, got {st['actBtns']}"
         assert st["actBtns"][0]["action"] == "startPart", f"Row {idx} first button is not startPart: {st['actBtns']}"
         assert st["actBtns"][0]["text"] == "Start", f"Row {idx} button label != Start: {st['actBtns']}"
-        assert st["actBtns"][0]["h"] >= 44, f"Row {idx} Start button < 44px: {st['actBtns']}"
-        assert st["actBtns"][1]["action"] == "togglePractised", f"Row {idx} second button is not togglePractised: {st['actBtns']}"
-        assert st["actBtns"][1]["h"] >= 44, f"Row {idx} Mark done button < 44px: {st['actBtns']}"
+        assert st["actBtns"][0]["h"] >= 48, f"Row {idx} Start button < 48px on mobile: {st['actBtns']}"
+        assert st["actBtns"][1]["action"] == "openPartContents", f"Row {idx} second button is not openPartContents: {st['actBtns']}"
+        assert st["actBtns"][2]["action"] == "openPartLogModal", f"Row {idx} third button is not openPartLogModal: {st['actBtns']}"
+        assert st["actBtns"][3]["action"] == "togglePractised", f"Row {idx} fourth button is not togglePractised: {st['actBtns']}"
+        assert all(b["h"] >= 48 for b in st["actBtns"]), f"Row {idx} action button < 48px on mobile: {st['actBtns']}"
         assert not any("library" in t.lower() for t in st["allTexts"]), (
             f"Row {idx} still mentions Library: {st['allTexts']}"
         )
@@ -425,6 +429,8 @@ with sync_playwright() as p:
     out["8_close_clean"] = after_close
 
     # 8b. Writing Part 1 & Listening Part 3 Contents also prioritize the active part.
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(150)
     pg.click("#partsList .step button[data-action='startPart'][data-i='15']")
     pg.wait_for_timeout(200)
     pg.click("#sessionTabContentsBtn")
@@ -435,6 +441,8 @@ with sync_playwright() as p:
     pg.click("#sessionCloseBtn")
     pg.wait_for_timeout(200)
 
+    pg.click("#practiceIntentByPart")
+    pg.wait_for_timeout(150)
     pg.click("#partsList .step button[data-action='startPart'][data-i='9']")
     pg.wait_for_timeout(200)
     pg.click("#sessionTabContentsBtn")
