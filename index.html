@@ -3291,7 +3291,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
   .fm-start-btn{width:auto}
 }
 /* ---------- PRACTICE UX (compact hub + filters sheet + by-part & log modals) ---------- */
-.practice-shell{width:100%;max-width:1040px;margin:0 auto}
+.practice-shell{width:100%;max-width:var(--content-max);margin:0 auto}
 .practice-head{
   display:flex;align-items:flex-end;justify-content:space-between;
   gap:var(--s3) var(--s4);margin-bottom:var(--s4);flex-wrap:wrap;
@@ -3312,19 +3312,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
 .practice-intent-card:active{transform:scale(.97)}
 .practice-intent-card:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .practice-intent-title{font-size:inherit;font-weight:600;color:inherit;line-height:1.2}
-.practice-overview{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s4)}
-.practice-progress-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.practice-progress-card{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
-.practice-progress-card .pp-label{font-size:var(--t-sm);color:var(--txt-2);font-weight:600}
-.practice-progress-card .pp-value{margin-top:4px;font-size:22px;font-weight:700;line-height:1.15;color:var(--txt)}
-.practice-progress-card .pp-bar{height:6px;margin-top:var(--s2);border-radius:999px;background:var(--surface-2);overflow:hidden}
-.practice-progress-card .pp-bar span{display:block;height:100%;border-radius:999px;background:var(--acc)}
-.practice-recent{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
-.practice-recent h3{font-size:var(--t-body);font-weight:650;margin:0 0 var(--s2)}
-.practice-recent-row{display:flex;justify-content:space-between;gap:var(--s3);padding:8px 0;border-top:1px solid var(--line);font-size:var(--t-sm)}
-.practice-recent-row:first-of-type{border-top:0}
-.practice-recent-row .pr-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:normal}
-.practice-recent-row .pr-date{color:var(--txt-2);flex:none}
 .practice-part-chooser{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s4)}
 .ppc-group{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
 .ppc-group h3{font-size:var(--t-body);font-weight:650;margin:0 0 var(--s2)}
@@ -3338,18 +3325,12 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
 @media (min-width:700px){
   .ppc-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-@media (min-width:700px){
-  .practice-progress-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
-}
 @media (min-width:900px){
-  .practice-shell{max-width:760px}
   .practice-head{flex-direction:column;align-items:stretch;gap:var(--s4);margin-top:var(--s5)}
   .practice-head-copy{flex:none}
   .practice-intents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s4);width:100%}
   .practice-intent-card{height:120px;padding:var(--s4);flex-direction:column;gap:var(--s3);font-size:var(--t-title);white-space:normal}
   .practice-intent-card .ico{width:28px;height:28px}
-  .practice-overview{display:grid;grid-template-columns:1.1fr .9fr;gap:var(--s4);align-items:start}
-  .practice-progress-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 #practiceLibraryCard{margin-top:0;scroll-margin-top:96px;padding:var(--s4)}
 .prac-lib-toolbar{display:flex;flex-direction:column;gap:var(--s2);margin:0 0 var(--s3);min-width:0}
@@ -6482,7 +6463,6 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
             </div>
           </div>
 
-          <div id="practiceOverview" class="practice-overview"></div>
           <div id="practicePartChooser" class="practice-part-chooser"></div>
 
           <div class="card" id="practiceLibraryCard" data-exlib-root="practice" hidden>
@@ -6753,8 +6733,6 @@ const I18N={
     plan_edit_intake_short:'Edit intake',
     practice_head_title:'Practice',
     practice_head_sub:'Choose a full mock or one part. You go straight to the session.',
-    practice_recent_title:'Recent practice',
-    practice_recent_empty:'Nothing logged yet. Start a part and it will show up here.',
     practice_choose_part:'Choose a part',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 papers, official timing',
@@ -7859,8 +7837,6 @@ const I18N={
     plan_edit_intake_short:'Editar perfil',
     practice_head_title:'Práctica',
     practice_head_sub:'Elegí un mock completo o una parte. Vas directo a la sesión.',
-    practice_recent_title:'Práctica reciente',
-    practice_recent_empty:'Todavía no registraste nada. Empezá una parte y aparece acá.',
     practice_choose_part:'Elegí una parte',
     practice_intent_mock_title:'Full mock',
     practice_intent_mock_sub:'4 pruebas, tiempo oficial',
@@ -17734,16 +17710,6 @@ function scrollToPracticeParts(){
   const el=document.getElementById('practicePartChooser');
   if(el&&typeof el.scrollIntoView==='function')el.scrollIntoView({behavior:'smooth',block:'start'});
 }
-function renderPracticeOverview(){
-  const el=document.getElementById('practiceOverview');
-  if(!el)return;
-  const recent=(Array.isArray(D.log)?D.log:[]).slice(-4).reverse();
-  const rows=recent.length?recent.map(e=>{
-    const name=e.note||e.kind||(e.part?`Part ${e.part}`:'Practice');
-    return `<div class="practice-recent-row"><span class="pr-name">${esc(name)}</span><span class="pr-date">${esc(fmtDate(e.date))}</span></div>`;
-  }).join(''):`<div class="practice-recent-row"><span class="pr-name" style="color:var(--txt-2)">${esc(t('practice_recent_empty'))}</span></div>`;
-  el.innerHTML=`<div class="practice-recent"><h3>${esc(t('practice_recent_title'))}</h3>${rows}</div>`;
-}
 function renderPracticeNow(){
   const box=document.getElementById('practiceNow');
   if(!box)return;
@@ -21308,7 +21274,6 @@ function activateNavView(viewId,isUserClick){
   if(viewId==='diag')skRenderView('diag',renderDiag);
   if(viewId==='practice')skRenderView('practice',function(){
     renderExercisesLibrary('practice');
-    renderPracticeOverview();
     renderPracticePartChooser();
     renderParts();
   });
@@ -21404,7 +21369,7 @@ document.querySelectorAll('nav button[data-view]').forEach(b=>b.onclick=()=>{
   syncTopbarCompact();
 })();
 
-function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPracticeOverview();renderPracticePartChooser();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();updateWritingPhase3Summary();applyI18n()}
+function refreshAll(){seedScheduleIfNeeded();advanceStageIfReady();renderToday();renderRecent();renderPracticeNow();renderPracticePartChooser();renderStreak();renderGates();renderLog();renderStats();renderErrs();renderGuides();renderSessionTopbar();renderExercisesLibrary();renderFullMockPreflight();renderGrafEvol();renderGrafPart();renderGrafCons();renderProgChartsState();renderPlan();renderWeeklyPlan();renderEx();renderParts();renderMetrics();renderWeeklySummary();renderErrPills();renderIa();renderDiag();updateWritingPhase3Summary();applyI18n()}
 /* slow_view: report full re-renders that take more than 800 ms. */
 (function(){
   const orig=refreshAll;

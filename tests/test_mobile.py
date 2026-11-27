@@ -35,6 +35,8 @@ with sync_playwright() as p:
     assert out["part_rows"] == 17, f"Expected 17 part rows, got {out['part_rows']}"
     out["charts"] = pg.eval_on_selector_all("#practiceOverview .practice-progress-card", "els => els.length")
     assert out["charts"] == 0, f"Practice still has {out['charts']} progress charts"
+    out["practice_overview_absent"] = pg.evaluate("document.getElementById('practiceOverview') === null")
+    assert out["practice_overview_absent"], "Practice still contains #practiceOverview"
     pg.click("#practicePartChooser .part-row")
     pg.wait_for_timeout(400)
     assert pg.evaluate("(() => { const v=document.getElementById('v-sesion'); return (v&&v.classList.contains('active')) || (document.getElementById('sessionTabSession') && !document.getElementById('sessionTabSession').hidden); })()"), "Part tap did not open Session"
