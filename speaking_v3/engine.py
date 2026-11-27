@@ -489,7 +489,7 @@ def create_session(uid, test_id=None, part=0, own_task_id=None,
     wav, tts_err = voice.synthesize_speech(
         greeting_text,
         role="examiner",
-        partner_voice=test["partner"]["voice"],
+        partner_voice=voice.partner_voice_for(test["partner"].get("sex"), test["partner"].get("voice")),
         cacheable=True,
     )
     if tts_err:
@@ -572,7 +572,7 @@ def _record_turn_score(sess, text, accepted, part, compared_photos=None):
 
 def _handle_retry(sess, test, reason, canonical_text, cacheable=True):
     """Apply retry policy (silence never burns a semantic retry; max 2 semantic retries)."""
-    partner_voice = test["partner"]["voice"]
+    partner_voice = voice.partner_voice_for(test["partner"].get("sex"), test["partner"].get("voice"))
     ui = _build_ui(test, sess["phase"], sess["step"], sess["target_part"])
 
     if reason == "silence":
@@ -660,7 +660,7 @@ def handle_turn(uid, session_id, audio_b64="", mime="audio/wav",
             return None, 404, "test_not_found"
 
         partner_name = test["partner"]["name"]
-        partner_voice = test["partner"]["voice"]
+        partner_voice = voice.partner_voice_for(test["partner"].get("sex"), test["partner"].get("voice"))
 
         # Special non-audio transition: Part 3 15-second prep timer completed
         if sess["phase"] == "part3" and sess["step"] == "prep" and action == "prep_done":
@@ -1402,7 +1402,7 @@ def handle_skip(uid, session_id):
             return None, 404, "test_not_found"
 
         partner_name = test["partner"]["name"]
-        partner_voice = test["partner"]["voice"]
+        partner_voice = voice.partner_voice_for(test["partner"].get("sex"), test["partner"].get("voice"))
         sess["flags"]["skipped_turns"] += 1
         sess["step_retries"] = 0
 

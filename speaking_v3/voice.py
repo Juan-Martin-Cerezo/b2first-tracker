@@ -32,7 +32,8 @@ import store
 from speaking_v3 import tone, validation
 
 EXAMINER_VOICE = "Charon"
-DEFAULT_PARTNER_VOICE = "Kore"
+PARTNER_VOICE_BY_SEX = {"male": "Puck", "female": "Aoede"}
+DEFAULT_PARTNER_VOICE = PARTNER_VOICE_BY_SEX["male"]
 DEFAULT_GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 DEFAULT_STT_MODEL = "gemini-2.5-flash"
 DEFAULT_TTS_MODEL = "gemini-2.5-flash-preview-tts"
@@ -41,6 +42,11 @@ TTS_CACHE_MAX = 400
 AUDIO_MAX_BYTES = 5 * 1024 * 1024
 
 _TTS_LOCK = threading.Lock()
+
+
+def partner_voice_for(sex, explicit=None):
+    """Partner voice that matches the partner's sex; explicit wins."""
+    return explicit or PARTNER_VOICE_BY_SEX.get((sex or "").lower(), DEFAULT_PARTNER_VOICE)
 
 
 def is_test_mode():

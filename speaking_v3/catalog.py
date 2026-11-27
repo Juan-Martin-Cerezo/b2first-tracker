@@ -10,7 +10,7 @@ import threading
 import time
 
 import store
-from speaking_v3 import tone
+from speaking_v3 import tone, voice
 from speaking_v3.multipart import detect_image_type
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -397,6 +397,9 @@ def get_own_task_as_test(uid, task_id):
     if not p3_dec.endswith((".", "?")):
         p3_dec += "."
 
+    partner_sex = normalize_sex(meta.get("partner_sex"))
+    voice_partner_default = voice.PARTNER_VOICE_BY_SEX.get(partner_sex, voice.DEFAULT_PARTNER_VOICE)
+
     return {
         "id": meta["id"],
         "title": meta["title"],
@@ -404,9 +407,9 @@ def get_own_task_as_test(uid, task_id):
         "own_task_part": meta["part"],
         "partner": {
             "name": "Alex",
-            "sex": normalize_sex(meta.get("partner_sex")),
+            "sex": partner_sex,
             "home": "Bristol",
-            "voice": "Kore",
+            "voice": voice_partner_default,
             "persona": "A B2 First candidate from Bristol speaking natural British English.",
         },
         "examiner": {
