@@ -6,8 +6,9 @@ Contract:
   3. The part chooser is inline: 17 rows, one button each, no extra actions.
   4. Reading/Listening part -> Session. Writing part -> Contents + corrector CTA.
      Speaking part -> Speaking exam overlay.
-  5. Recent practice block is present; progress charts are not shown in Practice.
-  6. 390x844 / 1280x800: no horizontal overflow, no page errors.
+  5. Recent practice block is absent in EN and ES; progress charts are not shown in Practice.
+  6. 390x844 / 1280x800: .practice-shell matches Today/Progress content edges (±2 px),
+     no horizontal overflow, no page errors.
 """
 import os
 import sys
@@ -38,8 +39,23 @@ with sync_playwright() as p:
 
     assert pg.evaluate("document.querySelectorAll('.practice-intent-card').length") == 2
     assert pg.evaluate("document.getElementById('practiceLibraryCard').hidden")
+    assert pg.evaluate("document.getElementById('practiceOverview') === null")
     assert pg.evaluate("document.querySelectorAll('#practiceOverview .practice-progress-card').length") == 0
-    assert pg.evaluate("!!document.querySelector('#practiceOverview .practice-recent')")
+    assert pg.evaluate("document.querySelector('.practice-recent') === null")
+    no_recent_js = (
+        "Array.from(document.querySelectorAll('#v-practice *')).every(el => {"
+        " const t = (el.textContent || '').trim();"
+        " return !t.includes('Recent practice') && !t.includes('Práctica reciente');"
+        "})"
+    )
+    assert pg.evaluate(no_recent_js), "Recent practice copy still present in EN"
+    pg.evaluate("setLang('es')")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate("document.getElementById('practiceOverview') === null")
+    assert pg.evaluate("document.querySelector('.practice-recent') === null")
+    assert pg.evaluate(no_recent_js), "Recent practice copy still present in ES"
+    pg.evaluate("setLang('en')")
+    pg.wait_for_timeout(200)
     assert pg.evaluate("document.querySelectorAll('#practicePartChooser .part-row').length") == 17
     assert pg.evaluate("document.querySelectorAll('#practicePartChooser button:not([data-action=startPart])').length") == 0
 
@@ -87,16 +103,72 @@ with sync_playwright() as p:
     assert pg.evaluate("document.getElementById('v-exam').classList.contains('active')")
     pg.evaluate("closeMockStartModal(false)")
 
-    # Mobile and desktop overflow + screenshots.
-    pg.evaluate("window.scrollTo(0,0)")
-    pg.click("nav button[data-view='practice']")
-    pg.wait_for_timeout(300)
-    assert pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
+    # Mobile and desktop width parity + overflow + screenshots.
+    def measure_shell_edges(label, width, height):
+        pg.set_viewport_size({"width": width, "height": height})
+        pg.evaluate("window.scrollTo(0,0)")
+        pg.click("nav button[data-view='hoy']")
+        pg.wait_for_timeout(250)
+        hoy = pg.evaluate("""() => {
+            const col = document.querySelector('#v-hoy .today-shell') || document.querySelector('main');
+            const r = col.getBoundingClientRect();
+            return {left: r.left, right: r.right, width: r.width};
+        }""")
+        pg.click("nav button[data-view='prog']")
+        pg.wait_for_timeout(250)
+        prog = pg.evaluate("""() => {
+            const col = document.querySelector('#v-prog .card') || document.querySelector('#v-prog');
+            const r = col.getBoundingClientRect();
+            return {left: r.left, right: r.right, width: r.width};
+        }""")
+        pg.click("nav button[data-view='practice']")
+        pg.wait_for_timeout(250)
+        prac = pg.evaluate("""() => {
+            const el = document.querySelector('#v-practice .practice-shell');
+            const r = el.getBoundingClientRect();
+            return {
+                left: r.left, right: r.right, width: r.width,
+                scrollWidth: document.documentElement.scrollWidth,
+                innerWidth: window.innerWidth,
+            };
+        }""")
+        assert prac["scrollWidth"] <= prac["innerWidth"] + 1, (
+            f"{label}: horizontal overflow {prac['scrollWidth']} > {prac['innerWidth']}"
+        )
+        d_hoy_l = abs(prac["left"] - hoy["left"])
+        d_hoy_r = abs(prac["right"] - hoy["right"])
+        d_prog_l = abs(prac["left"] - prog["left"])
+        d_prog_r = abs(prac["right"] - prog["right"])
+        print(
+            f"edges {label} ({width}x{height}): "
+            f"practice=[{prac['left']:.1f},{prac['right']:.1f}] w={prac['width']:.1f} | "
+            f"today=[{hoy['left']:.1f},{hoy['right']:.1f}] dL={d_hoy_l:.1f} dR={d_hoy_r:.1f} | "
+            f"progress=[{prog['left']:.1f},{prog['right']:.1f}] dL={d_prog_l:.1f} dR={d_prog_r:.1f} | "
+            f"scroll={prac['scrollWidth']}/{prac['innerWidth']}"
+        )
+        assert d_hoy_l <= 2 and d_hoy_r <= 2, (
+            f"{label}: .practice-shell vs Today edge delta ({d_hoy_l:.1f}, {d_hoy_r:.1f}) > 2px"
+        )
+        assert d_prog_l <= 2 and d_prog_r <= 2, (
+            f"{label}: .practice-shell vs Progress edge delta ({d_prog_l:.1f}, {d_prog_r:.1f}) > 2px"
+        )
+
+    measure_shell_edges("mobile", 390, 844)
     pg.screenshot(path=os.path.join(OUT, "practice_flow_390.png"))
+    pg.screenshot(path=os.path.join(OUT, "practice_width_390.png"))
+
+    measure_shell_edges("desktop", 1280, 800)
+    pg.screenshot(path=os.path.join(OUT, "practice_width_1280.png"))
+    pg.evaluate("setLang('es')")
+    pg.wait_for_timeout(200)
+    assert pg.evaluate(no_recent_js), "Recent practice copy present in ES at 1280"
+    pg.screenshot(path=os.path.join(OUT, "practice_no_recent_es_1280.png"))
+    pg.evaluate("setLang('en')")
+    pg.wait_for_timeout(150)
 
     pg.set_viewport_size({"width": 1280, "height": 900})
     pg.evaluate("window.scrollTo(0,0)")
-    pg.wait_for_timeout(250)
+    pg.wait_for_timeout(200)
     assert pg.evaluate("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
     pg.screenshot(path=os.path.join(OUT, "practice_flow_1280.png"))
 
