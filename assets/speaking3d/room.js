@@ -26,16 +26,50 @@ const MOUTH_ATTACK_S = 0.06;
 const MOUTH_RELEASE_S = 0.13;
 const SILENCE_FLOOR = 4;
 const SILENCE_TIMEOUT_S = 0.4;
-const FOV_DESKTOP = 62;
-const FOV_MOBILE = 68;
+const FOV_BASE = 58;
 const CAM_NEAR = 0.045;
 
-// Camera base pose (candidate eyes above hips (0.18, 0.46, 0.82))
-const CAM_BASE_POS = new THREE.Vector3(0.18, 1.22, 0.82);
-const CAM_BASE_TARGET = new THREE.Vector3(0.10, 1.08, -0.55);
+// Camera poses matched to the two-vs-two seating (Photo pair raised/pulled slightly so
+// both cards at x=+-0.27 stay inside the frame and clear of all HUD pills at 1280x800 and 390x844)
+const CAM_POSES = {
+  base: {
+    pos: new THREE.Vector3(0.18, 1.22, 0.82),
+    target: new THREE.Vector3(0.10, 1.08, -0.55),
+    fov: FOV_BASE
+  },
+  photos: {
+    pos: new THREE.Vector3(0.06, 1.20, 0.78),
+    target: new THREE.Vector3(0.00, 0.78, 0.18),
+    fov: 46
+  },
+  card: {
+    pos: new THREE.Vector3(0.10, 1.14, 0.48),
+    target: new THREE.Vector3(0.02, 0.76, 0.09),
+    fov: 44
+  }
+};
+const CAM_BASE_POS = CAM_POSES.base.pos;
+const CAM_BASE_TARGET = CAM_POSES.base.target;
 const _camBaseDir = new THREE.Vector3().subVectors(CAM_BASE_TARGET, CAM_BASE_POS).normalize();
 const CAM_BASE_YAW = Math.atan2(-_camBaseDir.x, -_camBaseDir.z);
 const CAM_BASE_PITCH = Math.asin(Math.max(-1, Math.min(1, _camBaseDir.y)));
+
+// Camera dolly and reduced-motion lift timing
+const DOLLY_WAIT_MS = 900;
+const DOLLY_EASE_MS = 800;
+const DOLLY_RETURN_MS = 700;
+const REDUCED_LIFT_M = 0.10;
+const REDUCED_LIFT_MS = 600;
+const LIFT_DIR = new THREE.Vector3(0, 0.85, 0.5268).normalize();
+const MAX_CACHED_TEXTURES = 4;
+const PLACEHOLDER_GREY = 0x9a9a9a;
+const PHOTO_BASE_W = 0.17;
+const PHOTO_BASE_H = 0.13;
+const CARD_BASE_W = 0.289;
+const CARD_BASE_H = 0.202;
+const PHOTO_L_BASE = new THREE.Vector3(-0.27, 0.748, 0.20);
+const PHOTO_R_BASE = new THREE.Vector3(0.27, 0.748, 0.20);
+const CARD_BASE_POS = new THREE.Vector3(0, 0.748, 0.03);
 
 // Look-around drag constants
 const LOOK_SENS = 0.0042;
@@ -53,10 +87,14 @@ const LOOK_DRAG_TAP_PX = 10;
 const _vHeadWorld = new THREE.Vector3();
 const _vTargetWorld = new THREE.Vector3();
 const _vLocal = new THREE.Vector3();
+const _vCamDir = new THREE.Vector3();
+const _vProj = new THREE.Vector3();
 const _qInvTorso = new THREE.Quaternion();
 const _frustum = new THREE.Frustum();
 const _projScreen = new THREE.Matrix4();
 const _box3 = new THREE.Box3();
+const _raycaster = new THREE.Raycaster();
+const _pointerNdc = new THREE.Vector2();
 
 let cachedSupported = null;
 let mounted = false;
@@ -75,6 +113,46 @@ let containerVisible = true;
 let contextLost = false;
 let speakingData = null;
 let silentSec = 0;
+let lightboxOpen = false;
+let thumbsEl = null;
+let thumbsVisible = false;
+
+// Camera dolly runtime state
+const camPos = CAM_BASE_POS.clone();
+const camTarget = CAM_BASE_TARGET.clone();
+let camFov = FOV_BASE;
+let dollyGoal = 'base';
+let dollyPhase = 'idle';
+let dollyStartMs = 0;
+let dollyWaitMs = 0;
+let dollyDurMs = 0;
+const dollyFromPos = CAM_BASE_POS.clone();
+const dollyFromTarget = CAM_BASE_TARGET.clone();
+let dollyFromFov = FOV_BASE;
+let dollyFromWeight = 0;
+const dollyToPos = CAM_BASE_POS.clone();
+const dollyToTarget = CAM_BASE_TARGET.clone();
+let dollyToFov = FOV_BASE;
+let dollyToWeight = 0;
+let dollyWeight = 0;
+let dollyReturnLookYaw = 0;
+let dollyReturnLookPitch = 0;
+
+// Reduced-motion material lift state
+let matLiftProgress = 0;
+let matLiftFrom = 0;
+let matLiftTo = 0;
+let matLiftStartMs = 0;
+let matLiftActive = false;
+
+// Table material props and texture cache
+let textureLoader = null;
+const textureCache = new Map();
+let tableProps = null;
+let lightboxBound = false;
+let lbCloseListener = null;
+let lbBackdropListener = null;
+let lbKeyListener = null;
 
 // Look-around runtime state
 let lookYaw = 0;
@@ -123,6 +201,118 @@ let allFigures = [];
 
 function clamp(v, lo, hi) {
   return v < lo ? lo : (v > hi ? hi : v);
+}
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function buildPhotoStand(basePos, rotYDeg, index, shadows, standMat, backingMat) {
+  const grp = new THREE.Group();
+  grp.name = index === 0 ? 'photo_left' : 'photo_right';
+  grp.position.copy(basePos);
+  grp.rotation.y = (rotYDeg * Math.PI) / 180;
+
+  // Slim dark easel stand resting cleanly on the desk pad
+  const standBase = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.006, 0.055), standMat);
+  standBase.position.set(0, 0.003, 0);
+  standBase.castShadow = shadows;
+  standBase.receiveShadow = shadows;
+  grp.add(standBase);
+
+  const standLip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.055, 0.008), standMat);
+  standLip.position.set(0, 0.028, -0.018);
+  standLip.rotation.x = -0.26;
+  standLip.castShadow = shadows;
+  grp.add(standLip);
+
+  // Rigid card tilted back 15 degrees so the image faces the candidate cleanly
+  const cardPivot = new THREE.Group();
+  cardPivot.position.set(0, 0.006, 0);
+  cardPivot.rotation.x = (-15 * Math.PI) / 180;
+  grp.add(cardPivot);
+
+  const backing = new THREE.Mesh(new THREE.BoxGeometry(0.175, 0.135, 0.004), backingMat);
+  backing.position.set(0, 0.0675, 0);
+  backing.castShadow = shadows;
+  backing.receiveShadow = shadows;
+  backing.userData = { materialKind: 'photo', slot: index, materialUrl: '', materialAlt: '' };
+  cardPivot.add(backing);
+
+  const faceMat = new THREE.MeshStandardMaterial({
+    color: PLACEHOLDER_GREY,
+    roughness: 0.82,
+    metalness: 0.0
+  });
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(PHOTO_BASE_W, PHOTO_BASE_H), faceMat);
+  face.position.set(0, 0.0675, 0.0024);
+  face.castShadow = false;
+  face.receiveShadow = false;
+  face.userData = { materialKind: 'photo', slot: index, materialUrl: '', materialAlt: '' };
+  cardPivot.add(face);
+
+  return { group: grp, basePos: basePos.clone(), backing, face, faceMat };
+}
+
+function buildTableMaterials(s, shadows) {
+  const standMat = new THREE.MeshStandardMaterial({
+    color: 0x26282c,
+    roughness: 0.76,
+    metalness: 0.14
+  });
+  const backingMat = new THREE.MeshStandardMaterial({
+    color: 0xfaf9f6,
+    roughness: 0.86,
+    metalness: 0.0
+  });
+
+  const photoGroup = new THREE.Group();
+  photoGroup.name = 'table_photos';
+  photoGroup.visible = false;
+  const photoL = buildPhotoStand(PHOTO_L_BASE, 6, 0, shadows, standMat, backingMat);
+  const photoR = buildPhotoStand(PHOTO_R_BASE, -6, 1, shadows, standMat, backingMat);
+  photoGroup.add(photoL.group);
+  photoGroup.add(photoR.group);
+  s.add(photoGroup);
+
+  // Part 3 A4 task card: 0.297 x 0.21 x 0.002 m flat on desk pad, rotated 7 deg, centre (0, 0.748, +0.03)
+  const cardGroup = new THREE.Group();
+  cardGroup.name = 'table_task_card';
+  cardGroup.position.copy(CARD_BASE_POS);
+  cardGroup.rotation.y = (7 * Math.PI) / 180;
+  cardGroup.visible = false;
+
+  const cardBacking = new THREE.Mesh(new THREE.BoxGeometry(0.297, 0.002, 0.21), backingMat);
+  cardBacking.position.set(0, 0.001, 0);
+  cardBacking.castShadow = shadows;
+  cardBacking.receiveShadow = shadows;
+  cardBacking.userData = { materialKind: 'card', slot: 0, materialUrl: '', materialAlt: '' };
+  cardGroup.add(cardBacking);
+
+  const cardFaceMat = new THREE.MeshStandardMaterial({
+    color: PLACEHOLDER_GREY,
+    roughness: 0.84,
+    metalness: 0.0
+  });
+  const cardFace = new THREE.Mesh(new THREE.PlaneGeometry(CARD_BASE_W, CARD_BASE_H), cardFaceMat);
+  cardFace.position.set(0, 0.0024, 0);
+  cardFace.rotation.x = -Math.PI / 2;
+  cardFace.castShadow = false;
+  cardFace.receiveShadow = false;
+  cardFace.userData = { materialKind: 'card', slot: 0, materialUrl: '', materialAlt: '' };
+  cardGroup.add(cardFace);
+
+  s.add(cardGroup);
+
+  return {
+    photoGroup,
+    photos: [photoL, photoR],
+    cardGroup,
+    cardBasePos: CARD_BASE_POS.clone(),
+    cardBacking,
+    cardFace,
+    cardFaceMat
+  };
 }
 
 function detectReducedMotion() {
@@ -730,6 +920,8 @@ function buildScene(mobile) {
   s.add(youGrp);
   allFigures = avatars.concat([youGrp]);
 
+  tableProps = buildTableMaterials(s, shadows);
+
   return s;
 }
 
@@ -745,6 +937,7 @@ function isSpeakingOverlayClosed() {
 function isStageActive() {
   if (!mounted || !container || !renderer || !scene || !camera) return false;
   if (contextLost) return false;
+  if (lightboxOpen) return false;
   if (typeof document !== 'undefined' && document.hidden) return false;
   if (container.hidden || !container.isConnected) return false;
   if (!containerVisible) return false;
@@ -818,13 +1011,475 @@ function resolveGazeTarget(name, focusRole, outVec) {
   return false;
 }
 
+function getMaxAnisotropy() {
+  if (!renderer || !renderer.capabilities || typeof renderer.capabilities.getMaxAnisotropy !== 'function') {
+    return 1;
+  }
+  const maxAniso = renderer.capabilities.getMaxAnisotropy() || 1;
+  // Cap anisotropy further on mobile tier (no canvas downscale allowed)
+  return Math.min(lastMobile ? 2 : 4, maxAniso);
+}
+
+function getActiveMaterialUrls() {
+  const active = new Set();
+  if (Array.isArray(state.images) && state.images.length >= 2) {
+    if (state.images[0]) active.add(state.images[0]);
+    if (state.images[1]) active.add(state.images[1]);
+  }
+  if (state.card) active.add(state.card);
+  return active;
+}
+
+function evictTextureCacheIfNeeded() {
+  if (textureCache.size < MAX_CACHED_TEXTURES) return;
+  const active = getActiveMaterialUrls();
+  let oldestUrl = null;
+  let oldestTs = Infinity;
+  textureCache.forEach((entry, url) => {
+    if (!active.has(url) && entry.lastUsed < oldestTs) {
+      oldestTs = entry.lastUsed;
+      oldestUrl = url;
+    }
+  });
+  if (oldestUrl !== null) {
+    const victim = textureCache.get(oldestUrl);
+    textureCache.delete(oldestUrl);
+    if (victim && victim.texture && typeof victim.texture.dispose === 'function') {
+      try { victim.texture.dispose(); } catch (e) {}
+    }
+  }
+}
+
+function fitFaceAspect(faceMesh, boxW, boxH, imgW, imgH) {
+  if (!faceMesh) return;
+  if (!imgW || !imgH) {
+    faceMesh.scale.set(1, 1, 1);
+    return;
+  }
+  const imgAspect = imgW / imgH;
+  const boxAspect = boxW / boxH;
+  if (imgAspect > boxAspect) {
+    faceMesh.scale.set(1, Math.max(0.35, boxAspect / imgAspect), 1);
+  } else {
+    faceMesh.scale.set(Math.max(0.35, imgAspect / boxAspect), 1, 1);
+  }
+}
+
+function applyTextureToSlot(kind, slotIdx, url, entry) {
+  if (!tableProps) return;
+  if (kind === 'photo') {
+    const slot = tableProps.photos[slotIdx];
+    if (!slot) return;
+    if (slot.face.userData.materialUrl !== url) return;
+    if (entry && entry.status === 'ready' && entry.texture) {
+      entry.texture.anisotropy = getMaxAnisotropy();
+      slot.faceMat.map = entry.texture;
+      slot.faceMat.color.setHex(0xffffff);
+      slot.faceMat.needsUpdate = true;
+      fitFaceAspect(slot.face, PHOTO_BASE_W, PHOTO_BASE_H, entry.width, entry.height);
+    } else {
+      slot.faceMat.map = null;
+      slot.faceMat.color.setHex(PLACEHOLDER_GREY);
+      slot.faceMat.needsUpdate = true;
+      slot.face.scale.set(1, 1, 1);
+    }
+  } else if (kind === 'card') {
+    if (tableProps.cardFace.userData.materialUrl !== url) return;
+    if (entry && entry.status === 'ready' && entry.texture) {
+      entry.texture.anisotropy = getMaxAnisotropy();
+      tableProps.cardFaceMat.map = entry.texture;
+      tableProps.cardFaceMat.color.setHex(0xffffff);
+      tableProps.cardFaceMat.needsUpdate = true;
+      fitFaceAspect(tableProps.cardFace, CARD_BASE_W, CARD_BASE_H, entry.width, entry.height);
+    } else {
+      tableProps.cardFaceMat.map = null;
+      tableProps.cardFaceMat.color.setHex(PLACEHOLDER_GREY);
+      tableProps.cardFaceMat.needsUpdate = true;
+      tableProps.cardFace.scale.set(1, 1, 1);
+    }
+  }
+}
+
+function requestMaterialTexture(url, kind, slotIdx) {
+  if (!mounted || !url || typeof url !== 'string') return;
+  const now = performance.now();
+  const existing = textureCache.get(url);
+  if (existing) {
+    existing.lastUsed = now;
+    applyTextureToSlot(kind, slotIdx, url, existing);
+    return;
+  }
+
+  // Show neutral grey placeholder while texture loads
+  applyTextureToSlot(kind, slotIdx, url, null);
+  if (!textureLoader) {
+    textureLoader = new THREE.TextureLoader();
+  }
+  evictTextureCacheIfNeeded();
+
+  const entry = {
+    texture: null,
+    status: 'loading',
+    width: 0,
+    height: 0,
+    bytes: 0,
+    lastUsed: now
+  };
+  textureCache.set(url, entry);
+
+  const tex = textureLoader.load(
+    url,
+    loaded => {
+      if (!mounted || textureCache.get(url) !== entry) {
+        try { loaded.dispose(); } catch (e) {}
+        return;
+      }
+      loaded.colorSpace = THREE.SRGBColorSpace;
+      loaded.anisotropy = getMaxAnisotropy();
+      loaded.generateMipmaps = true;
+      loaded.minFilter = THREE.LinearMipmapLinearFilter;
+      loaded.magFilter = THREE.LinearFilter;
+      loaded.needsUpdate = true;
+      const img = loaded.image;
+      const w = img ? (img.naturalWidth || img.width || 0) : 0;
+      const h = img ? (img.naturalHeight || img.height || 0) : 0;
+      entry.texture = loaded;
+      entry.status = 'ready';
+      entry.width = w;
+      entry.height = h;
+      entry.bytes = w * h * 4;
+      entry.lastUsed = performance.now();
+      applyTextureToSlot('photo', 0, url, entry);
+      applyTextureToSlot('photo', 1, url, entry);
+      applyTextureToSlot('card', 0, url, entry);
+      if (mounted && !lightboxOpen) {
+        renderOnce(0);
+        syncLoop();
+      }
+    },
+    undefined,
+    () => {
+      if (textureCache.get(url) !== entry) return;
+      entry.status = 'error';
+      if (entry.texture) {
+        try { entry.texture.dispose(); } catch (e) {}
+        entry.texture = null;
+      }
+    }
+  );
+  entry.texture = tex;
+}
+
+function getPhotoAlt(index) {
+  if (typeof document !== 'undefined') {
+    const el = document.getElementById(index === 0 ? 'speakingPhoto1' : 'speakingPhoto2');
+    if (el && el.alt) return el.alt;
+  }
+  return 'Photograph ' + (index + 1);
+}
+
+function getCardAlt() {
+  if (typeof document !== 'undefined') {
+    const el = document.getElementById('speakingCardImg');
+    if (el && el.alt) return el.alt;
+  }
+  return 'Part 3 task card';
+}
+
+function openLightbox(url, alt) {
+  if (!url || typeof document === 'undefined') return;
+  const lb = document.getElementById('speaking3dLightbox');
+  const img = document.getElementById('speaking3dLightboxImg');
+  const closeBtn = document.getElementById('speaking3dLightboxClose');
+  const titleEl = document.getElementById('speaking3dLightboxTitle');
+  if (!lb || !img) return;
+  img.src = url;
+  img.alt = alt || '';
+  if (titleEl) titleEl.textContent = alt || '';
+  lb.hidden = false;
+  lightboxOpen = true;
+  stopLoop();
+  syncCanvasTouchAction(false);
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    try { closeBtn.focus({ preventScroll: true }); } catch (e) { closeBtn.focus(); }
+  }
+}
+
+function closeLightbox(restoreFocus) {
+  if (typeof document === 'undefined') {
+    lightboxOpen = false;
+    return;
+  }
+  const lb = document.getElementById('speaking3dLightbox');
+  const img = document.getElementById('speaking3dLightboxImg');
+  const wasOpen = lightboxOpen || Boolean(lb && !lb.hidden);
+  lightboxOpen = false;
+  if (lb) lb.hidden = true;
+  if (img) img.removeAttribute('src');
+  if (wasOpen && restoreFocus !== false && renderer && renderer.domElement) {
+    try {
+      renderer.domElement.focus({ preventScroll: true });
+    } catch (e) {
+      try { renderer.domElement.focus(); } catch (_e) {}
+    }
+  }
+  if (mounted) syncLoop();
+}
+
+function bindLightboxEvents() {
+  if (lightboxBound || typeof document === 'undefined') return;
+  const lb = document.getElementById('speaking3dLightbox');
+  const closeBtn = document.getElementById('speaking3dLightboxClose');
+  lbCloseListener = () => closeLightbox(true);
+  lbBackdropListener = ev => {
+    if (ev.target === lb) closeLightbox(true);
+  };
+  lbKeyListener = ev => {
+    if (lightboxOpen && ev.key === 'Escape') {
+      ev.preventDefault();
+      ev.stopPropagation();
+      closeLightbox(true);
+    }
+  };
+  if (closeBtn) closeBtn.addEventListener('click', lbCloseListener);
+  if (lb) lb.addEventListener('click', lbBackdropListener);
+  document.addEventListener('keydown', lbKeyListener, true);
+  lightboxBound = true;
+}
+
+function unbindLightboxEvents() {
+  if (!lightboxBound || typeof document === 'undefined') return;
+  const lb = document.getElementById('speaking3dLightbox');
+  const closeBtn = document.getElementById('speaking3dLightboxClose');
+  if (closeBtn && lbCloseListener) closeBtn.removeEventListener('click', lbCloseListener);
+  if (lb && lbBackdropListener) lb.removeEventListener('click', lbBackdropListener);
+  if (lbKeyListener) document.removeEventListener('keydown', lbKeyListener, true);
+  lbCloseListener = null;
+  lbBackdropListener = null;
+  lbKeyListener = null;
+  lightboxBound = false;
+}
+
+function syncThumbs() {
+  if (!mounted || !container || typeof document === 'undefined') return;
+  const mobile = isMobileViewport();
+  const items = [];
+  if (Array.isArray(state.images) && state.images.length >= 2) {
+    if (state.images[0]) items.push({ url: state.images[0], alt: getPhotoAlt(0) });
+    if (state.images[1]) items.push({ url: state.images[1], alt: getPhotoAlt(1) });
+  } else if (state.card) {
+    items.push({ url: state.card, alt: getCardAlt() });
+  }
+  const show = Boolean(mobile && items.length > 0);
+  const changed = show !== thumbsVisible;
+  thumbsVisible = show;
+
+  const examView = document.getElementById('speakingViewExam');
+  if (examView) examView.classList.toggle('has-thumbs', show);
+  container.classList.toggle('has-thumbs', show);
+
+  if (!thumbsEl) return;
+  if (!show) {
+    thumbsEl.hidden = true;
+    thumbsEl.innerHTML = '';
+  } else {
+    thumbsEl.innerHTML = '';
+    items.forEach(item => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'spk3d-thumb-btn';
+      btn.setAttribute('aria-label', item.alt || 'Enlarge');
+      const im = document.createElement('img');
+      im.src = item.url;
+      im.alt = item.alt || '';
+      btn.appendChild(im);
+      btn.addEventListener('click', ev => {
+        ev.stopPropagation();
+        openLightbox(item.url, item.alt);
+      });
+      thumbsEl.appendChild(btn);
+    });
+    thumbsEl.hidden = false;
+  }
+  if (changed) updateSize();
+}
+
+function applyMaterialLiftOffset() {
+  if (!tableProps) return;
+  const dist = matLiftProgress * REDUCED_LIFT_M;
+  for (let i = 0; i < tableProps.photos.length; i++) {
+    const p = tableProps.photos[i];
+    p.group.position.copy(p.basePos).addScaledVector(LIFT_DIR, dist);
+  }
+  tableProps.cardGroup.position.copy(tableProps.cardBasePos).addScaledVector(LIFT_DIR, dist);
+}
+
+function updateMaterialLift(nowMs) {
+  if (!matLiftActive) return true;
+  const now = typeof nowMs === 'number' ? nowMs : performance.now();
+  const u = clamp((now - matLiftStartMs) / REDUCED_LIFT_MS, 0, 1);
+  const ease = easeInOutCubic(u);
+  matLiftProgress = matLiftFrom + (matLiftTo - matLiftFrom) * ease;
+  applyMaterialLiftOffset();
+  if (u >= 1) {
+    matLiftProgress = matLiftTo;
+    matLiftActive = false;
+    applyMaterialLiftOffset();
+    return true;
+  }
+  return false;
+}
+
+function advanceDolly(nowMs) {
+  if (dollyPhase === 'idle') return true;
+  const now = typeof nowMs === 'number' ? nowMs : performance.now();
+  const elapsed = Math.max(0, now - dollyStartMs);
+  if (dollyPhase === 'waiting') {
+    if (elapsed < dollyWaitMs) return false;
+    dollyPhase = 'moving';
+    dollyStartMs = dollyStartMs + dollyWaitMs;
+  }
+  const moveElapsed = Math.max(0, now - dollyStartMs);
+  const u = dollyDurMs > 0 ? clamp(moveElapsed / dollyDurMs, 0, 1) : 1;
+  const ease = easeInOutCubic(u);
+  camPos.lerpVectors(dollyFromPos, dollyToPos, ease);
+  camTarget.lerpVectors(dollyFromTarget, dollyToTarget, ease);
+  camFov = dollyFromFov + (dollyToFov - dollyFromFov) * ease;
+  dollyWeight = dollyFromWeight + (dollyToWeight - dollyFromWeight) * ease;
+  if (dollyGoal === 'base' && !lookDragging) {
+    // Restore base yaw/pitch cleanly as the dolly returns
+    lookYaw = dollyReturnLookYaw * (1 - ease);
+    lookPitch = dollyReturnLookPitch * (1 - ease);
+  }
+  if (u >= 1) {
+    camPos.copy(dollyToPos);
+    camTarget.copy(dollyToTarget);
+    camFov = dollyToFov;
+    dollyWeight = dollyToWeight;
+    dollyPhase = 'idle';
+    if (dollyGoal === 'base' && !lookDragging) {
+      lookYaw = 0;
+      lookPitch = 0;
+      lookVelYaw = 0;
+      lookVelPitch = 0;
+      lookReturning = false;
+      lookIdleStartMs = 0;
+    }
+    return true;
+  }
+  return false;
+}
+
+function requestDolly(goal) {
+  const now = performance.now();
+  advanceDolly(now);
+  updateMaterialLift(now);
+
+  if (isReducedMotion()) {
+    // Reduced motion skips the camera dolly and lifts the material 0.10 m toward the camera
+    dollyGoal = 'base';
+    dollyPhase = 'idle';
+    camPos.copy(CAM_POSES.base.pos);
+    camTarget.copy(CAM_POSES.base.target);
+    camFov = CAM_POSES.base.fov;
+    dollyWeight = 0;
+    const targetLift = goal === 'base' ? 0 : 1;
+    if (Math.abs(matLiftProgress - targetLift) > 0.001 || (matLiftActive && matLiftTo !== targetLift)) {
+      matLiftFrom = matLiftProgress;
+      matLiftTo = targetLift;
+      matLiftStartMs = now;
+      matLiftActive = true;
+    }
+    if (mounted) {
+      renderOnce(0);
+      syncLoop();
+    }
+    return;
+  }
+
+  // Normal motion: keep material seated on the desk pad and run camera dolly
+  if (matLiftProgress !== 0 || matLiftActive) {
+    matLiftProgress = 0;
+    matLiftFrom = 0;
+    matLiftTo = 0;
+    matLiftActive = false;
+    applyMaterialLiftOffset();
+  }
+
+  const targetPose = CAM_POSES[goal] || CAM_POSES.base;
+  if (goal === dollyGoal) {
+    if (dollyPhase !== 'idle') return;
+    if (
+      camPos.distanceToSquared(targetPose.pos) < 1e-6 &&
+      camTarget.distanceToSquared(targetPose.target) < 1e-6 &&
+      Math.abs(camFov - targetPose.fov) < 0.01
+    ) {
+      return;
+    }
+  }
+
+  // Retarget seamlessly from the current interpolated pose (no queue, no snap)
+  dollyFromPos.copy(camPos);
+  dollyFromTarget.copy(camTarget);
+  dollyFromFov = camFov;
+  dollyFromWeight = dollyWeight;
+  dollyToPos.copy(targetPose.pos);
+  dollyToTarget.copy(targetPose.target);
+  dollyToFov = targetPose.fov;
+  dollyToWeight = goal === 'base' ? 0 : 1;
+  dollyGoal = goal;
+  dollyStartMs = now;
+
+  if (goal === 'base') {
+    dollyWaitMs = 0;
+    dollyDurMs = DOLLY_RETURN_MS;
+    dollyPhase = 'moving';
+    dollyReturnLookYaw = lookYaw;
+    dollyReturnLookPitch = lookPitch;
+  } else {
+    dollyWaitMs = DOLLY_WAIT_MS;
+    dollyDurMs = DOLLY_EASE_MS;
+    dollyPhase = 'waiting';
+  }
+
+  if (mounted && !rafId) syncLoop();
+}
+
+function resetCameraAndDolly() {
+  camPos.copy(CAM_POSES.base.pos);
+  camTarget.copy(CAM_POSES.base.target);
+  camFov = CAM_POSES.base.fov;
+  dollyGoal = 'base';
+  dollyPhase = 'idle';
+  dollyStartMs = 0;
+  dollyWaitMs = 0;
+  dollyDurMs = 0;
+  dollyFromPos.copy(CAM_POSES.base.pos);
+  dollyFromTarget.copy(CAM_POSES.base.target);
+  dollyFromFov = CAM_POSES.base.fov;
+  dollyFromWeight = 0;
+  dollyToPos.copy(CAM_POSES.base.pos);
+  dollyToTarget.copy(CAM_POSES.base.target);
+  dollyToFov = CAM_POSES.base.fov;
+  dollyToWeight = 0;
+  dollyWeight = 0;
+  dollyReturnLookYaw = 0;
+  dollyReturnLookPitch = 0;
+  matLiftProgress = 0;
+  matLiftFrom = 0;
+  matLiftTo = 0;
+  matLiftStartMs = 0;
+  matLiftActive = false;
+}
+
 function updateLook(dt, nowMs) {
   if (!camera) return true;
   const now = typeof nowMs === 'number' ? nowMs : performance.now();
+  const dollySettled = advanceDolly(now);
   const hasMaterial = Boolean(state.images || state.card);
   const displaced = Math.abs(lookYaw) > 0.0005 || Math.abs(lookPitch) > 0.0005;
 
-  if (!lookDragging) {
+  if (!lookDragging && dollyPhase === 'idle') {
     const moving = Math.abs(lookVelYaw) >= LOOK_INERTIA_STOP || Math.abs(lookVelPitch) >= LOOK_INERTIA_STOP;
     if (moving && dt > 0) {
       const frames = dt * 60;
@@ -864,12 +1519,23 @@ function updateLook(dt, nowMs) {
     }
   }
 
+  camera.position.copy(camPos);
+  if (Math.abs(camera.fov - camFov) > 0.001) {
+    camera.fov = camFov;
+    camera.updateProjectionMatrix();
+  }
+
+  // Dolly target wins during dolly while look-around offsets remain preserved in state
+  _vCamDir.subVectors(camTarget, camPos).normalize();
+  const baseYaw = Math.atan2(-_vCamDir.x, -_vCamDir.z);
+  const basePitch = Math.asin(clamp(_vCamDir.y, -1, 1));
+  const lookBlend = 1 - dollyWeight;
   camera.rotation.order = 'YXZ';
-  camera.rotation.set(CAM_BASE_PITCH + lookPitch, CAM_BASE_YAW + lookYaw, 0);
+  camera.rotation.set(basePitch + lookPitch * lookBlend, baseYaw + lookYaw * lookBlend, 0);
 
   const stillDisplaced = Math.abs(lookYaw) > 0.0005 || Math.abs(lookPitch) > 0.0005;
   const stillMoving = Math.abs(lookVelYaw) >= LOOK_INERTIA_STOP || Math.abs(lookVelPitch) >= LOOK_INERTIA_STOP;
-  return !lookDragging && !lookReturning && !stillMoving && (hasMaterial || !stillDisplaced);
+  return dollySettled && !lookDragging && !lookReturning && !stillMoving && (hasMaterial || !stillDisplaced);
 }
 
 function updateAvatars(dt, elapsedSec) {
@@ -1013,6 +1679,7 @@ function renderOnce(dtOverride) {
   const elapsed = (now - clockStart) * 0.001;
   let settled = true;
   let lookSettled = true;
+  const liftSettled = updateMaterialLift(now);
   if (totalDt <= 0) {
     settled = updateAvatars(0, elapsed);
     lookSettled = updateLook(0, now);
@@ -1031,7 +1698,7 @@ function renderOnce(dtOverride) {
   renderTimes[renderTimeIdx] = rMs;
   renderTimeIdx = (renderTimeIdx + 1) % renderTimes.length;
   if (renderTimeCount < renderTimes.length) renderTimeCount++;
-  return settled && lookSettled;
+  return settled && lookSettled && liftSettled;
 }
 
 function stopLoop() {
@@ -1078,7 +1745,8 @@ function updateSize() {
   if (!mounted || !container || !renderer || !camera) return;
   const rect = container.getBoundingClientRect();
   const w = Math.floor(rect.width);
-  const h = Math.floor(rect.height);
+  const fullH = Math.floor(rect.height);
+  const h = Math.max(0, fullH - (thumbsVisible ? 64 : 0));
   if (w < 2 || h < 2) {
     syncCanvasTouchAction(false);
     stopLoop();
@@ -1088,12 +1756,25 @@ function updateSize() {
   if (mobile !== lastMobile) {
     lastMobile = mobile;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
-    camera.fov = mobile ? FOV_MOBILE : FOV_DESKTOP;
     if (keyLight) {
       keyLight.castShadow = !mobile;
       renderer.shadowMap.enabled = !mobile;
     }
+    const maxAniso = getMaxAnisotropy();
+    textureCache.forEach(entry => {
+      if (entry.texture) {
+        entry.texture.anisotropy = maxAniso;
+        entry.texture.needsUpdate = true;
+      }
+    });
+    syncThumbs();
   }
+  const canvas = renderer.domElement;
+  if (canvas) {
+    canvas.style.bottom = thumbsVisible ? '64px' : '0';
+    canvas.style.height = thumbsVisible ? 'calc(100% - 64px)' : '100%';
+  }
+  camera.fov = camFov;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
@@ -1154,6 +1835,35 @@ function onPointerMove(ev) {
   updateLook(0);
 }
 
+function tryRaycastMaterialTap(ev) {
+  if (!mounted || !renderer || !renderer.domElement || !camera || !tableProps || lightboxOpen) return false;
+  const rect = renderer.domElement.getBoundingClientRect();
+  if (rect.width <= 1 || rect.height <= 1) return false;
+  _pointerNdc.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+  _pointerNdc.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+  camera.updateMatrixWorld(true);
+  _raycaster.setFromCamera(_pointerNdc, camera);
+  const targets = [];
+  if (tableProps.photoGroup && tableProps.photoGroup.visible) {
+    for (let i = 0; i < tableProps.photos.length; i++) {
+      targets.push(tableProps.photos[i].face, tableProps.photos[i].backing);
+    }
+  }
+  if (tableProps.cardGroup && tableProps.cardGroup.visible) {
+    targets.push(tableProps.cardFace, tableProps.cardBacking);
+  }
+  if (!targets.length) return false;
+  const hits = _raycaster.intersectObjects(targets, false);
+  if (hits.length > 0) {
+    const ud = hits[0].object && hits[0].object.userData;
+    if (ud && ud.materialUrl) {
+      openLightbox(ud.materialUrl, ud.materialAlt || '');
+      return true;
+    }
+  }
+  return false;
+}
+
 function finishPointerDrag(ev) {
   if (ev.pointerId !== lookPointerId) return;
   if (renderer && renderer.domElement) {
@@ -1165,12 +1875,16 @@ function finishPointerDrag(ev) {
     lookVelYaw = 0;
     lookVelPitch = 0;
   }
+  const wasTap = ev.type === 'pointerup' && lookDragDist < LOOK_DRAG_TAP_PX;
   if (lookDragDist > LOOK_DRAG_TAP_PX) {
     suppressClickUntil = performance.now() + 300;
   }
   lookDragging = false;
   lookPointerId = null;
   lookIdleStartMs = performance.now();
+  if (wasTap && tryRaycastMaterialTap(ev)) {
+    return;
+  }
   if (!rafId) syncLoop();
 }
 
@@ -1248,8 +1962,32 @@ function disposeScene(root) {
   });
 }
 
+function disposeTextureCache() {
+  textureCache.forEach(entry => {
+    if (entry && entry.texture && typeof entry.texture.dispose === 'function') {
+      try { entry.texture.dispose(); } catch (e) {}
+    }
+  });
+  textureCache.clear();
+  textureLoader = null;
+}
+
 function unmount() {
   stopLoop();
+  closeLightbox(false);
+  unbindLightboxEvents();
+  if (typeof document !== 'undefined') {
+    const examView = document.getElementById('speakingViewExam');
+    if (examView) examView.classList.remove('has-thumbs');
+  }
+  if (container) {
+    container.classList.remove('has-thumbs');
+  }
+  if (thumbsEl && thumbsEl.parentNode) {
+    thumbsEl.parentNode.removeChild(thumbsEl);
+  }
+  thumbsEl = null;
+  thumbsVisible = false;
   if (resizeObserver) {
     try { resizeObserver.disconnect(); } catch (e) {}
     resizeObserver = null;
@@ -1301,6 +2039,8 @@ function unmount() {
     disposeScene(scene);
     scene = null;
   }
+  disposeTextureCache();
+  tableProps = null;
   if (renderer) {
     try { renderer.dispose(); } catch (e) {}
     renderer = null;
@@ -1315,6 +2055,7 @@ function unmount() {
   speakingData = null;
   silentSec = 0;
   resetLookState();
+  resetCameraAndDolly();
   renderTimeIdx = 0;
   renderTimeCount = 0;
   container = null;
@@ -1338,7 +2079,10 @@ function mount(containerEl) {
   lastMobile = mobile;
   contextLost = false;
   containerVisible = true;
+  lightboxOpen = false;
+  thumbsVisible = false;
   resetLookState();
+  resetCameraAndDolly();
   renderTimeIdx = 0;
   renderTimeCount = 0;
 
@@ -1370,6 +2114,7 @@ function mount(containerEl) {
   canvas.style.height = '100%';
   canvas.style.display = 'block';
   canvas.setAttribute('aria-hidden', 'true');
+  canvas.tabIndex = -1;
 
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
@@ -1383,7 +2128,7 @@ function mount(containerEl) {
   const initW = Math.max(2, Math.floor(rect.width || containerEl.clientWidth || 320));
   const initH = Math.max(2, Math.floor(rect.height || containerEl.clientHeight || 240));
 
-  camera = new THREE.PerspectiveCamera(mobile ? FOV_MOBILE : FOV_DESKTOP, initW / initH, CAM_NEAR, 25);
+  camera = new THREE.PerspectiveCamera(FOV_BASE, initW / initH, CAM_NEAR, 25);
   camera.position.copy(CAM_BASE_POS);
   camera.rotation.order = 'YXZ';
   camera.rotation.set(CAM_BASE_PITCH, CAM_BASE_YAW, 0);
@@ -1398,6 +2143,13 @@ function mount(containerEl) {
 
   containerEl.innerHTML = '';
   containerEl.appendChild(canvas);
+  if (typeof document !== 'undefined') {
+    thumbsEl = document.createElement('div');
+    thumbsEl.className = 'spk3d-thumbs';
+    thumbsEl.hidden = true;
+    containerEl.appendChild(thumbsEl);
+  }
+  bindLightboxEvents();
   renderer.setSize(initW, initH, false);
 
   if (typeof ResizeObserver === 'function') {
@@ -1443,6 +2195,9 @@ function mount(containerEl) {
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('resize', onWindowResize);
 
+  // Sync any pre-existing table materials if set prior to mount
+  syncTableMaterialsFromState();
+
   // Render first frame synchronously so canvas is populated immediately
   renderOnce(0);
   syncLoop();
@@ -1484,36 +2239,112 @@ function setSpeaking(role, analyser) {
   if (mounted && !rafId) syncLoop();
 }
 
+function syncTableMaterialsFromState() {
+  if (!mounted || !tableProps) return;
+  const hasPhotos = Array.isArray(state.images) && state.images.length >= 2 && state.images[0] && state.images[1];
+  const hasCard = Boolean(state.card);
+
+  if (hasPhotos) {
+    tableProps.cardGroup.visible = false;
+    tableProps.cardFace.userData.materialUrl = '';
+    tableProps.cardBacking.userData.materialUrl = '';
+    tableProps.photoGroup.visible = true;
+    for (let i = 0; i < 2; i++) {
+      const url = state.images[i];
+      const alt = getPhotoAlt(i);
+      const slot = tableProps.photos[i];
+      slot.face.userData.materialUrl = url;
+      slot.face.userData.materialAlt = alt;
+      slot.backing.userData.materialUrl = url;
+      slot.backing.userData.materialAlt = alt;
+      requestMaterialTexture(url, 'photo', i);
+    }
+    syncThumbs();
+    requestDolly('photos');
+  } else if (hasCard) {
+    tableProps.photoGroup.visible = false;
+    for (let i = 0; i < 2; i++) {
+      tableProps.photos[i].face.userData.materialUrl = '';
+      tableProps.photos[i].backing.userData.materialUrl = '';
+    }
+    tableProps.cardGroup.visible = true;
+    const alt = getCardAlt();
+    tableProps.cardFace.userData.materialUrl = state.card;
+    tableProps.cardFace.userData.materialAlt = alt;
+    tableProps.cardBacking.userData.materialUrl = state.card;
+    tableProps.cardBacking.userData.materialAlt = alt;
+    requestMaterialTexture(state.card, 'card', 0);
+    syncThumbs();
+    requestDolly('card');
+  } else {
+    tableProps.photoGroup.visible = false;
+    tableProps.cardGroup.visible = false;
+    for (let i = 0; i < 2; i++) {
+      tableProps.photos[i].face.userData.materialUrl = '';
+      tableProps.photos[i].backing.userData.materialUrl = '';
+    }
+    tableProps.cardFace.userData.materialUrl = '';
+    tableProps.cardBacking.userData.materialUrl = '';
+    closeLightbox(false);
+    syncThumbs();
+    requestDolly('base');
+  }
+}
+
 function setPart(partNumber) {
   const n = Number(partNumber);
   if (!Number.isFinite(n)) return;
   const clamped = Math.max(0, Math.min(4, Math.round(n)));
+  const prev = state.part;
   state.part = clamped;
+  if (!mounted || clamped === prev) return;
+  // Return dolly on part change away from an active material part
+  if ((prev === 2 && clamped !== 2 && state.images) || (prev === 3 && clamped !== 3 && state.card)) {
+    requestDolly('base');
+  }
 }
 
 function showImages(urls) {
   if (urls === null || urls === undefined) {
+    const hadImages = Boolean(state.images);
     state.images = null;
+    if (mounted && hadImages && !state.card) {
+      syncTableMaterialsFromState();
+    } else if (mounted && tableProps && !state.images) {
+      tableProps.photoGroup.visible = false;
+    }
     return;
   }
-  if (Array.isArray(urls) && urls.length === 2 && typeof urls[0] === 'string' && typeof urls[1] === 'string') {
+  if (Array.isArray(urls) && urls.length === 2 && typeof urls[0] === 'string' && typeof urls[1] === 'string' && urls[0] && urls[1]) {
     state.images = [urls[0], urls[1]];
+    state.card = null;
+    if (mounted) syncTableMaterialsFromState();
   }
 }
 
 function showCard(url) {
   if (url === null || url === undefined) {
+    const hadCard = Boolean(state.card);
     state.card = null;
+    if (mounted && hadCard && !state.images) {
+      syncTableMaterialsFromState();
+    } else if (mounted && tableProps && !state.card) {
+      tableProps.cardGroup.visible = false;
+    }
     return;
   }
   if (typeof url === 'string' && url.length > 0) {
     state.card = url;
+    state.images = null;
+    if (mounted) syncTableMaterialsFromState();
   }
 }
 
 function setReducedMotion(bool) {
   reducedMotionOverride = Boolean(bool);
   if (mounted) {
+    const activeGoal = state.images ? 'photos' : (state.card ? 'card' : 'base');
+    requestDolly(activeGoal);
     syncLoop();
   }
 }
@@ -1616,6 +2447,123 @@ function benchRender(frames) {
   };
 }
 
+function getDebugCamera() {
+  if (!mounted || !camera) return null;
+  return {
+    x: Math.round(camera.position.x * 10000) / 10000,
+    y: Math.round(camera.position.y * 10000) / 10000,
+    z: Math.round(camera.position.z * 10000) / 10000,
+    tx: Math.round(camTarget.x * 10000) / 10000,
+    ty: Math.round(camTarget.y * 10000) / 10000,
+    tz: Math.round(camTarget.z * 10000) / 10000,
+    fov: Math.round(camera.fov * 100) / 100,
+    moving: Boolean(dollyPhase !== 'idle')
+  };
+}
+
+function getDebugProps() {
+  if (!mounted || !tableProps) return null;
+  const photos = tableProps.photoGroup && tableProps.photoGroup.visible ? 2 : 0;
+  const card = tableProps.cardGroup && tableProps.cardGroup.visible ? 1 : 0;
+  let texturesReady = true;
+  let activeBytes = 0;
+  const activeUrls = [];
+  if (photos === 2 && Array.isArray(state.images)) {
+    activeUrls.push(state.images[0], state.images[1]);
+  } else if (card === 1 && state.card) {
+    activeUrls.push(state.card);
+  }
+  for (let i = 0; i < activeUrls.length; i++) {
+    const entry = textureCache.get(activeUrls[i]);
+    if (!entry || entry.status !== 'ready') {
+      texturesReady = false;
+    } else {
+      activeBytes += entry.bytes;
+    }
+  }
+  let totalBytes = 0;
+  const textures = [];
+  textureCache.forEach((entry, url) => {
+    totalBytes += entry.bytes;
+    textures.push({
+      url: url.length > 96 ? url.slice(0, 96) : url,
+      w: entry.width,
+      h: entry.height,
+      bytes: entry.bytes,
+      status: entry.status
+    });
+  });
+  return {
+    photos,
+    card,
+    texturesReady,
+    textureCount: textureCache.size,
+    textureBytes: totalBytes,
+    activeTextureBytes: activeBytes,
+    liftM: Math.round(matLiftProgress * REDUCED_LIFT_M * 10000) / 10000,
+    textures
+  };
+}
+
+function projectObjectToViewportRect(obj) {
+  if (!obj || !camera || !renderer || !renderer.domElement) return null;
+  const rect = renderer.domElement.getBoundingClientRect();
+  if (rect.width <= 1 || rect.height <= 1) return null;
+  scene.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  _box3.setFromObject(obj);
+  if (_box3.isEmpty()) return null;
+  const min = _box3.min;
+  const max = _box3.max;
+  let left = Infinity;
+  let right = -Infinity;
+  let top = Infinity;
+  let bottom = -Infinity;
+  for (let ix = 0; ix < 2; ix++) {
+    for (let iy = 0; iy < 2; iy++) {
+      for (let iz = 0; iz < 2; iz++) {
+        _vProj.set(ix ? max.x : min.x, iy ? max.y : min.y, iz ? max.z : min.z).project(camera);
+        const sx = rect.left + (_vProj.x * 0.5 + 0.5) * rect.width;
+        const sy = rect.top + (-_vProj.y * 0.5 + 0.5) * rect.height;
+        if (sx < left) left = sx;
+        if (sx > right) right = sx;
+        if (sy < top) top = sy;
+        if (sy > bottom) bottom = sy;
+      }
+    }
+  }
+  return {
+    left: Math.round(left * 10) / 10,
+    top: Math.round(top * 10) / 10,
+    right: Math.round(right * 10) / 10,
+    bottom: Math.round(bottom * 10) / 10,
+    width: Math.round((right - left) * 10) / 10,
+    height: Math.round((bottom - top) * 10) / 10
+  };
+}
+
+function getDebugMaterialBounds() {
+  if (!mounted || !tableProps) return null;
+  const photos = [];
+  if (tableProps.photoGroup && tableProps.photoGroup.visible) {
+    photos.push(
+      projectObjectToViewportRect(tableProps.photos[0].backing),
+      projectObjectToViewportRect(tableProps.photos[1].backing)
+    );
+  }
+  const card = tableProps.cardGroup && tableProps.cardGroup.visible
+    ? projectObjectToViewportRect(tableProps.cardBacking)
+    : null;
+  return { photos, card };
+}
+
+function getDebugLightbox() {
+  return {
+    open: Boolean(lightboxOpen),
+    paused: !rafId
+  };
+}
+
 const SPK3D = {
   supported,
   mount,
@@ -1632,7 +2580,11 @@ const SPK3D = {
     seats: getDebugSeats,
     look: getDebugLook,
     stats: getDebugStats,
-    bench: benchRender
+    bench: benchRender,
+    camera: getDebugCamera,
+    props: getDebugProps,
+    materialBounds: getDebugMaterialBounds,
+    lightbox: getDebugLightbox
   },
   version: '1'
 };

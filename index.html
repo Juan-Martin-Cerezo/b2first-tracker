@@ -1681,12 +1681,66 @@ body.speaking-open{overflow:hidden}
 #speakingViewExam.is-3d .spk3-desk,
 #speakingViewExam.is-3d .spk3-desk.is-3d{
   position:relative;width:100%;height:100%;max-height:none;min-height:0;
-  aspect-ratio:auto;order:unset;grid-column:unset;
+  aspect-ratio:auto;order:unset;grid-column:unset;overflow:hidden;
 }
 #speakingViewExam.is-3d .spk3-stage{
   position:absolute;inset:0;border-radius:0;border:0;z-index:1;
 }
 #speakingViewExam.is-3d .spk3-stage canvas{z-index:0}
+#speakingViewExam.is-3d.has-thumbs .spk3-exam-body{
+  height:min(calc(100dvh - var(--spk3d-head-h)),calc(75vw + 64px));
+}
+#speakingViewExam.is-3d.has-thumbs .spk3-panel{
+  bottom:64px;height:calc(100% - 64px);
+}
+#speakingViewExam.is-3d .spk3d-thumbs{
+  position:absolute;left:0;right:0;bottom:0;height:64px;z-index:9;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:6px 12px;box-sizing:border-box;
+  background:rgba(12,16,22,.88);border-top:1px solid rgba(255,255,255,.16);
+}
+#speakingViewExam.is-3d .spk3d-thumbs[hidden]{display:none}
+#speakingViewExam.is-3d .spk3d-thumb-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:64px;height:52px;min-height:44px;padding:3px;box-sizing:border-box;
+  border-radius:8px;border:1px solid rgba(255,255,255,.32);
+  background:#fff;cursor:pointer;overflow:hidden;flex:0 1 auto;
+}
+#speakingViewExam.is-3d .spk3d-thumb-btn:focus-visible{
+  outline:3px solid #93c5fd;outline-offset:2px;
+}
+#speakingViewExam.is-3d .spk3d-thumb-btn img{
+  display:block;max-height:44px;max-width:120px;width:auto;height:100%;object-fit:contain;
+}
+.spk3d-lightbox{
+  position:fixed;inset:0;z-index:220;
+  display:flex;align-items:center;justify-content:center;
+  padding:16px;box-sizing:border-box;
+  background:rgba(0,0,0,.72);
+}
+.spk3d-lightbox[hidden]{display:none}
+.spk3d-lightbox-dialog{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  max-width:min(94vw,1100px);max-height:88dvh;
+}
+.spk3d-lightbox-img{
+  display:block;max-width:min(94vw,1100px);max-height:88dvh;width:auto;height:auto;
+  object-fit:contain;background:#fff;padding:6px;box-sizing:border-box;
+  border-radius:10px;box-shadow:0 18px 48px rgba(0,0,0,.45);
+}
+.spk3d-lightbox-close{
+  position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));
+  z-index:222;min-width:44px;min-height:44px;height:44px;padding:0 16px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.36);background:rgba(12,16,22,.88);color:#f6f8fb;
+  font-size:14px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+}
+.spk3d-lightbox-close:hover{background:rgba(30,41,59,.96);border-color:#93c5fd}
+.spk3d-lightbox-close:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.spk3d-sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;
+}
 #speakingViewExam.is-3d .spk3-panel{
   position:absolute;inset:0;z-index:5;pointer-events:none;display:block;
   width:100%;height:100%;max-height:none;overflow:visible;
@@ -5007,7 +5061,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
         <aside class="spk3-panel" id="speakingPanel">
           <div class="spk3-panel-timer-row">
             <span class="spk3-panel-part" id="speakingPanelPart">Introduction</span>
-            <span class="spk3-hud-hint" id="speaking3dHint" data-i18n="spv3_tap_enlarge" hidden>Tap the photos to enlarge</span>
+            <span class="spk3-hud-hint" id="speaking3dHint" data-i18n="spv3_3d_enlarge" aria-live="polite" hidden>Tap to enlarge</span>
             <span class="spk3-panel-timer" id="speakingPanelTimer" aria-hidden="true">--:--</span>
           </div>
 
@@ -5050,6 +5104,14 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
         </aside>
       </div>
     </section>
+
+    <div class="spk3d-lightbox" id="speaking3dLightbox" role="dialog" aria-modal="true" aria-labelledby="speaking3dLightboxTitle" hidden>
+      <div class="spk3d-lightbox-dialog">
+        <button type="button" class="spk3d-lightbox-close" id="speaking3dLightboxClose" data-i18n="spv3_3d_close">Close</button>
+        <span class="spk3d-sr-only" id="speaking3dLightboxTitle"></span>
+        <img class="spk3d-lightbox-img" id="speaking3dLightboxImg" alt="">
+      </div>
+    </div>
 
     <!-- View 4: Report (3 Cambridge bands) -->
     <section class="spk3-view" id="speakingViewReport" data-spk-view="report">
@@ -7841,7 +7903,8 @@ const I18N={
     spv3_skip_turn:'Skip turn',
     spv3_3d_on:'3D room',
     spv3_3d_off:'Classic view',
-    spv3_tap_enlarge:'Tap the photos to enlarge',
+    spv3_3d_close:'Close',
+    spv3_3d_enlarge:'Tap to enlarge',
     l_own_opt:'My own material',
     l_own_heading:'My own listening material',
     l_own_empty:'No saved material yet. Add audio, written questions or a transcript below.',
@@ -8946,7 +9009,8 @@ const I18N={
     spv3_skip_turn:'Saltar turno',
     spv3_3d_on:'Sala 3D',
     spv3_3d_off:'Vista clásica',
-    spv3_tap_enlarge:'Tocá las fotos para ampliar',
+    spv3_3d_close:'Cerrar',
+    spv3_3d_enlarge:'Tocá para ampliar',
     l_own_opt:'Mi material',
     l_own_heading:'Mi material de Listening',
     l_own_empty:'Todavía no guardaste material. Subí un audio o pegá la tarea o transcripción abajo.',
@@ -12017,13 +12081,11 @@ const SPEAKING=(function(){
     btn.setAttribute('aria-pressed',state.spk3dActive?'true':'false');
     btn.textContent=t(state.spk3dActive?'spv3_3d_off':'spv3_3d_on');
   }
-  function hide2dDesk(){
-    ['speakingPhotos','speakingCardWrap','speakingConvStage'].forEach(id=>{const el=$(id);if(el)el.hidden=true;});
-  }
   function sync3dHint(){
     const hint=$('speaking3dHint');
     if(!hint)return;
-    const hasMats=Boolean(state.ui&&((Array.isArray(state.ui.images)&&state.ui.images.length>=2)||state.ui.card));
+    const pw=$('speakingPhotos'),cw=$('speakingCardWrap');
+    const hasMats=Boolean((state.ui&&((Array.isArray(state.ui.images)&&state.ui.images.length>=2)||state.ui.card))||(pw&&!pw.hidden)||(cw&&!cw.hidden));
     hint.hidden=!(state.spk3dActive&&hasMats);
   }
   function sync3dTabOrder(active){
@@ -12041,7 +12103,7 @@ const SPEAKING=(function(){
     state.spk3dActive=false;
     if(st)st.hidden=true;
     if(dk)dk.classList.remove('is-3d');
-    if(vw)vw.classList.remove('is-3d');
+    if(vw){vw.classList.remove('is-3d');vw.classList.remove('has-thumbs');}
     sync3dTabOrder(false);
     sync3dHint();
     sync3dToggleBtn();
@@ -12057,16 +12119,16 @@ const SPEAKING=(function(){
     if(typeof api.supported!=='function'||!api.supported()){if(state.spk3dActive)teardown3d(true);warn3dUnavailable();return;}
     if(!want3d()){
       if(state.spk3dActive||(api.isMounted&&api.isMounted()))teardown3d(true);
-      else{if(st)st.hidden=true;if(dk)dk.classList.remove('is-3d');if(vw)vw.classList.remove('is-3d');sync3dTabOrder(false);sync3dHint();sync3dToggleBtn();}
+      else{if(st)st.hidden=true;if(dk)dk.classList.remove('is-3d');if(vw){vw.classList.remove('is-3d');vw.classList.remove('has-thumbs');}sync3dTabOrder(false);sync3dHint();sync3dToggleBtn();}
       return;
     }
     if(!st||!dk)return;
-    hide2dDesk();dk.classList.add('is-3d');if(vw)vw.classList.add('is-3d');st.hidden=false;
+    dk.classList.add('is-3d');if(vw)vw.classList.add('is-3d');st.hidden=false;
     let ok=false;const t0=performance.now();
     try{ok=api.mount(st)!==false&&!!api.isMounted();}catch(e){ok=false;}
     if(!ok||performance.now()-t0>2000){
       try{api.unmount();}catch(e){}
-      state.spk3dActive=false;st.hidden=true;dk.classList.remove('is-3d');if(vw)vw.classList.remove('is-3d');
+      state.spk3dActive=false;st.hidden=true;dk.classList.remove('is-3d');if(vw){vw.classList.remove('is-3d');vw.classList.remove('has-thumbs');}
       sync3dTabOrder(false);sync3dHint();
       warn3dUnavailable();applyDeskUi(state.ui);return;
     }
@@ -12079,8 +12141,9 @@ const SPEAKING=(function(){
       const imgs=(state.ui&&Array.isArray(state.ui.images)&&state.ui.images.length>=2)?state.ui.images:null;
       const card=(state.ui&&state.ui.card)?state.ui.card:null;
       const p1=$('speakingPhoto1'),p2=$('speakingPhoto2'),ci=$('speakingCardImg');
-      api.showImages(imgs?[p1?p1.src:imgs[0],p2?p2.src:imgs[1]]:null);
-      api.showCard(card?(ci?ci.src:card):null);
+      if(imgs){api.showImages([p1&&p1.src?p1.src:imgs[0],p2&&p2.src?p2.src:imgs[1]]);api.showCard(null);}
+      else if(card){api.showCard(ci&&ci.src?ci.src:card);api.showImages(null);}
+      else{api.showImages(null);api.showCard(null);}
     }catch(e){}
     sync3dToggleBtn();
   }
@@ -12399,16 +12462,17 @@ const SPEAKING=(function(){
     if(!photosWrap||!cardWrap)return;
     const imgs=(ui&&Array.isArray(ui.images))?ui.images:[];
     const card=(ui&&ui.card)?ui.card:null;
+    let u1='',u2='',uc='';
     if(imgs.length>=2){
-      const u1=await resolveImageUrl(imgs[0]);
-      const u2=await resolveImageUrl(imgs[1]);
+      u1=await resolveImageUrl(imgs[0]);
+      u2=await resolveImageUrl(imgs[1]);
       if(p1){p1.src=u1;p1.alt=t('spv3_photo_alt',{n:'1'});}
       if(p2){p2.src=u2;p2.alt=t('spv3_photo_alt',{n:'2'});}
       photosWrap.hidden=false;
       cardWrap.hidden=true;
       if(convStage)convStage.hidden=true;
     }else if(card){
-      const uc=await resolveImageUrl(card);
+      uc=await resolveImageUrl(card);
       if(cardImg){cardImg.src=uc;cardImg.alt=t('spv3_card_alt');}
       cardWrap.hidden=false;
       photosWrap.hidden=true;
@@ -12421,13 +12485,14 @@ const SPEAKING=(function(){
       if(p2)p2.removeAttribute('src');
       if(cardImg)cardImg.removeAttribute('src');
     }
-    if(state.spk3dActive&&window.SPK3D&&window.SPK3D.isMounted()){
-      hide2dDesk();
-      try{
-        window.SPK3D.showImages(imgs.length>=2?[p1?p1.src:'',p2?p2.src:'']:null);
-        window.SPK3D.showCard(card?(cardImg?cardImg.src:''):null);
-      }catch(e){}
-    }
+    try{
+      if(window.SPK3D&&SPK3D.isMounted()){
+        if(imgs.length>=2){SPK3D.showImages([u1,u2]);SPK3D.showCard(null);}
+        else if(card){SPK3D.showCard(uc);SPK3D.showImages(null);}
+        else{SPK3D.showImages(null);SPK3D.showCard(null);}
+        SPK3D.setPart(state.currentPart);
+      }
+    }catch(e){}
     sync3dHint();
     syncStageVisual();
   }

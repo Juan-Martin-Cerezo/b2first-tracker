@@ -61,6 +61,8 @@ def enter_part(pg, part_num):
     pg.evaluate("openSpeakingExam()")
     pg.wait_for_selector("#speakingOverlay.is-open")
     pg.wait_for_selector("#speakingCatalogGrid .spk3-exam-card")
+    if part_num == 3:
+        pg.evaluate("() => { SPEAKING._prepStepMs = 35; }")
     pg.click(f'.spk3-exam-card[data-test-id="01"] .spk3-chip[data-part="{part_num}"]')
     pg.wait_for_selector("#speakingViewExam.is-active")
     wait_for_mic_ready(pg)
@@ -248,6 +250,116 @@ def assert_seats_and_figures(pg):
 
 def measure_render_120_frames(pg):
     return pg.evaluate("() => window.SPK3D.__debug.bench(120)")
+
+
+def check_material_hud_clearance(pg):
+    """Assert visible 3D card/photo projected boxes never intersect mic, timer or role pills."""
+    return pg.evaluate(
+        """() => {
+            const bounds = window.SPK3D.__debug.materialBounds();
+            const rects = [];
+            if (bounds && Array.isArray(bounds.photos)) {
+                bounds.photos.forEach((b, i) => { if (b) rects.push({ name: 'photo' + (i + 1), rect: b }); });
+            }
+            if (bounds && bounds.card) {
+                rects.push({ name: 'card', rect: bounds.card });
+            }
+            const hudEls = [
+                { id: 'speakingMicBtn', el: document.getElementById('speakingMicBtn') },
+                { id: 'speakingTimer', el: document.getElementById('speakingTimer') },
+                { id: 'speakingRoles', el: document.getElementById('speakingRoles') },
+            ];
+            document.querySelectorAll('#speakingRoles .spk3-role').forEach((el, idx) => {
+                hudEls.push({ id: 'role_' + idx, el });
+            });
+            const intersects = (a, b) =>
+                a.width > 1 && a.height > 1 && b.width > 1 && b.height > 1 &&
+                a.left < b.right && a.right > b.left &&
+                a.top < b.bottom && a.bottom > b.top;
+            const overlaps = [];
+            for (const m of rects) {
+                for (const h of hudEls) {
+                    if (!h.el || h.el.hidden) continue;
+                    const cs = getComputedStyle(h.el);
+                    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+                    const hr = h.el.getBoundingClientRect();
+                    if (intersects(m.rect, hr)) {
+                        overlaps.push({
+                            material: m.name,
+                            materialRect: m.rect,
+                            hud: h.id,
+                            hudRect: {
+                                left: Math.round(hr.left),
+                                top: Math.round(hr.top),
+                                right: Math.round(hr.right),
+                                bottom: Math.round(hr.bottom),
+                            },
+                        });
+                    }
+                }
+            }
+            return { materials: rects, overlaps };
+        }"""
+    )
+
+
+def probe_material_color_buckets(pg):
+    """Sample rendered pixels inside the projected 3D photo card boxes and count distinct colour buckets."""
+    return pg.evaluate(
+        """() => new Promise((resolve, reject) => {
+            const c = document.querySelector('#speaking3dStage canvas');
+            const bounds = window.SPK3D.__debug.materialBounds();
+            if (!c || !bounds || !bounds.photos || bounds.photos.length < 2) {
+                return resolve({ ok: false, reason: 'no_photos' });
+            }
+            const cr = c.getBoundingClientRect();
+            const url = c.toDataURL('image/png');
+            const img = new Image();
+            img.onload = () => {
+                const off = document.createElement('canvas');
+                off.width = img.width;
+                off.height = img.height;
+                const ctx = off.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const sx = img.width / cr.width;
+                const sy = img.height / cr.height;
+                const allBuckets = new Set();
+                const perCard = [];
+                let chromaticPixels = 0;
+                let totalPixels = 0;
+                for (const b of bounds.photos) {
+                    const padX = b.width * 0.12;
+                    const padY = b.height * 0.12;
+                    const x0 = Math.max(0, Math.floor((b.left + padX - cr.left) * sx));
+                    const y0 = Math.max(0, Math.floor((b.top + padY - cr.top) * sy));
+                    const x1 = Math.min(off.width, Math.ceil((b.right - padX - cr.left) * sx));
+                    const y1 = Math.min(off.height, Math.ceil((b.bottom - padY - cr.top) * sy));
+                    const w = Math.max(1, x1 - x0);
+                    const h = Math.max(1, y1 - y0);
+                    const data = ctx.getImageData(x0, y0, w, h).data;
+                    const cardBuckets = new Set();
+                    for (let i = 0; i < data.length; i += 16) {
+                        const r = data[i], g = data[i + 1], bl = data[i + 2];
+                        const key = ((r >> 5) << 6) | ((g >> 5) << 3) | (bl >> 5);
+                        cardBuckets.add(key);
+                        allBuckets.add(key);
+                        if (Math.max(r, g, bl) - Math.min(r, g, bl) >= 16) chromaticPixels++;
+                        totalPixels++;
+                    }
+                    perCard.push({ buckets: cardBuckets.size, w, h });
+                }
+                resolve({
+                    ok: true,
+                    totalBuckets: allBuckets.size,
+                    chromaticPixels,
+                    totalPixels,
+                    perCard,
+                });
+            };
+            img.onerror = () => reject(new Error('decode_failed'));
+            img.src = url;
+        })"""
+    )
 
 
 def main():
@@ -713,6 +825,349 @@ def main():
         assert z_errors == [], f"?spk3d=0 page errors: {z_errors}"
         results["force_off"] = z_state
         zctx.close()
+
+        # =====================================================================
+        # 8. SPK3D-4: Part 2 photos, dolly, colour buckets, HUD clearance, lightbox & perf (1280x800)
+        # =====================================================================
+        p2ctx = browser.new_context(viewport={"width": 1280, "height": 800})
+        p2pg = p2ctx.new_page()
+        p2_errors = []
+        p2pg.on("pageerror", lambda e: p2_errors.append(str(e)))
+        p2pg.add_init_script(
+            "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(user))
+        )
+        p2pg.goto(url + "app?spk3d=1", wait_until="networkidle")
+        p2pg.wait_for_timeout(200)
+        p2pg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding(); setLang('en');")
+        enter_part(p2pg, 2)
+
+        p2pg.wait_for_function(
+            """() => {
+                const pr = window.SPK3D.__debug.props();
+                return pr && pr.photos === 2 && pr.card === 0 && pr.texturesReady === true;
+            }""",
+            timeout=6000,
+        )
+        p2pg.wait_for_function(
+            """() => {
+                const c = window.SPK3D.__debug.camera();
+                return c && c.moving === false && Math.abs(c.fov - 46) <= 1.0;
+            }""",
+            timeout=2500,
+        )
+        p2_props = p2pg.evaluate("() => window.SPK3D.__debug.props()")
+        p2_cam = p2pg.evaluate("() => window.SPK3D.__debug.camera()")
+        p2_dom_visible = p2pg.evaluate(
+            """() => ({
+                photosHidden: document.getElementById('speakingPhotos').hidden,
+                hintHidden: document.getElementById('speaking3dHint').hidden,
+                hintAriaLive: document.getElementById('speaking3dHint').getAttribute('aria-live'),
+                hintText: document.getElementById('speaking3dHint').textContent.trim(),
+            })"""
+        )
+        assert p2_props["photos"] == 2 and p2_props["card"] == 0 and p2_props["texturesReady"], p2_props
+        assert p2_props["textureCount"] <= 4, p2_props
+        assert abs(p2_cam["fov"] - 46.0) <= 1.0 and p2_cam["moving"] is False, p2_cam
+        assert not p2_dom_visible["photosHidden"], f"2D photos DOM must stay unhidden under stage: {p2_dom_visible}"
+        assert not p2_dom_visible["hintHidden"] and p2_dom_visible["hintAriaLive"] == "polite", p2_dom_visible
+
+        p2_hud = check_material_hud_clearance(p2pg)
+        assert p2_hud["overlaps"] == [], f"Part 2 HUD overlap at 1280x800: {p2_hud}"
+
+        p2_colors = probe_material_color_buckets(p2pg)
+        assert p2_colors["ok"] and p2_colors["totalBuckets"] >= 6, f"Photo area lacks real colour buckets: {p2_colors}"
+        assert p2_colors["chromaticPixels"] > 20, f"Photo area looks grey: {p2_colors}"
+
+        part2_shot = os.path.join(OUT_DIR, "speaking3d_part2_1280.png")
+        p2pg.screenshot(path=part2_shot)
+
+        # Performance with photo texture loaded (desktop)
+        perf_desktop_photo = measure_render_120_frames(p2pg)
+        assert perf_desktop_photo["medianMs"] <= 16.0, f"Desktop photo render too slow: {perf_desktop_photo}"
+
+        # Tap first photo card -> lightbox opens, render loop pauses, backdrop click closes
+        photo1_rect = p2_hud["materials"][0]["rect"]
+        p2pg.mouse.click(
+            photo1_rect["left"] + photo1_rect["width"] / 2,
+            photo1_rect["top"] + photo1_rect["height"] / 2,
+        )
+        p2pg.wait_for_function("() => !document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        lb_p2 = p2pg.evaluate(
+            """() => ({
+                hidden: document.getElementById('speaking3dLightbox').hidden,
+                activeId: document.activeElement ? document.activeElement.id : '',
+                closeH: Math.round(document.getElementById('speaking3dLightboxClose').getBoundingClientRect().height),
+                dbg: window.SPK3D.__debug.lightbox(),
+            })"""
+        )
+        assert not lb_p2["hidden"] and lb_p2["activeId"] == "speaking3dLightboxClose", lb_p2
+        assert lb_p2["closeH"] >= 44 and lb_p2["dbg"]["open"] and lb_p2["dbg"]["paused"], lb_p2
+        # Backdrop click closes and returns focus to canvas
+        p2pg.mouse.click(12, 12)
+        p2pg.wait_for_function("() => document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        p2_after_close = p2pg.evaluate(
+            "() => ({ activeTag: document.activeElement ? document.activeElement.tagName : '' })"
+        )
+        assert p2_after_close["activeTag"] == "CANVAS", p2_after_close
+
+        assert p2_errors == [], f"Part 2 desktop errors: {p2_errors}"
+        results["part2_1280"] = {
+            "props": p2_props,
+            "camera": p2_cam,
+            "colors": p2_colors,
+            "hudOverlaps": p2_hud["overlaps"],
+            "perfWithPhoto": perf_desktop_photo,
+        }
+        p2ctx.close()
+
+        # =====================================================================
+        # 9. SPK3D-4: Part 3 task card, dolly, HUD clearance, tap centre -> lightbox -> Escape (1280x800)
+        # =====================================================================
+        p3ctx = browser.new_context(viewport={"width": 1280, "height": 800})
+        p3pg = p3ctx.new_page()
+        p3_errors = []
+        p3pg.on("pageerror", lambda e: p3_errors.append(str(e)))
+        p3pg.add_init_script(
+            "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(user))
+        )
+        p3pg.goto(url + "app?spk3d=1", wait_until="networkidle")
+        p3pg.wait_for_timeout(200)
+        p3pg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding(); setLang('en');")
+        enter_part(p3pg, 3)
+
+        p3pg.wait_for_function(
+            """() => {
+                const pr = window.SPK3D.__debug.props();
+                return pr && pr.photos === 0 && pr.card === 1 && pr.texturesReady === true;
+            }""",
+            timeout=6000,
+        )
+        p3pg.wait_for_function(
+            """() => {
+                const c = window.SPK3D.__debug.camera();
+                return c && c.moving === false && Math.abs(c.fov - 44) <= 1.0;
+            }""",
+            timeout=2500,
+        )
+        p3_props = p3pg.evaluate("() => window.SPK3D.__debug.props()")
+        p3_cam = p3pg.evaluate("() => window.SPK3D.__debug.camera()")
+        assert p3_props["photos"] == 0 and p3_props["card"] == 1 and p3_props["texturesReady"], p3_props
+        assert abs(p3_cam["fov"] - 44.0) <= 1.0 and p3_cam["moving"] is False, p3_cam
+
+        p3_hud = check_material_hud_clearance(p3pg)
+        assert p3_hud["overlaps"] == [], f"Part 3 HUD overlap at 1280x800: {p3_hud}"
+
+        part3_shot = os.path.join(OUT_DIR, "speaking3d_part3_1280.png")
+        p3pg.screenshot(path=part3_shot)
+
+        # Tap centre of canvas -> lightbox opens, mic state untouched, Escape closes
+        mic_before = p3pg.evaluate(
+            """() => {
+                const b = document.getElementById('speakingMicBtn');
+                return { disabled: b.disabled, state: b.getAttribute('data-mic-state') };
+            }"""
+        )
+        cbox = p3pg.locator("#speaking3dStage canvas").bounding_box()
+        p3pg.mouse.click(cbox["x"] + cbox["width"] / 2, cbox["y"] + cbox["height"] / 2)
+        p3pg.wait_for_function("() => !document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        mic_open = p3pg.evaluate(
+            """() => {
+                const b = document.getElementById('speakingMicBtn');
+                const img = document.getElementById('speaking3dLightboxImg');
+                return {
+                    disabled: b.disabled,
+                    state: b.getAttribute('data-mic-state'),
+                    imgReady: Boolean(img && img.complete && img.naturalWidth > 0),
+                    activeId: document.activeElement ? document.activeElement.id : '',
+                    dbg: window.SPK3D.__debug.lightbox(),
+                };
+            }"""
+        )
+        assert mic_open["disabled"] == mic_before["disabled"] and mic_open["state"] == mic_before["state"], (mic_before, mic_open)
+        assert mic_open["imgReady"] and mic_open["activeId"] == "speaking3dLightboxClose", mic_open
+        assert mic_open["dbg"]["open"] and mic_open["dbg"]["paused"], mic_open
+
+        p3pg.keyboard.press("Escape")
+        p3pg.wait_for_function("() => document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        mic_after = p3pg.evaluate(
+            """() => {
+                const b = document.getElementById('speakingMicBtn');
+                return {
+                    disabled: b.disabled,
+                    state: b.getAttribute('data-mic-state'),
+                    activeTag: document.activeElement ? document.activeElement.tagName : '',
+                };
+            }"""
+        )
+        assert mic_after["disabled"] == mic_before["disabled"] and mic_after["state"] == mic_before["state"], (mic_before, mic_after)
+        assert mic_after["activeTag"] == "CANVAS", mic_after
+
+        assert p3_errors == [], f"Part 3 desktop errors: {p3_errors}"
+        results["part3_1280"] = {
+            "props": p3_props,
+            "camera": p3_cam,
+            "hudOverlaps": p3_hud["overlaps"],
+            "micUnchanged": True,
+        }
+        p3ctx.close()
+
+        # =====================================================================
+        # 10. SPK3D-4: Phone 390x844 Part 2 & Part 3 HUD safety, thumbs, lightbox & photo perf
+        # =====================================================================
+        mpctx = browser.new_context(
+            viewport={"width": 390, "height": 844},
+            is_mobile=True,
+            has_touch=True,
+        )
+        mppg = mpctx.new_page()
+        mp_errors = []
+        mppg.on("pageerror", lambda e: mp_errors.append(str(e)))
+        mppg.add_init_script(
+            "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(user))
+        )
+        mppg.goto(url + "app?spk3d=1", wait_until="networkidle")
+        mppg.wait_for_timeout(200)
+        mppg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding(); setLang('en');")
+        enter_part(mppg, 2)
+
+        mppg.wait_for_function(
+            """() => {
+                const pr = window.SPK3D.__debug.props();
+                const c = window.SPK3D.__debug.camera();
+                return pr && pr.photos === 2 && pr.texturesReady && c && !c.moving && Math.abs(c.fov - 46) <= 1.0;
+            }""",
+            timeout=5000,
+        )
+        mp2_hud = check_material_hud_clearance(mppg)
+        assert mp2_hud["overlaps"] == [], f"Part 2 HUD overlap at 390x844: {mp2_hud}"
+        mp2_thumbs = mppg.evaluate(
+            """() => {
+                const strip = document.querySelector('#speaking3dStage .spk3d-thumbs');
+                const btns = Array.from(document.querySelectorAll('#speaking3dStage .spk3d-thumb-btn'));
+                return {
+                    stripHidden: !strip || strip.hidden,
+                    stripH: strip ? Math.round(strip.getBoundingClientRect().height) : 0,
+                    btnCount: btns.length,
+                    btnHeights: btns.map(b => Math.round(b.getBoundingClientRect().height)),
+                };
+            }"""
+        )
+        assert not mp2_thumbs["stripHidden"] and mp2_thumbs["stripH"] == 64, mp2_thumbs
+        assert mp2_thumbs["btnCount"] == 2 and all(h >= 44 for h in mp2_thumbs["btnHeights"]), mp2_thumbs
+
+        perf_phone_photo = measure_render_120_frames(mppg)
+        assert perf_phone_photo["medianMs"] <= 24.0, f"Phone photo render too slow: {perf_phone_photo}"
+        mp2_props = mppg.evaluate("() => window.SPK3D.__debug.props()")
+
+        # Now test Part 3 on phone 390x844 + readable lightbox screenshot
+        mppg.click("#speakingCloseExamBtn")
+        mppg.wait_for_timeout(150)
+        enter_part(mppg, 3)
+        mppg.wait_for_function(
+            """() => {
+                const pr = window.SPK3D.__debug.props();
+                const c = window.SPK3D.__debug.camera();
+                return pr && pr.card === 1 && pr.texturesReady && c && !c.moving && Math.abs(c.fov - 44) <= 1.0;
+            }""",
+            timeout=5000,
+        )
+        mp3_hud = check_material_hud_clearance(mppg)
+        assert mp3_hud["overlaps"] == [], f"Part 3 HUD overlap at 390x844: {mp3_hud}"
+        mp3_thumbs = mppg.evaluate(
+            """() => {
+                const btns = Array.from(document.querySelectorAll('#speaking3dStage .spk3d-thumb-btn'));
+                return { count: btns.length, heights: btns.map(b => Math.round(b.getBoundingClientRect().height)) };
+            }"""
+        )
+        assert mp3_thumbs["count"] == 1 and mp3_thumbs["heights"][0] >= 44, mp3_thumbs
+
+        mic_m_before = mppg.evaluate(
+            "() => ({ disabled: document.getElementById('speakingMicBtn').disabled, state: document.getElementById('speakingMicBtn').getAttribute('data-mic-state') })"
+        )
+        mcbox = mppg.locator("#speaking3dStage canvas").bounding_box()
+        mppg.mouse.click(mcbox["x"] + mcbox["width"] / 2, mcbox["y"] + mcbox["height"] / 2)
+        mppg.wait_for_function("() => !document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        mppg.wait_for_timeout(150)
+        lb_390 = mppg.evaluate(
+            """() => {
+                const img = document.getElementById('speaking3dLightboxImg');
+                const cls = document.getElementById('speaking3dLightboxClose');
+                const mic = document.getElementById('speakingMicBtn');
+                const ir = img.getBoundingClientRect();
+                const cr = cls.getBoundingClientRect();
+                return {
+                    imgW: Math.round(ir.width),
+                    imgH: Math.round(ir.height),
+                    naturalW: img.naturalWidth,
+                    closeH: Math.round(cr.height),
+                    micDisabled: mic.disabled,
+                    micState: mic.getAttribute('data-mic-state'),
+                };
+            }"""
+        )
+        assert lb_390["naturalW"] > 0 and lb_390["imgW"] >= 300, f"Task card too small in 390px lightbox: {lb_390}"
+        assert lb_390["closeH"] >= 44, lb_390
+        assert lb_390["micDisabled"] == mic_m_before["disabled"] and lb_390["micState"] == mic_m_before["state"], lb_390
+
+        lb_390_shot = os.path.join(OUT_DIR, "speaking3d_lightbox_390.png")
+        mppg.screenshot(path=lb_390_shot)
+
+        mppg.keyboard.press("Escape")
+        mppg.wait_for_function("() => document.getElementById('speaking3dLightbox').hidden", timeout=3000)
+        assert mp_errors == [], f"Phone Part 2/3 errors: {mp_errors}"
+        results["phone_390_materials"] = {
+            "part2Props": mp2_props,
+            "part2HudOverlaps": mp2_hud["overlaps"],
+            "part2Thumbs": mp2_thumbs,
+            "perfWithPhoto": perf_phone_photo,
+            "part3HudOverlaps": mp3_hud["overlaps"],
+            "part3Thumbs": mp3_thumbs,
+            "lightbox390": lb_390,
+        }
+        mpctx.close()
+
+        # =====================================================================
+        # 11. SPK3D-4: Reduced motion emulation -> dolly skipped, material lifted & visible
+        # =====================================================================
+        rmctx = browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            reduced_motion="reduce",
+        )
+        rmpg = rmctx.new_page()
+        rm_errors = []
+        rmpg.on("pageerror", lambda e: rm_errors.append(str(e)))
+        rmpg.add_init_script(
+            "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(user))
+        )
+        rmpg.goto(url + "app?spk3d=1", wait_until="networkidle")
+        rmpg.wait_for_timeout(200)
+        rmpg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding(); setLang('en');")
+        enter_part(rmpg, 2)
+
+        rmpg.wait_for_function(
+            """() => {
+                const pr = window.SPK3D.__debug.props();
+                return pr && pr.photos === 2 && pr.texturesReady === true;
+            }""",
+            timeout=6000,
+        )
+        # Wait past dolly wait+ease window to ensure dolly never triggers
+        rmpg.wait_for_timeout(1200)
+        rm_state = rmpg.evaluate(
+            """() => ({
+                cam: window.SPK3D.__debug.camera(),
+                props: window.SPK3D.__debug.props(),
+                bounds: window.SPK3D.__debug.materialBounds(),
+            })"""
+        )
+        assert rm_state["cam"]["moving"] is False, rm_state
+        assert abs(rm_state["cam"]["fov"] - 58.0) <= 0.5, f"Dolly should be skipped in reduced motion: {rm_state}"
+        assert abs(rm_state["cam"]["z"] - 0.82) <= 0.02, f"Camera moved in reduced motion: {rm_state}"
+        assert rm_state["props"]["liftM"] >= 0.08, f"Material did not lift 0.10m in reduced motion: {rm_state}"
+        assert len(rm_state["bounds"]["photos"]) == 2 and rm_state["bounds"]["photos"][0]["width"] > 40, rm_state
+        assert rm_errors == [], f"Reduced motion errors: {rm_errors}"
+        results["reduced_motion"] = rm_state
+        rmctx.close()
 
         browser.close()
 
