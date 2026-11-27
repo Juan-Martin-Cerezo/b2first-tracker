@@ -51,6 +51,7 @@ from urllib.parse import parse_qs, quote, unquote, urlsplit
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import store
 import prompts
+import writing_grade
 import plans
 from speaking_v3 import (
     catalog as spk3_catalog,
@@ -174,6 +175,11 @@ AI_TEXT_MIN_WORDS = 40
 AI_TEXT_MAX_WORDS = 700
 AI_OUTPUT_MAX_BYTES = 8 * 1024
 AI_TIMEOUT = 25
+WRITING_AUDIT_TIMEOUT = 8
+RESCORE_COLLAPSE_INSTRUCTION = (
+    "Your previous bands collapsed three criteria to the same number. "
+    "Re-score each criterion independently."
+)
 
 # --- Phase 30: bring-your-own provider key (writing + speaking report) ------
 # The key arrives in X-Provider-Key and lives only in memory for the duration
@@ -1282,6 +1288,318 @@ def _validate_ai_payload(obj):
     }
 
 
+_AUDIT_STATUSES = frozenset(("present", "partial", "absent"))
+_AUDIT_REGISTERS = frozenset(("formal", "neutral", "informal"))
+_AUDIT_ERR_TYPES = frozenset((
+    "subject_verb", "article", "modal_infinitive", "tense",
+    "word_form", "preposition", "other",
+))
+_AUDIT_SEVERITIES = frozenset(("basic", "minor"))
+
+
+def _validate_audit_payload(obj, facts=None):
+    """Validate the pre-scoring audit JSON. Returns a cleaned dict or None."""
+    if not isinstance(obj, dict):
+        return None
+    req = (
+        "task_points", "word_count_echo", "paragraph_count_echo",
+        "register", "cohesion", "grammar_errors", "complex_structures", "off_topic",
+    )
+    if any(k not in obj for k in req):
+        return None
+
+    raw_points = obj.get("task_points")
+    if not isinstance(raw_points, list):
+        return None
+    clean_points = []
+    for item in raw_points:
+        if not isinstance(item, dict):
+            return None
+        point = item.get("point")
+        status = str(item.get("status") or "").strip().lower()
+        quote = "" if item.get("quote") is None else item.get("quote")
+        if not isinstance(point, str) or not point.strip():
+            return None
+        if status not in _AUDIT_STATUSES or not isinstance(quote, str):
+            return None
+        clean_points.append({
+            "point": point.strip(),
+            "status": status,
+            "quote": quote.strip(),
+        })
+
+    wc = obj.get("word_count_echo")
+    pc = obj.get("paragraph_count_echo")
+    if type(wc) is not int or wc < 0 or type(pc) is not int or pc < 0:
+        return None
+
+    reg = obj.get("register")
+    if not isinstance(reg, dict):
+        return None
+    verdict = reg.get("verdict")
+    markers = reg.get("markers")
+    if verdict not in _AUDIT_REGISTERS or not isinstance(markers, list):
+        return None
+    if not all(isinstance(m, str) for m in markers):
+        return None
+
+    coh = obj.get("cohesion")
+    if not isinstance(coh, dict):
+        return None
+    devices = coh.get("devices")
+    pbreaks = coh.get("paragraph_breaks")
+    if not isinstance(devices, list) or not all(isinstance(d, str) for d in devices):
+        return None
+    if not isinstance(pbreaks, bool):
+        return None
+
+    raw_errs = obj.get("grammar_errors")
+    if not isinstance(raw_errs, list):
+        return None
+    clean_errs = []
+    for err in raw_errs:
+        if not isinstance(err, dict):
+            return None
+        quote = err.get("quote")
+        etype = err.get("type")
+        sev = err.get("severity")
+        if not isinstance(quote, str) or not isinstance(etype, str) or not isinstance(sev, str):
+            return None
+        etype_norm = etype.strip().lower()
+        if etype_norm not in _AUDIT_ERR_TYPES:
+            etype_norm = "other"
+        sev_norm = sev.strip().lower()
+        if sev_norm not in _AUDIT_SEVERITIES:
+            sev_norm = "minor"
+        clean_errs.append({
+            "quote": quote.strip(),
+            "type": etype_norm,
+            "severity": sev_norm,
+        })
+
+    comp = obj.get("complex_structures")
+    if not isinstance(comp, list) or not all(isinstance(s, str) for s in comp):
+        return None
+    off_topic = obj.get("off_topic")
+    if not isinstance(off_topic, bool):
+        return None
+
+    if isinstance(facts, dict):
+        wc = int(facts.get("words", wc))
+        pc = int(facts.get("paragraphs", pc))
+        pbreaks = pc >= 2
+
+    return {
+        "task_points": clean_points,
+        "word_count_echo": wc,
+        "paragraph_count_echo": pc,
+        "register": {"verdict": verdict, "markers": [m.strip() for m in markers if m.strip()]},
+        "cohesion": {"devices": [d.strip() for d in devices if d.strip()], "paragraph_breaks": pbreaks},
+        "grammar_errors": clean_errs,
+        "complex_structures": [s.strip() for s in comp if s.strip()],
+        "off_topic": off_topic,
+    }
+
+
+def _build_writing_payload(system, user_block, model, wire):
+    if wire == "gemini":
+        return {
+            "contents": [{"parts": [{"text": f"{system}\n\n{user_block}"}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
+        }
+    return {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user_block},
+        ],
+        "response_format": {"type": "json_object"},
+        "temperature": 0.2,
+    }
+
+
+def _extract_writing_text(up_json, wire):
+    try:
+        if wire == "gemini":
+            cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            cand_text = up_json["choices"][0]["message"]["content"]
+        return cand_text if isinstance(cand_text, str) else None
+    except (ValueError, KeyError, IndexError, TypeError, AttributeError):
+        return None
+
+
+def _extract_writing_usage(up_json, wire):
+    """Extract token counts from an upstream response (best-effort, zero if absent)."""
+    if not isinstance(up_json, dict):
+        return {"prompt_tokens": 0, "completion_tokens": 0}
+    if wire == "gemini":
+        meta = up_json.get("usageMetadata") or {}
+        return {
+            "prompt_tokens": int(meta.get("promptTokenCount") or 0),
+            "completion_tokens": int(meta.get("candidatesTokenCount") or 0),
+        }
+    usage = up_json.get("usage") or {}
+    return {
+        "prompt_tokens": int(usage.get("prompt_tokens") or 0),
+        "completion_tokens": int(usage.get("completion_tokens") or 0),
+    }
+
+
+def run_writing_pipeline(clean_text, kind, task_prompt, base, api_key, model, wire,
+                         collect_metrics=False):
+    """Run the calibrated audit -> score (+ optional collapse re-score) pipeline.
+
+    Returns ``(status_code, payload_dict, leak_chars, metrics)``.
+    ``metrics`` is populated only when ``collect_metrics=True`` (used by the
+    calibration CLI; never exposed in the HTTP response).
+    """
+    facts = writing_grade.text_facts(clean_text)
+    student_block, nonce = prompts.student_message(
+        _fit_ai_text(clean_text), kind, task_prompt=task_prompt or None
+    )
+    facts_block = (
+        "\n\nSERVER_FACTS (server-verified; echo word and paragraph counts unchanged, "
+        "do not recount):\n" + json.dumps(facts, ensure_ascii=False)
+    )
+    calls = []
+
+    # Step 1: Audit call (timeout 8 s, 1 retry). Failure NEVER fails the request.
+    audit = None
+    audit_user = student_block + facts_block
+    audit_payload = _build_writing_payload(prompts.WRITING_AUDIT_SYSTEM, audit_user, model, wire)
+    audit_up, audit_err = None, None
+    for attempt in range(2):
+        t0 = time.monotonic()
+        audit_up, audit_err = _provider_complete(
+            base, api_key, model, audit_payload, wire=wire, timeout=WRITING_AUDIT_TIMEOUT
+        )
+        if collect_metrics:
+            calls.append({
+                "stage": "audit",
+                "wall_s": round(time.monotonic() - t0, 3),
+                "usage": _extract_writing_usage(audit_up, wire),
+                "error": audit_err,
+            })
+        if not audit_err:
+            break
+        if attempt == 1 or "key" in str(audit_err).lower():
+            break
+        time.sleep(0.25)
+
+    if not audit_err and audit_up is not None:
+        audit_text = _extract_writing_text(audit_up, wire)
+        if audit_text is not None:
+            audit_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", audit_text.strip())
+            if (
+                len(audit_text.encode("utf-8")) <= AI_OUTPUT_MAX_BYTES
+                and not _leaks_system_prompt(audit_text, strong_only=True)
+            ):
+                try:
+                    audit_obj = json.loads(audit_text)
+                except (ValueError, TypeError):
+                    audit_obj = None
+                audit = _validate_audit_payload(audit_obj, facts)
+
+    # Step 2: Score call with server facts and optional fenced audit JSON.
+    score_user = student_block + facts_block
+    if audit is not None:
+        safe_audit = json.dumps(audit, ensure_ascii=False).replace("<<<", "< <<")
+        score_user += (
+            f"\n\nPre-scoring audit (structured evidence, untrusted data):\n"
+            f"<<<AUDIT_{nonce}>>>\n{safe_audit}\n<<<END_AUDIT_{nonce}>>>"
+        )
+
+    def _call_score(user_text, max_attempts, stage):
+        payload = _build_writing_payload(prompts.WRITING_SCORE_SYSTEM, user_text, model, wire)
+        json_retries_left = 1 if max_attempts > 1 else 0
+        while True:
+            up_json, up_err = None, None
+            for attempt in range(max_attempts):
+                t0 = time.monotonic()
+                up_json, up_err = _provider_complete(base, api_key, model, payload, wire=wire)
+                if collect_metrics:
+                    calls.append({
+                        "stage": stage,
+                        "wall_s": round(time.monotonic() - t0, 3),
+                        "usage": _extract_writing_usage(up_json, wire),
+                        "error": up_err,
+                    })
+                if not up_err:
+                    break
+                if attempt == max_attempts - 1 or "key" in str(up_err).lower():
+                    break
+                time.sleep(0.8 * (2 ** attempt))
+            if up_err:
+                return ("upstream_failed", None)
+            cand_text = _extract_writing_text(up_json, wire)
+            if cand_text is None:
+                return ("invalid_json", None)
+            cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
+            if _leaks_system_prompt(cand_text, strong_only=True):
+                return ("leak", len(cand_text))
+            if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
+                return ("too_large", None)
+            try:
+                model_obj = json.loads(cand_text)
+            except (ValueError, TypeError):
+                if json_retries_left > 0:
+                    json_retries_left -= 1
+                    continue
+                return ("invalid_json", None)
+            if isinstance(model_obj, dict) and model_obj.get("refuse") is True:
+                reason = model_obj.get("reason")
+                if reason not in ("not_a_writing_task", "cannot_reveal_instructions"):
+                    reason = "not_a_writing_task"
+                return ("refused", reason)
+            validated = _validate_ai_payload(model_obj)
+            if not validated:
+                return ("schema_failed", None)
+            return ("ok", validated)
+
+    metrics = {"calls": calls} if collect_metrics else None
+    outcome, data = _call_score(score_user, max_attempts=3, stage="score")
+    if outcome == "upstream_failed":
+        return 502, {"error": "upstream provider failed"}, 0, metrics
+    if outcome == "leak":
+        return 502, {"error": "unsafe output"}, data, metrics
+    if outcome == "too_large":
+        return 502, {"error": "model output too large"}, 0, metrics
+    if outcome == "invalid_json":
+        return 422, {"error": "invalid model json"}, 0, metrics
+    if outcome == "schema_failed":
+        return 422, {"error": "schema validation failed"}, 0, metrics
+    if outcome == "refused":
+        return 200, {"refused": True, "reason": data}, 0, metrics
+
+    validated = data
+    guarded_bands, guards_applied = writing_grade.apply_guards(
+        validated["bands"], facts, audit, kind=kind
+    )
+    collapsed = False
+    if writing_grade.is_collapsed(guarded_bands) and not guards_applied:
+        rescore_user = score_user + "\n\n" + RESCORE_COLLAPSE_INSTRUCTION
+        r_outcome, r_data = _call_score(rescore_user, max_attempts=1, stage="rescore")
+        if r_outcome == "ok":
+            validated = r_data
+            guarded_bands, guards_applied = writing_grade.apply_guards(
+                validated["bands"], facts, audit, kind=kind
+            )
+            collapsed = writing_grade.is_collapsed(guarded_bands)
+        else:
+            collapsed = True
+
+    validated["bands"] = guarded_bands
+    validated["total"] = sum(guarded_bands.values())
+    validated["model"] = model
+    validated["audit"] = audit
+    validated["guards_applied"] = guards_applied
+    validated["facts"] = facts
+    validated["collapsed"] = collapsed
+    validated["audit_used"] = audit is not None
+    return 200, validated, 0, metrics
+
+
 # ---------------------------------------------------------------------------
 # AI input/output guards (fase 17)
 # ---------------------------------------------------------------------------
@@ -1343,8 +1661,12 @@ def _sanitize_ai_text(raw):
 
 
 def _fit_ai_text(text):
-    """Cap the text sent to the model: 500 chars per line, 200 lines max."""
-    return "\n".join(ln[:500] for ln in text.split("\n")[:200])
+    """Cap the text sent to the model: 200 lines max, AI_TEXT_MAX_CHARS total.
+
+    Single-paragraph essays (no blank lines) regularly exceed 500 characters;
+    truncating per line would silently chop off the second half of the essay.
+    """
+    return "\n".join(text.split("\n")[:200])[:AI_TEXT_MAX_CHARS]
 
 
 def _ai_abuse_reason(text):
@@ -6072,82 +6394,21 @@ class H(BaseHTTPRequestHandler):
                 task_prompt = " ".join(task_prompt.split())[:800]
             else:
                 task_prompt = ""
-            student_block, _nonce = prompts.student_message(
-                _fit_ai_text(clean_text), kind, task_prompt=task_prompt or None)
-            if wire == "gemini":
-                payload = {
-                    "contents": [{"parts": [{"text": f"{prompts.WRITING_SYSTEM}\n\n{student_block}"}]}],
-                    "generationConfig": {"responseMimeType": "application/json", "temperature": 0.2},
-                }
-            else:
-                payload = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": prompts.WRITING_SYSTEM},
-                        {"role": "user", "content": student_block},
-                    ],
-                    "response_format": {"type": "json_object"},
-                    "temperature": 0.2,
-                }
-            # A correction that ends in "server error" is the worst outcome for a
-            # student mid-essay. Transient upstream failures get three attempts
-            # with a short backoff before anything is shown to the user.
-            up_json, up_err = None, None
-            for _attempt in range(3):
-                up_json, up_err = _provider_complete(base, api_key, model, payload, wire=wire)
-                if not up_err:
-                    break
-                if _attempt == 2 or "key" in str(up_err).lower():
-                    break
-                time.sleep(0.8 * (2 ** _attempt))
-            if up_err:
-                self._send_json(502, {"error": "upstream provider failed"})
-                return
-            try:
-                if wire == "gemini":
-                    cand_text = up_json["candidates"][0]["content"]["parts"][0]["text"]
-                else:
-                    cand_text = up_json["choices"][0]["message"]["content"]
-                if not isinstance(cand_text, str):
-                    raise ValueError("not text")
-            except (ValueError, KeyError, IndexError, TypeError, AttributeError):
-                self._send_json(422, {"error": "invalid model json"})
-                return
-            cand_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", cand_text.strip())
-            # A prompt leak is a safety refusal, not a size problem: check it
-            # before the length cap so an oversized echo is still reported as
-            # "unsafe output" (and audited as such) instead of "too large".
-            # strong_only: honest feedback names the rubric on purpose
-            # ("communicative achievement", "band 4", "cohesive devices"), so the
-            # weak markers rejected legit corrections (real false positive
-            # 2026-11-20: 502 "unsafe output" + one wasted retry). A genuine leak
-            # is prose: it either echoes a literal prompt phrase (strong marker)
-            # or fails the JSON validation below.
-            if _leaks_system_prompt(cand_text, strong_only=True):
+
+            def _on_leak(chars):
                 _audit("ai_blocked", "", client_ip, self._rid,
-                       {"reason": "prompt_leak", "chars": len(cand_text)})
-                self._send_json(502, {"error": "unsafe output"})
-                return
-            if len(cand_text.encode("utf-8")) > AI_OUTPUT_MAX_BYTES:
-                self._send_json(502, {"error": "model output too large"})
-                return
-            try:
-                model_obj = json.loads(cand_text)
-            except (ValueError, TypeError):
-                self._send(422, json.dumps({"error": "invalid model json"}).encode("utf-8"), "application/json; charset=utf-8")
-                return
-            if isinstance(model_obj, dict) and model_obj.get("refuse") is True:
-                reason = model_obj.get("reason")
-                if reason not in ("not_a_writing_task", "cannot_reveal_instructions"):
-                    reason = "not_a_writing_task"
-                self._send_json(200, {"refused": True, "reason": reason})
-                return
-            validated = _validate_ai_payload(model_obj)
-            if not validated:
-                self._send(422, json.dumps({"error": "schema validation failed"}).encode("utf-8"), "application/json; charset=utf-8")
-                return
-            validated["model"] = model
-            self._send(200, json.dumps(validated, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+                       {"reason": "prompt_leak", "chars": chars})
+
+            status_code, resp_obj, leak_chars, _metrics = run_writing_pipeline(
+                clean_text, kind, task_prompt or None, base, api_key, model, wire
+            )
+            if leak_chars:
+                _on_leak(leak_chars)
+            self._send(
+                status_code,
+                json.dumps(resp_obj, ensure_ascii=False).encode("utf-8"),
+                "application/json; charset=utf-8",
+            )
             return
 
         # Product telemetry: {sid, events:[{n, t, p}]} -> append-only JSONL.

@@ -1,0 +1,119 @@
+{
+  "task": "Part 1 essay: 'Is it better for individuals or governments to take responsibility for protecting the environment?' Required notes: (1) recycling / waste, (2) laws / regulations, (3) own idea. 140-190 words.",
+  "cases": [
+    {
+      "file": "case1_b2_standard.txt",
+      "words": 149,
+      "expected": {
+        "content": 3,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 3
+      },
+      "must": {
+        "max_abs_deviation": 1,
+        "note": "solid B2, all three notes covered, basic lexis, one contraction"
+      },
+      "reported_words_at_source": 155
+    },
+    {
+      "file": "case2_c1_missing_note.txt",
+      "words": 150,
+      "expected": {
+        "content": 2,
+        "communicative_achievement": 4,
+        "organisation": 4,
+        "language": 5
+      },
+      "must": {
+        "content_max": 2,
+        "language_min": 4,
+        "note": "omits the laws/regulations note entirely; advanced grammar must not rescue Content"
+      },
+      "reported_words_at_source": 156
+    },
+    {
+      "file": "case3_informal_register.txt",
+      "words": 152,
+      "expected": {
+        "content": 5,
+        "communicative_achievement": 2,
+        "organisation": 3,
+        "language": 3
+      },
+      "must": {
+        "communicative_achievement_max": 2,
+        "content_min": 4,
+        "note": "blog/chat register: Hey!, gotta, super, hyped, direct questions"
+      },
+      "reported_words_at_source": 157
+    },
+    {
+      "file": "case4_no_paragraphs.txt",
+      "words": 142,
+      "expected": {
+        "content": 4,
+        "communicative_achievement": 3,
+        "organisation": 1,
+        "language": 4
+      },
+      "must": {
+        "organisation_max": 2,
+        "language_min": 3,
+        "note": "single block, almost no connectives; format must not sink Language"
+      },
+      "reported_words_at_source": 149
+    },
+    {
+      "file": "case5_a2_99_words.txt",
+      "words": 95,
+      "expected": {
+        "content": 2,
+        "communicative_achievement": 2,
+        "organisation": 2,
+        "language": 1
+      },
+      "must": {
+        "content_max": 2,
+        "language_max": 2,
+        "at_least_two_criteria_at_or_below_2": true,
+        "note": "99 words, third note missing, systematic L1 errors"
+      },
+      "reported_words_at_source": 99
+    },
+    {
+      "file": "case6_off_topic_c1.txt",
+      "words": 167,
+      "expected": {
+        "content": 0,
+        "communicative_achievement": 4,
+        "organisation": 4,
+        "language": 5
+      },
+      "must": {
+        "content_max": 1,
+        "language_min": 4,
+        "note": "synthetic C1 essay on compulsory school sport (off-topic); fluent English must not rescue Content"
+      },
+      "synthetic_added": true
+    },
+    {
+      "file": "case7_300_words.txt",
+      "words": 332,
+      "expected": {
+        "content": 4,
+        "communicative_achievement": 3,
+        "organisation": 3,
+        "language": 4
+      },
+      "must": {
+        "content_max": 4,
+        "guards_include": [
+          "length_over_250"
+        ],
+        "note": "synthetic over-long (300+ words) padded and repetitive essay; length_over_250 guard must fire"
+      },
+      "synthetic_added": true
+    }
+  ]
+}

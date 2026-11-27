@@ -175,10 +175,14 @@ th.start()
 URL = f"http://127.0.0.1:{APP_PORT}"
 SAMPLE_TEXT = (
     "Nowadays pollution and damage to the environment is the most serious and difficult problem "
-    "for countries all over the world. First of all, transport causes huge damage to the environment "
-    "because people cannot imagine living without cars and planes. In addition to this, our rivers "
-    "and seas are in danger due to factories pouring waste. Every person must contribute to solving "
-    "this problem by taking small steps every day."
+    "for countries all over the world. Many citizens debate whether individuals or governments can achieve more.\n\n"
+    "First of all, transport causes huge damage to the environment because people cannot imagine living "
+    "without cars and planes. However, using bicycles or public buses for short daily trips can gradually "
+    "reduce urban emissions and improve air quality in crowded cities.\n\n"
+    "In addition to this, our rivers and seas are in danger due to factories pouring toxic waste into them. "
+    "Governments should enforce stricter regulations and invest in renewable energy so companies adopt cleaner methods.\n\n"
+    "In conclusion, every person must contribute to solving this problem by taking small steps every day "
+    "while governments lead larger changes."
 )
 FAKE_KEY = "AIzaSyFAKE_SECRET_TEST_KEY_99887766"
 
