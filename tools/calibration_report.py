@@ -75,11 +75,16 @@ def resolve_provider(env_path):
     return wire, base, model, api_key
 
 
-def check_must(must, bands, expected, guards_applied):
+def check_must(must, bands, expected, guards_applied, raw_bands=None):
     """Evaluate all discriminating `must` assertions for one fixture."""
     failures = []
     if not isinstance(must, dict):
         return failures
+    raw = raw_bands if isinstance(raw_bands, dict) else bands
+    if must.get("all_zero"):
+        if any(bands[k] != 0 for k in CRITERIA):
+            got_s = "-".join(str(bands[k]) for k in CRITERIA)
+            failures.append(f"expected all_zero (0-0-0-0), got {got_s}")
     if "max_abs_deviation" in must:
         lim = int(must["max_abs_deviation"])
         for k in CRITERIA:
@@ -90,6 +95,10 @@ def check_must(must, bands, expected, guards_applied):
             failures.append(f"{SHORT_LABELS[k]}={bands[k]} > max {must[f'{k}_max']}")
         if f"{k}_min" in must and bands[k] < int(must[f"{k}_min"]):
             failures.append(f"{SHORT_LABELS[k]}={bands[k]} < min {must[f'{k}_min']}")
+        if f"raw_{k}_max" in must and raw[k] > int(must[f"raw_{k}_max"]):
+            failures.append(f"raw {SHORT_LABELS[k]}={raw[k]} > max {must[f'raw_{k}_max']}")
+        if f"raw_{k}_min" in must and raw[k] < int(must[f"raw_{k}_min"]):
+            failures.append(f"raw {SHORT_LABELS[k]}={raw[k]} < min {must[f'raw_{k}_min']}")
     if must.get("at_least_two_criteria_at_or_below_2"):
         n_low = sum(1 for k in CRITERIA if bands[k] <= 2)
         if n_low < 2:
@@ -181,10 +190,11 @@ def main(argv=None):
     rows = []
     baseline_rows = []
     abs_errors = {k: [] for k in CRITERIA}
+    raw_abs_errors = {k: [] for k in CRITERIA}
     must_failed_any = False
 
     header = (
-        f"{'Case':<28} {'Expected':<10} {'Got':<10} {'Must':<6} "
+        f"{'Case':<28} {'Expected':<10} {'Raw':<10} {'Final':<10} {'Must':<6} "
         f"{'Calls':<5} {'Audit':<5} {'Clps':<5} {'Wall':<6} {'Tok(in/out)':<13} Guards"
     )
     print(header)
@@ -206,20 +216,23 @@ def main(argv=None):
             continue
 
         bands = resp["bands"]
+        raw_bands = resp.get("raw_bands") or bands
         expected = c["expected"]
         guards = resp.get("guards_applied") or []
-        must_errs = check_must(c.get("must"), bands, expected, guards)
+        must_errs = check_must(c.get("must"), bands, expected, guards, raw_bands=raw_bands)
         if must_errs:
             must_failed_any = True
 
         for k in CRITERIA:
             abs_errors[k].append(abs(bands[k] - expected[k]))
+            raw_abs_errors[k].append(abs(raw_bands[k] - expected[k]))
 
         call_list = (metrics or {}).get("calls") or []
         tok_in = sum(item["usage"]["prompt_tokens"] for item in call_list)
         tok_out = sum(item["usage"]["completion_tokens"] for item in call_list)
 
         exp_s = "-".join(str(expected[k]) for k in CRITERIA)
+        raw_s = "-".join(str(raw_bands[k]) for k in CRITERIA)
         got_s = "-".join(str(bands[k]) for k in CRITERIA)
         must_s = "PASS" if not must_errs else "FAIL"
         aud_s = "yes" if resp.get("audit_used") else "no"
@@ -227,7 +240,7 @@ def main(argv=None):
         g_s = ",".join(guards) if guards else "-"
 
         print(
-            f"{c['file']:<28} {exp_s:<10} {got_s:<10} {must_s:<6} "
+            f"{c['file']:<28} {exp_s:<10} {raw_s:<10} {got_s:<10} {must_s:<6} "
             f"{len(call_list):<5} {aud_s:<5} {clps_s:<5} {total_wall:<6.2f} "
             f"{tok_in}/{tok_out:<7} {g_s}"
         )
@@ -238,6 +251,7 @@ def main(argv=None):
         rows.append({
             "file": c["file"],
             "expected": expected,
+            "raw": raw_bands,
             "got": bands,
             "must_ok": not must_errs,
             "must_errors": must_errs,
@@ -258,15 +272,23 @@ def main(argv=None):
 
     print()
     mae_per_criterion = {}
+    raw_mae_per_criterion = {}
     all_errs = []
+    raw_all_errs = []
     for k in CRITERIA:
         vals = abs_errors[k]
+        raw_vals = raw_abs_errors[k]
         mae = sum(vals) / len(vals) if vals else 99.0
+        raw_mae = sum(raw_vals) / len(raw_vals) if raw_vals else 99.0
         mae_per_criterion[k] = mae
+        raw_mae_per_criterion[k] = raw_mae
         all_errs.extend(vals)
-        print(f"MAE {k:<26}: {mae:.3f}")
+        raw_all_errs.extend(raw_vals)
+        print(f"MAE (final) {k:<26}: {mae:.3f}  (raw: {raw_mae:.3f})")
     overall_mae = sum(all_errs) / len(all_errs) if all_errs else 99.0
-    print(f"MAE {'overall':<26}: {overall_mae:.3f}")
+    raw_overall_mae = sum(raw_all_errs) / len(raw_all_errs) if raw_all_errs else 99.0
+    print(f"MAE (final) {'overall':<26}: {overall_mae:.3f}")
+    print(f"MAE (raw)   {'overall':<26}: {raw_overall_mae:.3f}")
 
     ok_rows = [r for r in rows if "got" in r]
     if ok_rows:
@@ -308,6 +330,8 @@ def main(argv=None):
                     "model": model,
                     "mae": mae_per_criterion,
                     "overall_mae": overall_mae,
+                    "raw_mae": raw_mae_per_criterion,
+                    "raw_overall_mae": raw_overall_mae,
                     "rows": rows,
                     "baseline": baseline_rows,
                 },

@@ -209,6 +209,7 @@ MOCK["queue"] = [
         "collapsed": True,
         "facts": {"words": 9999},
         "audit": {"spoofed": True},
+        "raw_bands": {"content": 0, "communicative_achievement": 0, "organisation": 0, "language": 0},
     })},
 ]
 st, res = post_writing({
@@ -222,6 +223,7 @@ assert res["guards_applied"] == []
 assert res["collapsed"] is False
 assert res["facts"]["paragraphs"] == 4 and res["facts"]["words"] > 120
 assert res["bands"] == {"content": 4, "communicative_achievement": 3, "organisation": 4, "language": 4}
+assert res["raw_bands"] == {"content": 4, "communicative_achievement": 3, "organisation": 4, "language": 4}
 assert res["total"] == 15
 score_user_msg = MOCK["received"][1]["messages"][1]["content"]
 assert "<<<AUDIT_" in score_user_msg and "<<<END_AUDIT_" in score_user_msg, "audit not fenced in score call"
@@ -353,6 +355,50 @@ MOCK["queue"] = [
 st_leak, res_leak = post_writing({"text": ESSAY_GOOD, "task": "essay", "provider_key": FAKE_KEY})
 assert st_leak == 502 and res_leak.get("error") == "unsafe output", (st_leak, res_leak)
 out["9_contracts_unchanged"] = {"refusal": st_r, "bad_schema": st_bad, "leak": st_leak}
+
+# 10. Cambridge Content = 0 rule: 0-3-3-4 -> final 0-0-0-0, raw_bands 0-3-3-4, content_zero_all last;
+#     1-3-3-4 stays unchanged.
+OFF_TOPIC_AUDIT = dict(
+    GOOD_AUDIT,
+    task_points=[
+        {"point": "everyday habits at home", "status": "absent", "quote": ""},
+        {"point": "laws and regulations", "status": "absent", "quote": ""},
+        {"point": "your own idea", "status": "absent", "quote": ""},
+    ],
+    off_topic=True,
+)
+MOCK["received"].clear()
+MOCK["queue"] = [
+    {"content": OFF_TOPIC_AUDIT},
+    {"content": make_score(0, 3, 3, 4)},
+]
+st_z, res_z = post_writing({"text": ESSAY_GOOD, "task": "essay", "prompt": TASK_PROMPT, "provider_key": FAKE_KEY})
+assert st_z == 200, (st_z, res_z)
+assert len(MOCK["received"]) == 2, f"content_zero_all must not trigger rescore, got {len(MOCK['received'])}"
+assert res_z["bands"] == {"content": 0, "communicative_achievement": 0, "organisation": 0, "language": 0}, res_z["bands"]
+assert res_z["raw_bands"] == {"content": 0, "communicative_achievement": 3, "organisation": 3, "language": 4}, res_z["raw_bands"]
+assert res_z["total"] == 0, res_z["total"]
+assert res_z["guards_applied"][-1] == "content_zero_all", res_z["guards_applied"]
+assert res_z["collapsed"] is False
+
+MOCK["received"].clear()
+MOCK["queue"] = [
+    {"content": GOOD_AUDIT},
+    {"content": make_score(1, 3, 3, 4)},
+]
+st_one, res_one = post_writing({"text": ESSAY_GOOD, "task": "essay", "prompt": TASK_PROMPT, "provider_key": FAKE_KEY})
+assert st_one == 200, (st_one, res_one)
+assert res_one["bands"] == {"content": 1, "communicative_achievement": 3, "organisation": 3, "language": 4}, res_one["bands"]
+assert res_one["raw_bands"] == {"content": 1, "communicative_achievement": 3, "organisation": 3, "language": 4}, res_one["raw_bands"]
+assert res_one["total"] == 11, res_one["total"]
+assert "content_zero_all" not in res_one["guards_applied"], res_one["guards_applied"]
+out["10_content_zero_rule"] = {
+    "zero_final": res_z["bands"],
+    "zero_raw": res_z["raw_bands"],
+    "zero_total": res_z["total"],
+    "zero_guards": res_z["guards_applied"],
+    "one_final": res_one["bands"],
+}
 
 srv.shutdown()
 mock_srv.shutdown()

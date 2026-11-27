@@ -86,14 +86,14 @@
       "words": 167,
       "expected": {
         "content": 0,
-        "communicative_achievement": 4,
-        "organisation": 4,
-        "language": 5
+        "communicative_achievement": 0,
+        "organisation": 0,
+        "language": 0
       },
       "must": {
-        "content_max": 1,
-        "language_min": 4,
-        "note": "synthetic C1 essay on compulsory school sport (off-topic); fluent English must not rescue Content"
+        "all_zero": true,
+        "raw_content_max": 1,
+        "note": "synthetic C1 essay on compulsory school sport (off-topic); the model must still detect the off-topic text before the Cambridge content_zero_all rule fires"
       },
       "synthetic_added": true
     },
