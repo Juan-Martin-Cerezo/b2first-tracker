@@ -37,11 +37,11 @@ Self-study candidates preparing for the Cambridge B2 First can check Reading, Us
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/writing-progress.webp" alt="Writing Corrector while grading: essay draft, progress bar, step-by-step status, and elapsed timer"></td>
-    <td width="50%"><img src="docs/screenshots/exam-sources.webp" alt="Exam Sources: 81 hand-checked official resources grouped by paper with live search and filter chips"></td>
+    <td width="50%"><img src="docs/screenshots/exam-sources.webp" alt="Exam Sources: 30 hand-checked official resources grouped by paper with live search and filter chips"></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Writing Corrector:</b> 4-band Cambridge marking with live grading steps</sub></td>
-    <td align="center"><sub><b>Exam Sources:</b> 81 curated resources grouped by paper with search & filters</sub></td>
+    <td align="center"><sub><b>Exam Sources:</b> 30 curated resources grouped by paper with search & filters</sub></td>
   </tr>
 </table>
 
@@ -52,7 +52,7 @@ Self-study candidates preparing for the Cambridge B2 First can check Reading, Us
 - **Daily exam plan and 3-step session coach:** An optional 12-question diagnostic ranks your weakest exam parts. Two rotations (*By part* and *Full paper each session*) derive today's session directly from the units already logged, with a mobile-ready 3-step session coach, official Cambridge timings, streak shields, and exam-day countdown.
 - **Writing corrector on all four Cambridge bands:** Marks Essays, Articles, Reports, Reviews, and Emails from 0 to 5 on *Content*, *Communicative Achievement*, *Organisation*, and *Language*. Every band quotes evidence from your text, lists concrete weaknesses, rewrites three sentences, and displays a step-by-step progress bar with elapsed time while grading.
 - **Cambridge Speaking exam (Parts 1–4):** Four complete Cambridge sample papers (*B2 First Sample Paper 1 & 2*, *B2 First for Schools Sample Paper 1 & 2*) plus **Use my own task** (form + image uploads). Runs a full 14-minute mock or any single part with mandatory British examiner introduction, AI candidate partner, push-to-talk voice, official timings, Part 2 photo pairs, Part 3 task cards, and a 3-band report — with no on-screen scripts, no stored transcripts, and no pronunciation scoring.
-- **Practice & Real mocks:** Timed drills for every exam part, a guided Full Mock sequence inside **Exam → Real mocks** (materials to timer in one screen, handing straight into Speaking), and a unified searchable **Library** combining local sample papers, answer keys, audio, tapescripts, checklists, and 81 verified online sources — plus private user-uploaded Listening practice files.
+- **Practice & Real mocks:** Timed drills for every exam part, a guided Full Mock sequence inside **Exam → Real mocks** (materials to timer in one screen, handing straight into Speaking), and a unified searchable **Library** combining local sample papers, answer keys, audio, tapescripts, checklists, and 30 verified online sources — plus private user-uploaded Listening practice files.
 - **Progress, Error Taxonomy, and Progression Matrix:** Three zero-dependency SVG charts track score evolution over time, weakest Reading & Use of English parts, and weekly consistency, alongside a stage Progression Matrix and a dedicated root-cause Error Taxonomy view (*L-GAP*, *G-ERR*, *T-MIS*, *T-LIM*).
 
 ---
@@ -226,7 +226,7 @@ uv run --no-project --with playwright --with httpx python test_landing_honest.py
 | **Plan, diagnostic & progress** | `test_plan.py`, `test_diag.py`, `test_streak.py`, `test_progression.py`, `test_graf.py`, `test_progress_view.py`, `test_today_compact.py` | Deterministic rotation, 12-item diagnostic, streak shields, stage gates, three SVG charts. |
 | **Writing AI & guards** | `test_ai.py`, `test_ai_guard.py`, `test_writing_progress.py` | Strict JSON schema validation, injection/leak guards, live progress bar and elapsed timer, rate limits. |
 | **Speaking v3 exam & UI** | `test_speaking_v3_catalog.py`, `test_speaking_v3_intro.py`, `test_speaking_v3_parts.py`, `test_speaking_v3_validation.py`, `test_speaking_v3_tone.py`, `test_speaking_v3_own_task.py`, `test_speaking_v3_privacy.py`, `test_speaking_v3_ui.py`, `test_speaking_v3_no_old_ui.py` | 4 Cambridge sample exams, mandatory British intro, push-to-talk audio order, Part 2 photos, Part 3 15s prep & card, multipart own tasks, 3-band report, zero transcripts/audio stored. |
-| **Materials & sources** | `test_practice_real.py`, `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Real exam resources, paired keys, 81 searchable Exam sources, private Listening uploads. |
+| **Materials & sources** | `test_practice_real.py`, `test_where_to_find.py`, `test_exam_sources_blocks.py`, `test_listening_own_material.py` | Real exam resources, paired keys, 30 searchable Exam sources, private Listening uploads. |
 | **Auth & accounts** | `test_register.py`, `test_multiuser.py`, `test_auth_methods.py`, `test_mfa.py`, `test_owner_unlimited.py` | Account isolation, Google OAuth, WebAuthn passkeys, TOTP MFA, owner limits, export & deletion. |
 | **Security, legal & load** | `test_security2.py`, `test_security3.py`, `test_server_hardening.py`, `test_legal.py`, `test_readme_limits.py`, `test_capacity.py` | Lockout/backoff, hash-chained audit log, CSP, raw HTTP limits, `/privacy` `/terms` `/security`, measured p95 throughput. |
 

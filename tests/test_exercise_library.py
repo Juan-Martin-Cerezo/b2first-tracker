@@ -1,7 +1,7 @@
 """Session Contents & Full Library acceptance (local, online & Reference).
 
 Verifies:
-  1. PRACTICE_SOURCES.length >= 50, no duplicate URLs, all start with https://.
+  1. PRACTICE_SOURCES.length >= 25, no duplicate URLs, all start with https://.
   2. No #v-resources, #v-exercises, #practiceTabs or #practiceTabLibrary, and no
      "Browse all exercises" buttons in Today or Exam; Practice shows By part
      only, with one Start button per unit opening Session / Contents.
@@ -190,13 +190,13 @@ with sync_playwright() as p:
     assert "Resources" not in removed["navLabels"], f"Resources still in nav: {removed['navLabels']}"
     assert "Exercises" not in removed["navLabels"], f"Exercises still in nav: {removed['navLabels']}"
 
-    # 1. PRACTICE_SOURCES >= 50, no duplicate URLs, all https://
+    # 1. PRACTICE_SOURCES >= 25, no duplicate URLs, all https://
     sources = pg.evaluate(
         """() => (typeof PRACTICE_SOURCES !== 'undefined' ? PRACTICE_SOURCES : []).map(s => ({
             n: s.n, url: s.url, skill: s.skill, kind: s.kind, what: s.what, mins: s.mins, part: s.part || []
         }))"""
     )
-    assert len(sources) >= 50, f"PRACTICE_SOURCES has only {len(sources)} entries (need >= 50)"
+    assert len(sources) >= 25, f"PRACTICE_SOURCES has only {len(sources)} entries (need >= 25)"
     urls = [s["url"] for s in sources]
     assert len(urls) == len(set(urls)), "Duplicate URLs found in PRACTICE_SOURCES"
     for s in sources:

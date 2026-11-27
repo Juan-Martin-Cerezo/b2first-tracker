@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""English Practice Test is present in the Library with all B2 sections."""
+"""English Practice Test FCE listening archive is present in the Library."""
 import os
 import sys
 
@@ -13,12 +13,6 @@ sys.path.insert(0, TESTS_DIR)
 from helpers import isolated_server, login_owner, OWNER_NAME  # noqa: E402
 
 EXPECTED = {
-    "https://englishpracticetest.net/category/reading-tests-for-b2/",
-    "https://englishpracticetest.net/category/use-of-english-for-b2/",
-    "https://englishpracticetest.net/category/grammar-tests-for-b2/",
-    "https://englishpracticetest.net/category/vocabulary-tests-for-b2/",
-    "https://englishpracticetest.net/category/writing-tests-for-b2/",
-    "https://englishpracticetest.net/category/listening-tests-for-b2/",
     "https://englishpracticetest.net/category/fce-b2-listening-tests/",
 }
 
@@ -42,17 +36,17 @@ def main():
                 .filter(r => r.href.includes('englishpracticetest.net'))"""
         )
         urls = [r["href"] for r in rows]
-        assert len(rows) == 7, f"Expected 7 English Practice Test rows, got {len(rows)}: {urls}"
+        assert len(rows) == 1, f"Expected 1 FCE English Practice Test row, got {len(rows)}: {urls}"
         assert set(urls) == EXPECTED, f"Wrong URLs: {sorted(set(urls) ^ EXPECTED)}"
         assert len(urls) == len(set(urls)), "Duplicate English Practice Test URLs"
         assert all(r["type"] == "online" for r in rows), rows
         skills = {r["skill"] for r in rows}
-        assert {"rue", "w", "l"} <= skills, f"Missing skills: {skills}"
+        assert skills == {"l"}, f"Missing skill: {skills}"
         sw, iw = pg.evaluate("() => [document.documentElement.scrollWidth, innerWidth]")
         assert sw <= iw, f"Mobile overflow: {sw} > {iw}"
         assert not errors, f"Page errors: {errors}"
         browser.close()
-    print("PASS English Practice Test: 7 B2 archives in Library (reading, UoE, grammar, vocab, writing, listening, FCE listening)")
+    print("PASS English Practice Test: FCE B2 listening archive in Library")
 
 
 if __name__ == "__main__":
