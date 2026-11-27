@@ -80,10 +80,17 @@ def greeting_for_hour(hour=None, tz_offset_minutes=None):
     return "Good evening"
 
 
-def opening_greeting(hour=None, tz_offset_minutes=None):
+def resolve_examiner_name(name=None):
+    """Return a clean examiner name token, defaulting to EXAMINER_NAME."""
+    cleaned = re.sub(r"\s+", " ", str(name or "")).strip()
+    return cleaned or EXAMINER_NAME
+
+
+def opening_greeting(hour=None, tz_offset_minutes=None, examiner_name=None):
     """Initial examiner greeting + name prompt."""
     g = greeting_for_hour(hour=hour, tz_offset_minutes=tz_offset_minutes)
-    return f"{g}. My name is {EXAMINER_NAME}. {CANONICAL['ask_names']}"
+    ex_name = resolve_examiner_name(examiner_name)
+    return f"{g}. My name is {ex_name}. {CANONICAL['ask_names']}"
 
 
 def off_topic_prompt(topic):

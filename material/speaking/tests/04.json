@@ -4,9 +4,14 @@
   "variant": "for_schools",
   "partner": {
     "name": "Hannah",
+    "sex": "female",
     "home": "Oxford",
     "voice": "Leda",
     "persona": "A 17-year-old student from Oxford preparing for B2 First for Schools. Speaks natural British English, thinks aloud briefly when weighing options, and enjoys building on the other candidate's ideas."
+  },
+  "examiner": {
+    "name": "Mr Thompson",
+    "sex": "male"
   },
   "images": {
     "part2_task1": [

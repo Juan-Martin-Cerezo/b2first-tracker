@@ -5069,7 +5069,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
             <div class="spk3-role" id="speakingRoleExaminer" data-role="examiner" data-active="false">
               <span class="spk3-role-dot" aria-hidden="true"></span>
               <span class="spk3-role-tag" data-i18n="spv3_role_examiner">Examiner</span>
-              <span class="spk3-role-name">Mr Thompson</span>
+              <span class="spk3-role-name" id="speakingExaminerLabel">Mr Thompson</span>
             </div>
             <div class="spk3-role" id="speakingRolePartner" data-role="partner" data-active="false">
               <span class="spk3-role-dot" aria-hidden="true"></span>
@@ -11975,6 +11975,9 @@ const SPEAKING=(function(){
     testId:'01',
     testTitle:'',
     partnerName:'Alex',
+    partnerSex:'male',
+    examinerName:'Mr Thompson',
+    examinerSex:'male',
     ownTaskId:null,
     targetPart:0,
     phase:'intro',
@@ -12109,6 +12112,35 @@ const SPEAKING=(function(){
     sync3dToggleBtn();
     if(restore)applyDeskUi(state.ui);
   }
+  function normalizeSex(v){
+    const s=String(v||'').trim().toLowerCase();
+    return s==='female'?'female':'male';
+  }
+  function sync3dCast(){
+    const api=window.SPK3D;
+    if(!api||typeof api.setCast!=='function')return;
+    try{
+      api.setCast({
+        partner:{name:state.partnerName||'Alex',sex:state.partnerSex||'male'},
+        examiner:{name:state.examinerName||'Mr Thompson',sex:state.examinerSex||'male'}
+      });
+    }catch(e){}
+  }
+  function applyCastFromPayload(data){
+    if(!data||typeof data!=='object')return;
+    const st=(data.state&&typeof data.state==='object')?data.state:{};
+    if(data.partner_sex!==undefined||st.partner_sex!==undefined){
+      state.partnerSex=normalizeSex(data.partner_sex!==undefined?data.partner_sex:st.partner_sex);
+    }
+    if(data.examiner_sex!==undefined||st.examiner_sex!==undefined){
+      state.examinerSex=normalizeSex(data.examiner_sex!==undefined?data.examiner_sex:st.examiner_sex);
+    }
+    const exName=data.examiner_name||st.examiner_name;
+    if(typeof exName==='string'&&exName.trim()){
+      state.examinerName=exName.trim();
+    }
+    sync3dCast();
+  }
   function sync3dStage(){
     const api=window.SPK3D,st=$('speaking3dStage'),dk=$('speakingDesk'),vw=$('speakingViewExam');
     if(!state.isOpen||state.view!=='exam'){
@@ -12123,6 +12155,7 @@ const SPEAKING=(function(){
       return;
     }
     if(!st||!dk)return;
+    sync3dCast();
     dk.classList.add('is-3d');if(vw)vw.classList.add('is-3d');st.hidden=false;
     let ok=false;const t0=performance.now();
     try{ok=api.mount(st)!==false&&!!api.isMounted();}catch(e){ok=false;}
@@ -12136,6 +12169,7 @@ const SPEAKING=(function(){
     sync3dTabOrder(true);
     sync3dHint();
     try{
+      sync3dCast();
       api.setActiveRole(state.activeRole||null);
       api.setPart(state.currentPart||0);
       const imgs=(state.ui&&Array.isArray(state.ui.images)&&state.ui.images.length>=2)?state.ui.images:null;
@@ -12280,7 +12314,7 @@ const SPEAKING=(function(){
     }
     stage.setAttribute('data-live',live);
     if(spkEl){
-      if(role==='examiner')spkEl.textContent=t('spv3_role_examiner')+' · Mr Thompson';
+      if(role==='examiner')spkEl.textContent=t('spv3_role_examiner')+' · '+(state.examinerName||'Mr Thompson');
       else if(role==='partner')spkEl.textContent=t('spv3_role_partner')+' · '+(state.partnerName||'Alex');
       else spkEl.textContent=t('spv3_role_you');
     }
@@ -12434,6 +12468,7 @@ const SPEAKING=(function(){
     const partEl=$('speakingExamPart');
     const panelPartEl=$('speakingPanelPart');
     const partnerEl=$('speakingPartnerLabel');
+    const examinerEl=$('speakingExaminerLabel');
     const guideEl=$('speakingPartGuide');
     if(titleEl)titleEl.textContent=state.testTitle||t('spv3_title');
     let partLabel=t('spv3_phase_intro');
@@ -12442,6 +12477,7 @@ const SPEAKING=(function(){
     }
     if(partEl)partEl.textContent=partLabel;
     if(panelPartEl)panelPartEl.textContent=partLabel;
+    if(examinerEl)examinerEl.textContent=state.examinerName||'Mr Thompson';
     if(partnerEl)partnerEl.textContent=state.partnerName||'Alex';
     if(guideEl)guideEl.textContent=t(partGuideKey());
     if(state.spk3dActive&&window.SPK3D){
@@ -12609,6 +12645,7 @@ const SPEAKING=(function(){
       state.step=finalState.step||state.step;
       state.currentPart=Number(finalState.part||0);
       if(finalState.target_part!==undefined)state.targetPart=Number(finalState.target_part);
+      applyCastFromPayload({state:finalState});
     }
     if(finalUi){
       state.ui=finalUi;
@@ -13130,15 +13167,20 @@ const SPEAKING=(function(){
     state.busy=true;
     state.sessionStartedAt=Date.now();
 
+    state.examinerName='Mr Thompson';
+    state.examinerSex='male';
     if(state.ownTaskId){
       const found=(state.catalog.own_tasks||[]).find(x=>x.id===state.ownTaskId);
       state.testTitle=found?found.title:t('spv3_title');
       state.partnerName='Alex';
+      state.partnerSex=normalizeSex(found&&found.partner_sex);
     }else{
       const found=(state.catalog.tests||[]).find(x=>x.id===state.testId);
       state.testTitle=found?found.title:('B2 First Sample Paper '+state.testId);
       state.partnerName=(found&&found.partner)||'Alex';
+      state.partnerSex=normalizeSex(found&&found.partner_sex);
     }
+    sync3dCast();
 
     showViewInternal('exam');
     renderExamHeader();
@@ -13168,6 +13210,8 @@ const SPEAKING=(function(){
         return false;
       }
       state.sessionId=data.session_id;
+      applyCastFromPayload(data);
+      renderExamHeader();
       const firstClip={
         speaker:data.speaker||'examiner',
         audio_b64:data.audio_b64,

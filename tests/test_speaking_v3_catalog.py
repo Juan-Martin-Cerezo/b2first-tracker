@@ -17,7 +17,7 @@ sys.path.insert(0, REPO_ROOT)
 sys.path.insert(0, TESTS_DIR)
 
 import helpers  # noqa: E402
-from speaking_v3 import catalog  # noqa: E402
+from speaking_v3 import catalog, engine, tone  # noqa: E402
 
 
 def _req(base, method, path, payload=None, token=None):
@@ -84,11 +84,13 @@ def main():
         "04": "B2 First for Schools Sample Paper 2",
     }
     expected_variants = {"01": "first", "02": "first", "03": "for_schools", "04": "for_schools"}
+    expected_partner_sex = {"01": "male", "02": "female", "03": "male", "04": "female"}
     partners = set()
     for t in tests:
-        assert set(t.keys()) == {"id", "title", "variant", "partner", "parts"}, t.keys()
+        assert set(t.keys()) == {"id", "title", "variant", "partner", "partner_sex", "parts"}, t.keys()
         assert t["title"] == expected_titles[t["id"]], t
         assert t["variant"] == expected_variants[t["id"]], t
+        assert t["partner_sex"] == expected_partner_sex[t["id"]], t
         assert t["parts"] == [1, 2, 3, 4]
         assert isinstance(t["partner"], str) and len(t["partner"]) >= 2
         partners.add(t["partner"])
@@ -105,6 +107,8 @@ def main():
 
     forbidden_asset_markers = (b"Interlocutor", b"Candidate A", b"Place Part 2 booklet", b"Retrieve Part")
     for tid, doc in sorted(all_tests.items()):
+        assert doc["partner"]["sex"] == expected_partner_sex[tid], (tid, doc["partner"])
+        assert doc["examiner"] == {"name": "Mr Thompson", "sex": "male"}, (tid, doc.get("examiner"))
         assert set(doc["parts"].keys()) == {"1", "2", "3", "4"}
         assert doc["parts"]["1"]["duration_seconds"] == 120
         assert doc["parts"]["2"]["duration_seconds"] == 240
@@ -142,6 +146,72 @@ def main():
     assert "Cambridge" in credits_txt
     assert "personal" in credits_txt.lower()
     assert "redistribute" in credits_txt.lower()
+
+    # 4. Sex normalisation, tone examiner-name override, and session API metadata
+    assert catalog.normalize_sex("female") == "female"
+    assert catalog.normalize_sex("FEMALE") == "female"
+    assert catalog.normalize_sex("male") == "male"
+    for bad_sex in ("invalid", "other", "", None, 42):
+        assert catalog.normalize_sex(bad_sex) == "male", bad_sex
+    norm_doc = catalog._normalize_test_doc({
+        "id": "99",
+        "partner": {"name": "Sam", "sex": "invalid_value"},
+        "examiner": {"name": "Ms Clarke", "sex": "not_valid"},
+    })
+    assert norm_doc["partner"]["sex"] == "male", norm_doc
+    assert norm_doc["examiner"] == {"name": "Ms Clarke", "sex": "male"}, norm_doc
+
+    greet_override = tone.opening_greeting(hour=10, examiner_name="Ms Clarke")
+    assert greet_override == "Good morning. My name is Ms Clarke. And your names are?", greet_override
+    assert tone.check_examiner_line(greet_override) == []
+
+    # Own-task partner_sex validation: default male, accept female, reject invalid
+    helpers.isolated_data_dir(prefix="b2cat-own-")
+    import store
+    store.DATA_DIR = os.environ["B2_DATA_DIR"]
+    os.environ["B2_SPK_TEST_MODE"] = "1"
+    own_bad, own_code, own_err = catalog.create_own_task(
+        "cat-own-u",
+        {"title": ["Bad sex"], "part": ["1"], "questions": ["How are you?"], "partner_sex": ["robot"]},
+        {},
+    )
+    assert own_bad is None and own_code == 422 and own_err == "invalid_partner_sex"
+    own_ok, own_code2, own_err2 = catalog.create_own_task(
+        "cat-own-u",
+        {"title": ["Female partner task"], "part": ["1"], "questions": ["How are you?"], "partner_sex": ["female"]},
+        {},
+    )
+    assert own_code2 == 201 and own_err2 is None and own_ok["partner_sex"] == "female", own_ok
+    own_test = catalog.get_own_task_as_test("cat-own-u", own_ok["id"])
+    assert own_test["partner"]["sex"] == "female" and own_test["examiner"]["sex"] == "male"
+
+    # Session API tests against live isolated server: paper 02 -> female, paper 01 -> male
+    st_s2, s2 = _req(base, "POST", "/api/speaking/v3/sessions", {"test_id": "02", "part": 1}, token=tok)
+    assert st_s2 == 200, (st_s2, s2)
+    assert s2["partner_sex"] == "female", s2
+    assert s2["examiner_name"] == "Mr Thompson" and s2["examiner_sex"] == "male", s2
+    assert s2["state"]["partner_sex"] == "female" and s2["state"]["examiner_sex"] == "male", s2
+
+    st_s1, s1 = _req(base, "POST", "/api/speaking/v3/sessions", {"test_id": "01", "part": 1}, token=tok)
+    assert st_s1 == 200, (st_s1, s1)
+    assert s1["partner_sex"] == "male", s1
+    assert s1["examiner_name"] == "Mr Thompson" and s1["examiner_sex"] == "male", s1
+    assert s1["state"]["partner_sex"] == "male" and s1["state"]["examiner_sex"] == "male", s1
+
+    # Session whose test JSON lacks partner.sex and examiner -> defaults to male / Mr Thompson without error
+    base_doc = json.loads(json.dumps(catalog.get_test("01")))
+    base_doc["partner"].pop("sex", None)
+    base_doc.pop("examiner", None)
+    orig_get_test = catalog.get_test
+    catalog.get_test = lambda tid: base_doc
+    try:
+        res_missing, code_missing, err_missing = engine.create_session("cat-own-u", test_id="01", part=1, hour=10)
+        assert code_missing == 200 and err_missing is None, (code_missing, err_missing)
+        assert res_missing["partner_sex"] == "male", res_missing
+        assert res_missing["examiner_name"] == "Mr Thompson" and res_missing["examiner_sex"] == "male", res_missing
+        assert res_missing["state"]["partner_sex"] == "male", res_missing
+    finally:
+        catalog.get_test = orig_get_test
 
     print("PASS test_speaking_v3_catalog")
     return 0

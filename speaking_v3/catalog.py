@@ -10,10 +10,13 @@ import threading
 import time
 
 import store
+from speaking_v3 import tone
 from speaking_v3.multipart import detect_image_type
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TESTS_DIR = os.path.join(REPO_ROOT, "material", "speaking", "tests")
+
+VALID_SEXES = ("male", "female")
 
 OWN_TASK_MAX_ITEMS = 20
 OWN_TASK_MAX_IMAGES = 4
@@ -48,6 +51,24 @@ def _clean_lines(value, max_items=12, max_len=240):
     return out
 
 
+def normalize_sex(value):
+    """Normalise an explicit sex field to 'male' or 'female' (default 'male')."""
+    s = str(value or "").strip().lower()
+    return s if s in VALID_SEXES else "male"
+
+
+def _normalize_test_doc(doc):
+    partner = doc.get("partner") if isinstance(doc.get("partner"), dict) else {}
+    partner["sex"] = normalize_sex(partner.get("sex"))
+    doc["partner"] = partner
+    ex = doc.get("examiner") if isinstance(doc.get("examiner"), dict) else {}
+    doc["examiner"] = {
+        "name": tone.resolve_examiner_name(_clean_text(ex.get("name"), max_len=80)),
+        "sex": normalize_sex(ex.get("sex")),
+    }
+    return doc
+
+
 # ---------------------------------------------------------------------------
 # Built-in 4 Cambridge Sample Tests
 # ---------------------------------------------------------------------------
@@ -64,7 +85,7 @@ def load_all_tests(force_reload=False):
                     continue
                 path = os.path.join(TESTS_DIR, fname)
                 with open(path, "r", encoding="utf-8") as fh:
-                    doc = json.load(fh)
+                    doc = _normalize_test_doc(json.load(fh))
                 tid = str(doc.get("id") or "").strip()
                 if tid:
                     tests[tid] = doc
@@ -83,6 +104,7 @@ def list_public_tests():
             "title": t["title"],
             "variant": t["variant"],
             "partner": t["partner"]["name"],
+            "partner_sex": normalize_sex((t.get("partner") or {}).get("sex")),
             "parts": [1, 2, 3, 4],
         })
     return out
@@ -120,6 +142,7 @@ def _public_own_task(meta):
         "title": meta["title"],
         "part": meta["part"],
         "parts": [1, 2, 3, 4] if meta["part"] == 0 else [meta["part"]],
+        "partner_sex": normalize_sex(meta.get("partner_sex")),
         "images": [
             f"/api/speaking/v3/own-tasks/{meta['id']}/images/{img}"
             for img in (meta.get("image_files") or [])
@@ -155,6 +178,15 @@ def _parse_part_field(raw_part):
     return None
 
 
+def _parse_sex_field(raw_sex):
+    s = str(raw_sex or "").strip().lower()
+    if not s:
+        return "male"
+    if s in VALID_SEXES:
+        return s
+    return None
+
+
 def create_own_task(uid, fields, files):
     """Validate form fields + images and persist one own task for `uid`.
 
@@ -171,6 +203,10 @@ def create_own_task(uid, fields, files):
     part = _parse_part_field(first("part"))
     if part is None:
         return None, 422, "invalid_part"
+
+    partner_sex = _parse_sex_field(first("partner_sex"))
+    if partner_sex is None:
+        return None, 422, "invalid_partner_sex"
 
     questions = _clean_lines(first("questions"))
     prompt = _clean_text(first("prompt"), max_len=500)
@@ -247,6 +283,7 @@ def create_own_task(uid, fields, files):
                 "id": task_id,
                 "title": title,
                 "part": part,
+                "partner_sex": partner_sex,
                 "questions": questions,
                 "prompt": prompt,
                 "discussion": discussion,
@@ -367,9 +404,14 @@ def get_own_task_as_test(uid, task_id):
         "own_task_part": meta["part"],
         "partner": {
             "name": "Alex",
+            "sex": normalize_sex(meta.get("partner_sex")),
             "home": "Bristol",
             "voice": "Kore",
             "persona": "A B2 First candidate from Bristol speaking natural British English.",
+        },
+        "examiner": {
+            "name": tone.EXAMINER_NAME,
+            "sex": "male",
         },
         "images": {
             "part2_task1": p2_imgs,

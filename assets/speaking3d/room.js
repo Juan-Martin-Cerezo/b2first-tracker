@@ -1,12 +1,13 @@
 import * as THREE from '../vendor/three/three.module.min.js';
 
 const VALID_ROLES = new Set(['examiner', 'partner', 'you', null]);
+const VALID_SEXES = new Set(['male', 'female']);
 const BREATH_HZ = 0.25;
 const BREATH_AMP = 0.006;
 const MAX_DT = 0.05;
-const SPRING_K = 28;
-const SPRING_D = 9;
-const MAX_YAW = 0.55;
+const SPRING_K = 64;
+const SPRING_D = 16;
+const MAX_YAW = 0.80;
 const MAX_YAW_PARTNER = 1.15;
 const MAX_YAW_REDUCED = 0.26;
 const MAX_PITCH = 0.18;
@@ -33,8 +34,8 @@ const CAM_NEAR = 0.045;
 // both cards at x=+-0.27 stay inside the frame and clear of all HUD pills at 1280x800 and 390x844)
 const CAM_POSES = {
   base: {
-    pos: new THREE.Vector3(0.18, 1.22, 0.82),
-    target: new THREE.Vector3(0.10, 1.08, -0.55),
+    pos: new THREE.Vector3(0.18, 1.22, 0.94),
+    target: new THREE.Vector3(0.10, 1.05, -0.55),
     fov: FOV_BASE
   },
   photos: {
@@ -71,10 +72,10 @@ const PHOTO_L_BASE = new THREE.Vector3(-0.27, 0.748, 0.20);
 const PHOTO_R_BASE = new THREE.Vector3(0.27, 0.748, 0.20);
 const CARD_BASE_POS = new THREE.Vector3(0, 0.748, 0.03);
 
-// Look-around drag constants
-const LOOK_SENS = 0.0042;
-const LOOK_YAW_MIN = -0.55;
-const LOOK_YAW_MAX = 0.55;
+// Look-around drag constants (asymmetric yaw: negative = left toward partner, positive = right)
+const LOOK_SENS = 0.00465;
+const LOOK_YAW_MIN = -1.25;
+const LOOK_YAW_MAX = 0.65;
 const LOOK_PITCH_MIN = -0.30;
 const LOOK_PITCH_MAX = 0.22;
 const LOOK_INERTIA_DECAY = 0.90;
@@ -195,9 +196,21 @@ const state = {
   card: null
 };
 
+const castState = {
+  partner: { name: 'Alex', sex: 'male' },
+  examiner: { name: 'Mr Thompson', sex: 'male' }
+};
+
 let avatars = [];
 let avatarMap = { examiner: null, partner: null, assessor: null, you: null };
 let allFigures = [];
+let sceneSharedGeos = null;
+let sceneAvatarConfigs = null;
+
+function normalizeSex(value) {
+  const s = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return VALID_SEXES.has(s) ? s : 'male';
+}
 
 function clamp(v, lo, hi) {
   return v < lo ? lo : (v > hi ? hi : v);
@@ -360,7 +373,7 @@ function supported() {
   return cachedSupported;
 }
 
-function makeCapsuleBetween(p0, p1, radius, endTrim) {
+function makeCapsuleBetween(p0, p1, radius, endTrim, radiusScale) {
   const dir = new THREE.Vector3().subVectors(p1, p0);
   const fullLen = Math.max(0.04, dir.length());
   const trim = endTrim || 0;
@@ -374,31 +387,53 @@ function makeCapsuleBetween(p0, p1, radius, endTrim) {
   );
   // Shared CapsuleGeometry(0.044, 0.2) has total unscaled height 0.288 along Y.
   const scaleY = Math.max(0.25, len / 0.288);
+  const rScale = radiusScale || 1;
   const m = new THREE.Matrix4();
-  m.compose(mid, quat, new THREE.Vector3(1, scaleY, 1));
+  m.compose(mid, quat, new THREE.Vector3(rScale, scaleY, rScale));
   return m;
 }
 
-function createTorsoGeometry() {
-  // Smooth tapered seated torso from hip (y=0) to collar (y=0.56), shoulder width ~0.38.
-  const pts = [
-    new THREE.Vector2(0.0, 0.0),
-    new THREE.Vector2(0.145, 0.01),
-    new THREE.Vector2(0.152, 0.14),
-    new THREE.Vector2(0.175, 0.34),
-    new THREE.Vector2(0.192, 0.45),
-    new THREE.Vector2(0.18, 0.51),
-    new THREE.Vector2(0.11, 0.545),
-    new THREE.Vector2(0.06, 0.56),
-    new THREE.Vector2(0.0, 0.56)
-  ];
+function createTorsoGeometry(sex) {
+  // Smooth tapered seated torso from hip (y=0) to collar (y=0.56).
+  // Male shoulder width ~0.38 m; female shoulder width ~0.34 m with +6% hip base and tailored waist.
+  const isFemale = sex === 'female';
+  const pts = isFemale
+    ? [
+        new THREE.Vector2(0.0, 0.0),
+        new THREE.Vector2(0.154, 0.01),
+        new THREE.Vector2(0.158, 0.09),
+        new THREE.Vector2(0.132, 0.21),
+        new THREE.Vector2(0.156, 0.35),
+        new THREE.Vector2(0.170, 0.45),
+        new THREE.Vector2(0.156, 0.51),
+        new THREE.Vector2(0.098, 0.545),
+        new THREE.Vector2(0.052, 0.56),
+        new THREE.Vector2(0.0, 0.56)
+      ]
+    : [
+        new THREE.Vector2(0.0, 0.0),
+        new THREE.Vector2(0.145, 0.01),
+        new THREE.Vector2(0.152, 0.14),
+        new THREE.Vector2(0.175, 0.34),
+        new THREE.Vector2(0.192, 0.45),
+        new THREE.Vector2(0.18, 0.51),
+        new THREE.Vector2(0.11, 0.545),
+        new THREE.Vector2(0.06, 0.56),
+        new THREE.Vector2(0.0, 0.56)
+      ];
   const geo = new THREE.LatheGeometry(pts, 18);
-  geo.scale(1.0, 1.0, 0.58);
+  geo.scale(1.0, 1.0, isFemale ? 0.57 : 0.58);
   geo.computeVertexNormals();
   return geo;
 }
 
 function buildAvatar(cfg, sharedGeos, shadows) {
+  const sex = cfg.name === 'assessor' ? 'male' : normalizeSex(cfg.sex);
+  const isFemale = sex === 'female';
+  const clothColor = cfg.clothPalette ? (cfg.clothPalette[sex] || cfg.clothColor) : cfg.clothColor;
+  const ownedGeos = [];
+  const ownedMats = [];
+
   const root = new THREE.Group();
   root.name = cfg.name;
   root.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
@@ -410,7 +445,7 @@ function buildAvatar(cfg, sharedGeos, shadows) {
     metalness: 0.02
   });
   const clothMat = new THREE.MeshStandardMaterial({
-    color: cfg.clothColor,
+    color: clothColor,
     roughness: 0.82,
     metalness: 0.03
   });
@@ -434,6 +469,7 @@ function buildAvatar(cfg, sharedGeos, shadows) {
     roughness: 0.75,
     metalness: 0.02
   });
+  ownedMats.push(skinMat, clothMat, hairMat, eyeMat, browMat, mouthMat);
 
   // Breathing group (hips anchored at y=0, scales subtly along Y)
   const torsoGroup = new THREE.Group();
@@ -443,7 +479,9 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   }
   root.add(torsoGroup);
 
-  const torsoMesh = new THREE.Mesh(sharedGeos.torso, clothMat);
+  const torsoGeo = createTorsoGeometry(sex);
+  ownedGeos.push(torsoGeo);
+  const torsoMesh = new THREE.Mesh(torsoGeo, clothMat);
   torsoMesh.castShadow = shadows;
   torsoMesh.receiveShadow = shadows;
   torsoGroup.add(torsoMesh);
@@ -453,10 +491,14 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   armMesh.castShadow = shadows;
   armMesh.receiveShadow = shadows;
   const pose = cfg.armPose;
-  armMesh.setMatrixAt(0, makeCapsuleBetween(pose.shL, pose.elL, 0.04, 0));
-  armMesh.setMatrixAt(1, makeCapsuleBetween(pose.elL, pose.hdL, 0.036, 0.032));
-  armMesh.setMatrixAt(2, makeCapsuleBetween(pose.shR, pose.elR, 0.04, 0));
-  armMesh.setMatrixAt(3, makeCapsuleBetween(pose.elR, pose.hdR, 0.036, 0.032));
+  const shScaleX = isFemale ? 0.88 : 1.0;
+  const armRadScale = isFemale ? 0.88 : 1.0;
+  const shL = new THREE.Vector3(pose.shL.x * shScaleX, pose.shL.y, pose.shL.z);
+  const shR = new THREE.Vector3(pose.shR.x * shScaleX, pose.shR.y, pose.shR.z);
+  armMesh.setMatrixAt(0, makeCapsuleBetween(shL, pose.elL, 0.04, 0, armRadScale));
+  armMesh.setMatrixAt(1, makeCapsuleBetween(pose.elL, pose.hdL, 0.036, 0.032, armRadScale));
+  armMesh.setMatrixAt(2, makeCapsuleBetween(shR, pose.elR, 0.04, 0, armRadScale));
+  armMesh.setMatrixAt(3, makeCapsuleBetween(pose.elR, pose.hdR, 0.036, 0.032, armRadScale));
   armMesh.instanceMatrix.needsUpdate = true;
   torsoGroup.add(armMesh);
 
@@ -473,7 +515,11 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   torsoGroup.add(handsMesh);
 
   // Neck (tucked cleanly into torso collar and head base with no seam)
-  const neckMesh = new THREE.Mesh(sharedGeos.neck, skinMat);
+  const neckGeo = isFemale
+    ? new THREE.CylinderGeometry(0.041, 0.047, 0.11, 12)
+    : new THREE.CylinderGeometry(0.048, 0.054, 0.11, 12);
+  ownedGeos.push(neckGeo);
+  const neckMesh = new THREE.Mesh(neckGeo, skinMat);
   neckMesh.position.set(0, 0.58, 0);
   neckMesh.castShadow = shadows;
   torsoGroup.add(neckMesh);
@@ -485,20 +531,43 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   headGroup.rotation.order = 'YXZ';
   torsoGroup.add(headGroup);
 
+  const headScale = isFemale ? 0.95 : 1.0;
   const headMesh = new THREE.Mesh(sharedGeos.head, skinMat);
   headMesh.position.set(0, 0.118, 0);
-  headMesh.scale.set(0.095, 0.115, 0.105);
+  headMesh.scale.set(0.095 * headScale, 0.115 * headScale, 0.105 * headScale);
   headMesh.castShadow = shadows;
   headMesh.receiveShadow = shadows;
   headGroup.add(headMesh);
 
   // Stylized hair cap over upper/back crown (total seated height ~0.90 above hip)
-  const hairMesh = new THREE.Mesh(sharedGeos.hair, hairMat);
-  hairMesh.position.set(0, 0.138, 0.014);
-  hairMesh.scale.set(0.099, 0.104, 0.108);
-  hairMesh.rotation.x = -0.18;
+  const hairGeo = isFemale
+    ? new THREE.SphereGeometry(1, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.66)
+    : new THREE.SphereGeometry(1, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.6);
+  ownedGeos.push(hairGeo);
+  const hairMesh = new THREE.Mesh(hairGeo, hairMat);
+  if (isFemale) {
+    hairMesh.position.set(0, 0.132, 0.010);
+    hairMesh.scale.set(0.099, 0.108, 0.108);
+    hairMesh.rotation.x = -0.08;
+  } else {
+    hairMesh.position.set(0, 0.138, 0.014);
+    hairMesh.scale.set(0.099, 0.104, 0.108);
+    hairMesh.rotation.x = -0.18;
+  }
   hairMesh.castShadow = shadows;
   headGroup.add(hairMesh);
+
+  // Female nape hair volume (+1 mesh, same hairMat, stays clear of chair backrest)
+  if (isFemale) {
+    const hairBackGeo = new THREE.SphereGeometry(1, 16, 12);
+    ownedGeos.push(hairBackGeo);
+    const hairBackMesh = new THREE.Mesh(hairBackGeo, hairMat);
+    hairBackMesh.name = 'hair_nape';
+    hairBackMesh.position.set(0, 0.068, 0.036);
+    hairBackMesh.scale.set(0.104, 0.105, 0.088);
+    hairBackMesh.castShadow = shadows;
+    headGroup.add(hairBackMesh);
+  }
 
   // Eyes (two spheres r=0.012 on -Z front of face, pivoted at head centre for subtle gaze shift)
   const eyesGroup = new THREE.Group();
@@ -506,36 +575,44 @@ function buildAvatar(cfg, sharedGeos, shadows) {
   eyesGroup.rotation.order = 'YXZ';
   const eyesMesh = new THREE.InstancedMesh(sharedGeos.eye, eyeMat, 2);
   const em = new THREE.Matrix4();
-  em.makeTranslation(-0.034, 0, -0.094);
+  const eyeX = isFemale ? 0.032 : 0.034;
+  const eyeZ = isFemale ? -0.089 : -0.094;
+  em.makeTranslation(-eyeX, 0, eyeZ);
   eyesMesh.setMatrixAt(0, em);
-  em.makeTranslation(0.034, 0, -0.094);
+  em.makeTranslation(eyeX, 0, eyeZ);
   eyesMesh.setMatrixAt(1, em);
   eyesMesh.instanceMatrix.needsUpdate = true;
   eyesGroup.add(eyesMesh);
   headGroup.add(eyesGroup);
 
-  // Brows (two thin boxes)
-  const browsMesh = new THREE.InstancedMesh(sharedGeos.brow, browMat, 2);
+  // Brows (two thin boxes; thinner and gently arched for female variant)
+  const browGeo = isFemale
+    ? new THREE.BoxGeometry(0.030, 0.0042, 0.010)
+    : new THREE.BoxGeometry(0.032, 0.007, 0.012);
+  ownedGeos.push(browGeo);
+  const browsMesh = new THREE.InstancedMesh(browGeo, browMat, 2);
   const bm = new THREE.Matrix4();
-  const qL = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -0.06));
-  const qR = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0.06));
-  bm.compose(new THREE.Vector3(-0.034, 0.154, -0.095), qL, new THREE.Vector3(1, 1, 1));
+  const browTilt = isFemale ? 0.09 : 0.06;
+  const browZ = isFemale ? -0.090 : -0.095;
+  const qL = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -browTilt));
+  const qR = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, browTilt));
+  bm.compose(new THREE.Vector3(-eyeX, 0.153, browZ), qL, new THREE.Vector3(1, 1, 1));
   browsMesh.setMatrixAt(0, bm);
-  bm.compose(new THREE.Vector3(0.034, 0.154, -0.095), qR, new THREE.Vector3(1, 1, 1));
+  bm.compose(new THREE.Vector3(eyeX, 0.153, browZ), qR, new THREE.Vector3(1, 1, 1));
   browsMesh.setMatrixAt(1, bm);
   browsMesh.instanceMatrix.needsUpdate = true;
   headGroup.add(browsMesh);
 
   // Nose (small cone pointing -Z)
   const noseMesh = new THREE.Mesh(sharedGeos.nose, skinMat);
-  noseMesh.position.set(0, 0.112, -0.108);
+  noseMesh.position.set(0, 0.112, isFemale ? -0.102 : -0.108);
   noseMesh.rotation.x = -Math.PI * 0.48;
   headGroup.add(noseMesh);
 
   // Mouth (dark thin box scaled at runtime from audio RMS)
   const mouthMesh = new THREE.Mesh(sharedGeos.mouth, mouthMat);
   mouthMesh.name = 'mouth';
-  mouthMesh.position.set(0, MOUTH_BASE_Y, -0.097);
+  mouthMesh.position.set(0, MOUTH_BASE_Y, isFemale ? -0.092 : -0.097);
   mouthMesh.scale.y = MOUTH_BASE_SCALE;
   headGroup.add(mouthMesh);
 
@@ -551,13 +628,17 @@ function buildAvatar(cfg, sharedGeos, shadows) {
       roughness: 0.9,
       metalness: 0.0
     });
+    const boardGeo = new THREE.BoxGeometry(0.24, 0.32, 0.012);
+    const paperGeo = new THREE.BoxGeometry(0.21, 0.28, 0.005);
+    ownedGeos.push(boardGeo, paperGeo);
+    ownedMats.push(boardMat, paperMat);
     const clipGroup = new THREE.Group();
     clipGroup.position.set(0.02, 0.28, -0.34);
     clipGroup.rotation.set(-0.98, 0.08, 0.04);
-    const board = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.32, 0.012), boardMat);
+    const board = new THREE.Mesh(boardGeo, boardMat);
     board.castShadow = shadows;
     clipGroup.add(board);
-    const paper = new THREE.Mesh(new THREE.BoxGeometry(0.21, 0.28, 0.005), paperMat);
+    const paper = new THREE.Mesh(paperGeo, paperMat);
     paper.position.set(0, -0.004, 0.008);
     clipGroup.add(paper);
     torsoGroup.add(clipGroup);
@@ -569,6 +650,7 @@ function buildAvatar(cfg, sharedGeos, shadows) {
 
   root.userData = {
     name: cfg.name,
+    sex,
     head: headGroup,
     eyes: eyesGroup,
     mouth: mouthMesh,
@@ -584,10 +666,24 @@ function buildAvatar(cfg, sharedGeos, shadows) {
     rollVel: 0,
     eyeYaw: 0,
     eyePitch: 0,
-    mouthOpen: 0
+    mouthOpen: 0,
+    ownedGeos,
+    ownedMats
   };
 
   return root;
+}
+
+function disposeAvatar(avatarRoot) {
+  if (!avatarRoot || !avatarRoot.userData) return;
+  const geos = avatarRoot.userData.ownedGeos || [];
+  const mats = avatarRoot.userData.ownedMats || [];
+  for (let i = 0; i < geos.length; i++) {
+    try { geos[i].dispose(); } catch (e) {}
+  }
+  for (let i = 0; i < mats.length; i++) {
+    try { mats[i].dispose(); } catch (e) {}
+  }
 }
 
 function buildCandidateSelf(sharedGeos, shadows) {
@@ -776,10 +872,10 @@ function buildScene(mobile) {
 
   // Chairs: two-vs-two layout (4 chairs batched into 3 InstancedMeshes; assessor uses plain side chair)
   const seatsCfg = [
-    { x: -0.62, z: 0.82, rotY: 0.30 },           // Partner (candidate left)
+    { x: -0.80, z: 0.64, rotY: -0.55 },          // Partner (ahead of candidate shoulder line, turned toward table)
     { x: 0.18, z: 0.82, rotY: 0.0 },             // You (candidate right)
     { x: 0.18, z: -0.86, rotY: Math.PI },        // Examiner (interlocutor at table)
-    { x: -0.52, z: -1.72, rotY: Math.PI * 0.94 } // Assessor (behind examiner, offset left)
+    { x: -0.72, z: -1.46, rotY: Math.PI * 0.94 } // Assessor (behind examiner, offset left)
   ];
   const chairMat = new THREE.MeshStandardMaterial({
     color: 0x4b4f55,
@@ -831,19 +927,16 @@ function buildScene(mobile) {
   s.add(backMesh);
   s.add(cLegMesh);
 
-  // Shared avatar geometries
+  // Shared base avatar geometries (per-variant torso, neck, hair, brows are built per avatar for clean disposal)
   const sharedGeos = {
-    torso: createTorsoGeometry(),
     armSeg: new THREE.CapsuleGeometry(0.044, 0.2, 6, 10),
     hand: new THREE.SphereGeometry(0.036, 12, 10),
-    neck: new THREE.CylinderGeometry(0.048, 0.054, 0.11, 12),
     head: new THREE.SphereGeometry(1, 20, 16),
-    hair: new THREE.SphereGeometry(1, 18, 12, 0, Math.PI * 2, 0, Math.PI * 0.6),
     eye: new THREE.SphereGeometry(0.012, 10, 8),
-    brow: new THREE.BoxGeometry(0.032, 0.007, 0.012),
     nose: new THREE.ConeGeometry(0.013, 0.034, 10),
     mouth: new THREE.BoxGeometry(0.046, 0.016, 0.014)
   };
+  sceneSharedGeos = sharedGeos;
 
   // Two-vs-two exam geometry: examiner + assessor facing partner + candidate ("you")
   const avatarConfigs = [
@@ -854,6 +947,7 @@ function buildScene(mobile) {
       leanX: -0.05,
       skinColor: 0xd8b49a,
       clothColor: 0x2f3d56,
+      clothPalette: { male: 0x2f3d56, female: 0x513f56 },
       hairColor: 0x524b46,
       phaseOffset: 0.0,
       clipboard: false,
@@ -868,27 +962,28 @@ function buildScene(mobile) {
     },
     {
       name: 'partner',
-      pos: [-0.62, 0.46, 0.82],
-      rotY: 0.30,
+      pos: [-0.80, 0.46, 0.64],
+      rotY: -0.55,
       leanX: -0.05,
       skinColor: 0xdfbda5,
       clothColor: 0x6b7350,
+      clothPalette: { male: 0x6b7350, female: 0x7a5b6b },
       hairColor: 0x4b3525,
       phaseOffset: 2.1,
       clipboard: false,
       armPose: {
-        // Forearms resting cleanly on the candidate table edge (right forearm visible bottom-left)
+        // Forearms resting cleanly on the candidate edge of the table (turned toward the table)
         shL: new THREE.Vector3(-0.17, 0.45, 0.0),
-        elL: new THREE.Vector3(-0.12, 0.31, -0.26),
-        hdL: new THREE.Vector3(0.08, 0.33, -0.46),
+        elL: new THREE.Vector3(-0.21, 0.31, -0.24),
+        hdL: new THREE.Vector3(-0.12, 0.33, -0.46),
         shR: new THREE.Vector3(0.17, 0.45, 0.0),
-        elR: new THREE.Vector3(0.24, 0.31, -0.28),
-        hdR: new THREE.Vector3(0.41, 0.335, -0.50)
+        elR: new THREE.Vector3(0.21, 0.31, -0.26),
+        hdR: new THREE.Vector3(0.16, 0.335, -0.50)
       }
     },
     {
       name: 'assessor',
-      pos: [-0.52, 0.46, -1.72],
+      pos: [-0.72, 0.46, -1.46],
       rotY: Math.PI * 0.94,
       leanX: 0,
       skinColor: 0xcfa88d,
@@ -906,10 +1001,18 @@ function buildScene(mobile) {
       }
     }
   ];
+  sceneAvatarConfigs = {
+    examiner: avatarConfigs[0],
+    partner: avatarConfigs[1],
+    assessor: avatarConfigs[2]
+  };
 
   avatarMap = { examiner: null, partner: null, assessor: null, you: null };
   avatars = avatarConfigs.map(cfg => {
-    const grp = buildAvatar(cfg, sharedGeos, shadows);
+    const builtCfg = (cfg.name === 'examiner' || cfg.name === 'partner')
+      ? Object.assign({}, cfg, { sex: castState[cfg.name].sex })
+      : cfg;
+    const grp = buildAvatar(builtCfg, sharedGeos, shadows);
     avatarMap[cfg.name] = grp;
     s.add(grp);
     return grp;
@@ -1348,8 +1451,8 @@ function advanceDolly(nowMs) {
   dollyWeight = dollyFromWeight + (dollyToWeight - dollyFromWeight) * ease;
   if (dollyGoal === 'base' && !lookDragging) {
     // Restore base yaw/pitch cleanly as the dolly returns
-    lookYaw = dollyReturnLookYaw * (1 - ease);
-    lookPitch = dollyReturnLookPitch * (1 - ease);
+    lookYaw = clamp(dollyReturnLookYaw * (1 - ease), LOOK_YAW_MIN, LOOK_YAW_MAX);
+    lookPitch = clamp(dollyReturnLookPitch * (1 - ease), LOOK_PITCH_MIN, LOOK_PITCH_MAX);
   }
   if (u >= 1) {
     camPos.copy(dollyToPos);
@@ -1497,8 +1600,8 @@ function updateLook(dt, nowMs) {
         const elapsed = Math.max(0, (now - lookReturnStartMs) * 0.001);
         const u = clamp(elapsed / LOOK_RETURN_DUR_S, 0, 1);
         const ease = 1 - Math.pow(1 - u, 3);
-        lookYaw = lookReturnStartYaw * (1 - ease);
-        lookPitch = lookReturnStartPitch * (1 - ease);
+        lookYaw = clamp(lookReturnStartYaw * (1 - ease), LOOK_YAW_MIN, LOOK_YAW_MAX);
+        lookPitch = clamp(lookReturnStartPitch * (1 - ease), LOOK_PITCH_MIN, LOOK_PITCH_MAX);
         if (u >= 1) {
           lookYaw = 0;
           lookPitch = 0;
@@ -1510,8 +1613,8 @@ function updateLook(dt, nowMs) {
       if (!lookIdleStartMs) lookIdleStartMs = now;
       if ((now - lookIdleStartMs) * 0.001 >= LOOK_IDLE_RETURN_S) {
         lookReturning = true;
-        lookReturnStartYaw = lookYaw;
-        lookReturnStartPitch = lookPitch;
+        lookReturnStartYaw = clamp(lookYaw, LOOK_YAW_MIN, LOOK_YAW_MAX);
+        lookReturnStartPitch = clamp(lookPitch, LOOK_PITCH_MIN, LOOK_PITCH_MAX);
         lookReturnStartMs = now;
       }
     } else if (!displaced) {
@@ -1525,13 +1628,14 @@ function updateLook(dt, nowMs) {
     camera.updateProjectionMatrix();
   }
 
-  // Dolly target wins during dolly while look-around offsets remain preserved in state
+  // Dolly target wins during dolly while look-around offsets remain preserved in state.
+  // Negative lookYaw turns the camera left toward the partner; positive turns right.
   _vCamDir.subVectors(camTarget, camPos).normalize();
   const baseYaw = Math.atan2(-_vCamDir.x, -_vCamDir.z);
   const basePitch = Math.asin(clamp(_vCamDir.y, -1, 1));
   const lookBlend = 1 - dollyWeight;
   camera.rotation.order = 'YXZ';
-  camera.rotation.set(basePitch + lookPitch * lookBlend, baseYaw + lookYaw * lookBlend, 0);
+  camera.rotation.set(basePitch + lookPitch * lookBlend, baseYaw - lookYaw * lookBlend, 0);
 
   const stillDisplaced = Math.abs(lookYaw) > 0.0005 || Math.abs(lookPitch) > 0.0005;
   const stillMoving = Math.abs(lookVelYaw) >= LOOK_INERTIA_STOP || Math.abs(lookVelPitch) >= LOOK_INERTIA_STOP;
@@ -1674,7 +1778,7 @@ function renderOnce(dtOverride) {
   const now = performance.now();
   const totalDt = typeof dtOverride === 'number'
     ? dtOverride
-    : Math.min(Math.max(0, (now - lastFrameMs) * 0.001), 0.15);
+    : Math.min(Math.max(0, (now - lastFrameMs) * 0.001), 0.5);
   lastFrameMs = now;
   const elapsed = (now - clockStart) * 0.001;
   let settled = true;
@@ -2050,6 +2154,8 @@ function unmount() {
   avatars = [];
   allFigures = [];
   avatarMap = { examiner: null, partner: null, assessor: null, you: null };
+  sceneSharedGeos = null;
+  sceneAvatarConfigs = null;
   state.speakingRole = null;
   state.speakingAnalyser = null;
   speakingData = null;
@@ -2340,6 +2446,77 @@ function showCard(url) {
   }
 }
 
+function rebuildAvatarRole(role) {
+  if (!mounted || !scene || !sceneSharedGeos || !sceneAvatarConfigs) return false;
+  if (role !== 'examiner' && role !== 'partner') return false;
+  const baseCfg = sceneAvatarConfigs[role];
+  const oldGrp = avatarMap[role];
+  if (!baseCfg || !oldGrp) return false;
+  const nextSex = castState[role].sex;
+  if (oldGrp.userData && oldGrp.userData.sex === nextSex) return false;
+
+  const prevUd = oldGrp.userData || {};
+  const shadows = !lastMobile;
+  const builtCfg = Object.assign({}, baseCfg, { sex: nextSex });
+  const newGrp = buildAvatar(builtCfg, sceneSharedGeos, shadows);
+  const newUd = newGrp.userData;
+  if (newUd && prevUd) {
+    newUd.yaw = prevUd.yaw || 0;
+    newUd.yawVel = prevUd.yawVel || 0;
+    newUd.pitch = prevUd.pitch || 0;
+    newUd.pitchVel = prevUd.pitchVel || 0;
+    newUd.roll = prevUd.roll || 0;
+    newUd.rollVel = prevUd.rollVel || 0;
+    newUd.eyeYaw = prevUd.eyeYaw || 0;
+    newUd.eyePitch = prevUd.eyePitch || 0;
+    newUd.mouthOpen = prevUd.mouthOpen || 0;
+    if (newUd.head) newUd.head.rotation.set(newUd.pitch, newUd.yaw, newUd.roll);
+    if (newUd.eyes) newUd.eyes.rotation.set(newUd.eyePitch, newUd.eyeYaw, 0);
+    if (newUd.mouth) {
+      newUd.mouth.scale.y = MOUTH_BASE_SCALE + newUd.mouthOpen * MOUTH_SCALE_GAIN;
+      newUd.mouth.position.y = newUd.mouthBaseY - newUd.mouthOpen * MOUTH_DROP_Y;
+    }
+  }
+
+  scene.remove(oldGrp);
+  disposeAvatar(oldGrp);
+  scene.add(newGrp);
+
+  avatarMap[role] = newGrp;
+  const avIdx = avatars.indexOf(oldGrp);
+  if (avIdx >= 0) avatars[avIdx] = newGrp;
+  const figIdx = allFigures.indexOf(oldGrp);
+  if (figIdx >= 0) allFigures[figIdx] = newGrp;
+  scene.updateMatrixWorld(true);
+  return true;
+}
+
+function setCast(cast) {
+  if (!cast || typeof cast !== 'object') return;
+  let rebuilt = false;
+  ['partner', 'examiner'].forEach(role => {
+    if (!(role in cast)) return;
+    const entry = cast[role];
+    if (typeof entry === 'string') {
+      castState[role].sex = normalizeSex(entry);
+    } else if (entry && typeof entry === 'object') {
+      if (typeof entry.name === 'string' && entry.name.trim()) {
+        castState[role].name = entry.name.trim();
+      }
+      castState[role].sex = normalizeSex(entry.sex);
+    } else {
+      castState[role].sex = 'male';
+    }
+    if (mounted && scene) {
+      if (rebuildAvatarRole(role)) rebuilt = true;
+    }
+  });
+  if (rebuilt && mounted && !lightboxOpen) {
+    renderOnce(0);
+    syncLoop();
+  }
+}
+
 function setReducedMotion(bool) {
   reducedMotionOverride = Boolean(bool);
   if (mounted) {
@@ -2380,9 +2557,37 @@ function getDebugLook() {
   return {
     yaw: Number(lookYaw),
     pitch: Number(lookPitch),
+    yawMin: LOOK_YAW_MIN,
+    yawMax: LOOK_YAW_MAX,
     dragging: Boolean(lookDragging),
     returning: Boolean(lookReturning)
   };
+}
+
+function getDebugCast() {
+  const seen = new Set();
+  ['examiner', 'partner'].forEach(role => {
+    const av = avatarMap[role];
+    if (av && av.userData && av.userData.sex) {
+      seen.add(av.userData.sex);
+    } else {
+      seen.add(castState[role].sex);
+    }
+  });
+  return {
+    partner: { name: castState.partner.name, sex: castState.partner.sex },
+    examiner: { name: castState.examiner.name, sex: castState.examiner.sex },
+    visibleSexes: ['male', 'female'].filter(s => seen.has(s))
+  };
+}
+
+function countMeshesInObject(obj) {
+  if (!obj) return 0;
+  let n = 0;
+  obj.traverse(node => {
+    if (node && node.isMesh) n++;
+  });
+  return n;
 }
 
 function getDebugStats() {
@@ -2411,6 +2616,13 @@ function getDebugStats() {
     figuresVisible,
     drawCalls: renderer.info.render.calls,
     triangles: renderer.info.render.triangles,
+    meshes: {
+      total: countMeshesInObject(scene),
+      examiner: countMeshesInObject(avatarMap.examiner),
+      partner: countMeshesInObject(avatarMap.partner),
+      assessor: countMeshesInObject(avatarMap.assessor),
+      you: countMeshesInObject(avatarMap.you)
+    },
     dpr: renderer.getPixelRatio(),
     shadows: Boolean(renderer.shadowMap.enabled),
     mobile: Boolean(lastMobile),
@@ -2574,11 +2786,13 @@ const SPK3D = {
   setPart,
   showImages,
   showCard,
+  setCast,
   setReducedMotion,
   __debug: {
     state: getDebugState,
     seats: getDebugSeats,
     look: getDebugLook,
+    cast: getDebugCast,
     stats: getDebugStats,
     bench: benchRender,
     camera: getDebugCamera,

@@ -301,6 +301,16 @@ def _synth_sequence(clips, partner_voice):
     return results, None
 
 
+def _cast_from_test(test):
+    """Extract explicit partner_sex and examiner name/sex with safe defaults."""
+    partner = test.get("partner") if isinstance(test, dict) and isinstance(test.get("partner"), dict) else {}
+    examiner = test.get("examiner") if isinstance(test, dict) and isinstance(test.get("examiner"), dict) else {}
+    partner_sex = catalog.normalize_sex(partner.get("sex"))
+    examiner_name = tone.resolve_examiner_name(examiner.get("name"))
+    examiner_sex = catalog.normalize_sex(examiner.get("sex"))
+    return partner_sex, examiner_name, examiner_sex
+
+
 def _public_state(sess):
     st = {
         "phase": sess["phase"],
@@ -309,6 +319,9 @@ def _public_state(sess):
         "target_part": sess["target_part"],
         "question_index": sess.get("q_idx", 0),
         "retries": sess.get("step_retries", 0),
+        "partner_sex": catalog.normalize_sex(sess.get("partner_sex")),
+        "examiner_name": tone.resolve_examiner_name(sess.get("examiner_name")),
+        "examiner_sex": catalog.normalize_sex(sess.get("examiner_sex")),
     }
     if sess.get("phase") == "part3":
         st["covered_count"] = len(sess.get("covered_options") or [])
@@ -466,7 +479,13 @@ def create_session(uid, test_id=None, part=0, own_task_id=None,
             return None, 404, "test_not_found"
         resolved_test_id = test["id"]
 
-    greeting_text = tone.opening_greeting(hour=hour, tz_offset_minutes=tz_offset_minutes)
+    partner_sex, examiner_name, examiner_sex = _cast_from_test(test)
+
+    greeting_text = tone.opening_greeting(
+        hour=hour,
+        tz_offset_minutes=tz_offset_minutes,
+        examiner_name=examiner_name,
+    )
     wav, tts_err = voice.synthesize_speech(
         greeting_text,
         role="examiner",
@@ -493,6 +512,9 @@ def create_session(uid, test_id=None, part=0, own_task_id=None,
         "candidate_name": "",
         "candidate_home": "",
         "partner_name": test["partner"]["name"],
+        "partner_sex": partner_sex,
+        "examiner_name": examiner_name,
+        "examiner_sex": examiner_sex,
         "done": False,
         "created_at": now,
         "updated_at": now,
@@ -520,11 +542,17 @@ def create_session(uid, test_id=None, part=0, own_task_id=None,
         "speaker": "examiner",
         "audio_b64": base64.b64encode(wav).decode("ascii"),
         "mime": "audio/wav",
+        "partner_sex": partner_sex,
+        "examiner_name": examiner_name,
+        "examiner_sex": examiner_sex,
         "state": {
             "phase": "intro",
             "step": "greeting",
             "part": 0,
             "target_part": target_part,
+            "partner_sex": partner_sex,
+            "examiner_name": examiner_name,
+            "examiner_sex": examiner_sex,
         },
         "ui": ui,
     }, 200, None

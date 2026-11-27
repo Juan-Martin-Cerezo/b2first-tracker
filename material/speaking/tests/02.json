@@ -4,9 +4,14 @@
   "variant": "first",
   "partner": {
     "name": "Sophie",
+    "sex": "female",
     "home": "Leeds",
     "voice": "Aoede",
     "persona": "A 24-year-old trainee architect from Leeds taking B2 First. Speaks natural British English, sometimes hesitates before deciding, and offers balanced counter-arguments."
+  },
+  "examiner": {
+    "name": "Mr Thompson",
+    "sex": "male"
   },
   "images": {
     "part2_task1": [

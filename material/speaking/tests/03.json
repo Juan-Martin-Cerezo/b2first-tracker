@@ -4,9 +4,14 @@
   "variant": "for_schools",
   "partner": {
     "name": "Oliver",
+    "sex": "male",
     "home": "Cambridge",
     "voice": "Fenrir",
     "persona": "A 16-year-old sixth-form student from Cambridge preparing for B2 First for Schools. Speaks natural British English, sometimes changes his mind mid-discussion, and asks follow-up questions."
+  },
+  "examiner": {
+    "name": "Mr Thompson",
+    "sex": "male"
   },
   "images": {
     "part2_task1": [

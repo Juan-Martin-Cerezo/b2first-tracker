@@ -22,9 +22,9 @@ from helpers import isolated_server, login_owner, OWNER_NAME  # noqa: E402
 
 EXPECTED_SEATS = {
     "you": [0.18, 0.46, 0.82],
-    "partner": [-0.62, 0.46, 0.82],
+    "partner": [-0.80, 0.46, 0.64],
     "examiner": [0.18, 0.46, -0.86],
-    "assessor": [-0.52, 0.46, -1.72],
+    "assessor": [-0.72, 0.46, -1.46],
 }
 
 
@@ -57,13 +57,13 @@ def hold_to_speak(pg, transcript_text, hold_ms=100):
     pg.mouse.up()
 
 
-def enter_part(pg, part_num):
+def enter_part(pg, part_num, test_id="01"):
     pg.evaluate("openSpeakingExam()")
     pg.wait_for_selector("#speakingOverlay.is-open")
     pg.wait_for_selector("#speakingCatalogGrid .spk3-exam-card")
     if part_num == 3:
         pg.evaluate("() => { SPEAKING._prepStepMs = 35; }")
-    pg.click(f'.spk3-exam-card[data-test-id="01"] .spk3-chip[data-part="{part_num}"]')
+    pg.click(f'.spk3-exam-card[data-test-id="{test_id}"] .spk3-chip[data-part="{part_num}"]')
     pg.wait_for_selector("#speakingViewExam.is-active")
     wait_for_mic_ready(pg)
     hold_to_speak(pg, "My name is Juan")
@@ -404,6 +404,8 @@ def main():
                     a.showImages(null);
                     a.showCard('c');
                     a.showCard(null);
+                    a.setCast({partner:{sex:'invalid'}, examiner:{sex:'male'}});
+                    a.setCast({partner:'male'});
                     a.setReducedMotion(false);
                     a.unmount();
                 } catch (e) {
@@ -417,7 +419,7 @@ def main():
                     threw,
                     methods: [
                         'supported','mount','unmount','isMounted','setActiveRole',
-                        'setSpeaking','setPart','showImages','showCard','setReducedMotion'
+                        'setSpeaking','setPart','showImages','showCard','setCast','setReducedMotion'
                     ].every(k => typeof a[k] === 'function'),
                 };
             }"""
@@ -507,10 +509,13 @@ def main():
         full_1280_shot = os.path.join(OUT_DIR, "speaking3d_fullwidth_1280.png")
         dpg.screenshot(path=full_1280_shot)
 
-        # 2b. Look-around: synthetic drag 120 px -> yaw 0.50 +- 0.06, clamp at 0.55, idle return
+        # 2b. Look-around: asymmetric clamp [-1.25, +0.65], right drag, left drag (-260px toward partner), idle return
         stage_box = dpg.locator("#speaking3dStage").bounding_box()
         sx = stage_box["x"] + stage_box["width"] * 0.50
         sy = stage_box["y"] + stage_box["height"] * 0.50
+        look_init = dpg.evaluate("() => window.SPK3D.__debug.look()")
+        assert abs(look_init["yawMin"] - (-1.25)) < 1e-6 and abs(look_init["yawMax"] - 0.65) < 1e-6, look_init
+
         dpg.mouse.move(sx, sy)
         dpg.mouse.down()
         dpg.mouse.move(sx + 120, sy, steps=12)
@@ -519,14 +524,11 @@ def main():
         assert look_120["dragging"] is True, look_120
         assert abs(look_120["yaw"] - 0.50) <= 0.06, f"Expected yaw 0.50+-0.06 after 120px drag, got {look_120}"
 
-        look_left_shot = os.path.join(OUT_DIR, "speaking3d_look_left_1280.png")
-        dpg.screenshot(path=look_left_shot)
-
-        # Drag further to verify clamp at 0.55
+        # Drag further right to verify upper clamp at +0.65
         dpg.mouse.move(sx + 260, sy, steps=10)
         dpg.wait_for_timeout(80)
         look_clamped = dpg.evaluate("() => window.SPK3D.__debug.look()")
-        assert 0.54 <= look_clamped["yaw"] <= 0.551, f"Did not clamp at 0.55: {look_clamped}"
+        assert 0.64 <= look_clamped["yaw"] <= 0.651, f"Did not clamp at +0.65: {look_clamped}"
         dpg.mouse.up()
         was_drag = dpg.evaluate("() => document.querySelector('#speaking3dStage canvas').dataset.wasDrag")
         assert was_drag == "1", f"Drag >10px did not mark wasDrag: {was_drag}"
@@ -542,6 +544,23 @@ def main():
         )
         look_returned = dpg.evaluate("() => window.SPK3D.__debug.look()")
         assert abs(look_returned["yaw"]) < 0.03 and not look_returned["returning"], look_returned
+
+        # Synthetic drag -260 px (left, toward partner) -> yaw <= -1.20 rad, partner fully in view
+        dpg.mouse.move(sx, sy)
+        dpg.mouse.down()
+        dpg.mouse.move(sx - 260, sy, steps=14)
+        dpg.wait_for_timeout(120)
+        look_partner = dpg.evaluate("() => window.SPK3D.__debug.look()")
+        assert look_partner["yaw"] <= -1.20 and look_partner["yaw"] >= -1.251, f"Expected yaw <= -1.20 on -260px drag, got {look_partner}"
+        look_partner_shot = os.path.join(OUT_DIR, "speaking3d_look_partner_1280.png")
+        dpg.screenshot(path=look_partner_shot)
+        look_left_shot = os.path.join(OUT_DIR, "speaking3d_look_left_1280.png")
+        dpg.screenshot(path=look_left_shot)
+        dpg.mouse.up()
+        dpg.wait_for_function(
+            "() => { const l = window.SPK3D.__debug.look(); return Math.abs(l.yaw) < 0.03 && !l.returning; }",
+            timeout=6000,
+        )
 
         # 2c. Mouth-sync check with fake analyser
         dpg.evaluate(
@@ -567,35 +586,81 @@ def main():
         mouth_closed = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
         assert mouth_closed["mouthOpen"] < 0.6, mouth_closed
 
-        # 2d. Gaze check (partner turns, assessor stays head-down)
-        # Two-vs-two seating: the partner sits at -0.62 on the candidate side and
-        # looks across at the examiner, which is a ~0.74 rad turn, not the ~1.15 the
-        # older end-of-table layout produced.
-        dpg.evaluate("() => window.SPK3D.setActiveRole('partner')")
+        # 2d. Gaze check: all four speaker transitions (>= 0.15 rad change, settle < 1 s),
+        # setSpeaking authoritative over setActiveRole, assessor stays head-down.
+        def wait_gaze(check_js, arg=None):
+            t0 = dpg.evaluate("() => performance.now()")
+            dpg.wait_for_function(check_js, arg=arg, timeout=1000)
+            elapsed_ms = dpg.evaluate("(t) => performance.now() - t", arg=t0)
+            assert elapsed_ms < 1000, f"Gaze transition took {elapsed_ms}ms (>= 1s)"
+            return elapsed_ms
+
+        # Baseline: candidate speaks ('you') -> examiner & partner both look at camera
+        dpg.evaluate("() => { window.SPK3D.setSpeaking(null, null); window.SPK3D.setActiveRole('you'); }")
         dpg.wait_for_function(
-            "() => window.SPK3D.__debug.state('partner').headYaw < -0.60",
-            timeout=8000,
+            "() => Math.abs(window.SPK3D.__debug.state('examiner').headYaw) < 0.12 && window.SPK3D.__debug.state('partner').headYaw < -0.90",
+            timeout=2000,
         )
-        p_on_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
-        a_on_p = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
+        g_you_e = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        g_you_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        g_you_a = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
+        assert abs(g_you_e["headYaw"]) < 0.12, g_you_e
+        assert g_you_p["headYaw"] < -0.90, g_you_p
+
+        # Transition 1: you -> examiner (partner turns from camera to examiner >= 0.15 rad, settles < 1 s)
         dpg.evaluate("() => window.SPK3D.setActiveRole('examiner')")
-        # Measured on this seating: partner looks at the candidate at ~-1.04 rad and
-        # at the examiner at ~-0.78 rad, so the turn is ~0.26 rad. Assert the real
-        # geometry (the examiner sits almost straight ahead of the partner), not the
-        # old end-of-table swing.
-        dpg.wait_for_function(
-            "(prevYaw) => Math.abs(window.SPK3D.__debug.state('partner').headYaw - prevYaw) > 0.20",
-            arg=p_on_p["headYaw"],
-            timeout=8000,
+        t1_ms = wait_gaze(
+            "(prev) => window.SPK3D.__debug.state('partner').headYaw > -0.25 && Math.abs(window.SPK3D.__debug.state('partner').headYaw - prev) >= 0.15",
+            arg=g_you_p["headYaw"],
         )
-        p_on_e = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
-        a_on_e = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
-        dpg.wait_for_timeout(150)
-        p_settled = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
-        assert abs(p_on_e["headYaw"] - p_on_p["headYaw"]) > 0.20, (p_on_p, p_on_e)
-        assert abs(p_settled["headYaw"] - p_on_e["headYaw"]) < 0.08, (p_on_e, p_settled)
-        assert a_on_p["headPitch"] < 0 and a_on_e["headPitch"] < 0, (a_on_p, a_on_e)
-        assert abs(a_on_e["headYaw"] - a_on_p["headYaw"]) <= 0.05, (a_on_p, a_on_e)
+        g_ex_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        g_ex_e = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        assert abs(g_ex_p["headYaw"] - g_you_p["headYaw"]) >= 0.15, (g_you_p, g_ex_p)
+        assert abs(g_ex_e["headYaw"]) < 0.12, g_ex_e
+
+        # Transition 2: examiner -> partner via setSpeaking (authoritative over activeRole='examiner')
+        dpg.evaluate(
+            """() => {
+                const fake = { frequencyBinCount: 64, getByteFrequencyData(a) { a.fill(140); } };
+                window.SPK3D.setSpeaking('partner', fake);
+            }"""
+        )
+        t2_ms = wait_gaze(
+            "([pe, pp]) => window.SPK3D.__debug.state('examiner').headYaw < -0.35 && window.SPK3D.__debug.state('partner').headYaw < -0.80 && Math.abs(window.SPK3D.__debug.state('examiner').headYaw - pe) >= 0.15 && Math.abs(window.SPK3D.__debug.state('partner').headYaw - pp) >= 0.15",
+            arg=[g_ex_e["headYaw"], g_ex_p["headYaw"]],
+        )
+        g_pa_e = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        g_pa_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        assert abs(g_pa_e["headYaw"] - g_ex_e["headYaw"]) >= 0.15, (g_ex_e, g_pa_e)
+        assert abs(g_pa_p["headYaw"] - g_ex_p["headYaw"]) >= 0.15, (g_ex_p, g_pa_p)
+
+        # Transition 3: partner -> you (examiner turns back to camera >= 0.15 rad, settles < 1 s)
+        dpg.evaluate("() => { window.SPK3D.setSpeaking(null, null); window.SPK3D.setActiveRole('you'); }")
+        t3_ms = wait_gaze(
+            "(prev) => Math.abs(window.SPK3D.__debug.state('examiner').headYaw) < 0.15 && Math.abs(window.SPK3D.__debug.state('examiner').headYaw - prev) >= 0.15",
+            arg=g_pa_e["headYaw"],
+        )
+        g_you2_e = dpg.evaluate("() => window.SPK3D.__debug.state('examiner')")
+        assert abs(g_you2_e["headYaw"] - g_pa_e["headYaw"]) >= 0.15, (g_pa_e, g_you2_e)
+
+        # Transition 4: you -> examiner via setSpeaking overriding activeRole='you'
+        dpg.evaluate(
+            """() => {
+                const fake = { frequencyBinCount: 64, getByteFrequencyData(a) { a.fill(140); } };
+                window.SPK3D.setSpeaking('examiner', fake);
+            }"""
+        )
+        t4_ms = wait_gaze(
+            "(prev) => window.SPK3D.__debug.state('partner').headYaw > -0.25 && Math.abs(window.SPK3D.__debug.state('partner').headYaw - prev) >= 0.15",
+            arg=g_pa_p["headYaw"],
+        )
+        g_ex2_p = dpg.evaluate("() => window.SPK3D.__debug.state('partner')")
+        g_ex2_a = dpg.evaluate("() => window.SPK3D.__debug.state('assessor')")
+        assert abs(g_ex2_p["headYaw"] - g_pa_p["headYaw"]) >= 0.15, (g_pa_p, g_ex2_p)
+        assert g_you_a["headPitch"] < 0 and g_ex2_a["headPitch"] < 0, (g_you_a, g_ex2_a)
+        assert abs(g_ex2_a["headYaw"] - g_you_a["headYaw"]) <= 0.05, (g_you_a, g_ex2_a)
+        dpg.evaluate("() => window.SPK3D.setSpeaking(null, null)")
+        results["gaze_transitions_ms"] = [round(t1_ms, 1), round(t2_ms, 1), round(t3_ms, 1), round(t4_ms, 1)]
 
         # 2e. 120-frame render performance benchmark (desktop tier)
         perf_desktop = measure_render_120_frames(dpg)
@@ -1162,12 +1227,102 @@ def main():
         )
         assert rm_state["cam"]["moving"] is False, rm_state
         assert abs(rm_state["cam"]["fov"] - 58.0) <= 0.5, f"Dolly should be skipped in reduced motion: {rm_state}"
-        assert abs(rm_state["cam"]["z"] - 0.82) <= 0.02, f"Camera moved in reduced motion: {rm_state}"
+        assert abs(rm_state["cam"]["z"] - 0.94) <= 0.02, f"Camera moved in reduced motion: {rm_state}"
         assert rm_state["props"]["liftM"] >= 0.08, f"Material did not lift 0.10m in reduced motion: {rm_state}"
         assert len(rm_state["bounds"]["photos"]) == 2 and rm_state["bounds"]["photos"][0]["width"] > 40, rm_state
         assert rm_errors == [], f"Reduced motion errors: {rm_errors}"
         results["reduced_motion"] = rm_state
         rmctx.close()
+
+        # =====================================================================
+        # 12. SPK3D-5: Gender-aware cast from paper data + synthetic setCast + screenshots
+        # =====================================================================
+        gctx = browser.new_context(viewport={"width": 1280, "height": 800})
+        gpg = gctx.new_page()
+        g_errors = []
+        gpg.on("pageerror", lambda e: g_errors.append(str(e)))
+        gpg.add_init_script(
+            "localStorage.setItem('b2first_user', %s);" % json.dumps(json.dumps(user))
+        )
+        gpg.goto(url + "app?spk3d=1", wait_until="networkidle")
+        gpg.wait_for_timeout(200)
+        gpg.evaluate("if (typeof hideOnboarding === 'function') hideOnboarding(); setLang('en');")
+
+        # Verify __debug.cast() matches all four papers (01/03 -> male, 02/04 -> female)
+        cast_by_paper = {}
+        expected_sex = {"01": "male", "02": "female", "03": "male", "04": "female"}
+        for pid in ("01", "02", "03", "04"):
+            enter_part(gpg, 1, test_id=pid)
+            gpg.wait_for_timeout(150)
+            c = gpg.evaluate("() => window.SPK3D.__debug.cast()")
+            assert c["partner"]["sex"] == expected_sex[pid], (pid, c)
+            assert c["examiner"]["sex"] == "male", (pid, c)
+            if expected_sex[pid] == "female":
+                assert c["visibleSexes"] == ["male", "female"], (pid, c)
+            else:
+                assert c["visibleSexes"] == ["male"], (pid, c)
+            cast_by_paper[pid] = c
+
+            if pid == "01":
+                # Synthetic setCast({partner:{sex:'female'}}) flips only partner meshes
+                before_m = gpg.evaluate("() => window.SPK3D.__debug.stats().meshes")
+                gpg.evaluate("() => window.SPK3D.setCast({partner:{sex:'female'}})")
+                gpg.wait_for_timeout(100)
+                after_m = gpg.evaluate("() => window.SPK3D.__debug.stats().meshes")
+                after_c = gpg.evaluate("() => window.SPK3D.__debug.cast()")
+                assert after_c["partner"]["sex"] == "female" and after_c["examiner"]["sex"] == "male", after_c
+                assert after_m["partner"] != before_m["partner"], (before_m, after_m)
+                assert 0 < (after_m["partner"] - before_m["partner"]) <= 2, (before_m, after_m)
+                assert after_m["examiner"] == before_m["examiner"], (before_m, after_m)
+                assert after_m["assessor"] == before_m["assessor"], (before_m, after_m)
+                assert after_m["you"] == before_m["you"], (before_m, after_m)
+                # Invalid sex normalises to male without throwing
+                gpg.evaluate("() => window.SPK3D.setCast({partner:{sex:'not_a_sex'}})")
+                gpg.wait_for_timeout(80)
+                reset_c = gpg.evaluate("() => window.SPK3D.__debug.cast()")
+                assert reset_c["partner"]["sex"] == "male", reset_c
+                results["cast_mesh_delta"] = {"before": before_m, "after": after_m}
+
+            if pid == "02":
+                # Drag left (-260 px) to frame female partner Sophie for screenshot
+                gbox = gpg.locator("#speaking3dStage").bounding_box()
+                gsx = gbox["x"] + gbox["width"] * 0.50
+                gsy = gbox["y"] + gbox["height"] * 0.50
+                gpg.evaluate("() => window.SPK3D.setActiveRole('you')")
+                gpg.wait_for_timeout(350)
+                gpg.mouse.move(gsx, gsy)
+                gpg.mouse.down()
+                gpg.mouse.move(gsx - 260, gsy, steps=14)
+                gpg.wait_for_timeout(120)
+                gpg.screenshot(path=os.path.join(OUT_DIR, "speaking3d_female_partner_1280.png"))
+                gpg.mouse.up()
+                gpg.wait_for_function(
+                    "() => { const l = window.SPK3D.__debug.look(); return Math.abs(l.yaw) < 0.03 && !l.returning; }",
+                    timeout=6000,
+                )
+
+                # Toggle 3D off and back on mid-exam -> remounts and preserves female partner cast
+                gpg.click("#speaking3dBtn")
+                gpg.wait_for_function("() => !window.SPK3D.isMounted()", timeout=4000)
+                gpg.wait_for_timeout(350)
+                gpg.click("#speaking3dBtn")
+                gpg.wait_for_function("() => window.SPK3D.isMounted()", timeout=6000)
+                c_remount = gpg.evaluate("() => window.SPK3D.__debug.cast()")
+                assert c_remount["partner"]["sex"] == "female", c_remount
+
+                # Force examiner female via setCast for screenshot
+                gpg.evaluate("() => window.SPK3D.setCast({examiner:{name:'Ms Clarke', sex:'female'}})")
+                gpg.wait_for_timeout(180)
+                c_fem_ex = gpg.evaluate("() => window.SPK3D.__debug.cast()")
+                assert c_fem_ex["examiner"]["sex"] == "female" and c_fem_ex["visibleSexes"] == ["female"], c_fem_ex
+                gpg.screenshot(path=os.path.join(OUT_DIR, "speaking3d_female_examiner_1280.png"))
+
+            gpg.click("#speakingCloseExamBtn")
+            gpg.wait_for_timeout(120)
+
+        assert g_errors == [], f"Gender cast test errors: {g_errors}"
+        results["cast_by_paper"] = cast_by_paper
+        gctx.close()
 
         browser.close()
 
