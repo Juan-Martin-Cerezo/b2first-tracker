@@ -1348,8 +1348,21 @@ body.speaking-open{overflow:hidden}
 
 /* Center exam desk: table visuals (Part 2 photos / Part 3 card) or Conversation stage (Intro / Part 1 / Part 4) */
 .spk3-desk{
-  order:3;flex:1 0 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:center;
+  position:relative;order:3;flex:1 0 auto;display:flex;flex-direction:column;align-items:stretch;justify-content:center;
   min-height:160px;width:100%;min-width:0;
+}
+.spk3-stage{
+  position:absolute;inset:0;border-radius:var(--r-panel);overflow:hidden;
+  border:1px solid var(--line);background:#dcd7ce;
+}
+.spk3-stage[hidden]{display:none}
+.spk3-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.spk3-desk.is-3d{flex:0 0 auto;min-height:0;aspect-ratio:4/3;max-height:52dvh}
+.spk3-3d-btn{white-space:nowrap}
+.spk3-3d-btn[hidden]{display:none}
+.spk3-3d-btn[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-text)}
+@media (max-width:480px){
+  .spk3-3d-btn{padding:0 10px;font-size:var(--fs-xs)}
 }
 .spk3-photos{
   flex:1 0 auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);
@@ -1557,6 +1570,7 @@ body.speaking-open{overflow:hidden}
     order:unset;grid-column:1;height:100%;min-height:0;
     justify-content:center;align-items:stretch;
   }
+  .spk3-desk.is-3d{flex:1 1 auto;aspect-ratio:auto;max-height:none;height:100%}
   .spk3-photos{flex:1 1 auto;gap:var(--s4);padding:var(--s4);height:100%;min-height:0}
   .spk3-photo-frame{width:100%;height:auto;max-height:100%;aspect-ratio:4/3}
   .spk3-photo-frame img{
@@ -4768,6 +4782,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
           <span class="spk3-head-sub" id="speakingExamPart">Introduction</span>
         </div>
         <div class="spk3-head-right">
+          <button type="button" class="spk3-icon-btn spk3-3d-btn" id="speaking3dBtn" data-action="speakingToggle3d" aria-pressed="false" data-i18n="spv3_3d_on">3D room</button>
           <span class="spk3-timer" id="speakingTimer" role="timer" aria-live="off">--:--</span>
           <button type="button" class="spk3-icon-btn" id="speakingCloseExamBtn" data-action="speakingClose" data-i18n="common_close">Close</button>
         </div>
@@ -4794,6 +4809,7 @@ body.fm-running-active #qlFab{display:none !important;opacity:0;pointer-events:n
               <p class="spk3-conv-status" id="speakingStageStatus" data-i18n="spv3_stage_listening">Listening</p>
             </div>
           </div>
+          <div class="spk3-stage" id="speaking3dStage" hidden></div>
         </div>
 
         <aside class="spk3-panel" id="speakingPanel">
@@ -7633,6 +7649,8 @@ const I18N={
     spv3_loading:'Loading tests…',
     spv3_time_up:'Time is up',
     spv3_skip_turn:'Skip turn',
+    spv3_3d_on:'3D room',
+    spv3_3d_off:'Classic view',
     l_own_opt:'My own material',
     l_own_heading:'My own listening material',
     l_own_empty:'No saved material yet. Add audio, written questions or a transcript below.',
@@ -8737,6 +8755,8 @@ const I18N={
     spv3_loading:'Cargando exámenes…',
     spv3_time_up:'Tiempo cumplido',
     spv3_skip_turn:'Saltar turno',
+    spv3_3d_on:'Sala 3D',
+    spv3_3d_off:'Vista clásica',
     l_own_opt:'Mi material',
     l_own_heading:'Mi material de Listening',
     l_own_empty:'Todavía no guardaste material. Subí un audio o pegá la tarea o transcripción abajo.',
@@ -9014,6 +9034,7 @@ const QUEUE_CYCLES={
 };
 const SETTINGS_DEFAULT={
   lang:'en',
+  spk3d:false,
   /* Phase 38: `fast` speaks the reply with the browser's own speechSynthesis
      (one AI call per turn, ~2 s); `natural` asks Gemini for audio (+3-4 s). */
   voice:'fast',
@@ -11742,8 +11763,9 @@ const SPEAKING=(function(){
     recStopping:false,
     blobUrls:new Map(),
     ownPreviewUrls:[],
-    sessionStartedAt:0,
-    _prepStepMs:1000
+    sessionStartedAt:0,_prepStepMs:1000,
+    spk3dOverride:(()=>{try{const v=new URLSearchParams(location.search).get('spk3d');return v==='1'?true:v==='0'?false:null;}catch(e){return null;}})(),
+    spk3dUnavailable:false,spk3dWarned:false,spk3dActive:false,spk3dSettled:false
   };
 
   function $(id){return document.getElementById(id)}
@@ -11784,6 +11806,72 @@ const SPEAKING=(function(){
     document.querySelectorAll('#speakingOverlay .spk3-view').forEach(sec=>{
       sec.classList.toggle('is-active',sec.dataset.spkView===name);
     });
+    if(name==='exam')sync3dStage();
+    else if(state.spk3dActive)teardown3d(false);
+  }
+
+  function warn3dUnavailable(){
+    state.spk3dUnavailable=true;
+    if(!state.spk3dWarned){state.spk3dWarned=true;console.warn('spk3d unavailable');}
+    sync3dToggleBtn();
+  }
+  function want3d(){
+    if(state.spk3dUnavailable)return false;
+    return state.spk3dOverride!==null?state.spk3dOverride:Boolean(typeof D!=='undefined'&&D&&D.settings&&D.settings.spk3d);
+  }
+  function sync3dToggleBtn(){
+    const btn=$('speaking3dBtn'),api=window.SPK3D;
+    if(!btn)return;
+    if(state.spk3dUnavailable||!api||typeof api.supported!=='function'||!api.supported()){btn.hidden=true;return;}
+    btn.hidden=false;
+    btn.setAttribute('aria-pressed',state.spk3dActive?'true':'false');
+    btn.textContent=t(state.spk3dActive?'spv3_3d_off':'spv3_3d_on');
+  }
+  function hide2dDesk(){
+    ['speakingPhotos','speakingCardWrap','speakingConvStage'].forEach(id=>{const el=$(id);if(el)el.hidden=true;});
+  }
+  function teardown3d(restore){
+    const st=$('speaking3dStage'),dk=$('speakingDesk');
+    if(window.SPK3D&&typeof window.SPK3D.unmount==='function'){try{window.SPK3D.unmount();}catch(e){}}
+    state.spk3dActive=false;
+    if(st)st.hidden=true;
+    if(dk)dk.classList.remove('is-3d');
+    sync3dToggleBtn();
+    if(restore)applyDeskUi(state.ui);
+  }
+  function sync3dStage(){
+    const api=window.SPK3D,st=$('speaking3dStage'),dk=$('speakingDesk');
+    if(!state.isOpen||state.view!=='exam'){
+      if(state.spk3dActive||(api&&api.isMounted&&api.isMounted()))teardown3d(false);
+      return;
+    }
+    if(!api){if(state.spk3dSettled)warn3dUnavailable();else sync3dToggleBtn();return;}
+    if(typeof api.supported!=='function'||!api.supported()){if(state.spk3dActive)teardown3d(true);warn3dUnavailable();return;}
+    if(!want3d()){
+      if(state.spk3dActive||(api.isMounted&&api.isMounted()))teardown3d(true);
+      else{if(st)st.hidden=true;if(dk)dk.classList.remove('is-3d');sync3dToggleBtn();}
+      return;
+    }
+    if(!st||!dk)return;
+    hide2dDesk();dk.classList.add('is-3d');st.hidden=false;
+    let ok=false;const t0=performance.now();
+    try{ok=api.mount(st)!==false&&!!api.isMounted();}catch(e){ok=false;}
+    if(!ok||performance.now()-t0>2000){
+      try{api.unmount();}catch(e){}
+      state.spk3dActive=false;st.hidden=true;dk.classList.remove('is-3d');
+      warn3dUnavailable();applyDeskUi(state.ui);return;
+    }
+    state.spk3dActive=true;
+    try{api.setActiveRole(state.activeRole||null);api.setPart(state.currentPart||0);}catch(e){}
+    sync3dToggleBtn();
+  }
+  function toggle3d(){
+    const api=window.SPK3D;
+    if(state.spk3dUnavailable||!api||typeof api.supported!=='function'||!api.supported()){warn3dUnavailable();return;}
+    const next=!state.spk3dActive;
+    if(typeof D!=='undefined'&&D&&D.settings){state.spk3dOverride=null;D.settings.spk3d=next;if(typeof save==='function')save();}
+    else state.spk3dOverride=next;
+    if(next)sync3dStage();else teardown3d(true);
   }
 
   function stopBusyTicker(){
@@ -11927,6 +12015,9 @@ const SPEAKING=(function(){
     Object.keys(map).forEach(k=>{
       if(map[k])map[k].setAttribute('data-active',k===role?'true':'false');
     });
+    if(state.spk3dActive&&window.SPK3D){
+      try{window.SPK3D.setActiveRole(role||null);}catch(e){}
+    }
     syncStageVisual();
   }
 
@@ -12071,6 +12162,10 @@ const SPEAKING=(function(){
     if(panelPartEl)panelPartEl.textContent=partLabel;
     if(partnerEl)partnerEl.textContent=state.partnerName||'Alex';
     if(guideEl)guideEl.textContent=t(partGuideKey());
+    if(state.spk3dActive&&window.SPK3D){
+      try{window.SPK3D.setPart(state.currentPart||0);}catch(e){}
+    }
+    sync3dToggleBtn();
     renderTimer();
     syncStageVisual();
   }
@@ -12106,6 +12201,13 @@ const SPEAKING=(function(){
       if(p1)p1.removeAttribute('src');
       if(p2)p2.removeAttribute('src');
       if(cardImg)cardImg.removeAttribute('src');
+    }
+    if(state.spk3dActive&&window.SPK3D&&window.SPK3D.isMounted()){
+      hide2dDesk();
+      try{
+        window.SPK3D.showImages(imgs.length>=2?[p1?p1.src:'',p2?p2.src:'']:null);
+        window.SPK3D.showCard(card?(cardImg?cardImg.src:''):null);
+      }catch(e){}
     }
     syncStageVisual();
   }
@@ -12730,6 +12832,7 @@ const SPEAKING=(function(){
     state.phase='intro';
     state.step='greeting';
     state.currentPart=0;
+    state.ui={part:0,timer_seconds:0,images:[],card:null};
     state.partTimerPart=0;
     state.partTimerLeft=0;
     state.partTimeUp=false;
@@ -12965,6 +13068,7 @@ const SPEAKING=(function(){
   }
 
   function close(){
+    teardown3d(false);
     stopAudio();
     stopPartTimer();
     stopPrepTimer();
@@ -13030,10 +13134,31 @@ const SPEAKING=(function(){
     });
   })();
 
+  (function bind3dEvents(){
+    window.addEventListener('error',ev=>{
+      if(ev&&ev.target&&ev.target.tagName==='SCRIPT'&&String(ev.target.src||'').includes('speaking3d/room.js')){
+        state.spk3dSettled=true;
+        warn3dUnavailable();
+      }
+    },true);
+    window.addEventListener('spk3d:ready',()=>{
+      state.spk3dSettled=true;
+      if(state.isOpen&&state.view==='exam')sync3dStage();
+      else sync3dToggleBtn();
+    });
+    window.addEventListener('load',()=>{
+      state.spk3dSettled=true;
+      if(!window.SPK3D)warn3dUnavailable();
+      else if(state.isOpen&&state.view==='exam')sync3dStage();
+      else sync3dToggleBtn();
+    });
+  })();
+
   return {
     open,
     close,
     rerender,
+    toggle3d,
     startSession,
     openOwnTaskForm,
     syncOwnFormFields,
@@ -21377,6 +21502,7 @@ click:{
 'speakingSkip':()=>SPEAKING.skipTurn(),
 'speakingStart':el=>SPEAKING.startSession({testId:el.dataset.testId,part:Number(el.dataset.part)}),
 'speakingStartOwn':el=>SPEAKING.startSession({ownTaskId:el.dataset.ownId,part:Number(el.dataset.part)}),
+'speakingToggle3d':()=>SPEAKING.toggle3d(),
 'accountProfile':()=>{closeAccountSheet(false);openUserModal()},
 'accountSettings':()=>{closeAccountSheet(false);openSettingsModal()},
 'addPasskey':()=>addPasskey(),
@@ -21673,5 +21799,6 @@ keydown:{
 })();
 
 </script>
+<script type="module" src="/assets/speaking3d/room.js"></script>
 </body>
 </html>
